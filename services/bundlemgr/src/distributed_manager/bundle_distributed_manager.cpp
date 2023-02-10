@@ -20,6 +20,7 @@
 #include "bundle_manager_callback.h"
 #include "bundle_mgr_service.h"
 #include "distributed_device_profile_client.h"
+#include "free_install_params.h"
 #include "json_util.h"
 #include "scope_guard.h"
 #include "syscap_interface.h"
@@ -32,7 +33,7 @@ const int32_t QUERY_RPC_ID_BY_ABILITY = 1;
 const uint32_t OUT_TIME = 3000;
 const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "com.ohos.hag.famanager.HapInstallServiceAbility";
+const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 }
 
@@ -189,6 +190,10 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(SERVICE_CENTER_TOKEN)) {
+        APP_LOGE("failed to sendCallback due to write MessageParcel fail");
+        return false;
+    }
     if (!data.WriteString16(Str8ToStr16(targetInfo))) {
         APP_LOGE("WriteString16 failed");
         return false;
