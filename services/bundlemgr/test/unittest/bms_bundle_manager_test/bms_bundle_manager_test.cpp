@@ -101,7 +101,6 @@ public:
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
-    std::shared_ptr<Want> want_ = nullptr;
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
@@ -204,7 +203,6 @@ void BmsBundleManagerTest::SetUp()
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    want_ = std::make_shared<Want>();
 }
 
 void BmsBundleManagerTest::TearDown()
@@ -4294,8 +4292,8 @@ HWTEST_F(BmsBundleManagerTest, FindAbilityInfo_0300, Function | MediumTest | Lev
 HWTEST_F(BmsBundleManagerTest, WantParamTest_0001, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
-    want_->ClearWant(&want);
     want.SetUri("");
+    want.SetType("");
     std::vector<AbilityInfo> abilityInfos;
     int32_t appIndex = 1;
     bool testRet = GetBundleDataMgr()->ImplicitQueryAbilityInfos(
@@ -4312,7 +4310,7 @@ HWTEST_F(BmsBundleManagerTest, WantParamTest_0001, Function | SmallTest | Level1
 HWTEST_F(BmsBundleManagerTest, WantParamTest_0002, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
-    want_->ClearWant(&want);
+    want.SetType("");
     want.SetUri("");
     std::vector<AbilityInfo> abilityInfos;
     int32_t appIndex = 1;
@@ -4330,7 +4328,7 @@ HWTEST_F(BmsBundleManagerTest, WantParamTest_0002, Function | SmallTest | Level1
 HWTEST_F(BmsBundleManagerTest, WantParamTest_0003, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
-    want_->ClearWant(&want);
+    want.SetType("");
     want.SetUri("");
     std::vector<ExtensionAbilityInfo> extensionInfos;
     int32_t appIndex = 1;
@@ -4348,7 +4346,7 @@ HWTEST_F(BmsBundleManagerTest, WantParamTest_0003, Function | SmallTest | Level1
 HWTEST_F(BmsBundleManagerTest, WantParamTest_0004, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
-    want_->ClearWant(&want);
+    want.SetType("");
     want.SetUri("");
     std::vector<ExtensionAbilityInfo> extensionInfos;
     int32_t appIndex = 1;
