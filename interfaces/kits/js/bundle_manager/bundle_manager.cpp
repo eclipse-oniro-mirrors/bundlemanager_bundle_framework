@@ -2840,6 +2840,9 @@ void CreateLaunchTypeObject(napi_env env, napi_value value)
     napi_value nStandard;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nStandard));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STANDARD", nStandard));
+    napi_value nMultiton;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nMultiton));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MULTITON", nMultiton));
     napi_value nSpecified;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SPECIFIED), &nSpecified));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPECIFIED", nSpecified));
