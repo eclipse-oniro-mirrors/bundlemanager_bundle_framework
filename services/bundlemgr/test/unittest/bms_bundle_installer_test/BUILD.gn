@@ -802,9 +802,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 
   sources += [ "bms_system_bundle_installer_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
