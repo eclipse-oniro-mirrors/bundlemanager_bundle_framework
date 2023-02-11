@@ -54,6 +54,7 @@ const std::string PATH_LOCATION = "/data/app/el1/bundle/public/com.ohos.launcher
 const std::string PATH_LOCATIONS = "/data/app/el1/bundle/new_create.txt";
 const std::string DEVICE_ID_NORMAL = "deviceId";
 const std::string LOCALE_INFO = "localeInfo";
+const std::EMPTY_STRING = "";
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -1410,13 +1411,13 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0073, Function | SmallTest | L
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         std::vector<ElementName> names;
-        ElementName name_1;
-        name_1.SetBundleName(BUNDLE_NAME);
-        name_1.SetAbilityName(ABILITY_NAME);
-        name_1.SetDeviceID("");
-        names.push_back(name_1);
+        ElementName name;
+        name.SetBundleName(BUNDLE_NAME);
+        name.SetAbilityName(ABILITY_NAME);
+        name.SetDeviceID(EMPTY_STRING);
+        names.push_back(name);
         std::vector<RemoteAbilityInfo> info;
-        auto ret = distributedBms->GetRemoteAbilityInfos(names, "", info);
+        auto ret = distributedBms->GetRemoteAbilityInfos(names, EMPTY_STRING, info);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
@@ -1438,7 +1439,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0074, Function | SmallTest | L
         name.SetDeviceID(DEVICE_ID);
         names.push_back(name);
         std::vector<RemoteAbilityInfo> info;
-        auto ret = distributedBms->GetRemoteAbilityInfos(names, "", info);
+        auto ret = distributedBms->GetRemoteAbilityInfos(names, EMPTY_STRING, info);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
