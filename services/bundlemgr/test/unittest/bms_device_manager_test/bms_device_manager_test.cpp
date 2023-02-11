@@ -32,6 +32,7 @@ namespace {
     const int32_t DEVICEMANAGER_SA_ID = 4802;
     const int32_t SYSTEM_ABILITY_ID = 4801;
     const int32_t SYS_ABILITY_ID = 402;
+    const std::string EMPTY_STRING = "";
 }
 class BmsDeviceManagerTest : public testing::Test {
 public:
@@ -106,13 +107,13 @@ HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0100, Function | SmallTest | L
  * @tc.number: OnAddSystemAbility_0200
  * @tc.name: test OnAddSystemAbility
  * @tc.desc: 1.systemAbilityId = DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID.
- *           2.deviceId = ""
+ *           2.deviceId = EMPTY_STRING
  */
 HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0200, Function | SmallTest | Level0)
 {
     BmsDeviceManager deviceManager;
     int32_t systemAbilityId = DEVICEMANAGER_SA_ID;
-    std::string deviceId = "";
+    std::string deviceId = EMPTY_STRING;
     deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
     EXPECT_EQ(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
 }
@@ -126,7 +127,7 @@ HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0300, Function | SmallTest | L
 {
     BmsDeviceManager deviceManager;
     int32_t systemAbilityId = SYSTEM_ABILITY_ID;
-    std::string deviceId = "";
+    std::string deviceId = EMPTY_STRING;
     deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
     EXPECT_NE(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
 }
@@ -140,7 +141,7 @@ HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0100, Function | SmallTest 
 {
     BmsDeviceManager deviceManager;
     int32_t systemAbilityId = SYS_ABILITY_ID;
-    std::string deviceId = "";
+    std::string deviceId = EMPTY_STRING;
     deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
     EXPECT_EQ(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
@@ -154,7 +155,7 @@ HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0200, Function | SmallTest 
 {
     BmsDeviceManager deviceManager;
     int32_t systemAbilityId = SYSTEM_ABILITY_ID;
-    std::string deviceId = "";
+    std::string deviceId = EMPTY_STRING;
     deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
     EXPECT_NE(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
@@ -221,8 +222,8 @@ HWTEST_F(BmsDeviceManagerTest, StartDynamicSystemProcess_0100, Function | SmallT
 HWTEST_F(BmsDeviceManagerTest, GetUdidByNetworkId_0100, Function | SmallTest | Level0)
 {
     BmsDeviceManager deviceManager;
-    std::string netWorkId = "";
-    std::string uid = "";
+    std::string netWorkId = EMPTY_STRING;
+    std::string uid = EMPTY_STRING;
     auto ret = deviceManager.GetUdidByNetworkId(netWorkId, uid);
     EXPECT_FALSE(ret == -1);
 }
