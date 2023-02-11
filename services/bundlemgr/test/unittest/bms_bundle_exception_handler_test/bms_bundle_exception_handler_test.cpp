@@ -33,8 +33,9 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.ohos.launcher";
 const std::string Package_NAME = "launcher_settings";
-const std::string BUNDLEDIR_NAME = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
-const std::string BUNDLEORMOUDLEDIR = "/data/app/el1/bundle/public/";
+const std::string BUNDLE_DIR_NAME = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
+const std::string BUNDLE_OR_MOUDLE_DIR = "/data/app/el1/bundle/public/";
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class BmsBundleExceptionHandlerTest : public testing::Test {
@@ -74,7 +75,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0100, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0100 start";
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0100 end";
 }
@@ -88,7 +89,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0200, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0200 start";
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(EMPTY_STRING, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0200 end";
 }
@@ -102,7 +103,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0300, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0300 start";
     int32_t userId = 0;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(EMPTY_STRING, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0300 end";
 }
@@ -116,7 +117,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, RemoveBundleAndDataDirTest_0400, TestSiz
 {
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0400 start";
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir("", "", userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(EMPTY_STRING, EMPTY_STRING, userId);
     EXPECT_EQ(result, false);
     GTEST_LOG_(INFO) << "RemoveBundleAndDataDirTest_0400 end";
 }
@@ -132,7 +133,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0100, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::INSTALL_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -203,7 +204,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0500, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_EXISTED_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -223,7 +224,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0600, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_NEW_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -243,7 +244,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0700, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UNINSTALL_BUNDLE_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -262,7 +263,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0800, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UNINSTALL_PACKAGE_START);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -282,7 +283,7 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0900, TestSize.L
     bool isBundleValid = true;
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = bundleExceptionHandler_->RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_FINISH);
     bundleExceptionHandler_->HandleInvalidBundle(info, isBundleValid);
@@ -301,11 +302,11 @@ HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1000, Te
 {
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1000 start";
     bool isBundleValid = true;
-    std::shared_ptr<IBundleDataStorage> dataStorage_ = std::make_shared<BundleDataStorageRdb>();
-    BundleExceptionHandler BundleExceptionHandler(dataStorage_);
+    std::shared_ptr<IBundleDataStorage> dataStorageSptr = std::make_shared<BundleDataStorageRdb>();
+    BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = BundleExceptionHandler.RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = BundleExceptionHandler.RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_FINISH);
     BundleExceptionHandler.HandleInvalidBundle(info, isBundleValid);
@@ -325,11 +326,11 @@ HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1100, Te
 {
     GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1100 start";
     bool isBundleValid = true;
-    std::shared_ptr<IBundleDataStorage> dataStorage_ = nullptr;
-    BundleExceptionHandler BundleExceptionHandler(dataStorage_);
+    std::shared_ptr<IBundleDataStorage> dataStorageSptr = nullptr;
+    BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
     InnerBundleInfo info;
     int32_t userId = 100;
-    bool result = BundleExceptionHandler.RemoveBundleAndDataDir(BUNDLEDIR_NAME, BUNDLEORMOUDLEDIR, userId);
+    bool result = BundleExceptionHandler.RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
     EXPECT_EQ(result, true);
     info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_FINISH);
     BundleExceptionHandler.HandleInvalidBundle(info, isBundleValid);

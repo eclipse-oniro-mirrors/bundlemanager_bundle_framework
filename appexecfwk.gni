@@ -35,6 +35,8 @@ kits_path = "${appexecfwk_path}/interfaces/kits"
 inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
 tools_path = "${appexecfwk_path}/tools"
 core_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core"
+multimedia_path = "//foundation/multimedia/image_framework"
+notification_path = "//base/notification/eventhandler"
 
 declare_args() {
   bundle_framework_graphics = true

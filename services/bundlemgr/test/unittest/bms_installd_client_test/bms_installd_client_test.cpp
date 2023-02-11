@@ -50,6 +50,7 @@ const std::string DESTINATION_DIR = "destinationDir";
 const int32_t USERID = 100;
 const int32_t UID = 1000;
 const int32_t GID = 1000;
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class BmsInstalldClientTest : public testing::Test {
@@ -91,7 +92,7 @@ void BmsInstalldClientTest::TearDown()
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0100 start";
-    std::string bundleDir = "";
+    std::string bundleDir = EMPTY_STRING;
     ErrCode result = installClient_->CreateBundleDir(bundleDir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDir_0100 end";
@@ -119,7 +120,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDir_0200, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0100 start";
-    std::string srcModulePath = "";
+    std::string srcModulePath = EMPTY_STRING;
     std::string targetPath = TARGET_PATH;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
@@ -137,7 +138,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractModuleFiles_0200, T
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractModuleFiles_0200 start";
     std::string srcModulePath = SRC_MODULE_PATH;
-    std::string targetPath = "";
+    std::string targetPath = EMPTY_STRING;
     std::string targetSoPath = TARGET_SO_PATH;
     std::string cpuAbi = CPU_ABI;
     ErrCode result = installClient_->ExtractModuleFiles(srcModulePath, targetPath, targetSoPath, cpuAbi);
@@ -172,7 +173,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0100, TestSiz
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0100 start";
     ExtractParam extractParam;
-    extractParam.srcPath = "";
+    extractParam.srcPath = EMPTY_STRING;
     extractParam.targetPath = TARGET_PATH;
     ErrCode result = installClient_->ExtractFiles(extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -189,7 +190,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0200, TestSiz
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0200 start";
     ExtractParam extractParam;
     extractParam.srcPath = SRC_PATH;
-    extractParam.targetPath = "";
+    extractParam.targetPath = EMPTY_STRING;
     ErrCode result = installClient_->ExtractFiles(extractParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractFiles_0200 end";
@@ -219,7 +220,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractFiles_0300, TestSiz
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0100 start";
-    std::string oldPath = "";
+    std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
     ErrCode result = installClient_->RenameModuleDir(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -235,7 +236,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0200, Test
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0200 start";
     std::string oldPath = OLD_PATH;
-    std::string newPath = "";
+    std::string newPath = EMPTY_STRING;
     ErrCode result = installClient_->RenameModuleDir(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RenameModuleDir_0200 end";
@@ -264,7 +265,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0300, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0100 start";
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     int userid = USERID;
     int uid = UID;
     int gid = GID;
@@ -355,7 +356,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0500, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveBundleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveBundleDataDir_0100 start";
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     int userid = USERID;
     ErrCode result = installClient_->RemoveBundleDataDir(bundleName, userid);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -400,7 +401,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveBundleDataDir_0300, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveModuleDataDir_0100 start";
-    std::string ModuleName = "";
+    std::string ModuleName = EMPTY_STRING;
     int userid = USERID;
     ErrCode result = installClient_->RemoveModuleDataDir(ModuleName, userid);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -445,7 +446,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveModuleDataDir_0300, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0100 start";
-    std::string dir = "";
+    std::string dir = EMPTY_STRING;
     ErrCode result = installClient_->RemoveDir(dir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_RemoveDir_0100 end";
@@ -473,7 +474,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RemoveDir_0200, TestSize.L
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0100 start";
-    std::string bundleDir = "";
+    std::string bundleDir = EMPTY_STRING;
     ErrCode result = installClient_->CleanBundleDataDir(bundleDir);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CleanBundleDataDir_0100 end";
@@ -501,7 +502,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CleanBundleDataDir_0200, T
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleStats_0100 start";
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     int userId = USERID;
     std::vector<int64_t> bundleStats;
     ErrCode result = installClient_->GetBundleStats(bundleName, userId, bundleStats);
@@ -533,7 +534,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleStats_0200, TestS
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0100 start";
-    std::string dir = "";
+    std::string dir = EMPTY_STRING;
     std::string bundleName = BUNDLE_NAME;
     std::string apl = APL;
     ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
@@ -550,7 +551,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0200, TestSize.L
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 start";
     std::string dir = DIR;
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     std::string apl = APL;
     ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -567,7 +568,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0300, TestSize.L
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0300 start";
     std::string dir = DIR;
     std::string bundleName = BUNDLE_NAME;
-    std::string apl = "";
+    std::string apl = EMPTY_STRING;
     ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0300 end";
@@ -597,7 +598,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0400, TestSize.L
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetBundleCachePath_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetBundleCachePath_0100 start";
-    std::string dir = "";
+    std::string dir = EMPTY_STRING;
     std::vector<std::string> cachePath;
     ErrCode result = installClient_->GetBundleCachePath(dir, cachePath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -653,7 +654,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetInstalldProxy_0100, Tes
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ScanDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ScanDir_0100 start";
-    std::string dir = "";
+    std::string dir = EMPTY_STRING;
     std::vector<std::string> paths;
     ErrCode result = installClient_->ScanDir(dir, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -684,7 +685,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ScanDir_0200, TestSize.Lev
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0100 start";
-    std::string oldPath = "";
+    std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
     ErrCode result = installClient_->MoveFile(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -700,7 +701,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0200, TestSize.Le
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0200 start";
     std::string oldPath = OLD_PATH;
-    std::string newPath = "";
+    std::string newPath = EMPTY_STRING;
     ErrCode result = installClient_->MoveFile(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_MoveFile_0200 end";
@@ -729,7 +730,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_MoveFile_0300, TestSize.Le
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0100 start";
-    std::string oldPath = "";
+    std::string oldPath = EMPTY_STRING;
     std::string newPath = NEW_PATH;
     ErrCode result = installClient_->CopyFile(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -745,7 +746,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0200, TestSize.Le
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 start";
     std::string oldPath = OLD_PATH;
-    std::string newPath = "";
+    std::string newPath = EMPTY_STRING;
     ErrCode result = installClient_->CopyFile(oldPath, newPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0200 end";
@@ -774,7 +775,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_Mkdir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_Mkdir_0100 start";
-    std::string dir = "";
+    std::string dir = EMPTY_STRING;
     int32_t mode = 1;
     int32_t uid = UID;
     int32_t gid = GID;
@@ -808,7 +809,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_Mkdir_0200, TestSize.Level
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetFileStat_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetFileStat_0100 start";
-    std::string file = "";
+    std::string file = EMPTY_STRING;
     FileStat fileStat;
     ErrCode result = installClient_->GetFileStat(file, fileStat);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -838,7 +839,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetFileStat_0200, TestSize
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDiffFiles_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractDiffFiles_0100 start";
-    std::string filePath = "";
+    std::string filePath = EMPTY_STRING;
     std::string targetPath = TARGET_PATH;
     std::string cpuAbi = CPU_ABI;
     ErrCode result = installClient_->ExtractDiffFiles(filePath, targetPath, cpuAbi);
@@ -855,7 +856,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDiffFiles_0200, Tes
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractDiffFiles_0200 start";
     std::string filePath = FILE_PATH;
-    std::string targetPath = "";
+    std::string targetPath = EMPTY_STRING;
     std::string cpuAbi = CPU_ABI;
     ErrCode result = installClient_->ExtractDiffFiles(filePath, targetPath, cpuAbi);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -872,7 +873,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDiffFiles_0300, Tes
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractDiffFiles_0300 start";
     std::string filePath = FILE_PATH;
     std::string targetPath = TARGET_PATH;
-    std::string cpuAbi = "";
+    std::string cpuAbi = EMPTY_STRING;
     ErrCode result = installClient_->ExtractDiffFiles(filePath, targetPath, cpuAbi);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ExtractDiffFiles_0300 end";
@@ -902,7 +903,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ExtractDiffFiles_0400, Tes
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0100 start";
-    std::string oldSoPath = "";
+    std::string oldSoPath = EMPTY_STRING;
     std::string diffFilePath = DIFF_FILE_PATH;
     std::string newSoPath = NEW_SO_PATH;
     ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
@@ -919,7 +920,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0200, TestS
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0200 start";
     std::string oldSoPath = OLD_SO_PATH;
-    std::string diffFilePath = "";
+    std::string diffFilePath = EMPTY_STRING;
     std::string newSoPath = NEW_SO_PATH;
     ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
@@ -936,7 +937,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0300, TestS
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0300 start";
     std::string oldSoPath = OLD_SO_PATH;
     std::string diffFilePath = DIFF_FILE_PATH;
-    std::string newSoPath = "";
+    std::string newSoPath = EMPTY_STRING;
     ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0300 end";
