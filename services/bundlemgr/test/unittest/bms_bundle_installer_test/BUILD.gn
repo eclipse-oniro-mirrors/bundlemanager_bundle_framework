@@ -813,9 +813,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 
   deps = []
   if (bundle_framework_graphics) {
-    include_dirs += [
-      "${multimedia_path}/interfaces/innerkits/include",
-    ]
+    include_dirs += [ "${multimedia_path}/interfaces/innerkits/include" ]
     deps += [ "${multimedia_path}/interfaces/innerkits:image_native" ]
   }
 
