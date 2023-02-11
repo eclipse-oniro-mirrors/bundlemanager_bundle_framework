@@ -42,10 +42,12 @@ const std::string TEST_CPU_ARM = "arm";
 const std::string TEST_PATH = "/test/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
+const std::string TEST_LIB_AP = "ap/test.ap";
 const std::string TEST_QUICK_FIX_FILE_PATH_FIRST = "/data/app/el1/bundle/public/com.example.test/patch_1000001";
 const std::string TEST_QUICK_FIX_FILE_PATH_SECOND = "/data/app/el1/bundle/public/com.example.test/patch_1000002";
 const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/patch_1000001/entry.hqf";
 const std::string HAP_FILE_PATH_BACKUP = "/data/app/el1/bundle/public/com.example.test/patch_1000002/entry.hqf";
+const std::string HAP_PATH = "/data/app/el1/bundle/public/com.example.test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
 }; // namespace
 class BmsInstallDaemonOperatorTest : public testing::Test {
@@ -475,6 +477,14 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_2600, Function | Sma
 
     extractParam.extractFileType = ExtractFileType::AN;
     ret = InstalldOperator::IsNativeFile(TEST_LIB_AN, extractParam);
+    EXPECT_TRUE(ret);
+
+    extractParam.extractFileType = ExtractFileType::AN;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_AP, extractParam);
+    EXPECT_FALSE(ret);
+
+    extractParam.extractFileType = ExtractFileType::AP;
+    ret = InstalldOperator::IsNativeFile(TEST_LIB_AP, extractParam);
     EXPECT_TRUE(ret);
 }
 

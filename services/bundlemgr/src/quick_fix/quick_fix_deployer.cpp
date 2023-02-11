@@ -21,12 +21,31 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "event_report.h"
 #include "patch_extractor.h"
 #include "patch_parser.h"
 #include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+static std::string GetAppDistributionType(Security::Verify::AppDistType type)
+{
+    std::unordered_map<Security::Verify::AppDistType, std::string> AppDistributionTypeMaps = {
+        { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
+        { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
+        { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+        { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
+        { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
+    };
+    auto typeIter = AppDistributionTypeMaps.find(type);
+    if (typeIter == AppDistributionTypeMaps.end()) {
+        return Constants::APP_DISTRIBUTION_TYPE_NONE;
+    }
+    return typeIter->second;
+}
+}
+
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
 {}
 
@@ -207,6 +226,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         APP_LOGE("check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
         return ret;
     }
+    appDistributionType_ = GetAppDistributionType(provisionInfo.distributionType);
     APP_LOGI("ProcessPatchDeployStart end.");
     return ERR_OK;
 }
@@ -619,9 +639,9 @@ ErrCode QuickFixDeployer::MoveHqfFiles(InnerAppQuickFix &innerAppQuickFix, const
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         std::string realPath = path + info.moduleName + Constants::QUICK_FIX_FILE_SUFFIX;
-        ErrCode ret = InstalldClient::GetInstance()->MoveFile(info.hqfFilePath, realPath);
+        ErrCode ret = InstalldClient::GetInstance()->CopyFile(info.hqfFilePath, realPath);
         if (ret != ERR_OK) {
-            APP_LOGE("error MoveFile failed, errcode: %{public}d", ret);
+            APP_LOGE("error CopyFile failed, errcode: %{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
         }
         info.hqfFilePath = realPath;
@@ -667,12 +687,16 @@ ErrCode QuickFixDeployer::SaveToInnerBundleInfo(const InnerAppQuickFix &newInner
     ScopeGuard enableGuard([&bundleName, &dataMgr] { dataMgr->EnableBundle(bundleName); });
     AppQuickFix appQuickFix = newInnerAppQuickFix.GetAppQuickFix();
     appQuickFix.deployedAppqfInfo = innerBundleInfo.GetAppQuickFix().deployedAppqfInfo;
+    // add apply quick fix frequency
+    innerBundleInfo.AddApplyQuickFixFrequency();
     innerBundleInfo.SetAppQuickFix(appQuickFix);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataMgr->UpdateQuickFixInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("update quickfix innerbundleInfo failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+    // send quick fix data
+    SendQuickFixSystemEvent(innerBundleInfo);
     return ERR_OK;
 }
 
@@ -691,6 +715,20 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
         }
     }
     return ERR_OK;
+}
+
+void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo)
+{
+    EventInfo sysEventInfo;
+    sysEventInfo.errCode = ERR_OK;
+    sysEventInfo.bundleName = innerBundleInfo.GetBundleName();
+    sysEventInfo.appDistributionType = appDistributionType_;
+    for (const auto &hqfInfo : innerBundleInfo.GetAppQuickFix().deployingAppqfInfo.hqfInfos) {
+        sysEventInfo.filePath.push_back(hqfInfo.hqfFilePath);
+        sysEventInfo.hashValue.push_back(hqfInfo.hapSha256);
+    }
+    sysEventInfo.applyQuickFixFrequency = innerBundleInfo.GetApplyQuickFixFrequency();
+    EventReport::SendBundleSystemEvent(BundleEventType::QUICK_FIX, sysEventInfo);
 }
 } // AppExecFwk
 } // OHOS

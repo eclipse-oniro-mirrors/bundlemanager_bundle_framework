@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -132,7 +132,7 @@ int32_t InnerAppQuickFix::FromJson(const nlohmann::json &jsonObject)
         quickFixMark_,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerAppQuickFix from database error, error code : %{public}d", parseResult);

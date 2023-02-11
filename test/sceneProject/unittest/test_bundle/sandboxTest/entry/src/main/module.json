@@ -173,7 +173,6 @@
         "name": "entry_phone",
         "pages": "@profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
-        "type": "entry",
-        "uiSyntax": "ets"
+        "type": "entry"
     }
 }

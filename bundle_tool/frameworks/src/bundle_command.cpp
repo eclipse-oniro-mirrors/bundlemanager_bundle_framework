@@ -29,6 +29,8 @@
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_proxy.h"
 #include "clean_cache_callback_host.h"
+#include "json_serializer.h"
+#include "nlohmann/json.hpp"
 #include "parameter.h"
 #include "quick_fix_command.h"
 #include "status_receiver_impl.h"
@@ -38,12 +40,16 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_NAME_EMPTY = "";
+const std::string OVERLAY_MODULE_INFOS = "overlayModuleInfos";
+const std::string OVERLAY_BUNDLE_INFOS = "overlayBundleInfos";
+const std::string OVERLAY_MODULE_INFO = "overlayModuleInfo";
 const int32_t INDEX_OFFSET = 2;
 const int32_t MAX_WAITING_TIME = 3000;
 const int32_t DEVICE_UDID_LENGTH = 65;
 const int32_t MAX_ARGUEMENTS_NUMBER = 3;
-const int32_t MINIMUM_WAITTING_TIME = 5;
-const int32_t MAXIMUM_WAITTING_TIME = 600;
+const int32_t MAX_OVERLAY_ARGUEMENTS_NUMBER = 8;
+const int32_t MINIMUM_WAITTING_TIME = 180; // 3 mins
+const int32_t MAXIMUM_WAITTING_TIME = 600; // 10 mins
 
 const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:";
 const struct option LONG_OPTIONS[] = {
@@ -86,6 +92,25 @@ const struct option LONG_OPTIONS_DUMP_DEPENDENCIES[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-name", required_argument, nullptr, 'n'},
     {"module-name", required_argument, nullptr, 'm'},
+    {nullptr, 0, nullptr, 0},
+};
+
+const std::string SHORT_OPTIONS_OVERLAY = "hb:m:t:u:";
+const struct option LONG_OPTIONS_OVERLAY[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"bundle-name", required_argument, nullptr, 'b'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {"target-module-name", required_argument, nullptr, 't'},
+    {"user-id", required_argument, nullptr, 'u'},
+    {nullptr, 0, nullptr, 0},
+};
+
+const std::string SHORT_OPTIONS_OVERLAY_TARGET = "hb:m:u:";
+const struct option LONG_OPTIONS_OVERLAY_TARGET[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"bundle-name", required_argument, nullptr, 'b'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {"user-id", required_argument, nullptr, 'u'},
     {nullptr, 0, nullptr, 0},
 };
 }  // namespace
@@ -139,6 +164,8 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"disable", std::bind(&BundleManagerShellCommand::RunAsDisableCommand, this)},
         {"get", std::bind(&BundleManagerShellCommand::RunAsGetCommand, this)},
         {"quickfix", std::bind(&BundleManagerShellCommand::RunAsQuickFixCommand, this)},
+        {"dump-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpOverlay, this)},
+        {"dump-target-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpTargetOverlay, this)},
     };
 
     return OHOS::ERR_OK;
@@ -1300,6 +1327,271 @@ ErrCode BundleManagerShellCommand::RunAsQuickFixCommand()
     return ERR_INVALID_VALUE;
 }
 
+ErrCode BundleManagerShellCommand::RunAsDumpOverlay()
+{
+    int result = OHOS::ERR_OK;
+    int counter = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName = "";
+    std::string moduleName = "";
+    std::string targetModuleName = "";
+    while (true) {
+        counter++;
+        if (argc_ > MAX_OVERLAY_ARGUEMENTS_NUMBER) {
+            resultReceiver_.append(HELP_MSG_OVERLAY);
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY.c_str(), LONG_OPTIONS_OVERLAY,
+            nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if (counter == 1) {
+                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                    // 1.'bm dump-overlay' with no option: bm dump-overlay
+                    // 2.'bm dump-overlay' with a wrong argument: bm dump-overlay -xxx
+                    APP_LOGD("'bm dump-overlay' %{public}s", HELP_MSG_NO_OPTION.c_str());
+                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                    result = OHOS::ERR_INVALID_VALUE;
+                }
+            }
+            break;
+        }
+        if (option == '?') {
+            switch (optopt) {
+                case 'b': {
+                    // 'bm dump-overlay -b' with no argument
+                    // 'bm dump-overlay --bundle-name' with no argument
+                    APP_LOGD("'bm dump-overlay -b' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 'm': {
+                    // 'bm dump-overlay -m' with no argument: bm enable -m
+                    // 'bm dump-overlay --bundle-name' with no argument: bm dump-overlay --bundle-name
+                    APP_LOGD("'bm dump-overlay -m' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 't': {
+                    // 'bm dump-overlay -t' with no argument
+                    // 'bm dump-overlay --target-module-name' with no argument
+                    APP_LOGD("'bm dump-overlay -t' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 'u': {
+                    // 'bm dump-overlay -u' with no argument: bm dump-overlay -u
+                    // 'bm dump-overlay --user-id' with no argument: bm dump-overlay --user-id
+                    APP_LOGD("'bm dump-overlay -u' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                default: {
+                    // 'bm dump-overlay' with an unknown option
+                    // 'bm dump-overlay' with an unknown option
+                    std::string unknownOption = "";
+                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                    APP_LOGD("'bm dump-overlay' with an unknown option.");
+                    resultReceiver_.append(unknownOptionMsg);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+            }
+            break;
+        }
+
+        switch (option) {
+            case 'h': {
+                // 'bm dump-overlay -h'
+                // 'bm dump-overlay --help'
+                APP_LOGD("'bm dump-overlay %{public}s'", argv_[optind - 1]);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            case 'b': {
+                // 'bm dump-overlay -b <bundle-name>'
+                // 'bm dump-overlay --bundle-name <bundle-name>'
+                bundleName = optarg;
+                break;
+            }
+            case 'm': {
+                // 'bm dump-overlay -m <module-name>'
+                // 'bm dump-overlay --module-name <module-name>'
+                moduleName = optarg;
+                break;
+            }
+            case 't': {
+                // 'bm dump-overlay -t <target-module-name>'
+                // 'bm dump-overlay --target-module-name <target-module-name>'
+                targetModuleName = optarg;
+                break;
+            }
+            case 'u': {
+                APP_LOGD("'bm dump-overlay %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (!OHOS::StrToInt(optarg, userId) || userId < 0) {
+                    APP_LOGE("bm dump-overlay with error userId %{private}s", optarg);
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                break;
+            }
+            default: {
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    }
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_OVERLAY);
+        return result;
+    }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    auto res = DumpOverlayInfo(bundleName, moduleName, targetModuleName, userId);
+    if (res.empty()) {
+        resultReceiver_.append(STRING_DUMP_OVERLAY_NG + "\n");
+    } else {
+        resultReceiver_.append(STRING_DUMP_OVERLAY_OK + "\n");
+        resultReceiver_.append(res + "\n");
+    }
+#else
+    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+#endif
+    return result;
+}
+
+ErrCode BundleManagerShellCommand::RunAsDumpTargetOverlay()
+{
+    int result = OHOS::ERR_OK;
+    int counter = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName = "";
+    std::string moduleName = "";
+    while (true) {
+        counter++;
+        if (argc_ > MAX_OVERLAY_ARGUEMENTS_NUMBER) {
+            resultReceiver_.append(HELP_MSG_OVERLAY_TARGET);
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_OVERLAY_TARGET.c_str(), LONG_OPTIONS_OVERLAY_TARGET,
+            nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if (counter == 1) {
+                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                    // 1.'bm dump-target-overlay' with no option: bm dump-target-overlay
+                    // 2.'bm dump-target-overlay' with a wrong argument: bm dump-target-overlay -xxx
+                    APP_LOGD("'bm dump-target-overlay' %{public}s", HELP_MSG_NO_OPTION.c_str());
+                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                    result = OHOS::ERR_INVALID_VALUE;
+                }
+            }
+            break;
+        }
+        if (option == '?') {
+            switch (optopt) {
+                case 'b': {
+                    // 'bm dump-target-overlay -b' with no argument
+                    // 'bm dump-target-overlay --bundle-name' with no argument
+                    APP_LOGD("'bm dump-target-overlay -b' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 'm': {
+                    // 'bm dump-target-overlay -m' with no argument: bm enable -m
+                    // 'bm dump-target-overlay --bundle-name' with no argument: bm dump-target-overlay --bundle-name
+                    APP_LOGD("'bm dump-target-overlay -m' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                case 'u': {
+                    // 'bm dump-target-overlay -u' with no argument: bm dump-target-overlay -u
+                    // 'bm dump-target-overlay --user-id' with no argument: bm  dump-target-overlay --user-id
+                    APP_LOGD("'bm dump-target-overlay -u' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+                default: {
+                    // 'bm dump-target-overlay' with an unknown option
+                    // 'bm dump-target-overlay' with an unknown option
+                    std::string unknownOption = "";
+                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                    APP_LOGD("'bm dump-target-overlay' with an unknown option.");
+                    resultReceiver_.append(unknownOptionMsg);
+                    result = OHOS::ERR_INVALID_VALUE;
+                    break;
+                }
+            }
+            break;
+        }
+
+        switch (option) {
+            case 'h': {
+                // 'bm dump-target-overlay -h'
+                // 'bm dump-target-overlay --help'
+                APP_LOGD("'bm dump-target-overlay %{public}s'", argv_[optind - 1]);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            case 'b': {
+                // 'bm dump-target-overlay -b <bundle-name>'
+                // 'bm dump-target-overlay --bundle-name <bundle-name>'
+                bundleName = optarg;
+                break;
+            }
+            case 'm': {
+                // 'bm dump-target-overlay -m <module-name>'
+                // 'bm dump-target-overlay --module-name <module-name>'
+                moduleName = optarg;
+                break;
+            }
+            case 'u': {
+                APP_LOGD("'bm dump-target-overlay %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT],
+                    optarg);
+                if (!OHOS::StrToInt(optarg, userId) || userId < 0) {
+                    APP_LOGE("bm dump-target-overlay with error userId %{private}s", optarg);
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                break;
+            }
+            default: {
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    }
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_OVERLAY_TARGET);
+        return result;
+    }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    auto res = DumpTargetOverlayInfo(bundleName, moduleName, userId);
+    if (res.empty()) {
+        resultReceiver_.append(STRING_DUMP_TARGET_OVERLAY_NG + "\n");
+    } else {
+        resultReceiver_.append(STRING_DUMP_TARGET_OVERLAY_OK + "\n");
+        resultReceiver_.append(res + "\n");
+    }
+#else
+    resultReceiver_.append(MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+#endif
+    return result;
+}
+
+
 std::string BundleManagerShellCommand::GetUdid() const
 {
     char innerUdid[DEVICE_UDID_LENGTH] = { 0 };
@@ -1526,6 +1818,83 @@ bool BundleManagerShellCommand::SetApplicationEnabledOperation(const AbilityInfo
         return false;
     }
     return true;
+}
+
+std::string BundleManagerShellCommand::DumpOverlayInfo(const std::string &bundleName, const std::string &moduleName,
+    const std::string &targetModuleName, int32_t userId)
+{
+    std::string res = "";
+    if ((bundleName.empty()) || (!moduleName.empty() && !targetModuleName.empty())) {
+        APP_LOGE("error value of the dump-overlay command options");
+        return res;
+    }
+
+    auto overlayManagerProxy = bundleMgrProxy_->GetOverlayManagerProxy();
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is null");
+        return res;
+    }
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    OverlayModuleInfo overlayModuleInfo;
+    ErrCode ret = ERR_OK;
+    userId = BundleCommandCommon::GetCurrentUserId(userId);
+    if (moduleName.empty() && targetModuleName.empty()) {
+        ret = overlayManagerProxy->GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+    } else if (!moduleName.empty()) {
+        ret = overlayManagerProxy->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
+    } else {
+        ret = overlayManagerProxy->GetOverlayModuleInfoForTarget(bundleName, targetModuleName, overlayModuleInfos,
+            userId);
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("dump-overlay failed due to errcode %{public}d", ret);
+        return res;
+    }
+
+    nlohmann::json overlayInfoJson;
+    if (!overlayModuleInfos.empty()) {
+        overlayInfoJson = nlohmann::json {{OVERLAY_MODULE_INFOS, overlayModuleInfos}};
+    } else {
+        overlayInfoJson = nlohmann::json {{OVERLAY_MODULE_INFO, overlayModuleInfo}};
+    }
+    return overlayInfoJson.dump(Constants::DUMP_INDENT);
+}
+
+std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &bundleName,
+    const std::string &moduleName, int32_t userId)
+{
+    std::string res = "";
+    if (bundleName.empty()) {
+        APP_LOGE("error value of the dump-target-overlay command options");
+        return res;
+    }
+    auto overlayManagerProxy = bundleMgrProxy_->GetOverlayManagerProxy();
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is null");
+        return res;
+    }
+
+    std::vector<OverlayBundleInfo> overlayBundleInfos;
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    userId = BundleCommandCommon::GetCurrentUserId(userId);
+    ErrCode ret = ERR_OK;
+    nlohmann::json overlayInfoJson;
+    if (moduleName.empty()) {
+        ret = overlayManagerProxy->GetOverlayBundleInfoForTarget(bundleName, overlayBundleInfos, userId);
+        if (ret != ERR_OK || overlayBundleInfos.empty()) {
+            APP_LOGE("dump-target-overlay failed due to errcode %{public}d", ret);
+            return res;
+        }
+        overlayInfoJson = nlohmann::json {{OVERLAY_BUNDLE_INFOS, overlayBundleInfos}};
+    } else {
+        ret = overlayManagerProxy->GetOverlayModuleInfoForTarget(bundleName, moduleName, overlayModuleInfos, userId);
+        if (ret != ERR_OK || overlayModuleInfos.empty()) {
+            APP_LOGE("dump-target-overlay failed due to errcode %{public}d", ret);
+            return res;
+        }
+        overlayInfoJson = nlohmann::json {{OVERLAY_MODULE_INFOS, overlayModuleInfos}};
+    }
+    return overlayInfoJson.dump(Constants::DUMP_INDENT);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

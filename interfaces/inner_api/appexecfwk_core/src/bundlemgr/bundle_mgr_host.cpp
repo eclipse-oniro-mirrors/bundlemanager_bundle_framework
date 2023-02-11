@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -117,12 +117,7 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9);
     funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
-    funcMap_.emplace(IBundleMgr::Message::CHECK_PUBLICKEYS, &BundleMgrHost::HandleCheckPublicKeys);
     funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetPermissionDef);
-    funcMap_.emplace(IBundleMgr::Message::HAS_SYSTEM_CAPABILITY, &BundleMgrHost::HandleHasSystemCapability);
-    funcMap_.emplace(IBundleMgr::Message::GET_SYSTEM_AVAILABLE_CAPABILITIES,
-        &BundleMgrHost::HandleGetSystemAvailableCapabilities);
-    funcMap_.emplace(IBundleMgr::Message::IS_SAFE_MODE, &BundleMgrHost::HandleIsSafeMode);
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, &BundleMgrHost::HandleCleanBundleCacheFiles);
     funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, &BundleMgrHost::HandleCleanBundleDataFiles);
     funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK,
@@ -162,8 +157,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_BY_TYPE,
         &BundleMgrHost::HandleQueryExtAbilityInfosByType);
     funcMap_.emplace(IBundleMgr::Message::VERIFY_CALLING_PERMISSION, &BundleMgrHost::HandleVerifyCallingPermission);
-    funcMap_.emplace(IBundleMgr::Message::GET_ACCESSIBLE_APP_CODE_PATH,
-        &BundleMgrHost::HandleGetAccessibleAppCodePaths);
     funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_ABILITY_INFO_BY_URI,
         &BundleMgrHost::HandleQueryExtensionAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::GET_APPID_BY_BUNDLE_NAME, &BundleMgrHost::HandleGetAppIdByBundleName);
@@ -208,6 +201,8 @@ void BundleMgrHost::init()
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
+    funcMap_.emplace(IBundleMgr::Message::VERIFY_SYSTEM_API, &BundleMgrHost::HandleVerifySystemApi);
+    funcMap_.emplace(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, &BundleMgrHost::HandleGetOverlayManagerProxy);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -237,7 +232,7 @@ ErrCode BundleMgrHost::HandleGetApplicationInfo(MessageParcel &data, MessageParc
     std::string name = data.ReadString();
     ApplicationFlag flag = static_cast<ApplicationFlag>(data.ReadInt32());
     int userId = data.ReadInt32();
-    APP_LOGI("name %{public}s, flag %{public}d, userId %{public}d", name.c_str(), flag, userId);
+    APP_LOGD("name %{public}s, flag %{public}d, userId %{public}d", name.c_str(), flag, userId);
 
     ApplicationInfo info;
     bool ret = GetApplicationInfo(name, flag, userId, info);
@@ -1088,22 +1083,6 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleCheckPublicKeys(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string firstBundleName = data.ReadString();
-    std::string secondBundleName = data.ReadString();
-
-    APP_LOGI(
-        "firstBundleName %{public}s, secondBundleName %{public}s", firstBundleName.c_str(), secondBundleName.c_str());
-    int ret = CheckPublicKeys(firstBundleName, secondBundleName);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1121,48 +1100,6 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleHasSystemCapability(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string capName = data.ReadString();
-
-    bool ret = HasSystemCapability(capName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetSystemAvailableCapabilities(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::vector<std::string> caps;
-    bool ret = GetSystemAvailableCapabilities(caps);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret) {
-        if (!reply.WriteStringVector(caps)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleIsSafeMode(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    bool ret = IsSafeMode();
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }
@@ -1740,22 +1677,6 @@ ErrCode BundleMgrHost::HandleVerifyCallingPermission(MessageParcel &data, Messag
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetAccessibleAppCodePaths(MessageParcel &data, MessageParcel &reply)
-{
-    int32_t userId = data.ReadInt32();
-    std::vector<std::string> vec = GetAccessibleAppCodePaths(userId);
-    bool ret = vec.empty() ? false : true;
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write result failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (ret && !reply.WriteStringVector(vec)) {
-        APP_LOGE("write code paths failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
 ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2228,6 +2149,18 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t beginApiVersion = data.ReadInt32();
+
+    bool ret = VerifySystemApi(beginApiVersion);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 bool BundleMgrHost::WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
@@ -2399,6 +2332,22 @@ ErrCode BundleMgrHost::HandleSetDebugMode(MessageParcel &data, MessageParcel &re
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IOverlayManager> overlayManagerProxy = GetOverlayManagerProxy();
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(overlayManagerProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

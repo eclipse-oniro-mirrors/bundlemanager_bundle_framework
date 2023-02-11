@@ -1997,32 +1997,6 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
 }
 
 /**
- * @tc.number: GetAccessibleAppCodePaths001
- * @tc.name: GetAccessibleAppCodePaths
- * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
- *           2.Install application
- */
-HWTEST_F(BundleMgrClientSystemTest, GetAccessibleAppCodePaths001, TestSize.Level1)
-{
-    auto name = std::string("GetAccessibleAppCodePaths001");
-    GTEST_LOG_(INFO) << name << " start";
-    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    BundleMgrClient bundleMgrClient;
-    std::vector<std::string> ret = bundleMgrClient.GetAccessibleAppCodePaths(DEFAULT_USERID);
-    EXPECT_EQ(ret.empty(), true);
-
-    std::string uninstallMsg;
-    UninstallBundle(BUNDLE_NAME, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-
-    GTEST_LOG_(INFO) << name << " end";
-}
-
-/**
  * @tc.number: CreateNewUser_001
  * @tc.name: CreateNewUser
  * @tc.desc: 1.Test CreateNewUser and then remove it
@@ -2048,7 +2022,7 @@ HWTEST_F(BundleMgrClientSystemTest, CreateNewUser_001, Function | SmallTest | Le
 
 /**
  * @tc.number: BundleMgrClientImpl_001
- * @tc.name: GetAccessibleAppCodePaths
+ * @tc.name: TransformFileToJsonString
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
  *           2.Install application
  */
@@ -2064,7 +2038,7 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_001, TestSize.Level1)
 
 /**
  * @tc.number: BundleMgrClientImpl_002
- * @tc.name: GetAccessibleAppCodePaths
+ * @tc.name: IsFileExisted
  * @tc.desc: 1.Test the interface of GetSandboxAbilityInfo
  *           2.Install application
  */
@@ -2282,9 +2256,6 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     AbilityInfo abilityInfo;
     res = client.GetResConfigFile(abilityInfo, metadataName, profileInfos);
     EXPECT_FALSE(res);
-
-    auto res2 = client.GetAccessibleAppCodePaths(DEFAULT_USERID);
-    EXPECT_EQ(res2.size(), 0);
 
     res = client.GetProfileFromExtension(extensionInfo, metadataName, profileInfos);
     EXPECT_FALSE(res);

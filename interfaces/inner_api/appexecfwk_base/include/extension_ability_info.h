@@ -18,8 +18,8 @@
 
 #include <string>
 
-#include "parcel.h"
 #include "application_info.h"
+#include "parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -56,6 +56,11 @@ enum class ExtensionAbilityType {
     UNSPECIFIED = 255
 };
 
+enum class CompileMode {
+    JS_BUNDLE = 0,
+    ES_MODULE,
+};
+
 struct ExtensionAbilityInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
@@ -81,6 +86,7 @@ struct ExtensionAbilityInfo : public Parcelable {
     std::string hapPath;
     bool enabled = true;
     std::string process;
+    CompileMode compileMode = CompileMode::JS_BUNDLE;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

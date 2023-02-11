@@ -138,29 +138,12 @@ namespace {
         }
     }
 
-    /**
-     * @tc.name: BenchmarkTestForGetAccessibleAppCodePaths
-     * @tc.desc: Testcase for testing 'GetAccessibleAppCodePaths' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForGetAccessibleAppCodePaths(benchmark::State &state)
-    {
-        BundleMgrClient client;
-        int32_t userId = 100;
-        for (auto _ : state) {
-            /* @tc.steps: step1.call GetAccessibleAppCodePaths in loop */
-            client.GetAccessibleAppCodePaths(userId);
-        }
-    }
-
     BENCHMARK(BenchmarkTestForGetBundleNameForUid)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetBundleInfo)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetHapModuleInfo)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetResConfigFile1)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetResConfigFile2)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetResConfigFile3)->Iterations(1000);
-    BENCHMARK(BenchmarkTestForGetAccessibleAppCodePaths)->Iterations(1000);
 }
 
 BENCHMARK_MAIN();

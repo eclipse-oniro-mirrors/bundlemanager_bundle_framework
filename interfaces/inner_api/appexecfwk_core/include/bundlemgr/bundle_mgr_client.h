@@ -76,8 +76,6 @@ public:
     bool GetResConfigFile(const AbilityInfo &abilityInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
 
-    std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId);
-
     bool GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo, const std::string &metadataName,
         std::vector<std::string> &profileInfos) const;
     bool GetProfileFromAbility(const AbilityInfo &abilityInfo, const std::string &metadataName,

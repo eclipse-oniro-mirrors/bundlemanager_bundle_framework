@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -333,40 +333,12 @@ private:
      */
     ErrCode HandleGetLaunchWantForBundle(MessageParcel &data, MessageParcel &reply);
     /**
-     * @brief Handles the CheckPublicKeys function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleCheckPublicKeys(MessageParcel &data, MessageParcel &reply);
-    /**
      * @brief Handles the GetPermissionDef function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleGetPermissionDef(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the HasSystemCapability function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleHasSystemCapability(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the GetSystemAvailableCapabilities function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleGetSystemAvailableCapabilities(MessageParcel &data, MessageParcel &reply);
-    /**
-     * @brief Handles the IsSafeMode function called from a IBundleMgr proxy object.
-     * @param data Indicates the data to be read.
-     * @param reply Indicates the reply to be sent;
-     * @return Returns ERR_OK if called successfully; returns error code otherwise.
-     */
-    ErrCode HandleIsSafeMode(MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Handles the CleanBundleCacheFiles function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
@@ -544,8 +516,6 @@ private:
 
     ErrCode HandleVerifyCallingPermission(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAccessibleAppCodePaths(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleQueryExtensionAbilityInfoByUri(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAppIdByBundleName(MessageParcel &data, MessageParcel &reply);
@@ -630,6 +600,10 @@ private:
     ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetOverlayManagerProxy(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

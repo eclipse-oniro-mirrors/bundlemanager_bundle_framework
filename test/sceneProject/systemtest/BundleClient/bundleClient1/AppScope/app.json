@@ -5,7 +5,6 @@
       "apiCompatibleVersion": 8,
       "singleUser": false
     },
-    "distributedNotificationEnabled": true,
     "icon": "$media:app_icon",
     "iconId": 16777217,
     "label": "$string:app_name",

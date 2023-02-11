@@ -1618,20 +1618,6 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0025, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: bundleInfosFalse_0026
- * @tc.name: test GetAccessibleAppCodePaths
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0026, Function | SmallTest | Level1)
-{
-    GetBundleDataMgr()->bundleInfos_.clear();
-    std::vector<std::string> testRet = GetBundleDataMgr()->GetAccessibleAppCodePaths(
-        USERID);
-    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
-}
-
-/**
  * @tc.number: bundleInfosFalse_0027
  * @tc.name: test QueryExtensionAbilityInfoByUri
  * @tc.desc: 1.system run normally
@@ -2389,7 +2375,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1700, Function | MediumTest | L
     ExtensionAbilityInfo extensionAbilityInfo;
 
     ClearDataMgr();
-    hostImpl->GetAccessibleAppCodePaths(USERID);
     std::string retString = hostImpl->GetAppPrivilegeLevel("", USERID);
     EXPECT_EQ(retString, Constants::EMPTY_STRING);
 
@@ -2488,9 +2473,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     retCode = hostImpl->GetMediaData(
         "", "", "", mediaDataPtr, len, USERID);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-
-    int res1 = hostImpl->CheckPublicKeys("", "");
-    EXPECT_EQ(res1, false);
 
     retCode = hostImpl->SetApplicationEnabled("", isEnabled, USERID);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_SERVICE_NOT_READY);
@@ -2841,33 +2823,6 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0005, Function | SmallTest | Leve
     EXPECT_EQ(info.appIndex, 0);
     GetBundleDataMgr()->DeleteSandboxPersistentInfo("", info);
     EXPECT_EQ(info.appIndex, 0);
-}
-
-/**
- * @tc.number: TestMgrByUserId_0006
- * @tc.name: test CheckPublicKeys
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0006, Function | SmallTest | Level1)
-{
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
-    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
-    EXPECT_EQ(installResult, ERR_OK);
-    std::string bundlePath1 = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
-    ErrCode installResult1 = InstallThirdPartyBundle(bundlePath1);
-    EXPECT_EQ(installResult1, ERR_OK);
-
-    int res = GetBundleDataMgr()->CheckPublicKeys("", "secondBundleName");
-    int res1 = GetBundleDataMgr()->CheckPublicKeys("firstBundleName", "");
-    int res2 = GetBundleDataMgr()->CheckPublicKeys("", "");
-    int res3 = GetBundleDataMgr()->CheckPublicKeys(BUNDLE_BACKUP_NAME, BUNDLE_PREVIEW_NAME);
-    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
-    EXPECT_EQ(res1, Constants::SIGNATURE_UNKNOWN_BUNDLE);
-    EXPECT_EQ(res2, Constants::SIGNATURE_UNKNOWN_BUNDLE);
-    EXPECT_EQ(res3, 0);
-
-    UnInstallBundle(BUNDLE_BACKUP_NAME);
-    UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 
 /**
@@ -4051,9 +4006,6 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0100, Function | SmallTest | L
     ret = dataMgr->GetAppFeature(BUNDLE_NAME, appFeature);
     EXPECT_EQ(ret, false);
 
-    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_NAME);
-    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
-
     ret = dataMgr->UpdateQuickFixInnerBundleInfo(BUNDLE_NAME, info);
     EXPECT_EQ(ret, false);
 
@@ -4086,9 +4038,6 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0200, Function | SmallTest | L
     dataMgr->bundleInfos_.clear();
     ret = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info);
     EXPECT_EQ(ret, false);
-
-    int res = dataMgr->CheckPublicKeys(BUNDLE_NAME, BUNDLE_BACKUP_NAME);
-    EXPECT_EQ(res, Constants::SIGNATURE_UNKNOWN_BUNDLE);
 }
 
 /**

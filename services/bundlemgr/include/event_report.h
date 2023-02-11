@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_EVENT_REPORT_H
 
 #include <string>
+#include <vector>
 
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
@@ -41,7 +42,8 @@ enum class BMSEventType {
     PRE_BUNDLE_RECOVER,
     BUNDLE_STATE_CHANGE,
     BUNDLE_CLEAN_CACHE,
-    BMS_USER_EVENT
+    BMS_USER_EVENT,
+    APPLY_QUICK_FIX
 };
 
 enum class BundleEventType {
@@ -50,6 +52,7 @@ enum class BundleEventType {
     UNINSTALL,
     UPDATE,
     RECOVER,
+    QUICK_FIX
 };
 
 enum class InstallScene {
@@ -83,24 +86,38 @@ struct EventInfo {
     int64_t timeStamp = 0;
     uint32_t versionCode = 0;
 
-    // olny used for preBundle
+    // for install and uninstall
+    int32_t callingUid = 0;
+    std::string callingAppId;
+    std::string callingBundleName;
+    std::vector<std::string> filePath;
+    std::vector<std::string> hashValue;
+    // only for install
+    std::string fingerprint;
+    bool hideDesktopIcon = false;
+    std::string appDistributionType;
+
+    // only used for preBundle
     bool isPreInstallApp = false;
     InstallScene preBundleScene = InstallScene::NORMAL;
 
-    // olny used for clean cache
+    // only used for clean cache
     bool isCleanCache = true;
 
-    // olny used for component diable or enable
+    // only used for component disable or enable
     bool isEnable = false;
 
-    // olny used for free install
+    // only used for free install
     bool isFreeInstallMode = false;
 
-    // olny used in fault event
+    // only used in fault event
     ErrCode errCode = ERR_OK;
 
-    // olny used in user event
+    // only used in user event
     UserEventType userEventType = UserEventType::UNKNOW;
+
+    // for quick fix
+    int32_t applyQuickFixFrequency = 0;
 
     void Reset()
     {
@@ -117,6 +134,15 @@ struct EventInfo {
         isEnable = false;
         errCode = ERR_OK;
         userEventType = UserEventType::UNKNOW;
+        callingUid = 0;
+        callingAppId.clear();
+        callingBundleName.clear();
+        filePath.clear();
+        hashValue.clear();
+        fingerprint.clear();
+        hideDesktopIcon = false;
+        appDistributionType.clear();
+        applyQuickFixFrequency = 0;
     }
 };
 

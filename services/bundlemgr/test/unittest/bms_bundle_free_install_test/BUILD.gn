@@ -312,7 +312,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
 
 group("unittest") {
   testonly = true
-  if (bundle_framework_free_install) {
+  if (bundle_framework_free_install && bundle_framework_graphics) {
     deps = [
       ":BmsBundleFreeInstallBaseTest",
       ":BmsBundleFreeInstallTest",

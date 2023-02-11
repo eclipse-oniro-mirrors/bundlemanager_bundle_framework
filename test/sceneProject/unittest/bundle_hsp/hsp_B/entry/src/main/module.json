@@ -41,7 +41,6 @@
         "pages": "$profile:main_pages",
         "srcEntrance": "./ets/Application/AbilityStage.ts",
         "type": "shared",
-        "uiSyntax": "ets",
         "virtualMachine": "ark"
     }
 }
