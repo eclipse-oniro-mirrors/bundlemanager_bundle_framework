@@ -52,7 +52,6 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -63,11 +62,6 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits/include" ]
-    deps += [ "../../../../../../../multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
 
   deps += bundle_install_deps
 
@@ -85,7 +79,9 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
   defines = []
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
@@ -129,7 +125,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   }
 
   if (bms_rdb_enable) {
-    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+    configs += [ "${services_path}/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
     external_deps += [ "relational_store:native_rdb" ]
     sources += [

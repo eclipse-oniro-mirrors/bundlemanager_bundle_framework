@@ -804,7 +804,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "${notification_path}/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -812,10 +811,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
 
   deps = []
-  if (bundle_framework_graphics) {
-    include_dirs += [ "${multimedia_path}/interfaces/innerkits/include" ]
-    deps += [ "${multimedia_path}/interfaces/innerkits:image_native" ]
-  }
 
   deps += bundle_install_deps
 
@@ -830,7 +825,9 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
