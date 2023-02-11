@@ -33,6 +33,7 @@ namespace {
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_NAME = "entry";
 const int32_t WAIT_TIME = 5;
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class BmsSystemBundleInstallerTest : public testing::Test {
@@ -106,7 +107,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0100, Function | Sm
  */
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0200, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName);
     EXPECT_EQ(result, false);
 }
@@ -131,7 +132,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0300, Function | Sm
  */
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0400, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool isKeepData = true;
     bool result = UninstallSystemBundle(bundleName, isKeepData);
     EXPECT_EQ(result, false);
@@ -157,7 +158,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0500, Function | Sm
  */
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0600, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool isKeepData = false;
     bool result = UninstallSystemBundle(bundleName, isKeepData);
     EXPECT_EQ(result, false);
@@ -183,7 +184,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0700, Function | Sm
  */
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0800, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     std::string modulePackage = MODULE_NAME;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, false);
@@ -196,8 +197,8 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0800, Function | Sm
  */
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0900, Function | SmallTest | Level0)
 {
-    std::string bundleName = "";
-    std::string modulePackage = "";
+    std::string bundleName = EMPTY_STRING;
+    std::string modulePackage = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, false);
 }
@@ -210,7 +211,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_0900, Function | Sm
 HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1000, Function | SmallTest | Level0)
 {
     std::string bundleName = BUNDLE_NAME;
-    std::string modulePackage = "";
+    std::string modulePackage = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, false);
 }
@@ -243,7 +244,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1200, Function | Sm
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName);
     EXPECT_EQ(result, true);
 }
@@ -276,7 +277,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1400, Function | Sm
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool isKeepData = true;
     bool result = UninstallSystemBundle(bundleName, isKeepData);
     EXPECT_EQ(result, true);
@@ -310,7 +311,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1600, Function | Sm
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     bool isKeepData = false;
     bool result = UninstallSystemBundle(bundleName, isKeepData);
     EXPECT_EQ(result, true);
@@ -344,7 +345,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1800, Function | Sm
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    std::string bundleName = "";
+    std::string bundleName = EMPTY_STRING;
     std::string modulePackage = MODULE_NAME;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, true);
@@ -361,8 +362,8 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_1900, Function | Sm
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
-    std::string bundleName = "";
-    std::string modulePackage = "";
+    std::string bundleName = EMPTY_STRING;
+    std::string modulePackage = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, true);
 }
@@ -379,7 +380,7 @@ HWTEST_F(BmsSystemBundleInstallerTest, UninstallSystemBundle_2000, Function | Sm
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
     std::string bundleName = BUNDLE_NAME;
-    std::string modulePackage = "";
+    std::string modulePackage = EMPTY_STRING;
     bool result = UninstallSystemBundle(bundleName, modulePackage);
     EXPECT_EQ(result, true);
 }

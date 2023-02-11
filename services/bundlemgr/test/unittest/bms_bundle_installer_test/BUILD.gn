@@ -769,7 +769,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   module_out_path = module_output_path
   include_dirs = [
     "//third_party/jsoncpp/include",
-    "../../mock/include/parameter",
+    "${services_path}/bundlemgr/test/mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = [
@@ -804,7 +804,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
+    "${notification_path}/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -814,9 +814,9 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   deps = []
   if (bundle_framework_graphics) {
     include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
+      "${multimedia_path}/interfaces/innerkits/include",
     ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
+    deps += [ "${multimedia_path}/interfaces/innerkits:image_native" ]
   }
 
   deps += bundle_install_deps
@@ -882,7 +882,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
 
   if (bms_rdb_enable) {
-    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+    configs += [ "${services_path}/bundlemgr:rdb_config" ]
     defines += [ "BMS_RDB_ENABLE" ]
     external_deps += [ "relational_store:native_rdb" ]
     sources += [

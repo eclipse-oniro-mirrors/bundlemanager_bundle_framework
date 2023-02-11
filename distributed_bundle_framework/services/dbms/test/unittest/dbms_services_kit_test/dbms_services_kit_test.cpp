@@ -50,6 +50,8 @@ const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string PATH_LOCATION = "/data/app/el1/bundle/public/com.ohos.launcher";
 const std::string PATH_LOCATIONS = "/data/app/el1/bundle/public/com.ohos.nweb/libs/arm/libnweb_adapter.so";
+const std::string DEVICE_ID_NORMAL = "deviceId";
+const std::string LOCALE_INFO = "localeInfo";
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
@@ -1000,7 +1002,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0052, Function | SmallTest | L
     if (distributedBms != nullptr) {
         OHOS::AppExecFwk::ElementName elementName;
         elementName.SetDeviceID("");
-        std::string localeInfo = "localeInfo";
+        std::string localeInfo = LOCALE_INFO;
         RemoteAbilityInfo remoteAbilityInfo;
         auto ret = distributedBms->GetRemoteAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
@@ -1375,9 +1377,9 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0072, Function | SmallTest | L
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         OHOS::AppExecFwk::ElementName elementName;
-        std::string deviceId = "deviceId";
+        std::string deviceId = DEVICE_ID_NORMAL;
         elementName.SetDeviceID(deviceId);
-        std::string localeInfo = "localeInfo";
+        std::string localeInfo = LOCALE_INFO;
         RemoteAbilityInfo remoteAbilityInfo;
         auto ret = distributedBms->GetRemoteAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
