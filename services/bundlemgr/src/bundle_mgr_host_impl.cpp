@@ -422,6 +422,17 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
     return connectAbilityMgr->QueryAbilityInfo(want, flags, userId, abilityInfo, callBack);
 }
 
+bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    APP_LOGD("SilentInstall in");
+    auto connectMgr = GetConnectAbilityMgrFromService();
+    if (connectMgr == nullptr) {
+        APP_LOGE("connectMgr is nullptr");
+        return false;
+    }
+    return connectMgr->SilentInstall(want, userId, callBack);
+}
+
 void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 {
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();

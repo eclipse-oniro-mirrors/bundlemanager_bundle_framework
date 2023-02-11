@@ -49,6 +49,14 @@ public:
     bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack);
     /**
+     * @brief Silent install by the given Want.
+     * @param want Indicates the information of the want.
+     * @param userId Indicates the user ID.
+     * @param callBack Indicates the callback to be invoked for return the operation result.
+     * @return Returns true if silent install successfully; returns false otherwise.
+     */
+    bool SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack);
+    /**
      * @brief Upgrade atomic service status
      * @param want Query the AbilityInfo by the given Want.
      * @param userId Indicates the user ID.

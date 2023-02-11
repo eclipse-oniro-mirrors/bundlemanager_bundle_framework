@@ -377,6 +377,10 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info for self");
 
+    //for test
+    // Want want;
+    // SilentInstall(want, 100, nullptr);
+
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
@@ -879,6 +883,35 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
         return false;
     }
     return true;
+}
+
+bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to silent install");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel");
+        return false;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to QueryAbilityInfo due to write want");
+        return false;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryAbilityInfo due to write userId");
+        return false;
+    }
+
+    if (!data.WriteObject(callBack)) {
+        APP_LOGE("fail to callBack, for write parcel");
+        return false;
+    }
+
+    MessageParcel reply;
+    return SendTransactCmd(IBundleMgr::Message::SILENT_INSTALL, data, reply);
 }
 
 void BundleMgrProxy::UpgradeAtomicService(const Want &want, int32_t userId)
