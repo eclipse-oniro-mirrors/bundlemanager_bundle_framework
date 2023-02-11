@@ -231,6 +231,7 @@ struct ApplicationInfo : public Parcelable {
     static ApplicationInfo *Unmarshalling(Parcel &parcel);
     void Dump(std::string prefix, int fd);
     void ConvertToCompatibleApplicationInfo(CompatibleApplicationInfo& compatibleApplicationInfo) const;
+    bool CheckNeedPreload(const std::string &moduleName) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
