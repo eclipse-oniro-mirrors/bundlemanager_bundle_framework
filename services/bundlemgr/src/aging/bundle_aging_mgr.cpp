@@ -206,13 +206,13 @@ bool BundleAgingMgr::InitAgingRequest()
 
                 return false;
             });
-        APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}" PRId64 ", startCount: %{public}d",
-            bundleName.c_str(), bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         AgingBundleInfo agingBundleInfo(bundleName, bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         request_.AddAgingBundle(agingBundleInfo);
     }
 
-    return request_.SortAgingBundles() > 0;
+    bool ret = request_.SortAgingBundles() > 0;
+    request_.Dump();
+    return ret;
 }
 
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
@@ -304,10 +304,7 @@ void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
 void BundleAgingMgr::InitAgingHandlerChain()
 {
     chain_ = AgingHandlerChain();
-    chain_.AddHandler(std::make_shared<Over30DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<Over20DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<Over10DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<BundleDataSizeAgingHandler>());
+    chain_.AddHandler(std::make_shared<RecentlyUnuseBundleAgingHandler>());
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

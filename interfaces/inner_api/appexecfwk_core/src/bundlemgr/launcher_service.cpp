@@ -81,6 +81,10 @@ bool LauncherService::RegisterCallback(const sptr<IBundleStatusCallback> &callba
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         return false;
@@ -102,6 +106,10 @@ bool LauncherService::UnRegisterCallback()
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         return false;
@@ -118,7 +126,7 @@ bool LauncherService::GetAbilityList(
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         return false;
     }
@@ -183,7 +191,7 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         return false;
     }
@@ -247,7 +255,7 @@ bool LauncherService::GetShortcutInfos(
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         return false;
     }

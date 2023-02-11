@@ -154,7 +154,7 @@ ErrCode AppControlManagerRdb::GetAppInstallControlRule(const std::string &callin
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppInstallControlRule size 0");
+        APP_LOGD("GetAppInstallControlRule size 0");
         return ERR_OK;
     }
 

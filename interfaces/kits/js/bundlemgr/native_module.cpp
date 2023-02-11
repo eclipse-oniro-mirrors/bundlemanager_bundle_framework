@@ -49,7 +49,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     object->SetProperty("AbilitySubType", CreateAbilitySubTypeObject(engine));
     object->SetProperty("DisplayOrientation", CreateDisplayOrientationObject(engine));
     object->SetProperty("LaunchMode", CreateLaunchModeObject(engine));
-    object->SetProperty("ModuleUpdateFlag", CreateModuleUpdateFlagObject(engine));
     object->SetProperty("ColorMode", CreateColorModeObject(engine));
     object->SetProperty("GrantStatus", CreateGrantStatusObject(engine));
     object->SetProperty("ModuleRemoveFlag", CreateModuleRemoveFlagObject(engine));
@@ -57,11 +56,7 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     object->SetProperty("ShortcutExistence", CreateShortcutExistenceObject(engine));
     object->SetProperty("QueryShortCutFlag", CreateQueryShortCutFlagObject(engine));
     object->SetProperty("InstallErrorCode", CreateInstallErrorCodeObject(engine));
-    object->SetProperty("SupportWindowMode", CreateSupportWindowModesObject(engine));
-    object->SetProperty("ExtensionAbilityType", CreateExtensionAbilityTypeObject(engine));
     object->SetProperty("BundleFlag", CreateBundleFlagObject(engine));
-    object->SetProperty("ExtensionFlag", CreateExtensionFlagObject(engine));
-    object->SetProperty("UpgradeFlag", CreateUpgradeFlagObject(engine));
 
     const char *moduleName = "JsBundleMgr";
     BindNativeFunction(*engine, *object, "getAllApplicationInfo", moduleName, JsBundleMgr::GetAllApplicationInfo);
@@ -71,9 +66,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "isAbilityEnabled", moduleName, JsBundleMgr::IsAbilityEnabled);
     BindNativeFunction(*engine, *object, "isApplicationEnabled", moduleName, JsBundleMgr::IsApplicationEnabled);
     BindNativeFunction(*engine, *object, "getAbilityIcon", moduleName, JsBundleMgr::GetAbilityIcon);
-    BindNativeFunction(*engine, *object, "getProfileByAbility", moduleName, JsBundleMgr::GetProfileByAbility);
-    BindNativeFunction(*engine, *object, "getProfileByExtensionAbility", moduleName,
-        JsBundleMgr::GetProfileByExtensionAbility);
     BindNativeFunction(*engine, *object, "getBundleInfo", moduleName, JsBundleMgr::GetBundleInfo);
     BindNativeFunction(*engine, *object, "getNameForUid", moduleName, JsBundleMgr::GetNameForUid);
     BindNativeFunction(*engine, *object, "getAbilityInfo", moduleName, JsBundleMgr::GetAbilityInfo);
@@ -82,10 +74,7 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
     BindNativeFunction(*engine, *object, "queryAbilityByWant", moduleName, JsBundleMgr::QueryAbilityInfos);
     BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
-    BindNativeFunction(*engine, *object, "queryExtensionAbilityInfos", moduleName,
-        JsBundleMgr::QueryExtensionAbilityInfos);
     BindNativeFunction(*engine, *object, "getPermissionDef", moduleName, JsBundleMgr::GetPermissionDef);
-    BindNativeFunction(*engine, *object, "getBundlePackInfo", moduleName, JsBundleMgr::GetBundlePackInfo);
     BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
@@ -94,15 +83,8 @@ static napi_value Init(napi_env env, napi_value exports)
 {
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
-        DECLARE_NAPI_FUNCTION("getApplicationInfoSync", GetApplicationInfoSync),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
-        DECLARE_NAPI_FUNCTION("getBundleInfoSync", GetBundleInfoSync),
-        DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
-        DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
-        DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
-        DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
-        DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

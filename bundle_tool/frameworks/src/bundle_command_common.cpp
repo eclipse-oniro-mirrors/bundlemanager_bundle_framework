@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,8 +17,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_proxy.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
 #include "os_account_manager.h"
+#endif
 #include "if_system_ability_manager.h"
 #include "iservice_registry.h"
 #include "status_receiver_interface.h"
@@ -49,11 +51,13 @@ int32_t BundleCommandCommon::GetCurrentUserId(int32_t userId)
 {
     if (userId == Constants::UNSPECIFIED_USERID) {
         std::vector<int> activeIds;
+#ifdef ACCOUNT_ENABLE
         int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
         if (ret != 0) {
             APP_LOGW("QueryActiveOsAccountIds failed! ret = %{public}d.", ret);
             return userId;
         }
+#endif
         if (activeIds.empty()) {
             APP_LOGW("QueryActiveOsAccountIds activeIds empty");
             return userId;
@@ -531,15 +535,19 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY,
-        "error: external overlay installation only support system bundle.",
+        "error: external overlay installation only support preInstall bundle.",
     },
     {
-        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_NO_PERMISSION_FOR_TARGET_BUNDLE,
-        "error:target bundle has no query permission for other bundles.",
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_DIFFERENT_SIGNATURE_CERTIFICATE,
+        "error:target bundle has different signature certificate with current bundle.",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_IS_OVERLAY_BUNDLE,
         "error: target bundle cannot be overlay bundle of external overlay installation.",
+    },
+    {
+        IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE,
+        "error: target module cannot be overlay module of overlay installation",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
@@ -548,6 +556,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR,
         "error: bundle dir is invalid.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME,
+        "error: install asanEnabled not same",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT,
+        "error, install asan enabled is not support",
     },
     {
         IStatusReceiver::ERR_UNKNOWN,

@@ -67,9 +67,10 @@ napi_value Register(napi_env env, napi_callback_info info)
         APP_LOGE("can not get iBundleMgr");
         return nullptr;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("register bundle status callback failed due to non-sys app calling");
-        BusinessError::ThrowError(env, ERROR_NOT_SYSTEM_APP);
+        auto error = BusinessError::CreateCommonError(env, ERROR_NOT_SYSTEM_APP);
+        napi_throw(env, error);
         return nullptr;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
@@ -105,9 +106,10 @@ napi_value Unregister(napi_env env, napi_callback_info info)
         APP_LOGE("can not get iBundleMgr");
         return nullptr;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("unregister bundle status callback failed due to non-sys app calling");
-        BusinessError::ThrowError(env, ERROR_NOT_SYSTEM_APP);
+        auto error = BusinessError::CreateCommonError(env, ERROR_NOT_SYSTEM_APP);
+        napi_throw(env, error);
         return nullptr;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {

@@ -38,6 +38,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
+const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+}
+
 InstalldHostImpl::InstalldHostImpl()
 {
     APP_LOGI("installd service instance is created");
@@ -316,9 +321,13 @@ ErrCode InstalldHostImpl::GetBundleStats(
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string path = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
-    int64_t fileSize = InstalldOperator::GetDiskUsage(path);
     std::vector<std::string> bundlePath;
+    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+    bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
+    // ark profile
+    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+    int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+    bundlePath.clear();
     std::vector<std::string> cachePath;
     int64_t allBundleLocalSize = 0;
     for (const auto &el : Constants::BUNDLE_EL) {

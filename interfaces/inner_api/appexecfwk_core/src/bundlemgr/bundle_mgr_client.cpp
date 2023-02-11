@@ -102,16 +102,6 @@ bool BundleMgrClient::GetResConfigFile(const AbilityInfo &abilityInfo, const std
     return impl_->GetResConfigFile(abilityInfo, metadataName, profileInfos);
 }
 
-std::vector<std::string> BundleMgrClient::GetAccessibleAppCodePaths(int32_t userId)
-{
-    if (impl_ == nullptr) {
-        APP_LOGE("Bundle mgr client impl is nullptr");
-        std::vector<std::string> vec;
-        return vec;
-    }
-    return impl_->GetAccessibleAppCodePaths(userId);
-}
-
 bool BundleMgrClient::GetProfileFromExtension(const ExtensionAbilityInfo &extensionInfo,
     const std::string &metadataName, std::vector<std::string> &profileInfos) const
 {

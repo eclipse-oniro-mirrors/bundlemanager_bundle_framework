@@ -22,7 +22,6 @@
         "deliveryWithInstall":true,
         "installationFree":false,
         "virtualMachine":"ark",
-        "uiSyntax":"hml",
         "pages":"$profile:page_config",
         "metadata":[
             {

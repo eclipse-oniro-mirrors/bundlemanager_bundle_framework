@@ -47,7 +47,9 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
 #endif
-
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_manager_host_impl.h"
+#endif
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService : public SystemAbility {
@@ -134,6 +136,10 @@ public:
 
     const std::shared_ptr<BmsParam> GetBmsParam() const;
 
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    sptr<IOverlayManager> GetOverlayManagerProxy() const;
+#endif
+
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
     void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -155,6 +161,7 @@ private:
     bool InitDefaultApp();
     bool InitAppControl();
     bool InitQuickFixManager();
+    bool InitOverlayManager();
 
 private:
     bool ready_ = false;
@@ -190,6 +197,10 @@ private:
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> quickFixManagerHostImpl_;
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    sptr<OverlayManagerHostImpl>  overlayManagerHostImpl_;
 #endif
 
 #define CHECK_INIT_RESULT(result, errmsg)                                         \

@@ -49,6 +49,7 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_SINGLETON = "singleton";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_REMOVABLE = "removable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_USER_DATA_CLEARABLE = "userDataClearable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundleList";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -301,8 +302,10 @@ constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* META_DATA = "metadata";
 constexpr const char* SKILLS = "skills";
 constexpr const char* SRC_ENTRANCE = "srcEntrance";
+constexpr const char* SRC_ENTRY = "srcEntry";
 constexpr const char* PERMISSIONS = "permissions";
 constexpr const char* VISIBLE = "visible";
+constexpr const char* EXPORTED = "exported";
 constexpr const char* SRC_LANGUAGE = "srcLanguage";
 constexpr const char* PRIORITY = "priority";
 // module.json
@@ -319,8 +322,6 @@ constexpr const char* APP_MIN_API_VERSION = "minAPIVersion";
 constexpr const char* APP_TARGET_API_VERSION = "targetAPIVersion";
 constexpr const char* APP_API_RELEASETYPE = "apiReleaseType";
 constexpr const char* APP_API_RELEASETYPE_DEFAULT_VALUE = "Release";
-constexpr const char* APP_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
-constexpr const char* APP_ENTITY_TYPE = "entityType";
 constexpr const char* APP_ENTITY_TYPE_DEFAULT_VALUE = "unspecified";
 constexpr const char* APP_KEEP_ALIVE = "keepAlive";
 constexpr const char* APP_REMOVABLE = "removable";
@@ -337,6 +338,7 @@ constexpr const char* APP_ROUTER = "router";
 constexpr const char* APP_ACCESSIBLE = "accessible";
 constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
+constexpr const char* APP_ASAN_ENABLED = "asanEnabled";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";
@@ -363,7 +365,6 @@ constexpr const char* MODULE_TYPE_FEATURE = "feature";
 constexpr const char* MODULE_TYPE_SHARED = "shared";
 // deviceConfig
 constexpr const char* MIN_API_VERSION = "minAPIVersion";
-constexpr const char* DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED = "distributedNotificationEnabled";
 constexpr const char* DEVICE_CONFIG_KEEP_ALIVE = "keepAlive";
 constexpr const char* DEVICE_CONFIG_REMOVABLE = "removable";
 constexpr const char* DEVICE_CONFIG_SINGLETON = "singleton";
@@ -441,17 +442,7 @@ constexpr const char* APP_TARGET_PRIORITY = "targetPriority";
 constexpr const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* MODULE_TARGET_PRIORITY = "targetPriority";
 
-constexpr const char* MODULE_OVERLAY_BUNDLE_NAME = "bundleName";
-constexpr const char* MODULE_OVERLAY_MODULE_NAME = "moduleName";
-constexpr const char* MODULE_OVERLAY_HAP_PATH = "hapPath";
-constexpr const char* MODULE_OVERLAY_PRIORITY = "priority";
-constexpr const char* MODULE_OVERLAY_STATE = "state";
-
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_NAME = "bundleName";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_DIR = "bundleDir";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_STATE = "state";
-constexpr const char* BUNDLE_OVERLAY_BUNDLE_PRIORITY = "priority";
-
+constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk

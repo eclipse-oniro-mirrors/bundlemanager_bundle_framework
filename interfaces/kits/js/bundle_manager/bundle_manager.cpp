@@ -1716,18 +1716,58 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
     return promise;
 }
 
+ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+    const std::string& moduleName, AbilityInfo& targetAbilityInfo)
+{
+    bool ifExists = false;
+    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
+            if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                ifExists = true;
+                targetAbilityInfo = abilityInfo;
+                break;
+            }
+        }
+        if (ifExists) {
+            break;
+        }
+    }
+    if (!ifExists) {
+        APP_LOGE("ability not exist");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::string& abilityName,
+    const std::string& moduleName, ExtensionAbilityInfo& targetExtensionInfo)
+{
+    bool ifExists = false;
+    for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
+        for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
+            if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
+                ifExists = true;
+                targetExtensionInfo = extensionInfo;
+                break;
+            }
+        }
+        if (ifExists) {
+            break;
+        }
+    }
+    if (!ifExists) {
+        APP_LOGE("ability not exist");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-
-    std::string bundleName;
-    if (!iBundleMgr->ObtainCallingBundleName(bundleName)) {
-        APP_LOGE("InnerGetProfile failed when obtain calling bundelName");
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     if (info.abilityName.empty()) {
@@ -1739,26 +1779,26 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         APP_LOGE("InnerGetProfile failed due to empty moduleName");
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
-
+    auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
     ErrCode result;
-    Want want;
-    ElementName elementName("", bundleName, info.abilityName, info.moduleName);
-    want.SetElement(elementName);
     BundleMgrClient client;
+    BundleInfo bundleInfo;
     if (info.type == ProfileType::ABILITY_PROFILE) {
-        std::vector<AbilityInfo> abilityInfos;
-        result = iBundleMgr->QueryAbilityInfosV9(
-            want, static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA),
-            Constants::UNSPECIFIED_USERID, abilityInfos);
+        auto getAbilityFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
         if (result != ERR_OK) {
-            APP_LOGE("QueryExtensionAbilityInfosV9 failed");
+            APP_LOGE("GetBundleInfoForSelf failed");
             return result;
         }
-        if (abilityInfos.empty()) {
-            APP_LOGE("extensionInfos empty");
-            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        AbilityInfo targetAbilityInfo;
+        result = GetAbilityFromBundleInfo(
+            bundleInfo, info.abilityName, info.moduleName, targetAbilityInfo);
+        if (result != ERR_OK) {
+            return result;
         }
-        if (!client.GetProfileFromAbility(abilityInfos[0], info.metadataName, info.profileVec)) {
+        if (!client.GetProfileFromAbility(targetAbilityInfo, info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
             return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
         }
@@ -1766,25 +1806,24 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     }
 
     if (info.type == ProfileType::EXTENSION_PROFILE) {
-        std::vector<ExtensionAbilityInfo> extensionInfos;
-        result = iBundleMgr->QueryExtensionAbilityInfosV9(want,
-            static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA),
-            Constants::UNSPECIFIED_USERID, extensionInfos);
+        auto getExtensionFlag = baseFlag +
+            static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
+        result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
         if (result != ERR_OK) {
-            APP_LOGE("QueryExtensionAbilityInfosV9 failed");
+            APP_LOGE("GetBundleInfoForSelf failed");
             return result;
         }
 
-        if (extensionInfos.empty()) {
-            APP_LOGE("extensionInfos empty");
-            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        ExtensionAbilityInfo targetExtensionInfo;
+        result = GetExtensionFromBundleInfo(
+            bundleInfo, info.abilityName, info.moduleName, targetExtensionInfo);
+        if (result != ERR_OK) {
+            return result;
         }
-
-        if (!client.GetProfileFromExtension(extensionInfos[0], info.metadataName, info.profileVec)) {
+        if (!client.GetProfileFromExtension(targetExtensionInfo, info.metadataName, info.profileVec)) {
             APP_LOGE("GetProfileFromExtension failed");
             return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
         }
-
         return ERR_OK;
     }
 
@@ -2801,6 +2840,9 @@ void CreateLaunchTypeObject(napi_env env, napi_value value)
     napi_value nStandard;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nStandard));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STANDARD", nStandard));
+    napi_value nMultiton;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::STANDARD), &nMultiton));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MULTITON", nMultiton));
     napi_value nSpecified;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(LaunchMode::SPECIFIED), &nSpecified));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPECIFIED", nSpecified));

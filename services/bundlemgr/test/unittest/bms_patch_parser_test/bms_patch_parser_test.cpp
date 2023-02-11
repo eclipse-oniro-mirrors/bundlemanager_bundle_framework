@@ -17,11 +17,15 @@
 #include <string>
 #include <gtest/gtest.h>
 
+#define private public
 #include "app_log_wrapper.h"
 #include "app_quick_fix.h"
+#include "bundle_constants.h"
 #include "json_constants.h"
 #include "quick_fix/patch_extractor.h"
+#include "quick_fix/patch_parser.h"
 #include "quick_fix/patch_profile.h"
+#undef private
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -60,6 +64,7 @@ std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_DEVICE_TYPES = "deviceTypes";
 std::string BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH = "originalModuleHash";
 std::string BUNDLE_PATCH_PROFILE_KEY_APP = "app";
 std::string BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
+constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 } // namespace
 
 class BmsPatchParserTest : public testing::Test {
@@ -506,5 +511,149 @@ HWTEST_F(BmsPatchParserTest, TestParse_0026, Function | SmallTest | Level0)
     nlohmann::json errorTypeJson = PATCH_JSON;
     errorTypeJson[BUNDLE_PATCH_PROFILE_KEY_MODULE][BUNDLE_PATCH_PROFILE_MODULE_KEY_ORIGINAL_MODULE_HASH] = 1234567890;
     CheckProfileTypes(errorTypeJson);
+}
+
+/**
+ * @tc.number: PatchExtractor_ExtractPatchProfile_0100
+ * @tc.name: ExtractPatchProfile
+ * @tc.desc: system running normally
+ */
+HWTEST_F(BmsPatchParserTest, PatchExtractor_ExtractPatchProfile_0100, Function | SmallTest | Level0)
+{
+    PatchExtractor patchExtractor("");
+    std::ostringstream osForTest;
+    bool result = patchExtractor.ExtractPatchProfile(osForTest);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: PatchProfile_DefaultNativeSo_0100
+ * @tc.name: DefaultNativeSo
+ * @tc.desc: 1. system running normally
+ *           2. call DefaultNativeSo with isSystemLib64Exist is true
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_DefaultNativeSo_0100, Function | SmallTest | Level0)
+{
+    PatchExtractor patchExtractor("");
+    bool isSystemLib64Exist = true;
+    PatchProfile patchProfile;
+    AppqfInfo appqfInfo;
+    bool result = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: PatchProfile_DefaultNativeSo_0200
+ * @tc.name: DefaultNativeSo
+ * @tc.desc: 1. system running normally
+ *           2. call DefaultNativeSo with isSystemLib64Exist is false
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_DefaultNativeSo_0200, Function | SmallTest | Level0)
+{
+    PatchExtractor patchExtractor("");
+    bool isSystemLib64Exist = false;
+    PatchProfile patchProfile;
+    AppqfInfo appqfInfo;
+    bool result = patchProfile.DefaultNativeSo(patchExtractor, isSystemLib64Exist, appqfInfo);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: PatchProfile_TransformTo_0100
+ * @tc.name: TransformTo
+ * @tc.desc: 1. system running normally
+ *           2. call TransformTo with module name is invalid
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_TransformTo_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json errorProfileJson = PATCH_JSON;
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].erase(BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME);
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].emplace(BUNDLE_PATCH_PROFILE_MODULE_KEY_NAME, "");
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << errorProfileJson.dump();
+    PatchExtractor patchExtractor("");
+    AppQuickFix appQuickFix;
+    PatchProfile patchProfile;
+    ErrCode ret = patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
+    EXPECT_EQ(ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR, ret);
+}
+
+/**
+ * @tc.number: PatchProfile_TransformTo_0200
+ * @tc.name: TransformTo
+ * @tc.desc: 1. system running normally
+ *           2. test TransformTo with bad profile
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_TransformTo_0200, Function | SmallTest | Level0)
+{
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << "";
+    PatchExtractor patchExtractor("");
+    AppQuickFix appQuickFix;
+    PatchProfile patchProfile;
+    ErrCode ret = patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
+    EXPECT_EQ(ERR_APPEXECFWK_PARSE_BAD_PROFILE, ret);
+}
+
+/**
+ * @tc.number: PatchProfile_GetQuickFixType_0100
+ * @tc.name: GetQuickFixType
+ * @tc.desc: 1. system running normally
+ *           2. test GetQuickFixType with type == BUNDLE_PATCH_TYPE_HOT_RELOAD
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_GetQuickFixType_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json errorProfileJson = PATCH_JSON;
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].erase(BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE);
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].emplace(
+        BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE, BUNDLE_PATCH_TYPE_HOT_RELOAD);
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << errorProfileJson.dump();
+    PatchExtractor patchExtractor("");
+    AppQuickFix appQuickFix;
+    PatchProfile patchProfile;
+    patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
+    EXPECT_EQ(QuickFixType::HOT_RELOAD, appQuickFix.deployingAppqfInfo.type);
+}
+
+/**
+ * @tc.number: PatchProfile_GetQuickFixType_0200
+ * @tc.name: GetQuickFixType
+ * @tc.desc: 1. system running normally
+ *           2. test GetQuickFixType with type == UNKNOWN
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_GetQuickFixType_0200, Function | SmallTest | Level0)
+{
+    nlohmann::json errorProfileJson = PATCH_JSON;
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].erase(BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE);
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_MODULE].emplace(BUNDLE_PATCH_PROFILE_MODULE_KEY_TYPE, "UNKNOWN");
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << errorProfileJson.dump();
+    PatchExtractor patchExtractor("");
+    AppQuickFix appQuickFix;
+    PatchProfile patchProfile;
+    patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
+    EXPECT_EQ(QuickFixType::UNKNOWN, appQuickFix.deployingAppqfInfo.type);
+}
+
+/**
+ * @tc.number: PatchProfile_ToPatchInfo_0100
+ * @tc.name: ToPatchInfo
+ * @tc.desc: 1. system running normally
+ *           2. test ToPatchInfo with bundle is not match
+ */
+HWTEST_F(BmsPatchParserTest, PatchProfile_ToPatchInfo_0100, Function | SmallTest | Level0)
+{
+    nlohmann::json errorProfileJson = PATCH_JSON;
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_APP].erase(BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME);
+    errorProfileJson[BUNDLE_PATCH_PROFILE_KEY_APP].emplace(
+        BUNDLE_PATCH_PROFILE_APP_KEY_BUNDLE_NAME, Constants::RELATIVE_PATH);
+    std::ostringstream profileFileBuffer;
+    profileFileBuffer << errorProfileJson.dump();
+    PatchExtractor patchExtractor("");
+    AppQuickFix appQuickFix;
+    PatchProfile patchProfile;
+    ErrCode ret = patchProfile.TransformTo(profileFileBuffer, patchExtractor, appQuickFix);
+    EXPECT_EQ(ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR, ret);
 }
 }

@@ -69,6 +69,7 @@ constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -99,8 +100,9 @@ constexpr int PERMISSION_GRANTED = 0;
 constexpr int PERMISSION_NOT_GRANTED = -1;
 constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
-constexpr int INVALID_API_VERSION = -1;
-constexpr int API_VERSION_NINE = 9;
+constexpr int32_t INVALID_API_VERSION = -1;
+constexpr int32_t API_VERSION_EIGHT = 8;
+constexpr int32_t API_VERSION_NINE = 9;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -112,6 +114,7 @@ constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
+const std::string AP = "ap/";
 constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
 constexpr const char* ARM = "arm";
 const std::map<std::string, std::string> ABI_MAP = {
@@ -124,6 +127,7 @@ const std::map<std::string, std::string> ABI_MAP = {
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AI_SUFFIX = ".ai";
+constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -646,7 +646,7 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
         return false;
     }
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        APP_LOGD("reply result false");
         return false;
     }
     if (!reply.ReadStringVector(&bundleNames)) {
@@ -1350,38 +1350,6 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
         IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
 }
 
-int BundleMgrProxy::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD(
-        "begin to CheckPublicKeys of %{public}s and %{public}s", firstBundleName.c_str(), secondBundleName.c_str());
-    if (firstBundleName.empty() || secondBundleName.empty()) {
-        APP_LOGE("fail to CheckPublicKeys due to params empty");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleInfo due to write MessageParcel fail");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    if (!data.WriteString(firstBundleName)) {
-        APP_LOGE("fail to GetBundleInfo due to write firstBundleName fail");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    if (!data.WriteString(secondBundleName)) {
-        APP_LOGE("fail to GetBundleInfo due to write secondBundleName fail");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CHECK_PUBLICKEYS, data, reply)) {
-        APP_LOGE("fail to CheckPublicKeys from server");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    return reply.ReadInt32();
-}
-
 ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -1397,75 +1365,6 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
     }
 
     return GetParcelableInfoWithErrCode<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef);
-}
-
-bool BundleMgrProxy::HasSystemCapability(const std::string &capName)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to HasSystemCapability of %{public}s", capName.c_str());
-    if (capName.empty()) {
-        APP_LOGE("fail to HasSystemCapability due to params empty");
-        return false;
-    }
-
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to HasSystemCapability due to write InterfaceToken fail");
-        return false;
-    }
-    if (!data.WriteString(capName)) {
-        APP_LOGE("fail to HasSystemCapability due to write capName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::HAS_SYSTEM_CAPABILITY, data, reply)) {
-        APP_LOGE("fail to HasSystemCapability from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
-bool BundleMgrProxy::GetSystemAvailableCapabilities(std::vector<std::string> &systemCaps)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetSystemAvailableCapabilities");
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetSystemAvailableCapabilities due to write InterfaceToken fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_SYSTEM_AVAILABLE_CAPABILITIES, data, reply)) {
-        APP_LOGE("fail to GetSystemAvailableCapabilities from server");
-        return false;
-    }
-
-    if (!reply.ReadStringVector(&systemCaps)) {
-        APP_LOGE("fail to GetSystemAvailableCapabilities from reply");
-        return false;
-    }
-
-    return true;
-}
-
-bool BundleMgrProxy::IsSafeMode()
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to IsSafeMode");
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to IsSafeMode due to write InterfaceToken fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_SAFE_MODE, data, reply)) {
-        APP_LOGE("fail to IsSafeMode from server");
-        return false;
-    }
-    return reply.ReadBool();
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
@@ -2467,39 +2366,6 @@ bool BundleMgrProxy::VerifyCallingPermission(const std::string &permission)
     return reply.ReadBool();
 }
 
-std::vector<std::string> BundleMgrProxy::GetAccessibleAppCodePaths(int32_t userId)
-{
-    APP_LOGD("GetAccessibleAppCodePaths begin");
-    MessageParcel data;
-    std::vector<std::string> vec;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAccessibleAppCodePaths due to write InterfaceToken fail");
-        return vec;
-    }
-
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAccessibleAppCodePaths due to write userId fail");
-        return vec;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ACCESSIBLE_APP_CODE_PATH, data, reply)) {
-        APP_LOGE("fail to sendRequest");
-        return vec;
-    }
-
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return vec;
-    }
-
-    if (!reply.ReadStringVector(&vec)) {
-        APP_LOGE("fail to GetAccessibleAppCodePaths from reply");
-        return vec;
-    }
-    return vec;
-}
-
 bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo)
 {
@@ -3232,7 +3098,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to get quick fix manager proxy due to write InterfaceToken failed.");
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
     }
     if (!data.WriteBool(isDebug)) {
@@ -3245,6 +3111,54 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     }
 
     return reply.ReadInt32();
+}
+
+bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
+{
+    APP_LOGD("begin to verify system app");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to VerifySystemApi due to write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteInt32(beginApiVersion)) {
+        APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+        APP_LOGE("fail to sendRequest");
+        return false;
+    }
+    return reply.ReadBool();
+}
+
+sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get bundle manager proxy due to write InterfaceToken failed.");
+        return nullptr;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IOverlayManager> overlayManagerProxy = iface_cast<IOverlayManager>(object);
+    if (overlayManagerProxy == nullptr) {
+        APP_LOGE("overlayManagerProxy is nullptr.");
+    }
+
+    return overlayManagerProxy;
 }
 
 template<typename T>
