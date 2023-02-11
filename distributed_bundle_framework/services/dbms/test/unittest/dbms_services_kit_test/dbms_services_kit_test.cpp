@@ -1432,11 +1432,11 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0074, Function | SmallTest | L
     EXPECT_NE(distributedBms, nullptr);
     if (distributedBms != nullptr) {
         std::vector<ElementName> names;
-        ElementName name_1;
-        name_1.SetBundleName(BUNDLE_NAME);
-        name_1.SetAbilityName(ABILITY_NAME);
-        name_1.SetDeviceID(DEVICE_ID);
-        names.push_back(name_1);
+        ElementName name;
+        name.SetBundleName(BUNDLE_NAME);
+        name.SetAbilityName(ABILITY_NAME);
+        name.SetDeviceID(DEVICE_ID);
+        names.push_back(name);
         std::vector<RemoteAbilityInfo> info;
         auto ret = distributedBms->GetRemoteAbilityInfos(names, "", info);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);

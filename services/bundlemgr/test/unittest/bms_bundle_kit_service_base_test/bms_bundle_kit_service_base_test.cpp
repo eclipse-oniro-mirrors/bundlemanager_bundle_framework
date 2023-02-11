@@ -85,8 +85,8 @@ const std::string VALUE = "value";
 const std::string EXTRA = "extra";
 std::string ABILITY_PERM_001 = "abilityPerm001";
 std::string ABILITY_PERM_002 = "abilityPerm002";
-std::string PERMISSION1 = "permission1";
-std::string PERMISSION2 = "permission2";
+std::string MY_APPLICATION_PERMISSION_TEST = "com.example.MyApplication.permissiontest";
+std::string MY_APPLICATION_PERMISSION_BASE = "com.example.MyApplication.permissionbase";
 std::string INSTALL_RESULT = "installResult";
 std::string DEVICE_ID_NORMAL = "deviceId";
 std::string QUERY_RPC_ID_RESULT = "queryRpcIdResult";
@@ -211,11 +211,11 @@ AbilityInfo BmsBundleKitServiceBaseTest::MockAbilityInfo(
 InnerModuleInfo BmsBundleKitServiceBaseTest::MockModuleInfo(const std::string &moduleName) const
 {
     InnerModuleInfo moduleInfo;
-    RequestPermission reqPermission1;
-    reqPermission1.name = PERMISSION1;
-    RequestPermission reqPermission2;
-    reqPermission2.name = PERMISSION2;
-    moduleInfo.requestPermissions = {reqPermission1, reqPermission2};
+    RequestPermission reqPermissionTest;
+    reqPermissionTest.name = MY_APPLICATION_PERMISSION_TEST;
+    RequestPermission reqPermissionBase;
+    reqPermissionBase.name = MY_APPLICATION_PERMISSION_TEST;
+    moduleInfo.requestPermissions = {reqPermissionTest, reqPermissionBase};
     moduleInfo.name = MODULE_NAME_TEST;
     moduleInfo.icon = ICON_PATH;
     moduleInfo.modulePackage = PACKAGE_NAME;
@@ -242,18 +242,18 @@ void BmsBundleKitServiceBaseTest::SaveToDatabase(const std::string &bundleName,
     innerBundleUserInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
     innerBundleUserInfo.uid = BASE_TEST_UID;
 
-    InnerBundleUserInfo innerBundleUserInfo1;
-    innerBundleUserInfo1.bundleName = bundleName;
-    innerBundleUserInfo1.bundleUserInfo.enabled = true;
-    innerBundleUserInfo1.bundleUserInfo.userId = DEFAULT_USERID;
-    innerBundleUserInfo1.uid = TEST_UID;
+    InnerBundleUserInfo innerBundleUserInfoTest;
+    innerBundleUserInfoTest.bundleName = bundleName;
+    innerBundleUserInfoTest.bundleUserInfo.enabled = true;
+    innerBundleUserInfoTest.bundleUserInfo.userId = DEFAULT_USERID;
+    innerBundleUserInfoTest.uid = TEST_UID;
 
     ApplicationInfo appInfo;
     AddApplicationInfo(bundleName, appInfo, userDataClearable, isSystemApp);
     BundleInfo bundleInfo;
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
     innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
-    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo1);
+    innerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfoTest);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     auto moduleNameVec = innerBundleInfo.GetModuleNameVec();
     auto abilityNameVec = innerBundleInfo.GetAbilityNames();
