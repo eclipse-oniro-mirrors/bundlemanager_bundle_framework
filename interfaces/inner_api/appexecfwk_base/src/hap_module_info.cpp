@@ -67,7 +67,57 @@ const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string HAP_MODULE_INFO_CPU_ABI = "cpuAbi";
 const std::string HAP_MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 const std::string HAP_OVERLAY_MODULE_INFO = "overlayModuleInfos";
+const std::string HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
+const std::string HAP_MODULE_INFO_PRELOADS = "preloads";
+const std::string PRELOAD_ITEM_MODULE_NAME = "moduleName";
 const size_t MODULE_CAPACITY = 10240; // 10K
+}
+
+bool PreloadItem::ReadFromParcel(Parcel &parcel)
+{
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool PreloadItem::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    return true;
+}
+
+PreloadItem *PreloadItem::Unmarshalling(Parcel &parcel)
+{
+    PreloadItem *info = new (std::nothrow) PreloadItem();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const PreloadItem &preloadItem)
+{
+    jsonObject = nlohmann::json {
+        {PRELOAD_ITEM_MODULE_NAME, preloadItem.moduleName}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        PRELOAD_ITEM_MODULE_NAME,
+        preloadItem.moduleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read PreloadItem from database error, error code : %{public}d", parseResult);
+    }
 }
 
 bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
@@ -193,6 +243,19 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         overlayModuleInfos.emplace_back(*overlayModuleInfo);
     }
+    atomicServiceModuleType = static_cast<AtomicServiceModuleType>(parcel.ReadInt32());
+
+    int32_t preloadsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, preloadsSize, &preloads);
+    for (int32_t i = 0; i < preloadsSize; ++i) {
+        std::unique_ptr<PreloadItem> preload(parcel.ReadParcelable<PreloadItem>());
+        if (!preload) {
+            APP_LOGE("ReadParcelable<PreloadItem> failed");
+            return false;
+        }
+        preloads.emplace_back(*preload);
+    }
     return true;
 }
 
@@ -289,6 +352,12 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &overlayModuleInfo : overlayModuleInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &overlayModuleInfo);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(atomicServiceModuleType));
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloads.size());
+    for (auto &item : preloads) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
     return true;
 }
 
@@ -338,7 +407,9 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_NATIVE_LIBRARY_PATH, hapModuleInfo.nativeLibraryPath},
         {HAP_MODULE_INFO_CPU_ABI, hapModuleInfo.cpuAbi},
         {HAP_MODULE_INFO_MODULE_SOURCE_DIR, hapModuleInfo.moduleSourceDir},
-        {HAP_OVERLAY_MODULE_INFO, hapModuleInfo.overlayModuleInfos}
+        {HAP_OVERLAY_MODULE_INFO, hapModuleInfo.overlayModuleInfos},
+        {HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE, hapModuleInfo.atomicServiceModuleType},
+        {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads}
     };
 }
 
@@ -694,6 +765,22 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_OVERLAY_MODULE_INFO,
         hapModuleInfo.overlayModuleInfos,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<AtomicServiceModuleType>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE,
+        hapModuleInfo.atomicServiceModuleType,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<PreloadItem>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_PRELOADS,
+        hapModuleInfo.preloads,
         JsonType::ARRAY,
         false,
         parseResult,

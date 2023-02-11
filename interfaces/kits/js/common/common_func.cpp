@@ -971,6 +971,14 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
     APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
 
+    napi_value nAppType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.appType), &nAppType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appType", nAppType));
+
+    napi_value nSplit;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.split, &nSplit));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "split", nSplit));
+
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, appInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
@@ -1143,6 +1151,14 @@ void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission 
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "usedScene", nUsedScene));
 }
 
+void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value)
+{
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env,
+        preloadItem.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
+}
+
 void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value)
 {
     napi_value nAppId;
@@ -1258,6 +1274,23 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDependencies, index, nDependency));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "dependencies", nDependencies));
+
+    napi_value nAtomicServiceModuleType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(hapModuleInfo.atomicServiceModuleType), &nAtomicServiceModuleType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env,
+        objHapModuleInfo, "atomicServiceModuleType", nAtomicServiceModuleType));
+
+    napi_value nPreloads;
+    size = hapModuleInfo.preloads.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPreloads));
+    for (size_t index = 0; index < size; ++index) {
+        napi_value nPreload;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nPreload));
+        ConvertPreloadItem(env, hapModuleInfo.preloads[index], nPreload);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPreloads, index, nPreload));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "preloads", nPreloads));
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const std::string &moduleName, napi_value value)
