@@ -47,6 +47,11 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
 };
 
+enum class AppType {
+    APP = 0,
+    ATOMIC_SERVICE = 1,
+};
+
 struct Metadata : public Parcelable {
     std::string name;
     std::string value;
@@ -224,6 +229,9 @@ struct ApplicationInfo : public Parcelable {
     // overlay installation
     std::string targetBundleName;
     int32_t targetPriority;
+
+    bool split = true;
+    AppType appType = AppType::APP;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

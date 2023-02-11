@@ -39,6 +39,21 @@ enum class ModuleType {
     SHARED = 3
 };
 
+enum class AtomicServiceModuleType {
+    NORMAL = 0,
+    MAIN = 1,
+};
+
+struct PreloadItem : public Parcelable {
+    std::string moduleName;
+
+    PreloadItem() = default;
+    explicit PreloadItem(std::string name) : moduleName(name) {}
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static PreloadItem *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -91,6 +106,8 @@ struct HapModuleInfo : public Parcelable {
     int32_t upgradeFlag = 0;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     std::string moduleSourceDir;
+    AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+    std::vector<PreloadItem> preloads;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

@@ -129,6 +129,8 @@ static void ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, 
 
 static void ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value);
 
+static void ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value);
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
