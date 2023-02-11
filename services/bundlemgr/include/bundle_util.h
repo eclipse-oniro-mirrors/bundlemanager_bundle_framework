@@ -156,6 +156,7 @@ public:
     static bool RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath);
     static bool StartWith(const std::string &source, const std::string &suffix);
     static bool EndWith(const std::string &source, const std::string &suffix);
+    static int64_t GetFileSize(const std::string &filePath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

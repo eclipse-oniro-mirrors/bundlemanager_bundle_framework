@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -42,6 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -1746,6 +1746,26 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
 
     APP_LOGD("the uid(%{public}d) is not exists.", uid);
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+}
+
+bool BundleDataMgr::GetBundleStats(
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
+{
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        return false;
+    }
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats) != ERR_OK) {
+        APP_LOGE("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        return false;
+    }
+    if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+        }
+    }
+    return true;
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
