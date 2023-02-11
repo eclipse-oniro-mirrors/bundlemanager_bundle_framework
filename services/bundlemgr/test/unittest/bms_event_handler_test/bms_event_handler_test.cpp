@@ -31,6 +31,9 @@ const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
 const std::string CALL_MOCK_BUNDLE_DIR_FAILED = "callMockBundleDirFailed";
 const std::string RETURN_MOCK_BUNDLE_DIR_SUCCESS = "mockSuccess";
 const std::string RETURN_MOCK_BUNDLE_DIR_FAILED = "mockFailed";
+const std::string BUNDLE_NAME = "bundleName";
+const std::string BUNDLE_NAME_ONE = "bundleName01";
+const std::string TEST_BUNDLE_NAME = "bundleName02";
 class BmsEventHandlerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -155,7 +158,7 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0200, Function | SmallTest
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     PreBundleConfigInfo preBundleConfigInfo;
-    preBundleConfigInfo.bundleName = "bundleName";
+    preBundleConfigInfo.bundleName = BUNDLE_NAME;
     EXPECT_TRUE(handler->LoadPreInstallProFile());
     EXPECT_FALSE(handler->GetPreInstallCapability(preBundleConfigInfo));
 }
@@ -287,7 +290,7 @@ HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0100, Function | SmallTest | Le
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
-    std::string bundleName = "bundleName";
+    std::string bundleName = BUNDLE_NAME;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     handler->AddParseInfosToMap(bundleName, infos);
     EXPECT_EQ(handler->hapParseInfoMap_.size(), 1);
@@ -303,8 +306,8 @@ HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0200, Function | SmallTest | Le
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
-    std::string bundleName = "bundleName01";
-    std::string testBundleName = "bundleName02";
+    std::string bundleName = BUNDLE_NAME_ONE;
+    std::string testBundleName = TEST_BUNDLE_NAME;
     InnerBundleInfo innerBundleInfo;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     std::unordered_map<std::string, InnerBundleInfo> testInfos;

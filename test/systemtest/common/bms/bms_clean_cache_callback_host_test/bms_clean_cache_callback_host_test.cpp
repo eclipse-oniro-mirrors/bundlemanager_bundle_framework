@@ -59,8 +59,8 @@ HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_001, TestSize.Lev
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
-    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost_ = new (std::nothrow) MockCleanCacheCallbackHost();
-    auto result = cleanCacheCallbackHost_->OnRemoteRequest(code, data, reply, option);
+    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost = new (std::nothrow) MockCleanCacheCallbackHost();
+    auto result = cleanCacheCallbackHost->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, OBJECT_NULL);
 }
 
@@ -75,12 +75,12 @@ HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_002, TestSize.Lev
 {
     uint32_t code = static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK);
     MessageParcel data;
-    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost_ = new (std::nothrow) MockCleanCacheCallbackHost();
+    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost = new (std::nothrow) MockCleanCacheCallbackHost();
     data.WriteInterfaceToken(CleanCacheCallbackHost::GetDescriptor());
     MessageParcel reply;
     MessageOption option;
 
-    auto result = cleanCacheCallbackHost_->OnRemoteRequest(code, data, reply, option);
+    auto result = cleanCacheCallbackHost->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, NO_ERROR);
 }
 
@@ -95,12 +95,12 @@ HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_003, TestSize.Lev
 {
     uint32_t code = static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK) + 1;
     MessageParcel data;
-    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost_ = new (std::nothrow) MockCleanCacheCallbackHost();
+    sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost = new (std::nothrow) MockCleanCacheCallbackHost();
     data.WriteInterfaceToken(CleanCacheCallbackHost::GetDescriptor());
     MessageParcel reply;
     MessageOption option;
 
-    auto result = cleanCacheCallbackHost_->OnRemoteRequest(code, data, reply, option);
+    auto result = cleanCacheCallbackHost->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, IPC_STUB_UNKNOW_TRANS_ERR);
 }
 } // namespace AppExecFwk
