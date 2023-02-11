@@ -37,6 +37,7 @@ const std::string BUNDLE_PATH = "/data/app/el1/bundle/public/";
 const std::string BUNDLE_PATHS = "/data/app/el1/bundle/public/com.ohos.nweb/libs";
 const std::int32_t FIRST_NUM = 1;
 const std::int32_t ZERO_NUM = 0;
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class BmsBundleInstallersTest : public testing::Test {
@@ -49,9 +50,9 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    int64_t installerId = 1;
-    std::shared_ptr<EventHandler> handler = std::make_shared<EventHandler>();
-    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    int64_t installerId_ = 1;
+    std::shared_ptr<EventHandler> handler_ = std::make_shared<EventHandler>();
+    sptr<MockStatusReceiver> receiver_ = new (std::nothrow) MockStatusReceiver();
     std::shared_ptr<BundleInstaller> bundleInstaller_ = nullptr;
 };
 
@@ -63,7 +64,7 @@ void BmsBundleInstallersTest::TearDownTestCase()
 
 void BmsBundleInstallersTest::SetUp()
 {
-    bundleInstaller_ = std::make_shared<BundleInstaller>(installerId, handler, receiver);
+    bundleInstaller_ = std::make_shared<BundleInstaller>(installerId_, handler_, receiver_);
 }
 
 void BmsBundleInstallersTest::TearDown()
@@ -77,8 +78,8 @@ void BmsBundleInstallersTest::TearDown()
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0100 start";
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
@@ -86,8 +87,8 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0100, TestSize.Level1)
     dataMgr->AddUserId(Constants::START_USERID);
     std::set<int32_t> ret = bundleInstaller_->GetExistsCommonUserIds();
     EXPECT_TRUE(ret.size() > ZERO_NUM);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0100 end";
 }
 
@@ -128,23 +129,23 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0400, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
     bundleInstaller_->Install(BUNDLE_PATH, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0400 end";
 }
 
 /**
  * @tc.number: BmsBundleInstallersTest_0500
  * @tc.name: Install
- * @tc.desc: test Install (Input bundleFilePath parameter is "")
+ * @tc.desc: test Install (Input bundleFilePath parameter is EMPTY_STRING)
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0500, TestSize.Level1)
 {
@@ -152,16 +153,16 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0500, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
-    bundleInstaller_->Install("", installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    bundleInstaller_->Install(EMPTY_STRING, installParam);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0500 end";
 }
 
@@ -176,15 +177,15 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0600, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     bundleInstaller_->Install(BUNDLE_PATH, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0600 end";
 }
 
@@ -196,8 +197,8 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0600, TestSize.Level1)
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0700, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0700 start";
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
@@ -207,8 +208,8 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0700, TestSize.Level1)
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
     bundleInstaller_->Recover(BUNDLE_NAME, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0700 end";
 }
 
@@ -223,8 +224,8 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0800, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
@@ -233,15 +234,15 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0800, TestSize.Level1)
     std::vector<std::string> bundleFilePaths;
     bundleFilePaths.push_back(BUNDLE_PATHS);
     bundleInstaller_->Install(bundleFilePaths, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0800 end";
 }
 
 /**
  * @tc.number: BmsBundleInstallersTest_0900
  * @tc.name: Install
- * @tc.desc: test Install (Input bundleFilePath parameter is "")
+ * @tc.desc: test Install (Input bundleFilePath parameter is EMPTY_STRING)
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0900, TestSize.Level1)
 {
@@ -249,18 +250,18 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_0900, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
     std::vector<std::string> bundleFilePaths;
-    bundleFilePaths.push_back("");
+    bundleFilePaths.push_back(EMPTY_STRING);
     bundleInstaller_->Install(bundleFilePaths, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_0900 end";
 }
 
@@ -288,23 +289,23 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1100, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
     bundleInstaller_->Uninstall(BUNDLE_PATH, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1100 end";
 }
 
 /**
  * @tc.number: BmsBundleInstallersTest_1200
  * @tc.name: Uninstall
- * @tc.desc: test Uninstall (The bundlename parameter is "")
+ * @tc.desc: test Uninstall (The bundlename parameter is EMPTY_STRING)
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1200, TestSize.Level1)
 {
@@ -312,16 +313,16 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1200, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
-    bundleInstaller_->Uninstall("", installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    bundleInstaller_->Uninstall(EMPTY_STRING, installParam);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1200 end";
 }
 
@@ -336,15 +337,15 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1300, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     bundleInstaller_->Uninstall(BUNDLE_PATH, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1300 end";
 }
 
@@ -359,16 +360,16 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1400, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
     bundleInstaller_->Uninstall(BUNDLE_PATH, PACKAGE_NAME, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1400 end";
 }
 
@@ -383,22 +384,22 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1500, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     bundleInstaller_->Uninstall(BUNDLE_PATH, PACKAGE_NAME, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1500 end";
 }
 
 /**
  * @tc.number: BmsBundleInstallersTest_1600
  * @tc.name: Uninstall
- * @tc.desc: test Uninstall (The bundlename parameter is "")
+ * @tc.desc: test Uninstall (The bundlename parameter is EMPTY_STRING)
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1600, TestSize.Level1)
 {
@@ -406,23 +407,23 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1600, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
-    bundleInstaller_->Uninstall("", PACKAGE_NAME, installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    bundleInstaller_->Uninstall(EMPTY_STRING, PACKAGE_NAME, installParam);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1600 end";
 }
 
 /**
  * @tc.number: BmsBundleInstallersTest_1700
  * @tc.name: Uninstall
- * @tc.desc: test Uninstall (The modulePackage parameter is "")
+ * @tc.desc: test Uninstall (The modulePackage parameter is EMPTY_STRING)
  */
 HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1700, TestSize.Level1)
 {
@@ -430,16 +431,16 @@ HWTEST_F(BmsBundleInstallersTest, BmsBundleInstallersTest_1700, TestSize.Level1)
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::NORMAL;
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ != nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = std::make_shared<BundleDataMgr>();
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr != nullptr);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return;
     }
     dataMgr->AddUserId(Constants::START_USERID);
-    bundleInstaller_->Uninstall(BUNDLE_PATH, "", installParam);
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
-    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ == nullptr);
+    bundleInstaller_->Uninstall(BUNDLE_PATH, EMPTY_STRING, installParam);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr = nullptr;
+    EXPECT_TRUE(DelayedSingleton<BundleMgrService>::GetInstance()->dataMgrSptr == nullptr);
     GTEST_LOG_(INFO) << "BmsBundleInstallersTest_1700 end";
 }
 }  // namespace OHOS

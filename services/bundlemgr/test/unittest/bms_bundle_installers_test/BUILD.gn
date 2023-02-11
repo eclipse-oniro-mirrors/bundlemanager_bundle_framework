@@ -53,18 +53,12 @@ ohos_unittest("BmsBundleInstallersTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = []
-
-  if (bundle_framework_graphics) {
-    include_dirs += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits/include" ]
-    deps += [ "../../../../../../../../foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
 
   deps += bundle_install_deps
 
@@ -80,7 +74,9 @@ ohos_unittest("BmsBundleInstallersTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
-
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]

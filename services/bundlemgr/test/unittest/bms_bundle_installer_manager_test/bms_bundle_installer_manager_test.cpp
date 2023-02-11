@@ -40,6 +40,7 @@ const std::string MODULE_PACKAGE = "entry";
 const int32_t USERID = 100;
 const int32_t ERROR_NUM = 0;
 const int32_t ERROR_OK = 1;
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class BundleInstallerManagerTest : public testing::Test {
@@ -51,7 +52,7 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<EventRunner> runner_ = nullptr;
-    std::shared_ptr<BundleInstallerManager> bundleInstallerManager_ = nullptr;
+    std::shared_ptr<BundleInstallerManager> bundleInstallerManager = nullptr;
 };
 
 BundleInstallerManagerTest::BundleInstallerManagerTest()
@@ -80,11 +81,11 @@ void BundleInstallerManagerTest::TearDown()
 HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_001, TestSize.Level1)
 {
     auto callback = [] () {};
-    std::string name = "";
+    std::string name = EMPTY_STRING;
     auto event = InnerEvent::Get(callback, name);
     event->innerEventId_ = BundleInstallerManager::REMOVE_BUNDLE_INSTALLER;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->ProcessEvent(event);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->ProcessEvent(event);
 }
 
 /**
@@ -95,12 +96,12 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_001, TestSize.Le
 HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_002, TestSize.Level1)
 {
     auto callback = [] () {};
-    std::string name = "";
+    std::string name = EMPTY_STRING;
     auto event = InnerEvent::Get(callback, name);
     constexpr int32_t defaultVal = BundleInstallerManager::REMOVE_BUNDLE_INSTALLER + 1;
     event->innerEventId_ = defaultVal;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->ProcessEvent(event);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->ProcessEvent(event);
 }
 
 /**
@@ -116,10 +117,10 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_003, TestSize.Le
     sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
     std::shared_ptr<BundleInstaller> bundleInstaller = std::make_shared<BundleInstaller>(installerId, handler,
         statusReceiver);
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->installers_.emplace(installerId, bundleInstaller);
-    bundleInstallerManager_->RemoveInstaller(installerId);
-    EXPECT_EQ(bundleInstallerManager_->installers_.size(), ERROR_NUM);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->installers_.emplace(installerId, bundleInstaller);
+    bundleInstallerManager->RemoveInstaller(installerId);
+    EXPECT_EQ(bundleInstallerManager->installers_.size(), ERROR_NUM);
 }
 
 /**
@@ -129,20 +130,20 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_003, TestSize.Le
  */
 HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_004, TestSize.Level1)
 {
-    int64_t installerId1 = 1;
-    int64_t installerId2 = 2;
+    int64_t installerIdFirst = 1;
+    int64_t installerIdSecond = 2;
     std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<EventHandler> handler = std::make_shared<EventHandler>();
     sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
-    std::shared_ptr<BundleInstaller> bundleInstaller1 = std::make_shared<BundleInstaller>(installerId1, handler,
+    std::shared_ptr<BundleInstaller> bundleInstallerFirst = std::make_shared<BundleInstaller>(installerIdFirst, handler,
         statusReceiver);
-    std::shared_ptr<BundleInstaller> bundleInstaller2 = std::make_shared<BundleInstaller>(installerId2, handler,
+    std::shared_ptr<BundleInstaller> bundleInstallerSecond = std::make_shared<BundleInstaller>(installerIdSecond, handler,
         statusReceiver);
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->installers_.emplace(installerId1, bundleInstaller1);
-    bundleInstallerManager_->installers_.emplace(installerId2, bundleInstaller2);
-    bundleInstallerManager_->RemoveInstaller(installerId1);
-    EXPECT_EQ(bundleInstallerManager_->installers_.size(), ERROR_OK);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->installers_.emplace(installerIdFirst, bundleInstallerFirst);
+    bundleInstallerManager->installers_.emplace(installerIdSecond, bundleInstallerSecond);
+    bundleInstallerManager->RemoveInstaller(installerIdFirst);
+    EXPECT_EQ(bundleInstallerManager->installers_.size(), ERROR_OK);
 }
 
 /**
@@ -157,8 +158,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_005, TestSize.Le
     InstallParam installParam;
     installParam.userId = USERID;
     std::string bundleFilePath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->CreateInstallTask(bundleFilePath, installParam, receiver);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->CreateInstallTask(bundleFilePath, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
@@ -175,8 +176,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_006, TestSize.Le
     InstallParam installParam;
     installParam.userId = USERID;
     std::string bundleName = BUNDLE_NAME;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->CreateRecoverTask(bundleName, installParam, receiver);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->CreateRecoverTask(bundleName, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
@@ -194,9 +195,9 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_007, TestSize.Le
     installParam.userId = USERID;
     std::vector<std::string> bundleFilePaths;
     std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
     bundleFilePaths.emplace_back(bundleFile);
-    bundleInstallerManager_->CreateInstallTask(bundleFilePaths, installParam, receiver);
+    bundleInstallerManager->CreateInstallTask(bundleFilePaths, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
@@ -213,8 +214,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_008, TestSize.Le
     InstallParam installParam;
     installParam.userId = USERID;
     std::string bundleName = BUNDLE_NAME;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->CreateInstallByBundleNameTask(bundleName, installParam, receiver);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->CreateInstallByBundleNameTask(bundleName, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
@@ -231,8 +232,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_009, TestSize.Le
     InstallParam installParam;
     installParam.userId = USERID;
     std::string bundleName = BUNDLE_NAME;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->CreateUninstallTask(bundleName, installParam, receiver);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->CreateUninstallTask(bundleName, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
@@ -250,8 +251,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_010, TestSize.Le
     installParam.userId = USERID;
     std::string bundleName = BUNDLE_NAME;
     std::string modulePackage = MODULE_PACKAGE;
-    auto bundleInstallerManager_ = std::make_shared<BundleInstallerManager>(runner_);
-    bundleInstallerManager_->CreateUninstallTask(bundleName, modulePackage, installParam, receiver);
+    auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
+    bundleInstallerManager->CreateUninstallTask(bundleName, modulePackage, installParam, receiver);
     ErrCode result = receiver->GetResultCode();
     EXPECT_NE(ERR_OK, result);
 }
