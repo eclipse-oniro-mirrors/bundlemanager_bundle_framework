@@ -35,7 +35,6 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "${notification_path}/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -45,20 +44,21 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry:dependencies_entry",
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
-  if (bundle_framework_graphics) {
-    include_dirs += [ "${multimedia_path}/interfaces/innerkits/include" ]
-    deps += [ "${multimedia_path}/interfaces/innerkits:image_native" ]
-  }
+
   deps += bundle_install_deps
 
   external_deps = [
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_core",
+    "eventhandler:libeventhandler",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
   ]
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
   if (bms_rdb_enable) {
-    configs += [ "${services_path}/services/bundlemgr:rdb_config" ]
+    configs += [ "${services_path}/bundlemgr:rdb_config" ]
     external_deps += [ "relational_store:native_rdb" ]
     sources += [
       "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
