@@ -787,6 +787,7 @@ bool BundleConnectAbilityMgr::SilentInstall(const Want &want, int32_t userId, co
         APP_LOGE("targetExtSetting is nullptr");
         return false;
     }
+
     targetAbilityInfo->targetInfo = *targetInfo;
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
@@ -797,6 +798,7 @@ bool BundleConnectAbilityMgr::SilentInstall(const Want &want, int32_t userId, co
         APP_LOGE("freeInstallParams is nullptr");
         return false;
     }
+
     freeInstallParams->callback = callBack;
     freeInstallParams->want = want;
     freeInstallParams->userId = userId;
