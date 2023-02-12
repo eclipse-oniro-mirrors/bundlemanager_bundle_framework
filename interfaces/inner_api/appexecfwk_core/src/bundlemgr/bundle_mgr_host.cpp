@@ -203,6 +203,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
     funcMap_.emplace(IBundleMgr::Message::VERIFY_SYSTEM_API, &BundleMgrHost::HandleVerifySystemApi);
     funcMap_.emplace(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, &BundleMgrHost::HandleGetOverlayManagerProxy);
+    funcMap_.emplace(IBundleMgr::Message::SILENT_INSTALL, &BundleMgrHost::HandleSilentInstall);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2240,6 +2241,25 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfoWithCallback(MessageParcel &data, M
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrHost::HandleSilentInstall(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    bool ret = SilentInstall(*want, userId, object);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleUpgradeAtomicService(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

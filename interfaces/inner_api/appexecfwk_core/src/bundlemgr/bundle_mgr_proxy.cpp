@@ -881,6 +881,35 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
     return true;
 }
 
+bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to silent install");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to SilentInstall due to write token");
+        return false;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to SilentInstall due to write want");
+        return false;
+    }
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to SilentInstall due to write userId");
+        return false;
+    }
+
+    if (!data.WriteObject(callBack)) {
+        APP_LOGE("fail to SilentInstall due to write callBack");
+        return false;
+    }
+
+    MessageParcel reply;
+    return SendTransactCmd(IBundleMgr::Message::SILENT_INSTALL, data, reply);
+}
+
 void BundleMgrProxy::UpgradeAtomicService(const Want &want, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
