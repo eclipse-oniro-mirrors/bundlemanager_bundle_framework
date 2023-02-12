@@ -888,21 +888,21 @@ bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to QueryAbilityInfo due to write MessageParcel");
+        APP_LOGE("fail to SilentInstall due to write token");
         return false;
     }
     if (!data.WriteParcelable(&want)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write want");
+        APP_LOGE("fail to SilentInstall due to write want");
         return false;
     }
 
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to QueryAbilityInfo due to write userId");
+        APP_LOGE("fail to SilentInstall due to write userId");
         return false;
     }
 
     if (!data.WriteObject(callBack)) {
-        APP_LOGE("fail to callBack, for write parcel");
+        APP_LOGE("fail to SilentInstall due to write callBack");
         return false;
     }
 
