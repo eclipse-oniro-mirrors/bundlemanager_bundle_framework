@@ -377,10 +377,6 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get bundle info for self");
 
-    //for test
-    // Want want;
-    // SilentInstall(want, 100, nullptr);
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
