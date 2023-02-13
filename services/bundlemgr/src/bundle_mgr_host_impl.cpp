@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <future>
+#include <set>
 #include <string>
 
 #include "app_log_wrapper.h"
@@ -458,6 +459,17 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
         return false;
     }
     return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, userId, callback);
+}
+
+void BundleMgrHostImpl::ProcessPreload(const Want &want)
+{
+    APP_LOGD("begin to process preload.");
+    auto connectAbilityMgr = GetConnectAbilityMgrFromService();
+    if (connectAbilityMgr == nullptr) {
+        APP_LOGE("connectAbilityMgr is nullptr");
+        return;
+    }
+    connectAbilityMgr->ProcessPreload(want);
 }
 #endif
 

@@ -339,6 +339,7 @@ constexpr const char* APP_ACCESSIBLE = "accessible";
 constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
 constexpr const char* APP_ASAN_ENABLED = "asanEnabled";
+constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";
@@ -359,6 +360,7 @@ constexpr const char* MODULE_DEFINE_PERMISSIONS = "definePermissions";
 constexpr const char* MODULE_DEPENDENCIES = "dependencies";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
+constexpr const char* MODULE_ATOMIC_SERVICE = "atomicService";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";
@@ -443,6 +445,14 @@ constexpr const char* MODULE_TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* MODULE_TARGET_PRIORITY = "targetPriority";
 
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
+
+// app atomicService
+constexpr const char* APP_ATOMIC_SERVICE_SPLIT = "split";
+constexpr const char* APP_ATOMIC_SERVICE_MAIN = "main";
+// module atomicService
+constexpr const char* MODULE_ATOMIC_SERVICE_PRELOADS = "preloads";
+// module atomicService preloads
+constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 extern thread_local int32_t parseResult;
 }  // namespace Profile
 }  // namespace AppExecFwk

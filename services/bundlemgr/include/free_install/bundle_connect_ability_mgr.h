@@ -81,12 +81,17 @@ public:
     bool ConnectAbility(const Want &want, const sptr<IRemoteObject> &callerToken);
 
     /**
+     * @brief send preload request to service center.
+     * @param preloadItems the modules need to be preloaded.
+     */
+    void ProcessPreload(const Want &want);
+
+    /**
      * @brief Disconnect service center
      */
     void DisconnectAbility();
 
     bool SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply);
-
 private:
     void Init();
     /**
@@ -237,6 +242,15 @@ private:
     void WaitFromConnecting(std::unique_lock<std::mutex> &lock);
     void WaitFromConnected(std::unique_lock<std::mutex> &lock);
     void DisconnectDelay();
+
+    void PreloadRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo);
+    bool ProcessPreloadCheck(const TargetAbilityInfo &targetAbilityInfo);
+    void ProcessPreloadRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo);
+
+    int32_t GetPreloadFlag();
+    bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,
+        int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
+    bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;

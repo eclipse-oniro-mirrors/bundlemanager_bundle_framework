@@ -595,6 +595,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
+    bool hasAtomicServiceConfig = (infos.begin()->second).GetHasAtomicServiceConfig();
+    bool split = (infos.begin()->second).GetBaseApplicationInfo().split;
+    std::string main = (infos.begin()->second).GetAtomicMainModuleName();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -650,6 +653,12 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (asanEnabled && info.second.GetReleaseType().find(RELEASE) != std::string::npos) {
             APP_LOGE("asanEnabled is not supported in Release");
             return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
+        }
+        if (hasAtomicServiceConfig != info.second.GetHasAtomicServiceConfig() ||
+                split != info.second.GetBaseApplicationInfo().split ||
+                main != info.second.GetAtomicMainModuleName()) {
+            APP_LOGE("atomicService config is not same.");
+            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
         }
     }
     // check api sdk version

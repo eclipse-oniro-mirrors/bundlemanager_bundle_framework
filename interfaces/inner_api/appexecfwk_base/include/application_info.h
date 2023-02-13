@@ -47,7 +47,7 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
 };
 
-enum class AppType {
+enum class BundleType {
     APP = 0,
     ATOMIC_SERVICE = 1,
 };
@@ -231,7 +231,7 @@ struct ApplicationInfo : public Parcelable {
     int32_t targetPriority;
 
     bool split = true;
-    AppType appType = AppType::APP;
+    BundleType bundleType = BundleType::APP;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

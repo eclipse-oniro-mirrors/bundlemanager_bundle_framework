@@ -1098,6 +1098,11 @@ public:
         return nullptr;
     }
 
+    virtual void ProcessPreload(const Want &want)
+    {
+        return;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1203,6 +1208,7 @@ public:
         VERIFY_SYSTEM_API,
         GET_OVERLAY_MANAGER_PROXY,
         SILENT_INSTALL,
+        PROCESS_PRELOAD,
     };
 };
 }  // namespace AppExecFwk

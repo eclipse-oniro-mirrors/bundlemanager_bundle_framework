@@ -110,7 +110,7 @@ const std::string APPLICATION_APP_TARGET_PRIORITY = "targetPriority";
 const std::string APPLICATION_ASAN_ENABLED = "asanEnabled";
 const std::string APPLICATION_ASAN_LOG_PATH = "asanLogPath";
 const std::string APPLICATION_SPLIT = "split";
-const std::string APPLICATION_APP_TYPE = "appType";
+const std::string APPLICATION_APP_TYPE = "bundleType";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -393,7 +393,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     asanEnabled = parcel.ReadBool();
     asanLogPath = Str16ToStr8(parcel.ReadString16());
     split = parcel.ReadBool();
-    appType = static_cast<AppType>(parcel.ReadInt32());
+    bundleType = static_cast<BundleType>(parcel.ReadInt32());
     return true;
 }
 
@@ -534,7 +534,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(asanLogPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, split);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(appType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
     return true;
 }
 
@@ -714,7 +714,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ASAN_ENABLED, applicationInfo.asanEnabled},
         {APPLICATION_ASAN_LOG_PATH, applicationInfo.asanLogPath},
         {APPLICATION_SPLIT, applicationInfo.split},
-        {APPLICATION_APP_TYPE, applicationInfo.appType},
+        {APPLICATION_APP_TYPE, applicationInfo.bundleType},
     };
 }
 
@@ -1322,10 +1322,10 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<AppType>(jsonObject,
+    GetValueIfFindKey<BundleType>(jsonObject,
         jsonObjectEnd,
         APPLICATION_APP_TYPE,
-        applicationInfo.appType,
+        applicationInfo.bundleType,
         JsonType::NUMBER,
         false,
         parseResult,

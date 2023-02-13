@@ -115,6 +115,8 @@ struct InnerModuleInfo {
     std::string targetModuleName;
     int32_t targetPriority;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
+    AtomicServiceModuleType atomicServiceModuleType;
+    std::vector<std::string> preloads;
 };
 
 struct SkillUri {
@@ -1400,7 +1402,8 @@ public:
         return baseApplicationInfo_->asanEnabled;
     }
 
-    void SetAsanEnabled(bool asanEnabled) {
+    void SetAsanEnabled(bool asanEnabled)
+    {
         baseApplicationInfo_->asanEnabled = asanEnabled;
     }
 
@@ -1850,6 +1853,55 @@ public:
         return baseApplicationInfo_->asanLogPath;
     }
 
+    void SetApplicationSplit(bool split)
+    {
+        baseApplicationInfo_->split = split;
+    }
+    void SetApplicationBundleType(BundleType type)
+    {
+        baseApplicationInfo_->bundleType = type;
+    }
+
+    bool SetInnerModuleAtomicPreload(const std::string &moduleName, const std::vector<std::string> &preloads)
+    {
+        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+            APP_LOGE("innerBundleInfo does not contain the module.");
+            return false;
+        }
+        innerModuleInfos_.at(moduleName).preloads = preloads;
+        return true;
+    }
+
+    bool SetInnerModuleAtomicType(const std::string &moduleName, AtomicServiceModuleType type)
+    {
+        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+            APP_LOGE("innerBundleInfo does not contain the module.");
+            return false;
+        }
+        innerModuleInfos_.at(moduleName).atomicServiceModuleType = type;
+        return true;
+    }
+
+    bool GetHasAtomicServiceConfig() const
+    {
+        return hasAtomicServiceConfig_;
+    }
+
+    void SetHasAtomicServiceConfig(bool hasConfig)
+    {
+        hasAtomicServiceConfig_ = hasConfig;
+    }
+
+    std::string GetAtomicMainModuleName() const
+    {
+        return mainAtomicModuleName_;
+    }
+
+    void SetAtomicMainModuleName(std::string main)
+    {
+        mainAtomicModuleName_ = main;
+    }
+
     void SetDisposedStatus(int32_t status);
 
     int32_t GetDisposedStatus() const;
@@ -1958,6 +2010,10 @@ private:
     // overlay bundleInfo
     std::vector<OverlayBundleInfo> overlayBundleInfo_;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
+
+    // atomicService
+    bool hasAtomicServiceConfig_ = false;
+    std::string mainAtomicModuleName_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
