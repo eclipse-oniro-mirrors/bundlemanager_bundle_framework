@@ -971,9 +971,9 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
     APP_LOGD("ConvertApplicationInfo name=%{public}s.", appInfo.name.c_str());
 
-    napi_value nAppType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.appType), &nAppType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appType", nAppType));
+    napi_value nBundleType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "bundleType", nBundleType));
 
     napi_value nSplit;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.split, &nSplit));

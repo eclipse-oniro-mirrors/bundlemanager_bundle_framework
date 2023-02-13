@@ -48,6 +48,8 @@ enum ServiceCenterFunction {
     CONNECT_SILENT_INSTALL = 2,
     CONNECT_UPGRADE_CHECK = 3,
     CONNECT_UPGRADE_INSTALL = 4,
+    CONNECT_QUERY_RPCID = 5,
+    CONNECT_PRELOAD_INSTALL = 6,
 };
 
 enum ServiceCenterResultCode {

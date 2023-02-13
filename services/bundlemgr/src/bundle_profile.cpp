@@ -2511,6 +2511,18 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.InsertInnerModuleInfo(configJson.module.package, innerModuleInfo);
+    if (innerBundleInfo.GetEntryInstallationFree()) {
+        innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+        auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+        innerBundleInfo.SetApplicationSplit(moduleInfos.size() != 1);
+        for (auto it : moduleInfos) {
+            if (it.second.isEntry) {
+                innerBundleInfo.SetInnerModuleAtomicType(it.first, AtomicServiceModuleType::MAIN);
+            } else {
+                innerBundleInfo.SetInnerModuleAtomicType(it.first, AtomicServiceModuleType::NORMAL);
+            }
+        }
+    }
     return true;
 }
 

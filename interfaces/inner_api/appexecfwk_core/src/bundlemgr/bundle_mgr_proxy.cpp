@@ -3164,6 +3164,26 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
     return reply.ReadBool();
 }
 
+void BundleMgrProxy::ProcessPreload(const Want &want)
+{
+    APP_LOGD("BundleMgrProxy::ProcessPreload is called.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to ProcessPreload due to write InterfaceToken fail");
+        return;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to ProcessPreload due to write want fail");
+        return;
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    auto res = Remote()->SendRequest(IBundleMgr::Message::PROCESS_PRELOAD, data, reply, option);
+    if (res != ERR_OK) {
+        APP_LOGE("SendRequest fail, error: %{public}d", res);
+    }
+}
+
 sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

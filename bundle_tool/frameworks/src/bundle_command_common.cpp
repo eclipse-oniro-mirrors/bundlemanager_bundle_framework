@@ -566,6 +566,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error, install asan enabled is not support",
     },
     {
+        IStatusReceiver::ERR_INSTALL_ATOMIC_SERVICE_NOT_SAME,
+        "error, install atomic service config is not same",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

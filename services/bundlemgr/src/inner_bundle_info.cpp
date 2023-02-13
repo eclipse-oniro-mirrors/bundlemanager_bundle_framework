@@ -117,6 +117,10 @@ const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
+const std::string MODULE_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
+const std::string MODULE_PRELOADS = "preloads";
+const std::string HAS_ATOMIC_SERVICE_CONFIG = "hasAtomicServiceConfig";
+const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -420,6 +424,8 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->overlayBundleInfo_ = info.overlayBundleInfo_;
     this->overlayType_ = info.overlayType_;
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
+    this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
+    this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
     return *this;
 }
 
@@ -511,7 +517,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COMPILE_MODE, info.compileMode},
         {MODULE_TARGET_MODULE_NAME, info.targetModuleName},
         {MODULE_TARGET_PRIORITY, info.targetPriority},
-        {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo}
+        {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo},
+        {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
+        {MODULE_PRELOADS, info.preloads}
     };
 }
 
@@ -585,6 +593,8 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
+    jsonObject[HAS_ATOMIC_SERVICE_CONFIG] = hasAtomicServiceConfig_;
+    jsonObject[MAIN_ATOMIC_MODULE_NAME] = mainAtomicModuleName_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -976,6 +986,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<AtomicServiceModuleType>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ATOMIC_SERVICE_MODULE_TYPE,
+        info.atomicServiceModuleType,
+        JsonType::NUMBER,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PRELOADS,
+        info.preloads,
+        JsonType::ARRAY,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1534,6 +1560,22 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        HAS_ATOMIC_SERVICE_CONFIG,
+        hasAtomicServiceConfig_,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MAIN_ATOMIC_MODULE_NAME,
+        mainAtomicModuleName_,
+        JsonType::STRING,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
         return parseResult;
@@ -1640,6 +1682,11 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
             hapInfo.hqfInfo = hqf;
             break;
         }
+    }
+    hapInfo.atomicServiceModuleType = it->second.atomicServiceModuleType;
+    for (const auto &item : it->second.preloads) {
+        PreloadItem preload(item);
+        hapInfo.preloads.emplace_back(preload);
     }
     return hapInfo;
 }
@@ -2051,6 +2098,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
             moduleInfo.moduleSourceDir = info.second.modulePath;
             appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
         }
+        moduleInfo.preloads = info.second.preloads;
         appInfo.moduleInfos.emplace_back(moduleInfo);
         if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
@@ -2103,6 +2151,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
             moduleInfo.moduleSourceDir = info.second.modulePath;
             appInfo.moduleSourceDirs.emplace_back(info.second.modulePath);
         }
+        moduleInfo.preloads = info.second.preloads;
         appInfo.moduleInfos.emplace_back(moduleInfo);
         if (deCompress && info.second.isEntry) {
             appInfo.entryDir = info.second.modulePath;
