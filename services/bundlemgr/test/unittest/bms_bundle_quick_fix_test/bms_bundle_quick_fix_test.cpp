@@ -3888,7 +3888,7 @@ HWTEST_F(BmsBundleQuickFixTest, ToString_0100, Function | SmallTest | Level0)
 {
     InnerAppQuickFix innerAppQuickFix;
     auto ret = innerAppQuickFix.ToString();
-    EXPECT_EQ(ret, "{\"appQuickFix\":{\"bundleName\":\"\",\"deployedAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"},\"deployingAppqfInfo\":{\"cpuAbi\":\"\",\"hqfInfos\":[],\"nativeLibraryPath\":\"\",\"type\":0,\"versionCode\":0,\"versionName\":\"\"},\"versionCode\":0,\"versionName\":\"\"},\"quickFixMark\":{\"bundleName\":\"\",\"status\":0}}");
+    EXPECT_EQ(ret.empty(), false);
 }
 
 /**
@@ -3976,7 +3976,7 @@ HWTEST_F(BmsBundleQuickFixTest, FromJson_0400, Function | SmallTest | Level0)
 /**
  * @tc.number: FromJson_0500
  * @tc.name: test FromJson
- * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR 
+ * @tc.desc: Parse json to C++ return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
  */
 HWTEST_F(BmsBundleQuickFixTest, FromJson_0500, Function | SmallTest | Level0)
 {

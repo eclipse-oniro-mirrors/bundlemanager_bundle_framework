@@ -1400,7 +1400,8 @@ public:
         return baseApplicationInfo_->asanEnabled;
     }
 
-    void SetAsanEnabled(bool asanEnabled) {
+    void SetAsanEnabled(bool asanEnabled)
+    {
         baseApplicationInfo_->asanEnabled = asanEnabled;
     }
 
@@ -1797,7 +1798,7 @@ public:
             innerModuleInfo.second.overlayModuleInfo.erase(std::remove_if(
                 innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
                 [&bundleName](const auto &overlayInfo) {
-                return overlayInfo.bundleName == bundleName;
+                    return overlayInfo.bundleName == bundleName;
             }), innerModuleInfo.second.overlayModuleInfo.end());
         }
     }

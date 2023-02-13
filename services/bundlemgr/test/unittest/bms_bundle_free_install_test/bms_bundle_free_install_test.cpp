@@ -1597,7 +1597,7 @@ HWTEST_F(BmsBundleFreeInstallTest, Request_0100, Function | SmallTest | Level0)
 /**
 * @tc.number: OnAbilityDisconnectDone_0100
 * @tc.name: test OnAbilityDisconnectDone
-* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_& deathRecipient_ instantiation 
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_& deathRecipient_ instantiation
  */
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | SmallTest | Level0)
 {
@@ -1619,13 +1619,12 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0100, Function | Smal
     EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
     connection.GetRemoteObject();
     EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
-
 }
 
 /**
 * @tc.number: OnAbilityDisconnectDone_0200
 * @tc.name: test OnAbilityDisconnectDone
-* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_ instantiation  
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, serviceCenterRemoteObject_ instantiation
  */
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | SmallTest | Level0)
 {
@@ -1651,7 +1650,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0200, Function | Smal
 /**
 * @tc.number: OnAbilityDisconnectDone_0300
 * @tc.name: test OnAbilityDisconnectDone
-* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, deathRecipient_ instantiation  
+* @tc.desc: 1.Verify the OnAbilityDisconnectDone function, deathRecipient_ instantiation
  */
 HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0300, Function | SmallTest | Level0)
 {

@@ -21,7 +21,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class OverlayDataMgr final : public DelayedSingleton<OverlayDataMgr>{
+class OverlayDataMgr final : public DelayedSingleton<OverlayDataMgr> {
 public:
     OverlayDataMgr() = default;
     virtual ~OverlayDataMgr() = default;
@@ -42,7 +42,8 @@ public:
 
     void RemoveOverlayBundleInfo(const std::string &targetBundleName, const std::string &bundleName);
 
-    void RemoveOverlayModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo);
+    void RemoveOverlayModuleInfo(const std::string &bundleName,
+        const std::string &modulePackage, InnerBundleInfo &oldInfo);
 
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo);
 
