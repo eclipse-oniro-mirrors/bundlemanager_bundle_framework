@@ -84,7 +84,10 @@ group("unittest") {
       ]
     }
   }
-  if (bundle_framework_free_install) {
-    deps += [ "unittest/bms_bundle_free_install_test:unittest" ]
+  if (bundle_framework_free_install && bundle_framework_graphics) {
+    deps += [
+      "unittest/bms_bundle_free_install_test:unittest",
+      "unittest/bms_bundle_kit_service_base_test:unittest",
+    ]
   }
 }
