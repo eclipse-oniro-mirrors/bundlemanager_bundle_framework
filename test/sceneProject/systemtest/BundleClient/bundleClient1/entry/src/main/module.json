@@ -3,7 +3,7 @@
         "name":"entry_phone",
         "type":"entry",
         "mainElement":"MainAbility",
-        "srcEntrance":"./ets/Application/AbilityStage.ts",
+        "srcEntry":"./ets/Application/AbilityStage.ts",
         "description":"$string:phone_entry_dsc",
         "descriptionId":16777220,
         "deviceTypes":[
@@ -23,14 +23,14 @@
         "abilities":[
             {
                 "name":"MainAbility",
-                "srcEntrance":"./ets/MainAbility/MainAbility.ts",
+                "srcEntry":"./ets/MainAbility/MainAbility.ts",
                 "description":"$string:phone_entry_main",
                 "descriptionId":16777221,
                 "icon":"$media:icon",
                 "iconId":16777225,
                 "label":"$string:entry_label",
                 "labelId":16777218,
-                "visible":true,
+                "exported":true,
                 "orientation":"portrait",
                 "metadata":[
                     {
@@ -64,9 +64,9 @@
                     }
                 ],
                 "name":"Form",
-                "srcEntrance":"./ets/Form/MyForm.ts",
+                "srcEntry":"./ets/Form/MyForm.ts",
                 "type":"form",
-                "visible":true
+                "exported":true
             },
             {
                 "description":"$string:serviceability_description",
@@ -74,7 +74,7 @@
                 "icon":"$media:icon",
                 "iconId":16777225,
                 "name":"WeatherFormAbility",
-                "srcEntrance":"./ets/Weather/WeatherFormAbility.ts",
+                "srcEntry":"./ets/Weather/WeatherFormAbility.ts",
                 "type":"wallpaper"
             }
         ],

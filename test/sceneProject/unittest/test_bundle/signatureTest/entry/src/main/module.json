@@ -19,8 +19,8 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             },
             {
                 "description": "$string:MainAbility_desc",
@@ -40,8 +40,8 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             },
             {
                 "description": "$string:MainAbility_desc",
@@ -61,8 +61,8 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -86,7 +86,7 @@
                         ]
                     }
                 ],
-                "srcEntrance": "",
+                "srcEntry": "",
                 "type": "backup"
             },
             {
@@ -101,7 +101,7 @@
                         ]
                     }
                 ],
-                "srcEntrance": "",
+                "srcEntry": "",
                 "type": "backup"
             },
             {
@@ -116,7 +116,7 @@
                         ]
                     }
                 ],
-                "srcEntrance": "",
+                "srcEntry": "",
                 "type": "backup"
             }
         ],
@@ -124,7 +124,7 @@
         "mainElement": "MainAbility",
         "name": "entry",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry",
         "virtualMachine": "ark"
     }

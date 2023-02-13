@@ -9,12 +9,12 @@
                 "label": "$string:MainAbility_label",
                 "labelId": 16777219,
                 "name": "MainAbility",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowBackground": "$color:white",
                 "startWindowBackgroundId": 16777221,
                 "startWindowIcon": "$media:icon",
                 "startWindowIconId": 16777222,
-                "visible": true
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -28,7 +28,7 @@
         "mainElement": "MainAbility",
         "name": "entry",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry",
         "virtualMachine": "ark"
     }

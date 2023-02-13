@@ -25,12 +25,12 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             },
             {
                 "name": "MainAbility1",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "unspecified",
@@ -40,7 +40,7 @@
             },
             {
                 "name": "MainAbility2",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "landscape",
@@ -50,7 +50,7 @@
             },
             {
                 "name": "MainAbility3",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "portrait",
@@ -60,7 +60,7 @@
             },
             {
                 "name": "MainAbility4",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "landscape_inverted",
@@ -72,7 +72,7 @@
             },
             {
                 "name": "MainAbility5",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "portrait_inverted",
@@ -80,7 +80,7 @@
             },
             {
                 "name": "MainAbility6",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation",
@@ -88,7 +88,7 @@
             },
             {
                 "name": "MainAbility7",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation_landscape",
@@ -96,7 +96,7 @@
             },
             {
                 "name": "MainAbility8",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation_portrait",
@@ -104,7 +104,7 @@
             },
             {
                 "name": "MainAbility9",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation_restricted",
@@ -112,7 +112,7 @@
             },
             {
                 "name": "MainAbility10",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation_landscape_restricted",
@@ -120,14 +120,14 @@
             },
             {
                 "name": "MainAbility11",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "auto_rotation_portrait_restricted"
             },
             {
                 "name": "MainAbility12",
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowIcon": "$media:icon",
                 "startWindowBackground": "$color:icon",
                 "orientation": "locked"
@@ -154,9 +154,9 @@
                     }
                 ],
                 "name": "Form",
-                "srcEntrance": "./ets/Form/MyForm.ts",
+                "srcEntry": "./ets/Form/MyForm.ts",
                 "type": "form",
-                "visible": true
+                "exported": true
             },
             {
                 "description": "$string:serviceability_description",
@@ -164,7 +164,7 @@
                 "icon": "$media:icon",
                 "iconId": 16777225,
                 "name": "WeatherFormAbility",
-                "srcEntrance": "./ets/Weather/WeatherFormAbility.ts",
+                "srcEntry": "./ets/Weather/WeatherFormAbility.ts",
                 "type": "service"
             }
         ],
@@ -172,7 +172,7 @@
         "mainElement": "MainAbility",
         "name": "entry_phone",
         "pages": "@profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry"
     }
 }
