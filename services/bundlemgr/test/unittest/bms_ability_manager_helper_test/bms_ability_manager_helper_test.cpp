@@ -96,7 +96,6 @@ HWTEST_F(BmsAbilityManagerHelperTest, IsRunning_bundleUid_0100, Function | Small
     int uid = 1;
     int ret = abilityManagerHelper_->IsRunning(bundleName, uid);
     EXPECT_EQ(ret, 0);
-
 }
 
 /**
