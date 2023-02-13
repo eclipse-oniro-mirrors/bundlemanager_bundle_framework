@@ -137,8 +137,8 @@ HWTEST_F(BundleInstallerManagerTest, BundleInstallerManagerTest_004, TestSize.Le
     sptr<MockStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
     std::shared_ptr<BundleInstaller> bundleInstallerFirst = std::make_shared<BundleInstaller>(installerIdFirst, handler,
         statusReceiver);
-    std::shared_ptr<BundleInstaller> bundleInstallerSecond = std::make_shared<BundleInstaller>(installerIdSecond, handler,
-        statusReceiver);
+    std::shared_ptr<BundleInstaller> bundleInstallerSecond = std::make_shared<BundleInstaller>(installerIdSecond,
+        handler, statusReceiver);
     auto bundleInstallerManager = std::make_shared<BundleInstallerManager>(runner_);
     bundleInstallerManager->installers_.emplace(installerIdFirst, bundleInstallerFirst);
     bundleInstallerManager->installers_.emplace(installerIdSecond, bundleInstallerSecond);
