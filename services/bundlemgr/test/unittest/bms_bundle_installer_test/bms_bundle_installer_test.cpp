@@ -61,9 +61,11 @@ const int32_t USERID = 100;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
+const std::string BUNDLE_MODULEJSON_TEST = "moduleJsonTest.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
 const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
+const std::string BUNDLE_MODULEJSON_NAME = "com.test.modulejsontest";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
@@ -2033,6 +2035,20 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3200, Function | SmallTest 
     int32_t userId = Constants::DEFAULT_USERID;;
     OHOS::ErrCode ret = installer.InstallAppControl(installAppIds, userId);
     EXPECT_EQ(ret, OHOS::ERR_OK);
+}
+
+/**
+ * @tc.number: BundleInstaller_3300
+ * @tc.name: test InstallAppControl
+ * @tc.desc: 1.Test the InstallAppControl of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_MODULEJSON_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UnInstallBundle(BUNDLE_MODULEJSON_NAME);
 }
 
 /**
