@@ -85,6 +85,9 @@ group("unittest") {
         "unittest/bms_bundle_quick_fix_test:unittest",
       ]
     }
+    if (bundle_framework_overlay_install) {
+      deps += [ "unittest/bms_bundle_overlay_test:unittest" ]
+    }
   }
   if (bundle_framework_free_install && bundle_framework_graphics) {
     deps += [
