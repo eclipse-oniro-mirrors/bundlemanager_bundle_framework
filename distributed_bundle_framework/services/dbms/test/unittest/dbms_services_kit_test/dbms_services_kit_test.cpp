@@ -54,7 +54,7 @@ const std::string PATH_LOCATION = "/data/app/el1/bundle/public/com.ohos.launcher
 const std::string PATH_LOCATIONS = "/data/app/el1/bundle/new_create.txt";
 const std::string DEVICE_ID_NORMAL = "deviceId";
 const std::string LOCALE_INFO = "localeInfo";
-const std::EMPTY_STRING = "";
+const std::string EMPTY_STRING = "";
 }  // namespace
 
 class DbmsServicesKitTest : public testing::Test {
