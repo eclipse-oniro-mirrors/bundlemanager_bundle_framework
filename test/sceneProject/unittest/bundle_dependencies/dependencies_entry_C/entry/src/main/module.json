@@ -19,8 +19,8 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -35,7 +35,7 @@
         "mainElement": "MainAbility",
         "name": "entry_C",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
         "virtualMachine": "ark"
     }

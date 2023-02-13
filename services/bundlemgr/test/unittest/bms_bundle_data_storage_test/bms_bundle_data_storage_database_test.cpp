@@ -407,6 +407,8 @@ protected:
                 "allowCommonEvent": [],
                 "needAppDetail": false,
                 "appDetailAbilityLibraryPath": "",
+                "appType": 0,
+                "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0
             },
@@ -769,7 +771,8 @@ protected:
     nlohmann::json moduleInfoJson_ = R"(
         {
             "moduleName": "entry",
-            "moduleSourceDir": ""
+            "moduleSourceDir": "",
+            "preloads": []
         }
     )"_json;
     const std::string BASE_ABILITY_INFO = "baseAbilityInfos";

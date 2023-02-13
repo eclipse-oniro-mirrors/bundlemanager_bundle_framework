@@ -2,7 +2,7 @@
     "module": {
         "name":"module01",
         "type":"entry",
-        "srcEntrance":"./MyAbilityStage.ts",
+        "srcEntry":"./MyAbilityStage.ts",
         "description":"$string:description_application",
         "descriptionId": 2020,
         "process":"bba",
@@ -38,7 +38,7 @@
         "abilities": [
             {
             "name": "MainAbility",
-            "srcEntrance": "./login/MyLoginAbility.ts",
+            "srcEntry": "./login/MyLoginAbility.ts",
             "description": "$string:description_main_ability",
             "descriptionId": 3030,
             "icon": "$media:icon",
@@ -58,7 +58,7 @@
                     "resource":"world"
                 }
             ],
-            "visible": true,
+            "exported": true,
             "skills": [
                 {
                 "actions": [
@@ -103,7 +103,7 @@
         "extensionAbilities": [
             {
             "name": "FormName",
-            "srcEntrance": "./form/MyForm.ts",
+            "srcEntry": "./form/MyForm.ts",
             "icon": "$media:icon",
             "iconId": 16777223,
             "label": "$string:extension_name",
@@ -114,7 +114,7 @@
             "readPermission":"readPermission---",
             "writePermission":"writePermission---",
             "permissions":["aaa","ccc"],
-            "visible": true,
+            "exported": true,
             "skills": [
                 {
                 "actions": ["action001"],
