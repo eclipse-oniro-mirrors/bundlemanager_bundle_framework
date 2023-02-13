@@ -349,7 +349,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0010, Function | SmallTest | L
  * @tc.name: test GetAbilityInfo
  * @tc.require: issueI5MZ8V
  * @tc.desc: 1. system running normally
- *           2. test abilityName empty
+ *           2. test abilityName is empty
  */
 HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0011, Function | SmallTest | Level0)
 {
