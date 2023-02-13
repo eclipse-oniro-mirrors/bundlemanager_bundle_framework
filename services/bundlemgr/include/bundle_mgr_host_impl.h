@@ -21,6 +21,7 @@
 #endif
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service_event_handler.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -36,6 +37,8 @@ public:
     {
         auto myRunner = EventRunner::Create(BUNDLE_MGR_THREAD);
         handler_ = std::make_shared<BMSEventHandler>(myRunner);
+        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
     virtual ~BundleMgrHostImpl() {}
     /**

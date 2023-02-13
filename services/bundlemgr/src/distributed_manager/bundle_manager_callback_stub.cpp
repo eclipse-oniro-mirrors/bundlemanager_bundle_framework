@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "bundle_manager_callback_stub.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "message_parcel.h"
 #include "string_ex.h"
 
@@ -29,6 +30,7 @@ BundleManagerCallbackStub::BundleManagerCallbackStub()
 int32_t BundleManagerCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGI("bundle mgr callback onReceived message, the message code is %{public}u", code);
     std::u16string descriptor = BundleManagerCallbackStub::GetDescriptor();
     std::u16string token = data.ReadInterfaceToken();

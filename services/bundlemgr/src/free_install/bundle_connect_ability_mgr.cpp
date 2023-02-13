@@ -17,6 +17,7 @@
 
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "free_install_params.h"
 #include "json_util.h"
@@ -80,6 +81,8 @@ void BundleConnectAbilityMgr::Init()
     if (handler_ == nullptr) {
         APP_LOGE("Create handler failed");
     }
+    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 BundleConnectAbilityMgr::BundleConnectAbilityMgr()

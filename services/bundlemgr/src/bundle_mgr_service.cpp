@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_distributed_manager.h"
+#include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
@@ -189,6 +190,8 @@ bool BundleMgrService::InitBundleEventHandler()
 
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>(runner_);
+        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
 #ifdef HICOLLIE_ENABLE
         int32_t timeout = 10 * 60 * 1000; // 10min
         if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {

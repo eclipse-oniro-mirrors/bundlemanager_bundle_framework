@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
 
@@ -49,6 +50,7 @@ void OverlayManagerHost::init()
 int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGD("bundle mgr host onReceived message, the message code is %{public}u", code);
     std::u16string descripter = OverlayManagerHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();

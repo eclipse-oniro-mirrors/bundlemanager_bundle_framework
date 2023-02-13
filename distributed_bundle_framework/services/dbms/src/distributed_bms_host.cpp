@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_memory_guard.h"
 #include "remote_ability_info.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
@@ -41,6 +42,7 @@ DistributedBmsHost::~DistributedBmsHost()
 
 int DistributedBmsHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGI("DistributedBmsHost receives message from client, code = %{public}u, flags = %{public}d", code,
         option.GetFlags());
     std::u16string descripter = DistributedBmsHost::GetDescriptor();
