@@ -3912,8 +3912,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
         return nullptr;
     }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     BundleInfo bundleInfo;
-    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
         std::string moduleResPath;
