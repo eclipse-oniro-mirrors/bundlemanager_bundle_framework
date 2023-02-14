@@ -414,6 +414,8 @@ protected:
             },
             "baseBundleInfo": {
                 "asanEnabled": false,
+                "abilityInfos": [
+                ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
                 "compatibleVersion": 8,
                 "cpuAbi": "",
@@ -422,6 +424,8 @@ protected:
                 "description": "",
                 "entryInstallationFree": true,
                 "entryModuleName": "phone",
+                "extensionAbilityInfo": [
+                ],
                 "gid": -1,
                 "hapModuleInfos": [
                 ],
