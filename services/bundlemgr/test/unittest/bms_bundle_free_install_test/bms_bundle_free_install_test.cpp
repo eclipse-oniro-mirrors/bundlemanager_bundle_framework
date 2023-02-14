@@ -818,6 +818,142 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0030, Function | Sma
 }
 
 /**
+ * @tc.number: BmsBundleFreeInstallTest_0031
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreloadCheck
+ * @tc.desc: test ProcessPreloadCheck failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0031, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    TargetAbilityInfo targetAbilityInfo;
+    connectAbilityMgr.handler_ = nullptr;
+    bool installResult = connectAbilityMgr.ProcessPreloadCheck(targetAbilityInfo);
+    EXPECT_EQ(installResult, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0032
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreloadCheck
+ * @tc.desc: test ProcessPreloadCheck failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0032, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    TargetAbilityInfo targetAbilityInfo;
+    bool installResult = connectAbilityMgr.ProcessPreloadCheck(targetAbilityInfo);
+    EXPECT_EQ(installResult, true);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0035
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0035, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr.GetPreloadList("", "", USERID, targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0036
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0036, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr.GetPreloadList(BUNDLE_NAME, "", USERID, targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0037
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0037, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    std::string moudleName = "moudleName";
+    bool ret = connectAbilityMgr.GetPreloadList(
+        BUNDLE_NAME, moudleName, USERID, targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0038
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0038, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = connectAbilityMgr.GetPreloadList(
+        BUNDLE_NAME, "|", USERID, targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0039
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0039, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    bool ret = connectAbilityMgr.GetPreloadList(
+        BUNDLE_NAME, MODULE_NAME_TEST, USERID, targetAbilityInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0041
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0041, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    InnerBundleInfo innerBundleInfo;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr.CheckDependencies("", innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0042
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0042, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    InnerBundleInfo innerBundleInfo;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr.CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: BundleConnectAbilityMgr_0001
  * Function: GetBundleConnectAbilityMgr
  * @tc.name: test GetBundleConnectAbilityMgr
@@ -1201,6 +1337,32 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
     ElementName name;
     name.SetAbilityName(ABILITY_NAME_TEST);
     name.SetBundleName(BUNDLE_NAME);
+    want.SetElement(name);
+    int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    InnerBundleInfo innerBundleInfo;
+    ClearDataMgr();
+    connectAbilityMgr.UpgradeAtomicService(want, USERID);
+    bool res = connectAbilityMgr.IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
+    EXPECT_FALSE(res);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0024
+ * Function: IsObtainAbilityInfo
+ * @tc.name: test IsObtainAbilityInfo
+ * @tc.desc: test IsObtainAbilityInfo failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    name.SetBundleName(BUNDLE_NAME);
+    name.SetModuleName(MODULE_NAME_TEST);
     want.SetElement(name);
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     AbilityInfo abilityInfo;
