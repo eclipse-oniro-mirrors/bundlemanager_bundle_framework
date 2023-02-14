@@ -2084,6 +2084,11 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
+    if (!GetHasAtomicServiceConfig()) {
+        std::vector<std::string> moduleNames;
+        GetModuleNames(moduleNames);
+        appInfo.split = moduleNames.size() != 1;
+    }
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
@@ -2142,6 +2147,11 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
     appInfo.uid = innerBundleUserInfo.uid;
+    if (!GetHasAtomicServiceConfig()) {
+        std::vector<std::string> moduleNames;
+        GetModuleNames(moduleNames);
+        appInfo.split = moduleNames.size() != 1;
+    }
 
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
