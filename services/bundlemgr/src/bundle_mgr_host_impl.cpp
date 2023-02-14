@@ -1121,7 +1121,16 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     result.append(bundleName);
     result.append(":\n");
     nlohmann::json jsonObject = bundleInfo;
-    jsonObject["hapModuleInfos"] = bundleInfo.hapModuleInfos;
+    jsonObject.erase("abilityInfos");
+    jsonObject.erase("extensionAbilityInfo");
+    for (auto &hapModule : jsonObject["hapModuleInfos"]) {
+        for (auto &ability : hapModule["abilityInfos"]) {
+            ability.erase("applicationInfo");
+        }
+        for (auto &extension : hapModule["extensionInfos"]) {
+            extension.erase("applicationInfo");
+        }
+    }
     jsonObject["userInfo"] = innerBundleUserInfos;
     result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");
