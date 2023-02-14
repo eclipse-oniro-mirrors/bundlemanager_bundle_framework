@@ -1554,6 +1554,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             if (moduleJson.at(Profile::MODULE_TYPE) != "entry") {
                 atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
             }
+        } else {
+            atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
         }
         auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
         split = (moduleInfos.size() != 1);
