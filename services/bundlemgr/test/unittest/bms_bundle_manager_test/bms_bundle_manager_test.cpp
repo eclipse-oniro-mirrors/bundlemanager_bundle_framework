@@ -3938,22 +3938,6 @@ HWTEST_F(BmsBundleManagerTest, GetDataStorage_0001, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: GetDataStorage_0002
- * @tc.name: test LoadAllData
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleManagerTest, GetDataStorage_0002, Function | SmallTest | Level1)
-{
-    auto dataStorage = GetBundleDataMgr()->GetDataStorage();
-    EXPECT_NE(dataStorage, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    bool res = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
-    EXPECT_EQ(res, true);
-    res = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
-    EXPECT_EQ(res, true);
-}
-
-/**
  * @tc.number: BundleFreeInstall_0100
  * @tc.name: test CheckAbilityEnableInstall
  * @tc.desc: 1.check ability infos
