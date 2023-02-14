@@ -1121,7 +1121,7 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     result.append(bundleName);
     result.append(":\n");
     nlohmann::json jsonObject = bundleInfo;
-    jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
+    jsonObject["hapModuleInfos"] = bundleInfo.hapModuleInfos;
     jsonObject["userInfo"] = innerBundleUserInfos;
     result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");

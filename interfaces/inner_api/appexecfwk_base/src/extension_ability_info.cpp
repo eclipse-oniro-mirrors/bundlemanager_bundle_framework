@@ -44,6 +44,7 @@ const std::string WRITE_PERMISSION = "writePermission";
 const std::string URI = "uri";
 const std::string VISIBLE = "visible";
 const std::string META_DATA = "metadata";
+const std::string APPLICATION_INFO = "applicationInfo";
 const std::string RESOURCE_PATH = "resourcePath";
 const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
@@ -168,6 +169,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {PERMISSIONS, extensionInfo.permissions},
         {VISIBLE, extensionInfo.visible},
         {META_DATA, extensionInfo.metadata},
+        {APPLICATION_INFO, extensionInfo.applicationInfo},
         {RESOURCE_PATH, extensionInfo.resourcePath},
         {Constants::HAP_PATH, extensionInfo.hapPath},
         {ENABLED, extensionInfo.enabled},
@@ -325,6 +327,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<ApplicationInfo>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_INFO,
+        extensionInfo.applicationInfo,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         RESOURCE_PATH,

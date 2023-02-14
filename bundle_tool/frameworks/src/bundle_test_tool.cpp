@@ -1127,7 +1127,6 @@ ErrCode BundleTestTool::DumpSandboxBundleInfo(const std::string &bundleName, con
     auto dumpRet = client.GetSandboxBundleInfo(bundleName, appIndex, userId, bundleInfo);
     if (dumpRet == ERR_OK) {
         nlohmann::json jsonObject = bundleInfo;
-        jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
         dumpResults= jsonObject.dump(Constants::DUMP_INDENT);
     }
     return dumpRet;
@@ -1175,7 +1174,7 @@ ErrCode BundleTestTool::RunAsDumpSandboxCommand()
     std::string dumpRes = "";
     ErrCode ret = DumpSandboxBundleInfo(bundleName, appIndex, userId, dumpRes);
     if (ret == ERR_OK) {
-        resultReceiver_.append(dumpRes + "\n");
+        resultReceiver_.append(dumpRes);
     } else {
         resultReceiver_.append(STRING_DUMP_SANDBOX_FAILED + "errCode is "+ std::to_string(ret) + "\n");
     }
