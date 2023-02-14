@@ -56,6 +56,8 @@ using namespace OHOS::Security;
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string LOG = "log";
+const std::string RELEASE = "Release";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -877,6 +879,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
         return result;
     }
+    if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
+        APP_LOGE("fail to remove asan log path, error is %{public}d", result);
+        return result;
+    }
 
     enableGuard.Dismiss();
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -995,6 +1001,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             result = DeleteArkProfile(bundleName, userId_);
             if (result != ERR_OK) {
                 APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+                return result;
+            }
+            if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
+                APP_LOGE("fail to remove asan log path, error is %{public}d", result);
                 return result;
             }
 
@@ -1334,6 +1344,10 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTime(), userId_);
+    if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
+        return result;
+    }
     if (!dataMgr_->AddNewModuleInfo(bundleName_, newInfo, oldInfo)) {
         APP_LOGE(
             "add module %{public}s to innerBundleInfo %{public}s failed", modulePackage_.c_str(), bundleName_.c_str());
@@ -1409,6 +1423,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
+    if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
+        return result;
+    }
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
     if (result != ERR_OK) {
@@ -1778,6 +1796,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
     if (result != ERR_OK) {
         APP_LOGE("fail to create ark profile, error is %{public}d", result);
+        return result;
+    }
+
+    // create asan log directory when asanEnabled is true
+    // In update condition, delete asan log directory when asanEnabled is false if directory is exist
+    if ((result = ProcessAsanDirectory(info)) != ERR_OK) {
+        APP_LOGE("process asan log directory failed!");
         return result;
     }
 
@@ -2473,6 +2498,14 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("same version update module condition, model type must be the same");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
+    if (oldInfo.GetAsanEnabled() != newInfo.GetAsanEnabled()) {
+        APP_LOGE("asanEnabled is not same");
+        return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
+    }
+    if ((newInfo.GetReleaseType()).find(RELEASE) != std::string::npos && newInfo.GetAsanEnabled()) {
+        APP_LOGE("asanEnabled is not supported in Release");
+        return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }
@@ -2497,6 +2530,11 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     result = DeleteArkProfile(bundleName, userId_);
     if (result != ERR_OK) {
         APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
+        return result;
+    }
+
+    if ((result = CleanAsanDirectory(innerBundleInfo)) != ERR_OK) {
+        APP_LOGE("fail to remove asan log path, error is %{public}d", result);
         return result;
     }
 
@@ -2682,6 +2720,65 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
+{
+    const std::string bundleName = info.GetBundleName();
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR + LOG;
+    bool dirExist = false;
+    ErrCode errCode = InstalldClient::GetInstance()->IsExistDir(asanLogDir, dirExist);
+    if (errCode != ERR_OK) {
+        APP_LOGE("check asan log directory failed!");
+        return errCode;
+    }
+    bool asanEnabled = info.GetAsanEnabled();
+    // create asan log directory if asanEnabled is true
+    if (!dirExist && asanEnabled) {
+        InnerBundleUserInfo newInnerBundleUserInfo;
+        if (!info.GetInnerBundleUserInfo(userId_, newInnerBundleUserInfo)) {
+            APP_LOGE("bundle(%{public}s) get user(%{public}d) failed.",
+                info.GetBundleName().c_str(), userId_);
+            return ERR_APPEXECFWK_USER_NOT_EXIST;
+        }
+
+        if (!dataMgr_->GenerateUidAndGid(newInnerBundleUserInfo)) {
+            APP_LOGE("fail to gererate uid and gid");
+            return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
+        }
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        if ((errCode = InstalldClient::GetInstance()->Mkdir(asanLogDir, mode,
+            newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid)) != ERR_OK) {
+            APP_LOGE("create asan log directory failed!");
+            return errCode;
+        }
+    }
+    if (asanEnabled) {
+        info.SetAsanLogPath(asanLogDir);
+    }
+    // clean asan directory
+    if (dirExist && !asanEnabled) {
+        if ((errCode = CleanAsanDirectory(info)) != ERR_OK) {
+            APP_LOGE("clean asan log directory failed!");
+            return errCode;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
+{
+    const std::string bundleName = info.GetBundleName();
+    const std::string asanLogDir = Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(userId_) + Constants::PATH_SEPARATOR + bundleName;
+    ErrCode errCode =  InstalldClient::GetInstance()->RemoveDir(asanLogDir);
+    if (errCode != ERR_OK) {
+        APP_LOGE("clean asan log path failed!");
+        return errCode;
+    }
+    info.SetAsanLogPath("");
+    return errCode;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

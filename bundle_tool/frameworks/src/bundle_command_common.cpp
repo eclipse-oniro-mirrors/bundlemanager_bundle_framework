@@ -474,6 +474,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: dependent module does not exist.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SAME,
+        "error: install asanEnabled not same",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_ASAN_ENABLED_NOT_SUPPORT,
+        "error, install asan enabled is not support",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

@@ -158,6 +158,8 @@ struct ApplicationInfo : public Parcelable {
     bool isSystemApp = false;
     bool isLauncherApp = false;
     bool isFreeInstallApp = false;
+    bool asanEnabled = false;
+    std::string asanLogPath;
 
     std::string codePath;
     std::string dataDir;

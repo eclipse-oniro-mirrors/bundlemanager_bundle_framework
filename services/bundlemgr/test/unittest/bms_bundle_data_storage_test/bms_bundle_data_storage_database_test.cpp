@@ -109,6 +109,8 @@ protected:
                             "id": 0,
                             "moduleName": ""
                         },
+                        "asanEnabled": false,
+                        "asanLogPath": "",
                         "metaData": {},
                         "metadata": {},
                         "minCompatibleVersionCode": 0,
@@ -405,6 +407,8 @@ protected:
                 },
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
+                "asanEnabled": false,
+                "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
@@ -506,6 +510,7 @@ protected:
                 "appDetailAbilityLibraryPath": ""
             },
             "baseBundleInfo": {
+                "asanEnabled": false,
                 "abilityInfos": [
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
@@ -527,6 +532,8 @@ protected:
                     "debug": false,
                     "description": "",
                     "descriptionId": 0,
+                    "asanEnabled": false,
+                    "asanLogPath": "",
                     "descriptionResource": {
                         "bundleName": "",
                         "id": 0,
