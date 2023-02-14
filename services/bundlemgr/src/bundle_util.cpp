@@ -274,9 +274,9 @@ int32_t BundleUtil::GetUserIdByUid(int32_t uid)
     return uid / Constants::BASE_USER_RANGE;
 }
 
-void BundleUtil::MakeHmdfsConfig(const std::string &bundleName, int32_t bundleId)
+void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath)
 {
-    std::string bundleDir = Constants::HMDFS_CONFIG_PATH + Constants::PATH_SEPARATOR + bundleName;
+    std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
     if (access(bundleDir.c_str(), F_OK) != 0) {
         if (mkdir(bundleDir.c_str(), S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH) != 0) {
             APP_LOGE("make bundle dir error");
@@ -302,9 +302,9 @@ void BundleUtil::MakeHmdfsConfig(const std::string &bundleName, int32_t bundleId
     close(bundleIdFd);
 }
 
-void BundleUtil::RemoveHmdfsConfig(const std::string &bundleName)
+void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string &configPath)
 {
-    std::string bundleDir = Constants::HMDFS_CONFIG_PATH + Constants::PATH_SEPARATOR + bundleName;
+    std::string bundleDir = configPath + Constants::PATH_SEPARATOR + bundleName;
     std::string realBundleDir;
     if (!PathToRealPath(bundleDir, realBundleDir)) {
         APP_LOGE("bundleDir is not real path");
