@@ -407,7 +407,7 @@ protected:
                 "allowCommonEvent": [],
                 "needAppDetail": false,
                 "appDetailAbilityLibraryPath": "",
-                "appType": 0,
+                "bundleType": 0,
                 "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0
