@@ -31,7 +31,9 @@ const std::string BUNDLE_INFO_SINGLETON = "singleton";
 const std::string BUNDLE_INFO_IS_NATIVE_APP = "isNativeApp";
 const std::string BUNDLE_INFO_IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string BUNDLE_INFO_IS_DIFFERENT_NAME = "isDifferentName";
+const std::string BUNDLE_INFO_ABILITY_INFOS = "abilityInfos";
 const std::string BUNDLE_INFO_HAP_MODULE_INFOS = "hapModuleInfos";
+const std::string BUNDLE_INFO_EXTENSION_ABILITY_INFOS = "extensionAbilityInfo";
 const std::string BUNDLE_INFO_JOINT_USERID = "jointUserId";
 const std::string BUNDLE_INFO_VERSION_CODE = "versionCode";
 const std::string BUNDLE_INFO_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -597,7 +599,9 @@ void to_json(nlohmann::json &jsonObject, const BundleInfo &bundleInfo)
         {BUNDLE_INFO_IS_NATIVE_APP, bundleInfo.isNativeApp},
         {BUNDLE_INFO_IS_PREINSTALL_APP, bundleInfo.isPreInstallApp},
         {BUNDLE_INFO_IS_DIFFERENT_NAME, bundleInfo.isDifferentName},
+        {BUNDLE_INFO_ABILITY_INFOS, bundleInfo.abilityInfos},
         {BUNDLE_INFO_HAP_MODULE_INFOS, bundleInfo.hapModuleInfos},
+        {BUNDLE_INFO_EXTENSION_ABILITY_INFOS, bundleInfo.extensionInfos},
         {BUNDLE_INFO_JOINT_USERID, bundleInfo.jointUserId},
         {BUNDLE_INFO_VERSION_CODE, bundleInfo.versionCode},
         {BUNDLE_INFO_MIN_COMPATIBLE_VERSION_CODE, bundleInfo.minCompatibleVersionCode},
@@ -703,6 +707,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<AbilityInfo>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_ABILITY_INFOS,
+        bundleInfo.abilityInfos,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<HapModuleInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_INFO_HAP_MODULE_INFOS,
@@ -943,6 +955,14 @@ void from_json(const nlohmann::json &jsonObject, BundleInfo &bundleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ExtensionAbilityInfo>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_INFO_EXTENSION_ABILITY_INFOS,
+        bundleInfo.extensionInfos,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
         BUNDLE_INFO_APP_INDEX,
