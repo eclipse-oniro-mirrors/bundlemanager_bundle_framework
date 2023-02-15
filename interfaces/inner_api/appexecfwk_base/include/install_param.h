@@ -56,6 +56,8 @@ struct InstallParam : public Parcelable {
     std::map<std::string, std::string> hashParams;
     // whether need copy hap to install path
     bool copyHapToInstallPath = true;
+    // is aging Cause uninstall.
+    bool isAgingUninstall = false;
 
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);

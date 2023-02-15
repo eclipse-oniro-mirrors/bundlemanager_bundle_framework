@@ -224,6 +224,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::FREE_INSTALL;
+    installParam.isAgingUninstall = true;
     installParam.noSkipsKill = false;
     bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
     if (unInstallReceiverImpl->IsRunning()) {
