@@ -291,23 +291,6 @@ struct AsyncAbilityInfo : public AsyncWorkData {
     std::string errMssage;
 };
 
-enum ProfileType : uint32_t {
-    ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE,
-    UNKNOWN_PROFILE
-};
-
-struct AsyncGetProfileInfo : public AsyncWorkData {
-    explicit AsyncGetProfileInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string moduleName = "";
-    std::string abilityName = "";
-    std::string metadataName = "";
-    std::vector<std::string> profileVec;
-    ProfileType type = ProfileType::UNKNOWN_PROFILE;
-    bool ret = false;
-    int32_t errCode = 0;
-};
-
 struct Query {
     std::string bundleName_;
     std::string interfaceType_;
@@ -372,11 +355,6 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsModuleRemovable(napi_env env, napi_callback_info info);
 napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info);
-napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
-napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
-napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType);
-napi_value GetProfileAsync(napi_env env, napi_value value,
-    std::unique_ptr<AsyncGetProfileInfo> &callbackPtr);
 napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo);
 napi_value GetDispatcherVersionWrap(
     napi_env env, napi_value promise, AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo);
@@ -490,7 +468,6 @@ private:
         const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
-    NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
     static bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
