@@ -34,6 +34,7 @@ services_path = "${appexecfwk_path}/services"
 kits_path = "${appexecfwk_path}/interfaces/kits"
 inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
 tools_path = "${appexecfwk_path}/tools"
+base_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_base"
 core_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core"
 
 declare_args() {
