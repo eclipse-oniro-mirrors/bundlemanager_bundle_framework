@@ -178,8 +178,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_DEPENDENT_MODULE_NAMES,
         &BundleMgrHost::HandleGetAllDependentModuleNames);
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, &BundleMgrHost::HandleGetSandboxBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::SET_DISPOSED_STATUS, &BundleMgrHost::HandleSetDisposedStatus);
-    funcMap_.emplace(IBundleMgr::Message::GET_DISPOSED_STATUS, &BundleMgrHost::HandleGetDisposedStatus);
     funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
     funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_STATS, &BundleMgrHost::HandleGetBundleStats);
     funcMap_.emplace(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL,
@@ -1897,32 +1895,6 @@ ErrCode BundleMgrHost::HandleGetSandboxBundleInfo(MessageParcel &data, MessagePa
     }
     if ((res == ERR_OK) && (!reply.WriteParcelable(&info))) {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleSetDisposedStatus(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string bundleName = data.ReadString();
-    int32_t status = data.ReadInt32();
-    bool ret = SetDisposedStatus(bundleName, status);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("HandleSetDisposedStatus write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetDisposedStatus(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string bundleName = data.ReadString();
-
-    int32_t ret = GetDisposedStatus(bundleName);
-    if (!reply.WriteInt32(ret)) {
-        APP_LOGE("HandleGetDisposedStatus write ret failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

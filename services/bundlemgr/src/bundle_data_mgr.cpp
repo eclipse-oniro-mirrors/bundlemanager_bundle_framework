@@ -4050,24 +4050,6 @@ bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, co
     return innerBundleInfo.GetAllDependentModuleNames(moduleName, dependentModuleNames);
 }
 
-bool BundleDataMgr::SetDisposedStatus(const std::string &bundleName, int32_t status)
-{
-    APP_LOGD("SetDisposedStatus: bundleName: %{public}s, status: %{public}d", bundleName.c_str(), status);
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("SetDisposedStatus: bundleName: %{public}s not find", bundleName.c_str());
-        return false;
-    }
-    auto& info = bundleInfos_.at(bundleName);
-    info.SetDisposedStatus(status);
-    if (!dataStorage_->SaveStorageBundleInfo(info)) {
-        APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
-        return false;
-    }
-    return true;
-}
-
 void BundleDataMgr::UpdateRemovable(
     const std::string &bundleName, bool removable)
 {
@@ -4127,19 +4109,6 @@ bool BundleDataMgr::FetchInnerBundleInfo(
 
     innerBundleInfo = infoItem->second;
     return true;
-}
-
-int32_t BundleDataMgr::GetDisposedStatus(const std::string &bundleName)
-{
-    APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("GetDisposedStatus: bundleName: %{public}s not find", bundleName.c_str());
-        return Constants::DEFAULT_DISPOSED_STATUS;
-    }
-    auto& info = bundleInfos_.at(bundleName);
-    return info.GetDisposedStatus();
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

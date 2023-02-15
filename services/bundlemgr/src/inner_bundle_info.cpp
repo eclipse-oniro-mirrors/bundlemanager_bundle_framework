@@ -108,7 +108,6 @@ const std::string META_DATA_SHORTCUTS_NAME = "ohos.ability.shortcuts";
 const std::string APP_INDEX = "appIndex";
 const std::string BUNDLE_IS_SANDBOX_APP = "isSandboxApp";
 const std::string BUNDLE_SANDBOX_PERSISTENT_INFO = "sandboxPersistentInfo";
-const std::string DISPOSED_STATUS = "disposedStatus";
 const std::string MODULE_COMPILE_MODE = "compileMode";
 const std::string BUNDLE_HQF_INFOS = "hqfInfos";
 const std::string MODULE_TARGET_MODULE_NAME = "targetModuleName";
@@ -392,7 +391,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->allowedAcls_ = info.allowedAcls_;
     this->mark_ = info.mark_;
     this->appIndex_ = info.appIndex_;
-    this->disposedStatus_ = info.disposedStatus_;
     this->isSandboxApp_ = info.isSandboxApp_;
     this->currentPackage_ = info.currentPackage_;
     this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
@@ -588,7 +586,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
-    jsonObject[DISPOSED_STATUS] = disposedStatus_;
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
@@ -1520,14 +1517,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        DISPOSED_STATUS,
-        disposedStatus_,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_HQF_INFOS,
@@ -3227,16 +3216,6 @@ bool InnerBundleInfo::HasEntry() const
     return std::any_of(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](const auto &item) {
             return item.second.isEntry;
         });
-}
-
-void InnerBundleInfo::SetDisposedStatus(int32_t status)
-{
-    disposedStatus_ = status;
-}
-
-int32_t InnerBundleInfo::GetDisposedStatus() const
-{
-    return disposedStatus_;
 }
 
 void InnerBundleInfo::SetAppDistributionType(const std::string &appDistributionType)

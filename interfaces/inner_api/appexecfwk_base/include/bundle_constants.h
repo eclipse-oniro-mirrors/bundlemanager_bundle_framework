@@ -277,9 +277,6 @@ constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
 constexpr int32_t MAX_APP_INDEX = 100;
 
-// disposed status
-constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
-
 // app-distribution-type
 constexpr const char* APP_DISTRIBUTION_TYPE_NONE = "none";
 constexpr const char* APP_DISTRIBUTION_TYPE_APP_GALLERY = "app_gallery";

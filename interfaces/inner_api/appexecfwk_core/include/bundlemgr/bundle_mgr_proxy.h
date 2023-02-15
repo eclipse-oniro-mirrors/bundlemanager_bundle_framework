@@ -726,10 +726,6 @@ public:
      */
     virtual void ProcessPreload(const Want &want) override;
 
-    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
-
-    virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
-
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,

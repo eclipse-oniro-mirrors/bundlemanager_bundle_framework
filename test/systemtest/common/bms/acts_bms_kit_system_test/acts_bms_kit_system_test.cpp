@@ -65,7 +65,6 @@ const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
 const int32_t ZERO_SIZE = 0;
-constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
 namespace OHOS {
@@ -6253,51 +6252,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0200, Function | SmallTest | Lev
     int32_t ret = bundleMgrProxy->GetPermissionDef(permissionName, permissionDef);
     EXPECT_EQ(permissionDef.permissionName, permissionName);
     EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: DisposedStatus_0100
- * @tc.name: test DisposedStatus proxy
- * @tc.desc: 1.system run normally
- *           2.get disposed status failed by unpermission
- */
-HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level1)
-{
-    std::cout << "START DisposedStatus_0100" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
-    EXPECT_TRUE(result);
-    int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
-    EXPECT_EQ(status, 10);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END DisposedStatus_0100" << std::endl;
-}
-
-/**
- * @tc.number: DisposedStatus_0200
- * @tc.name: test DisposedStatus proxy
- * @tc.desc: 1.system run normally
- *           2.get disposed status failed by empty bundle name
- */
-HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0200, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool result = bundleMgrProxy->SetDisposedStatus("", DISPOSED_STATUS);
-    EXPECT_FALSE(result);
-    int32_t status = bundleMgrProxy->GetDisposedStatus("");
-    EXPECT_EQ(status, 0);
 }
 
 /**
