@@ -110,6 +110,7 @@ void BmsBundleOverlayInfoTest::CheckOverlayModuleInfo(const OverlayModuleInfo &i
  * @tc.name: test ReadFromParcel interface in OverlayBundleInfo.
  * @tc.desc: 1.construct parcel.
  *           2.calling ReadFromParcel interface by using input parameter parcel.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0100, Function | SmallTest | Level0)
 {
@@ -129,6 +130,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0100, Function | SmallTest | 
  * @tc.name: test Marshalling interface in OverlayBundleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling Marshalling interface by using the constructed OverlayBundleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0200, Function | SmallTest | Level0)
 {
@@ -150,6 +152,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0200, Function | SmallTest | 
  * @tc.name: test Unmarshalling interface in OverlayBundleInfo.
  * @tc.desc: 1.construct parcel.
  *           2.calling Unmarshalling interface by using input parameter parcel.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0300, Function | SmallTest | Level0)
 {
@@ -171,6 +174,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0300, Function | SmallTest | 
  * @tc.name: test to_json interface in OverlayBundleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling to_json interface by using the constructed OverlayBundleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0400, Function | SmallTest | Level0)
 {
@@ -192,6 +196,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0400, Function | SmallTest | 
  * @tc.name: test from_json interface in OverlayBundleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling from_json interface by using the constructed OverlayBundleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0500, Function | SmallTest | Level0)
 {
@@ -206,6 +211,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0500, Function | SmallTest | 
  * @tc.name: test ReadFromParcel interface in OverlayModuleInfo.
  * @tc.desc: 1.construct parcel.
  *           2.calling ReadFromParcel interface by using input parameter parcel.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0600, Function | SmallTest | Level0)
 {
@@ -227,6 +233,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0600, Function | SmallTest | 
  * @tc.name: test Marshalling interface in OverlayModuleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling Marshalling interface by using the constructed OverlayModuleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0700, Function | SmallTest | Level0)
 {
@@ -250,6 +257,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0700, Function | SmallTest | 
  * @tc.name: test Unmarshalling interface in OverlayModuleInfo.
  * @tc.desc: 1.construct parcel.
  *           2.calling Unmarshalling interface by using input parameter parcel.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0800, Function | SmallTest | Level0)
 {
@@ -272,6 +280,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0800, Function | SmallTest | 
  * @tc.name: test to_json interface in OverlayModuleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling to_json interface by using the constructed OverlayModuleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0900, Function | SmallTest | Level0)
 {
@@ -295,6 +304,7 @@ HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_0900, Function | SmallTest | 
  * @tc.name: test from_json interface in OverlayModuleInfo.
  * @tc.desc: 1.construct OverlayBundleInfo instance.
  *           2.calling from_json interface by using the constructed OverlayModuleInfo instance.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayInfoTest, OverlayInfoTest_1000, Function | SmallTest | Level0)
 {
