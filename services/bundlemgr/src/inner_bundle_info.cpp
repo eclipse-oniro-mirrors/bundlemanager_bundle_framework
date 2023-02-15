@@ -1673,9 +1673,10 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
                 abilityInfo.applicationInfo);
         }
     }
-    for (const auto &dependency : it->second.dependencies) {
-        hapInfo.dependencies.emplace_back(dependency.moduleName);
-    }
+    // for (const auto &dependency : it->second.dependencies) {
+    //     hapInfo.dependencies.emplace_back(dependency);
+    // }
+    hapInfo.dependencies = it->second.dependencies;
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     for (const auto &hqf : hqfInfos_) {
         if (hqf.moduleName == it->second.moduleName) {

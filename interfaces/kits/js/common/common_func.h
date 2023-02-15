@@ -110,7 +110,7 @@ static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInf
 
 static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
 
-static void ConvertDependency(napi_env env, const std::string &moduleName, napi_value value);
+static void ConvertDependency(napi_env env, const Dependency &dependency, napi_value value);
 
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
 
