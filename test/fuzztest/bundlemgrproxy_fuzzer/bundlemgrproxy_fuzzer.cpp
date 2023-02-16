@@ -127,8 +127,6 @@ namespace OHOS {
         bundleMgrProxy.GetAllDependentModuleNames(bundleName, moduleName, dependentModuleNames);
         bundleMgrProxy.GetModuleUpgradeFlag(bundleName, moduleName);
         bundleMgrProxy.SetModuleUpgradeFlag(bundleName, moduleName, reinterpret_cast<uintptr_t>(data));
-        bundleMgrProxy.SetDisposedStatus(bundleName, reinterpret_cast<uintptr_t>(data));
-        bundleMgrProxy.GetDisposedStatus(bundleName);
         bundleMgrProxy.ObtainCallingBundleName(bundleName);
         std::vector<int64_t> bundleStats;
         bundleStats.push_back(reinterpret_cast<intptr_t>(data));

@@ -39,7 +39,6 @@ const std::string MODULE_NAME_TEST = "entry";
 const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
 constexpr int32_t DEFAULT_USERID = 100;
 constexpr int32_t BENCHMARK_TIMES = 1000;
-constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
 
 class BundleStatusCallbackImpl : public BundleStatusCallbackHost {
 public:
@@ -1336,44 +1335,6 @@ static void BenchmarkTestGetAllDependentModuleNames(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestSetDisposedStatus
- * @tc.desc: Testcase for testing SetDisposedStatus.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestSetDisposedStatus(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call SetDisposedStatus in loop */
-        bundleMgrProxy->SetDisposedStatus(BUNDLE_NAME, DEFAULT_DISPOSED_STATUS);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestSetDisposedStatus
- * @tc.desc: Testcase for testing GetDisposedStatus.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetDisposedStatus(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetDisposedStatus in loop */
-        bundleMgrProxy->GetDisposedStatus(BUNDLE_NAME);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestObtainCallingBundleName
  * @tc.desc: Testcase for testing ObtainCallingBundleName.
  * @tc.type: FUNC
@@ -1451,9 +1412,7 @@ BENCHMARK(BenchmarkTestImplicitQueryInfoByPriority)->Iterations(BENCHMARK_TIMES)
 BENCHMARK(BenchmarkTestGetSandboxBundleInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAbilityInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAbilityInfoByModuleName)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetAllDependentModuleNames)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestSetDisposedStatus)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetDisposedStatus)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAllDependentModuleNames)->Iterations(BENCHMARK_TIMES);;
 BENCHMARK(BenchmarkTestObtainCallingBundleName)->Iterations(BENCHMARK_TIMES);
 }  // namespace
 

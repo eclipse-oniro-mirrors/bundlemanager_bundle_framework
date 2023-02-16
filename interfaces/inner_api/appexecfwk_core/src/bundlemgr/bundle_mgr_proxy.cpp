@@ -2596,62 +2596,6 @@ bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, c
     return true;
 }
 
-bool BundleMgrProxy::SetDisposedStatus(const std::string &bundleName, int32_t status)
-{
-    APP_LOGD("begin to SetDisposedStatus");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (bundleName.empty()) {
-        APP_LOGE("SetDisposedStatus bundleName is empty");
-        return false;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to SetDisposedStatus due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("failed to SetDisposedStatus due to write bundleName fail");
-        return false;
-    }
-    if (!data.WriteInt32(status)) {
-        APP_LOGE("fail to SetDisposedStatus due to write status fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_DISPOSED_STATUS, data, reply)) {
-        APP_LOGE("fail to SetDisposedStatus from server");
-        return false;
-    }
-    return reply.ReadBool();
-}
-
-int32_t BundleMgrProxy::GetDisposedStatus(const std::string &bundleName)
-{
-    APP_LOGD("begin to GetDisposedStatus");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    if (bundleName.empty()) {
-        APP_LOGE("GetDisposedStatus bundleName is empty");
-        return false;
-    }
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("failed to GetDisposedStatus due to write MessageParcel fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("failed to GetDisposedStatus due to write bundleName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_DISPOSED_STATUS, data, reply)) {
-        APP_LOGE("fail to GetDisposedStatus from server");
-        return false;
-    }
-    return reply.ReadInt32();
-}
-
 bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
 {
     APP_LOGD("begin to ObtainCallingBundleName");

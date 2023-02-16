@@ -924,16 +924,6 @@ public:
         return false;
     }
 
-    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status)
-    {
-        return false;
-    }
-
-    virtual int32_t GetDisposedStatus(const std::string &bundleName)
-    {
-        return 0;
-    }
-
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo)
     {
@@ -1177,8 +1167,6 @@ public:
         IMPLICIT_QUERY_INFOS,
         GET_ALL_DEPENDENT_MODULE_NAMES,
         GET_SANDBOX_APP_BUNDLE_INFO,
-        SET_DISPOSED_STATUS,
-        GET_DISPOSED_STATUS,
         QUERY_CALLING_BUNDLE_NAME,
         GET_DEFAULT_APP_PROXY,
         GET_BUNDLE_STATS,

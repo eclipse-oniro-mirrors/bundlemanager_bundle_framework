@@ -573,10 +573,6 @@ private:
 
     ErrCode HandleGetSandboxBundleInfo(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleSetDisposedStatus(MessageParcel &data, MessageParcel &reply);
-
-    ErrCode HandleGetDisposedStatus(MessageParcel &data, MessageParcel &reply);
-
     ErrCode HandleObtainCallingBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleStats(MessageParcel &data, MessageParcel &reply);

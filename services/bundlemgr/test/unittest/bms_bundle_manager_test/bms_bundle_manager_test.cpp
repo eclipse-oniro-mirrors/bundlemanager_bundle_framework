@@ -2447,11 +2447,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     HapModuleInfo hapModuleInfo;
 
     ClearDataMgr();
-    bool retBool = hostImpl->SetDisposedStatus("", status);
-    EXPECT_EQ(retBool, false);
-
-    int32_t retInt = hostImpl->GetDisposedStatus("");
-    EXPECT_EQ(retInt, Constants::DEFAULT_DISPOSED_STATUS);
 
     std::string retString = hostImpl->GetStringById("", "", resId, USERID, "");
     EXPECT_EQ(retString, Constants::EMPTY_STRING);
@@ -2485,7 +2480,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1900, Function | MediumTest | L
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     std::vector<FormInfo> formInfos;
-    retBool = hostImpl->GetFormsInfoByModule(
+    bool retBool = hostImpl->GetFormsInfoByModule(
         "bundleName", "moduleName", formInfos);
     EXPECT_EQ(retBool, false);
     SetDataMgr();
@@ -3407,23 +3402,6 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0016, Function | SmallTest 
     std::vector<std::string> dependentModuleNames;
     bool testRet = GetBundleDataMgr()->GetAllDependentModuleNames(
         "bundleName", MODULE_NAME, dependentModuleNames);
-    EXPECT_EQ(testRet, false);
-}
-
-/**
- * @tc.number: GetMgrFalseByNoBundle_0017
- * @tc.name: test SetDisposedStatus and GetDisposedStatus
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0017, Function | SmallTest | Level1)
-{
-    int32_t status = 1;
-    bool testRet = GetBundleDataMgr()->SetDisposedStatus(
-        "", status);
-    EXPECT_EQ(testRet, false);
-    testRet = GetBundleDataMgr()->GetDisposedStatus(
-        "");
     EXPECT_EQ(testRet, false);
 }
 
