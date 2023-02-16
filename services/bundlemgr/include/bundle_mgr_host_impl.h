@@ -132,6 +132,13 @@ public:
     virtual ErrCode GetBundleInfoV9(const std::string &bundleName,
         int32_t flags, BundleInfo &bundleInfo, int32_t userId) override;
     /**
+     * @brief Obtains the BundleInfo based on a given bundle name.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo) override;
+    /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
@@ -666,6 +673,11 @@ public:
         std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
+
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
+        const std::string bundleName = Constants::EMPTY_STRING) override;
+
+    virtual bool VerifySystemApi(const std::string bundleName);
 
     virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) override;
 

@@ -81,6 +81,10 @@ bool LauncherService::RegisterCallback(const sptr<IBundleStatusCallback> &callba
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         return false;
@@ -102,6 +106,10 @@ bool LauncherService::UnRegisterCallback()
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     if (!iBundleMgr->VerifyCallingPermission(Constants::LISTEN_BUNDLE_CHANGE)) {
         APP_LOGE("register bundle status callback failed due to lack of permission");
         return false;
@@ -118,7 +126,10 @@ bool LauncherService::GetAbilityList(
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION, bundleName)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     std::vector<std::string> entities;
     entities.push_back(Want::ENTITY_HOME);
     Want want;
@@ -180,7 +191,10 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
     Want want;
     want.SetAction(Want::ACTION_HOME);
     want.AddEntity(Want::ENTITY_HOME);
@@ -364,6 +378,10 @@ bool LauncherService::GetShortcutInfos(
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
         return false;
     }
 

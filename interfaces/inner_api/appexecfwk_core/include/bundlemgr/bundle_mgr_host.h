@@ -85,6 +85,13 @@ private:
      */
     ErrCode HandleGetBundleInfo(MessageParcel &data, MessageParcel &reply);
     /**
+     * @brief Handles the GetBundleInfo function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleGetBundleInfoForSelf(MessageParcel &data, MessageParcel &reply);
+    /**
      * @brief Handles the GetBundlePackInfo function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
@@ -623,6 +630,8 @@ private:
     ErrCode HandleGetQuickFixManagerProxy(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleSetDebugMode(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

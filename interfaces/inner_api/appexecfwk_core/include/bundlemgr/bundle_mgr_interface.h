@@ -173,6 +173,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
+     * @brief Obtains the BundleInfo for the calling app.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
+     * @param userId Indicates the user ID.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
      * @brief Obtains the BundlePackInfo based on a given bundle name.
      * @param bundleName Indicates the application bundle name to be queried.
      * @param flags Indicates the information contained in the BundleInfo object to be returned.
@@ -913,6 +925,19 @@ public:
     }
 
     /**
+     * @brief Verify whether the calling app is system app. Only for BMS usage.
+     *
+     * @param beginApiVersion Indicates version since this api became to be system api.
+     * @param bundleName Indicates bundle name of the calling hap.
+     * @return Returns true if the hap passes the verification; returns false otherwise.
+     */
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
+        const std::string bundleName = Constants::EMPTY_STRING)
+    {
+        return true;
+    }
+
+    /**
      * @brief Obtains the dependent module names.
      *
      * @param bundleName Indicates the bundle name to be queried.
@@ -1207,6 +1232,8 @@ public:
         GET_SHORTCUT_INFO_V9,
         REGISTER_BUNDLE_EVENT_CALLBACK,
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
+        GET_BUNDLE_INFO_FOR_SELF,
+        VERIFY_SYSTEM_API,
     };
 };
 }  // namespace AppExecFwk

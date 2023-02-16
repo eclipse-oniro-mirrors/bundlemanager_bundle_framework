@@ -19,6 +19,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "ipc_skeleton.h"
+#include "parameter.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -668,6 +669,54 @@ bool BundlePermissionMgr::MatchSignature(
 
     return std::find(permission.appSignature.begin(),
         permission.appSignature.end(), signature) != permission.appSignature.end();
+}
+
+bool BundlePermissionMgr::VerifySystemAppForHap(int32_t beginSystemApiVersion)
+{
+    if (GetSdkApiVersion() < beginSystemApiVersion) {
+        return true;
+    }
+    std::string bundleName;
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto userId = uid / Constants::BASE_USER_RANGE;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
+    if (!ret) {
+        APP_LOGE("getBundleName failed");
+        return false;
+    }
+    ApplicationInfo applicationInfo;
+    auto res = dataMgr->GetApplicationInfoV9(bundleName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("getApplicationInfo failed");
+        return false;
+    }
+    if (applicationInfo.isSystemApp) {
+        return true;
+    }
+    return applicationInfo.apiTargetVersion < beginSystemApiVersion;
+}
+
+
+// if the api has been system api since it is published, then beginSystemApiVersion can be omitted
+bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
+{
+    APP_LOGD("verifying systemApp");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
+        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
+        || callingUid == Constants::ROOT_UID) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    return VerifySystemAppForHap(beginSystemApiVersion);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
