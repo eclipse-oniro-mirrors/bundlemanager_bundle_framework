@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 PreInstallDataStorageRdb::PreInstallDataStorageRdb()
 {
-    APP_LOGI("instance:%{private}p is created", this);
+    APP_LOGI("PreInstallDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = Constants::PRE_BUNDLE_RDB_TABLE_NAME;
@@ -31,7 +31,7 @@ PreInstallDataStorageRdb::PreInstallDataStorageRdb()
 
 PreInstallDataStorageRdb::~PreInstallDataStorageRdb()
 {
-    APP_LOGI("instance:%{private}p is destroyed", this);
+    APP_LOGI("PreInstallDataStorageRdb instance is destroyed");
 }
 
 bool PreInstallDataStorageRdb::LoadAllPreInstallBundleInfos(
