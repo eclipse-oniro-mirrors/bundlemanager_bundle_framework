@@ -99,14 +99,6 @@ static napi_value Init(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nQueryShortCutFlag));
     CreateQueryShortCutFlagObject(env, nShortcutExistence);
 
-    napi_value nExtensionAbilityType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionAbilityType));
-    CreateExtensionAbilityTypeObject(env, nExtensionAbilityType);
-
-    napi_value nExtensionFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionFlag));
-    CreateExtensionFlagObject(env, nExtensionFlag);
-
     napi_value nBundleFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nBundleFlag));
     CreateBundleFlagObject(env, nBundleFlag);
@@ -114,10 +106,6 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_value nInstallErrorCode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
     CreateInstallErrorCodeObject(env, nInstallErrorCode);
-
-    napi_value nSupportWindowMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
-    CreateSupportWindowModesObject(env, nSupportWindowMode);
     /*
      * Propertise define
      */
@@ -132,7 +120,6 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
-        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfos", QueryExtensionInfoByWant),
         DECLARE_NAPI_FUNCTION("getNameForUid", GetNameForUid),
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
@@ -148,10 +135,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ShortcutExistence", nShortcutExistence),
         DECLARE_NAPI_PROPERTY("QueryShortCutFlag", nQueryShortCutFlag),
         DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
-        DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
-        DECLARE_NAPI_PROPERTY("ExtensionAbilityType", nExtensionAbilityType),
         DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

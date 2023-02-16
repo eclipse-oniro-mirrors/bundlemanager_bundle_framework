@@ -193,17 +193,6 @@ struct AsyncGetBundleGidsCallbackInfo : public AsyncWorkData {
     std::string message;
 };
 
-struct AsyncExtensionInfoCallbackInfo : public AsyncWorkData {
-    explicit AsyncExtensionInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    OHOS::AAFwk::Want want;
-    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
-    int32_t flags = 0;
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos;
-    bool ret = false;
-    int32_t err = 0;
-};
-
 struct AsyncGetNameByUidInfo : public AsyncWorkData {
     explicit AsyncGetNameByUidInfo(napi_env env) : AsyncWorkData(env) {}
     int32_t uid = 0;
@@ -300,7 +289,6 @@ napi_value UnregisterPermissionsChanged(napi_env env, napi_callback_info info);
 napi_value ClearBundleCache(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
-napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info);
 napi_value GetNameForUid(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
@@ -321,21 +309,10 @@ void CreateShortcutExistenceObject(napi_env env, napi_value value);
 void CreateQueryShortCutFlagObject(napi_env env, napi_value value);
 void CreateBundleFlagObject(napi_env env, napi_value value);
 void CreateInstallErrorCodeObject(napi_env env, napi_value value);
-void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
-void CreateExtensionFlagObject(napi_env env, napi_value value);
-void CreateSupportWindowModesObject(napi_env env, napi_value value);
 class JsBundleMgr {
 public:
     JsBundleMgr() = default;
     ~JsBundleMgr() = default;
-
-    struct JsExtensionAbilityInfos {
-        OHOS::AAFwk::Want want;
-        int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
-        std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos;
-        int32_t flags = 0;
-        int32_t userId = Constants::UNSPECIFIED_USERID;
-    };
 
     struct JsAbilityInfo {
         std::string bundleName;
@@ -394,16 +371,10 @@ private:
     NativeValue* CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos);
     NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
     NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfos);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
-    NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
     int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
     NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
     NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
-    NativeValue* CreateSupportWindowMode(NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes);
     NativeValue* CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene);
     NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
     NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);

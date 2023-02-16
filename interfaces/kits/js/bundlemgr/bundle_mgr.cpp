@@ -54,7 +54,6 @@ constexpr size_t ARGS_SIZE_ONE = 1;
 constexpr size_t ARGS_SIZE_TWO = 2;
 constexpr size_t ARGS_SIZE_THREE = 3;
 constexpr size_t ARGS_SIZE_FOUR = 4;
-constexpr size_t ARGS_SIZE_FIVE = 5;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
@@ -611,17 +610,6 @@ static void ConvertAbilityInfo(napi_env env, napi_value objAbilityInfo, const Ab
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, abilityInfo.enabled, &nEnabled));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "enabled", nEnabled));
 
-    napi_value nSupportWindowMode;
-    size = abilityInfo.windowModes.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSupportWindowMode));
-    for (size_t index = 0; index < size; ++index) {
-        napi_value innerMode;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_int32(env, static_cast<int32_t>(abilityInfo.windowModes[index]), &innerMode));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSupportWindowMode, index, innerMode));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "supportWindowMode", nSupportWindowMode));
-
     napi_value nMaxWindowRatio;
     NAPI_CALL_RETURN_VOID(env, napi_create_double(env, abilityInfo.maxWindowRatio, &nMaxWindowRatio));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, "maxWindowRatio", nMaxWindowRatio));
@@ -664,99 +652,6 @@ static void ProcessAbilityInfos(
     } else {
         APP_LOGI("-----abilityInfos is null-----");
     }
-}
-
-static void ConvertExtensionInfos(napi_env env, napi_value result,
-    std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos)
-{
-    APP_LOGD("convert extensionInfos start");
-    if (extensionInfos.empty()) {
-        APP_LOGW("extensionInfos is null");
-        return;
-    }
-
-    for (size_t i = 0; i < extensionInfos.size(); ++i) {
-        napi_value value = nullptr;
-        napi_create_object(env, &value);
-        napi_value nBundleName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].bundleName.c_str(),
-            NAPI_AUTO_LENGTH, &nBundleName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "bundleName", nBundleName));
-
-        napi_value nModuleName;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].moduleName.c_str(),
-            NAPI_AUTO_LENGTH, &nModuleName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
-
-        napi_value nName;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_string_utf8(env, extensionInfos[i].name.c_str(), NAPI_AUTO_LENGTH, &nName));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "name", nName));
-
-        napi_value nLabelId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].labelId, &nLabelId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "labelId", nLabelId));
-
-        napi_value nDescriptionId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].descriptionId, &nDescriptionId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "descriptionId", nDescriptionId));
-
-        napi_value nIconId;
-        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, extensionInfos[i].iconId, &nIconId));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "iconId", nIconId));
-
-        napi_value nIsVisible;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfos[i].visible, &nIsVisible));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "isVisible", nIsVisible));
-
-        napi_value nExtensionAbilityType;
-        NAPI_CALL_RETURN_VOID(env,
-            napi_create_int32(env, static_cast<int32_t>(extensionInfos[i].type), &nExtensionAbilityType));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "extensionAbilityType", nExtensionAbilityType));
-
-        napi_value nPermission;
-        size_t size = extensionInfos[i].permissions.size();
-        NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermission));
-        for (size_t j = 0; j < size; ++j) {
-            napi_value innerPerm;
-            NAPI_CALL_RETURN_VOID(env,
-                napi_create_string_utf8(env, extensionInfos[i].permissions[j].c_str(), NAPI_AUTO_LENGTH, &innerPerm));
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermission, j, innerPerm));
-        }
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "permissions", nPermission));
-
-        napi_value nApplication;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nApplication));
-        ConvertApplicationInfo(env, nApplication, extensionInfos[i].applicationInfo);
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "applicationInfo", nApplication));
-
-        napi_value nMetadata;
-        size = extensionInfos[i].metadata.size();
-        NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nMetadata));
-        for (size_t index = 0; index < size; ++index) {
-            napi_value innerMeta;
-            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &innerMeta));
-            ConvertInnerMetadata(env, innerMeta, extensionInfos[i].metadata[index]);
-            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, index, innerMeta));
-        }
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "metadata", nMetadata));
-
-        napi_value nEnabled;
-        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, extensionInfos[i].enabled, &nEnabled));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "enabled", nEnabled));
-
-        napi_value nReadPermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].readPermission.c_str(),
-            NAPI_AUTO_LENGTH, &nReadPermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "readPermission", nReadPermission));
-
-        napi_value nWritePermission;
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, extensionInfos[i].writePermission.c_str(),
-            NAPI_AUTO_LENGTH, &nWritePermission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "writePermission", nWritePermission));
-        napi_set_element(env, result, i, value);
-    }
-    APP_LOGD("convert extensionInfos finished");
 }
 
 static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, const HapModuleInfo &hapModuleInfo)
@@ -860,12 +755,6 @@ static void ConvertHapModuleInfo(napi_env env, napi_value objHapModuleInfo, cons
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.mainElementName.c_str(), NAPI_AUTO_LENGTH,
         &nMainElementName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "mainElementName", nMainElementName));
-
-    napi_value nExtensionAbilityInfos;
-    napi_create_array_with_length(env, hapModuleInfo.extensionInfos.size(), &nExtensionAbilityInfos);
-    ConvertExtensionInfos(env, nExtensionAbilityInfos, hapModuleInfo.extensionInfos);
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objHapModuleInfo, "extensionAbilityInfo", nExtensionAbilityInfos));
 
     napi_value nMetadata;
     size_t size = hapModuleInfo.metadata.size();
@@ -1054,12 +943,6 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, bundleInfo.entryInstallationFree, &nEntryInstallationFree));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "entryInstallationFree", nEntryInstallationFree));
-
-    napi_value nExtensionAbilityInfos;
-    napi_create_array_with_length(env, bundleInfo.extensionInfos.size(), &nExtensionAbilityInfos);
-    ConvertExtensionInfos(env, nExtensionAbilityInfos, bundleInfo.extensionInfos);
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objBundleInfo, "extensionAbilityInfo", nExtensionAbilityInfos));
 }
 
 static void ConvertFormCustomizeData(napi_env env, napi_value objformInfo, const FormCustomizeData &customizeData)
@@ -5671,37 +5554,6 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         nGetApplicationInfoWithFingerprint));
 }
 
-void CreateExtensionFlagObject(napi_env env, napi_value value)
-{
-    napi_value nGetExtensionInfoDefault;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT),
-            &nGetExtensionInfoDefault));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_DEFAULT", nGetExtensionInfoDefault));
-
-    napi_value nGetExtensionInfoWithPermission;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_PERMISSION),
-            &nGetExtensionInfoWithPermission));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_PERMISSION", nGetExtensionInfoWithPermission));
-
-    napi_value nGetExtensionInfoWithApplication;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_APPLICATION),
-            &nGetExtensionInfoWithApplication));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_APPLICATION", nGetExtensionInfoWithApplication));
-
-    napi_value nGetExtensionInfoWithMetaData;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_WITH_METADATA),
-            &nGetExtensionInfoWithMetaData));
-    NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, value, "GET_EXTENSION_INFO_WITH_METADATA", nGetExtensionInfoWithMetaData));
-}
-
 void CreateInstallErrorCodeObject(napi_env env, napi_value value)
 {
     napi_value nSuccess;
@@ -5829,238 +5681,6 @@ void CreateInstallErrorCodeObject(napi_env env, napi_value value)
             static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailure));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailure));
-}
-
-static bool InnerQueryExtensionInfo(napi_env env, AsyncExtensionInfoCallbackInfo &info)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-    APP_LOGD("action:%{public}s, uri:%{private}s, type:%{public}s, flags:%{public}d",
-        info.want.GetAction().c_str(), info.want.GetUriString().c_str(), info.want.GetType().c_str(), info.flags);
-
-    if (info.extensionAbilityType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
-        APP_LOGD("query extensionAbilityInfo without type");
-        return iBundleMgr->QueryExtensionAbilityInfos(info.want, info.flags, info.userId, info.extensionInfos);
-    } else {
-        auto type = static_cast<ExtensionAbilityType>(info.extensionAbilityType);
-        APP_LOGD("query extensionAbilityInfo with type");
-        return iBundleMgr->QueryExtensionAbilityInfos(info.want, type, info.flags, info.userId, info.extensionInfos);
-    }
-}
-
-/**
- * Promise and async callback
- */
-napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("QueryExtensionInfoByWant start in NAPI");
-    size_t argc = ARGS_SIZE_FIVE;
-    napi_value argv[ARGS_SIZE_FIVE] = { nullptr };
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
-    APP_LOGD("the count of input arguments is [%{public}zu]", argc);
-
-    AsyncExtensionInfoCallbackInfo *callBackInfo = new (std::nothrow) AsyncExtensionInfoCallbackInfo(env);
-    if (callBackInfo == nullptr) {
-        APP_LOGE("QueryExtensionInfoByWant failed due to null callBackInfo");
-        return nullptr;
-    }
-
-    if (argc < ARGS_SIZE_TWO || argc > ARGS_SIZE_FIVE) {
-        APP_LOGE("the number of input arguments is invalid");
-        delete callBackInfo;
-        callBackInfo = nullptr;
-        return nullptr;
-    }
-    std::unique_ptr<AsyncExtensionInfoCallbackInfo> callbackPtr {callBackInfo};
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
-        if ((i == 0) && (valueType == napi_object)) {
-            if (!ParseWant(env, callBackInfo->want, argv[i])) {
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_ONE) && (valueType == napi_number)) {
-            ParseInt(env, callBackInfo->extensionAbilityType, argv[i]);
-            if ((callBackInfo->extensionAbilityType < 0) ||
-                (callBackInfo->extensionAbilityType > static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED))) {
-                APP_LOGE("invalid extensionType %{public}d", callBackInfo->extensionAbilityType);
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_TWO) && (valueType == napi_number)) {
-            ParseInt(env, callBackInfo->flags, argv[i]);
-        } else if (i == ARGS_SIZE_THREE) {
-            if (valueType == napi_number) {
-                ParseInt(env, callBackInfo->userId, argv[i]);
-            } else if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callBackInfo->callback));
-                break;
-            } else {
-                callBackInfo->err = PARAM_TYPE_ERROR;
-            }
-        } else if ((i == ARGS_SIZE_FOUR) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &callBackInfo->callback));
-        } else {
-            callBackInfo->err = PARAM_TYPE_ERROR;
-        }
-    }
-
-    APP_LOGD("QueryExtensionInfoByWant finish to parse arguments");
-    napi_value promise = nullptr;
-    if (callBackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &callBackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env, &promise));
-    }
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "QueryExtensionInfoByWant", NAPI_AUTO_LENGTH, &resource));
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void *data) {
-            AsyncExtensionInfoCallbackInfo *info =
-                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
-            if (!info->err) {
-                info->ret = InnerQueryExtensionInfo(env, *info);
-            }
-        },
-        [](napi_env env, napi_status status, void *data) {
-            AsyncExtensionInfoCallbackInfo *info =
-                reinterpret_cast<AsyncExtensionInfoCallbackInfo *>(data);
-            std::unique_ptr<AsyncExtensionInfoCallbackInfo> callbackPtr {info};
-            napi_value result[2] = { 0 };
-            if (info->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(info->err), &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "type mismatch", NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                if (info->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, info->extensionInfos.size(),
-                        &result[1]));
-                    ConvertExtensionInfos(env, result[1], info->extensionInfos);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, "QueryExtensionInfoByWant failed",
-                        NAPI_AUTO_LENGTH, &result[1]));
-                }
-            }
-            if (info->deferred) {
-                if (info->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, info->deferred, result[1]));
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, info->deferred, result[0]));
-                }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, info->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(callBackInfo), &callBackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, callBackInfo->asyncWork));
-    callbackPtr.release();
-    return promise;
-}
-
-void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
-{
-    napi_value nForm;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FORM), &nForm));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FORM", nForm));
-
-    napi_value nWorkSchedule;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::WORK_SCHEDULER), &nWorkSchedule));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WORK_SCHEDULER", nWorkSchedule));
-
-    napi_value nInputMethod;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::INPUTMETHOD), &nInputMethod));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INPUT_METHOD", nInputMethod));
-
-    napi_value nService;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SERVICE), &nService));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SERVICE", nService));
-
-    napi_value nAccessibility;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ACCESSIBILITY), &nAccessibility));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACCESSIBILITY", nAccessibility));
-
-    napi_value nDataShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::DATASHARE), &nDataShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA_SHARE", nDataShare));
-
-    napi_value nFileShare;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::FILESHARE), &nFileShare));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILE_SHARE", nFileShare));
-
-    napi_value nStaticSubscriber;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::STATICSUBSCRIBER), &nStaticSubscriber));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATIC_SUBSCRIBER", nStaticSubscriber));
-
-    napi_value nWallpaper;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WALLPAPER), &nWallpaper));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WALLPAPER", nWallpaper));
-
-    napi_value nBackup;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::BACKUP), &nBackup));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKUP", nBackup));
-
-    napi_value nWindow;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::WINDOW), &nWindow));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "WINDOW", nWindow));
-
-    napi_value nFileAccess;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::FILEACCESS_EXTENSION), &nFileAccess));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FILEACCESS_EXTENSION", nFileAccess));
-
-    napi_value nTHUMBNAIL;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::THUMBNAIL), &nTHUMBNAIL));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "THUMBNAIL", nTHUMBNAIL));
-
-    napi_value nPREVIEW;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::PREVIEW), &nPREVIEW));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PREVIEW", nPREVIEW));
-
-    napi_value nEnterpriseAdmin;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ENTERPRISE_ADMIN), &nEnterpriseAdmin));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTERPRISE_ADMIN", nEnterpriseAdmin));
-
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-}
-
-void CreateSupportWindowModesObject(napi_env env, napi_value value)
-{
-    napi_value nFullscreen;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FULLSCREEN), &nFullscreen));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FULL_SCREEN", nFullscreen));
-
-    napi_value nSplit;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::SPLIT), &nSplit));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SPLIT", nSplit));
-
-    napi_value nFloat;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FLOATING), &nFloat));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLOATING", nFloat));
 }
 
 static bool InnerGetApplicationInfo(
@@ -6304,52 +5924,6 @@ NativeValue* JsBundleMgr::CreateAppInfo(NativeEngine &engine, const ApplicationI
     return objContext;
 }
 
-NativeValue* JsBundleMgr::CreateExtensionInfo(
-    NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos)
-{
-    APP_LOGD("CreateExtensionInfo is called.");
-    NativeValue *arrayValue = engine.CreateArray(extensionInfos.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (size_t i = 0; i < extensionInfos.size(); i++) {
-        array->SetElement(i, CreateExtensionInfo(engine, extensionInfos.at(i)));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo)
-{
-    APP_LOGD("CreateExtensionInfo is called.");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("bundleName", CreateJsValue(engine, extensionInfo.bundleName));
-    object->SetProperty("moduleName", CreateJsValue(engine, extensionInfo.moduleName));
-    object->SetProperty("name", CreateJsValue(engine, extensionInfo.name));
-    object->SetProperty("labelId", CreateJsValue(engine, extensionInfo.labelId));
-    object->SetProperty("descriptionId", CreateJsValue(engine, extensionInfo.descriptionId));
-    object->SetProperty("iconId", CreateJsValue(engine, extensionInfo.iconId));
-    object->SetProperty("isVisible", CreateJsValue(engine, extensionInfo.visible));
-    object->SetProperty("extensionAbilityType",
-        CreateJsValue(engine, static_cast<int32_t>(extensionInfo.type)));
-    object->SetProperty("permissions", CreateNativeArray(engine, extensionInfo.permissions));
-    object->SetProperty("applicationInfo", CreateAppInfo(engine, extensionInfo.applicationInfo));
-    object->SetProperty("metaData", CreateInnerMetaDatas(engine, extensionInfo.metadata));
-    object->SetProperty("enabled", CreateJsValue(engine, extensionInfo.enabled));
-    object->SetProperty("readPermission", CreateJsValue(engine, extensionInfo.readPermission));
-    object->SetProperty("writePermission", CreateJsValue(engine, extensionInfo.writePermission));
-
-    return objContext;
-}
-
 NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityInfo &abilityInfo)
 {
     APP_LOGD("CreateAbilityInfo is called.");
@@ -6399,7 +5973,6 @@ NativeValue* JsBundleMgr::CreateAbilityInfo(NativeEngine &engine, const AbilityI
     object->SetProperty("metaData", CreateMetaData(engine, abilityInfo.metaData));
     object->SetProperty("metadata", CreateInnerMetaDatas(engine, abilityInfo.metadata));
     object->SetProperty("enabled", CreateJsValue(engine, abilityInfo.enabled));
-    object->SetProperty("supportWindowMode", CreateSupportWindowMode(engine, abilityInfo.windowModes));
     object->SetProperty("maxWindowRatio", CreateJsValue(engine, abilityInfo.maxWindowRatio));
     object->SetProperty("minWindowRatio", CreateJsValue(engine, abilityInfo.minWindowRatio));
     object->SetProperty("maxWindowWidth", CreateJsValue(engine, abilityInfo.maxWindowWidth));
@@ -6417,18 +5990,6 @@ NativeValue* JsBundleMgr::CreateMetaData(NativeEngine &engine, const MetaData &m
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
     for (size_t i = 0; i < metaData.customizeData.size(); i++) {
         array->SetElement(i, CreateCustomizeMetaData(engine, metaData.customizeData[i]));
-    }
-    return arrayValue;
-}
-
-NativeValue* JsBundleMgr::CreateSupportWindowMode(
-    NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes)
-{
-    APP_LOGD("CreateSupportWindowMode is called.");
-    NativeValue *arrayValue = engine.CreateArray(windowModes.size());
-    NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
-    for (size_t i = 0; i < windowModes.size(); i++) {
-        array->SetElement(i, CreateJsValue(engine, windowModes[i]));
     }
     return arrayValue;
 }
@@ -6546,7 +6107,6 @@ NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInf
     object->SetProperty("reqPermissionDetails", CreateRequestPermissions(engine, bundleInfo.reqPermissionDetails));
     object->SetProperty("minCompatibleVersionCode", CreateJsValue(engine, bundleInfo.minCompatibleVersionCode));
     object->SetProperty("entryInstallationFree", CreateJsValue(engine, bundleInfo.entryInstallationFree));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, bundleInfo.extensionInfos));
 
     return objContext;
 }
@@ -6594,7 +6154,6 @@ NativeValue* JsBundleMgr::CreateHapModuleInfo(NativeEngine &engine, const HapMod
     object->SetProperty("mainAbilityName", CreateJsValue(engine, hapModuleInfo.mainAbility));
     object->SetProperty("installationFree", CreateJsValue(engine, hapModuleInfo.installationFree));
     object->SetProperty("mainElementName", CreateJsValue(engine, hapModuleInfo.mainElementName));
-    object->SetProperty("extensionAbilityInfo", CreateExtensionInfo(engine, hapModuleInfo.extensionInfos));
     object->SetProperty("metadata", CreateInnerMetaDatas(engine, hapModuleInfo.metadata));
 
     return objContext;
