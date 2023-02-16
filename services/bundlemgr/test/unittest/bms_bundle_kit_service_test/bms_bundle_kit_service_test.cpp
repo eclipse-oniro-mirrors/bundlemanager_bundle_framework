@@ -5993,7 +5993,7 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_007, Function | SmallTest | Level1
     HapModuleInfo info;
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     std::vector<AbilityInfo> abilityInfos;
     AbilityInfo abilityInfo;
     std::map<std::string, bool> isRemovable;
@@ -6004,7 +6004,9 @@ HWTEST_F(BmsBundleKitServiceTest, Marshalling_007, Function | SmallTest | Level1
     Metadata data;
     reqCapabilities.emplace_back("video_support");
     deviceTypes.emplace_back("default");
-    dependencies.emplace_back("dependency");
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST_1;
+    dependencies.emplace_back(dependency);
     abilityInfos.emplace_back(abilityInfo);
     extensionInfos.emplace_back(extensionAbilityInfo);
     metadata.emplace_back(data);
@@ -6200,11 +6202,13 @@ HWTEST_F(BmsBundleKitServiceTest, ReadFromParcelOfHapModuleInfo_001, Function | 
 {
     HapModuleInfo info;
     std::vector<std::string> reqCapabilities;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     std::map<std::string, bool> isRemovable;
     isRemovable["hap1"] = true;
     reqCapabilities.emplace_back("video_support");
-    dependencies.emplace_back("dependency");
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST_1;
+    dependencies.emplace_back(dependency);
     info.reqCapabilities = reqCapabilities;
     info.dependencies = dependencies;
     info.isRemovable = isRemovable;
