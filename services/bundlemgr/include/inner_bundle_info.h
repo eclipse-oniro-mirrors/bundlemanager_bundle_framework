@@ -1518,12 +1518,12 @@ public:
 
     void SetBundlePackInfo(const BundlePackInfo &bundlePackInfo)
     {
-        bundlePackInfo_ = bundlePackInfo;
+        *bundlePackInfo_ = bundlePackInfo;
     }
 
     BundlePackInfo GetBundlePackInfo() const
     {
-        return bundlePackInfo_;
+        return *bundlePackInfo_;
     }
 
     void SetAppIndex(int32_t appIndex)
@@ -1989,7 +1989,7 @@ private:
 
     std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos_;
 
-    BundlePackInfo bundlePackInfo_;
+    std::shared_ptr<BundlePackInfo> bundlePackInfo_;
     // new version fields
     bool isNewVersion_ = false;
     std::map<std::string, ExtensionAbilityInfo> baseExtensionInfos_;
