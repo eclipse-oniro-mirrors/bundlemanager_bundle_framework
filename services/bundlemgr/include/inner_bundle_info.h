@@ -1381,6 +1381,25 @@ public:
         return isNewVersion_;
     }
 
+    bool GetAsanEnabled() const
+    {
+        return baseApplicationInfo_->asanEnabled;
+    }
+
+    void SetAsanEnabled(bool asanEnabled) {
+        baseApplicationInfo_->asanEnabled = asanEnabled;
+    }
+
+    void SetAsanLogPath(const std::string& asanLogPath)
+    {
+        baseApplicationInfo_->asanLogPath = asanLogPath;
+    }
+
+    std::string GetAsanLogPath() const
+    {
+        return baseApplicationInfo_->asanLogPath;
+    }
+
     void SetAllowedAcls(const std::vector<std::string> &allowedAcls)
     {
         allowedAcls_.clear();
