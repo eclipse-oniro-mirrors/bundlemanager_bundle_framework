@@ -464,7 +464,7 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
     jsonObject = nlohmann::json {
         {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
         {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName},
-        {Profile::versionCode, dependency.versionCode}
+        {Profile::APP_VERSION_CODE, dependency.versionCode}
     };
 }
 
@@ -1307,8 +1307,8 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
-        Profile::DEPENDENCIES_BUNDLE_NAME,
-        dependency.APP_VERSION_CODE,
+        Profile::APP_VERSION_CODE,
+        dependency.versionCode,
         JsonType::NUMBER,
         false,
         ProfileReader::parseResult,

@@ -250,7 +250,6 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependenciesSize);
     CONTAINER_SECURITY_VERIFY(parcel, dependenciesSize, &dependencies);
     for (auto i = 0; i < dependenciesSize; i++) {
-        // dependencies.emplace_back(Str16ToStr8(parcel.ReadString16()));
         std::unique_ptr<Dependency> dependency(parcel.ReadParcelable<Dependency>());
         if (!dependency) {
             APP_LOGE("ReadParcelable<Dependency> failed");
@@ -387,7 +386,6 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependencies.size());
     for (auto &dependency : dependencies) {
-        // WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dependency));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &dependency);
     }
 
