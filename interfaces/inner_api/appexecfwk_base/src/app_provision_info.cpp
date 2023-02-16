@@ -15,8 +15,8 @@
 
 #include "app_provision_info.h"
 
+#include <cstring>
 #include <fcntl.h>
-#include <string.h>
 
 #include "json_util.h"
 #include "parcel_macro.h"
