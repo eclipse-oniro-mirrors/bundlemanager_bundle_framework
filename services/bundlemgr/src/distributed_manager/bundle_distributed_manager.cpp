@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "ability_manager_client.h"
 #include "bundle_manager_callback.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "distributed_device_profile_client.h"
 #include "free_install_params.h"
@@ -48,6 +49,8 @@ void BundleDistributedManager::Init()
     if (handler_ == nullptr) {
         APP_LOGE("Create handler failed");
     }
+    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 BundleDistributedManager::BundleDistributedManager()

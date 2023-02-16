@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "ipc_types.h"
@@ -209,6 +210,7 @@ void BundleMgrHost::init()
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGD("bundle mgr host onReceived message, the message code is %{public}u", code);
     std::u16string descripter = BundleMgrHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
