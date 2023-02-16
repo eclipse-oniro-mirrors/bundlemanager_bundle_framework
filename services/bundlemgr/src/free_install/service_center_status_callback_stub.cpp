@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,6 +16,7 @@
 #include "service_center_status_callback_stub.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "free_install_params.h"
 #include "message_parcel.h"
 #include "string_ex.h"
@@ -30,6 +31,7 @@ ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
 int32_t ServiceCenterStatusCallbackStub::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     if (data.ReadInterfaceToken() != SEEVICE_CENTER_CALLBACK_TOKEN) {
         APP_LOGE("verify interface token failed");
         return -1;

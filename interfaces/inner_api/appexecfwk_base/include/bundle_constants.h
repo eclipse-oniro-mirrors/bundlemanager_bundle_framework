@@ -61,6 +61,7 @@ constexpr const char* BUNDLE_USER_INFO_PATH =
     "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
@@ -69,6 +70,7 @@ constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/cache",
@@ -84,6 +86,7 @@ constexpr const char* INSTALLD_SERVICE_NAME = "installd";
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
 constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -99,8 +102,9 @@ constexpr int PERMISSION_GRANTED = 0;
 constexpr int PERMISSION_NOT_GRANTED = -1;
 constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
-constexpr int INVALID_API_VERSION = -1;
-constexpr int API_VERSION_NINE = 9;
+constexpr int32_t INVALID_API_VERSION = -1;
+constexpr int32_t API_VERSION_EIGHT = 8;
+constexpr int32_t API_VERSION_NINE = 9;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -112,6 +116,7 @@ constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
+const std::string AP = "ap/";
 constexpr const char* LIBS_ARM_EABI_V7A = "libs/armeabi-v7a/";
 constexpr const char* ARM = "arm";
 const std::map<std::string, std::string> ABI_MAP = {
@@ -124,6 +129,7 @@ const std::map<std::string, std::string> ABI_MAP = {
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AI_SUFFIX = ".ai";
+constexpr const char* AP_SUFFIX = ".ap";
 constexpr const char* SYSTEM_LIB64 = "/system/lib64";
 constexpr const char* DIFF_SUFFIX = ".diff";
 constexpr const char* PATCH_PATH = "patch_";
@@ -254,8 +260,9 @@ constexpr int32_t INVALID_FILE_SIZE = -1;
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
 
-// hmdfs config
+// hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
+constexpr const char* SHAREFS_CONFIG_PATH {"/config/sharefs/"};
 constexpr const char* BUNDLE_ID_FILE = { "bid" };
 
 // pre bundle profile
@@ -270,9 +277,6 @@ constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissio
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
 constexpr int32_t MAX_APP_INDEX = 100;
-
-// disposed status
-constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
 
 // app-distribution-type
 constexpr const char* APP_DISTRIBUTION_TYPE_NONE = "none";

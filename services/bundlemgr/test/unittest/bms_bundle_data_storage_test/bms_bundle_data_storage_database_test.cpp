@@ -306,6 +306,8 @@ protected:
                 },
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
+                "asanEnabled": false,
+                "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
@@ -404,9 +406,14 @@ protected:
                 "formVisibleNotify": false,
                 "allowCommonEvent": [],
                 "needAppDetail": false,
-                "appDetailAbilityLibraryPath": ""
+                "appDetailAbilityLibraryPath": "",
+                "bundleType": 0,
+                "split": true,
+                "targetBundleName": "",
+                "targetPriority": 0
             },
             "baseBundleInfo": {
+                "asanEnabled": false,
                 "abilityInfos": [
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
@@ -444,6 +451,9 @@ protected:
                 "moduleResPaths": [
                 ],
                 "name": "com.ohos.launcher",
+                "overlayType": 3,
+                "overlayBundleInfos": [
+                ],
                 "releaseType": "Beta1",
                 "reqPermissionDetails": [
                 ],
@@ -765,7 +775,8 @@ protected:
     nlohmann::json moduleInfoJson_ = R"(
         {
             "moduleName": "entry",
-            "moduleSourceDir": ""
+            "moduleSourceDir": "",
+            "preloads": []
         }
     )"_json;
     const std::string BASE_ABILITY_INFO = "baseAbilityInfos";

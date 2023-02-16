@@ -39,7 +39,6 @@ const std::string MODULE_NAME_TEST = "entry";
 const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
 constexpr int32_t DEFAULT_USERID = 100;
 constexpr int32_t BENCHMARK_TIMES = 1000;
-constexpr int32_t DEFAULT_DISPOSED_STATUS = 0;
 
 class BundleStatusCallbackImpl : public BundleStatusCallbackHost {
 public:
@@ -746,64 +745,6 @@ static void BenchmarkTestGetPermissionDef(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestHasSystemCapability
- * @tc.desc: Testcase for testing HasSystemCapability.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestHasSystemCapability(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call HasSystemCapability in loop */
-        bundleMgrProxy->HasSystemCapability(ABILITY_NAME);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestGetSystemAvailableCapabilities
- * @tc.desc: Testcase for testing GetSystemAvailableCapabilities.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetSystemAvailableCapabilities(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    std::vector<std::string> systemCaps = {"bmsSystemBundle_A1"};
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetSystemAvailableCapabilities in loop */
-        bundleMgrProxy->GetSystemAvailableCapabilities(systemCaps);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestIsSafeMode
- * @tc.desc: Testcase for testing IsSafeMode.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestIsSafeMode(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call IsSafeMode in loop */
-        bundleMgrProxy->IsSafeMode();
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestCleanBundleDataFiles
  * @tc.desc: Testcase for testing CleanBundleDataFiles.
  * @tc.type: FUNC
@@ -1265,25 +1206,6 @@ static void BenchmarkTestVerifyCallingPermission(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestGetAccessibleAppCodePaths
- * @tc.desc: Testcase for testing GetAccessibleAppCodePaths.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetAccessibleAppCodePaths(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetAccessibleAppCodePaths in loop */
-        bundleMgrProxy->GetAccessibleAppCodePaths(DEFAULT_USERID);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestQueryExtensionAbilityInfoByUri
  * @tc.desc: Testcase for testing QueryExtensionAbilityInfoByUri.
  * @tc.type: FUNC
@@ -1413,44 +1335,6 @@ static void BenchmarkTestGetAllDependentModuleNames(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestSetDisposedStatus
- * @tc.desc: Testcase for testing SetDisposedStatus.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestSetDisposedStatus(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call SetDisposedStatus in loop */
-        bundleMgrProxy->SetDisposedStatus(BUNDLE_NAME, DEFAULT_DISPOSED_STATUS);
-    }
-}
-
-/**
- * @tc.name: BenchmarkTestSetDisposedStatus
- * @tc.desc: Testcase for testing GetDisposedStatus.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-
-static void BenchmarkTestGetDisposedStatus(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetDisposedStatus in loop */
-        bundleMgrProxy->GetDisposedStatus(BUNDLE_NAME);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestObtainCallingBundleName
  * @tc.desc: Testcase for testing ObtainCallingBundleName.
  * @tc.type: FUNC
@@ -1501,9 +1385,6 @@ BENCHMARK(BenchmarkTestGetBundleArchiveInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetBundleArchiveInfoByFlag)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetLaunchWantForBundle)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetPermissionDef)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestHasSystemCapability)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetSystemAvailableCapabilities)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestIsSafeMode)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestCleanBundleDataFiles)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestRegisterBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestClearBundleStatusCallback)->Iterations(BENCHMARK_TIMES);
@@ -1526,15 +1407,12 @@ BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByWant)->Iterations(BENCHMARK_T
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfos)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfosByType)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestVerifyCallingPermission)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetAccessibleAppCodePaths)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestQueryExtensionAbilityInfoByUri)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestImplicitQueryInfoByPriority)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetSandboxBundleInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAbilityInfo)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAbilityInfoByModuleName)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetAllDependentModuleNames)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestSetDisposedStatus)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetDisposedStatus)->Iterations(BENCHMARK_TIMES);
+BENCHMARK(BenchmarkTestGetAllDependentModuleNames)->Iterations(BENCHMARK_TIMES);;
 BENCHMARK(BenchmarkTestObtainCallingBundleName)->Iterations(BENCHMARK_TIMES);
 }  // namespace
 

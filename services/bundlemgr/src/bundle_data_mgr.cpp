@@ -22,8 +22,9 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
+#ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
+#endif
 #endif
 #include "account_helper.h"
 #include "app_log_wrapper.h"
@@ -42,6 +43,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -51,6 +53,9 @@
 #include "free_install_params.h"
 #include "parameters.h"
 #include "singleton.h"
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+#include "bundle_overlay_data_manager.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -236,6 +241,14 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         if (info.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(info);
         }
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if (info.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+            OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(info);
+        }
+        if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
+            OverlayDataMgr::GetInstance()->BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info);
+        }
+#endif
         if (dataStorage_->SaveStorageBundleInfo(info)) {
             APP_LOGI("write storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.emplace(bundleName, info);
@@ -273,10 +286,22 @@ bool BundleDataMgr::AddNewModuleInfo(
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
+            oldInfo.SetOverlayType(newInfo.GetOverlayType());
+        }
+        if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+            APP_LOGE("update overlay info failed");
+            return false;
+        }
+#endif
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -304,8 +329,14 @@ bool BundleDataMgr::RemoveModuleInfo(
     }
     if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        OverlayDataMgr::GetInstance()->RemoveOverlayModuleInfo(bundleName, modulePackage, oldInfo);
+#endif
         oldInfo.RemoveModuleInfo(modulePackage);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (!oldInfo.isExistedOverlayModule()) {
+            oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
+        }
         if (dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
             bundleInfos_.at(bundleName) = oldInfo;
@@ -363,7 +394,7 @@ bool BundleDataMgr::RemoveInnerBundleUserInfo(
 }
 
 bool BundleDataMgr::UpdateInnerBundleInfo(
-    const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+    const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("UpdateInnerBundleInfo:%{public}s", bundleName.c_str());
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -386,6 +417,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
         bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
         bool isOldInfoHasEntry = oldInfo.HasEntry();
+        if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            oldInfo.KeepOldOverlayConnection(newInfo);
+        }
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
@@ -405,9 +439,28 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
+        // clear apply quick fix frequency
+        oldInfo.ResetApplyQuickFixFrequency();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+        if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+                APP_LOGE("update overlay info failed");
+                return false;
+            }
+        }
+
+        if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
+            (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK)) {
+            APP_LOGE("update overlay info failed");
+            return false;
+        }
+#endif
         if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -1600,7 +1653,7 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
     const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const
 {
     if (userId == Constants::INVALID_USERID) {
-        APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGD("userId is invalid");
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
 
@@ -1750,7 +1803,6 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
-#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
@@ -1765,14 +1817,24 @@ bool BundleDataMgr::HasUserInstallInBundle(
 bool BundleDataMgr::GetBundleStats(
     const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
 {
-    if (!HasUserInstallInBundle(bundleName, userId)) {
-        APP_LOGE("userId(%{public}d) not in bundle(%{public}s)", userId, bundleName.c_str());
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
         return false;
     }
-
-    return InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) == ERR_OK;
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats) != ERR_OK) {
+        APP_LOGE("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        return false;
+    }
+    if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+        }
+    }
+    return true;
 }
 
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
     return GetBundleSpaceSize(bundleName, AccountHelper::GetCurrentActiveUserId());
@@ -1839,12 +1901,12 @@ bool BundleDataMgr::GetFreeInstallModules(
     }
 
     for (const auto &iter : bundleInfos_) {
-        std::vector<std::string> moudles;
-        if (!iter.second.GetFreeInstallModules(moudles)) {
+        std::vector<std::string> modules;
+        if (!iter.second.GetFreeInstallModules(modules)) {
             continue;
         }
 
-        freeInstallModules.emplace(iter.first, moudles);
+        freeInstallModules.emplace(iter.first, modules);
     }
 
     return !freeInstallModules.empty();
@@ -1874,7 +1936,6 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
         if (sandboxAppHelper_->GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-            APP_LOGE("get innerBundleInfo by uid failed.");
             return ERR_BUNDLE_MANAGER_INVALID_UID;
         }
     }
@@ -2114,6 +2175,11 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     }
 
     auto infoItem = bundleInfos_.find(bundleName);
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+        OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
+    }
+#endif
     if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
         const InnerBundleInfo &innerBundleInfo = infoItem->second;
@@ -2616,7 +2682,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGI("the %{public}d app install", i);
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeHmdfsConfig(bundleName, bundleId);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -2628,7 +2695,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeHmdfsConfig(bundleName, bundleId);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -2721,7 +2789,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveHmdfsConfig(innerBundleUserInfo.bundleName);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -2742,7 +2811,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeHmdfsConfig(innerBundleUserInfo.bundleName, bundleId);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             }
         }
     }
@@ -2804,29 +2874,6 @@ void BundleDataMgr::SetInitialUserFlag(bool flag)
     }
 
     initialUserFlag_ = flag;
-}
-
-int BundleDataMgr::CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) const
-{
-    APP_LOGD("CheckPublicKeys %{public}s and %{public}s", firstBundleName.c_str(), secondBundleName.c_str());
-    if (firstBundleName.empty() || secondBundleName.empty()) {
-        APP_LOGE("bundleName empty");
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto firstInfoItem = bundleInfos_.find(firstBundleName);
-    if (firstInfoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", firstBundleName.c_str());
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    auto secondInfoItem = bundleInfos_.find(secondBundleName);
-    if (secondInfoItem == bundleInfos_.end()) {
-        APP_LOGE("can not find bundle %{public}s", secondBundleName.c_str());
-        return Constants::SIGNATURE_UNKNOWN_BUNDLE;
-    }
-    auto firstProvisionId = firstInfoItem->second.GetProvisionId();
-    auto secondProvisionId = secondInfoItem->second.GetProvisionId();
-    return (firstProvisionId == secondProvisionId) ? Constants::SIGNATURE_MATCHED : Constants::SIGNATURE_NOT_MATCHED;
 }
 
 std::shared_ptr<IBundleDataStorage> BundleDataMgr::GetDataStorage() const
@@ -3729,28 +3776,6 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const ExtensionAbilityType &exten
     return true;
 }
 
-std::vector<std::string> BundleDataMgr::GetAccessibleAppCodePaths(int32_t userId) const
-{
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    std::vector<std::string> vec;
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos_ is empty");
-        return vec;
-    }
-
-    for (const auto &item : bundleInfos_) {
-        const InnerBundleInfo &info = item.second;
-        auto userInfoMap = info.GetInnerBundleUserInfos();
-        for (const auto &userInfo : userInfoMap) {
-            auto innerUserId = userInfo.second.bundleUserInfo.userId;
-            if (((innerUserId == 0) || (innerUserId == userId)) && info.IsAccessible()) {
-                vec.emplace_back(info.GetAppCodePath());
-            }
-        }
-    }
-    return vec;
-}
-
 bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
     ExtensionAbilityInfo &extensionAbilityInfo) const
 {
@@ -3887,8 +3912,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
         return nullptr;
     }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     BundleInfo bundleInfo;
-    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
         std::string moduleResPath;
@@ -4024,24 +4050,6 @@ bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, co
     return innerBundleInfo.GetAllDependentModuleNames(moduleName, dependentModuleNames);
 }
 
-bool BundleDataMgr::SetDisposedStatus(const std::string &bundleName, int32_t status)
-{
-    APP_LOGD("SetDisposedStatus: bundleName: %{public}s, status: %{public}d", bundleName.c_str(), status);
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("SetDisposedStatus: bundleName: %{public}s not find", bundleName.c_str());
-        return false;
-    }
-    auto& info = bundleInfos_.at(bundleName);
-    info.SetDisposedStatus(status);
-    if (!dataStorage_->SaveStorageBundleInfo(info)) {
-        APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
-        return false;
-    }
-    return true;
-}
-
 void BundleDataMgr::UpdateRemovable(
     const std::string &bundleName, bool removable)
 {
@@ -4101,19 +4109,6 @@ bool BundleDataMgr::FetchInnerBundleInfo(
 
     innerBundleInfo = infoItem->second;
     return true;
-}
-
-int32_t BundleDataMgr::GetDisposedStatus(const std::string &bundleName)
-{
-    APP_LOGD("GetDisposedStatus: bundleName: %{public}s", bundleName.c_str());
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("GetDisposedStatus: bundleName: %{public}s not find", bundleName.c_str());
-        return Constants::DEFAULT_DISPOSED_STATUS;
-    }
-    auto& info = bundleInfos_.at(bundleName);
-    return info.GetDisposedStatus();
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -4354,6 +4349,47 @@ bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t use
     APP_LOGW("app control is disable");
     return true;
 #endif
+}
+
+bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+{
+    APP_LOGI("start to get overlay innerBundleInfo");
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+        info = bundleInfos_.at(bundleName);
+        return true;
+    }
+
+    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+    return false;
+}
+
+void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+    if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
+        APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
+        return;
+    }
+    bundleInfos_.at(bundleName) = innerBundleInfo;
+}
+
+void BundleDataMgr::EnableOverlayBundle(const std::string &bundleName)
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        return;
+    }
+    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+}
+
+const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerbundleInfos() const
+{
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    return bundleInfos_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

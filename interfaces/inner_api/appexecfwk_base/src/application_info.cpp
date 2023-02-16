@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
+#include <set>
 #include <unistd.h>
 
 #include "message_parcel.h"
@@ -106,6 +107,10 @@ const std::string APPLICATION_NEED_APP_DETAIL = "needAppDetail";
 const std::string APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH = "appDetailAbilityLibraryPath";
 const std::string APPLICATION_APP_TARGET_BUNDLE_NAME = "targetBundleName";
 const std::string APPLICATION_APP_TARGET_PRIORITY = "targetPriority";
+const std::string APPLICATION_ASAN_ENABLED = "asanEnabled";
+const std::string APPLICATION_ASAN_LOG_PATH = "asanLogPath";
+const std::string APPLICATION_SPLIT = "split";
+const std::string APPLICATION_APP_TYPE = "bundleType";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -276,7 +281,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (auto i = 0; i < allowCommonEventSize; i++) {
         allowCommonEvent.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
-    
+
     codePath = Str16ToStr8(parcel.ReadString16());
     dataDir = Str16ToStr8(parcel.ReadString16());
     dataBaseDir = Str16ToStr8(parcel.ReadString16());
@@ -302,7 +307,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     arkNativeFilePath = Str16ToStr8(parcel.ReadString16());
     arkNativeFileAbi = Str16ToStr8(parcel.ReadString16());
-    
+
     int32_t permissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissionsSize);
     CONTAINER_SECURITY_VERIFY(parcel, permissionsSize, &permissions);
@@ -385,6 +390,10 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     appDetailAbilityLibraryPath = Str16ToStr8(parcel.ReadString16());
     targetBundleName = Str16ToStr8(parcel.ReadString16());
     targetPriority = parcel.ReadInt32();
+    asanEnabled = parcel.ReadBool();
+    asanLogPath = Str16ToStr8(parcel.ReadString16());
+    split = parcel.ReadBool();
+    bundleType = static_cast<BundleType>(parcel.ReadInt32());
     return true;
 }
 
@@ -522,6 +531,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appDetailAbilityLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(targetBundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, targetPriority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(asanLogPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, split);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
     return true;
 }
 
@@ -550,6 +563,35 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
         }
     }
     return;
+}
+
+bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
+{
+    std::set<std::string> preloadModules;
+    for (const ModuleInfo &moduleInfo : moduleInfos) {
+        if (moduleInfo.moduleName == moduleName) {
+            for (const std::string &name : moduleInfo.preloads) {
+                preloadModules.insert(name);
+            }
+            break;
+        }
+    }
+    if (preloadModules.empty()) {
+        APP_LOGD("the module have no preloads.");
+        return false;
+    }
+    for (const ModuleInfo &moduleInfo : moduleInfos) {
+        auto iter = preloadModules.find(moduleInfo.moduleName);
+        if (iter != preloadModules.end()) {
+            preloadModules.erase(iter);
+        }
+    }
+    if (preloadModules.empty()) {
+        APP_LOGD("all preload modules exist locally.");
+        return false;
+    }
+    APP_LOGI("start to process preload.");
+    return true;
 }
 
 void to_json(nlohmann::json &jsonObject, const Resource &resource)
@@ -669,6 +711,10 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_DETAIL_ABILITY_LIBRARY_PATH, applicationInfo.appDetailAbilityLibraryPath},
         {APPLICATION_APP_TARGET_BUNDLE_NAME, applicationInfo.targetBundleName},
         {APPLICATION_APP_TARGET_PRIORITY, applicationInfo.targetPriority},
+        {APPLICATION_ASAN_ENABLED, applicationInfo.asanEnabled},
+        {APPLICATION_ASAN_LOG_PATH, applicationInfo.asanLogPath},
+        {APPLICATION_SPLIT, applicationInfo.split},
+        {APPLICATION_APP_TYPE, applicationInfo.bundleType},
     };
 }
 
@@ -1248,6 +1294,38 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_APP_TARGET_PRIORITY,
         applicationInfo.targetPriority,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ASAN_ENABLED,
+        applicationInfo.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_ASAN_LOG_PATH,
+        applicationInfo.asanLogPath,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_SPLIT,
+        applicationInfo.split,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<BundleType>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_APP_TYPE,
+        applicationInfo.bundleType,
         JsonType::NUMBER,
         false,
         parseResult,

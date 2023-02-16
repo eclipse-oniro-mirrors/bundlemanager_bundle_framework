@@ -65,7 +65,6 @@ const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
 const int32_t ZERO_SIZE = 0;
-constexpr int32_t DISPOSED_STATUS = 10;
 }  // namespace
 
 namespace OHOS {
@@ -2654,7 +2653,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest |
     bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
     EXPECT_TRUE(getInfoResult);
     EXPECT_EQ(bundleName, appName);
-    
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -5286,7 +5285,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Le
     for (auto bundleName : bundleNames) {
         EXPECT_EQ(bundleName, appName);
     }
-    
+
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -5707,67 +5706,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAllAbilityInfos_0100, Function | MediumTest 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END QueryAllAbilityInfos_0100" << std::endl;
-}
-
-/**
- * @tc.number: CheckPublicKeys_0100
- * @tc.name: test CheckPublicKeys interface
- * @tc.desc: 1.check pubilic keys
- *           2.the pubilic keys is zero
- */
-HWTEST_F(ActsBmsKitSystemTest, CheckPublicKeys_0100, Function | MediumTest | Level1)
-{
-    std::cout << "START CheckPublicKeys_0100" << std::endl;
-    std::vector<std::string> resvec;
-    std::vector<std::string> resvec2;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    std::string appName2 = BASE_BUNDLE_NAME + "2";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-    Install(bundleFilePath2, InstallFlag::NORMAL, resvec2);
-    std::string installResult2 = commonTool.VectorToStr(resvec2);
-    EXPECT_EQ(installResult2, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    int ret = bundleMgrProxy->CheckPublicKeys(appName, appName2);
-    EXPECT_EQ(ret, 0);
-
-    resvec.clear();
-    resvec2.clear();
-    Uninstall(appName, resvec);
-    Uninstall(appName2, resvec2);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::string uninstallResult2 = commonTool.VectorToStr(resvec2);
-    EXPECT_EQ(uninstallResult2, "Success") << "uninstall fail!";
-    std::cout << "END CheckPublicKeys_0100" << std::endl;
-}
-
-/**
- * @tc.number: CheckPublicKeys_0200
- * @tc.name: test CheckPublicKeys interface
- * @tc.desc: 1.check pubilic keys
- *           2.the pubilic keys is zero
- */
-HWTEST_F(ActsBmsKitSystemTest, CheckPublicKeys_0200, Function | MediumTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-
-    int ret = bundleMgrProxy->CheckPublicKeys("", "");
-    EXPECT_NE(ret, 0);
 }
 
 /**
@@ -6317,51 +6255,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0200, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: DisposedStatus_0100
- * @tc.name: test DisposedStatus proxy
- * @tc.desc: 1.system run normally
- *           2.get disposed status failed by unpermission
- */
-HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0100, Function | SmallTest | Level1)
-{
-    std::cout << "START DisposedStatus_0100" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool result = bundleMgrProxy->SetDisposedStatus(appName, DISPOSED_STATUS);
-    EXPECT_TRUE(result);
-    int32_t status = bundleMgrProxy->GetDisposedStatus(appName);
-    EXPECT_EQ(status, 10);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END DisposedStatus_0100" << std::endl;
-}
-
-/**
- * @tc.number: DisposedStatus_0200
- * @tc.name: test DisposedStatus proxy
- * @tc.desc: 1.system run normally
- *           2.get disposed status failed by empty bundle name
- */
-HWTEST_F(ActsBmsKitSystemTest, DisposedStatus_0200, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bool result = bundleMgrProxy->SetDisposedStatus("", DISPOSED_STATUS);
-    EXPECT_FALSE(result);
-    int32_t status = bundleMgrProxy->GetDisposedStatus("");
-    EXPECT_EQ(status, 0);
-}
-
-/**
  * @tc.number: GetUdidByNetworkId_0100
  * @tc.name: test GetUdidByNetworkId proxy
  * @tc.desc: 1.system run normally
@@ -6623,19 +6516,6 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetUdidByNetworkId_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetAccessibleAppCodePaths_0100
- * @tc.name: test GetAccessibleAppCodePaths proxy
- * @tc.desc: 1.system run normally
- *           2.get accessible app code paths successfully
- */
-HWTEST_F(ActsBmsKitSystemTest, GetAccessibleAppCodePaths_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    auto res = bundleMgrProxy->GetAccessibleAppCodePaths(USERID);
-    EXPECT_EQ(res.size(), 0);
 }
 
 /**
@@ -7261,6 +7141,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0200, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: GetMediaData_0300
+ * @tc.name: test GetMediaData proxy
+ * @tc.desc: 1.system run normally
+ *           2.return not ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0300, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "invalid";
+    std::string moduleName = "invalid";
+    std::string abilityName = "invalid";
+    std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
+    size_t len = 0;
+    ErrCode ret = bundleMgrProxy->GetMediaData(bundleName, moduleName, abilityName, mediaDataPtr, len);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
  * @tc.number: GetBundleArchiveInfoV9_0100
  * @tc.name: test query archive information
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -7649,6 +7548,40 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnableInstall_0100, Function | SmallT
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool testRet = bundleMgrProxy->CheckAbilityEnableInstall(want, missionId, USERID, callback);
     EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0100
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0100, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    BundleInfo bundleInfo;
+    int32_t flags = 1;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
+
+/**
+ * @tc.number: VerifySystemApi_0100
+ * @tc.name: test VerifySystemApi proxy
+ * @tc.desc: 1.system run normally
+ *           2.verify system api
+ */
+HWTEST_F(ActsBmsKitSystemTest, VerifySystemApi_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    int32_t beginApiVersion = 1;
+    auto res = bundleMgrProxy->VerifySystemApi(beginApiVersion);
+    EXPECT_EQ(res, true);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

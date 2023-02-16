@@ -17,6 +17,7 @@
 #include "account_helper.h"
 #include "battery_srv_client.h"
 #include "bundle_active_period_stats.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "display_power_mgr_client.h"
@@ -72,6 +73,8 @@ void BundleAgingMgr::InitAgingRunner()
     }
 
     SetEventRunner(agingRunner);
+    PostTask([]() { BundleMemoryGuard cacheGuard; },
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 void BundleAgingMgr::InitAgingTimerInterval()
@@ -206,13 +209,13 @@ bool BundleAgingMgr::InitAgingRequest()
 
                 return false;
             });
-        APP_LOGD("bundle: %{public}s, lastTimeUsed: %{public}" PRId64 ", startCount: %{public}d",
-            bundleName.c_str(), bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         AgingBundleInfo agingBundleInfo(bundleName, bundleRecord.lastTimeUsed_, bundleRecord.startCount_);
         request_.AddAgingBundle(agingBundleInfo);
     }
 
-    return request_.SortAgingBundles() > 0;
+    bool ret = request_.SortAgingBundles() > 0;
+    request_.Dump();
+    return ret;
 }
 
 void BundleAgingMgr::Process(const std::shared_ptr<BundleDataMgr> &dataMgr)
@@ -304,10 +307,7 @@ void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
 void BundleAgingMgr::InitAgingHandlerChain()
 {
     chain_ = AgingHandlerChain();
-    chain_.AddHandler(std::make_shared<Over30DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<Over20DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<Over10DaysUnusedBundleAgingHandler>());
-    chain_.AddHandler(std::make_shared<BundleDataSizeAgingHandler>());
+    chain_.AddHandler(std::make_shared<RecentlyUnuseBundleAgingHandler>());
 }
 }  //  namespace AppExecFwk
 }  //  namespace OHOS

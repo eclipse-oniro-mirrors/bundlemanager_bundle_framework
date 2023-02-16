@@ -44,6 +44,7 @@ const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExten
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
+const std::string RELEASE = "Release";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -307,8 +308,7 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
                 APP_LOGD("deliveryWithInstall is false, do not check whether the dependency exists.");
                 continue;
             }
-
-            std::string bundleName = 
+            std::string bundleName =
                 dependency.bundleName.empty() ? info.second.GetBundleName() : dependency.bundleName;
             isModuleExist = FindModuleInInstallingPackage(dependency.moduleName, bundleName, infos);
             if (!isModuleExist) {
@@ -592,6 +592,12 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool singleton = (infos.begin()->second).IsSingleton();
     Constants::AppType appType = (infos.begin()->second).GetAppType();
     bool isStage = (infos.begin()->second).GetIsNewVersion();
+    const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
+    int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
+    bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
+    bool hasAtomicServiceConfig = (infos.begin()->second).GetHasAtomicServiceConfig();
+    bool split = (infos.begin()->second).GetBaseApplicationInfo().split;
+    std::string main = (infos.begin()->second).GetAtomicMainModuleName();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -632,6 +638,27 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (isStage != info.second.GetIsNewVersion()) {
             APP_LOGE("must be all FA model or all stage model");
             return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+        }
+        if (targetBundleName != info.second.GetTargetBundleName()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME;
+        }
+        if (targetPriority != info.second.GetTargetPriority()) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME;
+        }
+        // check asanEnabled
+        if (asanEnabled != info.second.GetAsanEnabled()) {
+            APP_LOGE("asanEnabled is not same");
+            return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
+        }
+        if (asanEnabled && info.second.GetReleaseType().find(RELEASE) != std::string::npos) {
+            APP_LOGE("asanEnabled is not supported in Release");
+            return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
+        }
+        if (hasAtomicServiceConfig != info.second.GetHasAtomicServiceConfig() ||
+                split != info.second.GetBaseApplicationInfo().split ||
+                main != info.second.GetAtomicMainModuleName()) {
+            APP_LOGE("atomicService config is not same.");
+            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
         }
     }
     // check api sdk version

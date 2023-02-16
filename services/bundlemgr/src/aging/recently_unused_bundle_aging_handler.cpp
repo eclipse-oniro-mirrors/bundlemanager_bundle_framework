@@ -79,13 +79,9 @@ bool RecentlyUnuseBundleAgingHandler::Process(AgingRequest &request) const
 
 bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
 {
-    APP_LOGD("aging handler start: %{public}s, cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
-        GetName().c_str(), static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
+    APP_LOGD("aging handler start: cleanType: %{public}d, totalDataBytes: %{public}" PRId64,
+        static_cast<int32_t>(request.GetAgingCleanType()), request.GetTotalDataBytes());
     for (const auto &agingBundle : request.GetAgingBundles()) {
-        if (!CheckBundle(agingBundle)) {
-            break;
-        }
-
         bool isBundleRunning = AbilityManagerHelper::IsRunning(agingBundle.GetBundleName());
         APP_LOGD("found matching bundle: %{public}s, isRunning: %{public}d.",
             agingBundle.GetBundleName().c_str(), isBundleRunning);
@@ -98,12 +94,10 @@ bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
             continue;
         }
 
-        if (NeedCheckEndAgingThreshold()) {
-            UpdateUsedTotalDataBytes(request);
-            if (!NeedContinue(request)) {
-                APP_LOGD("there is no need to continue now.");
-                return false;
-            }
+        UpdateUsedTotalDataBytes(request);
+        if (!NeedContinue(request)) {
+            APP_LOGD("there is no need to continue now.");
+            return false;
         }
     }
 
@@ -114,12 +108,6 @@ bool RecentlyUnuseBundleAgingHandler::ProcessBundle(AgingRequest &request) const
 bool RecentlyUnuseBundleAgingHandler::NeedContinue(const AgingRequest &request) const
 {
     return !request.IsReachEndAgingThreshold();
-}
-
-bool RecentlyUnuseBundleAgingHandler::NeedCheckEndAgingThreshold() const
-{
-    return GetName() == AgingConstants::UNUSED_FOR_10_DAYS_BUNDLE_AGING_HANDLER ||
-        GetName() == AgingConstants::BUNDLE_DATA_SIZE_AGING_HANDLER;
 }
 
 bool RecentlyUnuseBundleAgingHandler::UpdateUsedTotalDataBytes(AgingRequest &request) const
@@ -236,6 +224,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     InstallParam installParam;
     installParam.userId = Constants::ALL_USERID;
     installParam.installFlag = InstallFlag::FREE_INSTALL;
+    installParam.isAgingUninstall = true;
     installParam.noSkipsKill = false;
     bundleInstaller->Uninstall(bundleName, installParam, unInstallReceiverImpl);
     if (unInstallReceiverImpl->IsRunning()) {

@@ -37,12 +37,10 @@ bool BundlePermissionMgr::Init()
         APP_LOGE("rootDirList is empty");
         return false;
     }
-    std::transform(rootDirList.begin(),
-        rootDirList.end(),
-        std::back_inserter(permissionFileList),
-        [](const auto &rootDir) {
-            return rootDir + Constants::PRODUCT_SUFFIX + Constants::INSTALL_LIST_PERMISSIONS_CONFIG;
-        });
+    for (const auto &item : rootDirList) {
+        permissionFileList.push_back(item + Constants::PRODUCT_SUFFIX
+            + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
+    }
 #else
     permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);
 #endif
@@ -709,7 +707,6 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
 {
     APP_LOGD("verifying systemApp");
-#ifdef SYSTEM_API_VERIFICATION
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
@@ -734,7 +731,6 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
         APP_LOGI("hapApiVersion equal to or less than the version this api begins to be system api");
         return true;
     }
-#endif
     return true;
 }
 }  // namespace AppExecFwk

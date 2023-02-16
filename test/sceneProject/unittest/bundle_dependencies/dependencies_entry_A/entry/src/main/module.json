@@ -19,8 +19,8 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -40,9 +40,8 @@
         "mainElement": "MainAbility",
         "name": "entry_A",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
-        "uiSyntax": "ets",
         "virtualMachine": "ark"
     }
 }

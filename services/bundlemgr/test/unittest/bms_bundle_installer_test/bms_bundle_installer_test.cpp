@@ -61,9 +61,11 @@ const int32_t USERID = 100;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
+const std::string BUNDLE_MODULEJSON_TEST = "moduleJsonTest.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
 const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
+const std::string BUNDLE_MODULEJSON_NAME = "com.test.modulejsontest";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
@@ -72,6 +74,7 @@ const std::string TEST_STRING = "test.string";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
+const std::string LOG = "log";
 
 }  // namespace
 
@@ -589,7 +592,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(info.labelId, 16777216);
     EXPECT_EQ(info.iconPath, "$media:app_icon");
     EXPECT_EQ(info.iconId, 16777228);
-    EXPECT_EQ(info.entityType, "game");
     EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
     EXPECT_EQ(info.versionName, "1.0");
     EXPECT_EQ(info.minCompatibleVersionCode, 1);
@@ -2036,6 +2038,20 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3200, Function | SmallTest 
 }
 
 /**
+ * @tc.number: BundleInstaller_3300
+ * @tc.name: test InstallAppControl
+ * @tc.desc: 1.Test the InstallAppControl of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_MODULEJSON_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UnInstallBundle(BUNDLE_MODULEJSON_NAME);
+}
+
+/**
  * @tc.number: InstalldHostImpl_0100
  * @tc.name: test CheckArkNativeFileWithOldInfo
  * @tc.desc: 1.Test the CreateBundleDir of InstalldHostImpl
@@ -2410,7 +2426,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0100, Function | SmallTest | Lev
  * @tc.desc: 1. BundleInstallChecker
 */
 HWTEST_F(BmsBundleInstallerTest, InstallChecker_0200, Function | SmallTest | Level0)
-{    
+{
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST + "rpcid.sc";
     std::vector<std::string> bundlePaths;
     bundlePaths.push_back(bundlePath);
@@ -2447,7 +2463,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Lev
     std::unordered_map<std::string, InnerBundleInfo> infos;
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckDependency(infos);
-    EXPECT_EQ(ret, ERR_OK);//0
+    EXPECT_EQ(ret, ERR_OK);
 
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
@@ -2570,6 +2586,246 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleSignatureType_0100, Function | SmallTe
     std::string bundlePath = RESOURCE_ROOT_PATH + "signatureTest.hap";
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
     EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: ExtractArkProfileFile_0100
+ * @tc.name: test ExtractArkProfileFile
+ * @tc.desc: 1.Test ExtractArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string modulePath = "";
+    std::string bundleName = "";
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractArkProfileFile_0200
+ * @tc.name: test ExtractArkProfileFile
+ * @tc.desc: 1.Test ExtractArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractArkProfileFile_0200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string modulePath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    std::string bundleName = BUNDLE_NAME;
+    auto ret = installer.ExtractArkProfileFile(modulePath, bundleName, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0100
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0200
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0200, Function | SmallTest | Level0)
+{
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(true);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0300
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0300, Function | SmallTest | Level0)
+{
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    innerModuleInfo.hapPath = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.name = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: ExtractAllArkProfileFile_0400
+ * @tc.name: test ExtractAllArkProfileFile
+ * @tc.desc: 1.Test ExtractAllArkProfileFile
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractAllArkProfileFile_0400, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractAllArkProfileFile(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0100
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0100, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 100;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 101;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldInnerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0200
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0200, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 101;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldInnerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0300
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0300, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 101;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(false);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldInnerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = installer.DeleteArkProfile(installer.bundleName_, installer.userId_);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckArkProfileDir_0400
+ * @tc.name: test CheckArkProfileDir
+ * @tc.desc: 1.Test CheckArkProfileDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckArkProfileDir_0400, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bundleInfo.versionCode = 101;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsNewVersion(true);
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    installer.userId_ = USERID;
+    InnerBundleInfo oldInnerBundleInfo;
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.versionCode = 100;
+    oldInnerBundleInfo.SetBaseBundleInfo(oldBundleInfo);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = USERID;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME;
+    oldInnerBundleInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+    auto ret = installer.CheckArkProfileDir(innerBundleInfo, oldInnerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = installer.DeleteArkProfile(installer.bundleName_, installer.userId_);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: asanEnabled_0100
+ * @tc.name: test checkAsanEnabled when asanEnabled is set to be ture
+ * @tc.desc: 1.Test checkAsanEnabled
+*/
+HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    ApplicationInfo info;
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_BACKUP_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(info.asanEnabled);
+    std::string asanLogPath =  Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
+        + std::to_string(USERID) + Constants::PATH_SEPARATOR + BUNDLE_BACKUP_NAME + Constants::PATH_SEPARATOR + LOG;
+    EXPECT_EQ(asanLogPath, info.asanLogPath);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ApplicationInfo info;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_PREVIEW_NAME,
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(info.asanEnabled);
+    std::string asanLogPath = "";
+    EXPECT_EQ(asanLogPath, info.asanLogPath);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 
 } // OHOS

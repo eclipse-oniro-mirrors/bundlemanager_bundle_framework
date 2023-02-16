@@ -38,6 +38,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
+const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+}
+
 InstalldHostImpl::InstalldHostImpl()
 {
     APP_LOGI("installd service instance is created");
@@ -146,6 +151,18 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
     }
 }
 
+static void CreateShareDir(const std::string &bundleName, const int userid, const int uid, const int gid)
+{
+    std::string bundleShareDir = Constants::SHARE_FILE_PATH + bundleName;
+    bundleShareDir = bundleShareDir.replace(bundleShareDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::MkOwnerDir(bundleShareDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
+        static std::once_flag logOnce;
+        std::call_once(logOnce, []() {
+            APP_LOGW("CreateBundledatadir MkOwnerDir(share's home dir) failed");
+        });
+    }
+}
+
 ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
     const int userid, const int uid, const int gid, const std::string &apl)
 {
@@ -210,6 +227,18 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
         }
     }
     CreateBackupExtHomeDir(bundleName, userid, uid);
+    CreateShareDir(bundleName, userid, uid, gid);
+    return ERR_OK;
+}
+
+static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
+{
+    std::string shareFileDir = Constants::SHARE_FILE_PATH + bundleName;
+    shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(shareFileDir)) {
+        APP_LOGE("remove dir %{public}s failed", shareFileDir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
     return ERR_OK;
 }
 
@@ -235,6 +264,10 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
             APP_LOGE("remove dir %{public}s failed", databaseDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
         }
+    }
+    if (RemoveShareDir(bundleName, userid) != ERR_OK) {
+        APP_LOGE("failed to remove share dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
 }
@@ -316,9 +349,13 @@ ErrCode InstalldHostImpl::GetBundleStats(
     if (bundleName.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string path = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
-    int64_t fileSize = InstalldOperator::GetDiskUsage(path);
     std::vector<std::string> bundlePath;
+    bundlePath.push_back(Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName); // bundle code
+    bundlePath.push_back(ARK_CACHE_PATH + bundleName); // ark cache file
+    // ark profile
+    bundlePath.push_back(ARK_PROFILE_PATH + std::to_string(userId) + Constants::PATH_SEPARATOR + bundleName);
+    int64_t fileSize = InstalldOperator::GetDiskUsageFromPath(bundlePath);
+    bundlePath.clear();
     std::vector<std::string> cachePath;
     int64_t allBundleLocalSize = 0;
     for (const auto &el : Constants::BUNDLE_EL) {

@@ -29,6 +29,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string AVAILABLELEVEL_NORMAL = "normal";
+    const std::string DEFAULT_ENTITY_TYPE = "unspecified";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -44,6 +45,11 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_PERMISSION = 0x00000001,
     GET_APPLICATION_INFO_WITH_METADATA = 0x00000002,
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
+};
+
+enum class BundleType {
+    APP = 0,
+    ATOMIC_SERVICE = 1,
 };
 
 struct Metadata : public Parcelable {
@@ -157,6 +163,8 @@ struct ApplicationInfo : public Parcelable {
     bool isSystemApp = false;
     bool isLauncherApp = false;
     bool isFreeInstallApp = false;
+    bool asanEnabled = false;
+    std::string asanLogPath;
 
     std::string codePath;
     std::string dataDir;
@@ -168,7 +176,7 @@ struct ApplicationInfo : public Parcelable {
     bool debug = false;
     std::string deviceId;
     bool distributedNotificationEnabled = true;
-    std::string entityType;
+    std::string entityType = DEFAULT_ENTITY_TYPE;
     std::string process;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     std::string vendor;
@@ -222,12 +230,16 @@ struct ApplicationInfo : public Parcelable {
     std::string targetBundleName;
     int32_t targetPriority;
 
+    bool split = true;
+    BundleType bundleType = BundleType::APP;
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ApplicationInfo *Unmarshalling(Parcel &parcel);
     void Dump(std::string prefix, int fd);
     void ConvertToCompatibleApplicationInfo(CompatibleApplicationInfo& compatibleApplicationInfo) const;
+    bool CheckNeedPreload(const std::string &moduleName) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

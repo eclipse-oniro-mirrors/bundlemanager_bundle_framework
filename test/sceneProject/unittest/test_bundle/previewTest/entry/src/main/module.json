@@ -19,12 +19,12 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowBackground": "$color:white",
                 "startWindowBackgroundId": 16777221,
                 "startWindowIcon": "$media:icon",
                 "startWindowIconId": 16777222,
-                "visible": true
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -47,7 +47,7 @@
                         ]
                     }
                 ],
-                "srcEntrance": "",
+                "srcEntry": "",
                 "type": "preview"
             }
         ],
@@ -55,9 +55,8 @@
         "mainElement": "MainAbility",
         "name": "entry",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry",
-        "uiSyntax": "ets",
         "virtualMachine": "ark"
     }
 }

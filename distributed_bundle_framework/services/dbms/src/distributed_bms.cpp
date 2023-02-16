@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,14 +34,18 @@
 #include "image_packer.h"
 #include "image_source.h"
 #include "system_ability_definition.h"
+#ifdef HICOLLIE_ENABLE
 #include "xcollie/xcollie.h"
 #include "xcollie/xcollie_define.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+#ifdef HICOLLIE_ENABLE
     const unsigned int LOCAL_TIME_OUT_SECONDS = 5;
     const unsigned int REMOTE_TIME_OUT_SECONDS = 10;
+#endif
     const uint8_t DECODE_VALUE_ONE = 1;
     const uint8_t DECODE_VALUE_TWO = 2;
     const uint8_t DECODE_VALUE_THREE = 3;
@@ -58,7 +62,7 @@ namespace {
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
     };
     const std::string POSTFIX = "_Compress.";
-
+#ifdef HISYSEVENT_ENABLE
     DBMSEventInfo GetEventInfo(
         const std::vector<ElementName> &elements, const std::string &localeInfo, int32_t resultCode)
     {
@@ -98,6 +102,7 @@ namespace {
         eventInfo.resultCode = resultCode;
         return eventInfo;
     }
+#endif
 }
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<DistributedBms>::GetInstance().get());
@@ -198,20 +203,24 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
-    int32_t resultCode;
+    int32_t resultCode = 0;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+#ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfo", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
     }
 
+#ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFO, GetEventInfo(elementName, localeInfo, resultCode));
+#endif
     return resultCode;
 }
 
@@ -229,20 +238,23 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementNames[0].GetDeviceID());
-    int32_t resultCode;
+    int32_t resultCode = 0;
     if (!iDistBundleMgr) {
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
         APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+#ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfos", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
         resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
     }
-
+#ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
         DBMSEventType::GET_REMOTE_ABILITY_INFOS, GetEventInfo(elementNames, localeInfo, resultCode));
+#endif
     return resultCode;
 }
 
@@ -377,11 +389,15 @@ bool DistributedBms::GetMediaBase64(std::unique_ptr<uint8_t[]> &data, int64_t fi
 bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
     DistributedBundleInfo &distributedBundleInfo)
 {
+#ifdef HICOLLIE_ENABLE
     int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleInfo", LOCAL_TIME_OUT_SECONDS,
         nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
+#endif
     bool ret = DistributedDataStorage::GetInstance()->GetStorageDistributeInfo(
         networkId, bundleName, distributedBundleInfo);
+#ifdef HICOLLIE_ENABLE
     HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
     return ret;
 }
 

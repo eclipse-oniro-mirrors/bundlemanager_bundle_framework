@@ -200,7 +200,6 @@ const std::string URI_PATH_REGEX_001 = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 
 const int32_t DEFAULT_USERID = 100;
 const int32_t ALL_USERID = -3;
 const int32_t WAIT_TIME = 5; // init mocked bms
-constexpr int32_t DISPOSED_STATUS = 10;
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const std::string BUNDLE_NAME = "bundleName";
@@ -5800,78 +5799,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetAlldependentModuleNames_004, Function | Sma
 }
 
 /**
- * @tc.number: SetDisposedStatus_001
- * @tc.name: test SetDisposedStatus
- * @tc.desc: bundleName empty, expect false
- */
-HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_001, Function | SmallTest | Level1)
-{
-    bool result = GetBundleDataMgr()->SetDisposedStatus("", DISPOSED_STATUS);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: SetDisposedStatus_002
- * @tc.name: test SetDisposedStatus
- * @tc.desc: wrong bundleName, expect false
- */
-HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_002, Function | SmallTest | Level1)
-{
-    bool result = GetBundleDataMgr()->SetDisposedStatus("wrong", DISPOSED_STATUS);
-    EXPECT_FALSE(result);
-}
-
-/**
- * @tc.number: SetDisposedStatus_003
- * @tc.name: test SetDisposedStatus
- * @tc.desc: right bundleName, expect true
- */
-HWTEST_F(BmsBundleKitServiceTest, SetDisposedStatus_003, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    bool result = GetBundleDataMgr()->SetDisposedStatus(BUNDLE_NAME_TEST, DISPOSED_STATUS);
-    EXPECT_TRUE(result);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: GetDisposedStatus_001
- * @tc.name: test GetDisposedStatus
- * @tc.desc: empty bundleName, expect 0
- */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_001, Function | SmallTest | Level1)
-{
-    int32_t status = GetBundleDataMgr()->GetDisposedStatus("");
-    EXPECT_EQ(status, 0);
-}
-
-/**
- * @tc.number: GetDisposedStatus_002
- * @tc.name: test GetDisposedStatus
- * @tc.desc: wrong bundleName, expect 0
- */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_002, Function | SmallTest | Level1)
-{
-    int32_t status = GetBundleDataMgr()->GetDisposedStatus("wrong");
-    EXPECT_EQ(status, 0);
-}
-
-/**
- * @tc.number: GetDisposedStatus_003
- * @tc.name: test GetDisposedStatus
- * @tc.desc: right bundleName, expect true
- */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_003, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    bool result = GetBundleDataMgr()->SetDisposedStatus(BUNDLE_NAME_TEST, DISPOSED_STATUS);
-    EXPECT_TRUE(result);
-    int32_t status = GetBundleDataMgr()->GetDisposedStatus(BUNDLE_NAME_TEST);
-    EXPECT_EQ(status, DISPOSED_STATUS);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: Marshalling_001
  * @tc.name: BundleInfo Marshalling
  * @tc.desc: 1.Test the marshalling of BundleInfo
@@ -6323,22 +6250,6 @@ HWTEST_F(BmsBundleKitServiceTest, CompatibleApplicationInfo_002, Function | Smal
     ApplicationInfo info;
     appInfo.ConvertToApplicationInfo(info);
     EXPECT_EQ(appInfo.name, info.name);
-}
-
-/**
- * @tc.number: GetDisposedStatus_002
- * @tc.name: test GetDisposedStatus
- * @tc.desc: wrong bundleName, expect 0
- */
-HWTEST_F(BmsBundleKitServiceTest, GetDisposedStatus_004, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    int32_t status = bundleMgrProxy->GetDisposedStatus("wrong");
-    EXPECT_EQ(status, 0);
 }
 
 /**
@@ -9292,5 +9203,33 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateAppDetailAbilityAttrs_0008, Function | S
     innerBundleInfo.UpdateAppDetailAbilityAttrs();
     EXPECT_FALSE(innerBundleInfo.GetBaseApplicationInfo().hideDesktopIcon);
     EXPECT_TRUE(innerBundleInfo.GetBaseApplicationInfo().needAppDetail);
+}
+
+/**
+ * @tc.number: IsHideDesktopIcon_0001
+ * @tc.name: test can IsHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.IsHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = true;
+    bool ret = innerBundleInfo.IsHideDesktopIcon();
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: IsHideDesktopIcon_0002
+ * @tc.name: test can IsHideDesktopIcon
+ * @tc.desc: 1.system run normally
+ *           2.IsHideDesktopIcon
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0002, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
+    bool ret = innerBundleInfo.IsHideDesktopIcon();
+    EXPECT_TRUE(ret);
 }
 }

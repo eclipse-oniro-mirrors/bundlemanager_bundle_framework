@@ -36,6 +36,7 @@ const std::string JSON_KEY_CALLINGUID = "callingUid";
 const std::string JSON_KEY_CALLINGAPPTYPE = "callingAppType";
 const std::string JSON_KEY_CALLINGBUNDLENAMES = "callingBundleNames";
 const std::string JSON_KEY_CALLINGAPPIDS = "callingAppIds";
+const std::string JSON_KEY_PRELOAD_MODULE_NAMES = "preloadModuleNames";
 }  // namespace
 
 void to_json(nlohmann::json &jsonObject, const TargetExtSetting &targetExtSetting)
@@ -108,7 +109,8 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
         {JSON_KEY_CALLINGUID, targetInfo.callingUid},
         {JSON_KEY_CALLINGAPPTYPE, targetInfo.callingAppType},
         {JSON_KEY_CALLINGBUNDLENAMES, targetInfo.callingBundleNames},
-        {JSON_KEY_CALLINGAPPIDS, targetInfo.callingAppIds}
+        {JSON_KEY_CALLINGAPPIDS, targetInfo.callingAppIds},
+        {JSON_KEY_PRELOAD_MODULE_NAMES, targetInfo.preloadModuleNames}
     };
 }
 
@@ -196,6 +198,14 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PRELOAD_MODULE_NAMES,
+        targetInfo.preloadModuleNames,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read module targetInfo from jsonObject error, error code : %{public}d", parseResult);
     }
@@ -221,6 +231,11 @@ bool TargetInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < callingAppIdsSize; i++) {
         callingAppIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    int32_t preloadModuleNamesSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadModuleNamesSize);
+    for (int32_t i = 0; i < preloadModuleNamesSize; i++) {
+        preloadModuleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -241,6 +256,10 @@ bool TargetInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingAppIds.size());
     for (auto &callingAppId : callingAppIds) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(callingAppId));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadModuleNames.size());
+    for (auto &preloadItem : preloadModuleNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(preloadItem));
     }
     return true;
 }

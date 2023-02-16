@@ -8,6 +8,7 @@
                 "iconId": 16777222,
                 "label": "$string:MainAbility_label",
                 "labelId": 16777219,
+                "launchType": "multiton",
                 "name": "MainAbility",
                 "skills": [
                     {
@@ -19,12 +20,12 @@
                         ]
                     }
                 ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                "srcEntry": "./ets/MainAbility/MainAbility.ts",
                 "startWindowBackground": "$color:white",
                 "startWindowBackgroundId": 16777221,
                 "startWindowIcon": "$media:icon",
                 "startWindowIconId": 16777222,
-                "visible": true
+                "exported": true
             }
         ],
         "deliveryWithInstall": true,
@@ -37,6 +38,8 @@
         "extensionAbilities": [
             {
                 "name": "extensionAbility_A",
+                "exported": true,
+                "srcEntry": "./ets/Application/AbilityStage.ts",
                 "skills": [
                     {
                         "actions": [
@@ -47,7 +50,7 @@
                         ]
                     }
                 ],
-                "srcEntrance": "",
+                "srcEntry": "",
                 "type": "thumbnail"
             }
         ],
@@ -55,9 +58,8 @@
         "mainElement": "MainAbility",
         "name": "entry",
         "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry",
-        "uiSyntax": "ets",
         "virtualMachine": "ark"
     }
 }

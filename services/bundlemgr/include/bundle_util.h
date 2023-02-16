@@ -150,8 +150,8 @@ public:
      */
     static bool DeleteDir(const std::string &path);
     static std::string GetBoolStrVal(bool val);
-    static void MakeHmdfsConfig(const std::string &bundleName, int32_t bundleId);
-    static void RemoveHmdfsConfig(const std::string &bundleName);
+    static void MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath);
+    static void RemoveFsConfig(const std::string &bundleName, const std::string &configPath);
     static std::string CreateInstallTempDir(uint32_t installerId, const DirType &type);
     static int32_t CreateFileDescriptor(const std::string &bundlePath, long long offset);
     static int32_t CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset);
@@ -161,6 +161,7 @@ public:
     static bool RevertToRealPath(const std::string &sandBoxPath, const std::string &bundleName, std::string &realPath);
     static bool StartWith(const std::string &source, const std::string &suffix);
     static bool EndWith(const std::string &source, const std::string &suffix);
+    static int64_t GetFileSize(const std::string &filePath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

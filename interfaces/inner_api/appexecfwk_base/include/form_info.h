@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -47,6 +47,7 @@ struct FormInfo : public Parcelable {
     bool updateEnabled = false;
     bool isStatic = true;
     FormType type = FormType::JS;
+    FormType uiSyntax = FormType::JS;
     std::vector<int32_t> supportDimensions;
     FormsColorMode colorMode = FormsColorMode::AUTO_MODE;
     std::vector<std::string> landscapeLayouts;

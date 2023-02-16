@@ -1,4 +1,4 @@
-# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Copyright (c) 2022-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -80,6 +80,15 @@ BUNDLE_INSTALL:
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
   SCENE: {type: STRING, desc: boot reboot or createUser}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_APP_ID: {type: STRING, desc: calling appId}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
+  APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
+  HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
+  INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
 
 BUNDLE_UNINSTALL:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle uninstall}
@@ -87,6 +96,9 @@ BUNDLE_UNINSTALL:
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_APP_ID: {type: STRING, desc: calling appId}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
 
 BUNDLE_UPDATE:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle update}
@@ -94,12 +106,30 @@ BUNDLE_UPDATE:
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
   INSTALL_TYPE: {type: STRING, desc: normal prebundle or freeInstall}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_APP_ID: {type: STRING, desc: calling appId}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
+  APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
+  HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
+  INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
 
 PRE_BUNDLE_RECOVER:
   __BASE: {type: BEHAVIOR, level: MINOR, desc: prebundle recover}
   USERID: {type: INT32, desc: userId of the bundle}
   BUNDLE_NAME: {type: STRING, desc: bundleName}
   VERSION: {type: UINT32, desc: versionCode}
+  CALLING_UID: {type: INT32, desc: calling uid}
+  CALLING_APP_ID: {type: STRING, desc: calling appId}
+  CALLING_BUNDLE_NAME: {type: STRING, desc: calling bundleName}
+  FINGERPRINT: {type: STRING, desc: fingerprint of the bundle}
+  HIDE_DESKTOP_ICON: {type: BOOL, desc: whether hide desktop icon}
+  APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hap file}
+  HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hap file}
+  INSTALL_TIME: {type: INT64, desc: the install time or the bundle}
   INSTALL_TYPE: {type: STRING, desc: only prebundle}
 
 BUNDLE_STATE_CHANGE:
@@ -137,3 +167,11 @@ BMS_USER_EVENT:
   TYPE: {type: STRING, desc: user event type}
   USERID: {type: INT32, desc: userId of the bundle}
   TIME: {type: INT64, desc: time stamp}
+
+BUNDLE_QUICK_FIX:
+  __BASE: {type: BEHAVIOR, level: MINOR, desc: bundle apply quick fix}
+  BUNDLE_NAME: {type: STRING, desc: bundleName}
+  APP_DISTRIBUTION_TYPE: {type: STRING, desc: app distribution type}
+  APPLY_QUICK_FIX_FREQUENCY: {type: INT32, desc: apply quick fix frequency}
+  FILE_PATH: {type: STRING, arrsize: 99, desc: the path of the hqf file}
+  HASH_VALUE: {type: STRING, arrsize: 99, desc: the hash value of the hqf file}

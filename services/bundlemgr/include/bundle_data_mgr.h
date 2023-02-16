@@ -112,7 +112,7 @@ public:
      * @param oldInfo Indicates the old InnerBundleInfo object.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    bool UpdateInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
     bool UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo);
     /**
@@ -471,15 +471,6 @@ public:
      */
     void SetInitialUserFlag(bool flag);
     /**
-     * @brief Checks whether the publickeys of two bundles are the same.
-     * @param firstBundleName Indicates the first bundle name.
-     * @param secondBundleName Indicates the second bundle name.
-     * @return Returns SIGNATURE_UNKNOWN_BUNDLE if at least one of the given bundles is not found;
-     *         returns SIGNATURE_NOT_MATCHED if their publickeys are different;
-     *         returns SIGNATURE_MATCHED if their publickeys are the same.
-     */
-    int CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) const;
-    /**
      * @brief Get a shared pointer to the IBundleDataStorage object.
      * @return Returns the pointer of IBundleDataStorage object.
      */
@@ -682,8 +673,6 @@ public:
     bool QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos) const;
 
-    std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) const;
-
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
@@ -752,10 +741,6 @@ public:
     void StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
     void DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info);
 
-    bool SetDisposedStatus(const std::string &bundleName, int32_t status);
-
-    int32_t GetDisposedStatus(const std::string &bundleName);
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     bool QueryInfoAndSkillsByElement(int32_t userId, const Element& element,
         AbilityInfo& abilityInfo, ExtensionAbilityInfo& extensionInfo, std::vector<Skill>& skills) const;
@@ -792,6 +777,15 @@ public:
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
+
+    bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
+    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+
+    void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
+
+    void EnableOverlayBundle(const std::string &bundleName);
+
 private:
     /**
      * @brief Init transferStates.
@@ -906,6 +900,7 @@ private:
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
+    mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName

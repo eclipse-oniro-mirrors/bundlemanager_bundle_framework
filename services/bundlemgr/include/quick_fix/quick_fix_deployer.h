@@ -98,9 +98,12 @@ private:
 
     bool HasNativeSoInBundle(const AppQuickFix &appQuickFix);
 
+    void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
+
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
+    std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
 };
 } // AppExecFwk
 } // OHOS

@@ -38,6 +38,7 @@ const std::unordered_map<BundleEventType, BMSEventType> BUNDLE_SYS_EVENT_MAP = {
     { BundleEventType::UNINSTALL, BMSEventType::BUNDLE_UNINSTALL },
     { BundleEventType::UPDATE, BMSEventType::BUNDLE_UPDATE },
     { BundleEventType::RECOVER, BMSEventType::PRE_BUNDLE_RECOVER },
+    { BundleEventType::QUICK_FIX, BMSEventType::APPLY_QUICK_FIX }
 };
 }
 

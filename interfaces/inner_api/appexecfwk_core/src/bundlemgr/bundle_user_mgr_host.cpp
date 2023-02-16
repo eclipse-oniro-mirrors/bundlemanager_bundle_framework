@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include "ipc_types.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -34,6 +35,7 @@ BundleUserMgrHost::~BundleUserMgrHost()
 int BundleUserMgrHost::OnRemoteRequest(
     uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGD("BundleUserMgrHost onReceived message, the message code is %{public}u", code);
     std::u16string descripter = BundleUserMgrHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();

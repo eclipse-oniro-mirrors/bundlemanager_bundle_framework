@@ -36,6 +36,7 @@ public:
     bool IsReachEndAgingThreshold() const;
     size_t SortAgingBundles();
     void ResetRequest();
+    void Dump();
     void AddAgingBundle(AgingBundleInfo &bundleInfo);
 
     const std::vector<AgingBundleInfo> &GetAgingBundles() const

@@ -23,7 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 BundleDataStorageRdb::BundleDataStorageRdb()
 {
-    APP_LOGI("instance:%{private}p is created", this);
+    APP_LOGI("BundleDataStorageRdb instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = Constants::BUNDLE_RDB_TABLE_NAME;
@@ -33,7 +33,7 @@ BundleDataStorageRdb::BundleDataStorageRdb()
 
 BundleDataStorageRdb::~BundleDataStorageRdb()
 {
-    APP_LOGI("instance:%{private}p is destroyed", this);
+    APP_LOGI("BundleDataStorageRdb instance is destroyed");
 }
 
 bool BundleDataStorageRdb::LoadAllData(std::map<std::string, InnerBundleInfo> &infos)

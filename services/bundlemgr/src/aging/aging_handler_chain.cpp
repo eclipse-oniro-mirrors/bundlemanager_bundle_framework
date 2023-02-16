@@ -40,7 +40,6 @@ void AgingHandlerChain::AddHandler(const ::std::shared_ptr<AgingHandler> &handle
     }
 
     handlers_.emplace_back(handler);
-    APP_LOGD("agingHandler: %{public}s is added into handlers", handler->GetName().c_str());
 }
 
 bool AgingHandlerChain::Process(AgingRequest &request) const
@@ -68,8 +67,8 @@ bool AgingHandlerChain::InnerProcess(AgingRequest &request) const
     bool isPassed = false;
     for (auto handler : handlers_) {
         isPassed = !handler->Process(request);
-        APP_LOGD("agingHandler: %{public}s process, passed: %{public}d, type: %{public}d",
-            handler->GetName().c_str(), isPassed, static_cast<AgingCleanType>(request.GetAgingCleanType()));
+        APP_LOGD("agingHandler: passed: %{public}d, type: %{public}d",
+            isPassed, static_cast<AgingCleanType>(request.GetAgingCleanType()));
         if (isPassed) {
             break;
         }

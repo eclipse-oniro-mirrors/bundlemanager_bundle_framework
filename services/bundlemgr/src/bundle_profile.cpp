@@ -114,6 +114,7 @@ struct App {
     int32_t iconId = 0;
     int32_t labelId = 0;
     bool userDataClearable = true;
+    bool asanEnabled = false;
     std::vector<std::string> targetBundleList;
 };
 
@@ -496,6 +497,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED,
+        app.asanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ReqVersion &reqVersion)
@@ -2099,6 +2108,7 @@ bool ToApplicationInfo(
     applicationInfo.apiCompatibleVersion = configJson.app.apiVersion.compatible;
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
+    applicationInfo.asanEnabled = configJson.app.asanEnabled;
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
@@ -2170,6 +2180,7 @@ bool ToBundleInfo(
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
     bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;
@@ -2230,7 +2241,9 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.distro = configJson.module.distro;
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
-    innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
+        innerModuleInfo.definePermissions = configJson.module.definePermissions;
+    }
     if (configJson.module.mainAbility.substr(0, 1) == ".") {
         innerModuleInfo.mainAbility = configJson.module.package + configJson.module.mainAbility;
     } else {
@@ -2498,6 +2511,18 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.InsertInnerModuleInfo(configJson.module.package, innerModuleInfo);
+    if (innerBundleInfo.GetEntryInstallationFree()) {
+        innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+        auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+        innerBundleInfo.SetApplicationSplit(moduleInfos.size() != 1);
+        for (auto it : moduleInfos) {
+            if (it.second.isEntry) {
+                innerBundleInfo.SetInnerModuleAtomicType(it.first, AtomicServiceModuleType::MAIN);
+            } else {
+                innerBundleInfo.SetInnerModuleAtomicType(it.first, AtomicServiceModuleType::NORMAL);
+            }
+        }
+    }
     return true;
 }
 

@@ -22,6 +22,7 @@ config("bundlemgr_test_config") {
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
     "${inner_api_path}/appexecfwk_core/include/distributed_manager",
     "${inner_api_path}/appexecfwk_core/include/free_install",
+    "${appexecfwk_path}/services/bundlemgr/include/overlay",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
     "mock/include",
   ]
@@ -45,11 +46,13 @@ group("unittest") {
   deps = []
   if (bundle_framework_graphics) {
     deps += [
+      "unittest/bms_ability_manager_helper_test:unittest",
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_app_control_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
       "unittest/bms_bundle_dependencies_test:unittest",
+      "unittest/bms_bundle_exception_handler_test:unittest",
       "unittest/bms_bundle_hap_verify_test:unittest",
       "unittest/bms_bundle_hsp_test:unittest",
       "unittest/bms_bundle_installer_test:unittest",
@@ -58,13 +61,16 @@ group("unittest") {
       "unittest/bms_bundle_mgr_service_death_recipient_test:unittest",
       "unittest/bms_bundle_parser_test:unittest",
       "unittest/bms_bundle_permission_grant_test:unittest",
+      "unittest/bms_bundle_quick_fix_mgr_rdb_test:unittest",
       "unittest/bms_bundle_resource_manager_test:unittest",
       "unittest/bms_bundle_sandbox_app_test:unittest",
       "unittest/bms_bundle_uninstaller_test:unittest",
       "unittest/bms_bundle_updater_test:unittest",
       "unittest/bms_data_mgr_test:unittest",
+      "unittest/bms_device_manager_test:unittest",
       "unittest/bms_event_handler_test:unittest",
       "unittest/bms_install_daemon_test:unittest",
+      "unittest/bms_installd_client_test:unittest",
       "unittest/bms_patch_parser_test:unittest",
       "unittest/bms_rdb_data_manager_test:unittest",
       "unittest/bms_service_bundle_scan_test:unittest",
@@ -84,8 +90,14 @@ group("unittest") {
         "unittest/bms_bundle_quick_fix_test:unittest",
       ]
     }
+    if (bundle_framework_overlay_install) {
+      deps += [ "unittest/bms_bundle_overlay_test:unittest" ]
+    }
   }
-  if (bundle_framework_free_install) {
-    deps += [ "unittest/bms_bundle_free_install_test:unittest" ]
+  if (bundle_framework_free_install && bundle_framework_graphics) {
+    deps += [
+      "unittest/bms_bundle_free_install_test:unittest",
+      "unittest/bms_bundle_kit_service_base_test:unittest",
+    ]
   }
 }

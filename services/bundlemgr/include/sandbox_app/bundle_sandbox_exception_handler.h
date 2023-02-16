@@ -17,9 +17,26 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLE_SANDBOX_EXCEPTION_HANDLE_H
 
 #include "bundle_data_storage_interface.h"
+#include "common_event_subscriber.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+using namespace OHOS::EventFwk;
+
+class BundleMgrCommonEventSubscriber final : public CommonEventSubscriber {
+public:
+    BundleMgrCommonEventSubscriber(const CommonEventSubscribeInfo &subscribeInfo,
+        const std::map<int32_t, std::vector<std::string>> &sandboxDirs);
+    virtual ~BundleMgrCommonEventSubscriber() {};
+    virtual void OnReceiveEvent(const CommonEventData &data);
+
+private:
+    static void RemoveSandboxDataDir(int32_t userId,
+        const std::map<int32_t, std::vector<std::string>> &toDeleteSandboxDir);
+
+    std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir_;
+};
+
 class BundleSandboxExceptionHandler final {
 public:
     explicit BundleSandboxExceptionHandler(const std::shared_ptr<IBundleDataStorage> &dataStorage);
@@ -32,10 +49,14 @@ public:
     void RemoveSandboxApp(InnerBundleInfo &info);
 
 private:
-    static void RemoveSandboxDataDirAndTokenId(const std::string &bundleName,
+    void RemoveTokenIdAndKeepSandboxDir(const std::string &bundleName,
         const std::vector<SandboxAppPersistentInfo> &sandboxPersistentInfo, const InnerBundleInfo &info);
     void UpdateBundleInfoToStorage(const InnerBundleInfo &info);
+    void KeepSandboxDirs(const std::string &bundleName, int32_t appIndex, int32_t userId);
+    void RemoveDataDir();
+    void ListeningUserUnlocked();
 
+    std::map<int32_t, std::vector<std::string>> sandboxDirs_;
     std::weak_ptr<IBundleDataStorage> dataStorage_;
 };
 }  // namespace AppExecFwk

@@ -25,12 +25,18 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
+const std::string MODULE_INFO_PRELOADS = "preloads";
 }
 
 bool ModuleInfo::ReadFromParcel(Parcel &parcel)
 {
     moduleName = Str16ToStr8(parcel.ReadString16());
     moduleSourceDir = Str16ToStr8(parcel.ReadString16());
+    int32_t preloadsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadsSize);
+    for (auto i = 0; i < preloadsSize; i++) {
+        preloads.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -49,6 +55,10 @@ bool ModuleInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleSourceDir));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloads.size());
+    for (auto &preload : preloads) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(preload));
+    }
     return true;
 }
 
@@ -56,7 +66,8 @@ void to_json(nlohmann::json &jsonObject, const ModuleInfo &moduleInfo)
 {
     jsonObject = nlohmann::json {
         {Constants::MODULE_NAME, moduleInfo.moduleName},
-        {MODULE_INFO_MODULE_SOURCE_DIR, moduleInfo.moduleSourceDir}
+        {MODULE_INFO_MODULE_SOURCE_DIR, moduleInfo.moduleSourceDir},
+        {MODULE_INFO_PRELOADS, moduleInfo.preloads}
     };
 }
 
@@ -80,6 +91,14 @@ void from_json(const nlohmann::json &jsonObject, ModuleInfo &moduleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_INFO_PRELOADS,
+        moduleInfo.preloads,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

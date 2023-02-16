@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -268,6 +268,14 @@ public:
     virtual bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack) override;
     /**
+     * @brief Silent install by the given Want.
+     * @param want Indicates the information of the want.
+     * @param userId Indicates the user ID.
+     * @param callBack Indicates the callback to be invoked for return the operation result.
+     * @return Returns true if silent install successfully; returns false otherwise.
+     */
+    virtual bool SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack) override;
+    /**
      * @brief Upgrade atomic service
      * @param want Indicates the information of the ability.
      * @param userId Indicates the user ID.
@@ -420,38 +428,12 @@ public:
     virtual ErrCode GetLaunchWantForBundle(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
-     * @brief Checks whether the publickeys of two bundles are the same through the proxy object.
-     * @param firstBundleName Indicates the first bundle name.
-     * @param secondBundleName Indicates the second bundle name.
-     * @return Returns SIGNATURE_UNKNOWN_BUNDLE if at least one of the given bundles is not found;
-     *         returns SIGNATURE_NOT_MATCHED if their publickeys are different;
-     *         returns SIGNATURE_MATCHED if their publickeys are the same.
-     */
-    virtual int CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) override;
-    /**
      * @brief Obtains detailed information about a specified permission through the proxy object.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
      * @return Returns ERR_OK if the PermissionDef object is successfully obtained; returns other ErrCode otherwise.
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
-    /**
-     * @brief Checks whether the system has a specified capability through the proxy object.
-     * @param capName Indicates the name of the system feature to check.
-     * @return Returns true if the given feature specified by name is available in the system; returns false otherwise.
-     */
-    virtual bool HasSystemCapability(const std::string &capName) override;
-    /**
-     * @brief Obtains the capabilities that are available in the system through the proxy object.
-     * @param systemCaps Indicates the list of capabilities available in the system.
-     * @return Returns true if capabilities in the system are successfully obtained; returns false otherwise.
-     */
-    virtual bool GetSystemAvailableCapabilities(std::vector<std::string> &systemCaps) override;
-    /**
-     * @brief Checks whether the current device has been started in safe mode through the proxy object.
-     * @return Returns true if the device is in safe mode; returns false otherwise.
-     */
-    virtual bool IsSafeMode() override;
     /**
      * @brief Clears cache data of a specified application through the proxy object.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
@@ -657,8 +639,6 @@ public:
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
 
-    virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) override;
-
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) override;
 
@@ -739,10 +719,12 @@ public:
      */
     virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
-
-    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
-
-    virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
+    /**
+     * @brief Process preload when ability or extensionAbility is running.
+     * @param want Indicates the information of the ability.
+     * @param preload Specifies whether to preload modules in atomicService.
+     */
+    virtual void ProcessPreload(const Want &want) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
@@ -781,6 +763,10 @@ public:
     virtual sptr<IAppControlMgr> GetAppControlProxy() override;
 #endif
     virtual ErrCode SetDebugMode(bool isDebug) override;
+
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
+
+    virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
 private:
     /**

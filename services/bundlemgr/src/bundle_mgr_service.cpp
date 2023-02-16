@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_distributed_manager.h"
+#include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
@@ -31,7 +32,9 @@
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#ifdef HICOLLIE_ENABLE
 #include "xcollie/watchdog.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -118,6 +121,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitDefaultApp(), "Init defaultApp fail");
     CHECK_INIT_RESULT(InitAppControl(), "Init appControl fail");
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
+    CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     ready_ = true;
     APP_LOGI("Init success");
     return true;
@@ -186,10 +190,14 @@ bool BundleMgrService::InitBundleEventHandler()
 
     if (handler_ == nullptr) {
         handler_ = std::make_shared<BMSEventHandler>(runner_);
+        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
+#ifdef HICOLLIE_ENABLE
         int32_t timeout = 10 * 60 * 1000; // 10min
         if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {
             APP_LOGE("watchdog addThread failed");
         }
+#endif
     }
 
     handler_->SendEvent(BMSEventHandler::BMS_START);
@@ -278,6 +286,20 @@ bool BundleMgrService::InitQuickFixManager()
     return true;
 }
 
+bool BundleMgrService::InitOverlayManager()
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (overlayManagerHostImpl_ == nullptr) {
+        overlayManagerHostImpl_ = new (std::nothrow) OverlayManagerHostImpl();
+        if (overlayManagerHostImpl_ == nullptr) {
+            APP_LOGE("create OverlayManagerHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+    return true;
+}
+
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -358,6 +380,13 @@ sptr<IAppControlMgr> BundleMgrService::GetAppControlProxy() const
 sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const
 {
     return quickFixManagerHostImpl_;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+sptr<IOverlayManager> BundleMgrService::GetOverlayManagerProxy() const
+{
+    return overlayManagerHostImpl_;
 }
 #endif
 

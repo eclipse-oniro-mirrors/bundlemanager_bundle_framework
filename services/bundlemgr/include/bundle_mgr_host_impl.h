@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #endif
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_host.h"
 #include "bundle_mgr_service_event_handler.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -36,6 +37,8 @@ public:
     {
         auto myRunner = EventRunner::Create(BUNDLE_MGR_THREAD);
         handler_ = std::make_shared<BMSEventHandler>(myRunner);
+        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
+            AppExecFwk::EventQueue::Priority::IMMEDIATE);
     }
     virtual ~BundleMgrHostImpl() {}
     /**
@@ -253,6 +256,15 @@ public:
     virtual bool QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack) override;
 
+    /**
+     * @brief Silent install by the given Want.
+     * @param want Indicates the information of the want.
+     * @param userId Indicates the user ID.
+     * @param callBack Indicates the callback to be invoked for return the operation result.
+     * @return Returns true if silent install successfully; returns false otherwise.
+     */
+    virtual bool SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack) override;
+
     virtual bool CheckAbilityEnableInstall(
         const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback) override;
 #endif
@@ -292,6 +304,8 @@ public:
      * @param userId Indicates the user ID.
      */
     virtual void UpgradeAtomicService(const Want &want, int32_t userId) override;
+
+    virtual void ProcessPreload(const Want &want) override;
 #endif
     /**
      * @brief Query the AbilityInfo of list by the given Want.
@@ -428,38 +442,12 @@ public:
     virtual ErrCode GetLaunchWantForBundle(
         const std::string &bundleName, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
-     * @brief Checks whether the publickeys of two bundles are the same.
-     * @param firstBundleName Indicates the first bundle name.
-     * @param secondBundleName Indicates the second bundle name.
-     * @return Returns SIGNATURE_UNKNOWN_BUNDLE if at least one of the given bundles is not found;
-     *         returns SIGNATURE_NOT_MATCHED if their publickeys are different;
-     *         returns SIGNATURE_MATCHED if their publickeys are the same.
-     */
-    virtual int CheckPublicKeys(const std::string &firstBundleName, const std::string &secondBundleName) override;
-    /**
      * @brief Obtains detailed information about a specified permission.
      * @param permissionName Indicates the name of the ohos permission.
      * @param permissionDef Indicates the object containing detailed information about the given ohos permission.
      * @return Returns true if the PermissionDef object is successfully obtained; returns false otherwise.
      */
     virtual ErrCode GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef) override;
-    /**
-     * @brief Checks whether the system has a specified capability.
-     * @param capName Indicates the name of the system feature to check.
-     * @return Returns true if the given feature specified by name is available in the system; returns false otherwise.
-     */
-    virtual bool HasSystemCapability(const std::string &capName) override;
-    /**
-     * @brief Obtains the capabilities that are available in the system.
-     * @param systemCaps Indicates the list of capabilities available in the system.
-     * @return Returns true if capabilities in the system are successfully obtained; returns false otherwise.
-     */
-    virtual bool GetSystemAvailableCapabilities(std::vector<std::string> &systemCaps) override;
-    /**
-     * @brief Checks whether the current device has been started in safe mode.
-     * @return Returns true if the device is in safe mode; returns false otherwise.
-     */
-    virtual bool IsSafeMode() override;
     /**
      * @brief Clears cache data of a specified application.
      * @param bundleName Indicates the bundle name of the application whose cache data is to be cleared.
@@ -674,12 +662,7 @@ public:
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
 
-    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
-        const std::string bundleName = Constants::EMPTY_STRING) override;
-
-    virtual bool VerifySystemApi(const std::string bundleName) override;
-
-    virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) override;
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
 
     virtual bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) override;
@@ -745,10 +728,6 @@ public:
     virtual ErrCode GetSandboxBundleInfo(
         const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info) override;
 
-    virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
-
-    virtual int32_t GetDisposedStatus(const std::string &bundleName) override;
-
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
     virtual bool GetBundleStats(const std::string &bundleName, int32_t userId,
@@ -779,6 +758,7 @@ public:
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
     virtual ErrCode SetDebugMode(bool isDebug) override;
+    virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

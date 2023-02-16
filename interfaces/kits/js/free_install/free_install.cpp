@@ -442,6 +442,9 @@ static void ConvertAbilities(napi_env env, napi_value &modulesObject, const Pack
         napi_value visible;
         NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &visible));
         NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "visible", visible));
+        napi_value nExported;
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, ability.visible, &nExported));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, abilityObject, "exported", nExported));
         ConvertFormsInfo(env, abilityObject, ability.forms);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, abilities, index, abilityObject));
         index++;
@@ -692,9 +695,9 @@ static ErrCode InnerGetDispatchInfo(std::string &version, std::string &dispatchA
         APP_LOGE("can not get iBundleMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    if (!iBundleMgr->VerifySystemApi()) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        return ERROR_NOT_SYSTEM_APP;
     }
     if (!iBundleMgr->VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("GetDispatchInfo failed due to permission denied");

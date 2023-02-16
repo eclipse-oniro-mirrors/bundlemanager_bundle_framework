@@ -72,6 +72,7 @@ bool InstalldOperator::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
+        APP_LOGE("the path is not existed %{public}s", path.c_str());
         return false;
     }
     return S_ISDIR(buf.st_mode);
@@ -95,6 +96,7 @@ bool InstalldOperator::MkRecursiveDir(const std::string &path, bool isReadByOthe
 
 bool InstalldOperator::DeleteDir(const std::string &path)
 {
+    APP_LOGD("start to delete dir %{public}s", path.c_str());
     if (IsExistFile(path)) {
         return OHOS::RemoveFile(path);
     }
@@ -150,6 +152,11 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
         APP_LOGE("extractor init failed");
         return false;
     }
+    if ((extractParam.extractFileType == ExtractFileType::AP) &&
+        !extractor.IsDirExist(Constants::AP)) {
+        APP_LOGD("hap has no ap files and does not need to be extracted.");
+        return true;
+    }
 
     std::vector<std::string> entryNames;
     if (!extractor.GetZipFileNames(entryNames) || entryNames.empty()) {
@@ -187,15 +194,26 @@ bool InstalldOperator::IsNativeFile(
     }
     std::string prefix;
     std::vector<std::string> suffixs;
-    if (extractParam.extractFileType == ExtractFileType::SO) {
-        prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffixs.emplace_back(Constants::SO_SUFFIX);
-    } else if (extractParam.extractFileType == ExtractFileType::AN) {
-        prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
-        suffixs.emplace_back(Constants::AN_SUFFIX);
-        suffixs.emplace_back(Constants::AI_SUFFIX);
-    } else {
-        return false;
+    switch (extractParam.extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+            suffixs.emplace_back(Constants::SO_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + extractParam.cpuAbi + Constants::PATH_SEPARATOR;
+            suffixs.emplace_back(Constants::AN_SUFFIX);
+            suffixs.emplace_back(Constants::AI_SUFFIX);
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            suffixs.emplace_back(Constants::AP_SUFFIX);
+            break;
+        }
+        default: {
+            return false;
+        }
     }
 
     if (entryName.find(prefix) == std::string::npos) {
@@ -275,12 +293,22 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
 
     std::string prefix;
-    if (extractFileType == ExtractFileType::SO) {
-        prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    } else if (extractFileType == ExtractFileType::AN) {
-        prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
-    } else {
-        return;
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            break;
+        }
+        default: {
+            return;
+        }
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
@@ -294,6 +322,14 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         return;
     }
     mode_t mode = S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
+    if (extractFileType == ExtractFileType::AP) {
+        struct stat buf = {};
+        if (stat(targetPath.c_str(), &buf) != 0) {
+            return;
+        }
+        ChangeFileAttr(path, buf.st_uid, buf.st_gid);
+        mode = S_IRUSR | S_IWUSR;
+    }
     if (!OHOS::ChangeModeFile(path, mode)) {
         return;
     }
@@ -672,9 +708,9 @@ bool InstalldOperator::OpenHandle(void **handle)
         APP_LOGE("InstalldOperator::OpenHandle error handle is nullptr.");
         return false;
     }
-    if (IsExistDir(Constants::SYSTEM_LIB64)) {
-        *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
-    } else {
+    *handle = dlopen(LIB64_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
+    if (*handle == nullptr) {
+        APP_LOGW("ApplyDiffPatch failed to open libdiff_patch_shared.z.so, err:%{public}s", dlerror());
         *handle = dlopen(LIB_DIFF_PATCH_SHARED_SO_PATH, RTLD_NOW | RTLD_GLOBAL);
     }
     if (*handle == nullptr) {
@@ -740,7 +776,8 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
     const std::string &newSoPath)
 {
     APP_LOGI("ApplyDiffPatch start");
-    std::vector<std::string> oldSoFileNames, diffFileNames;
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
     if (InstalldOperator::IsDirEmpty(oldSoPath) || InstalldOperator::IsDirEmpty(diffFilePath)) {
         APP_LOGD("oldSoPath or diffFilePath is empty, not require ApplyPatch");
         return true;
@@ -749,7 +786,9 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         APP_LOGE("ApplyDiffPatch ProcessApplyDiffPatchPath failed");
         return false;
     }
-    std::string realOldSoPath, realDiffFilePath, realNewSoPath;
+    std::string realOldSoPath;
+    std::string realDiffFilePath;
+    std::string realNewSoPath;
     if (!PathToRealPath(oldSoPath, realOldSoPath) || !PathToRealPath(diffFilePath, realDiffFilePath) ||
         !PathToRealPath(newSoPath, realNewSoPath)) {
         APP_LOGE("ApplyDiffPatch Path is not real path");

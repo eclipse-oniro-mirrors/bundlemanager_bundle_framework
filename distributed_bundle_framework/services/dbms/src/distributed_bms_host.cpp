@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -19,8 +19,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_memory_guard.h"
 #include "remote_ability_info.h"
 #include "ipc_skeleton.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -40,6 +42,7 @@ DistributedBmsHost::~DistributedBmsHost()
 
 int DistributedBmsHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
 {
+    BundleMemoryGuard memoryGuard;
     APP_LOGI("DistributedBmsHost receives message from client, code = %{public}u, flags = %{public}d", code,
         option.GetFlags());
     std::u16string descripter = DistributedBmsHost::GetDescriptor();
@@ -74,7 +77,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfo(Parcel &data, Parcel &reply)
 {
     APP_LOGI("DistributedBmsHost handle get remote ability info");
     if (!VerifySystemApp()) {
-        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
@@ -108,7 +111,7 @@ int DistributedBmsHost::HandleGetRemoteAbilityInfos(Parcel &data, Parcel &reply)
 {
     APP_LOGI("DistributedBmsHost handle get remote ability infos");
     if (!VerifySystemApp()) {
-        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
@@ -235,13 +238,13 @@ bool DistributedBmsHost::VerifyCallingPermission(const std::string &permissionNa
 bool DistributedBmsHost::VerifySystemApp()
 {
     APP_LOGI("verifying systemApp");
-#ifdef SYSTEM_API_VERIFICATION
-    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
-    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    Security::AccessToken::ATokenTypeEnum tokenType =
+        Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
+        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL
         || callingUid == Constants::ROOT_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
@@ -251,7 +254,6 @@ bool DistributedBmsHost::VerifySystemApp()
         APP_LOGE("non-system app calling system api");
         return false;
     }
-#endif
     return true;
 }
 
