@@ -66,6 +66,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
     want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
+    want.SetParam(Constants::IS_AGING_UNINSTALL, installResult.isAgingUninstall);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
