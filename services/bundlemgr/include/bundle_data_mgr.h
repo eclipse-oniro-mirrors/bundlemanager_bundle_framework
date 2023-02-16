@@ -733,6 +733,9 @@ public:
      */
     int64_t GetAllFreeInstallBundleSpaceSize() const;
 #endif
+
+    bool GetBundleStats(
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
     bool GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames);
     ErrCode SetModuleUpgradeFlag(const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag);

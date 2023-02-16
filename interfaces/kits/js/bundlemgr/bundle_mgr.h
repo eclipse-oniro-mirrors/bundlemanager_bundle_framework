@@ -115,25 +115,6 @@ struct AsyncBundleInfosCallbackInfo : public AsyncWorkData {
     int32_t userId = Constants::UNSPECIFIED_USERID;
 };
 
-struct AsyncBundlePackInfoCallbackInfo : public AsyncWorkData {
-    explicit AsyncBundlePackInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    int32_t flags = 0;
-    std::string bundleName;
-    OHOS::AppExecFwk::BundlePackInfo bundlePackInfo;
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
-};
-
-struct AsyncDispatcherVersionCallbackInfo : public AsyncWorkData {
-    explicit AsyncDispatcherVersionCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
-    std::string version;
-    std::string dispatchAPI;
-};
-
 struct AsyncApplicationInfosCallbackInfo : public AsyncWorkData {
     explicit AsyncApplicationInfosCallbackInfo(napi_env env) : AsyncWorkData(env) {}
     int32_t flags = 0;
@@ -153,31 +134,6 @@ struct AsyncAbilityLabelCallbackInfo : public AsyncWorkData {
     std::string abilityLabel;
     int32_t err = 0;
     std::string message;
-};
-
-struct AsyncModuleRemovableCallbackInfo {
-    napi_env env;
-    napi_async_work asyncWork;
-    napi_deferred deferred;
-    napi_ref callback = 0;
-    std::string bundleName;
-    std::string moduleName;
-    bool result = false;
-    int32_t err = 0;
-    std::string errMssage;
-};
-
-struct AsyncModuleUpgradeFlagCallbackInfo {
-    napi_env env;
-    napi_async_work asyncWork;
-    napi_deferred deferred;
-    napi_ref callback = 0;
-    std::string bundleName;
-    std::string moduleName;
-    int32_t upgradeFlag = 0;
-    bool result = false;
-    int32_t err = 0;
-    std::string errMssage;
 };
 
 struct InstallResult {
@@ -237,17 +193,6 @@ struct AsyncGetBundleGidsCallbackInfo : public AsyncWorkData {
     std::string message;
 };
 
-struct AsyncExtensionInfoCallbackInfo : public AsyncWorkData {
-    explicit AsyncExtensionInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    OHOS::AAFwk::Want want;
-    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
-    int32_t flags = 0;
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos;
-    bool ret = false;
-    int32_t err = 0;
-};
-
 struct AsyncGetNameByUidInfo : public AsyncWorkData {
     explicit AsyncGetNameByUidInfo(napi_env env) : AsyncWorkData(env) {}
     int32_t uid = 0;
@@ -291,23 +236,6 @@ struct AsyncAbilityInfo : public AsyncWorkData {
     std::string errMssage;
 };
 
-enum ProfileType : uint32_t {
-    ABILITY_PROFILE = 0,
-    EXTENSION_PROFILE,
-    UNKNOWN_PROFILE
-};
-
-struct AsyncGetProfileInfo : public AsyncWorkData {
-    explicit AsyncGetProfileInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string moduleName = "";
-    std::string abilityName = "";
-    std::string metadataName = "";
-    std::vector<std::string> profileVec;
-    ProfileType type = ProfileType::UNKNOWN_PROFILE;
-    bool ret = false;
-    int32_t errCode = 0;
-};
-
 struct Query {
     std::string bundleName_;
     std::string interfaceType_;
@@ -345,11 +273,9 @@ napi_value GetAbilityInfo(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
-napi_value GetBundlePackInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
-napi_value GetDispatcherVersion(napi_env env, napi_callback_info info);
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
 napi_value Recover(napi_env env, napi_callback_info info);
@@ -363,29 +289,17 @@ napi_value UnregisterPermissionsChanged(napi_env env, napi_callback_info info);
 napi_value ClearBundleCache(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
-napi_value QueryExtensionInfoByWant(napi_env env, napi_callback_info info);
 napi_value GetNameForUid(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
-napi_value IsModuleRemovable(napi_env env, napi_callback_info info);
-napi_value SetModuleUpgradeFlag(napi_env env, napi_callback_info info);
-napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
-napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
-napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType);
-napi_value GetProfileAsync(napi_env env, napi_value value,
-    std::unique_ptr<AsyncGetProfileInfo> &callbackPtr);
-napi_value GetBundlePackInfoWrap(napi_env env, napi_value promise, AsyncBundlePackInfoCallbackInfo *asyncCallbackInfo);
-napi_value GetDispatcherVersionWrap(
-    napi_env env, napi_value promise, AsyncDispatcherVersionCallbackInfo *asyncCallbackInfo);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
 void CreateAbilityTypeObject(napi_env env, napi_value value);
 void CreateAbilitySubTypeObject(napi_env env, napi_value value);
 void CreateDisplayOrientationObject(napi_env env, napi_value value);
 void CreateLaunchModeObject(napi_env env, napi_value value);
-void CreateModuleUpdateFlagObject(napi_env env, napi_value value);
 void CreateFormTypeObject(napi_env env, napi_value value);
 void CreateColorModeObject(napi_env env, napi_value value);
 void CreateGrantStatusObject(napi_env env, napi_value value);
@@ -395,22 +309,10 @@ void CreateShortcutExistenceObject(napi_env env, napi_value value);
 void CreateQueryShortCutFlagObject(napi_env env, napi_value value);
 void CreateBundleFlagObject(napi_env env, napi_value value);
 void CreateInstallErrorCodeObject(napi_env env, napi_value value);
-void CreateExtensionAbilityTypeObject(napi_env env, napi_value value);
-void CreateExtensionFlagObject(napi_env env, napi_value value);
-void CreateSupportWindowModesObject(napi_env env, napi_value value);
-void CreateUpgradeFlagObject(napi_env env, napi_value value);
 class JsBundleMgr {
 public:
     JsBundleMgr() = default;
     ~JsBundleMgr() = default;
-
-    struct JsExtensionAbilityInfos {
-        OHOS::AAFwk::Want want;
-        int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
-        std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> extensionInfos;
-        int32_t flags = 0;
-        int32_t userId = Constants::UNSPECIFIED_USERID;
-    };
 
     struct JsAbilityInfo {
         std::string bundleName;
@@ -469,16 +371,10 @@ private:
     NativeValue* CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos);
     NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
     NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::shared_ptr<JsExtensionAbilityInfos> &extensionInfos);
-    NativeValue* CreateExtensionInfo(
-        NativeEngine &engine, const std::vector<OHOS::AppExecFwk::ExtensionAbilityInfo> &extensionInfos);
-    NativeValue* CreateExtensionInfo(NativeEngine &engine, const ExtensionAbilityInfo &extensionInfo);
     int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
         NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
     NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
     NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
-    NativeValue* CreateSupportWindowMode(NativeEngine &engine, const std::vector<SupportWindowMode> &windowModes);
     NativeValue* CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene);
     NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
     NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);
@@ -490,7 +386,6 @@ private:
         const std::vector<RequestPermission> &requestPermissions);
     NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
     NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
-    NativeValue* CreateProfiles(NativeEngine &engine, const std::vector<std::string> &profileInfos);
     NativeValue* UnwarpQueryAbilityInfolastParams(NativeCallbackInfo &info);
     static bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);

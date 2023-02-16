@@ -27,12 +27,14 @@ const std::string TYPE_ALL = "All";
 const std::string TYPE_SO = "So";
 const std::string TYPE_AN = "An";
 const std::string TYPE_PATCH = "Patch";
+const std::string TYPE_AP = "Ap";
 const std::string TYPE_OTHER = "Other";
 const std::unordered_map<ExtractFileType, std::string> ARGS_MAP = {
     { ExtractFileType::ALL, TYPE_ALL },
     { ExtractFileType::SO, TYPE_SO },
     { ExtractFileType::AN, TYPE_AN },
     { ExtractFileType::PATCH, TYPE_PATCH },
+    { ExtractFileType::AP, TYPE_AP },
 };
 
 std::string GetExtractFileTypeStrVal(const ExtractFileType &extractFileType)

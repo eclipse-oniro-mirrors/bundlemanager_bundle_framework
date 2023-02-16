@@ -75,10 +75,6 @@ static napi_value Init(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nLaunchMode));
     CreateLaunchModeObject(env, nLaunchMode);
 
-    napi_value nModuleUpdateFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nModuleUpdateFlag));
-    CreateModuleUpdateFlagObject(env, nModuleUpdateFlag);
-
     napi_value nColorMode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nColorMode));
     CreateColorModeObject(env, nColorMode);
@@ -103,18 +99,6 @@ static napi_value Init(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nQueryShortCutFlag));
     CreateQueryShortCutFlagObject(env, nShortcutExistence);
 
-    napi_value nExtensionAbilityType = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionAbilityType));
-    CreateExtensionAbilityTypeObject(env, nExtensionAbilityType);
-
-    napi_value nExtensionFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionFlag));
-    CreateExtensionFlagObject(env, nExtensionFlag);
-
-    napi_value nUpgradeFlag = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nUpgradeFlag));
-    CreateUpgradeFlagObject(env, nUpgradeFlag);
-
     napi_value nBundleFlag = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nBundleFlag));
     CreateBundleFlagObject(env, nBundleFlag);
@@ -122,10 +106,6 @@ static napi_value Init(napi_env env, napi_value exports)
     napi_value nInstallErrorCode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
     CreateInstallErrorCodeObject(env, nInstallErrorCode);
-
-    napi_value nSupportWindowMode = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nSupportWindowMode));
-    CreateSupportWindowModesObject(env, nSupportWindowMode);
     /*
      * Propertise define
      */
@@ -134,28 +114,20 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfo", GetBundleInfo),
-        DECLARE_NAPI_FUNCTION("getBundlePackInfo", GetBundlePackInfo),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
-        DECLARE_NAPI_FUNCTION("getDispatcherVersion", GetDispatcherVersion),
         DECLARE_NAPI_FUNCTION("queryAbilityByWant", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
-        DECLARE_NAPI_FUNCTION("isModuleRemovable", IsModuleRemovable),
-        DECLARE_NAPI_FUNCTION("setModuleUpgradeFlag", SetModuleUpgradeFlag),
-        DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfos", QueryExtensionInfoByWant),
         DECLARE_NAPI_FUNCTION("getNameForUid", GetNameForUid),
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
-        DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),
-        DECLARE_NAPI_FUNCTION("getProfileByExtensionAbility", GetProfileByExAbility),
         DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
         DECLARE_NAPI_PROPERTY("AbilitySubType", nAbilitySubType),
         DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
         DECLARE_NAPI_PROPERTY("LaunchMode", nLaunchMode),
-        DECLARE_NAPI_PROPERTY("ModuleUpdateFlag", nModuleUpdateFlag),
         DECLARE_NAPI_PROPERTY("ColorMode", nColorMode),
         DECLARE_NAPI_PROPERTY("GrantStatus", nGrantStatus),
         DECLARE_NAPI_PROPERTY("ModuleRemoveFlag", nModuleRemoveFlag),
@@ -163,11 +135,7 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ShortcutExistence", nShortcutExistence),
         DECLARE_NAPI_PROPERTY("QueryShortCutFlag", nQueryShortCutFlag),
         DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
-        DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
-        DECLARE_NAPI_PROPERTY("ExtensionAbilityType", nExtensionAbilityType),
         DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag),
-        DECLARE_NAPI_PROPERTY("ExtensionFlag", nExtensionFlag),
-        DECLARE_NAPI_PROPERTY("UpgradeFlag", nUpgradeFlag)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 

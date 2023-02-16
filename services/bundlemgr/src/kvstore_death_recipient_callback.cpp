@@ -31,12 +31,12 @@ const int32_t CHECK_INTERVAL = 100000;  // 100ms
 
 KvStoreDeathRecipientCallback::KvStoreDeathRecipientCallback()
 {
-    APP_LOGI("create kvstore death recipient callback instance %{public}p", this);
+    APP_LOGI("create kvstore death recipient callback instance");
 }
 
 KvStoreDeathRecipientCallback::~KvStoreDeathRecipientCallback()
 {
-    APP_LOGI("destroy kvstore death recipient callback instance %{public}p", this);
+    APP_LOGI("destroy kvstore death recipient callback instance");
 }
 
 void KvStoreDeathRecipientCallback::OnRemoteDied()

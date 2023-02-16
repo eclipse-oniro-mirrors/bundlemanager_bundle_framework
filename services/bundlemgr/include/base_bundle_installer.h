@@ -535,6 +535,10 @@ private:
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
+    ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
+        int32_t userId) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
+    ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

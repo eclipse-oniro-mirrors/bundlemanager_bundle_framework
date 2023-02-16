@@ -445,7 +445,7 @@ napi_value UnwrapUnZipParam(CallZipUnzipParam &param, napi_env env, napi_value *
  */
 napi_value NAPI_ZipFile(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("%{public}s,called env=%{public}p", __func__, env);
+    APP_LOGD("%{public}s,called", __func__);
     napi_value args[ARGS_MAX_COUNT] = {nullptr};
     napi_value ret = 0;
     size_t argcAsync = 4;
