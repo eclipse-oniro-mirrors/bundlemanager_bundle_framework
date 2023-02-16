@@ -153,6 +153,7 @@ public:
     static void MakeFsConfig(const std::string &bundleName, int32_t bundleId, const std::string &configPath);
     static void RemoveFsConfig(const std::string &bundleName, const std::string &configPath);
     static std::string CreateInstallTempDir(uint32_t installerId, const DirType &type);
+    static std::string CreateSharedPacakgeTempDir(uint32_t installerId, uint32_t index);
     static int32_t CreateFileDescriptor(const std::string &bundlePath, long long offset);
     static int32_t CreateFileDescriptorForReadOnly(const std::string &bundlePath, long long offset);
     static void CloseFileDescriptor(std::vector<int32_t> &fdVec);

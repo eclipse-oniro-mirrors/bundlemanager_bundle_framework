@@ -53,6 +53,11 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
     return -1;
 }
 
+int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
+{
+    return -1;
+}
+
 bool BundleStreamInstallerHostImpl::Install()
 {
     return true;

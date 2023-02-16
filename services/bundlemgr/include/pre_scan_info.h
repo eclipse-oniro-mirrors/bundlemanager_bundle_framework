@@ -39,6 +39,7 @@ struct PreBundleConfigInfo {
     bool allowExcludeFromMissions = false;
     bool userDataClearable = true;
     bool hideDesktopIcon = false;
+    bool appShareLibrary = false;
     std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
     std::vector<std::string> existInJsonFile;
@@ -62,6 +63,7 @@ struct PreBundleConfigInfo {
         allowExcludeFromMissions = false;
         userDataClearable = true;
         hideDesktopIcon = false;
+        appShareLibrary = false;
         allowCommonEvent.clear();
         appSignature.clear();
         existInJsonFile.clear();
@@ -80,7 +82,8 @@ struct PreBundleConfigInfo {
             + ", allowQueryPriority = " + GetBoolStrVal(allowQueryPriority)
             + ", allowExcludeFromMissions = " + GetBoolStrVal(allowExcludeFromMissions)
             + ", userDataClearable = " + GetBoolStrVal(userDataClearable)
-            + ", hideDesktopIcon = " + GetBoolStrVal(hideDesktopIcon) + "]";
+            + ", hideDesktopIcon = " + GetBoolStrVal(hideDesktopIcon)
+            + ", appShareLibrary = " + GetBoolStrVal(appShareLibrary) + "]";
     }
 };
 

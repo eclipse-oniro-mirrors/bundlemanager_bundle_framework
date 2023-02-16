@@ -33,6 +33,7 @@ public:
     virtual void UnInit() override;
 
     virtual int CreateStream(const std::string &bundleName) override;
+    virtual int CreateSharedBundleStream(const std::string &bundleName, uint32_t sharedBundleIdx) override;
     virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;

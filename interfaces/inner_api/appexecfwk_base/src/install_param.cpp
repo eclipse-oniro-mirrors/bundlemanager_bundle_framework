@@ -45,6 +45,13 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         hashParams.emplace(moduleName, hashValue);
     }
     crowdtestDeadline = parcel.ReadInt64();
+
+    int32_t sharedBundleDirPathsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, sharedBundleDirPathsSize);
+    for (int32_t i = 0; i < sharedBundleDirPathsSize; ++i) {
+        std::string sharedBundleDirPath = Str16ToStr8(parcel.ReadString16());
+        sharedBundleDirPaths.emplace_back(sharedBundleDirPath);
+    }
     return true;
 }
 
@@ -72,6 +79,11 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashParam.second));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, crowdtestDeadline);
+
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(sharedBundleDirPaths.size()));
+    for (const auto& sharedBundleDirPath : sharedBundleDirPaths) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sharedBundleDirPath));
+    }
 
     return true;
 }
