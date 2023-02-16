@@ -463,7 +463,8 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
 {
     jsonObject = nlohmann::json {
         {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
-        {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName}
+        {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName},
+        {Profile::versionCode, dependency.versionCode}
     };
 }
 
@@ -1304,6 +1305,14 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         false,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        Profile::DEPENDENCIES_BUNDLE_NAME,
+        dependency.APP_VERSION_CODE,
+        JsonType::NUMBER,
+        false,
+        ProfileReader::parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -1673,9 +1682,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
                 abilityInfo.applicationInfo);
         }
     }
-    // for (const auto &dependency : it->second.dependencies) {
-    //     hapInfo.dependencies.emplace_back(dependency);
-    // }
     hapInfo.dependencies = it->second.dependencies;
     hapInfo.compileMode = ConvertCompileMode(it->second.compileMode);
     for (const auto &hqf : hqfInfos_) {

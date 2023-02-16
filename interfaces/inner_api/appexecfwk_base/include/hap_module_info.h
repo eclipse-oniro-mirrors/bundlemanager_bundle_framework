@@ -57,10 +57,7 @@ struct PreloadItem : public Parcelable {
 struct Dependency : public Parcelable {
     std::string bundleName;
     std::string moduleName;
-
-    Dependency() = default;
-    explicit Dependency(std::string bundleName, std::string moduleName)
-        : bundleName(bundleName), moduleName(moduleName) {}
+    uint32_t versionCode;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
@@ -96,7 +93,6 @@ struct HapModuleInfo : public Parcelable {
 
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;
-    // std::vector<std::string> dependencies;
     std::vector<Dependency> dependencies;
     std::vector<AbilityInfo> abilityInfos;
     ModuleColorMode colorMode = ModuleColorMode::AUTO;

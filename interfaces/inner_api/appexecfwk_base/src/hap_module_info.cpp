@@ -70,6 +70,7 @@ const std::string HAP_OVERLAY_MODULE_INFO = "overlayModuleInfos";
 const std::string HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string HAP_MODULE_INFO_PRELOADS = "preloads";
 const std::string PRELOAD_ITEM_MODULE_NAME = "moduleName";
+const std::string HAP_MODULE_INFO_VERSION_CODE = "versionCode";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -124,6 +125,7 @@ bool Dependency::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
+    versionCode = parcel.ReadInt32();
     return true;
 }
 
@@ -131,6 +133,7 @@ bool Dependency::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
     return true;
 }
 
@@ -149,7 +152,8 @@ void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
 {
     jsonObject = nlohmann::json {
         {Constants::BUNDLE_NAME, dependency.bundleName},
-        {Constants::MODULE_NAME, dependency.moduleName}
+        {Constants::MODULE_NAME, dependency.moduleName},
+        {HAP_MODULE_INFO_VERSION_CODE, dependency.versionCode}
     };
 }
 
@@ -170,6 +174,14 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         Constants::MODULE_NAME,
         dependency.moduleName,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_VERSION_CODE,
+        dependency.versionCode,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
