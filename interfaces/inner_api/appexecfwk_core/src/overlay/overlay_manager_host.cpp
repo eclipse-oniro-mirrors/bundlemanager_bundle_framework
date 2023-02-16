@@ -50,9 +50,9 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     MessageParcel& reply, MessageOption& option)
 {
     APP_LOGD("bundle mgr host onReceived message, the message code is %{public}u", code);
-    std::u16string descripter = OverlayManagerHost::GetDescriptor();
-    std::u16string remoteDescripter = data.ReadInterfaceToken();
-    if (descripter != remoteDescripter) {
+    std::u16string descriptor = OverlayManagerHost::GetDescriptor();
+    std::u16string remoteDescriptor = data.ReadInterfaceToken();
+    if (descriptor != remoteDescriptor) {
         APP_LOGE("fail to write reply message in bundle mgr host due to the reply is nullptr");
         return OBJECT_NULL;
     }
@@ -61,10 +61,10 @@ int OverlayManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     if (funcMap_.find(code) != funcMap_.end() && funcMap_[code] != nullptr) {
         errCode = (this->*funcMap_[code])(data, reply);
     } else {
-        APP_LOGW("ovarlayMgr host receives unknown code, code = %{public}u", code);
+        APP_LOGW("overlayMgr host receives unknown code, code = %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    APP_LOGD("ovarlayMgr host finish to process message");
+    APP_LOGD("overlayMgr host finish to process message");
     return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;
 }
 

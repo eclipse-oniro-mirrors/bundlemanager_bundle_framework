@@ -98,6 +98,7 @@ const std::shared_ptr<BundleOverlayInstallChecker> BmsBundleOverlayCheckerTest::
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.the internal overlay hap is entry type.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0100, Function | SmallTest | Level0)
 {
@@ -120,6 +121,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0100, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.the internal overlay bundle is service.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0200, Function | SmallTest | Level0)
 {
@@ -139,6 +141,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0200, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.innerModuleInfos of innerBundleInfo is empty.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0300, Function | SmallTest | Level0)
 {
@@ -157,6 +160,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0300, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.target priority of internal overlay hap is invalid.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0400, Function | SmallTest | Level0)
 {
@@ -180,6 +184,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0400, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.target priority of internal overlay hap is invalid.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0500, Function | SmallTest | Level0)
 {
@@ -203,6 +208,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0500, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.target module name of the internal overlay is same as the module name.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0600, Function | SmallTest | Level0)
 {
@@ -227,6 +233,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0600, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.target module is overlay module.
  *           2.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0700, Function | SmallTest | Level0)
 {
@@ -275,6 +282,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0700, Function | SmallT
  * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
  * @tc.desc: 1.install overlay hap and non-overlay hap simultaneously.
  *           2.check successfully.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0800, Function | SmallTest | Level0)
 {
@@ -310,6 +318,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0800, Function | SmallT
  * @tc.desc: 1.install internal overlay hap.
  *           2.the version code of overlay hap is larger than non-overlay module.
  *           3.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0900, Function | SmallTest | Level0)
 {
@@ -359,6 +368,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0900, Function | SmallT
  * @tc.desc: 1.install internal overlay hap.
  *           2.the version code of overlay hap is lower than non-overlay module.
  *           3.check failed.
+ * @tc.require: issueI6F3H9
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_1000, Function | SmallTest | Level0)
 {
