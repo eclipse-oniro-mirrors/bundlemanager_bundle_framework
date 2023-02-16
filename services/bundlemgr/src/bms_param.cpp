@@ -24,7 +24,7 @@ const std::string BMS_PARAM_TABLE_NAME = "bms_param";
 }
 BmsParam::BmsParam()
 {
-    APP_LOGD("instance:%{private}p is created", this);
+    APP_LOGD("BmsParam instance is created");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = BMS_PARAM_TABLE_NAME;
@@ -34,7 +34,7 @@ BmsParam::BmsParam()
 
 BmsParam::~BmsParam()
 {
-    APP_LOGD("instance:%{private}p is destroyed", this);
+    APP_LOGD("BmsParam instance is destroyed");
 }
 
 bool BmsParam::GetBmsParam(const std::string &key, std::string &value)
