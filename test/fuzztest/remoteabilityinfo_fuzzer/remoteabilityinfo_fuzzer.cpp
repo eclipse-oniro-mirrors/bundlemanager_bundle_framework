@@ -26,9 +26,9 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        std::string label (reinterpret_cast<const char*>(data), size);
+        std::string name (reinterpret_cast<const char*>(data), size);
         RemoteAbilityInfo info;
-        info.label = label;
+        info.label  = name;
         if (!info.Marshalling(dataMessageParcel)) {
             return false;
         }
@@ -36,14 +36,15 @@ namespace OHOS {
         if (infoPtr == nullptr) {
             return false;
         }
-        RemoteAbilityInfo *remoteAbilityInfo =
-            new (std::nothrow) RemoteAbilityInfo();
-        if (remoteAbilityInfo == nullptr) {
+        delete infoPtr;
+        infoPtr = nullptr;
+        RemoteAbilityInfo *realInfo = new (std::nothrow) RemoteAbilityInfo();
+        if (realInfo == nullptr) {
             return false;
         }
-        bool ret = remoteAbilityInfo->ReadFromParcel(dataMessageParcel);
-        delete remoteAbilityInfo;
-        remoteAbilityInfo = nullptr;
+        bool ret = realInfo->ReadFromParcel(dataMessageParcel);
+        delete realInfo;
+        realInfo = nullptr;
         return ret;
     }
 }
