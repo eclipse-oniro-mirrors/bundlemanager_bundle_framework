@@ -28,6 +28,7 @@
 
 #include "ability_info.h"
 #include "application_info.h"
+#include "app_provision_info.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_promise.h"
@@ -785,6 +786,9 @@ public:
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     void EnableOverlayBundle(const std::string &bundleName);
+
+    ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+        AppProvisionInfo &appProvisionInfo);
 
 private:
     /**

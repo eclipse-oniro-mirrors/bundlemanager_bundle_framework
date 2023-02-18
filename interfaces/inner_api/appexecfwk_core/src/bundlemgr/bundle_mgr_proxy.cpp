@@ -3154,6 +3154,33 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
     return overlayManagerProxy;
 }
 
+ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+    AppProvisionInfo &appProvisionInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get AppProvisionInfo of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetAppProvisionInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAppProvisionInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAppProvisionInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetAppProvisionInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<AppProvisionInfo>(IBundleMgr::Message::GET_APP_PROVISION_INFO,
+        data, appProvisionInfo);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

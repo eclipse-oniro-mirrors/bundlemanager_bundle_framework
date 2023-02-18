@@ -746,6 +746,9 @@ public:
 
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
 
+    virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+        AppProvisionInfo &appProvisionInfo) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

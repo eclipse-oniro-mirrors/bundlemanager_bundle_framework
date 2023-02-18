@@ -204,6 +204,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, &BundleMgrHost::HandleGetOverlayManagerProxy);
     funcMap_.emplace(IBundleMgr::Message::SILENT_INSTALL, &BundleMgrHost::HandleSilentInstall);
     funcMap_.emplace(IBundleMgr::Message::PROCESS_PRELOAD, &BundleMgrHost::HandleProcessPreload);
+    funcMap_.emplace(IBundleMgr::Message::GET_APP_PROVISION_INFO, &BundleMgrHost::HandleGetAppProvisionInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2357,6 +2358,24 @@ ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ProcessPreload(*want);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    AppProvisionInfo appProvisionInfo;
+    ErrCode ret = GetAppProvisionInfo(bundleName, userId, appProvisionInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAppProvisionInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteParcelable(&appProvisionInfo)) {
+        APP_LOGE("write appProvisionInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
