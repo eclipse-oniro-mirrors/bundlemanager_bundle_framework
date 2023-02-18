@@ -7592,8 +7592,6 @@ HWTEST_F(ActsBmsKitSystemTest, VerifySystemApi_0100, Function | SmallTest | Leve
  */
 HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0100, Function | SmallTest | Level1)
 {
-
-    
     ModuleInfo moduleInfo1;
     std::string name1 = "testCheckNeedPreload1";
     moduleInfo1.preloads.push_back(name1);
