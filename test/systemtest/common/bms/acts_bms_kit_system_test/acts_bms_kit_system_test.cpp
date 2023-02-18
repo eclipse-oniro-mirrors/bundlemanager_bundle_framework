@@ -7583,5 +7583,55 @@ HWTEST_F(ActsBmsKitSystemTest, VerifySystemApi_0100, Function | SmallTest | Leve
     auto res = bundleMgrProxy->VerifySystemApi(beginApiVersion);
     EXPECT_EQ(res, true);
 }
+
+/**
+ * @tc.number: CheckNeedPreload_0100
+ * @tc.name: test CheckNeedPreload
+ * @tc.desc: 1.system run normally
+ *           2.test failed
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0100, Function | SmallTest | Level1)
+{
+
+    
+    ModuleInfo moduleInfo1;
+    std::string name1 = "testCheckNeedPreload1";
+    moduleInfo1.preloads.push_back(name1);
+    moduleInfo1.moduleName = "testCheckNeedPreload1";
+    
+    ApplicationInfo applicationInfo;
+    applicationInfo.moduleInfos.push_back(moduleInfo1);
+
+    std::string moduleName = "testCheckNeedPreload";
+    bool res = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(res, false);
+
+    moduleName = "testCheckNeedPreload1";
+    res = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: CheckNeedPreload_0200
+ * @tc.name: test CheckNeedPreload
+ * @tc.desc: 1.system run normally
+ *           2.test successed
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0200, Function | SmallTest | Level1)
+{
+    ModuleInfo moduleInfo1;
+    std::string name1 = "testCheckNeedPreload1";
+    std::string name2 = "testCheckNeedPreload2";
+    moduleInfo1.preloads.push_back(name1);
+    moduleInfo1.preloads.push_back(name2);
+    moduleInfo1.moduleName = "testCheckNeedPreload1";
+    
+    ApplicationInfo applicationInfo;
+    applicationInfo.moduleInfos.push_back(moduleInfo1);
+
+    std::string moduleName = "testCheckNeedPreload1";
+    bool res = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(res, true);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
