@@ -159,6 +159,50 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &ta
         IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET, data, overlayModuleInfo);
 }
 
+ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
+    bool isEnabled, int32_t userId)
+{
+    APP_LOGD("begin to call SetOverlayEnabled.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("SetOverlayEnabled failed due to params error.");
+        return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("failed to SetOverlayEnabled due to write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to SetOverlayEnabled due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IOverlayManager::Message::SET_OVERLAY_ENABLED, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("failed to SetOverlayEnabled due to error %{public}d", res);
+    }
+    return res;
+}
+
 template<typename T>
 ErrCode OverlayManagerProxy::GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo)
 {

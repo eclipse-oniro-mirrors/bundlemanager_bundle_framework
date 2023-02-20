@@ -36,6 +36,7 @@ enum class NotifyType {
     BUNDLE_CACHE_CLEARED,
     OVERLAY_INSTALL,
     OVERLAY_UPDATE,
+    OVERLAY_STATE_CHANGED,
 };
 
 enum class SandboxInstallType : uint32_t {
@@ -62,6 +63,8 @@ public:
         const std::shared_ptr<BundleDataMgr> &dataMgr);
     ErrCode NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
         const SandboxInstallType &type);
+    void NotifyOverlayModuleStateStatus(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
+        int32_t userId, int32_t uid);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);

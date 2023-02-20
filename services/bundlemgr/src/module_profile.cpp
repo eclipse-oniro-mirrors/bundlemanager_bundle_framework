@@ -2139,6 +2139,9 @@ bool ToInnerBundleInfo(
     } else {
         innerBundleInfo.SetTargetPriority(moduleJson.app.targetPriority);
     }
+    int32_t overlayState = overlayMsg.type == OVERLAY_EXTERNAL_BUNDLE ? Constants::DEFAULT_OVERLAY_ENABLE_STATUS :
+        Constants::DEFAULT_OVERLAY_DISABLE_STATUS;
+    innerBundleInfo.SetOverlayState(overlayState);
     return true;
 }
 }  // namespace

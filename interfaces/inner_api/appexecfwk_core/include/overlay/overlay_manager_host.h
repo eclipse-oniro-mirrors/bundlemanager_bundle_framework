@@ -38,6 +38,8 @@ private:
 
     ErrCode HandleGetOverlayModuleInfoForTarget(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSetOverlayEnabled(MessageParcel &data, MessageParcel &reply);
+
     void init();
 
     template<typename T>

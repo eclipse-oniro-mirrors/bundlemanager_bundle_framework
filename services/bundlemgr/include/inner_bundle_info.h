@@ -1740,6 +1740,16 @@ public:
         baseApplicationInfo_->targetPriority = priority;
     }
 
+    int32_t GetOverlayState() const
+    {
+        return baseApplicationInfo_->overlayState;
+    }
+
+    void SetOverlayState(int32_t state)
+    {
+        baseApplicationInfo_->overlayState = state;
+    }
+
     int32_t GetOverlayType() const
     {
         return overlayType_;
@@ -1938,6 +1948,14 @@ public:
     void AddApplyQuickFixFrequency();
     int32_t GetApplyQuickFixFrequency() const;
     void ResetApplyQuickFixFrequency();
+
+    bool GetOverlayModuleState(const std::string &moduleName, int32_t userId, int32_t &state) const;
+
+    void SetOverlayModuleState(const std::string &moduleName, int32_t state, int32_t userId);
+
+    void SetOverlayModuleState(const std::string &moduleName, int32_t state);
+
+    void ClearOverlayModuleStates(const std::string &moduleName);
 
 private:
     bool IsExistLauncherAbility() const;
