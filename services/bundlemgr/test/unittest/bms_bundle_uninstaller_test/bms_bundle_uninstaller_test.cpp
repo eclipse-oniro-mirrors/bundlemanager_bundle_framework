@@ -24,7 +24,6 @@
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
-#include "bundle_data_storage_database.h"
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"

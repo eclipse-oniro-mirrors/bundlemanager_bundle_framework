@@ -43,9 +43,7 @@
 #include "quick_fix/patch_parser.h"
 #include "quick_fix/patch_profile.h"
 #include "quick_fix/quick_fix_boot_scanner.h"
-#ifdef BMS_RDB_ENABLE
 #include "quick_fix/quick_fix_manager_rdb.h"
-#endif
 #undef private
 #include "quick_fix/quick_fix_mgr.h"
 #include "quick_fix/quick_fixer.h"
@@ -226,7 +224,6 @@ void BmsBundleQuickFixMgrRdbTest::SetUp()
 void BmsBundleQuickFixMgrRdbTest::TearDown()
 {}
 
-#ifdef BMS_RDB_ENABLE
 /**
  * @tc.number: BmsBundleQuickFixMgrRdbTest_0001
  * @tc.name: Constructor
@@ -446,7 +443,6 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0012, Function
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
 }
-#endif
 
 /**
  * @tc.number: BmsBundleQuickFixMgrTest_0001

@@ -17,9 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
-#ifdef BMS_RDB_ENABLE
 #include "quick_fix_manager_rdb.h"
-#endif
 #include "inner_app_quick_fix.h"
 
 namespace OHOS {
@@ -27,9 +25,7 @@ namespace AppExecFwk {
 QuickFixDataMgr::QuickFixDataMgr()
 {
     APP_LOGD("create QuickFixDataMgr start.");
-#ifdef BMS_RDB_ENABLE
     quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
-#endif
     if (quickFixManagerDb_ == nullptr) {
         APP_LOGE("create QuickFixDataMgr failed.");
         return;

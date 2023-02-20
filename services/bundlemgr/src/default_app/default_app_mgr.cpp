@@ -18,11 +18,7 @@
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
-#ifdef BMS_RDB_ENABLE
 #include "default_app_rdb.h"
-#else
-#include "default_app_db.h"
-#endif
 #include "ipc_skeleton.h"
 #include "string_ex.h"
 
@@ -81,11 +77,7 @@ DefaultAppMgr::~DefaultAppMgr()
 
 void DefaultAppMgr::Init()
 {
-#ifdef BMS_RDB_ENABLE
     defaultAppDb_ = std::make_shared<DefaultAppRdb>();
-#else
-    defaultAppDb_ = std::make_shared<DefaultAppDb>();
-#endif
     defaultAppDb_->RegisterDeathListener();
 }
 

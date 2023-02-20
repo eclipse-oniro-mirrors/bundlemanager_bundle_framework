@@ -23,9 +23,7 @@
 #include "event_report.h"
 #include "hitrace_meter.h"
 #include "installd_client.h"
-#ifdef BMS_RDB_ENABLE
 #include "rdb_data_manager.h"
-#endif
 #include "status_receiver_host.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
@@ -140,9 +138,7 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
-#ifdef BMS_RDB_ENABLE
         RdbDataManager::ClearCache();
-#endif
 }
 
 void BundleUserMgrHostImpl::RemoveUser(int32_t userId)

@@ -16,7 +16,6 @@
 #include <gtest/gtest.h>
 
 #include "bundle_data_mgr.h"
-#include "bundle_data_storage_database.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"

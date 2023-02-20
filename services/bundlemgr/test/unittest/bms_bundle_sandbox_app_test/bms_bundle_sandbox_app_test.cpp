@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 
-#include "bundle_data_storage_database.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_sandbox_installer.h"
@@ -30,7 +29,6 @@
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
-using namespace OHOS::DistributedKv;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
