@@ -152,6 +152,7 @@ bool BundleMgrHostImpl::GetBundleInfo(
         bundleName.c_str(), flags, userId);
     if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
+        return true;
     }
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
