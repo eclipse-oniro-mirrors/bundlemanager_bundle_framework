@@ -1740,6 +1740,16 @@ static bool VerifyCallingPermission(std::string permissionName)
     return iBundleMgr->VerifyCallingPermission(permissionName);
 }
 
+static bool VerifySystemApi()
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->VerifySystemApi();
+}
+
 static bool ParseHashParam(napi_env env, std::string &key, std::string &value, napi_value args)
 {
     napi_valuetype valueType;
@@ -5179,6 +5189,11 @@ NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, const Nativ
     }
 
     AsyncTask::CompleteCallback complete = [obj = this](NativeEngine &engine, AsyncTask &task, int32_t status) {
+            if (!VerifySystemApi()) {
+                APP_LOGE("GetBundleInstaller caller is not system app");
+                task.Reject(engine, CreateJsValue(engine, 1));
+                return;
+            }
             if (!VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
                 APP_LOGE("GetBundleInstaller no permission!");
                 task.Reject(engine, CreateJsValue(engine, 1));
