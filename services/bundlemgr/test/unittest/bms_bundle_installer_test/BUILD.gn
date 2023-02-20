@@ -36,6 +36,9 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   sources += bundle_install_sources
 
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+
   sources += [ "bms_bundle_installer_test.cpp" ]
 
   configs = [
@@ -177,6 +180,9 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   sources += bundle_install_sources
 
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+
   sources += [ "bms_multiple_installer_test.cpp" ]
 
   configs = [
@@ -317,6 +323,9 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   sources += bundle_install_sources
 
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
@@ -429,9 +438,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = []
 
-  sources += bundle_install_sources
+  sources = bundle_install_sources
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -441,6 +449,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   ]
 
   sources += [ "bms_bundle_install_checker_test.cpp" ]
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
@@ -545,9 +555,8 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "../../mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  sources = []
 
-  sources += bundle_install_sources
+  sources = bundle_install_sources
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -560,6 +569,9 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   ]
 
   sources += [ "bms_bundle_install_device_type_test.cpp" ]
+
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
@@ -658,9 +670,8 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "${services_path}/bundlemgr/test/mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  sources = []
 
-  sources += bundle_install_sources
+  sources = bundle_install_sources
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -673,6 +684,9 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   ]
 
   sources += [ "bms_system_bundle_installer_test.cpp" ]
+
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []

@@ -35,6 +35,8 @@ ohos_unittest("BmsSandboxAppTest") {
   ]
 
   sources += bundle_install_sources
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += sandbox_app
 

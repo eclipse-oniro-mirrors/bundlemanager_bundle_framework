@@ -37,6 +37,8 @@ ohos_unittest("BmsBundleQuickFixBootScannerTest") {
 
   defines = []
   sources += bundle_install_sources
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   if (bundle_framework_quick_fix) {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix

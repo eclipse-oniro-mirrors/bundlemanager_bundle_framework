@@ -40,6 +40,8 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   ]
 
   sources += bundle_install_sources
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_bundle_permission_grant_test.cpp" ]
 

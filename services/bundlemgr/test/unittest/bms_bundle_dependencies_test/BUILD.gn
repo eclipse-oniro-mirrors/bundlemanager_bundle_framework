@@ -40,6 +40,9 @@ ohos_unittest("BmsBundleDependenciesTest") {
 
   sources += bundle_install_sources
 
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+
   sources += [ "bms_bundle_dependencies_test.cpp" ]
 
   configs = [

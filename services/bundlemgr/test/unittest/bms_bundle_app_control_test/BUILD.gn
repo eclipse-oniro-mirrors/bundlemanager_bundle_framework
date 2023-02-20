@@ -25,6 +25,7 @@ ohos_unittest("BmsBundleAppControlTest") {
     "${services_path}/bundlemgr/include/app_control",
   ]
   sources = [
+    "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -40,6 +41,9 @@ ohos_unittest("BmsBundleAppControlTest") {
   ]
 
   sources += bundle_install_sources
+
+  sources += bundle_mgr
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_bundle_app_control_test.cpp" ]
 
