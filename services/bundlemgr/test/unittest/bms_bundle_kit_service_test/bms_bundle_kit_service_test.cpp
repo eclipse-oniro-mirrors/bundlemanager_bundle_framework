@@ -9318,4 +9318,123 @@ HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0005, Function | SmallTest | 
         delete info;
     }
 }
+
+/**
+ * @tc.number: GetAppProvisionInfo_0001
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normal
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0001, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AppProvisionInfo appProvisionInfo;
+    auto testRet = hostImpl->GetAppProvisionInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, appProvisionInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0002
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normal
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0002, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AppProvisionInfo appProvisionInfo;
+    auto testRet = hostImpl->GetAppProvisionInfo(BUNDLE_NAME_TEST, INVALID_UID, appProvisionInfo);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0003
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normally
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0003, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    AppProvisionInfo appProvisionInfo;
+    auto ret = bundleMgrProxy->GetAppProvisionInfo(EMPTY_STRING, DEFAULT_USERID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0004
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normally
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0004, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    AppProvisionInfo appProvisionInfo;
+    auto ret = bundleMgrProxy->GetAppProvisionInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0005
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normally
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0005, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    AppProvisionInfo appProvisionInfo;
+    auto ret = bundleMgrProxy->GetAppProvisionInfo(BUNDLE_NAME_TEST, INVALID_UID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0006
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normally
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0006, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AppProvisionInfo appProvisionInfo;
+    auto ret = dataMgr->GetAppProvisionInfo(BUNDLE_NAME_TEST, DEFAULT_USERID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0007
+ * @tc.name: test can get the bundleName's appProvisionInfo
+ * @tc.desc: 1.system run normally
+ *           2.get appProvisionInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0007, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AppProvisionInfo appProvisionInfo;
+    auto ret = dataMgr->GetAppProvisionInfo(BUNDLE_NAME_TEST, INVALID_UID, appProvisionInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
 }
