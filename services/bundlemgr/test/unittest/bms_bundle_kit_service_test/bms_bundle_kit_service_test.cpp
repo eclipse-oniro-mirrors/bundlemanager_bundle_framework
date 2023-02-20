@@ -23,6 +23,7 @@
 
 #include "ability_manager_client.h"
 #include "ability_info.h"
+#include "app_provision_info.h"
 #include "bms_device_manager.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
@@ -9231,5 +9232,86 @@ HWTEST_F(BmsBundleKitServiceTest, IsHideDesktopIcon_0002, Function | SmallTest |
     innerBundleInfo.baseApplicationInfo_->needAppDetail = false;
     bool ret = innerBundleInfo.IsHideDesktopIcon();
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AppProvisionInfo_0001
+ * @tc.name: test AppProvisionInfo Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. AppProvisionInfo Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0001, Function | SmallTest | Level1)
+{
+    AppProvisionInfo appProvisionInfo;
+    Parcel parcel;
+    auto ret = appProvisionInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AppProvisionInfo_0002
+ * @tc.name: test AppProvisionInfo ReadFromParcel
+ * @tc.desc: 1.system run normally
+ *           2. AppProvisionInfo ReadFromParcel
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0002, Function | SmallTest | Level1)
+{
+    AppProvisionInfo appProvisionInfo;
+    Parcel parcel;
+    auto ret = appProvisionInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    ret = appProvisionInfo.ReadFromParcel(parcel);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AppProvisionInfo_0003
+ * @tc.name: test AppProvisionInfo ReadFromParcel
+ * @tc.desc: 1.system run normally
+ *           2. AppProvisionInfo ReadFromParcel
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0003, Function | SmallTest | Level1)
+{
+    AppProvisionInfo appProvisionInfo;
+    Parcel parcel;
+    auto ret = appProvisionInfo.ReadFromParcel(parcel);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AppProvisionInfo_0004
+ * @tc.name: test AppProvisionInfo Unmarshalling
+ * @tc.desc: 1.system run normally
+ *           2. AppProvisionInfo Unmarshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0004, Function | SmallTest | Level1)
+{
+    AppProvisionInfo appProvisionInfo;
+    Parcel parcel;
+    AppProvisionInfo *info = appProvisionInfo.Unmarshalling(parcel);
+    EXPECT_EQ(info, nullptr);
+}
+
+/**
+ * @tc.number: AppProvisionInfo_0005
+ * @tc.name: test AppProvisionInfo Marshalling
+ * @tc.desc: 1.system run normally
+ *           2. AppProvisionInfo Marshalling
+ */
+HWTEST_F(BmsBundleKitServiceTest, AppProvisionInfo_0005, Function | SmallTest | Level1)
+{
+    AppProvisionInfo appProvisionInfo;
+    appProvisionInfo.versionCode = 200;
+    Parcel parcel;
+    auto ret = appProvisionInfo.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    AppProvisionInfo *info = AppProvisionInfo::Unmarshalling(parcel);
+    EXPECT_NE(info, nullptr);
+    if (info != nullptr) {
+        EXPECT_EQ(appProvisionInfo.versionCode, info->versionCode);
+        delete info;
+    }
 }
 }
