@@ -7265,6 +7265,7 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
 {
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.InitAgingtTimer();
+    EXPECT_FALSE(bundleAgingMgr.running_);
 }
 #endif
 
