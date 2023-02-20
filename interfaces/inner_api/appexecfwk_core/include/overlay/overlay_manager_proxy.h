@@ -27,17 +27,20 @@ public:
     virtual ~OverlayManagerProxy();
 
     virtual ErrCode GetAllOverlayModuleInfo(const std::string &bundleName,
-        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId) override;
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-        OverlayModuleInfo &overlayModuleInfo, int32_t userId) override;
+        OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId) override;
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
         const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo,
-        int32_t userId) override;
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
+        bool isEnabled, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     template<typename T>

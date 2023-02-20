@@ -42,8 +42,9 @@ void BundleCommonEventMgr::Init()
         { NotifyType::APPLICATION_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
         { NotifyType::BUNDLE_DATA_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_DATA_CLEARED },
         { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
-        { NotifyType::OVERLAY_INSTALL, Constants::OVERLAY_REMOVED_ACTION},
+        { NotifyType::OVERLAY_INSTALL, Constants::OVERLAY_ADD_ACTION},
         { NotifyType::OVERLAY_UPDATE, Constants::OVERLAY_CHANGED_ACTION},
+        { NotifyType::OVERLAY_STATE_CHANGED, Constants::OVERLAY_STATE_CHANGED},
     };
 }
 
@@ -121,6 +122,22 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);
     return ERR_OK;
+}
+
+void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bundleName,
+    const std::string &moduleName, bool isEnabled, int32_t userId, int32_t uid)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(Constants::OVERLAY_STATE_CHANGED);
+    ElementName element;
+    element.SetBundleName(bundleName);
+    element.SetModuleName(moduleName);
+    want.SetElement(element);
+    want.SetParam(Constants::UID, uid);
+    want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(Constants::OVERLAY_STATE, isEnabled);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
 }
 
 std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)

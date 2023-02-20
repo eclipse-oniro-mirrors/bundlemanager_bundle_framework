@@ -30,25 +30,32 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.OverlayManager");
 
     virtual ErrCode GetAllOverlayModuleInfo(const std::string &bundleName,
-        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
-        OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+        OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
+        std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
-        const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
+        const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -57,7 +64,9 @@ public:
         GET_ALL_OVERLAY_MODULE_INFO = 0,
         GET_OVERLAY_MODULE_INFO = 1,
         GET_OVERLAY_BUNDLE_INFO_FOR_TARGET = 2,
-        GET_OVERLAY_MODULE_INFO_FOR_TARGET = 3
+        GET_OVERLAY_MODULE_INFO_FOR_TARGET = 3,
+        SET_OVERLAY_ENABLED = 4,
+        SET_SELF_OVERLAY_ENABLED = 5,
     };
 };
 } // AppExecFwk
