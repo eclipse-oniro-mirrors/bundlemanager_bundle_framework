@@ -30,9 +30,9 @@ public:
 
     ErrCode UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    ErrCode UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo) const;
+    ErrCode UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    ErrCode UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo);
+    ErrCode UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
     ErrCode BuildOverlayConnection(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
@@ -45,13 +45,26 @@ public:
     void RemoveOverlayModuleInfo(const std::string &bundleName,
         const std::string &modulePackage, InnerBundleInfo &oldInfo);
 
-    void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo);
+    void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
 
-    void BuildInternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo);
+    void BuildInternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
 
     bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
     void EnableOverlayBundle(const std::string &bundleName);
+
+    ErrCode SaveInternalOverlayModuleState(const OverlayModuleInfo &overlayModuleInfo,
+        InnerBundleInfo &innerBundleInfo);
+
+    ErrCode SaveExternalOverlayModuleState(const OverlayModuleInfo &overlayModuleInfo,
+        const std::string &targetBundleName, int32_t userId, InnerBundleInfo &innerBundleInfo);
+
+    void ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
+        const std::string & modulePackage, InnerBundleInfo &oldInfo);
+
+    void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
+
+    void ResetExternalOverlayModuleState(const std::string &bundleName);
 
     ErrCode GetAllOverlayModuleInfo(const std::string &bundleName, std::vector<OverlayModuleInfo> &overlayModuleInfos,
         int32_t userId);
@@ -65,8 +78,22 @@ public:
     ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName, const std::string &targetModuleName,
         std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId);
 
+    ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
+        int32_t userId);
+
+    std::string GetCallingBundleName();
+
+    void AddOverlayModuleStates(const InnerBundleInfo &innerBundleInfo, InnerBundleUserInfo &userInfo);
+
 private:
     ErrCode GetBundleDataMgr();
+
+    std::map<std::string, int32_t> GetModulesStateFromUserInfo(const InnerBundleUserInfo &userInfo) const;
+
+    ErrCode ObtainOverlayModuleState(OverlayModuleInfo &overlayModuleInfo, int32_t userId);
+
+    ErrCode GetOverlayModuleInfoForTarget(const InnerBundleInfo &innerBundleInfo,
+        std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
 };

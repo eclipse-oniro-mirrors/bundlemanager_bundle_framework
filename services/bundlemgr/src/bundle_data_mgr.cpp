@@ -243,10 +243,16 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
         }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if (info.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
-            OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(info);
+            InnerBundleInfo newInfo = info;
+            OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(newInfo, info);
+        }
+        if (info.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
+            info.SetOverlayModuleState(info.GetCurrentModulePackage(), OverlayState::OVERLAY_INVALID,
+                info.GetUserId());
         }
         if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
-            OverlayDataMgr::GetInstance()->BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info);
+            OverlayDataMgr::GetInstance()->BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info,
+                info.GetUserId());
         }
 #endif
         if (dataStorage_->SaveStorageBundleInfo(info)) {
@@ -2178,6 +2184,10 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
         OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
+    }
+
+    if (infoItem->second.GetOverlayType() == NON_OVERLAY_TYPE) {
+        OverlayDataMgr::GetInstance()->ResetExternalOverlayModuleState(bundleName);
     }
 #endif
     if (infoItem != bundleInfos_.end()) {

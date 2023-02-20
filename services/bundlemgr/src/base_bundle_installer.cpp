@@ -2431,6 +2431,10 @@ ErrCode BaseBundleInstaller::CreateBundleUserData(InnerBundleInfo &innerBundleIn
         return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    OverlayDataMgr::GetInstance()->AddOverlayModuleStates(innerBundleInfo, innerBundleUserInfo);
+#endif
+
     if (!dataMgr_->AddInnerBundleUserInfo(innerBundleInfo.GetBundleName(), innerBundleUserInfo)) {
         APP_LOGE("update bundle user info to db failed %{public}s when createNewUser",
             innerBundleInfo.GetBundleName().c_str());
@@ -2903,6 +2907,7 @@ ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::st
     bool isInternalOverlayExisted = false;
     bool isExternalOverlayExisted = false;
     for (auto &info : newInfos) {
+        info.second.SetUserId(userId);
         if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
             APP_LOGW("the hap is not overlay hap");
             continue;
