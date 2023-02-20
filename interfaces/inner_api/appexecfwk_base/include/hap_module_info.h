@@ -54,6 +54,16 @@ struct PreloadItem : public Parcelable {
     static PreloadItem *Unmarshalling(Parcel &parcel);
 };
 
+struct Dependency : public Parcelable {
+    std::string bundleName;
+    std::string moduleName;
+    uint32_t versionCode;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static Dependency *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -83,7 +93,7 @@ struct HapModuleInfo : public Parcelable {
 
     std::vector<std::string> reqCapabilities;
     std::vector<std::string> deviceTypes;
-    std::vector<std::string> dependencies;
+    std::vector<Dependency> dependencies;
     std::vector<AbilityInfo> abilityInfos;
     ModuleColorMode colorMode = ModuleColorMode::AUTO;
     // new version fields

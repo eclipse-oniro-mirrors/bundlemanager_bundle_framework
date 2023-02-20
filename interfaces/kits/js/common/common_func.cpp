@@ -1293,11 +1293,21 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "preloads", nPreloads));
 }
 
-void CommonFunc::ConvertDependency(napi_env env, const std::string &moduleName, napi_value value)
+void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)
 {
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, dependency.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_NAME, nBundleName));
+
     napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, dependency.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
+
+    napi_value nVersionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, dependency.versionCode, &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionCode", nVersionCode));
 }
 
 void CommonFunc::ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags)

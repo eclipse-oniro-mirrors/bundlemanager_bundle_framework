@@ -57,11 +57,6 @@ struct DefinePermission {
     int32_t descriptionId = 0;
 };
 
-struct Dependency {
-    std::string moduleName;
-    std::string bundleName;
-};
-
 struct InnerModuleInfo {
     std::string name;
     std::string modulePackage;

@@ -70,6 +70,7 @@ const std::string HAP_OVERLAY_MODULE_INFO = "overlayModuleInfos";
 const std::string HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string HAP_MODULE_INFO_PRELOADS = "preloads";
 const std::string PRELOAD_ITEM_MODULE_NAME = "moduleName";
+const std::string HAP_MODULE_INFO_VERSION_CODE = "versionCode";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -117,6 +118,75 @@ void from_json(const nlohmann::json &jsonObject, PreloadItem &preloadItem)
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read PreloadItem from database error, error code : %{public}d", parseResult);
+    }
+}
+
+bool Dependency::ReadFromParcel(Parcel &parcel)
+{
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    versionCode = parcel.ReadInt32();
+    return true;
+}
+
+bool Dependency::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
+    return true;
+}
+
+Dependency *Dependency::Unmarshalling(Parcel &parcel)
+{
+    Dependency *dependency = new (std::nothrow) Dependency();
+    if (dependency && !dependency->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete dependency;
+        dependency = nullptr;
+    }
+    return dependency;
+}
+
+void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
+{
+    jsonObject = nlohmann::json {
+        {Constants::BUNDLE_NAME, dependency.bundleName},
+        {Constants::MODULE_NAME, dependency.moduleName},
+        {HAP_MODULE_INFO_VERSION_CODE, dependency.versionCode}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::BUNDLE_NAME,
+        dependency.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::MODULE_NAME,
+        dependency.moduleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_VERSION_CODE,
+        dependency.versionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read Dependency error, error code : %{public}d", parseResult);
     }
 }
 
@@ -180,7 +250,12 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependenciesSize);
     CONTAINER_SECURITY_VERIFY(parcel, dependenciesSize, &dependencies);
     for (auto i = 0; i < dependenciesSize; i++) {
-        dependencies.emplace_back(Str16ToStr8(parcel.ReadString16()));
+        std::unique_ptr<Dependency> dependency(parcel.ReadParcelable<Dependency>());
+        if (!dependency) {
+            APP_LOGE("ReadParcelable<Dependency> failed");
+            return false;
+        }
+        dependencies.emplace_back(*dependency);
     }
 
     colorMode = static_cast<ModuleColorMode>(parcel.ReadInt32());
@@ -311,7 +386,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dependencies.size());
     for (auto &dependency : dependencies) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(dependency));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &dependency);
     }
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(colorMode));
@@ -705,14 +780,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_DEPENDENCIES,
         hapModuleInfo.dependencies,
         JsonType::ARRAY,
         false,
         parseResult,
-        ArrayType::STRING);
+        ArrayType::OBJECT);
     GetValueIfFindKey<CompileMode>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_COMPILE_MODE,
