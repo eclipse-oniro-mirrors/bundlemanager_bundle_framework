@@ -759,6 +759,8 @@ public:
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
     virtual ErrCode SetDebugMode(bool isDebug) override;
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
+    virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+        AppProvisionInfo &appProvisionInfo) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

@@ -611,6 +611,8 @@ private:
 
     ErrCode HandleProcessPreload(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

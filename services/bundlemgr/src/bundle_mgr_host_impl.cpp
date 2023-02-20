@@ -2353,5 +2353,26 @@ bool BundleMgrHostImpl::VerifySystemApi(int32_t beginApiVersion)
     APP_LOGD("begin to verify system app");
     return BundlePermissionMgr::VerifySystemApp(beginApiVersion);
 }
+
+ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+    AppProvisionInfo &appProvisionInfo)
+{
+    APP_LOGD("begin to GetAppProvisionInfo bundleName: %{public}s, userId: %{public}d", bundleName.c_str(),
+        userId);
+    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

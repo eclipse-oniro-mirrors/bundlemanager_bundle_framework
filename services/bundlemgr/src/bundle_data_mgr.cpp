@@ -4391,5 +4391,19 @@ const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerb
     std::lock_guard<std::mutex> lock(overlayMutex_);
     return bundleInfos_;
 }
+
+ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+    AppProvisionInfo &appProvisionInfo)
+{
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

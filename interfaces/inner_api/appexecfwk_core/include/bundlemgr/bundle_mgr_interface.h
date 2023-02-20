@@ -19,6 +19,7 @@
 #include "ability_info.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "app_provision_info.h"
 #include "bundle_constants.h"
 #include "bundle_event_callback_interface.h"
 #include "bundle_info.h"
@@ -1093,6 +1094,12 @@ public:
         return;
     }
 
+    virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
+        AppProvisionInfo &appProvisionInfo)
+    {
+        return ERR_OK;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1197,6 +1204,7 @@ public:
         GET_OVERLAY_MANAGER_PROXY,
         SILENT_INSTALL,
         PROCESS_PRELOAD,
+        GET_APP_PROVISION_INFO,
     };
 };
 }  // namespace AppExecFwk
