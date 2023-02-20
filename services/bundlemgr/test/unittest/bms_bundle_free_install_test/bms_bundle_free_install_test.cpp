@@ -62,7 +62,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    void AddInnerBundleInfo(const std::string bundleName);
+    void AddInnerBundleInfo(const std::string bundleName, const int32_t flag);
     void UninstallBundleInfo(const std::string bundleName);
     BundlePackInfo CreateBundlePackInfo(const std::string &bundleName);
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
@@ -113,7 +113,7 @@ void BmsBundleFreeInstallTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
-void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName)
+void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName, const int32_t flag)
 {
     BundleInfo bundleInfo;
     bundleInfo.name = bundleName;
@@ -130,6 +130,11 @@ void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName)
     moduleInfo.moduleName = MODULE_NAME_TEST;
     moduleInfo.name = MODULE_NAME_TEST;
     moduleInfo.modulePackage = MODULE_NAME_TEST;
+    if (flag) {
+        application.bundleType = BundleType::ATOMIC_SERVICE;
+        moduleInfo.preloads.push_back(MODULE_NAME_TEST);
+        moduleInfo.preloads.push_back(bundleName);
+    }
 
     std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
     innerModuleInfoMap[MODULE_NAME_TEST] = moduleInfo;
@@ -227,7 +232,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0001, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -249,7 +254,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -271,7 +276,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -293,7 +298,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -333,7 +338,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0006, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0007, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -353,7 +358,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0007, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0008, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -373,7 +378,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0008, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0009, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -411,7 +416,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0010, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0011, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -431,7 +436,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0011, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0012, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -451,7 +456,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0012, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0013, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -473,7 +478,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0013, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0014, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -495,7 +500,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0014, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0015, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -528,7 +533,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0015, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0016, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -557,7 +562,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0016, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0017, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -588,7 +593,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0017, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -954,6 +959,29 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0042, Function | Sma
 }
 
 /**
+ * @tc.number: BmsBundleFreeInstallTest_0043
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0043, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 1);
+    auto bundleMgr = GetBundleConnectAbilityMgr();
+    if (bundleMgr != nullptr) {
+        Want want;
+        ElementName name;
+        name.SetAbilityName(ABILITY_NAME_TEST);
+        name.SetBundleName(BUNDLE_NAME);
+        want.SetElement(name);
+        want.SetModuleName(MODULE_NAME_TEST);
+        want.SetParam("uid", -800000);
+        bundleMgr->ProcessPreload(want);
+    }
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
  * @tc.number: BundleConnectAbilityMgr_0001
  * Function: GetBundleConnectAbilityMgr
  * @tc.name: test GetBundleConnectAbilityMgr
@@ -962,7 +990,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0042, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -991,7 +1019,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1019,7 +1047,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1052,7 +1080,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0005, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1081,7 +1109,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0005, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1107,7 +1135,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1138,7 +1166,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
     BundleConnectAbilityMgr connectAbilityMgr;
 
     Want want;
@@ -1163,7 +1191,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0011, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     BundleConnectAbilityMgr connectAbilityMgr;
     InnerBundleInfo innerBundleInfo;
