@@ -32,6 +32,10 @@ struct BundleUserInfo : public Parcelable {
     // disabled abilities of the user.
     std::vector<std::string> disabledAbilities;
 
+    // overlay module state
+    // element is moduleName_state
+    std::vector<std::string> overlayModulesState;
+
     bool IsInitialState() const;
     void Reset();
     bool ReadFromParcel(Parcel &parcel);

@@ -21,13 +21,19 @@
 #include "parcel.h"
 namespace OHOS {
 namespace AppExecFwk {
+enum OverlayState : int32_t {
+    OVERLAY_DISABLED = 0,
+    OVERLAY_ENABLE,
+    OVERLAY_INVALID,
+};
+
 struct OverlayModuleInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string targetModuleName;
     std::string hapPath;
     int32_t priority;
-    int32_t state; // 0 is for disable and 1 is for enable
+    int32_t state = OVERLAY_INVALID; // 0 is for disable and 1 is for enable
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

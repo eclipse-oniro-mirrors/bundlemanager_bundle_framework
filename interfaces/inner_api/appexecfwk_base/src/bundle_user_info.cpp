@@ -31,6 +31,7 @@ namespace {
 const std::string BUNDLE_USER_INFO_USER_ID = "userId";
 const std::string BUNDLE_USER_INFO_ENABLE = "enabled";
 const std::string BUNDLE_USER_INFO_DISABLE_ABILITIES = "disabledAbilities";
+const std::string BUNDLE_USER_INFO_OVERLAY_STATE = "overlayState";
 } // namespace
 
 bool BundleUserInfo::ReadFromParcel(Parcel &parcel)
@@ -44,6 +45,12 @@ bool BundleUserInfo::ReadFromParcel(Parcel &parcel)
         disabledAbilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
+    int32_t overlayStateSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayStateSize);
+    CONTAINER_SECURITY_VERIFY(parcel, overlayStateSize, &overlayModulesState);
+    for (int32_t i = 0; i < overlayStateSize; i++) {
+        overlayModulesState.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -67,7 +74,10 @@ bool BundleUserInfo::Marshalling(Parcel &parcel) const
     for (auto &disabledAbility : disabledAbilities) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(disabledAbility));
     }
-
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayModulesState.size());
+    for (const auto &overlayModuleState : overlayModulesState) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(overlayModuleState));
+    }
     return true;
 }
 
@@ -114,6 +124,7 @@ void to_json(nlohmann::json& jsonObject, const BundleUserInfo& bundleUserInfo)
         {BUNDLE_USER_INFO_USER_ID, bundleUserInfo.userId},
         {BUNDLE_USER_INFO_ENABLE, bundleUserInfo.enabled},
         {BUNDLE_USER_INFO_DISABLE_ABILITIES, bundleUserInfo.disabledAbilities},
+        {BUNDLE_USER_INFO_OVERLAY_STATE, bundleUserInfo.overlayModulesState},
     };
 }
 
@@ -141,6 +152,14 @@ void from_json(const nlohmann::json& jsonObject, BundleUserInfo& bundleUserInfo)
         jsonObjectEnd,
         BUNDLE_USER_INFO_DISABLE_ABILITIES,
         bundleUserInfo.disabledAbilities,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_USER_INFO_OVERLAY_STATE,
+        bundleUserInfo.overlayModulesState,
         JsonType::ARRAY,
         false,
         parseResult,

@@ -2759,6 +2759,102 @@ bool InnerBundleInfo::IsAbilityEnabled(const AbilityInfo &abilityInfo, int32_t u
     }
 }
 
+void InnerBundleInfo::SetOverlayModuleState(const std::string &moduleName, int32_t state, int32_t userId)
+{
+    APP_LOGD("start to set overlay moduleInfo state of module %{public}s", moduleName.c_str());
+    if (overlayType_ == NON_OVERLAY_TYPE) {
+        APP_LOGW("no overlay module");
+        return;
+    }
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        if (innerUserInfo.second.bundleUserInfo.userId != userId) {
+            continue;
+        }
+
+        auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
+        bool isSetSucc = std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
+            if (item.find(moduleName) != std::string::npos) {
+                item = moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
+                return true;
+            }
+            return false;
+        });
+        if (!isSetSucc) {
+            APP_LOGD("no overlay module state info under user %{public}d", userId);
+            overlayStates.emplace_back(moduleName + Constants::FILE_UNDERLINE + std::to_string(state));
+        }
+    }
+}
+
+void InnerBundleInfo::SetOverlayModuleState(const std::string &moduleName, int32_t state)
+{
+    APP_LOGD("start to set overlay moduleInfo state of module %{public}s", moduleName.c_str());
+    if (overlayType_ == NON_OVERLAY_TYPE) {
+        APP_LOGW("no overlay module");
+        return;
+    }
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
+        bool isSetSucc = std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
+            if (item.find(moduleName) != std::string::npos) {
+                item = moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
+                return true;
+            }
+            return false;
+        });
+        if (!isSetSucc) {
+            overlayStates.emplace_back(moduleName + Constants::FILE_UNDERLINE + std::to_string(state));
+        }
+    }
+}
+
+bool InnerBundleInfo::GetOverlayModuleState(const std::string &moduleName, int32_t userId, int32_t &state) const
+{
+    APP_LOGD("start to get overlay state of moduleName:%{public}s, userId:%{public}d", moduleName.c_str(), userId);
+    if (userId == Constants::NOT_EXIST_USERID) {
+        APP_LOGE("invalid userId %{public}d", userId);
+        return false;
+    }
+    auto& key = NameAndUserIdToKey(GetBundleName(), userId);
+    auto infoItem = innerBundleUserInfos_.find(key);
+    if (infoItem == innerBundleUserInfos_.end()) {
+        APP_LOGE("no userInfo under userId %{public}d", userId);
+        return false;
+    }
+
+    auto overlayModulesState = infoItem->second.bundleUserInfo.overlayModulesState;
+    if (overlayModulesState.empty()) {
+        APP_LOGE("no overlay module installed under userId %{public}d", userId);
+        return false;
+    }
+    for (const auto &item : overlayModulesState) {
+        auto pos = item.find(moduleName);
+        if (pos == std::string::npos) {
+            continue;
+        }
+        return OHOS::StrToInt(item.substr(moduleName.length() + 1), state);
+    }
+    APP_LOGE("no overlay module installed under userId %{public}d", userId);
+    return false;
+}
+
+void InnerBundleInfo::ClearOverlayModuleStates(const std::string &moduleName)
+{
+    // delete overlay module state
+    for (auto &innerUserInfo : innerBundleUserInfos_) {
+        auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
+        auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&moduleName](const auto &item) {
+            if (item.find(moduleName) != std::string::npos) {
+                return true;
+            }
+            return false;
+        });
+        if (iter != overlayStates.end()) {
+            overlayStates.erase(iter);
+        }
+    }
+}
+
 ErrCode InnerBundleInfo::IsAbilityEnabledV9(const AbilityInfo &abilityInfo, int32_t userId, bool &isEnable) const
 {
     APP_LOGD("IsAbilityEnabled bundleName:%{public}s, userId:%{public}d", abilityInfo.bundleName.c_str(), userId);
