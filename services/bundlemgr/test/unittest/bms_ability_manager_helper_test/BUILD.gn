@@ -25,24 +25,8 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
-  ]
-
+  sources = bundle_mgr_source
   sources += [
-    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
   ]

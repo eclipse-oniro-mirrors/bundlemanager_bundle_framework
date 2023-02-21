@@ -21,20 +21,9 @@ ohos_unittest("BmsBundleInstallerTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -175,20 +164,9 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -335,20 +313,9 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -468,22 +435,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
-  ]
-
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
 
   sources += [
@@ -598,22 +551,8 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "../../mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
-  ]
-
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
 
   sources += [
@@ -725,22 +664,8 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "${services_path}/bundlemgr/test/mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-  sources = [
-    "${services_path}/bundlemgr/src/account_helper.cpp",
-    "${services_path}/bundlemgr/src/bms_param.cpp",
-    "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
-    "${services_path}/bundlemgr/src/bundle_event_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
-    "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
-    "${services_path}/bundlemgr/src/bundle_scanner.cpp",
-    "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
-    "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
-    "${services_path}/bundlemgr/src/hidump_helper.cpp",
-  ]
-
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
 
   sources += [

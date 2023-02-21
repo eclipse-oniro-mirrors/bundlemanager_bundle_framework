@@ -175,23 +175,7 @@ ohos_shared_library("libbms") {
     "//foundation/*",
   ]
 
-  sources = [
-    "src/account_helper.cpp",
-    "src/bms_param.cpp",
-    "src/bundle_common_event_mgr.cpp",
-    "src/bundle_data_mgr.cpp",
-    "src/bundle_data_storage.cpp",
-    "src/bundle_event_callback_death_recipient.cpp",
-    "src/bundle_mgr_host_impl.cpp",
-    "src/bundle_mgr_service.cpp",
-    "src/bundle_mgr_service_event_handler.cpp",
-    "src/bundle_scanner.cpp",
-    "src/bundle_state_storage.cpp",
-    "src/bundle_status_callback_death_recipient.cpp",
-    "src/bundle_user_mgr_host_impl.cpp",
-    "src/hidump_helper.cpp",
-    "src/system_ability_helper.cpp",
-  ]
+  sources = bundle_mgr_source
 
   sources += bundle_install_sources
 
