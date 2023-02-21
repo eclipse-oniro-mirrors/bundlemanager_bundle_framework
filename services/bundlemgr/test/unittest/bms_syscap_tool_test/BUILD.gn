@@ -35,7 +35,7 @@ ohos_unittest("BmsSyscapToolTest") {
   ]
 
   sources += bundle_install_sources
-  sources += bundle_mgr
+  sources += bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_syscap_tool_test.cpp" ]

@@ -20,7 +20,9 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -36,8 +38,6 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
 
   defines = []
   sources += bundle_install_sources
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   if (bundle_framework_overlay_install) {
     include_dirs += [ "${services_path}/bundlemgr/include/overlay" ]
     sources += overlay_installation
@@ -180,8 +180,9 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "${services_path}/bundlemgr/test/mock/include/parameter",
     "//base/startup/init/interfaces/innerkits/include",
   ]
-
-  sources = bundle_install_sources
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += bundle_install_sources
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -192,8 +193,6 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   defines = []
   if (bundle_framework_overlay_install) {

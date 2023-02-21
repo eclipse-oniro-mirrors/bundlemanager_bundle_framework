@@ -175,7 +175,7 @@ ohos_shared_library("libbms") {
     "//foundation/*",
   ]
 
-  sources = bundle_mgr
+  sources = bundle_mgr_source
 
   sources += bundle_install_sources
 

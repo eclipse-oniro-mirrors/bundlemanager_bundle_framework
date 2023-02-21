@@ -23,7 +23,9 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
     "//third_party/jsoncpp/include",
     "//third_party/json/include",
   ]
-  sources = [
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -40,8 +42,6 @@ ohos_unittest("BmsBundleQuickFixMgrRdbTest") {
   ]
 
   sources += bundle_install_sources
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "../../../../../../../../base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",

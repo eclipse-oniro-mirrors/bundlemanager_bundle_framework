@@ -21,7 +21,9 @@ ohos_unittest("BmsBundleKitServiceTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -36,8 +38,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
   ]
 
   sources += bundle_install_sources
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_bundle_kit_service_test.cpp" ]
 
@@ -143,7 +143,9 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   use_exceptions = true
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
-  sources = [
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -157,8 +159,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   ]
 
   sources += bundle_install_sources
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
 

@@ -23,7 +23,7 @@ ohos_unittest("BmsEventHandlerTest") {
   include_dirs = [ "//third_party/jsoncpp/include" ]
 
   sources = bundle_install_sources
-  sources += bundle_mgr
+  sources += bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_bundle_installer.cpp" ]
   sources += [ "bms_event_handler_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]

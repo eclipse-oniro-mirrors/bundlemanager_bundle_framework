@@ -24,7 +24,9 @@ ohos_unittest("BmsDeviceManagerTest") {
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/unittest/bms_device_manager_test",
   ]
-  sources = [
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -37,8 +39,6 @@ ohos_unittest("BmsDeviceManagerTest") {
   ]
 
   sources += bundle_install_sources
-  sources += bundle_mgr
-  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += [ "bms_device_manager_test.cpp" ]
 
