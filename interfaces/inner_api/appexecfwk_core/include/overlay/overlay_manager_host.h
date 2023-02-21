@@ -40,6 +40,8 @@ private:
 
     ErrCode HandleSetOverlayEnabled(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+
     void init();
 
     template<typename T>

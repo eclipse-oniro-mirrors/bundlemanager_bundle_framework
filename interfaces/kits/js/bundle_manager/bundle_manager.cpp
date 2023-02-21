@@ -954,7 +954,6 @@ void CreateAbilityFlagObject(napi_env env, napi_value value)
         nGetAbilityInfOnlySystemApp));
 }
 
-
 void GetAbilityLabelExec(napi_env env, void *data)
 {
     AbilityLabelCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityLabelCallbackInfo *>(data);

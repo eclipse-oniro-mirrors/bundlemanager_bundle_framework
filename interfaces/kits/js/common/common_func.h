@@ -131,6 +131,12 @@ static void ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &
 
 static void ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value);
 
+static void ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info, napi_value objOverlayModuleInfo);
+
+static void ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos, napi_value objInfos);
+
+static std::string ObtainCallingBundleName();
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,

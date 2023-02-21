@@ -203,6 +203,29 @@ ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, co
     return res;
 }
 
+ErrCode OverlayManagerProxy::VerifySystemApi()
+{
+    APP_LOGD("begin to call VerifySystemApi.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IOverlayManager::Message::VERIFY_SYSTEM_APP, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("failed to VerifySystemApi due to error %{public}d", res);
+    }
+    return res;
+}
+
 template<typename T>
 ErrCode OverlayManagerProxy::GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo)
 {

@@ -129,6 +129,15 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName,
     return BundleOverlayManager::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
 }
 
+ErrCode OverlayManagerHostImpl::VerifySystemApi()
+{
+    APP_LOGD("begin to verify system app");
+    if (BundlePermissionMgr::VerifySystemApp()) {
+        return ERR_OK;
+    }
+    return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+}
+
 bool OverlayManagerHostImpl::VerifyQueryPermission(const std::string &queryBundleName,
     const std::string &permission) const
 {

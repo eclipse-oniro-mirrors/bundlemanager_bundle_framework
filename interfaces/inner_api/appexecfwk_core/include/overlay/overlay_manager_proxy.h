@@ -42,6 +42,8 @@ public:
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
         bool isEnabled, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode VerifySystemApi() override;
+
 private:
     template<typename T>
     ErrCode GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo);
