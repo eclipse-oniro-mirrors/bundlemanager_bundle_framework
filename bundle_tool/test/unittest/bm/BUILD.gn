@@ -362,6 +362,60 @@ ohos_unittest("bm_command_quickfix_test") {
   ]
 }
 
+ohos_unittest("bm_command_overlay_test") {
+  module_out_path = module_output_path
+
+  include_dirs = []
+
+  sources = [
+    "${bundletool_path}/src/bundle_command.cpp",
+    "${bundletool_path}/src/bundle_command_common.cpp",
+    "${bundletool_path}/src/quick_fix_command.cpp",
+    "${bundletool_path}/src/shell_command.cpp",
+    "${bundletool_path}/src/status_receiver_impl.cpp",
+    "${kits_path}/js/bundlemgr/bundle_death_recipient.cpp",
+    "bm_command_overlay_test.cpp",
+  ]
+  sources += tools_bm_mock_sources
+
+  configs = [
+    "${bundletool_path}:tools_bm_config",
+    ":tools_bm_config_mock",
+  ]
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "${ability_runtime_path}/services/abilitymgr:abilityms",
+    "${appexecfwk_path}/common:libappexecfwk_common",
+    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  external_deps = [
+    "ability_base:want",
+    "ability_runtime:quickfix_manager",
+    "access_token:libaccesstoken_sdk",
+    "appverify:libhapverify",
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "kv_store:distributeddata_inner",
+    "os_account:os_account_innerkits",
+    "resource_management:global_resmgr",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("unittest") {
   testonly = true
 
@@ -369,6 +423,7 @@ group("unittest") {
     ":bm_command_dump_dependencies_test",
     ":bm_command_dump_test",
     ":bm_command_install_test",
+    ":bm_command_overlay_test",
     ":bm_command_quickfix_test",
     ":bm_command_test",
     ":bm_command_uninstall_test",
