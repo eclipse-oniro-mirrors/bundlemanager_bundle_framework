@@ -61,6 +61,7 @@ constexpr const char* BUNDLE_USER_INFO_PATH =
     "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
 constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
 constexpr const char* COMPRESS_PROPERTY = "compress";
@@ -256,8 +257,9 @@ constexpr int32_t INVALID_FILE_SIZE = -1;
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
 
-// hmdfs config
+// hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
+constexpr const char* SHAREFS_CONFIG_PATH {"/config/sharefs/"};
 constexpr const char* BUNDLE_ID_FILE = { "bid" };
 
 // pre bundle profile
