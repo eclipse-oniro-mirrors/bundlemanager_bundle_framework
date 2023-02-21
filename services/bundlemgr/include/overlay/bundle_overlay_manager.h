@@ -40,6 +40,9 @@ public:
 
     ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName, const std::string &targetModuleName,
         std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId);
+
+    ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
+        int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

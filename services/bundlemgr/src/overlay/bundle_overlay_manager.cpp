@@ -84,13 +84,25 @@ ErrCode BundleOverlayManager::GetOverlayModuleInfoForTarget(const std::string &t
     const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
     APP_LOGD("start to get overlay moduleInfo for target bundle and targte module");
-    if (targetBundleName.empty() || targetModuleName.empty() || userId == Constants::INVALID_USERID) {
+    if (targetBundleName.empty() || userId == Constants::INVALID_USERID) {
         APP_LOGE("invalid bundleName for get innerBundleInfo");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
     return OverlayDataMgr::GetInstance()->GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName,
         overlayModuleInfo, userId);
+}
+
+ErrCode BundleOverlayManager::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
+    bool isEnabled, int32_t userId)
+{
+    APP_LOGD("start to SetOverlayEnabled");
+    if (bundleName.empty() || moduleName.empty() || userId == Constants::INVALID_USERID) {
+        APP_LOGE("invalid bundleName or userId for get innerBundleInfo");
+        return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+    }
+    return OverlayDataMgr::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+
 }
 } // AppExecFwk
 } // OHOS
