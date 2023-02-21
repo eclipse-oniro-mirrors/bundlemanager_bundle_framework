@@ -144,7 +144,8 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  switchQuickFix      switch a quick fix patch of an already installed bundle\n"
                              "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n"
                              "  setDebugMode        enable signature debug mode\n"
-                             "  getBundleStats        get bundle stats\n";
+                             "  getBundleStats        get bundle stats\n"
+                             "  getAppProvisionInfo   get appProvisionInfo\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
     "usage: bundle_test_tool getrm <options>\n"
@@ -377,6 +378,15 @@ const std::string HELP_MSG_GET_BUNDLE_STATS =
     "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
+
+const std::string HELP_MSG_GET_APP_PROVISION_INFO =
+    "usage: bundle_test_tool getAppProvisionInfo <options>\n"
+    "eg:bundle_test_tool getAppProvisionInfo -n <bundle-name>\n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
+    "  -u, --user-id <user-id>                specify a user id\n";
+
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
 
@@ -417,6 +427,9 @@ const std::string STRING_SET_DEBUG_MODE_NG = "set debug mode failed\n";
 
 const std::string STRING_GET_BUNDLE_STATS_OK = "get bundle stats successfully\n";
 const std::string STRING_GET_BUNDLE_STATS_NG = "get bundle stats failed\n";
+
+const std::string STRING_GET_APP_PROVISION_INFO_OK = "get appProvisionInfo successfully\n";
+const std::string STRING_GET_APP_PROVISION_INFO_NG = "get appProvisionInfo failed\n";
 
 const std::string GET_BUNDLE_STATS_ARRAY[] = {
     "app data size: ",
@@ -535,7 +548,8 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"switchQuickFix", std::bind(&BundleTestTool::RunAsSwitchQuickFix, this)},
         {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)},
         {"setDebugMode", std::bind(&BundleTestTool::RunAsSetDebugMode, this)},
-        {"getBundleStats", std::bind(&BundleTestTool::RunAsGetBundleStats, this)}
+        {"getBundleStats", std::bind(&BundleTestTool::RunAsGetBundleStats, this)},
+        {"getAppProvisionInfo", std::bind(&BundleTestTool::RunAsGetAppProvisionInfo, this)}
     };
 
     return OHOS::ERR_OK;
@@ -2541,12 +2555,11 @@ ErrCode BundleTestTool::SetDebugMode(int32_t debugMode)
     return bundleMgrProxy_->SetDebugMode(enable);
 }
 
-ErrCode BundleTestTool::RunAsGetBundleStats()
+ErrCode BundleTestTool::BundleNameAndUserIdCommonFunc(std::string &bundleName, int32_t &userId)
 {
     int32_t result = OHOS::ERR_OK;
     int32_t counter = 0;
-    std::string bundleName = "";
-    int32_t userId = Constants::UNSPECIFIED_USERID;
+    userId = Constants::UNSPECIFIED_USERID;
     while (true) {
         counter++;
         int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET_BUNDLE_STATS.c_str(),
@@ -2618,7 +2631,14 @@ ErrCode BundleTestTool::RunAsGetBundleStats()
             result = OHOS::ERR_INVALID_VALUE;
         }
     }
+    return result;
+}
 
+ErrCode BundleTestTool::RunAsGetBundleStats()
+{
+    std::string bundleName;
+    int32_t userId;
+    int32_t result = BundleNameAndUserIdCommonFunc(bundleName, userId);
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_GET_BUNDLE_STATS);
     } else {
@@ -2648,6 +2668,56 @@ bool BundleTestTool::GetBundleStats(const std::string &bundleName, int32_t userI
         for (size_t index = 0; index < bundleStats.size(); ++index) {
             msg += GET_BUNDLE_STATS_ARRAY[index] + std::to_string(bundleStats[index]) + "\n";
         }
+    }
+    return ret;
+}
+
+ErrCode BundleTestTool::RunAsGetAppProvisionInfo()
+{
+    std::string bundleName;
+    int32_t userId;
+    int32_t result = BundleNameAndUserIdCommonFunc(bundleName, userId);
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_GET_APP_PROVISION_INFO);
+    } else {
+        std::string msg;
+        result = GetAppProvisionInfo(bundleName, userId, msg);
+        if (result == OHOS::ERR_OK) {
+            resultReceiver_ = STRING_GET_APP_PROVISION_INFO_OK + msg;
+        } else {
+            resultReceiver_ = STRING_GET_APP_PROVISION_INFO_NG + "\n";
+        }
+    }
+
+    return result;
+}
+
+ErrCode BundleTestTool::GetAppProvisionInfo(const std::string &bundleName,
+    int32_t userId, std::string& msg)
+{
+    if (bundleMgrProxy_ == nullptr) {
+        APP_LOGE("bundleMgrProxy_ is nullptr");
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    userId = BundleCommandCommon::GetCurrentUserId(userId);
+    AppProvisionInfo info;
+    auto ret = bundleMgrProxy_->GetAppProvisionInfo(bundleName, userId, info);
+    if (ret == ERR_OK) {
+        msg = "{\n";
+        msg += "    versionCode: " + std::to_string(info.versionCode) + "\n";
+        msg += "    versionName: " + info.versionName+ "\n";
+        msg += "    uuid: " + info.uuid + "\n";
+        msg += "    type: " + info.type + "\n";
+        msg += "    appDistributionType: " + info.appDistributionType + "\n";
+        msg += "    developerId: " + info.developerId + "\n";
+        msg += "    certificate: " + info.certificate + "\n";
+        msg += "    apl: " + info.apl + "\n";
+        msg += "    issuer: " + info.issuer + "\n";
+        msg += "    validity: {\n";
+        msg += "        notBefore: " + std::to_string(info.validity.notBefore) + "\n";
+        msg += "        notAfter: " + std::to_string(info.validity.notAfter) + "\n";
+        msg += "    }\n";
+        msg += "}\n";
     }
     return ret;
 }
