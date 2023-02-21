@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,7 @@
 #include "business_error.h"
 #include "bundle_constants.h"
 #include "common_func.h"
+#include "hap_module_info.h"
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "image_source.h"
 #include "pixel_map_napi.h"
@@ -2707,6 +2708,28 @@ void CreateAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DATA", nData));
 }
 
+void CreateBundleTypeObject(napi_env env, napi_value value)
+{
+    napi_value nApp;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(BundleType::APP), &nApp));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP", nApp));
+    napi_value nAtomicService;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(BundleType::ATOMIC_SERVICE), &nAtomicService));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ATOMIC_SERVICE", nAtomicService));
+}
+
+void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value)
+{
+    napi_value nNormal;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(AtomicServiceModuleType::NORMAL), &nNormal));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NORMAL", nNormal));
+    napi_value nMain;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AtomicServiceModuleType::MAIN), &nMain));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN", nMain));
+}
+
 void CreateDisplayOrientationObject(napi_env env, napi_value value)
 {
     napi_value nUnspecified;
@@ -2800,6 +2823,25 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value)
     napi_value nFloat;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(SupportWindowMode::FLOATING), &nFloat));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FLOATING", nFloat));
+}
+
+void CreateModuleTypeObject(napi_env env, napi_value value)
+{
+    napi_value nUnknown;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::UNKNOWN), &nUnknown));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNKNOWN", nUnknown));
+
+    napi_value nEntry;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::ENTRY), &nEntry));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENTRY", nEntry));
+
+    napi_value nFeature;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::FEATURE), &nFeature));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "FEATURE", nFeature));
+
+    napi_value nShared;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ModuleType::SHARED), &nShared));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARED", nShared));
 }
 }
 }

@@ -29,7 +29,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
-const int32_t QUERY_RPC_ID_BY_ABILITY = 1;
 const uint32_t OUT_TIME = 3000;
 const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
@@ -207,7 +206,7 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
         APP_LOGE("failed to write remote object");
         return false;
     }
-    ret = connectAbility->SendRequest(QUERY_RPC_ID_BY_ABILITY, data, reply);
+    ret = connectAbility->SendRequest(ServiceCenterFunction::CONNECT_QUERY_RPCID, data, reply);
     if (!ret) {
         APP_LOGE("send request to serviceCenter failed");
         SendCallbackRequest(ErrorCode::SEND_REQUEST_FAILED, targetAbilityInfo.targetInfo.transactId);

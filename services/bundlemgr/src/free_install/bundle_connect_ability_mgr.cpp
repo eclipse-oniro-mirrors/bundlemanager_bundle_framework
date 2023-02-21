@@ -41,7 +41,9 @@ constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
 constexpr uint32_t BIT_ONE_BACKGROUND_MODE = 1;
 constexpr uint32_t BIT_TWO_CUSTOM = 0;
+constexpr uint32_t BIT_THREE_ZERO = 0;
 constexpr uint32_t BIT_FOUR_AZ_DEVICE = 0;
+constexpr uint32_t BIT_FIVE_SAME_BUNDLE_NAME = 0;
 constexpr uint32_t BIT_SIX_SAME_BUNDLE = 0;
 constexpr uint32_t BIT_ONE = 2;
 constexpr uint32_t BIT_TWO = 4;
@@ -93,6 +95,171 @@ BundleConnectAbilityMgr::~BundleConnectAbilityMgr()
     if (runner_ != nullptr) {
         runner_.reset();
     }
+}
+
+bool BundleConnectAbilityMgr::ProcessPreloadCheck(const TargetAbilityInfo &targetAbilityInfo)
+{
+    APP_LOGD("ProcessPreloadCheck");
+    if (handler_ == nullptr) {
+        APP_LOGE("handler is null");
+        return false;
+    }
+    auto PreloadCheckFunc = [this, targetAbilityInfo]() {
+        int32_t flag = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
+        this->ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
+    };
+    handler_->PostTask(PreloadCheckFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    return true;
+}
+
+void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
+    const TargetAbilityInfo &targetAbilityInfo)
+{
+    APP_LOGD("ProcessPreloadRequestToServiceCenter");
+    Want serviceCenterWant;
+    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
+    if (!isConnectSuccess) {
+        APP_LOGE("Fail to connect ServiceCenter");
+        return;
+    } else {
+        PreloadRequest(flag, targetAbilityInfo);
+        return;
+    }
+}
+
+void BundleConnectAbilityMgr::PreloadRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    if (!data.WriteInterfaceToken(SERVICE_CENTER_TOKEN)) {
+        APP_LOGE("failed to WriteInterfaceToken");
+        return;
+    }
+    const std::string dataString = GetJsonStrFromInfo(targetAbilityInfo);
+    APP_LOGI("TargetAbilityInfo to JsonString : %{public}s", dataString.c_str());
+    if (!data.WriteString16(Str8ToStr16(dataString))) {
+        APP_LOGE("%{public}s failed to WriteParcelable targetAbilityInfo", __func__);
+        return;
+    }
+    serviceCenterRemoteObject_ = serviceCenterConnection_->GetRemoteObject();
+    if (serviceCenterRemoteObject_ == nullptr) {
+        APP_LOGE("%{public}s failed to get remote object", __func__);
+        return;
+    }
+    int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
+    if (result != ERR_OK) {
+        APP_LOGE("Failed to sendRequest, result = %{public}d", result);
+    }
+    APP_LOGD("sendRequest to service center success.");
+}
+
+int32_t BundleConnectAbilityMgr::GetPreloadFlag()
+{
+    int32_t flagZero = BIT_ZERO_COMPATIBLE;
+    int32_t flagOne = BIT_ONE_BACKGROUND_MODE * BIT_ONE;
+    int32_t flagTwo = BIT_TWO_CUSTOM * BIT_TWO;
+    int32_t flagThree = BIT_THREE_ZERO * BIT_THREE;
+    int32_t flagFour = BIT_FOUR_AZ_DEVICE * BIT_FOUR;
+    int32_t flagFive = BIT_FIVE_SAME_BUNDLE_NAME * BIT_FIVE;
+    int32_t flagSix = BIT_SIX_SAME_BUNDLE * BIT_SIX;
+    return flagZero + flagOne + flagTwo + flagThree + flagFour + flagFive + flagSix;
+}
+
+bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, const std::string &moduleName,
+    int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo)
+{
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    InnerBundleInfo innerBundleInfo;
+    int32_t flag = ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE;
+    auto ret = bundleDataMgr_->GetInnerBundleInfoWithFlags(bundleName, flag, innerBundleInfo, userId);
+    if (!ret) {
+        APP_LOGE("GetInnerBundleInfoWithFlags failed.");
+        return false;
+    }
+    if (innerBundleInfo.GetBaseApplicationInfo().bundleType == BundleType::APP) {
+        return false;
+    }
+    if (moduleName.empty()) {
+        APP_LOGE("moduleName is empty.");
+        return false;
+    }
+    std::set<std::string> preloadModuleNames;
+    auto moduleInfoMap = innerBundleInfo.GetInnerModuleInfos();
+    if (moduleInfoMap.find(moduleName) == moduleInfoMap.end()) {
+        APP_LOGE("get moduleInfo from innerBundleInfo failed.");
+        return false;
+    }
+    auto preloadItems = moduleInfoMap[moduleName].preloads;
+    if (preloadItems.empty()) {
+        return false;
+    }
+    for (const auto &item : preloadItems) {
+        preloadModuleNames.insert(item);
+    }
+    for (const auto &it : moduleInfoMap) {
+        auto iter = preloadModuleNames.find(it.first);
+        if (iter != preloadModuleNames.end()) {
+            preloadModuleNames.erase(iter);
+        }
+    }
+    if (preloadModuleNames.empty()) {
+        APP_LOGD("All preload modules exist locally.");
+        return false;
+    }
+    targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().signatureInfo.appId);
+    for (const auto &item : preloadModuleNames) {
+        targetAbilityInfo->targetInfo.preloadModuleNames.emplace_back(item);
+    }
+    return true;
+}
+
+void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
+{
+    APP_LOGD("BundleConnectAbilityMgr::ProcessPreload is called.");
+    std::string bundleName = want.GetElement().GetBundleName();
+    std::string moduleName = want.GetElement().GetModuleName();
+    std::string abilityName = want.GetElement().GetAbilityName();
+    int32_t uid = want.GetIntParam("uid", 0);
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
+    if (targetAbilityInfo == nullptr) {
+        APP_LOGE("targetAbilityInfo is nullptr");
+        return;
+    }
+    sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
+    if (targetInfo == nullptr) {
+        APP_LOGE("targetInfo is nullptr");
+        return;
+    }
+    sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
+    if (targetExtSetting == nullptr) {
+        APP_LOGE("targetExtSetting is nullptr");
+        return;
+    }
+    targetAbilityInfo->targetInfo = *targetInfo;
+    targetAbilityInfo->targetExtSetting = *targetExtSetting;
+    targetAbilityInfo->version = DEFAULT_VERSION;
+
+    if (!GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo)) {
+        APP_LOGI("the module have no preload module.");
+        return;
+    }
+    targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
+    targetAbilityInfo->targetInfo.bundleName = bundleName;
+    targetAbilityInfo->targetInfo.moduleName = moduleName;
+    targetAbilityInfo->targetInfo.abilityName = abilityName;
+    targetAbilityInfo->targetInfo.flags = GetPreloadFlag();
+    targetAbilityInfo->targetInfo.callingUid = uid;
+    targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
+    targetAbilityInfo->targetInfo.callingBundleNames.emplace_back(bundleName);
+    ProcessPreloadCheck(*targetAbilityInfo);
 }
 
 bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
@@ -680,12 +847,29 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
     return false;
 }
 
+bool BundleConnectAbilityMgr::CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo)
+{
+    std::vector<std::string> dependentModuleNames;
+    if (!innerBundleInfo.GetDependentModuleNames(moduleName, dependentModuleNames)) {
+        APP_LOGE("GetDependentModuleNames can not find module %{public}s", moduleName.c_str());
+        return false;
+    }
+    for (const std::string &depend : dependentModuleNames) {
+        if (!innerBundleInfo.FindModule(depend)) {
+            APP_LOGD("%{public}s does not exist locally.", depend.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack, InnerBundleInfo &innerBundleInfo)
 {
-    APP_LOGI("IsObtainAbilityInfo");
+    APP_LOGD("IsObtainAbilityInfo");
     std::string bundleName = want.GetElement().GetBundleName();
     std::string abilityName = want.GetElement().GetAbilityName();
+    std::string moduleName = want.GetElement().GetModuleName();
     if (bundleName == "" || abilityName == "") {
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, callBack);
         APP_LOGE("bundle name or ability name is null");
@@ -703,8 +887,15 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
     if (!abilityInfoResult) {
         std::vector<ExtensionAbilityInfo> extensionInfos;
         abilityInfoResult = bundleDataMgr_->QueryExtensionAbilityInfos(want, flags, userId, extensionInfos);
+        if (abilityInfoResult && moduleName.empty()) {
+            moduleName = extensionInfos[0].moduleName;
+        }
+    } else {
+        if (moduleName.empty()) {
+            moduleName = abilityInfo.moduleName;
+        }
     }
-    if (innerBundleInfoResult && abilityInfoResult) {
+    if (innerBundleInfoResult && abilityInfoResult && CheckDependencies(moduleName, innerBundleInfo)) {
         bool isModuleNeedUpdate = CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
         if (!isModuleNeedUpdate) {
             CallAbilityManager(ServiceCenterResultCode::FREE_INSTALL_OK, want, userId, callBack);
@@ -717,7 +908,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
 bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     int32_t userId, AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    APP_LOGI("QueryAbilityInfo");
+    APP_LOGD("QueryAbilityInfo");
     InnerBundleInfo innerBundleInfo;
     if (IsObtainAbilityInfo(want, flags, userId, abilityInfo, callBack, innerBundleInfo)) {
         return true;
