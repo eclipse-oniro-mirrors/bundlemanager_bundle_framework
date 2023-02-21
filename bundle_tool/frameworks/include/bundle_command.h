@@ -50,6 +50,7 @@ const std::string HELP_MSG_INSTALL =
     "                                                                     under which are some hap or hsp files\n"
     "  -r -p <bundle-file-path>                                   replace an existing bundle\n"
     "  -r --bundle-path <bundle-file-path>                        replace an existing bundle\n"
+    "  -s, --shared-bundle-dir-path <shared-bundle-dir-path>      install cross-app hsp files\n"
     "  -u, --user-id <user-id>                                    specify a user id\n"
     "  -w, --waitting-time <waitting-time>                        specify waitting time for installation, the minimum\n"
     "                                                                     waitting time is 180s, the maximum waitting\n"
@@ -220,6 +221,8 @@ private:
     int32_t UninstallOperation(const std::string &bundleName, const std::string &moduleName,
                                InstallParam &installParam) const;
     std::string GetUdid() const;
+    bool IsInstallOption(int index) const;
+    void GetAbsPaths(const std::vector<std::string> &paths, std::vector<std::string> &absPaths) const;
 
     ErrCode GetBundlePath(const std::string& param, std::vector<std::string>& bundlePaths) const;
 
