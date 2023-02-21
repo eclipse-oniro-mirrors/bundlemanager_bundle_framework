@@ -18,6 +18,7 @@ import("appexecfwk_bundlemgr.gni")
 config("bundlemgr_common_config") {
   include_dirs = [
     "include",
+    "include/app_provision_info",
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
