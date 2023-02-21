@@ -19,7 +19,6 @@
 #include <map>
 
 #include "distributed_bundle_info.h"
-
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "distributed_kv_data_manager.h"

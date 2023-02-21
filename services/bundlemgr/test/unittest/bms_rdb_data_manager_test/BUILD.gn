@@ -83,7 +83,7 @@ ohos_unittest("BmsRdbDataManagerTest") {
     "syscap_codec:syscap_interface_shared",
   ]
 
-  defines = [ "BMS_RDB_ENABLE" ]
+  defines = []
   if (bundle_framework_default_app) {
     sources += default_app
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
@@ -143,7 +143,5 @@ ohos_unittest("BmsRdbDataManagerTest") {
 group("unittest") {
   testonly = true
   deps = []
-  if (bms_rdb_enable) {
-    deps += [ ":BmsRdbDataManagerTest" ]
-  }
+  deps += [ ":BmsRdbDataManagerTest" ]
 }

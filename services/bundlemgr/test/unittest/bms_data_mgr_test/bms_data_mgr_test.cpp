@@ -21,7 +21,6 @@
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_data_storage_interface.h"
-#include "bundle_data_storage_database.h"
 #include "bundle_data_mgr.h"
 #include "json_constants.h"
 #include "json_serializer.h"

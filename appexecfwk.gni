@@ -56,7 +56,6 @@ declare_args() {
   global_i18n_enable = true
   hicollie_enable = true
   hisysevent_enable = true
-  bms_rdb_enable = true
   use_pre_bundle_profile = true
 
   if (defined(global_parts_info) &&
@@ -112,15 +111,6 @@ declare_args() {
       !defined(global_parts_info.hiviewdfx_hisysevent_native)) {
     hisysevent_enable = false
   }
-
-  if (defined(global_parts_info) &&
-      !defined(global_parts_info.distributeddatamgr_relational_store)) {
-    bms_rdb_enable = false
-  }
-}
-
-if (!bms_rdb_enable) {
-  bundle_framework_app_control = false
 }
 
 print("bundle_framework_graphics = " + "$bundle_framework_graphics")
@@ -139,6 +129,5 @@ print("global_resmgr_enable = " + "$global_resmgr_enable")
 print("hicollie_enable = " + "$hicollie_enable")
 print("support_jsapi = " + "$support_jsapi")
 print("hisysevent_enable = " + "$hisysevent_enable")
-print("bms_rdb_enable = " + "$bms_rdb_enable")
 print(
     "bundle_framework_overlay_install = " + "$bundle_framework_overlay_install")

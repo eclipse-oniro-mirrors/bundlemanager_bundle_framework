@@ -28,7 +28,6 @@
 #include <unistd.h>
 
 #include "bundle_info.h"
-#include "bundle_data_storage_database.h"
 #include "bundle_file_util.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -44,7 +43,6 @@
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
-using namespace OHOS::DistributedKv;
 using OHOS::DelayedSingleton;
 
 namespace OHOS {

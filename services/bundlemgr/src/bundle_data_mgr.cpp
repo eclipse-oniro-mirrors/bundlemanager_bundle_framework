@@ -29,13 +29,8 @@
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#ifdef BMS_RDB_ENABLE
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
-#else
-#include "bundle_data_storage_database.h"
-#include "preinstall_data_storage.h"
-#endif
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
 #include "bundle_status_callback_death_recipient.h"
@@ -66,13 +61,8 @@ constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
-#ifdef BMS_RDB_ENABLE
     dataStorage_ = std::make_shared<BundleDataStorageRdb>();
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorageRdb>();
-#else
-    dataStorage_ = std::make_shared<BundleDataStorageDatabase>();
-    preInstallDataStorage_ = std::make_shared<PreInstallDataStorage>();
-#endif
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
     bundleStateStorage_ = std::make_shared<BundleStateStorage>();
     baseAppUid_ = system::GetIntParameter<int32_t>("const.product.baseappid", Constants::BASE_APP_UID);

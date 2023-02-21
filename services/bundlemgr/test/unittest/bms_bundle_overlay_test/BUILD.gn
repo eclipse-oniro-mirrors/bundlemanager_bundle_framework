@@ -88,24 +88,14 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     cflags += [ "-DWITH_SELINUX" ]
   }
 
-  if (bms_rdb_enable) {
-    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
-    defines += [ "BMS_RDB_ENABLE" ]
-    external_deps += [ "relational_store:native_rdb" ]
-    sources += [
-      "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
-      "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
-      "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
-      "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
-    ]
-  } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
-    sources += [
-      "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
-      "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
-      "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_database.cpp",
-    ]
-  }
+  configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+  external_deps += [ "relational_store:native_rdb" ]
+  sources += [
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
+  ]
 }
 
 ohos_unittest("BmsBundleOverlayInfoTest") {
@@ -280,25 +270,14 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
-  if (bms_rdb_enable) {
-    configs += [ "../../../../../services/bundlemgr:rdb_config" ]
-    defines += [ "BMS_RDB_ENABLE" ]
-    external_deps += [ "relational_store:native_rdb" ]
-    sources += [
-      "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
-      "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
-      "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
-      "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
-    ]
-  } else {
-    external_deps += [ "kv_store:distributeddata_inner" ]
-    sources += [
-      "${services_path}/bundlemgr/src/kvstore_death_recipient_callback.cpp",
-      "${services_path}/bundlemgr/src/preinstall_data_storage.cpp",
-      "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_database.cpp",
-    ]
-  }
+  configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+  external_deps += [ "relational_store:native_rdb" ]
+  sources += [
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
+  ]
 }
 
 group("unittest") {
