@@ -37,11 +37,11 @@ private:
         AppProvisionInfo &appProvisionInfo);
     std::shared_ptr<RdbDataManager> rdbDataManager_;
 
-#define CHECK_RDB_RESULT(errcode, errmsg)                                              \
+#define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
     do {                                                                           \
-        if (errcode != NativeRdb::E_OK) {                                                   \
+        if (errcode != NativeRdb::E_OK) {                                          \
             APP_LOGE(errmsg, errcode);                                             \
-            return false;                                                        \
+            return false;                                                          \
         }                                                                          \
     } while (0)
 };

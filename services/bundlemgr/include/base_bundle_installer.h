@@ -546,6 +546,9 @@ private:
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
+    bool AddAppProvisionInfo(const std::string &bundleName,
+        const Security::Verify::ProvisionInfo &provisionInfo) const;
+    bool DeleteAppProvisionInfo(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

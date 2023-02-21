@@ -124,11 +124,11 @@ bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::vector<st
     ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
 
     auto ret = absSharedResultSet->GoToFirstRow();
-    CHECK_RDB_RESULT(ret, "GoToFirstRow failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret: %{public}d");
     do {
         std::string name;
         ret = absSharedResultSet->GetString(INDEX_BUNDLE_NAME, name);
-        CHECK_RDB_RESULT(ret, "GetString bundleName failed, ret: %{public}d");
+        CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString bundleName failed, ret: %{public}d");
         bundleNames.push_back(name);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return true;
@@ -143,31 +143,31 @@ bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
         return false;
     }
     auto ret = absSharedResultSet->GoToFirstRow();
-    CHECK_RDB_RESULT(ret, "GoToFirstRow failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret: %{public}d");
     int64_t versionCode;
     ret = absSharedResultSet->GetLong(INDEX_VERSION_CODE, versionCode);
-    CHECK_RDB_RESULT(ret, "GetString versionCode failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString versionCode failed, ret: %{public}d");
     appProvisionInfo.versionCode = versionCode;
     ret = absSharedResultSet->GetString(INDEX_VERSION_NAME, appProvisionInfo.versionName);
-    CHECK_RDB_RESULT(ret, "GetString versionName failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString versionName failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_UUID, appProvisionInfo.uuid);
-    CHECK_RDB_RESULT(ret, "GetString uuid failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString uuid failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_TYPE, appProvisionInfo.type);
-    CHECK_RDB_RESULT(ret, "GetString type failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString type failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_APP_DISTRIBUTION_TYPE, appProvisionInfo.appDistributionType);
-    CHECK_RDB_RESULT(ret, "GetString appDistributionType failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString appDistributionType failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_DEVELOPER_ID, appProvisionInfo.developerId);
-    CHECK_RDB_RESULT(ret, "GetString developerId failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString developerId failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_CERTIFICATE, appProvisionInfo.certificate);
-    CHECK_RDB_RESULT(ret, "GetString certificate failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString certificate failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_APL, appProvisionInfo.apl);
-    CHECK_RDB_RESULT(ret, "GetString apl failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString apl failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_ISSUER, appProvisionInfo.issuer);
-    CHECK_RDB_RESULT(ret, "GetString issuer failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString issuer failed, ret: %{public}d");
     ret = absSharedResultSet->GetLong(INDEX_VALIDITY_NOT_BEFORE, appProvisionInfo.validity.notBefore);
-    CHECK_RDB_RESULT(ret, "GetString notBefore failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString notBefore failed, ret: %{public}d");
     ret = absSharedResultSet->GetLong(INDEX_VALIDITY_NOT_AFTER, appProvisionInfo.validity.notAfter);
-    CHECK_RDB_RESULT(ret, "GetString notAfter failed, ret: %{public}d");
+    CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString notAfter failed, ret: %{public}d");
     return true;
 }
 } // namespace AppExecFwk

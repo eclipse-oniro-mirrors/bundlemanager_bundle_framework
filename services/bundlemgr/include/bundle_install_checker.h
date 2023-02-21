@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "app_privilege_capability.h"
+#include "app_provision_info.h"
 #include "appexecfwk_errors.h"
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
@@ -122,6 +123,8 @@ public:
     bool IsContainModuleName(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
 
     ErrCode CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
+    AppProvisionInfo ConvertToAppProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo) const;
 
 private:
 
