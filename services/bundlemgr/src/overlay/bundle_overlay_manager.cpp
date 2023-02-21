@@ -102,7 +102,6 @@ ErrCode BundleOverlayManager::SetOverlayEnabled(const std::string &bundleName, c
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
     }
     return OverlayDataMgr::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
-
 }
 } // AppExecFwk
 } // OHOS
