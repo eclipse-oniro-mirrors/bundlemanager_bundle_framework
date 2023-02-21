@@ -410,7 +410,8 @@ protected:
                 "bundleType": 0,
                 "split": true,
                 "targetBundleName": "",
-                "targetPriority": 0
+                "targetPriority": 0,
+                "overlayState": 0
             },
             "baseBundleInfo": {
                 "asanEnabled": false,
