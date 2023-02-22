@@ -53,6 +53,7 @@ enum class ExtensionAbilityType {
     FILEACCESS_EXTENSION = 12,
     THUMBNAIL = 13,
     PREVIEW = 14,
+    PRINT = 15,
     UNSPECIFIED = 255
 };
 

@@ -2054,6 +2054,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::PREVIEW), &nPREVIEW));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PREVIEW", nPREVIEW));
 
+    napi_value nPrint;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::PRINT), &nPrint));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PRINT", nPrint));
+
     napi_value nUnspecified;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));

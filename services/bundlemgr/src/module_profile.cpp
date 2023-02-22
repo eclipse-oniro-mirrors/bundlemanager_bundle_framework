@@ -83,7 +83,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "enterpriseAdmin",
     "fileAccess",
     "thumbnail",
-    "preview"
+    "preview",
+    "print"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
