@@ -17,6 +17,7 @@
 
 #include "appexecfwk_errors.h"
 #include "bundle_overlay_install_checker.h"
+#include "bundle_overlay_manager.h"
 #include "bundle_mgr_service.h"
 
 #include <map>
@@ -410,5 +411,199 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_1000, Function | SmallT
     dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_START);
     bool ret = dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleOverlayManagerTest_0100
+ * @tc.name: check param is empty
+ * @tc.desc: 1.Test BundleOverlayManager
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, BundleOverlayManagerTest_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayManager manager;
+    std::string bundleName = "";
+    bool ret = manager.IsExistedNonOverlayHap(bundleName);
+    EXPECT_EQ(ret, false);
+    InnerBundleInfo innerBundleInfo;
+    ret = manager.GetInnerBundleInfo(bundleName, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+
+    int32_t userId = Constants::INVALID_USERID;
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto code = manager.GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    code = manager.GetAllOverlayModuleInfo("com.ohos.test", overlayModuleInfos, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    std::string moduleName = "";
+    OverlayModuleInfo overlayModuleInfo;
+    code = manager.GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    code = manager.GetOverlayModuleInfo("com.ohos.test", moduleName, overlayModuleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    code = manager.GetOverlayModuleInfo("com.ohos.test", "entry", overlayModuleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    std::string targetBundleName = "";
+    std::vector<OverlayBundleInfo> overlayBundleInfo;
+    code = manager.GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    code = manager.GetOverlayBundleInfoForTarget("target", overlayBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    code = manager.GetOverlayModuleInfoForTarget(targetBundleName, "", overlayModuleInfos, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    code = manager.GetOverlayModuleInfoForTarget("target", "", overlayModuleInfos, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    bool isEnabled = true;
+    code = manager.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+    code = manager.SetOverlayEnabled("com.ohos.test", moduleName, isEnabled, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+    code = manager.SetOverlayEnabled("com.ohos.test", "entry", isEnabled, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    userId = Constants::DEFAULT_USERID;
+    code = manager.GetAllOverlayModuleInfo("com.ohos.test", overlayModuleInfos, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+    code = manager.GetOverlayModuleInfo("com.ohos.test", "entry", overlayModuleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+    code = manager.SetOverlayEnabled("com.ohos.test", "entry", isEnabled, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+}
+
+/**
+ * @tc.number: CheckInternalBundle_0100
+ * @tc.name: check hap type failed
+ * @tc.desc: 1.Test CheckInternalBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckInternalBundle_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    auto code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
+    innerModuleInfo.isEntry = false;
+    code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
+
+    innerBundleInfo.SetEntryInstallationFree(true);
+    code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
+}
+
+/**
+ * @tc.number: CheckInternalBundle_0200
+ * @tc.name: check module target priority range
+ * @tc.desc: 1.Test CheckInternalBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckInternalBundle_0200, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    auto code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY - 1;
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
+}
+
+/**
+ * @tc.number: CheckInternalBundle_0300
+ * @tc.name: check module target priority range
+ * @tc.desc: 1.Test CheckInternalBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckInternalBundle_0300, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
+    innerModuleInfo.targetModuleName = TEST_MODULE_NAME;
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+
+    auto code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME);
+}
+
+/**
+ * @tc.number: CheckExternalBundle_0100
+ * @tc.name: check bundle priority
+ * @tc.desc: 1.Test CheckExternalBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    InnerBundleInfo innerBundleInfo;
+    int32_t userId = Constants::INVALID_USERID;
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    auto code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_BUNDLE_TYPE);
+
+    bundleInfo.entryInstallationFree = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    ApplicationInfo applicationInfo;
+    applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY - 1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
+
+    applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+
+    InnerModuleInfo innerModuleInfo;
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
+}
+
+/**
+ * @tc.number: CheckExternalBundle_0200
+ * @tc.name: check bundle priority
+ * @tc.desc: 1.Test CheckExternalBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0200, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
+    int32_t userId = Constants::INVALID_USERID;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo.targetBundleName = TEST_BUNDLE_NAME;
+    applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;;
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    auto code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_BUNDLE_NAME_SAME_WITH_TARGET_BUNDLE_NAME);
+    applicationInfo.bundleName = "";
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
+
+    BundleInfo bundleInfo;
+    bundleInfo.isPreInstallApp = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_OK);
 }
 } // OHOS
