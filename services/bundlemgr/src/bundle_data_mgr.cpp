@@ -1545,7 +1545,8 @@ bool BundleDataMgr::GetBaseSharedPackageInfo(const Dependency &dependency, int32
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     InnerBundleUserInfo innerBundleUserInfo;
-    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
+        !innerBundleInfo.GetInnerBundleUserInfo(Constants::DEFAULT_USERID, innerBundleUserInfo)) {
         APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
         return false;
     }

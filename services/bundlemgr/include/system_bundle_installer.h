@@ -36,6 +36,12 @@ public:
         InstallParam &installParam,
         Constants::AppType appType);
     /**
+     * @brief Install preinstall hsp.
+     * @param installParam Indicates the installParam.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool InstallSystemSharedBundle(InstallParam &installParam);
+    /**
      * @brief OTA Install preinstall app.
      * @param filePath Indicates the filePaths.
      * @param installParam Indicates the installParam.

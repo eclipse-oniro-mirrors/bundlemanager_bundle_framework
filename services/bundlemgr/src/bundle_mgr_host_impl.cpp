@@ -151,40 +151,20 @@ bool BundleMgrHostImpl::GetBundleInfo(
 {
     APP_LOGD("start GetBundleInfo, bundleName : %{public}s, flags : %{public}d, userId : %{public}d",
         bundleName.c_str(), flags, userId);
+    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+        APP_LOGD("non-system app calling system api");
+        return true;
+    }
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return false;
+    }
+    APP_LOGD("verify permission success, begin to GetBundleInfo");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-
-    bool isSharedPackage = false;
-    if (!bundleName.empty()) {
-        std::string callingBundleName;
-        bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
-        APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
-        if (ret && (bundleName != callingBundleName)) {
-            std::vector<BaseSharedPackageInfo> sharedPackages;
-            ErrCode ret = dataMgr->GetBaseSharedPackageInfos(callingBundleName, userId, sharedPackages);
-            if (ret == ERR_OK) {
-                auto iter = std::find_if(sharedPackages.begin(), sharedPackages.end(), [&bundleName](const auto& info) {
-                    return info.bundleName == bundleName;
-                });
-                isSharedPackage = iter != sharedPackages.end();
-            }
-            APP_LOGD("target bundle is hsp:%d", isSharedPackage);
-        }
-    }
-
-    if (!isSharedPackage && !VerifySystemApi(Constants::API_VERSION_NINE)) {
-        APP_LOGD("non-system app calling system api");
-        return true;
-    }
-
-    if (!isSharedPackage && !VerifyQueryPermission(bundleName)) {
-        APP_LOGE("verify permission failed");
-        return false;
-    }
-    APP_LOGD("verify permission success, begin to GetBundleInfo");
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
