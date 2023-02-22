@@ -63,7 +63,6 @@ constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bun
 constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
-constexpr const char* DISTRIBUTED_FILE_PROPERTY = "const.distributed_file_property.enabled";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
@@ -263,7 +262,7 @@ constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHAN
 // hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
 constexpr const char* SHAREFS_CONFIG_PATH {"/config/sharefs/"};
-constexpr const char* BUNDLE_ID_FILE = { "bid" };
+constexpr const char* BUNDLE_ID_FILE = { "appid" };
 
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
