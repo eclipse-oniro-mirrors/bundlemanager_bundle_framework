@@ -79,7 +79,12 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA, ERROR_CLEAR_CACHE_FILES_UNSUPPORTED },
     { ERR_ZLIB_SRC_FILE_DISABLED, ERR_ZLIB_SRC_FILE_INVALID },
     { ERR_ZLIB_DEST_FILE_DISABLED, ERR_ZLIB_DEST_FILE_INVALID },
-    { ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, ERROR_NOT_SYSTEM_APP}
+    { ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED, ERROR_NOT_SYSTEM_APP },
+    { ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR, ERROR_PARAM_CHECK_ERROR },
+    { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE, ERROR_BUNDLE_NOT_EXIST },
+    { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE, ERROR_SPECIFIED_BUNDLE_NOT_OVERLAY_BUNDLE },
+    { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE, ERROR_MODULE_NOT_EXIST },
+    { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE, ERROR_SPECIFIED_MODULE_NOT_OVERLAY_MODULE },
 };
 }
 using Want = OHOS::AAFwk::Want;
@@ -1548,5 +1553,18 @@ void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutIn
     }
 }
 
+std::string CommonFunc::ObtainCallingBundleName()
+{
+    std::string callingBundleName;
+    auto bundleMgr = GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed.");
+        return callingBundleName;
+    }
+    if (!bundleMgr->ObtainCallingBundleName(callingBundleName)) {
+        APP_LOGE("obtain calling bundleName failed.");
+    }
+    return callingBundleName;
 }
-}
+} // AppExecFwk
+} // OHOS

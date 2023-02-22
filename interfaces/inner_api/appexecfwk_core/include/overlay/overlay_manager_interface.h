@@ -60,13 +60,18 @@ public:
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
+    virtual ErrCode VerifySystemApi()
+    {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+    
     enum Message : uint32_t {
         GET_ALL_OVERLAY_MODULE_INFO = 0,
         GET_OVERLAY_MODULE_INFO = 1,
         GET_OVERLAY_BUNDLE_INFO_FOR_TARGET = 2,
         GET_OVERLAY_MODULE_INFO_FOR_TARGET = 3,
         SET_OVERLAY_ENABLED = 4,
-        SET_SELF_OVERLAY_ENABLED = 5,
+        VERIFY_SYSTEM_APP = 5,
     };
 };
 } // AppExecFwk

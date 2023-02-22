@@ -31,6 +31,7 @@ group("napi_packages") {
       "installer:installer",
       "launcher_bundle_manager:launcherbundlemanager",
       "launchermgr:innerbundlemanager",
+      "overlay:overlay",
       "package:package",
     ]
   }

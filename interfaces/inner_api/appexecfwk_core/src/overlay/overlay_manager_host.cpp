@@ -45,6 +45,8 @@ void OverlayManagerHost::init()
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET,
         &OverlayManagerHost::HandleGetOverlayModuleInfoForTarget);
     funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED, &OverlayManagerHost::HandleSetOverlayEnabled);
+    funcMap_.emplace(IOverlayManager::Message::VERIFY_SYSTEM_APP, &OverlayManagerHost::HandleVerifySystemApi);
+    
 }
 
 
@@ -171,6 +173,17 @@ ErrCode OverlayManagerHost::HandleSetOverlayEnabled(MessageParcel &data, Message
     int userId = data.ReadInt32();
 
     auto res = SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHost::HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    auto res = VerifySystemApi();
     if (!reply.WriteInt32(res)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

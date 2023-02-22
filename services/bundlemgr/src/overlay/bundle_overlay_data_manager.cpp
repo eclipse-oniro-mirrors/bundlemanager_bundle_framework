@@ -164,6 +164,7 @@ void OverlayDataMgr::BuildInternalOverlayConnection(const std::string &moduleNam
         return;
     }
     auto &oldInnerModuleInfos = oldInfo.FetchInnerModuleInfos();
+    std::vector<std::string> overlayModuleVec;
     for (auto &moduleInfo : oldInnerModuleInfos) {
         if (moduleInfo.second.targetModuleName == moduleName) {
             OverlayModuleInfo overlayModuleInfo;
@@ -173,10 +174,25 @@ void OverlayDataMgr::BuildInternalOverlayConnection(const std::string &moduleNam
             overlayModuleInfo.hapPath = oldInfo.GetModuleHapPath(moduleInfo.second.moduleName);
             overlayModuleInfo.priority = moduleInfo.second.targetPriority;
             oldInfo.AddOverlayModuleInfo(overlayModuleInfo);
+            overlayModuleVec.emplace_back(moduleInfo.second.moduleName);
+        }
+    }
+    if (GetBundleDataMgr() != ERR_OK) {
+        return;
+    }
+    auto userSet = dataMgr_->GetAllUser();
+    for (const auto &innerUserId : userSet) {
+        InnerBundleUserInfo userInfo;
+        if (!oldInfo.GetInnerBundleUserInfo(innerUserId, userInfo)) {
+            APP_LOGW("no userInfo of bundleName %{public}s under userId %{public}d", oldInfo.GetBundleName().c_str(),
+                innerUserId);
+            continue;
+        }
+        for (const auto &overlayModule : overlayModuleVec) {
             int32_t state = OVERLAY_INVALID;
-            oldInfo.GetOverlayModuleState(moduleInfo.second.moduleName, userId, state);
+            oldInfo.GetOverlayModuleState(overlayModule, innerUserId, state);
             if (state == OVERLAY_INVALID) {
-                oldInfo.SetOverlayModuleState(moduleInfo.second.moduleName, OVERLAY_ENABLE);
+                oldInfo.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
             }
         }
     }
@@ -219,6 +235,7 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
         }
 
         const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
+        std::vector<std::string> overlayModuleVec;
         for (const auto &moduleInfo : innerModuleInfos) {
             if (moduleInfo.second.targetModuleName != moduleName) {
                 continue;
@@ -230,13 +247,7 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
             overlayModuleInfo.hapPath = info.second.GetModuleHapPath(moduleInfo.second.moduleName);
             overlayModuleInfo.priority = moduleInfo.second.targetPriority;
             oldInfo.AddOverlayModuleInfo(overlayModuleInfo);
-            InnerBundleInfo innerBundleInfo = info.second;
-            int32_t state = OVERLAY_INVALID;
-            innerBundleInfo.GetOverlayModuleState(moduleInfo.second.moduleName, userId, state);
-            if (state == OVERLAY_INVALID) {
-                innerBundleInfo.SetOverlayModuleState(moduleInfo.second.moduleName, OVERLAY_ENABLE);
-            }
-            dataMgr_->SaveOverlayInfo(innerBundleInfo.GetBundleName(), innerBundleInfo);
+            overlayModuleVec.emplace_back(moduleInfo.second.moduleName);
         }
         std::string bundleDir;
         const std::string &moduleHapPath =
@@ -248,6 +259,18 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
         overlayBundleInfo.state = info.second.GetOverlayState();
         overlayBundleInfo.priority = info.second.GetTargetPriority();
         oldInfo.AddOverlayBundleInfo(overlayBundleInfo);
+        auto userSet = dataMgr_->GetAllUser();
+        for (const auto &innerUserId : userSet) {
+            InnerBundleInfo innerBundleInfo = info.second;
+            for (const auto &overlayModule : overlayModuleVec) {
+                int32_t state = OVERLAY_INVALID;
+                innerBundleInfo.GetOverlayModuleState(overlayModule, innerUserId, state);
+                if (state == OVERLAY_INVALID) {
+                    innerBundleInfo.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
+                }
+            }
+            dataMgr_->SaveOverlayInfo(innerBundleInfo.GetBundleName(), innerBundleInfo);
+        }
     }
 }
 
@@ -411,10 +434,10 @@ void OverlayDataMgr::ResetExternalOverlayModuleState(const std::string &bundleNa
         for (const auto &moduleInfo : innerModuleInfos) {
             if (moduleInfo.second.targetModuleName == modulePackage) {
                 innerBundleInfo.SetOverlayModuleState(moduleInfo.second.moduleName, OVERLAY_INVALID);
-                dataMgr_->SaveOverlayInfo(innerBundleInfo.GetBundleName(), innerBundleInfo);
-                return;
+                break;
             }
         }
+        dataMgr_->SaveOverlayInfo(innerBundleInfo.GetBundleName(), innerBundleInfo);
     }
 }
 

@@ -38,6 +38,7 @@ public:
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode VerifySystemApi() override;
 
 private:
     bool VerifyQueryPermission(const std::string &queryBundleName, const std::string &permission) const;
