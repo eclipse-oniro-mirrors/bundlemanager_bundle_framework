@@ -613,6 +613,8 @@ private:
 
     ErrCode HandleGetAppProvisionInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

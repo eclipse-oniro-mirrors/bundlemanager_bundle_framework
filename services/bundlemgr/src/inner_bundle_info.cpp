@@ -424,6 +424,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
     this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
     this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
+    this->provisionMetadatas_ = info.provisionMetadatas_;
     return *this;
 }
 

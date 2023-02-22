@@ -761,6 +761,8 @@ public:
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
+    virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+        std::vector<Metadata> &provisionMetadatas) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

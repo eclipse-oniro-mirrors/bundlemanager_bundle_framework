@@ -790,6 +790,9 @@ public:
     ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo);
 
+    ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+        std::vector<Metadata> &provisionMetadatas) const;
+
 private:
     /**
      * @brief Init transferStates.
