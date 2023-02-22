@@ -1486,6 +1486,13 @@ bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo 
         nlohmann::json moduleAtomicObj = moduleJson.at(Profile::MODULE_ATOMIC_SERVICE);
         if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
             nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
+            if (preloadObj.empty()) {
+                return true;
+            }
+            if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+                APP_LOGE("preloads config in module.json is oversize!");
+                return false;
+            }
             for (const auto &preload : preloadObj) {
                 if (preload.contains(Profile::PRELOADS_MODULE_NAME)) {
                     std::string preloadName = preload.at(Profile::PRELOADS_MODULE_NAME);

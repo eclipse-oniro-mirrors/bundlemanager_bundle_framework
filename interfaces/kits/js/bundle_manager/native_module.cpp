@@ -69,6 +69,14 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nModuleType));
     CreateModuleTypeObject(env, nModuleType);
 
+    napi_value nAtomicServiceModuleType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAtomicServiceModuleType));
+    CreateAtomicServiceModuleTypeObject(env, nAtomicServiceModuleType);
+
+    napi_value nBundleType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nBundleType));
+    CreateBundleTypeObject(env, nBundleType);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
@@ -102,7 +110,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
         DECLARE_NAPI_PROPERTY("LaunchType", nLaunchType),
         DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
-        DECLARE_NAPI_PROPERTY("ModuleType", nModuleType)
+        DECLARE_NAPI_PROPERTY("ModuleType", nModuleType),
+        DECLARE_NAPI_PROPERTY("BundleType", nBundleType),
+        DECLARE_NAPI_PROPERTY("AtomicServiceModuleType", nAtomicServiceModuleType)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
