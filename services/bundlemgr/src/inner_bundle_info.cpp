@@ -373,6 +373,10 @@ InnerBundleInfo::InnerBundleInfo()
     if (baseBundleInfo_ == nullptr) {
         APP_LOGE("baseBundleInfo_ is nullptr, create failed");
     }
+    bundlePackInfo_ = std::make_shared<BundlePackInfo>();
+    if (bundlePackInfo_ == nullptr) {
+        APP_LOGE("bundlePackInfo_ is nullptr, create failed");
+    }
     APP_LOGD("inner bundle info instance is created");
 }
 
@@ -401,7 +405,12 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->baseAbilityInfos_ = info.baseAbilityInfos_;
     this->skillInfos_ = info.skillInfos_;
     this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
-    this->bundlePackInfo_ = info.bundlePackInfo_;
+    this->bundlePackInfo_ = std::make_shared<BundlePackInfo>();
+    if (this->bundlePackInfo_ == nullptr) {
+        APP_LOGE("bundlePackInfo_ is nullptr, create failed");
+    } else {
+        *(this->bundlePackInfo_) = *(info.bundlePackInfo_);
+    }
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
@@ -584,7 +593,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_IS_NEW_VERSION] = isNewVersion_;
     jsonObject[BUNDLE_BASE_EXTENSION_INFOS] = baseExtensionInfos_;
     jsonObject[BUNDLE_EXTENSION_SKILL_INFOS] = extensionSkillInfos_;
-    jsonObject[BUNDLE_PACK_INFO] = bundlePackInfo_;
+    jsonObject[BUNDLE_PACK_INFO] = *bundlePackInfo_;
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
     jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
@@ -1498,7 +1507,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
     GetValueIfFindKey<BundlePackInfo>(jsonObject,
         jsonObjectEnd,
         BUNDLE_PACK_INFO,
-        bundlePackInfo_,
+        *bundlePackInfo_,
         JsonType::OBJECT,
         false,
         parseResult,
