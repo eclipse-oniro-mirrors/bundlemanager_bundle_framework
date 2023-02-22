@@ -59,7 +59,7 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
     bmsRdbConfig.createTableSql = std::string(
         "CREATE TABLE IF NOT EXISTS "
         + APP_PROVISION_INFO_RDB_TABLE_NAME
-        + "(BUNDLE_NAME TEXT PRIMARY KEY, "
+        + "(BUNDLE_NAME TEXT PRIMARY KEY NOT NULL, "
         + "VERSION_CODE INTEGER, VERSION_NAME TEXT, UUID TEXT, "
         + "TYPE TEXT, APP_DISTRIBUTION_TYPE TEXT, DEVELOPER_ID TEXT, CERTIFICATE TEXT, "
         + "APL TEXT, ISSUER TEXT, VALIDITY_NOT_BEFORE INTEGER, VALIDITY_NOT_AFTER INTEGER);");
@@ -75,6 +75,10 @@ AppProvisionInfoManagerRdb::~AppProvisionInfoManagerRdb()
 bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleName,
     const AppProvisionInfo &appProvisionInfo)
 {
+    if (bundleName.empty()) {
+        APP_LOGE("AddAppProvisionInfo failed, bundleName is empty");
+        return false;
+    }
     NativeRdb::ValuesBucket valuesBucket;
     valuesBucket.PutString(BUNDLE_NAME, bundleName);
     valuesBucket.PutLong(VERSION_CODE, static_cast<int64_t>(appProvisionInfo.versionCode));
@@ -109,7 +113,7 @@ bool AppProvisionInfoManagerRdb::GetAppProvisionInfo(const std::string &bundleNa
         APP_LOGE("AppProvisionInfoManagerRdb GetAppProvisionInfo failed.");
         return false;
     }
-    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     return ConvertToAppProvision(absSharedResultSet, appProvisionInfo);
 }
 
@@ -121,7 +125,7 @@ bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::vector<st
         APP_LOGE("GetAppProvisionInfo failed.");
         return false;
     }
-    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
 
     auto ret = absSharedResultSet->GoToFirstRow();
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GoToFirstRow failed, ret: %{public}d");

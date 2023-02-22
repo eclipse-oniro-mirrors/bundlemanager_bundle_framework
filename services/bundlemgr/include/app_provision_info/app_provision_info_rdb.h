@@ -15,12 +15,12 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_PROVISION_INFO_MANAGER_RDB_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_PROVISION_INFO_MANAGER_RDB_H
 
+#include <string>
+#include <vector>
+
 #include "appexecfwk_errors.h"
 #include "app_provision_info.h"
 #include "rdb_data_manager.h"
-
-#include <string>
-#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,7 +39,7 @@ private:
 
 #define CHECK_RDB_RESULT_RETURN_IF_FAIL(errcode, errmsg)                           \
     do {                                                                           \
-        if (errcode != NativeRdb::E_OK) {                                          \
+        if ((errcode) != NativeRdb::E_OK) {                                          \
             APP_LOGE(errmsg, errcode);                                             \
             return false;                                                          \
         }                                                                          \
