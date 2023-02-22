@@ -443,6 +443,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.ResetApplyQuickFixFrequency();
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
         oldInfo.SetIsNewVersion(newInfo.GetIsNewVersion());
+        oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
@@ -4403,6 +4404,13 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
     if (responseUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+    std::vector<Metadata> &provisionMetadatas) const
+{
+    // Reserved interface
     return ERR_OK;
 }
 }  // namespace AppExecFwk
