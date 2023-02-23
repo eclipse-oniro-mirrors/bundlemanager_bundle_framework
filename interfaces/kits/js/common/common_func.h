@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -110,6 +110,8 @@ static void ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInf
 
 static void ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo);
 
+static void ConvertDependency(napi_env env, const std::string &moduleName, napi_value value);
+
 static void ConvertBundleInfo(napi_env env, const BundleInfo &bundleInfo, napi_value objBundleInfo, int32_t flags);
 
 static void ConvertBundleChangeInfo(napi_env env, const std::string &bundleName,
@@ -126,6 +128,8 @@ static void ConvertShortcutIntent(napi_env env,
 static void ConvertShortCutInfo(napi_env env, const ShortcutInfo &shortcutInfo, napi_value value);
 
 static void ConvertShortCutInfos(napi_env env, const std::vector<ShortcutInfo> &shortcutInfos, napi_value value);
+
+static void ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,

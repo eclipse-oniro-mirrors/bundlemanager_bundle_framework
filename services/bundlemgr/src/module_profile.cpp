@@ -140,6 +140,14 @@ struct Metadata {
     std::string resource;
 };
 
+struct Preload {
+    std::string moduleName;
+};
+
+struct ModuleAtomicService {
+    std::vector<Profile::Preload> preloads;
+};
+
 struct Ability {
     std::string name;
     std::string srcEntrance;
@@ -1419,6 +1427,107 @@ bool ParserNativeSo(
     return false;
 }
 
+bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
+{
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    std::vector<std::string> preloads;
+    std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
+    if (moduleJson.contains(Profile::MODULE_ATOMIC_SERVICE)) {
+        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::MODULE_ATOMIC_SERVICE);
+        if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
+            nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
+            if (preloadObj.empty()) {
+                return true;
+            }
+            if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+                APP_LOGE("preloads config in module.json is oversize!");
+                return false;
+            }
+            for (const auto &preload : preloadObj) {
+                if (preload.contains(Profile::PRELOADS_MODULE_NAME)) {
+                    std::string preloadName = preload.at(Profile::PRELOADS_MODULE_NAME);
+                    preloads.emplace_back(preloadName);
+                } else {
+                    APP_LOGE("preloads must have moduleName.");
+                    return false;
+                }
+            }
+        }
+    }
+    innerBundleInfo.SetInnerModuleAtomicPreload(moduleName, preloads);
+    return true;
+}
+
+bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
+{
+    if (!jsonObject.contains(Profile::MODULE) || !jsonObject.contains(Profile::APP)) {
+        APP_LOGE("ParserAtomicConfig failed due to bad module.json");
+        Profile::parseResult = ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+        return false;
+    }
+    nlohmann::json appJson = jsonObject.at(Profile::APP);
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    if (!moduleJson.is_object() || !appJson.is_object()) {
+        APP_LOGE("module.json file lacks of invalid module or app properties");
+        Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        return false;
+    }
+    bool split = true;
+    BundleType bundleType = BundleType::APP;
+    AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::MAIN;
+    std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
+    if (appJson.contains(Profile::APP_ATOMIC_SERVICE)) {
+        if (!moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) ||
+            !moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
+            APP_LOGE("invalid installationFree in module.json");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        innerBundleInfo.SetHasAtomicServiceConfig(true);
+        bundleType = BundleType::ATOMIC_SERVICE;
+        nlohmann::json appAtomicObj = appJson.at(Profile::APP_ATOMIC_SERVICE);
+        if (!appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_SPLIT)) {
+            APP_LOGE("app.json file lacks of invalid module or app properties");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        split = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_SPLIT);
+        if (!split && appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
+            APP_LOGE("app.json file lacks of invalid module or app properties");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        if (appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
+            std::string main = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_MAIN);
+            innerBundleInfo.SetAtomicMainModuleName(main);
+            if (main != moduleName) {
+                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+            }
+        }
+    } else {
+        innerBundleInfo.SetHasAtomicServiceConfig(false);
+        if (moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) &&
+                moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
+            bundleType = BundleType::ATOMIC_SERVICE;
+            if (moduleJson.at(Profile::MODULE_TYPE) != "entry") {
+                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+            }
+        } else {
+            atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+        }
+        auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+        split = (moduleInfos.size() != 1);
+    }
+    innerBundleInfo.SetApplicationSplit(split);
+    innerBundleInfo.SetApplicationBundleType(bundleType);
+    innerBundleInfo.SetInnerModuleAtomicType(moduleName, atomicServiceModuleType);
+    if (!ParserAtomicModuleConfig(jsonObject, innerBundleInfo)) {
+        APP_LOGE("parse module atomicService failed.");
+        return false;
+    }
+    return true;
+}
+
 bool ParserArkNativeFilePath(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -1988,6 +2097,10 @@ ErrCode ModuleProfile::TransformTo(
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, innerBundleInfo)) {
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (!ParserAtomicConfig(jsonObject, innerBundleInfo)) {
+        APP_LOGE("Parser atomicService config failed.");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {

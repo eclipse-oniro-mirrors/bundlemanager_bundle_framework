@@ -47,6 +47,11 @@ enum class GetApplicationFlag {
     GET_APPLICATION_INFO_WITH_DISABLE = 0x00000004,
 };
 
+enum class BundleType {
+    APP = 0,
+    ATOMIC_SERVICE = 1,
+};
+
 struct Metadata : public Parcelable {
     std::string name;
     std::string value;
@@ -220,12 +225,16 @@ struct ApplicationInfo : public Parcelable {
     bool needAppDetail = false;
     std::string appDetailAbilityLibraryPath;
 
+    bool split = true;
+    BundleType bundleType = BundleType::APP;
+    
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ApplicationInfo *Unmarshalling(Parcel &parcel);
     void Dump(std::string prefix, int fd);
     void ConvertToCompatibleApplicationInfo(CompatibleApplicationInfo& compatibleApplicationInfo) const;
+    bool CheckNeedPreload(const std::string &moduleName) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
