@@ -69,29 +69,11 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
     return nullptr;
 }
 
-napi_value GetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info)
-{
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported.");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getOverlayModuleInfosByBundleName");
-    napi_throw(env, error);
-    return nullptr;
-}
-
 napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getTargetOverlayModuleInfosByBundleName");
-    napi_throw(env, error);
-    return nullptr;
-}
-
-napi_value GetTargetOverlayModuleInfosByModuleName(napi_env env, napi_callback_info info)
-{
-    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Overlay not supported.");
-    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
-        "getTargetOverlayModuleInfosByModuleName");
     napi_throw(env, error);
     return nullptr;
 }

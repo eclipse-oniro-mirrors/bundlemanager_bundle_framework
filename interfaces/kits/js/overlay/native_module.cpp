@@ -32,9 +32,7 @@ static napi_value OverlayExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getOverlayModuleInfo", GetOverlayModuleInfo),
         DECLARE_NAPI_FUNCTION("getTargetOverlayModuleInfos", GetTargetOverlayModuleInfos),
         DECLARE_NAPI_FUNCTION("getOverlayModuleInfoByBundleName", GetOverlayModuleInfoByBundleName),
-        DECLARE_NAPI_FUNCTION("getOverlayModuleInfosByBundleName", GetOverlayModuleInfosByBundleName),
         DECLARE_NAPI_FUNCTION("getTargetOverlayModuleInfosByBundleName", GetTargetOverlayModuleInfosByBundleName),
-        DECLARE_NAPI_FUNCTION("getTargetOverlayModuleInfosByModuleName", GetTargetOverlayModuleInfosByModuleName),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

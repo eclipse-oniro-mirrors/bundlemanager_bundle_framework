@@ -33,7 +33,6 @@ enum OverlayOption : uint32_t
     OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME,
     OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME,
     OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME,
-    OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_MODULE_NAME,
     INVALID_OPTION,
 };
 
@@ -55,9 +54,7 @@ napi_value SetOverlayEnabledByBundleName(napi_env env, napi_callback_info info);
 napi_value GetOverlayModuleInfo(napi_env env, napi_callback_info info);
 napi_value GetTargetOverlayModuleInfos(napi_env env, napi_callback_info info);
 napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info info);
-napi_value GetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info);
 napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info);
-napi_value GetTargetOverlayModuleInfosByModuleName(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* JS_APP_CONTROL_H */

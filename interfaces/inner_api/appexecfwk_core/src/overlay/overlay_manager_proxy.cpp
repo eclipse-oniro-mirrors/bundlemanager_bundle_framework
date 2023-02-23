@@ -132,7 +132,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &ta
     APP_LOGD("begin to call GetOverlayModuleInfoForTarget.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (targetBundleName.empty() || targetModuleName.empty()) {
+    if (targetBundleName.empty()) {
         APP_LOGE("GetOverlayModuleInfoForTarget failed due to params error.");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }

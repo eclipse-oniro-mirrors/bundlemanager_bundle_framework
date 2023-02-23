@@ -36,6 +36,7 @@ constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* TARGET_MODULE_NAME = "targetModuleName";
 constexpr const char* URI = "uri";
 constexpr const char* TYPE = "type";
 constexpr const char* ACTION = "action";
@@ -57,6 +58,8 @@ constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON = "icon";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
+constexpr const char* PRIORITY = "priority";
+constexpr const char* STATE = "state";
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
     { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
@@ -1550,6 +1553,52 @@ void CommonFunc::ConvertShortCutInfos(napi_env env, const std::vector<ShortcutIn
         ConvertShortCutInfo(env, shortcutInfo, shortcutObj);
         napi_set_element(env, value, index, shortcutObj);
         ++index;
+    }
+}
+
+void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info,
+    napi_value objOverlayModuleInfo)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, info.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, BUNDLE_NAME, nBundleName));
+    APP_LOGD("ConvertOverlayModuleInfo bundleName=%{public}s.", info.bundleName.c_str());
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, info.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objOverlayModuleInfo, MODULE_NAME, nModuleName));
+    APP_LOGD("ConvertOverlayModuleInfo moduleName=%{public}s.", info.moduleName.c_str());
+
+    napi_value nTargetModuleName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, info.targetModuleName.c_str(), NAPI_AUTO_LENGTH, &nTargetModuleName));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objOverlayModuleInfo, TARGET_MODULE_NAME, nTargetModuleName));
+    APP_LOGD("ConvertOverlayModuleInfo targetModuleName=%{public}s.", info.targetModuleName.c_str());
+
+    napi_value nPriority;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objOverlayModuleInfo, PRIORITY, nPriority));
+    APP_LOGD("ConvertOverlayModuleInfo priority=%{public}d.", info.priority);
+
+    napi_value nState;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, info.state, &nState));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objOverlayModuleInfo, STATE, nState));
+    APP_LOGD("ConvertOverlayModuleInfo state=%{public}d.", info.state);
+}
+
+void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos,
+    napi_value objInfos)
+{
+    for (size_t index = 0; index < Infos.size(); ++index) {
+        napi_value objInfo= nullptr;
+        napi_create_object(env, &objInfo);
+        ConvertOverlayModuleInfo(env, Infos[index], objInfo);
+        napi_set_element(env, objInfos, index, objInfo);
     }
 }
 
