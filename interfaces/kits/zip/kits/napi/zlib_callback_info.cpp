@@ -52,32 +52,30 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             napi_value result[ARGS_ONE] = {0};
             if (asyncCallbackInfo->deliverErrcode) {
                 if (asyncCallbackInfo->callbackResult == ERR_OK) {
-                    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]));
+                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_get_null(asyncCallbackInfo->env, &result[0]), scope);
                 } else {
                     result[0] = BusinessError::CreateCommonError(asyncCallbackInfo->env,
                         asyncCallbackInfo->callbackResult, "");
                 }
             } else {
-                NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
-                    napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]));
+                napi_create_int32(asyncCallbackInfo->env, asyncCallbackInfo->callbackResult, &result[0]);
             }
             if (asyncCallbackInfo->isCallBack) {
                 napi_value callback = 0;
                 napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_get_reference_value(asyncCallbackInfo->env,
-                    asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
-                    callback, sizeof(result) / sizeof(result[0]), result, &placeHolder));
+                napi_get_reference_value(asyncCallbackInfo->env, asyncCallbackInfo->callback, &callback);
+                CHKRV_SCOPE(asyncCallbackInfo->env, napi_call_function(asyncCallbackInfo->env, nullptr,
+                    callback, sizeof(result) / sizeof(result[0]), result, &placeHolder), scope);
                 if (asyncCallbackInfo->callback != nullptr) {
                     napi_delete_reference(asyncCallbackInfo->env, asyncCallbackInfo->callback);
                 }
             } else {
                 if (asyncCallbackInfo->callbackResult == ERR_OK) {
-                    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
-                        asyncCallbackInfo->deferred, result[0]));
+                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_resolve_deferred(asyncCallbackInfo->env,
+                        asyncCallbackInfo->deferred, result[0]), scope);
                 } else {
-                    NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
-                        asyncCallbackInfo->deferred, result[0]));
+                    CHKRV_SCOPE(asyncCallbackInfo->env, napi_reject_deferred(asyncCallbackInfo->env,
+                        asyncCallbackInfo->deferred, result[0]), scope);
                 }
             }
             if (work != nullptr) {

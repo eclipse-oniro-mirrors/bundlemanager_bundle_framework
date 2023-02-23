@@ -172,6 +172,14 @@ private:
     do {                                                                                      \
         NAPI_CALL_BASE(env, napi_get_value_##funcType(env, property, (&(value))), false);         \
     } while (0)
+
+#define CHKRV_SCOPE(env, state, scope) \
+    do { \
+        if ((state) != napi_ok) { \
+            napi_close_handle_scope(env, scope); \
+            return; \
+        } \
+    } while (0)
 } // AppExecFwk
 } // OHOS
 #endif
