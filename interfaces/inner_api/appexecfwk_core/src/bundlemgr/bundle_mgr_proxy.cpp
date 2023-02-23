@@ -3329,7 +3329,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
     return reply.ReadInt32();
 }
 
-bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion, const std::string bundleName)
+bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
 {
     APP_LOGD("begin to verify system app");
     MessageParcel data;
@@ -3340,10 +3340,6 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion, const std::string 
 
     if (!data.WriteInt32(beginApiVersion)) {
         APP_LOGE("fail to VerifySystemApi due to write apiVersion fail");
-        return false;
-    }
-    if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to VerifySystemApi due to write bundleName fail");
         return false;
     }
 

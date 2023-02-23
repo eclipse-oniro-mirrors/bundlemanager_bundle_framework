@@ -2233,9 +2233,8 @@ ErrCode BundleMgrHost::HandleGetQuickFixManagerProxy(MessageParcel &data, Messag
 ErrCode BundleMgrHost::HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply)
 {
     int32_t beginApiVersion = data.ReadInt32();
-    std::string bundleName = data.ReadString();
 
-    bool ret = VerifySystemApi(beginApiVersion, bundleName);
+    bool ret = VerifySystemApi(beginApiVersion);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

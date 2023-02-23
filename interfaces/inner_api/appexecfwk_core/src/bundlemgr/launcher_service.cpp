@@ -126,7 +126,7 @@ bool LauncherService::GetAbilityList(
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION, bundleName)) {
+    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         return false;
     }

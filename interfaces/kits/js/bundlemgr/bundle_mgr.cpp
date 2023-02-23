@@ -2562,6 +2562,16 @@ static bool VerifyCallingPermission(std::string permissionName)
     return iBundleMgr->VerifyCallingPermission(permissionName);
 }
 
+static bool VerifySystemApi()
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return false;
+    }
+    return iBundleMgr->VerifySystemApi();
+}
+
 /**
  * Promise and async callback
  */
@@ -2602,7 +2612,7 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
                 napi_value undefined = 0;
                 napi_value callResult = 0;
                 napi_value m_classBundleInstaller = nullptr;
-                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
                     NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
                         &m_classBundleInstaller));
                     NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));

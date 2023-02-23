@@ -676,10 +676,7 @@ public:
 
     virtual bool VerifyCallingPermission(const std::string &permission) override;
 
-    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION,
-        const std::string bundleName = Constants::EMPTY_STRING) override;
-
-    virtual bool VerifySystemApi(const std::string bundleName);
+    virtual bool VerifySystemApi(int32_t beginApiVersion = Constants::INVALID_API_VERSION) override;
 
     virtual std::vector<std::string> GetAccessibleAppCodePaths(int32_t userId) override;
 
