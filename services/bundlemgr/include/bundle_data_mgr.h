@@ -793,6 +793,14 @@ public:
     ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
 
+    ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
+        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) const;
+
+    bool GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
+        BaseSharedPackageInfo &baseSharedPackageInfo) const;
+
+    bool DeleteSharedPackage(const std::string &bundleName);
+
 private:
     /**
      * @brief Init transferStates.

@@ -33,6 +33,7 @@
 #include "json_util.h"
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
+#include "shared_package/base_shared_package_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -112,6 +113,8 @@ struct InnerModuleInfo {
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     AtomicServiceModuleType atomicServiceModuleType;
     std::vector<std::string> preloads;
+    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
+    uint32_t versionCode = 0;
 };
 
 struct SkillUri {
@@ -1112,6 +1115,7 @@ public:
             innerModuleInfos_.at(currentPackage_).nativeLibraryPath = nativeLibraryPath;
         }
     }
+
     /**
      * @brief Set ability enabled.
      * @param moduleName Indicates the moduleName.
@@ -1415,6 +1419,12 @@ public:
     {
         return allowedAcls_;
     }
+
+    CompatiblePolicy GetCompatiblePolicy() const
+    {
+        return baseApplicationInfo_->compatiblePolicy;
+    }
+
     /**
      * @brief ability is enabled.
      * @param abilityInfo Indicates the abilityInfo.
@@ -1918,6 +1928,22 @@ public:
         return provisionMetadatas_;
     }
 
+    const std::map<std::string, std::vector<InnerModuleInfo>> &GetInnerSharedPackageModuleInfos() const
+    {
+        return innerSharedPackageModuleInfos_;
+    }
+
+    std::vector<Dependency> GetDependencies() const
+    {
+        std::vector<Dependency> dependenciesList;
+        for (auto it = innerModuleInfos_.begin(); it != innerModuleInfos_.end(); it++) {
+            for (const auto &item : it->second.dependencies) {
+                dependenciesList.emplace_back(item);
+            }
+        }
+        return dependenciesList;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
@@ -1966,6 +1992,13 @@ public:
     void SetOverlayModuleState(const std::string &moduleName, int32_t state);
 
     void ClearOverlayModuleStates(const std::string &moduleName);
+
+    bool GetBaseSharedPackageInfo(const std::string &moduleName, uint32_t versionCode,
+        BaseSharedPackageInfo &baseSharedPackageInfo) const;
+    bool GetMaxVerBaseSharedPackageInfo(const std::string &moduleName,
+        BaseSharedPackageInfo &baseSharedPackageInfo) const;
+    void InsertInnerSharedPackageModuleInfo(const std::string &moduleName, const InnerModuleInfo &innerModuleInfo);
+    void SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath);
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2036,6 +2069,9 @@ private:
 
     // provision metadata
     std::vector<Metadata> provisionMetadatas_;
+
+    // shared package info
+    std::map<std::string, std::vector<InnerModuleInfo>> innerSharedPackageModuleInfos_ ;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

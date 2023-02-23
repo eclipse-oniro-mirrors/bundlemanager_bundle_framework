@@ -123,6 +123,11 @@ const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"split", SupportWindowMode::SPLIT},
     {"floating", SupportWindowMode::FLOATING}
 };
+const std::unordered_map<std::string, CompatiblePolicy> COMPATIBLE_POLICY_MAP = {
+    {"normal", CompatiblePolicy::NORMAL},
+    {"backwardCompatibility", CompatiblePolicy::BACK_COMPATIBLE},
+    {"preciseMatch", CompatiblePolicy::PRECISE_MATCH}
+};
 
 struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
@@ -147,6 +152,10 @@ struct Preload {
 
 struct ModuleAtomicService {
     std::vector<Profile::Preload> preloads;
+};
+
+struct AppShared {
+    std::string compatiblePolicy;
 };
 
 struct Ability {
@@ -230,6 +239,7 @@ struct App {
     std::string targetBundle;
     int32_t targetPriority = 0;
     bool asanEnabled = false;
+    Profile::AppShared shared;
 };
 
 struct Module {
@@ -1105,6 +1115,32 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    if (jsonObject.find(Profile::APP_SHARED) != jsonObjectEnd) {
+        AppShared shared;
+        GetValueIfFindKey<AppShared>(jsonObject,
+            jsonObjectEnd,
+            APP_SHARED,
+            shared,
+            JsonType::OBJECT,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        app.shared = shared;
+    }
+}
+
+void from_json(const nlohmann::json &jsonObject, AppShared &shared)
+{
+    APP_LOGD("read shared tag from app.json");
+    const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_COMPATIBLE_POLICY,
+        shared.compatiblePolicy,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1389,6 +1425,8 @@ void UpdateNativeSoAttrs(
     }
 
     innerBundleInfo.SetModuleNativeLibraryPath(
+        innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
+    innerBundleInfo.SetSharedPackageModuleNativeLibraryPath(
         innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
     innerBundleInfo.SetModuleCpuAbi(cpuAbi);
 }
@@ -1725,6 +1763,13 @@ bool ToApplicationInfo(
     applicationInfo.process = app.bundleName;
     applicationInfo.targetBundleName = app.targetBundle;
     applicationInfo.targetPriority = app.targetPriority;
+
+    auto iterCompatiblePolicy = std::find_if(std::begin(Profile::COMPATIBLE_POLICY_MAP),
+        std::end(Profile::COMPATIBLE_POLICY_MAP),
+        [&app](const auto &item) { return item.first == app.shared.compatiblePolicy; });
+    if (iterCompatiblePolicy != Profile::COMPATIBLE_POLICY_MAP.end()) {
+        applicationInfo.compatiblePolicy = iterCompatiblePolicy->second;
+    }
     return true;
 }
 
@@ -2139,6 +2184,14 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetCurrentModulePackage(moduleJson.module.name);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+
+    // Here also need verify module type is shared.
+    if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
+        innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
+        innerModuleInfo.versionCode = applicationInfo.versionCode;
+        innerBundleInfo.InsertInnerSharedPackageModuleInfo(moduleJson.module.name, innerModuleInfo);
+    }
+
     innerBundleInfo.InsertInnerModuleInfo(moduleJson.module.name, innerModuleInfo);
     innerBundleInfo.SetOverlayType(overlayMsg.type);
 

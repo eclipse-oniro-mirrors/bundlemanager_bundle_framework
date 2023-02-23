@@ -454,6 +454,10 @@ constexpr const char* MODULE_ATOMIC_SERVICE_PRELOADS = "preloads";
 // module atomicService preloads
 constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 extern thread_local int32_t parseResult;
+
+// app shared package
+constexpr const char* APP_COMPATIBLE_POLICY = "compatiblePolicy";
+constexpr const char* APP_SHARED = "shared";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS
