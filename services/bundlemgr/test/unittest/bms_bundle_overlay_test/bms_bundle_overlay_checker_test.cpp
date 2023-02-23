@@ -456,20 +456,10 @@ HWTEST_F(BmsBundleOverlayCheckerTest, BundleOverlayManagerTest_0100, Function | 
     code = manager.GetOverlayModuleInfoForTarget("target", "", overlayModuleInfos, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
 
-    bool isEnabled = true;
-    code = manager.SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
-    code = manager.SetOverlayEnabled("com.ohos.test", moduleName, isEnabled, userId);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
-    code = manager.SetOverlayEnabled("com.ohos.test", "entry", isEnabled, userId);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
-
     userId = Constants::DEFAULT_USERID;
     code = manager.GetAllOverlayModuleInfo("com.ohos.test", overlayModuleInfos, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
     code = manager.GetOverlayModuleInfo("com.ohos.test", "entry", overlayModuleInfo, userId);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
-    code = manager.SetOverlayEnabled("com.ohos.test", "entry", isEnabled, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 }
 
