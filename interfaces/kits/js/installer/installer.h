@@ -45,6 +45,7 @@ struct AsyncInstallCallbackInfo {
     std::string bundleName;
     std::string param;
     OHOS::AppExecFwk::InstallParam installParam;
+    OHOS::AppExecFwk::UninstallParam uninstallParam;
     InstallResult installResult;
     int32_t errCode = 0;
     InstallOption option = InstallOption::UNKNOWN;

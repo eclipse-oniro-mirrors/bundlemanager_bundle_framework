@@ -96,6 +96,13 @@ public:
      */
     void CreateUninstallTask(const std::string &bundleName, const std::string &modulePackage,
         const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver);
+    /**
+     * @brief Create a bundle installer object for uninstalling a module.
+     * @param uninstallParam Indicates the input of uninstall param.
+     * @param statusReceiver Indicates the callback object that using for notifing the uninstall result.
+     * @return
+     */
+    void CreateUninstallTask(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceive);
     enum {
         REMOVE_BUNDLE_INSTALLER = 1,
     };

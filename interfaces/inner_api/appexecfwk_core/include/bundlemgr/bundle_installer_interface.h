@@ -69,7 +69,9 @@ public:
      */
     virtual bool Uninstall(const std::string &bundleName, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;
-
+    
+    virtual bool Uninstall(const UninstallParam &uninstallParam,
+        const sptr<IStatusReceiver> &statusReceiver) = 0;
     /**
      * @brief Uninstalls a module in an application, the result will be notified from the statusReceiver object.
      * @param bundleName Indicates the bundle name of the module to uninstall.
@@ -124,6 +126,7 @@ public:
         INSTALL_MULTIPLE_HAPS,
         UNINSTALL,
         UNINSTALL_MODULE,
+        UNINSTALL_BY_UNINSTALL_PARAM,
         RECOVER,
         INSTALL_SANDBOX_APP,
         UNINSTALL_SANDBOX_APP,

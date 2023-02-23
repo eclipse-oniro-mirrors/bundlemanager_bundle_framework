@@ -99,6 +99,12 @@ protected:
     ErrCode UninstallBundle(
         const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam);
     /**
+     * @brief The main function for uninstall a bundle by uninstallParam.
+     * @param uninstallParam Indicates the input of uninstallParam.
+     * @return Returns ERR_OK if the application uninstall successfully; returns error code otherwise.
+     */
+    ErrCode UninstallBundleByUninstallParam(const UninstallParam &uninstallParam);
+    /**
      * @brief Update the installer state.
      * @attention This function changes the base class state only.
      * @param state Indicates the state to be updated to.

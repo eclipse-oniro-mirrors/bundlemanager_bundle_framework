@@ -85,6 +85,12 @@ public:
      */
     void Uninstall(const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam);
     /**
+     * @brief Uninstall a bundle by uninstallParam.
+     * @param uninstallParam Indicates the input uninstallParam.
+     * @return
+     */
+    void Uninstall(const UninstallParam &uninstallParam);
+    /**
      * @brief Update the installer state and send status from the StatusReceiver object.
      * @attention This function will send the install status to StatusReceiver.
      * @param state Indicates the state to be updated to.

@@ -54,6 +54,8 @@ const std::string CROWD_TEST_DEADLINE = "crowdtestDeadline";
 const std::string MODULE_NAME = "moduleName";
 const std::string HASH_VALUE = "hashValue";
 const std::string HASH_PARAMS = "hashParams";
+const std::string BUNDLE_NAME = "bundleName";
+const std::string VERSION_CODE = "versionCode";
 
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
@@ -382,6 +384,74 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
     return true;
 }
 
+static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleName)
+{
+    APP_LOGD("start to parse bundleName");
+    PropertyInfo propertyInfo = {
+        .propertyName = BUNDLE_NAME,
+        .isNecessary = true,
+        .propertyType = napi_string
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse bundleName failed");
+        return res;
+    }
+    if (property != nullptr) {
+        if (!CommonFunc::ParseString(env, property, bundleName)) {
+            APP_LOGE("ParseString failed!");
+            return false;
+        }
+    }
+    APP_LOGD("param bundleName is %{public}s", bundleName.c_str());
+    return true;
+}
+
+static bool ParseModuleName(napi_env env, napi_value args, std::string &moduleName)
+{
+    APP_LOGD("start to parse moduleName");
+    PropertyInfo propertyInfo = {
+        .propertyName = MODULE_NAME,
+        .isNecessary = false,
+        .propertyType = napi_string
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse moduleName failed");
+        return res;
+    }
+    if (property != nullptr) {
+        if (!CommonFunc::ParseString(env, property, moduleName)) {
+            APP_LOGE("ParseString failed!");
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool ParseVersionCode(napi_env env, napi_value args, int32_t &versionCode)
+{
+    APP_LOGD("start to parse versionCode");
+    PropertyInfo propertyInfo = {
+        .propertyName = VERSION_CODE,
+        .isNecessary = false,
+        .propertyType = napi_number
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse versionCode failed!");
+        return res;
+    }
+    if (property != nullptr) {
+        PARSE_PROPERTY(env, property, int32, versionCode);
+    }
+    APP_LOGD("param versionCode is %{public}d", versionCode);
+    return true;
+}
+
 static bool ParseUserId(napi_env env, napi_value args, int32_t &userId)
 {
     APP_LOGD("start to parse userId");
@@ -482,6 +552,18 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
         !ParseHashParams(env, args, installParam.hashParams)) {
         APP_LOGE("ParseInstallParam failed");
         return false;
+    }
+    return true;
+}
+
+static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &uninstallParam)
+{
+    if (!ParseBundleName(env, args, uninstallParam.bundleName) ||
+        !ParseModuleName(env, args, uninstallParam.moduleName) ||
+        !ParseVersionCode(env, args, uninstallParam.versionCode) ||
+        !ParseUserId(env, args, uninstallParam.userId)) {
+            APP_LOGE("Parse UninstallParam faied!");
+            return false;
     }
     return true;
 }
@@ -692,6 +774,72 @@ void UninstallOrRecoverExecuter(napi_env env, void *data)
     APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
 }
 
+void UninstallByUninstallParamExecuter(napi_env env, void* data)
+{
+    AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    const std::string bundleName = asyncCallbackInfo->uninstallParam.bundleName;
+    InstallResult &installResult = asyncCallbackInfo->installResult;
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
+    auto iBundleInstaller = CommonFunc::GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    if (callback == nullptr || recipient == nullptr) {
+        APP_LOGE("callback or death recipient is nullptr");
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR);
+        return;
+    }
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    iBundleInstaller->Uninstall(asyncCallbackInfo->uninstallParam, callback);
+    // do uninstall by uninstallparam
+    installResult.resultMsg = callback->GetResultMsg();
+    installResult.resultCode = callback->GetResultCode();
+}
+
+napi_value UninstallByUninstallParam(napi_env env, napi_callback_info info,
+    std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("init param failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseUninstallParam(env, args[i], callbackPtr->uninstallParam)) {
+                APP_LOGE("parse uninstallParam failed!");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+            break;
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), GetFunctionName(callbackPtr->option),
+        UninstallByUninstallParamExecuter, OperationCompleted);
+    callbackPtr.release();
+    return promise;
+}
+
 napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
     std::unique_ptr<AsyncInstallCallbackInfo> &callbackPtr)
 {
@@ -761,6 +909,14 @@ napi_value Uninstall(napi_env env, napi_callback_info info)
     APP_LOGD("Uninstall called");
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::UNINSTALL;
+    // uninstall uninstallParam
+    NapiArg args(env, info);
+    args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE);
+    napi_valuetype firstType = napi_undefined;
+    napi_typeof(env, args[FIRST_PARAM], &firstType);
+    if (firstType == napi_object) {
+        return UninstallByUninstallParam(env, info, callbackPtr);
+    }
     return UninstallOrRecover(env, info, callbackPtr);
 }
 

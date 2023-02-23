@@ -168,6 +168,25 @@ bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::s
     return SendInstallRequest(IBundleInstaller::Message::UNINSTALL_MODULE, data, reply, option);
 }
 
+bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
+    PARCEL_WRITE(data, Parcelable, &uninstallParam);
+    if (statusReceiver == nullptr) {
+        APP_LOGE("fail to uninstall, for statusReceiver is nullptr");
+        return false;
+    }
+    if (!data.WriteObject<IRemoteObject>(statusReceiver->AsObject())) {
+        APP_LOGE("write parcel failed");
+        return false;
+    }
+    return SendInstallRequest(IBundleInstaller::Message::UNINSTALL_BY_UNINSTALL_PARAM, data, reply, option);
+}
+
 ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
     int32_t &appIndex)
 {
