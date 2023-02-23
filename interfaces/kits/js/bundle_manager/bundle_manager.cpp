@@ -1683,7 +1683,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_number) {
-                if (CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
+                if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                     BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
                     return nullptr;
                 }
