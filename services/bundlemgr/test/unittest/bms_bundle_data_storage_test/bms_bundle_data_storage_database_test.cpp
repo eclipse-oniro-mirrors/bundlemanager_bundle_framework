@@ -69,6 +69,7 @@ protected:
                         "arkNativeFileAbi": "",
                         "arkNativeFilePath": "",
                         "bundleName": "",
+                        "bundleType": 0,
                         "cacheDir": "",
                         "codePath": "",
                         "cpuAbi": "",
@@ -109,6 +110,8 @@ protected:
                             "id": 0,
                             "moduleName": ""
                         },
+                        "asanEnabled": false,
+                        "asanLogPath": "",
                         "metaData": {},
                         "metadata": {},
                         "minCompatibleVersionCode": 0,
@@ -123,6 +126,7 @@ protected:
                         "process": "",
                         "removable": true,
                         "signatureKey": "",
+                        "split": false,
                         "multiProjects":false,
                         "singleton": false,
                         "supportedModes": 0,
@@ -405,7 +409,10 @@ protected:
                 },
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
+                "asanEnabled": false,
+                "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
+                "bundleType": 0,
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
                 "cpuAbi": "armeabi-v7a",
@@ -467,6 +474,7 @@ protected:
                 "signatureKey": "",
                 "multiProjects":false,
                 "singleton": false,
+                "split": false,
                 "supportedModes": 0,
                 "uid": -1,
                 "userDataClearable": true,
@@ -506,6 +514,7 @@ protected:
                 "appDetailAbilityLibraryPath": ""
             },
             "baseBundleInfo": {
+                "asanEnabled": false,
                 "abilityInfos": [
                 ],
                 "appId": "com.ohos.launcher_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
@@ -519,6 +528,7 @@ protected:
                     "arkNativeFileAbi": "",
                     "arkNativeFilePath": "",
                     "bundleName": "",
+                    "bundleType": 0,
                     "cacheDir": "",
                     "codePath": "",
                     "cpuAbi": "",
@@ -527,6 +537,8 @@ protected:
                     "debug": false,
                     "description": "",
                     "descriptionId": 0,
+                    "asanEnabled": false,
+                    "asanLogPath": "",
                     "descriptionResource": {
                         "bundleName": "",
                         "id": 0,
@@ -580,6 +592,7 @@ protected:
                     "signatureKey": "",
                     "multiProjects":false,
                     "singleton": false,
+                    "split":false,
                     "supportedModes": 0,
                     "uid": -1,
                     "userDataClearable": true,
@@ -690,6 +703,7 @@ protected:
                 ]
             },
             "gid": -1,
+            "hasAtomicServiceConfig ": true,
             "hasEntry": true,
             "innerBundleUserInfos": {
                 "com.ohos.launcher_100": {
@@ -716,6 +730,7 @@ protected:
                     "abilityKeys": [
                         "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility"
                     ],
+                    "atomicServiceModuleType": 0,
                     "colorMode": -1,
                     "defPermissions": [
                     ],
@@ -756,6 +771,7 @@ protected:
                     "modulePath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher",
                     "moduleResPath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher/assets/phone/resources.index",
                     "pages": "",
+                    "preloads":[],
                     "process": "",
                     "reqCapabilities": [
                     ],
@@ -823,6 +839,7 @@ protected:
                     "abilityKeys": [
                         "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility"
                     ],
+                    "atomicServiceModuleType": 0,
                     "colorMode": -1,
                     "defPermissions": [
                     ],
@@ -863,6 +880,7 @@ protected:
                     "modulePath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher.recents",
                     "moduleResPath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher.recents/assets/recents/resources.index",
                     "pages": "",
+                    "preloads":[],
                     "process": "",
                     "reqCapabilities": [
                     ],
@@ -880,6 +898,7 @@ protected:
                     "abilityKeys": [
                         "com.ohos.launcher.com.ohos.launcher.settings.com.ohos.launcher.settings.MainAbility"
                     ],
+                    "atomicServiceModuleType": 0,
                     "colorMode": -1,
                     "defPermissions": [
                     ],
@@ -920,6 +939,7 @@ protected:
                     "modulePath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher.settings",
                     "moduleResPath": "/data/app/el1/bundle/public/com.ohos.launcher/com.ohos.launcher.settings/assets/settings/resources.index",
                     "pages": "",
+                    "preloads":[],
                     "process": "",
                     "reqCapabilities": [
                     ],
@@ -943,6 +963,7 @@ protected:
             "isSupportBackup": false,
             "mainAbility": "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility",
             "mainAbilityName": "com.ohos.launcher.MainAbility",
+            "mainAtomicModuleName":"",
             "shortcutInfos": {
             },
             "skillInfos": {
@@ -973,7 +994,8 @@ protected:
     nlohmann::json moduleInfoJson_ = R"(
         {
             "moduleName": "entry",
-            "moduleSourceDir": ""
+            "moduleSourceDir": "",
+            "preloads": []
         }
     )"_json;
     const std::string BASE_ABILITY_INFO = "baseAbilityInfos";

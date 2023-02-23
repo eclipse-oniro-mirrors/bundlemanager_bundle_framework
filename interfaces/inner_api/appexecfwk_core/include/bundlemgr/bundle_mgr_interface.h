@@ -1126,6 +1126,11 @@ public:
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
     }
 
+    virtual void ProcessPreload(const Want &want)
+    {
+        return;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1234,6 +1239,7 @@ public:
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
         GET_BUNDLE_INFO_FOR_SELF,
         VERIFY_SYSTEM_API,
+        PROCESS_PRELOAD,
     };
 };
 }  // namespace AppExecFwk

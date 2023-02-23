@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <future>
+#include <set>
 #include <string>
 
 #include "app_log_wrapper.h"
@@ -440,6 +441,17 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
         return false;
     }
     return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, userId, callback);
+}
+
+void BundleMgrHostImpl::ProcessPreload(const Want &want)
+{
+    APP_LOGD("begin to process preload.");
+    auto connectAbilityMgr = GetConnectAbilityMgrFromService();
+    if (connectAbilityMgr == nullptr) {
+        APP_LOGE("connectAbilityMgr is nullptr");
+        return;
+    }
+    connectAbilityMgr->ProcessPreload(want);
 }
 #endif
 
@@ -1243,7 +1255,16 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     result.append(bundleName);
     result.append(":\n");
     nlohmann::json jsonObject = bundleInfo;
-    jsonObject["hapModuleInfos"] = bundleInfo.hapModuleInfos;
+    jsonObject.erase("abilityInfos");
+    jsonObject.erase("extensionAbilityInfo");
+    for (auto &hapModule : jsonObject["hapModuleInfos"]) {
+        for (auto &ability : hapModule["abilityInfos"]) {
+            ability.erase("applicationInfo");
+        }
+        for (auto &extension : hapModule["extensionInfos"]) {
+            extension.erase("applicationInfo");
+        }
+    }
     jsonObject["userInfo"] = innerBundleUserInfos;
     result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");
@@ -2194,11 +2215,12 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
-    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, userId, bundleStats) != ERR_OK) {
-        APP_LOGE("GetBundleStats: bundleName: %{public}s failed", bundleName.c_str());
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return true;
+    return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
 }
 
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,

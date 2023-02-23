@@ -896,4 +896,20 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
             + ", extractFileType = An]", value);
     extractParam.Unmarshalling(parcel);
 } // OHOS
+
+/**
+ * @tc.number: ExtractFiles_0200
+ * @tc.name: test the ExtractFiles
+ * @tc.desc: 1. extract files success
+*/
+HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0200, Function | SmallTest | Level0)
+{
+    ExtractParam extractParam;
+    extractParam.srcPath = BUNDLE_FILE;
+    extractParam.targetPath = TEST_PATH;
+    extractParam.cpuAbi = "";
+    extractParam.extractFileType = ExtractFileType::AP;
+    auto ret = ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
 } // OHOS

@@ -739,6 +739,12 @@ public:
      */
     virtual ErrCode SetModuleUpgradeFlag(
         const std::string &bundleName, const std::string &moduleName, int32_t upgradeFlag) override;
+    /**
+     * @brief Process preload when ability or extensionAbility is running.
+     * @param want Indicates the information of the ability.
+     * @param preload Specifies whether to preload modules in atomicService.
+     */
+    virtual void ProcessPreload(const Want &want) override;
 
     virtual bool SetDisposedStatus(const std::string &bundleName, int32_t status) override;
 

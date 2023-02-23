@@ -54,11 +54,6 @@ const std::set<std::string> VIRTUAL_MACHINE_SET = {
     "default"
 };
 
-const std::set<std::string> UI_SYNTAX_SET = {
-    "hml",
-    "ets"
-};
-
 const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_DATA_TRANSFER, ProfileReader::VALUE_DATA_TRANSFER},
     {ProfileReader::KEY_AUDIO_PLAYBACK, ProfileReader::VALUE_AUDIO_PLAYBACK},
@@ -89,21 +84,6 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "fileAccess",
     "thumbnail",
     "preview"
-};
-
-const std::set<std::string> ENTITY_TYPE_SET = {
-    "game",
-    "media",
-    "communication",
-    "news",
-    "travel",
-    "utility",
-    "shopping",
-    "education",
-    "kids",
-    "business",
-    "photography",
-    "unspecified"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -147,7 +127,6 @@ struct DeviceConfig {
     // pair first : if exist in module.json then true, otherwise false
     // pair second : actual value
     std::pair<bool, int32_t> minAPIVersion = std::make_pair<>(false, 0);
-    std::pair<bool, bool> distributedNotificationEnabled = std::make_pair<>(false, false);
     std::pair<bool, bool> keepAlive = std::make_pair<>(false, false);
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     std::pair<bool, bool> singleton = std::make_pair<>(false, false);
@@ -159,6 +138,14 @@ struct Metadata {
     std::string name;
     std::string value;
     std::string resource;
+};
+
+struct Preload {
+    std::string moduleName;
+};
+
+struct ModuleAtomicService {
+    std::vector<Profile::Preload> preloads;
 };
 
 struct Ability {
@@ -230,8 +217,6 @@ struct App {
     uint32_t minAPIVersion = 0;
     int32_t targetAPIVersion = 0;
     std::string apiReleaseType = APP_API_RELEASETYPE_DEFAULT_VALUE;
-    bool distributedNotificationEnabled = true;
-    std::string entityType = APP_ENTITY_TYPE_DEFAULT_VALUE;
     bool keepAlive = false;
     std::pair<bool, bool> removable = std::make_pair<>(false, true);
     bool singleton = false;
@@ -240,6 +225,7 @@ struct App {
     std::vector<std::string> targetBundleList;
     std::map<std::string, DeviceConfig> deviceConfigs;
     bool multiProjects = false;
+    bool asanEnabled = false;
 };
 
 struct Module {
@@ -254,7 +240,6 @@ struct Module {
     bool deliveryWithInstall = false;
     bool installationFree = false;
     std::string virtualMachine = MODULE_VIRTUAL_MACHINE_DEFAULT_VALUE;
-    std::string uiSyntax = MODULE_UI_SYNTAX_DEFAULT_VALUE;
     std::string pages;
     std::vector<Metadata> metadata;
     std::vector<Ability> abilities;
@@ -745,17 +730,6 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             parseResult,
             ArrayType::NOT_ARRAY);
     }
-    if (jsonObject.find(DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED) != jsonObjectEnd) {
-        deviceConfig.distributedNotificationEnabled.first = true;
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            DEVICE_CONFIG_DISTRIBUTED_NOTIFICATION_ENABLED,
-            deviceConfig.distributedNotificationEnabled.second,
-            JsonType::BOOLEAN,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-    }
     if (jsonObject.find(DEVICE_CONFIG_KEEP_ALIVE) != jsonObjectEnd) {
         deviceConfig.keepAlive.first = true;
         GetValueIfFindKey<bool>(jsonObject,
@@ -939,22 +913,6 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
-        APP_DISTRIBUTED_NOTIFICATION_ENABLED,
-        app.distributedNotificationEnabled,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_ENTITY_TYPE,
-        app.entityType,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
         APP_KEEP_ALIVE,
         app.keepAlive,
         JsonType::BOOLEAN,
@@ -1000,6 +958,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         jsonObjectEnd,
         APP_ACCESSIBLE,
         app.accessible,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_ASAN_ENABLED,
+        app.asanEnabled,
         JsonType::BOOLEAN,
         false,
         parseResult,
@@ -1210,14 +1176,6 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         jsonObjectEnd,
         MODULE_VIRTUAL_MACHINE,
         module.virtualMachine,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MODULE_UI_SYNTAX,
-        module.uiSyntax,
         JsonType::STRING,
         false,
         parseResult,
@@ -1469,6 +1427,107 @@ bool ParserNativeSo(
     return false;
 }
 
+bool ParserAtomicModuleConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
+{
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    std::vector<std::string> preloads;
+    std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
+    if (moduleJson.contains(Profile::MODULE_ATOMIC_SERVICE)) {
+        nlohmann::json moduleAtomicObj = moduleJson.at(Profile::MODULE_ATOMIC_SERVICE);
+        if (moduleAtomicObj.contains(Profile::MODULE_ATOMIC_SERVICE_PRELOADS)) {
+            nlohmann::json preloadObj = moduleAtomicObj.at(Profile::MODULE_ATOMIC_SERVICE_PRELOADS);
+            if (preloadObj.empty()) {
+                return true;
+            }
+            if (preloadObj.size() > Constants::MAX_JSON_ARRAY_LENGTH) {
+                APP_LOGE("preloads config in module.json is oversize!");
+                return false;
+            }
+            for (const auto &preload : preloadObj) {
+                if (preload.contains(Profile::PRELOADS_MODULE_NAME)) {
+                    std::string preloadName = preload.at(Profile::PRELOADS_MODULE_NAME);
+                    preloads.emplace_back(preloadName);
+                } else {
+                    APP_LOGE("preloads must have moduleName.");
+                    return false;
+                }
+            }
+        }
+    }
+    innerBundleInfo.SetInnerModuleAtomicPreload(moduleName, preloads);
+    return true;
+}
+
+bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &innerBundleInfo)
+{
+    if (!jsonObject.contains(Profile::MODULE) || !jsonObject.contains(Profile::APP)) {
+        APP_LOGE("ParserAtomicConfig failed due to bad module.json");
+        Profile::parseResult = ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
+        return false;
+    }
+    nlohmann::json appJson = jsonObject.at(Profile::APP);
+    nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
+    if (!moduleJson.is_object() || !appJson.is_object()) {
+        APP_LOGE("module.json file lacks of invalid module or app properties");
+        Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        return false;
+    }
+    bool split = true;
+    BundleType bundleType = BundleType::APP;
+    AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::MAIN;
+    std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
+    if (appJson.contains(Profile::APP_ATOMIC_SERVICE)) {
+        if (!moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) ||
+            !moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
+            APP_LOGE("invalid installationFree in module.json");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        innerBundleInfo.SetHasAtomicServiceConfig(true);
+        bundleType = BundleType::ATOMIC_SERVICE;
+        nlohmann::json appAtomicObj = appJson.at(Profile::APP_ATOMIC_SERVICE);
+        if (!appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_SPLIT)) {
+            APP_LOGE("app.json file lacks of invalid module or app properties");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        split = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_SPLIT);
+        if (!split && appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
+            APP_LOGE("app.json file lacks of invalid module or app properties");
+            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+            return false;
+        }
+        if (appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
+            std::string main = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_MAIN);
+            innerBundleInfo.SetAtomicMainModuleName(main);
+            if (main != moduleName) {
+                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+            }
+        }
+    } else {
+        innerBundleInfo.SetHasAtomicServiceConfig(false);
+        if (moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) &&
+                moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
+            bundleType = BundleType::ATOMIC_SERVICE;
+            if (moduleJson.at(Profile::MODULE_TYPE) != "entry") {
+                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+            }
+        } else {
+            atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
+        }
+        auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+        split = (moduleInfos.size() != 1);
+    }
+    innerBundleInfo.SetApplicationSplit(split);
+    innerBundleInfo.SetApplicationBundleType(bundleType);
+    innerBundleInfo.SetInnerModuleAtomicType(moduleName, atomicServiceModuleType);
+    if (!ParserAtomicModuleConfig(jsonObject, innerBundleInfo)) {
+        APP_LOGE("parse module atomicService failed.");
+        return false;
+    }
+    return true;
+}
+
 bool ParserArkNativeFilePath(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -1579,13 +1638,10 @@ bool ToApplicationInfo(
     applicationInfo.apiReleaseType = app.apiReleaseType;
     applicationInfo.debug = app.debug;
     applicationInfo.deviceId = Constants::CURRENT_DEVICE_ID;
-    applicationInfo.distributedNotificationEnabled = app.distributedNotificationEnabled;
-    if (Profile::ENTITY_TYPE_SET.find(app.entityType) != Profile::ENTITY_TYPE_SET.end()) {
-        applicationInfo.entityType = app.entityType;
-    } else {
-        applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
-    }
+    applicationInfo.distributedNotificationEnabled = true;
+    applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
+    applicationInfo.asanEnabled = app.asanEnabled;
 
     // device adapt
     std::string deviceType = GetDeviceType();
@@ -1594,9 +1650,6 @@ bool ToApplicationInfo(
         Profile::DeviceConfig deviceConfig = app.deviceConfigs.at(deviceType);
         if (deviceConfig.minAPIVersion.first) {
             applicationInfo.apiCompatibleVersion = static_cast<uint32_t>(deviceConfig.minAPIVersion.second);
-        }
-        if (deviceConfig.distributedNotificationEnabled.first) {
-            applicationInfo.distributedNotificationEnabled = deviceConfig.distributedNotificationEnabled.second;
         }
         if (applicationInfo.isSystemApp && transformParam.isPreInstallApp) {
             if (deviceConfig.keepAlive.first) {
@@ -1645,6 +1698,7 @@ bool ToBundleInfo(
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
     bundleInfo.isNativeApp = false;
+    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
 
     if (innerModuleInfo.isEntry) {
         bundleInfo.mainEntry = innerModuleInfo.moduleName;
@@ -1815,7 +1869,7 @@ void GetPermissions(
     const TransformParam &transformParam,
     InnerModuleInfo &innerModuleInfo)
 {
-    if (transformParam.isSystemApp && transformParam.isPreInstallApp) {
+    if (moduleJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
         for (const DefinePermission &definePermission : moduleJson.module.definePermissions) {
             if (definePermission.name.empty()) {
                 continue;
@@ -1875,9 +1929,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.virtualMachine = moduleJson.module.virtualMachine;
     }
 
-    if (Profile::UI_SYNTAX_SET.find(moduleJson.module.uiSyntax) != Profile::UI_SYNTAX_SET.end()) {
-        innerModuleInfo.uiSyntax = moduleJson.module.uiSyntax;
-    }
+    innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
 
     innerModuleInfo.pages = moduleJson.module.pages;
     GetPermissions(moduleJson, transformParam, innerModuleInfo);
@@ -2045,6 +2097,10 @@ ErrCode ModuleProfile::TransformTo(
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, innerBundleInfo)) {
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
+    }
+    if (!ParserAtomicConfig(jsonObject, innerBundleInfo)) {
+        APP_LOGE("Parser atomicService config failed.");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     if (!ParserNativeSo(moduleJson, bundleExtractor, innerBundleInfo)) {

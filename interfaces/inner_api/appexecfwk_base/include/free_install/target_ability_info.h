@@ -34,6 +34,7 @@ struct TargetInfo : public Parcelable {
     int32_t callingAppType;
     std::vector<std::string> callingBundleNames;
     std::vector<std::string> callingAppIds;
+    std::vector<std::string> preloadModuleNames;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static TargetInfo *Unmarshalling(Parcel &parcel);

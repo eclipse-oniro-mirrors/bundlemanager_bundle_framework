@@ -3355,6 +3355,26 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion, const std::string 
     return reply.ReadBool();
 }
 
+void BundleMgrProxy::ProcessPreload(const Want &want)
+{
+    APP_LOGD("BundleMgrProxy::ProcessPreload is called.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to ProcessPreload due to write InterfaceToken fail");
+        return;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("fail to ProcessPreload due to write want fail");
+        return;
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_ASYNC);
+    auto res = Remote()->SendRequest(IBundleMgr::Message::PROCESS_PRELOAD, data, reply, option);
+    if (res != ERR_OK) {
+        APP_LOGE("SendRequest fail, error: %{public}d", res);
+    }
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

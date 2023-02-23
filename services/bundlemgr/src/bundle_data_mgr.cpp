@@ -22,7 +22,6 @@
 #include "app_control_constants.h"
 #endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-#include "installd_client.h"
 #include "os_account_info.h"
 #endif
 #include "account_helper.h"
@@ -42,6 +41,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
@@ -273,6 +273,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.AddModuleInfo(newInfo);
         oldInfo.UpdateAppDetailAbilityAttrs();
@@ -405,6 +407,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         }
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
+        oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
+        oldInfo.SetAsanEnabled(newInfo.GetAsanEnabled());
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
@@ -1748,6 +1752,26 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
+bool BundleDataMgr::GetBundleStats(
+    const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const
+{
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        return false;
+    }
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (InstalldClient::GetInstance()->GetBundleStats(bundleName, responseUserId, bundleStats) != ERR_OK) {
+        APP_LOGE("bundle%{public}s GetBundleStats failed ", bundleName.c_str());
+        return false;
+    }
+    if (infoItem->second.IsPreInstallApp() && !bundleStats.empty()) {
+        for (const auto &innerModuleInfo : infoItem->second.GetInnerModuleInfos()) {
+            bundleStats[0] += BundleUtil::GetFileSize(innerModuleInfo.second.hapPath);
+        }
+    }
+    return true;
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 int64_t BundleDataMgr::GetBundleSpaceSize(const std::string &bundleName) const
 {
@@ -2552,7 +2576,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGI("the %{public}d app install", i);
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeHmdfsConfig(bundleName, bundleId);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -2564,7 +2589,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeHmdfsConfig(bundleName, bundleId);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -2657,7 +2683,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveHmdfsConfig(innerBundleUserInfo.bundleName);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -2678,7 +2705,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeHmdfsConfig(innerBundleUserInfo.bundleName, bundleId);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             }
         }
     }
@@ -3819,8 +3847,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
         APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
         return nullptr;
     }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     BundleInfo bundleInfo;
-    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, userId);
+    innerBundleInfo.GetBundleInfo(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, responseUserId);
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     for (auto hapModuleInfo : bundleInfo.hapModuleInfos) {
         std::string moduleResPath;
