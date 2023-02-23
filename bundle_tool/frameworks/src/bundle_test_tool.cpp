@@ -395,7 +395,7 @@ const std::string HELP_MSG_BUNDLE_EVENT_CALLBACK =
     "usage: bundle_test_tool eventCB <options>\n"
     "options list:\n"
     "  -h, --help           list available commands\n"
-    "  -o, --onlyUnregister only call unregister, default will call register then unregister\n";
+    "  -o, --onlyUnregister only call unregister, default will call register then unregister\n"
     "  -u, --uid            specify a uid, default is foundation uid\n";
 
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
