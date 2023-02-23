@@ -55,9 +55,7 @@ napi_value SetOverlayEnabledByBundleName(napi_env env, napi_callback_info info);
 napi_value GetOverlayModuleInfo(napi_env env, napi_callback_info info);
 napi_value GetTargetOverlayModuleInfos(napi_env env, napi_callback_info info);
 napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info info);
-napi_value GetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info);
 napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info);
-napi_value GetTargetOverlayModuleInfosByModuleName(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* JS_APP_CONTROL_H */

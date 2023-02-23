@@ -48,21 +48,9 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
     return nullptr;
 }
 
-napi_value GetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("NAPI GetOverlayModuleInfosByBundleName called");
-    return nullptr;
-}
-
 napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetTargetOverlayModuleInfosByBundleName called");
-    return nullptr;
-}
-
-napi_value GetTargetOverlayModuleInfosByModuleName(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("NAPI GetTargetOverlayModuleInfosByModuleName called");
     return nullptr;
 }
 } // AppExecFwk
