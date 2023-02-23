@@ -77,6 +77,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nBundleType));
     CreateBundleTypeObject(env, nBundleType);
 
+    napi_value nCompatiblePolicy = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nCompatiblePolicy));
+    CreateCompatiblePolicyObject(env, nCompatiblePolicy);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
@@ -112,7 +116,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
         DECLARE_NAPI_PROPERTY("ModuleType", nModuleType),
         DECLARE_NAPI_PROPERTY("BundleType", nBundleType),
-        DECLARE_NAPI_PROPERTY("AtomicServiceModuleType", nAtomicServiceModuleType)
+        DECLARE_NAPI_PROPERTY("AtomicServiceModuleType", nAtomicServiceModuleType),
+        DECLARE_NAPI_PROPERTY("CompatiblePolicy", nCompatiblePolicy),
+        DECLARE_NAPI_FUNCTION("getAllSharedPackageInfo", GetAllSharedPackageInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

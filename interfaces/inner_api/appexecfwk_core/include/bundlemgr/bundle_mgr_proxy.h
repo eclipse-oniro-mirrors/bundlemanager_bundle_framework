@@ -749,6 +749,8 @@ public:
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
 
+    virtual ErrCode GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages) override;
+
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     virtual sptr<IDefaultApp> GetDefaultAppProxy() override;
 #endif

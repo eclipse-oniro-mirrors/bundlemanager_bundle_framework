@@ -2399,5 +2399,33 @@ ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, i
     }
     return dataMgr->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
 }
+
+ErrCode BundleMgrHostImpl::GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+{
+    APP_LOGD("begin to GetAllSharedPackageInfo userId: %{public}d", userId);
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission("")) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    // auto dataMgr = GetDataMgrFromService();
+    // if (dataMgr == nullptr) {
+    //     APP_LOGE("DataMgr is nullptr");
+    //     return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    // }
+    // return dataMgr->GetAllSharedPackageInfo(userId, sharedPackages);
+    SharedPackageInfo info;
+    info.bundleName = "testBundleName";
+    info.moduleName = "testModuleName";
+    SharedPackageInfo info2;
+    info2.bundleName = "testBundleName2";
+    info2.moduleName = "testModuleName2";
+    sharedPackages.push_back(info);
+    sharedPackages.push_back(info2);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
