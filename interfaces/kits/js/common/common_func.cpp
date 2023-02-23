@@ -102,25 +102,21 @@ napi_value CommonFunc::WrapVoidToJS(napi_env env)
     return result;
 }
 
-napi_value CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
+bool CommonFunc::ParseInt(napi_env env, napi_value args, int32_t &param)
 {
     napi_valuetype valuetype = napi_undefined;
-    NAPI_CALL(env, napi_typeof(env, args, &valuetype));
-    APP_LOGD("valuetype=%{public}d.", valuetype);
+    napi_typeof(env, args, &valuetype);
     if (valuetype != napi_number) {
         APP_LOGD("Wrong argument type. int32 expected.");
-        return nullptr;
+        return false;
     }
     int32_t value = 0;
-    napi_get_value_int32(env, args, &value);
-    APP_LOGD("param=%{public}d.", value);
-    param = value;
-    napi_value result = nullptr;
-    napi_status status = napi_create_int32(env, NAPI_RETURN_ONE, &result);
-    if (status != napi_ok) {
-        return nullptr;
+    if (napi_get_value_int32(env, args, &value) != napi_ok) {
+        APP_LOGD("napi_get_value_int32 failed.");
+        return false;
     }
-    return result;
+    param = value;
+    return true;
 }
 
 bool CommonFunc::ParsePropertyArray(napi_env env, napi_value args, const std::string &propertyName,
