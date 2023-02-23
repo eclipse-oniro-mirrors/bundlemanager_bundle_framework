@@ -108,6 +108,7 @@ constexpr int32_t API_VERSION_NINE = 9;
 // native so
 constexpr const char* ABI_DEFAULT = "default";
 constexpr const char* ABI_SEPARATOR = ",";
+constexpr const char* MODULE_NAME_SEPARATOR = ",";
 constexpr const char* ARM_EABI = "armeabi";
 constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";

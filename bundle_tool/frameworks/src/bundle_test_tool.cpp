@@ -22,6 +22,7 @@
 #include <iostream>
 #include <set>
 #include <sstream>
+#include <thread>
 #include <unistd.h>
 #include <vector>
 
@@ -44,6 +45,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string LINE_BREAK = "\n";
+constexpr int32_t SLEEP_SECONDS = 20;
 // param
 const int32_t INDEX_OFFSET = 2;
 // quick fix error code
@@ -145,7 +148,8 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  deleteQuickFix      delete a quick fix patch of an already installed bundle\n"
                              "  setDebugMode        enable signature debug mode\n"
                              "  getBundleStats        get bundle stats\n"
-                             "  getAppProvisionInfo   get appProvisionInfo\n";
+                             "  getAppProvisionInfo   get appProvisionInfo\n"
+                             "  eventCB        register then unregister bundle event callback\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
     "usage: bundle_test_tool getrm <options>\n"
@@ -387,6 +391,13 @@ const std::string HELP_MSG_GET_APP_PROVISION_INFO =
     "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
+const std::string HELP_MSG_BUNDLE_EVENT_CALLBACK =
+    "usage: bundle_test_tool eventCB <options>\n"
+    "options list:\n"
+    "  -h, --help           list available commands\n"
+    "  -o, --onlyUnregister only call unregister, default will call register then unregister\n";
+    "  -u, --uid            specify a uid, default is foundation uid\n";
+
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
 
@@ -514,7 +525,33 @@ const struct option LONG_OPTIONS_GET_BUNDLE_STATS[] = {
     {"user-id", required_argument, nullptr, 'u'},
     {nullptr, 0, nullptr, 0},
 };
+
+const std::string SHORT_OPTIONS_BUNDLE_EVENT_CALLBACK = "hou:";
+const struct option LONG_OPTIONS_BUNDLE_EVENT_CALLBACK[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"onlyUnregister", no_argument, nullptr, 'o'},
+    {"uid", required_argument, nullptr, 'u'},
+    {nullptr, 0, nullptr, 0},
+};
 }  // namespace
+
+BundleEventCallbackImpl::BundleEventCallbackImpl()
+{
+    APP_LOGI("create BundleEventCallbackImpl");
+}
+
+BundleEventCallbackImpl::~BundleEventCallbackImpl()
+{
+    APP_LOGI("destroy BundleEventCallbackImpl");
+}
+
+void BundleEventCallbackImpl::OnReceiveEvent(const EventFwk::CommonEventData eventData)
+{
+    const Want &want = eventData.GetWant();
+    std::string bundleName = want.GetElement().GetBundleName();
+    std::string moduleName = want.GetElement().GetModuleName();
+    APP_LOGI("OnReceiveEvent, bundleName:%{public}s, moduleName:%{public}s", bundleName.c_str(), moduleName.c_str());
+}
 
 BundleTestTool::BundleTestTool(int argc, char *argv[]) : ShellCommand(argc, argv, TOOL_NAME)
 {}
@@ -549,7 +586,8 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"deleteQuickFix", std::bind(&BundleTestTool::RunAsDeleteQuickFix, this)},
         {"setDebugMode", std::bind(&BundleTestTool::RunAsSetDebugMode, this)},
         {"getBundleStats", std::bind(&BundleTestTool::RunAsGetBundleStats, this)},
-        {"getAppProvisionInfo", std::bind(&BundleTestTool::RunAsGetAppProvisionInfo, this)}
+        {"getAppProvisionInfo", std::bind(&BundleTestTool::RunAsGetAppProvisionInfo, this)},
+        {"eventCB", std::bind(&BundleTestTool::HandleBundleEventCallback, this)},
     };
 
     return OHOS::ERR_OK;
@@ -2720,6 +2758,119 @@ ErrCode BundleTestTool::GetAppProvisionInfo(const std::string &bundleName,
         msg += "}\n";
     }
     return ret;
+}
+
+bool BundleTestTool::ParseEventCallbackOptions(bool &onlyUnregister, int32_t &uid)
+{
+    int32_t opt;
+    while ((opt = getopt_long(argc_, argv_, SHORT_OPTIONS_BUNDLE_EVENT_CALLBACK.c_str(),
+        LONG_OPTIONS_BUNDLE_EVENT_CALLBACK, nullptr)) != -1) {
+        switch (opt) {
+            case 'o': {
+                onlyUnregister = true;
+                break;
+            }
+            case 'u': {
+                if (!OHOS::StrToInt(optarg, uid)) {
+                    std::string msg = "invalid param, uid should be int";
+                    APP_LOGE("%{public}s", msg.c_str());
+                    resultReceiver_.append(msg).append(LINE_BREAK);
+                    return false;
+                }
+                break;
+            }
+            case 'h': {
+                resultReceiver_.append(HELP_MSG_BUNDLE_EVENT_CALLBACK);
+                return false;
+            }
+            default: {
+                std::string msg = "unsupported option";
+                resultReceiver_.append(msg).append(LINE_BREAK);
+                APP_LOGE("%{public}s", msg.c_str());
+                return false;
+            }
+        }
+    }
+    APP_LOGI("ParseEventCallbackOptions success");
+    return true;
+}
+
+void BundleTestTool::Sleep(int32_t seconds)
+{
+    APP_LOGI("begin to sleep %{public}d seconds", seconds);
+    std::this_thread::sleep_for(std::chrono::seconds(seconds));
+    APP_LOGI("sleep done");
+}
+
+ErrCode BundleTestTool::CallRegisterBundleEventCallback(sptr<BundleEventCallbackImpl> bundleEventCallback)
+{
+    APP_LOGI("begin to call RegisterBundleEventCallback");
+    std::string msg;
+    bool ret = bundleMgrProxy_->RegisterBundleEventCallback(bundleEventCallback);
+    if (!ret) {
+        msg = "RegisterBundleEventCallback failed";
+        resultReceiver_.append(msg).append(LINE_BREAK);
+        APP_LOGE("%{public}s", msg.c_str());
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    msg = "RegisterBundleEventCallback success";
+    resultReceiver_.append(msg).append(LINE_BREAK);
+    APP_LOGI("%{public}s", msg.c_str());
+    return OHOS::ERR_OK;
+}
+
+ErrCode BundleTestTool::CallUnRegisterBundleEventCallback(sptr<BundleEventCallbackImpl> bundleEventCallback)
+{
+    APP_LOGI("begin to call UnregisterBundleEventCallback");
+    std::string msg;
+    bool ret = bundleMgrProxy_->UnregisterBundleEventCallback(bundleEventCallback);
+    if (!ret) {
+        msg = "UnregisterBundleEventCallback failed";
+        resultReceiver_.append(msg).append(LINE_BREAK);
+        APP_LOGE("%{public}s", msg.c_str());
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    msg = "UnregisterBundleEventCallback success";
+    resultReceiver_.append(msg).append(LINE_BREAK);
+    APP_LOGI("%{public}s", msg.c_str());
+    return OHOS::ERR_OK;
+}
+
+ErrCode BundleTestTool::HandleBundleEventCallback()
+{
+    APP_LOGI("begin to HandleBundleEventCallback");
+    bool onlyUnregister = false;
+    int32_t uid = Constants::FOUNDATION_UID;
+    if (!ParseEventCallbackOptions(onlyUnregister, uid)) {
+        APP_LOGE("ParseEventCallbackOptions failed");
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    APP_LOGI("onlyUnregister : %{public}d, uid : %{public}d", onlyUnregister, uid);
+    if (bundleMgrProxy_ == nullptr) {
+        std::string msg = "bundleMgrProxy_ is nullptr";
+        resultReceiver_.append(msg).append(LINE_BREAK);
+        APP_LOGE("%{public}s", msg.c_str());
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    seteuid(uid);
+    ErrCode ret = OHOS::ERR_OK;
+    sptr<BundleEventCallbackImpl> bundleEventCallback = new (std::nothrow) BundleEventCallbackImpl();
+    if (onlyUnregister) {
+        // only call UnRegisterBundleEventCallback
+        return CallUnRegisterBundleEventCallback(bundleEventCallback);
+    }
+    // call RegisterBundleEventCallback then call UnRegisterBundleEventCallback
+    ret = CallRegisterBundleEventCallback(bundleEventCallback);
+    if (ret != OHOS::ERR_OK) {
+        return ret;
+    }
+    Sleep(SLEEP_SECONDS);
+    ret = CallUnRegisterBundleEventCallback(bundleEventCallback);
+    if (ret != OHOS::ERR_OK) {
+        return ret;
+    }
+    Sleep(SLEEP_SECONDS);
+    return OHOS::ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

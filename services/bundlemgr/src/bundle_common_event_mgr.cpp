@@ -61,6 +61,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetAction(eventData);
     ElementName element;
     element.SetBundleName(installResult.bundleName);
+    element.SetModuleName(installResult.modulePackage);
     element.SetAbilityName(installResult.abilityName);
     want.SetElement(element);
     want.SetParam(Constants::UID, installResult.uid);

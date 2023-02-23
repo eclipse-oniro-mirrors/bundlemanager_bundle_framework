@@ -124,6 +124,7 @@ ErrCode BaseBundleInstaller::InstallBundle(
     if (installParam.needSendEvent && dataMgr_ && !bundleName_.empty()) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName_,
+            .modulePackage = moduleName_,
             .abilityName = mainAbility_,
             .resultCode = result,
             .type = GetNotifyType(),
@@ -671,6 +672,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
+    moduleName_ = GetModuleNames(newInfos);
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     if (installParam.installFlag == InstallFlag::FREE_INSTALL) {
         DelayedSingleton<BundleMgrService>::GetInstance()->GetAgingMgr()->Start(
@@ -2094,6 +2096,20 @@ void BaseBundleInstaller::RemoveEmptyDirs(const std::unordered_map<std::string, 
     }
 }
 
+std::string BaseBundleInstaller::GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    if (infos.empty()) {
+        return Constants::EMPTY_STRING;
+    }
+    std::string moduleNames;
+    for (const auto &item : infos) {
+        moduleNames.append(item.second.GetCurrentModulePackage()).append(Constants::MODULE_NAME_SEPARATOR);
+    }
+    moduleNames.pop_back();
+    APP_LOGD("moduleNames : %{public}s", moduleNames.c_str());
+    return moduleNames;
+}
+
 ErrCode BaseBundleInstaller::RemoveModuleAndDataDir(
     const InnerBundleInfo &info, const std::string &modulePackage, int32_t userId, bool isKeepData) const
 {
@@ -2789,6 +2805,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     singletonState_ = SingletonState::DEFAULT;
     accessTokenId_ = 0;
     sysEventInfo_.Reset();
+    moduleName_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
