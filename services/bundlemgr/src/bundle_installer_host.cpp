@@ -87,6 +87,9 @@ int BundleInstallerHost::OnRemoteRequest(
         case IBundleInstaller::Message::UNINSTALL_MODULE:
             HandleUninstallModuleMessage(data);
             break;
+        case IBundleInstaller::Message::UNINSTALL_BY_UNINSTALL_PARAM:
+            HandleUninstallByUninstallParam(data);
+            break;
         case IBundleInstaller::Message::RECOVER:
             HandleRecoverMessage(data);
             break;
@@ -216,9 +219,24 @@ void BundleInstallerHost::HandleUninstallModuleMessage(Parcel &data)
         return;
     }
     sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
-
     Uninstall(bundleName, modulePackage, *installParam, statusReceiver);
     APP_LOGD("handle uninstall message finished");
+}
+
+void BundleInstallerHost::HandleUninstallByUninstallParam(Parcel &data)
+{
+    std::unique_ptr<UninstallParam> uninstallParam(data.ReadParcelable<UninstallParam>());
+    if (uninstallParam == nullptr) {
+        APP_LOGE("ReadParcelable<UninstallParam failed");
+        return;
+    }
+    sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return;
+    }
+    sptr<IStatusReceiver> statusReceiver = iface_cast<IStatusReceiver>(object);
+    Uninstall(*uninstallParam, statusReceiver);
 }
 
 void BundleInstallerHost::HandleInstallSandboxApp(Parcel &data, Parcel &reply)
@@ -412,6 +430,27 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
     manager_->CreateUninstallTask(
         bundleName, modulePackage, CheckInstallParam(installParam), statusReceiver);
     return true;
+}
+
+bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
+    const sptr<IStatusReceiver> &statusReceiver)
+{
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        APP_LOGE("statusReceiver invalid");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("Uninstall permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("uninstall permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    manager_->CreateUninstallTask(uninstallParam, statusReceiver);
+    return false;
 }
 
 bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,

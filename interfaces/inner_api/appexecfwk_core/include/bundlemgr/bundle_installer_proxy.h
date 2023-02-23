@@ -78,6 +78,13 @@ public:
     virtual bool Uninstall(const std::string &bundleName, const std::string &modulePackage,
         const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver) override;
     /**
+     * @brief Uninstalls a module in an application through the proxy object.
+     * @param uninstallParam Indicates the input param to uninstall.
+     * @param statusReceiver Indicates the callback object that using for notifing the uninstall result.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual bool Uninstall(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceiver) override;
+    /**
      * @brief Install sandbox application.
      * @param bundleName Indicates the bundle name of the sandbox application to be install.
      * @param dlpType Indicates type of the sandbox application.

@@ -57,6 +57,8 @@ public:
     bool Uninstall(const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver);
 
+    bool Uninstall(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceiver);
+
     bool Recover(const std::string &bundleName, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver);
 

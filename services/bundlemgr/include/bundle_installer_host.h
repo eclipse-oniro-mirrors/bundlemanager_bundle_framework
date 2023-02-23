@@ -87,6 +87,9 @@ public:
      */
     virtual bool Uninstall(const std::string &bundleName, const std::string &modulePackage,
         const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver) override;
+
+    virtual bool Uninstall(const UninstallParam &uninstallParam,
+        const sptr<IStatusReceiver> &statusReceiver) override;
     /**
      * @brief Installs an app by bundleName, only used in preInstall app.
      * @param bundleName Indicates the bundleName of the application to install.
@@ -156,6 +159,12 @@ private:
      * @return
      */
     void HandleUninstallModuleMessage(Parcel &data);
+    /**
+     * @brief Handles the uninstall by input uninstall param.
+     * @param data Indicates the data to be read.
+     * @return Returns true if the application is uninstall successfully; returns false otherwise.
+     */
+    void HandleUninstallByUninstallParam(Parcel &data);
     /**
      * @brief Handles the InstallSandboxApp function called from a IBundleInstaller proxy object.
      * @param data Indicates the data to be read.

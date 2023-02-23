@@ -64,6 +64,17 @@ struct InstallParam : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static InstallParam *Unmarshalling(Parcel &parcel);
 };
+
+struct UninstallParam : public Parcelable {
+    std::string bundleName;
+    std::string moduleName;
+    int32_t versionCode;
+    int32_t userId;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static UninstallParam *Unmarshalling(Parcel &parcel);
+};
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALL_PARAM_H

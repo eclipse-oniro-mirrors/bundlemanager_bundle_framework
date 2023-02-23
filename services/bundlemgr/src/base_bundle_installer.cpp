@@ -256,6 +256,12 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     return result;
 }
 
+ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
+{
+    // uninstall by uninstallParam, only for sharedModule
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::UninstallBundle(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {

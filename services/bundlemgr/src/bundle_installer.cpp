@@ -142,6 +142,16 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
     SendRemoveEvent();
 }
 
+void BundleInstaller::Uninstall(const UninstallParam &uninstallParam)
+{
+    ErrCode resultCode = ERR_OK;
+    resultCode = UninstallBundleByUninstallParam(uninstallParam);
+    if (statusReceiver_ != nullptr) {
+        statusReceiver_->OnFinished(resultCode, "");
+    }
+    SendRemoveEvent();
+}
+
 void BundleInstaller::Uninstall(
     const std::string &bundleName, const std::string &modulePackage, const InstallParam &installParam)
 {
