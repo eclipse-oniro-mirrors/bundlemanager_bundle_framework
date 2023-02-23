@@ -771,6 +771,9 @@ public:
 
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
+    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
+        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

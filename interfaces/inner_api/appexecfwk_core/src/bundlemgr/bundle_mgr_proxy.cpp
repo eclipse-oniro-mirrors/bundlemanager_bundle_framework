@@ -3181,6 +3181,32 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
         data, appProvisionInfo);
 }
 
+ErrCode BundleMgrProxy::GetBaseSharedPackageInfos(const std::string &bundleName,
+    int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get base shared package infos");
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetBaseSharedPackageInfos due to bundleName empty");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetBaseSharedPackageInfos due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetBaseSharedPackageInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBaseSharedPackageInfos due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<BaseSharedPackageInfo>(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
+        data, baseSharedPackageInfos);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

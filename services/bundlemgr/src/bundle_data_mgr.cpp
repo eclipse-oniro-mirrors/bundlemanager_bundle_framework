@@ -1505,6 +1505,79 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetBaseSharedPackageInfos(const std::string &bundleName,
+    int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        APP_LOGE("GetBaseSharedPackageInfos input invalid userid");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("GetBaseSharedPackageInfos get bundleInfo failed");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
+    for (const auto &item : dependencies) {
+        BaseSharedPackageInfo baseSharedPackageInfo;
+        if (GetBaseSharedPackageInfo(item, requestUserId, baseSharedPackageInfo)) {
+            baseSharedPackageInfos.emplace_back(baseSharedPackageInfo);
+        }
+    }
+    APP_LOGD("GetBaseSharedPackageInfos(%{public}s) successfully in user(%{public}d)", bundleName.c_str(),
+        requestUserId);
+    return ERR_OK;
+}
+
+bool BundleDataMgr::GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
+    BaseSharedPackageInfo &baseSharedPackageInfo) const
+{
+    auto infoItem = bundleInfos_.find(dependency.bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("GetBaseSharedPackageInfo failed, can not find dependency bundle %{public}s",
+            dependency.bundleName.c_str());
+        return false;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
+        return false;
+    }
+    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::BACK_COMPATIBLE) {
+        innerBundleInfo.GetMaxVerBaseSharedPackageInfo(dependency.moduleName, baseSharedPackageInfo);
+    } else if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::PRECISE_MATCH) {
+        innerBundleInfo.GetBaseSharedPackageInfo(dependency.moduleName, dependency.versionCode, baseSharedPackageInfo);
+    } else {
+        APP_LOGE("GetBaseSharedPackageInfo failed, can not find compatiblePolicy %{public}d",
+            innerBundleInfo.GetCompatiblePolicy());
+        return false;
+    }
+    APP_LOGD("GetBaseSharedPackageInfo(%{public}s) successfully in user(%{public}d)",
+        dependency.bundleName.c_str(), userId);
+    return true;
+}
+
+bool BundleDataMgr::DeleteSharedPackage(const std::string &bundleName)
+{
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem != bundleInfos_.end()) {
+        APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
+        const InnerBundleInfo &innerBundleInfo = infoItem->second;
+        bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
+        if (!ret) {
+            APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
+        }
+        bundleInfos_.erase(bundleName);
+        return ret;
+    }
+    return false;
+}
+
 ErrCode BundleDataMgr::GetBundlePackInfo(
     const std::string &bundleName, int32_t flags, BundlePackInfo &bundlePackInfo, int32_t userId) const
 {

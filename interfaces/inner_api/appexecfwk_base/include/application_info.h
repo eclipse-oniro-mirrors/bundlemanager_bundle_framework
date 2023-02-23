@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -50,6 +50,12 @@ enum class GetApplicationFlag {
 enum class BundleType {
     APP = 0,
     ATOMIC_SERVICE = 1,
+};
+
+enum class CompatiblePolicy {
+    NORMAL = 0,
+    BACK_COMPATIBLE = 1,
+    PRECISE_MATCH = 2,
 };
 
 struct Metadata : public Parcelable {
@@ -233,6 +239,8 @@ struct ApplicationInfo : public Parcelable {
 
     bool split = true;
     BundleType bundleType = BundleType::APP;
+
+    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

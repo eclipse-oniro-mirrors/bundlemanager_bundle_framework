@@ -763,6 +763,8 @@ public:
         AppProvisionInfo &appProvisionInfo) override;
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) override;
+    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName, int32_t userId,
+        std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

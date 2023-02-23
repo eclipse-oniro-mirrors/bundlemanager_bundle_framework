@@ -44,6 +44,9 @@
       "OHOS::AppExecFwk::AppRunningControlRuleResult::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::AppRunningControlRuleResult::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::AppRunningControlRuleResult::Unmarshalling(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::BaseSharedPackageInfo::Marshalling(OHOS::Parcel&) const";
+      "OHOS::AppExecFwk::BaseSharedPackageInfo::ReadFromParcel(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::BaseSharedPackageInfo::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::BundleInfo::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::BundleInfo::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::BundleInfo::Unmarshalling(OHOS::Parcel&)";
@@ -349,6 +352,7 @@
       "vtable for OHOS::AppExecFwk::AppProvisionInfo";
       "vtable for OHOS::AppExecFwk::AppqfInfo";
       "vtable for OHOS::AppExecFwk::AppQuickFix";
+      "vtable for OHOS::AppExecFwk::BaseSharedPackageInfo";
       "vtable for OHOS::AppExecFwk::BundleInfo";
       "vtable for OHOS::AppExecFwk::BundlePackInfo";
       "vtable for OHOS::AppExecFwk::CommonEventInfo";
@@ -372,6 +376,7 @@
       "VTT for OHOS::AppExecFwk::AppProvisionInfo";
       "VTT for OHOS::AppExecFwk::AppqfInfo";
       "VTT for OHOS::AppExecFwk::AppQuickFix";
+      "VTT for OHOS::AppExecFwk::BaseSharedPackageInfo";
       "VTT for OHOS::AppExecFwk::BundleInfo";
       "VTT for OHOS::AppExecFwk::BundlePackInfo";
       "VTT for OHOS::AppExecFwk::CommonEventInfo";
