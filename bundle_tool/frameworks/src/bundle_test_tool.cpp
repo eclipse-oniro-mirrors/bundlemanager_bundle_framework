@@ -2773,8 +2773,8 @@ bool BundleTestTool::ParseEventCallbackOptions(bool &onlyUnregister, int32_t &ui
             case 'u': {
                 if (!OHOS::StrToInt(optarg, uid)) {
                     std::string msg = "invalid param, uid should be int";
-                    APP_LOGE("%{public}s", msg.c_str());
                     resultReceiver_.append(msg).append(LINE_BREAK);
+                    APP_LOGE("%{public}s", msg.c_str());
                     return false;
                 }
                 break;
