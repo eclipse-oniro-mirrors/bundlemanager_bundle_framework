@@ -1018,16 +1018,16 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1800, Function | SmallTest 
 {
     OverlayDataMgr overlayDataMgr;
     OverlayModuleInfo overlayModuleInfos;
-    ErrCode res = overlayDataMgr.GetOverlayModuleInfo("","", overlayModuleInfos, USERID);
+    ErrCode res = overlayDataMgr.GetOverlayModuleInfo("", "", overlayModuleInfos, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
 
     AddInnerBundleInfo();
     res = overlayDataMgr.GetOverlayModuleInfo(
-        TEST_BUNDLE_NAME,TEST_MODULE_NAME, overlayModuleInfos, Constants::INVALID_USERID);
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, Constants::INVALID_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
     res = overlayDataMgr.GetOverlayModuleInfo(
-        TEST_BUNDLE_NAME,TEST_MODULE_NAME, overlayModuleInfos, USERID);
+        TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
     UninstallBundleInfo();
 }
@@ -1107,7 +1107,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2100, Function | SmallTest 
     AddInnerBundleInfo();
     res = overlayDataMgr.SetOverlayEnabled(
         TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, Constants::INVALID_USERID);
-    EXPECT_EQ(res,ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
 
     res = overlayDataMgr.SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, isEnabled, USERID);
     EXPECT_EQ(res,ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
