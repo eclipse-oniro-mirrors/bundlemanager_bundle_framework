@@ -3892,7 +3892,7 @@ std::string BundleDataMgr::GetIconById(
         return Constants::EMPTY_STRING;
     }
     std::string base64;
-    OHOS::Global::Resource::RState errValue = resourceManager->GetMediaBase64DataById(resId, density, base64);
+    OHOS::Global::Resource::RState errValue = resourceManager->GetMediaBase64DataById(resId, base64, density);
     if (errValue != OHOS::Global::Resource::RState::SUCCESS) {
         APP_LOGE("GetIconById failed");
         return Constants::EMPTY_STRING;
