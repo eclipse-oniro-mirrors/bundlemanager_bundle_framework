@@ -617,6 +617,8 @@ private:
 
     ErrCode HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetAllSharedPackageInfo(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

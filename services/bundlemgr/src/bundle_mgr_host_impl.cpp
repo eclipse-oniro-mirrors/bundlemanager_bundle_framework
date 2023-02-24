@@ -2399,5 +2399,20 @@ ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, i
     }
     return dataMgr->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
 }
+
+ErrCode BundleMgrHostImpl::GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+{
+    APP_LOGD("begin to GetAllSharedPackageInfo userId: %{public}d", userId);
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission("")) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

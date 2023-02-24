@@ -28,6 +28,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
+#include "shared_package/shared_package_info.h"
 #include "want.h"
 
 namespace OHOS {
@@ -186,6 +187,13 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     BundleInfo bundleInfo;
 };
 
+struct SharedPackageCallbackInfo : public BaseCallbackInfo {
+    explicit SharedPackageCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::vector<SharedPackageInfo> sharedPackages;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -209,6 +217,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
+napi_value GetAllSharedPackageInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
@@ -222,6 +231,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
 void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value);
+void CreateCompatiblePolicyObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H

@@ -39,6 +39,7 @@
 #include "module_usage_record.h"
 #include "permission_define.h"
 #include "shared_package/base_shared_package_info.h"
+#include "shared_package/shared_package_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1113,6 +1114,11 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+    {
+        return ERR_OK;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1220,6 +1226,7 @@ public:
         GET_APP_PROVISION_INFO,
         GET_PROVISION_METADATA,
         GET_BASE_SHARED_PACKAGE_INFOS,
+        GET_ALL_SHARED_PACKAGE_INFO,
     };
 };
 }  // namespace AppExecFwk

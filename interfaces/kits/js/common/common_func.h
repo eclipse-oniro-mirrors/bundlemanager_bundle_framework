@@ -25,6 +25,7 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "shared_package/shared_package_info.h"
 #include "want.h"
 
 namespace OHOS {
@@ -136,6 +137,10 @@ static void ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info
 static void ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos, napi_value objInfos);
 
 static std::string ObtainCallingBundleName();
+
+static void ConvertSharedPackageInfo(napi_env env, napi_value value, const SharedPackageInfo &packageInfo);
+static void ConvertAllSharedPackageInfo(napi_env env, napi_value value,
+    const std::vector<SharedPackageInfo> &sharedPackages);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,

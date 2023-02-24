@@ -208,6 +208,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_PROVISION_METADATA, &BundleMgrHost::HandleGetProvisionMetadata);
     funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
         &BundleMgrHost::HandleGetBaseSharedPackageInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_ALL_SHARED_PACKAGE_INFO, &BundleMgrHost::HandleGetAllSharedPackageInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2425,6 +2426,23 @@ ErrCode BundleMgrHost::HandleGetBaseSharedPackageInfos(MessageParcel &data, Mess
     }
     if (!WriteParcelableVector(infos, reply)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllSharedPackageInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    int32_t userId = data.ReadInt32();
+    std::vector<SharedPackageInfo> infos;
+    ErrCode ret = GetAllSharedPackageInfo(userId, infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAllSharedPackageInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write infos failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
