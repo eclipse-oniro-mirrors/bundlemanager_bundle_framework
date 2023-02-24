@@ -412,6 +412,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAppCrowdtestDeadline(newInfo.GetAppCrowdtestDeadline());
         oldInfo.SetBundlePackInfo(newInfo.GetBundlePackInfo());
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
         if (!dataStorage_->SaveStorageBundleInfo(oldInfo)) {
             APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
             return false;
@@ -4315,6 +4316,13 @@ bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t use
     APP_LOGW("app control is disable");
     return true;
 #endif
+}
+
+ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+    std::vector<Metadata> &provisionMetadatas) const
+{
+    // Reserved interface
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

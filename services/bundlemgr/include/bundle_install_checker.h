@@ -179,6 +179,9 @@ private:
         const std::string &bundleName);
 
     bool isContainEntry_ = false;
+
+    void SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
+        InnerBundleInfo &newInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
