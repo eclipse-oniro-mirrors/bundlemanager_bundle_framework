@@ -1407,6 +1407,10 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
         return false;
     }
+    if (moduleName.find(Constants::MODULE_NAME_SEPARATOR) != std::string::npos) {
+        APP_LOGE("module name should not contain ,");
+        return false;
+    }
     return true;
 }
 
