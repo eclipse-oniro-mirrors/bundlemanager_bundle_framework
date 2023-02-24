@@ -53,9 +53,6 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
   ]
-  if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
-  }
   deps += bundle_install_deps
 
   external_deps = [
@@ -82,6 +79,9 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
+  }
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
   }
   if (bundle_framework_free_install) {
     sources += aging
