@@ -18,6 +18,7 @@
 
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
+#include "bundle_sandbox_exception_handler.h"
 #include "bundle_sandbox_installer.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
@@ -29,6 +30,7 @@
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::EventFwk;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
@@ -1947,6 +1949,22 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest |
 }
 
 /**
+ * @tc.number: GetInnerBundleInfoByUid_0500
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. system run normally
+ */
+HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0500, Function | SmallTest | Level1)
+{
+    std::shared_ptr<BundleSandboxDataMgr> dataMgr =
+        std::make_shared<BundleSandboxDataMgr>();
+    InnerBundleInfo info;
+    ErrCode testRet = dataMgr->GetInnerBundleInfoByUid(Constants::INVALID_UID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
+    testRet = dataMgr->GetInnerBundleInfoByUid(TEST_UID, info);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);
+}
+
+/**
  * @tc.number: GenerateSandboxAppIndex_0100
  * @tc.name: test original bundle has been installed at other userId
  * @tc.desc: 1. the original bundle has been installed at current userId
@@ -2022,4 +2040,85 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0200, Function | SmallTest | Level
     int32_t appIndex = 0;
     bool ret = DeleteSandboxAppIndex(bundleName, appIndex);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleMgrCommonEvent_0100
+ * @tc.name: OnReceiveEvent
+ * @tc.desc: 1.Test the interface of OnReceiveEvent
+ */
+HWTEST_F(BmsSandboxAppTest, BundleMgrCommonEvent_0100, Function | SmallTest | Level1)
+{
+    CommonEventSubscribeInfo subscribeInfo;
+    std::map<int32_t, std::vector<std::string>> sandboxDirs;
+    BundleMgrCommonEventSubscriber Subscriber(subscribeInfo, sandboxDirs);
+    Want want;
+    want.SetAction("usual.event.USER_UNLOCKED");
+    CommonEventData data;
+    data.SetWant(want);
+    Subscriber.OnReceiveEvent(data);
+    EXPECT_EQ(want.GetAction(), "usual.event.USER_UNLOCKED");
+    want.SetAction("action.hello");
+    data.SetWant(want);
+    Subscriber.OnReceiveEvent(data);
+    EXPECT_EQ(want.GetAction(), "action.hello");
+}
+
+/**
+ * @tc.number: BundleMgrCommonEvent_0200
+ * @tc.name: RemoveSandboxDataDir
+ * @tc.desc: 1.Test delete sandbox data dir
+ */
+HWTEST_F(BmsSandboxAppTest, BundleMgrCommonEvent_0200, Function | SmallTest | Level1)
+{
+    CommonEventSubscribeInfo subscribeInfo;
+    std::map<int32_t, std::vector<std::string>> sandboxDirs;
+    BundleMgrCommonEventSubscriber subscriber(subscribeInfo, sandboxDirs);
+    std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir;
+    subscriber.RemoveSandboxDataDir(USERID, toDeleteSandboxDir);
+    EXPECT_EQ(toDeleteSandboxDir.empty(), true);
+    std::vector<std::string> dir;
+    toDeleteSandboxDir.try_emplace(USERID, dir);
+    subscriber.RemoveSandboxDataDir(INVALID_USERID, toDeleteSandboxDir);
+    EXPECT_EQ(toDeleteSandboxDir.empty(), false);
+    subscriber.RemoveSandboxDataDir(USERID, toDeleteSandboxDir);
+    EXPECT_EQ(toDeleteSandboxDir.empty(), false);
+}
+
+/**
+ * @tc.number: SandboxExceptionHandler_0100
+ * @tc.name: KeepSandboxDirs
+ * @tc.desc: 1.Test keep sandbox dir
+ */
+HWTEST_F(BmsSandboxAppTest, SandboxExceptionHandler_0100, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleDataStorage> dataStorage;
+    BundleSandboxExceptionHandler handler(dataStorage);
+    std::vector<std::string> dirs;
+    handler.sandboxDirs_.try_emplace(INVALID_USERID, dirs);
+    int32_t appIndex = 0;
+    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
+    handler.sandboxDirs_.try_emplace(USERID, dirs);
+    handler.ListeningUserUnlocked();
+    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
+    handler.RemoveDataDir();
+    EXPECT_EQ(handler.sandboxDirs_.empty(), false);
+}
+
+/**
+ * @tc.number: SandboxExceptionHandler_0200
+ * @tc.name: KeepSandboxDirs
+ * @tc.desc: 1.Test keep sandbox dir
+ */
+HWTEST_F(BmsSandboxAppTest, SandboxExceptionHandler_0200, Function | SmallTest | Level1)
+{
+    std::shared_ptr<IBundleDataStorage> dataStorage;
+    BundleSandboxExceptionHandler handler(dataStorage);
+    std::vector<std::string> dirs;
+    handler.sandboxDirs_.try_emplace(INVALID_USERID, dirs);
+    int32_t appIndex = 0;
+    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
+    handler.sandboxDirs_.try_emplace(USERID, dirs);
+    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
+    EXPECT_EQ(handler.sandboxDirs_.empty(), false);
 }

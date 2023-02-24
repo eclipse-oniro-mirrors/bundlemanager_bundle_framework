@@ -1564,6 +1564,38 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, CommonEventInfo_0100, Function | Smal
 }
 
 /**
+ * @tc.number: CheckNeedPreloadTest
+ * @tc.name: Test CheckNeedPreload
+ * @tc.desc: 1.Test CheckNeedPreload of ApplicationInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, CheckNeedPreloadTest, Function | SmallTest | Level1)
+{
+    ApplicationInfo applicationInfo;
+    std::vector<ModuleInfo> moduleInfos;
+    ModuleInfo info1;
+    info1.moduleName = "settings";
+    moduleInfos.emplace_back(info1);
+    applicationInfo.moduleInfos = moduleInfos;
+    std::string moduleName = "entry";
+    bool ret = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(ret, false);
+    ModuleInfo info2;
+    info2.moduleName = "entry";
+    info2.preloads.emplace_back("entry");
+    moduleInfos.emplace_back(info2);
+    applicationInfo.moduleInfos = moduleInfos;
+    ret = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(ret, false);
+
+    moduleInfos.clear();
+    info2.preloads.emplace_back("settings");
+    moduleInfos.emplace_back(info2);
+    applicationInfo.moduleInfos = moduleInfos;
+    ret = applicationInfo.CheckNeedPreload(moduleName);
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: SetAccessTokenIdEx_0100
  * @tc.name: Test SetAccessTokenIdEx
  * @tc.desc: 1.Test the SetAccessTokenIdEx
