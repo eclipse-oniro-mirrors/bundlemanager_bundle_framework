@@ -3032,7 +3032,7 @@ ErrCode BaseBundleInstaller::ProcessAsanDirectory(InnerBundleInfo &info) const
         }
     }
     if (asanEnabled) {
-        info.SetAsanLogPath(asanLogDir);
+        info.SetAsanLogPath(LOG);
     }
     // clean asan directory
     if (dirExist && !asanEnabled) {

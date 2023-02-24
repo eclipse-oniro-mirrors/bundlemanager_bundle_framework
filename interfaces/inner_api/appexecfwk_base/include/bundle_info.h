@@ -106,8 +106,6 @@ struct BundleInfo : public Parcelable {
     std::string mainEntry; // modulePackage
     std::string entryModuleName; // moduleName
     bool entryInstallationFree = false; // application : false; atomic service : true
-    bool asanEnabled = false;
-
     std::string appId;
 
     // user related fields, assign when calling the get interface
