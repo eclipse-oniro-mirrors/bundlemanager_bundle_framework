@@ -227,7 +227,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .resultCode = result,
             .type = NotifyType::UNINSTALL_BUNDLE,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .isAgingUninstall = installParam.isAgingUninstall
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -269,7 +270,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .resultCode = result,
             .type = NotifyType::UNINSTALL_MODULE,
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .isAgingUninstall = installParam.isAgingUninstall
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
