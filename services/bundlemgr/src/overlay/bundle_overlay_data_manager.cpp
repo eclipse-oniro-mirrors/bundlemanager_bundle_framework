@@ -522,7 +522,8 @@ ErrCode OverlayDataMgr::SaveInternalOverlayModuleState(const OverlayModuleInfo &
         if (iter != overlayStates.end()) {
             overlayStates.erase(iter);
         }
-        std::string overlayModuleState = overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
+        std::string overlayModuleState =
+            overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
         overlayStates.emplace_back(overlayModuleState);
         innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     }
@@ -926,7 +927,6 @@ void OverlayDataMgr::AddOverlayModuleStates(const InnerBundleInfo &innerBundleIn
             bool isTargetModuleExisted = innerBundleInfo.FindModule(moduleInfo.targetModuleName);
             item = isTargetModuleExisted ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
                 (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_INVALID));
-
         }
         if (innerBundleInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
             std::string targetBundleName = innerBundleInfo.GetTargetBundleName();

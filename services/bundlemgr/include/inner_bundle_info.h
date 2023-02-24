@@ -1817,7 +1817,7 @@ public:
                 innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
                 [&bundleName](const auto &overlayInfo) {
                     return overlayInfo.bundleName == bundleName;
-            }), innerModuleInfo.second.overlayModuleInfo.end());
+                }), innerModuleInfo.second.overlayModuleInfo.end());
         }
     }
 
