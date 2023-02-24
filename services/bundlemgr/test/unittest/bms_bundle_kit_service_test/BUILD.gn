@@ -76,6 +76,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -197,6 +198,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []

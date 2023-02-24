@@ -59,6 +59,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "access_token:libtokenid_sdk",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (ability_runtime_enable) {

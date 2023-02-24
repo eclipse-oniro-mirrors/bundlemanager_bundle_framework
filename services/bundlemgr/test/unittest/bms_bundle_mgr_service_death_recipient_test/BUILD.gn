@@ -39,6 +39,7 @@ ohos_unittest("BmsBundleMgrServiceDeathRecipientTest") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 }
 

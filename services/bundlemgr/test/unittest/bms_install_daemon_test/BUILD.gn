@@ -56,6 +56,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (build_selinux) {
@@ -99,6 +100,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (build_selinux) {
@@ -145,6 +147,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
@@ -187,6 +190,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {

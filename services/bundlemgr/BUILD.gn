@@ -29,6 +29,7 @@ config("bundlemgr_common_config") {
     "//base/powermgr/power_manager/interfaces/innerkits/native/include",
     "//utils/system/safwk/native/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
+    "//foundation/filemanagement/storage_service/services/storage_manager/include/ipc",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
@@ -232,6 +233,7 @@ ohos_shared_library("libbms") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
     "syscap_codec:syscap_interface_shared",
   ]
 
@@ -334,6 +336,10 @@ ohos_shared_library("libbms") {
     configs += [ ":app_control_config" ]
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += app_control
+  }
+
+  if (build_variant == "root") {
+    defines += [ "QUOTA_SET_FOR_TEST" ]
   }
 
   subsystem_name = "bundlemanager"

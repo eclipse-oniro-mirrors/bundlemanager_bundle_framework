@@ -55,6 +55,12 @@
 #include "bundle_overlay_install_checker.h"
 #endif
 
+#include "storage_manager_proxy.h"
+#include "iservice_registry.h"
+#ifdef QUOTA_SET_FOR_TEST
+#include "parameter.h"
+#endif // QUOTA_SET_FOR_TEST
+
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::Security;
@@ -63,6 +69,14 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string RELEASE = "Release";
+
+#ifdef QUOTA_SET_FOR_TEST
+const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
+    "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
+const int32_t THRESHOLD_VAL_LEN = 20;
+#endif // QUOTA_SET_FOR_TEST
+const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
+const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -1835,6 +1849,51 @@ ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
     return ERR_OK;
 }
 
+static void SendToStorageQuota(const std::string &bundleName, const int uid,
+    const std::string &bundleDataDirPath, const int limitSizeMb)
+{
+    auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGW("SendToStorageQuota, systemAbilityManager error");
+    }
+
+    auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
+    if (!remote) {
+        APP_LOGW("SendToStorageQuota, CheckSystemAbility error");
+    }
+
+    auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
+    if (!proxy) {
+        APP_LOGW("SendToStorageQuotactl, proxy get error");
+    }
+
+    int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
+    if (err != ERR_OK) {
+        APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d", err);
+    }
+}
+
+static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, const std::string &bundleDataDirPath)
+{
+    int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
+#ifdef QUOTA_SET_FOR_TEST
+    char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
+        szAtomicDatasizeThresholdMb, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        APP_LOGI("GetParameter failed");
+    } else if (strcmp(szAtomicDatasizeThresholdMb, "") != 0) {
+        atomicserviceDatasizeThreshold = atoi(szAtomicDatasizeThresholdMb);
+        APP_LOGI("InstalldQuotaUtils init atomicserviceDataThreshold mb success");
+    }
+    if (atomicserviceDatasizeThreshold <= 0) {
+        APP_LOGW("no need to prepare quota");
+        return;
+    }
+#endif
+    SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
+}
+
 ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
 {
     InnerBundleUserInfo newInnerBundleUserInfo;
@@ -1855,7 +1914,11 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         APP_LOGE("fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
-
+    if (info.GetEntryInstallationFree()) {
+        std::string bundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+            Constants::PATH_SEPARATOR + std::to_string(userId_) + Constants::BASE + info.GetBundleName();
+        PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
+    }
     if (info.GetIsNewVersion()) {
         result = CreateArkProfile(
             info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);

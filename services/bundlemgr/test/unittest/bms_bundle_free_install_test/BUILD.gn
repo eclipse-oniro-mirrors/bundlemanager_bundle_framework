@@ -87,6 +87,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
     "syscap_codec:syscap_interface_shared",
   ]
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
@@ -211,6 +212,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "power_manager:powermgr_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
     "syscap_codec:syscap_interface_shared",
   ]
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
