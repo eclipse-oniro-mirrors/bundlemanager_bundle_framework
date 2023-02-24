@@ -17,11 +17,22 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_BUNDLE_TOOL_INCLUDE_BUNDLE_TEST_TOOL_H
 
 #include "shell_command.h"
+#include "bundle_event_callback_host.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_installer_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+class BundleEventCallbackImpl : public BundleEventCallbackHost {
+public:
+    BundleEventCallbackImpl();
+    virtual ~BundleEventCallbackImpl() override;
+    virtual void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
+
+private:
+    DISALLOW_COPY_AND_MOVE(BundleEventCallbackImpl);
+};
+
 class BundleTestTool : public ShellCommand {
 public:
     BundleTestTool(int argc, char *argv[]);
@@ -61,6 +72,7 @@ private:
     ErrCode RunAsSetDebugMode();
     ErrCode RunAsGetBundleStats();
     ErrCode RunAsGetAppProvisionInfo();
+    ErrCode HandleBundleEventCallback();
 
     std::condition_variable cv_;
     std::mutex mutex_;
@@ -110,6 +122,10 @@ private:
     bool GetBundleStats(const std::string &bundleName, int32_t userId, std::string& msg);
     ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId, std::string& msg);
     ErrCode BundleNameAndUserIdCommonFunc(std::string &bundleName, int32_t &userId);
+    bool ParseEventCallbackOptions(bool &onlyUnregister, int32_t &uid);
+    void Sleep(int32_t seconds);
+    ErrCode CallRegisterBundleEventCallback(sptr<BundleEventCallbackImpl> bundleEventCallback);
+    ErrCode CallUnRegisterBundleEventCallback(sptr<BundleEventCallbackImpl> bundleEventCallback);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

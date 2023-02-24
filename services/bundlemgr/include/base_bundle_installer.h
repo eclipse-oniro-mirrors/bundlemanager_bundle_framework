@@ -478,6 +478,7 @@ private:
     ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
     ErrCode RemoveBundleDataDir(const InnerBundleInfo &info) const;
     void RemoveEmptyDirs(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    std::string GetModuleNames(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     Security::AccessToken::AccessTokenIDEx CreateAccessTokenIdEx(const InnerBundleInfo &info);
     ErrCode GrantRequestPermissions(const InnerBundleInfo &info, const uint32_t tokenId);
     ErrCode UpdateDefineAndRequestPermissions(const InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
@@ -584,6 +585,7 @@ private:
     EventInfo sysEventInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
+    std::string moduleName_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
