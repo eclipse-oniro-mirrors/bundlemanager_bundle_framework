@@ -549,18 +549,17 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
 bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
 {
     std::set<std::string> preloadModules;
-    for (const ModuleInfo &moduleInfo : moduleInfos) {
-        auto it = std::find_if(std::begin(moduleInfos), std::end(moduleInfos),
-            [moduleName](ModuleInfo info){ return info.moduleName == moduleName; });
-        if (it != moduleInfos.end()) {
-            for (const std::string &name : it->preloads) {
-                preloadModules.insert(name);
-            }
-        } else {
-            APP_LOGE("CheckNeedPreload failed for wrong moduleName.");
-            return false;
+    auto it = std::find_if(std::begin(moduleInfos), std::end(moduleInfos), [moduleName](ModuleInfo info)
+        {return info.moduleName == moduleName;});
+    if (it != moduleInfos.end()) {
+        for (const std::string &name : it->preloads) {
+            preloadModules.insert(name);
         }
+    } else {
+        APP_LOGE("CheckNeedPreload failed for wrong moduleName.");
+        return false;
     }
+
     if (preloadModules.empty()) {
         APP_LOGD("the module have no preloads.");
         return false;
