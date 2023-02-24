@@ -1840,11 +1840,17 @@ std::string BundleManagerShellCommand::DumpOverlayInfo(const std::string &bundle
     userId = BundleCommandCommon::GetCurrentUserId(userId);
     if (moduleName.empty() && targetModuleName.empty()) {
         ret = overlayManagerProxy->GetAllOverlayModuleInfo(bundleName, overlayModuleInfos, userId);
+        if (overlayModuleInfos.empty()) {
+            ret = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_MODULE_INFO;
+        }
     } else if (!moduleName.empty()) {
         ret = overlayManagerProxy->GetOverlayModuleInfo(bundleName, moduleName, overlayModuleInfo, userId);
     } else {
         ret = overlayManagerProxy->GetOverlayModuleInfoForTarget(bundleName, targetModuleName, overlayModuleInfos,
             userId);
+        if (overlayModuleInfos.empty()) {
+            ret = ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_MODULE_INFO;
+        }
     }
     if (ret != ERR_OK) {
         APP_LOGE("dump-overlay failed due to errcode %{public}d", ret);

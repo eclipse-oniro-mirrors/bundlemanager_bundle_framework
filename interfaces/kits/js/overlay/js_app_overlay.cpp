@@ -447,13 +447,111 @@ napi_value GetTargetOverlayModuleInfos(napi_env env, napi_callback_info info)
 napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetOverlayModuleInfoByBundleName called");
-    return nullptr;
+    NapiArg args(env, info);
+    OverlayCallbackInfo *overlayCallbackInfo = new (std::nothrow) OverlayCallbackInfo(env);
+    if (overlayCallbackInfo == nullptr) {
+        APP_LOGE("overlayCallbackInfo is null.");
+        return nullptr;
+    }
+
+    std::unique_ptr<OverlayCallbackInfo> callbackPtr {overlayCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid!", overlayCallbackInfo->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+                break;
+            }
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
+                APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+            break;
+        } else {
+            APP_LOGE("GetOverlayModuleInfoByBundleName arg err!");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    if (!overlayCallbackInfo->moduleName.empty()) {
+        overlayCallbackInfo->option = OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME;
+    } else {
+        overlayCallbackInfo->option = OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME;
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<OverlayCallbackInfo>(
+        env, overlayCallbackInfo, GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, GetOverlayModuleInfoExec,
+        GetOverlayModuleInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetOverlayModuleInfoByBundleName done.");
+    return promise;
 }
 
 napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetTargetOverlayModuleInfosByBundleName called");
-    return nullptr;
+    NapiArg args(env, info);
+    OverlayCallbackInfo *overlayCallbackInfo = new (std::nothrow) OverlayCallbackInfo(env);
+    if (overlayCallbackInfo == nullptr) {
+        APP_LOGE("overlayCallbackInfo is null.");
+        return nullptr;
+    }
+    overlayCallbackInfo->option = OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME;
+    std::unique_ptr<OverlayCallbackInfo> callbackPtr {overlayCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->targetBundleName)) {
+                APP_LOGE("targetBundleName %{public}s invalid!", overlayCallbackInfo->targetBundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TARGET_BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+                break;
+            }
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
+                APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+            break;
+        } else {
+            APP_LOGE("GetTargetOverlayModuleInfosByBundleName arg err!");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<OverlayCallbackInfo>(
+        env, overlayCallbackInfo, GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME, GetOverlayModuleInfoExec,
+        GetTargetOverlayModuleInfosComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetTargetOverlayModuleInfosByBundleName done.");
+    return promise;
 }
 } // AppExecFwk
 } // OHOS
