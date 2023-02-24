@@ -28,6 +28,7 @@
 #endif
 #include "account_helper.h"
 #include "app_log_wrapper.h"
+#include "app_provision_info_manager.h"
 #include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
@@ -4476,6 +4477,10 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
     int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
     if (responseUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
+        APP_LOGE("bundleName:%{public}s GetAppProvisionInfo failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }

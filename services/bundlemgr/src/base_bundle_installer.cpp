@@ -37,6 +37,7 @@
 #endif
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
+#include "app_provision_info_manager.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
@@ -697,6 +698,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(newInfos, sysEventInfo_);
+    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
     sync();
     return result;
 }
@@ -930,6 +932,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         quickFixDataMgr->DeleteInnerAppQuickFix(bundleName);
     }
 #endif
+    DeleteAppProvisionInfo(bundleName);
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
     return ERR_OK;
 }
@@ -3062,6 +3065,27 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
     }
     info.SetAsanLogPath("");
     return errCode;
+}
+
+bool BaseBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
+    const Security::Verify::ProvisionInfo &provisionInfo) const
+{
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
+        bundleName, appProvisionInfo)) {
+        APP_LOGE("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool BaseBundleInstaller::DeleteAppProvisionInfo(const std::string &bundleName) const
+{
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+        APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

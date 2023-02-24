@@ -45,6 +45,7 @@ const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string RELEASE = "Release";
+const std::string APL_NORMAL = "normal";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -1029,6 +1030,29 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
         }
     }
     return ERR_OK;
+}
+
+AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
+    const Security::Verify::ProvisionInfo &provisionInfo) const
+{
+    AppProvisionInfo appProvisionInfo;
+    appProvisionInfo.versionCode = provisionInfo.versionCode;
+    appProvisionInfo.versionName = provisionInfo.versionName;
+    if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        appProvisionInfo.type = Constants::APP_PROVISION_TYPE_DEBUG;
+        appProvisionInfo.certificate = provisionInfo.bundleInfo.developmentCertificate;
+    } else {
+        appProvisionInfo.type = Constants::APP_PROVISION_TYPE_RELEASE;
+        appProvisionInfo.certificate = provisionInfo.bundleInfo.distributionCertificate;
+    }
+    appProvisionInfo.appDistributionType = GetAppDistributionType(provisionInfo.distributionType);
+    appProvisionInfo.apl = provisionInfo.bundleInfo.apl.empty() ? APL_NORMAL : provisionInfo.bundleInfo.apl;
+    appProvisionInfo.developerId = provisionInfo.bundleInfo.developerId;
+    appProvisionInfo.issuer = provisionInfo.issuer;
+    appProvisionInfo.uuid = provisionInfo.uuid;
+    appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
+    appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
+    return appProvisionInfo;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
