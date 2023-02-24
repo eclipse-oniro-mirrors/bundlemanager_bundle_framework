@@ -1795,7 +1795,6 @@ bool ToBundleInfo(
     bundleInfo.vendor = applicationInfo.vendor;
     bundleInfo.releaseType = applicationInfo.apiReleaseType;
     bundleInfo.isNativeApp = false;
-    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
 
     if (innerModuleInfo.isEntry) {
         bundleInfo.mainEntry = innerModuleInfo.moduleName;

@@ -1404,7 +1404,6 @@ public:
     void SetAsanEnabled(bool asanEnabled)
     {
         baseApplicationInfo_->asanEnabled = asanEnabled;
-        baseBundleInfo_->asanEnabled = asanEnabled;
     }
 
     void SetAllowedAcls(const std::vector<std::string> &allowedAcls)

@@ -2180,7 +2180,6 @@ bool ToBundleInfo(
 
     bundleInfo.isKeepAlive = applicationInfo.keepAlive;
     bundleInfo.singleton = applicationInfo.singleton;
-    bundleInfo.asanEnabled = applicationInfo.asanEnabled;
     bundleInfo.isPreInstallApp = transformParam.isPreInstallApp;
 
     bundleInfo.vendor = applicationInfo.vendor;

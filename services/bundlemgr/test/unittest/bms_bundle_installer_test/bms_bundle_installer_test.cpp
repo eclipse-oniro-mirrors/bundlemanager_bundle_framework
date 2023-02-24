@@ -2803,8 +2803,7 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0100, Function | SmallTest | L
         ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
     EXPECT_TRUE(info.asanEnabled);
-    std::string asanLogPath =  Constants::BUNDLE_ASAN_LOG_DIR + Constants::PATH_SEPARATOR
-        + std::to_string(USERID) + Constants::PATH_SEPARATOR + BUNDLE_BACKUP_NAME + Constants::PATH_SEPARATOR + LOG;
+    std::string asanLogPath = LOG;
     EXPECT_EQ(asanLogPath, info.asanLogPath);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
