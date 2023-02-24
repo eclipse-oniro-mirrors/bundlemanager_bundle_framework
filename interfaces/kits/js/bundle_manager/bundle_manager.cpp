@@ -77,14 +77,14 @@ static std::unordered_map<Query, napi_ref, QueryHash> cache;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
-void ConvertValidity(napi_env env, const Validity &Validity, napi_value objValidity)
+void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity)
 {
     napi_value notBefore;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, validity.notBefore, &notBefore));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notBefore, &notBefore));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notBefore", notBefore));
 
     napi_value notAfter;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, validity.notAfter, &notAfter));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notAfter, &notAfter));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notAfter", notAfter));
 }
 
@@ -3219,8 +3219,8 @@ void GetAppProvisionInfoExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
-            asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
+        asyncCallbackInfo->err = InnerGetAppProvisionInfo(
+            asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, asyncCallbackInfo->appProvisionInfo);
     }
 }
 
@@ -3237,8 +3237,7 @@ void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        ConvertAppProvisionInfo(env,
-            asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
+        ConvertAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
@@ -3280,7 +3279,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
                 APP_LOGE("bundleName invalid!");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_NUMBER);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
@@ -3288,11 +3287,11 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             }
-            if (CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId) == nullptr) {
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
                 return nullptr;
             }
-        } else if (i == ARGS_POS_TWO){
+        } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
