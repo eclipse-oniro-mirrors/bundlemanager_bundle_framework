@@ -94,7 +94,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
     const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
-    if (targetBundleName.empty() || targetModuleName.empty()) {
+    if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
