@@ -411,7 +411,8 @@ protected:
                 "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0,
-                "overlayState": 0
+                "overlayState": 0,
+                "compatiblePolicy": 0
             },
             "baseBundleInfo": {
                 "asanEnabled": false,
@@ -769,7 +770,9 @@ protected:
                 ]
             },
             "uid": -1,
-            "userId_": 100
+            "userId_": 100,
+            "provisionMetadatas": {},
+            "innerSharedPackageModuleInfos": {}
         }
     )"_json;
 
