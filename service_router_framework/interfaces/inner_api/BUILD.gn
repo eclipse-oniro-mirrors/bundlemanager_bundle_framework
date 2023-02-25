@@ -20,9 +20,9 @@ config("srms_fwk_config") {
 }
 
 ohos_shared_library("srms_fwk") {
-  sources = [ "src/service_info.cpp",
-    "src/service_router_mgr_proxy.cpp",
-    "src/service_router_mgr_client.cpp", ]
+  sources = [ 
+    "src/service_info.cpp",
+    "src/service_router_mgr_proxy.cpp", ]
 
   defines = [
     "APP_LOG_TAG = \"ServiceRouterMgrService\"",
