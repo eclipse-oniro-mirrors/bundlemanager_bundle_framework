@@ -36,6 +36,8 @@ namespace OHOS {
         if (rulePtr == nullptr) {
             return false;
         }
+        delete rulePtr;
+        rulePtr = nullptr;
         AppRunningControlRuleResult *readRule =
             new (std::nothrow) AppRunningControlRuleResult();
         if (readRule == nullptr) {

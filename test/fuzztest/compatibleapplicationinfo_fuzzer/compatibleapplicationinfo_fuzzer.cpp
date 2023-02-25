@@ -40,6 +40,8 @@ namespace OHOS {
         if (infoPtr == nullptr) {
             return false;
         }
+        delete infoPtr;
+        infoPtr = nullptr;
         CompatibleApplicationInfo *compatibleApplicationInfo =
             new (std::nothrow) CompatibleApplicationInfo();
         if (compatibleApplicationInfo == nullptr) {
