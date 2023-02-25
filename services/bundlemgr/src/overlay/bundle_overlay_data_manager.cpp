@@ -841,7 +841,7 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
     // 2. whether bundle is overlay bundle
-    if (innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+    if ((GetCallingBundleName() != bundleName) && innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
         APP_LOGE("current bundle %{public}s is non-overlay bundle", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE;
     }
