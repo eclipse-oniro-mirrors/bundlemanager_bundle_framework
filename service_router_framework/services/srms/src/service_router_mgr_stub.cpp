@@ -18,6 +18,10 @@
 #include "app_log_wrapper.h"
 #include "service_router_mgr_stub.h"
 #include "service_info.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
+#include "tokenid_kit.h"
+#include "bundle_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -40,8 +44,7 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
         return ERR_INVALID_STATE;
     }
 
-    switch (code)
-    {
+    switch (code) {
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_SERVICE_INFOS):
             return HandleQueryServiceInfos(data, reply);
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_INTENT_INFOS):
@@ -56,6 +59,14 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
 int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("ServiceRouterMgrStub handle query service infos");
+    if (!VerifySystemApp()) {
+            APP_LOGE("verify system app failed");
+            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+            APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     Want *want = data.ReadParcelable<Want>();
     ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());
     std::vector<ServiceInfo> infos;
@@ -64,13 +75,11 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
         APP_LOGE("QueryServiceInfos result:%{public}d", ret);
         return ret;
     }
-    if (!reply.WriteBool(true))
-    {
+    if (!reply.WriteBool(true)) {
         APP_LOGE("QueryServiceInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector<ServiceInfo>(infos, reply))
-    {
+    if (!WriteParcelableVector<ServiceInfo>(infos, reply)) {
         APP_LOGE("QueryServiceInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -80,6 +89,14 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
 int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("ServiceRouterMgrStub handle query service infos with muti param");
+    if (!VerifySystemApp()) {
+        APP_LOGE("verify system app failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     Want *want = data.ReadParcelable<Want>();
     std::string intentName = data.ReadString();
     std::vector<IntentInfo> infos;
@@ -88,32 +105,67 @@ int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessagePar
         APP_LOGE("QueryServiceInfos result:%{public}d", ret);
         return ret;
     }
-    if (!reply.WriteBool(true))
-    {
+    if (!reply.WriteBool(true)) {
         APP_LOGE("QueryIntentInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector<IntentInfo>(infos, reply))
-    {
+    if (!WriteParcelableVector<IntentInfo>(infos, reply)) {
         APP_LOGE("QueryIntentInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return NO_ERROR;
 }
 
+bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permissionName)
+{
+    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
+    OHOS::Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    OHOS::Security::AccessToken::ATokenTypeEnum tokenType =
+        OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    int32_t ret = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
+    if (ret == OHOS::Security::AccessToken::PermissionState::PERMISSION_DENIED) {
+        APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        return false;
+    }
+    APP_LOGD("verify permission success");
+    return true;
+}
+
+bool ServiceRouterMgrStub::VerifySystemApp()
+{
+    APP_LOGI("verifying systemApp");
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    Security::AccessToken::ATokenTypeEnum tokenType =
+        Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
+        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL || callingUid == Constants::ROOT_UID) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
+    }
+    return true;
+}
+
 template <typename T>
 bool ServiceRouterMgrStub::WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply)
 {
-    if (!reply.WriteInt32(parcelableVector.size()))
-    {
+    if (!reply.WriteInt32(parcelableVector.size())) {
         APP_LOGE("write ParcelableVector failed");
         return false;
     }
 
-    for (auto &parcelable : parcelableVector)
-    {
-        if (!reply.WriteParcelable(&parcelable))
-        {
+    for (auto &parcelable : parcelableVector) {
+        if (!reply.WriteParcelable(&parcelable)) {
             APP_LOGE("write ParcelableVector failed");
             return false;
         }

@@ -46,8 +46,6 @@ constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* NAME = "name";
 constexpr const char* SERVICE_TYPE = "serviceType";
 constexpr const char* PERMISSIONS = "permissions";
-constexpr const char* READ_PERMISSION = "readPermission";
-constexpr const char* WRITE_PERMISSION = "writePermission";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON_ID = "iconId";
@@ -147,16 +145,6 @@ static void ConvertServiceInfo(napi_env env, const ServiceInfo &serviceInfo, nap
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nAppInfo));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, APPLICATION_INFO, nAppInfo));
-
-    napi_value nReadPermission;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, serviceInfo.readPermission.c_str(), NAPI_AUTO_LENGTH, &nReadPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, READ_PERMISSION, nReadPermission));
-
-    napi_value nWritePermission;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, serviceInfo.writePermission.c_str(), NAPI_AUTO_LENGTH, &nWritePermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, WRITE_PERMISSION, nWritePermission));
 }
 
 static void ConvertServiceInfos(napi_env env, const std::vector<ServiceInfo> &serviceInfos,

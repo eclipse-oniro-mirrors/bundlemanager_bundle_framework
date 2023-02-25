@@ -30,7 +30,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 static std::unordered_map<std::string, ExtensionServiceType> SERVICE_TYPE_MAP = {
-    { "SHARE", ExtensionServiceType::SHARE }
+    { "share", ExtensionServiceType::SHARE }
 };
 }
 class BundleInfoResolveUtil {
@@ -43,12 +43,11 @@ static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentIn
         APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
         return false;
     }
-    APP_LOGI("ResolveBundleInfo, bundleName: %{public}s", bundleInfo.name.c_str());
     ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos);
     ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos);
     if (intentInfos.empty() && serviceInfos.empty())
     {
-        APP_LOGI("ConvertBundleInfo, not support intent or service");
+        APP_LOGD("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
         return false;
     }
     return true;
@@ -148,9 +147,9 @@ static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInf
     {
         return;
     }
-    std::string intentName = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
-    APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, intent: %{public}s", extAbilityInfo.name.c_str(), intentName.c_str());
-    auto item = SERVICE_TYPE_MAP.find(intentName);
+    std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
+    APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s", extAbilityInfo.name.c_str(), serviceType.c_str());
+    auto item = SERVICE_TYPE_MAP.find(serviceType);
     if (!intentName.empty() && item != SERVICE_TYPE_MAP.end())
     {
         ServiceInfo serviceInfo;
@@ -161,8 +160,6 @@ static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInf
         serviceInfo.iconId = extAbilityInfo.iconId;
         serviceInfo.labelId = extAbilityInfo.labelId;
         serviceInfo.descriptionId = extAbilityInfo.descriptionId;
-        serviceInfo.readPermission = extAbilityInfo.readPermission;
-        serviceInfo.writePermission = extAbilityInfo.writePermission;
         serviceInfo.permissions = extAbilityInfo.permissions;
         serviceInfos.emplace_back(serviceInfo);
     }

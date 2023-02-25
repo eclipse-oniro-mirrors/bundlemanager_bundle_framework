@@ -124,7 +124,6 @@
                         "header_base": "//foundation/bundlemanager/bundle_framework/service_router_framework/interfaces/inner_api/include",
                         "header_files": [
                             "service_info.h",
-                            "service_router_mgr_client.h",
                             "service_router_mgr_interface.h",
                             "service_router_mgr_proxy.h"
                         ]
