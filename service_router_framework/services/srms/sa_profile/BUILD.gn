@@ -22,7 +22,7 @@ group("srms") {
 }
 
 ohos_sa_profile("srms_sa_profile") {
-  sources = [ "404.json" ]
+  sources = [ "404.xml" ]
 
   part_name = "bundle_framework"
 }
