@@ -418,6 +418,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
 
     this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
     this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
+    this->provisionMetadatas_ = info.provisionMetadatas_;
     return *this;
 }
 
