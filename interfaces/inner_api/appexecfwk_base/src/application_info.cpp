@@ -555,9 +555,6 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         for (const std::string &name : it->preloads) {
             preloadModules.insert(name);
         }
-    } else {
-        APP_LOGE("CheckNeedPreload failed for wrong moduleName.");
-        return false;
     }
 
     if (preloadModules.empty()) {
