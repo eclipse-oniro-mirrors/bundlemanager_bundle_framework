@@ -1238,7 +1238,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0400, Function | Smal
 
     res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
         "targetBundleName", "", overlayModuleInfo, USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED);
 
     res = overlayManagerHostImpl.GetOverlayModuleInfoForTarget(
         "", "", overlayModuleInfo, USERID);
