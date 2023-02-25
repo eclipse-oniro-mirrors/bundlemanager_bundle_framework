@@ -45,8 +45,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
-    const int userid, const int uid, const int gid, const std::string &apl)
+ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     return ERR_OK;
 }

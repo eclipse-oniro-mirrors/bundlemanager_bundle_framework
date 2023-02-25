@@ -2099,9 +2099,25 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0300, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0400, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.CreateBundleDataDir("", INVAILD_CODE, INVAILD_CODE, INVAILD_CODE, TEST_STRING);
+    CreateDirParam createDirParam = {
+        .bundleName = "",
+        .userId = INVAILD_CODE,
+        .uid = INVAILD_CODE,
+        .gid = INVAILD_CODE,
+        .apl = TEST_STRING,
+        .isPreInstallApp = false
+    };
+    auto ret = impl.CreateBundleDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = impl.CreateBundleDataDir(TEST_STRING, 99, ZERO_CODE, ZERO_CODE, TEST_STRING);
+    CreateDirParam createDirParam2 = {
+        .bundleName = TEST_STRING,
+        .userId = 99,
+        .uid = ZERO_CODE,
+        .gid = ZERO_CODE,
+        .apl = TEST_STRING,
+        .isPreInstallApp = false
+    };
+    ret = impl.CreateBundleDataDir(createDirParam2);
     EXPECT_EQ(ret, ERR_OK);
 }
 

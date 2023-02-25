@@ -90,16 +90,14 @@ ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::st
     return TransactInstalldCmd(IInstalld::Message::RENAME_MODULE_DIR, data, reply, option);
 }
 
-ErrCode InstalldProxy::CreateBundleDataDir(const std::string &bundleName,
-    const int userid, const int uid, const int gid, const std::string &apl)
+ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
-    INSTALLD_PARCEL_WRITE(data, Int32, userid);
-    INSTALLD_PARCEL_WRITE(data, Int32, uid);
-    INSTALLD_PARCEL_WRITE(data, Int32, gid);
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(apl));
+    if (!data.WriteParcelable(&createDirParam)) {
+        APP_LOGE("WriteParcelable createDirParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     MessageOption option;

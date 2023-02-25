@@ -134,8 +134,15 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0400, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->CreateBundleDataDir(TEST_STRING, 0, 0, 0, TEST_STRING);
+    CreateDirParam createDirParam = {
+        .bundleName = TEST_STRING,
+        .userId = 0,
+        .uid = 0,
+        .gid = 0,
+        .apl = TEST_STRING,
+        .isPreInstallApp = false
+    };
+    auto ret = hostImpl->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -598,8 +605,15 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->CreateBundleDataDir(TEST_STRING, -1, -1, -1, TEST_STRING);
+    CreateDirParam createDirParam = {
+        .bundleName = TEST_STRING,
+        .userId = -1,
+        .uid = -1,
+        .gid = -1,
+        .apl = TEST_STRING,
+        .isPreInstallApp = false
+    };
+    auto ret = hostImpl->CreateBundleDataDir(createDirParam);
     EXPECT_NE(ret, ERR_OK);
 }
 

@@ -1036,9 +1036,14 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
     }
-
-    if (InstalldClient::GetInstance()->CreateBundleDataDir(bundleName, userId, innerBundleUserInfo.uid,
-        innerBundleUserInfo.uid, GetAppPrivilegeLevel(bundleName, userId))) {
+    CreateDirParam createDirParam = {
+        .bundleName = bundleName,
+        .userId = userId,
+        .uid = innerBundleUserInfo.uid,
+        .gid = innerBundleUserInfo.uid,
+        .apl = GetAppPrivilegeLevel(bundleName, userId)
+    };
+    if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam)) {
         APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
