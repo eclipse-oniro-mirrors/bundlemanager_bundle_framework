@@ -150,7 +150,7 @@ static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInf
     std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
     APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s", extAbilityInfo.name.c_str(), serviceType.c_str());
     auto item = SERVICE_TYPE_MAP.find(serviceType);
-    if (!intentName.empty() && item != SERVICE_TYPE_MAP.end())
+    if (!serviceType.empty() && item != SERVICE_TYPE_MAP.end())
     {
         ServiceInfo serviceInfo;
         serviceInfo.abilityName = extAbilityInfo.name;
