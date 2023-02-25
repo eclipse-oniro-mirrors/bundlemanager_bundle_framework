@@ -56,7 +56,7 @@ static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentIn
 
 private:
 static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, std::vector<IntentInfo> &intentInfos)
-    {
+{
     if (abilityInfos.empty())
     {
         return;
@@ -144,7 +144,7 @@ static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInf
 
 static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInfo, std::vector<ServiceInfo> &serviceInfos)
 {
-    if (extAbilityInfo.type != ExtensionAbilityType::UIEXTESNION)
+    if (extAbilityInfo.type != ExtensionAbilityType::UI)
     {
         return;
     }

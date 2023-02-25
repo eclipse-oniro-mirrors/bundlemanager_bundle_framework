@@ -127,8 +127,8 @@ int32_t ServiceRouterMgrProxy::GetParcelableInfos(
         std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (!info)
         {
-        APP_LOGE("Read Parcelable infos failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+            APP_LOGE("Read Parcelable infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         parcelableInfos.emplace_back(*info);
     }
