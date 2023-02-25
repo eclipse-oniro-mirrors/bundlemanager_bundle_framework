@@ -33,6 +33,8 @@ namespace OHOS {
         if (application == nullptr) {
             return false;
         }
+        delete application;
+        application = nullptr;
         ApplicationInfo oldApplicationInfo;
         if (!oldApplicationInfo.Marshalling(dataMessageParcel)) {
             return false;
