@@ -67,8 +67,6 @@ bool ServiceInfo::ReadFromParcel(Parcel &parcel)
     iconId = parcel.ReadInt32();
     labelId = parcel.ReadInt32();
     descriptionId = parcel.ReadInt32();
-    readPermission = Str16ToStr8(parcel.ReadString16());
-    writePermission = Str16ToStr8(parcel.ReadString16());
 
     int32_t size;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
@@ -91,8 +89,6 @@ bool ServiceInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(readPermission));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions)
     {

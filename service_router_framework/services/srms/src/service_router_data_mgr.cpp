@@ -21,10 +21,8 @@
 #include "app_log_wrapper.h"
 #include "sr_samgr_helper.h"
 
-
 namespace OHOS {
 namespace AppExecFwk {
-
 ServiceRouterDataMgr::ServiceRouterDataMgr()
 {
     APP_LOGD("SRDM instance is created");
@@ -40,20 +38,16 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
 {
     APP_LOGI("SRDM LoadAllBundleInfos");
     auto bms = SrSamgrHelper::GetInstance().GetBundleMgr();
-    if (bms == nullptr)
-    {
+    if (bms == nullptr) {
         APP_LOGE("SRDM GetBundleMgr return null");
         return false;
     }
     auto flags = (BundleFlag::GET_BUNDLE_WITH_ABILITIES | BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO);
     std::vector<BundleInfo> bundleInfos;
     bool ret = bms->GetBundleInfos(flags, bundleInfos, Constants::ALL_USERID);
-    if (!ret)
-    {
+    if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
-    }
-    for (const auto &bundleInfo : bundleInfos)
-    {
+    } for (const auto &bundleInfo : bundleInfos) {
         UpdateBundleInfo(bundleInfo);
     }
     return ret;
@@ -63,16 +57,14 @@ bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
 {
     APP_LOGD("SRDM LoadBundleInfo");
     auto bms = SrSamgrHelper::GetInstance().GetBundleMgr();
-    if (bms == nullptr)
-    {
+    if (bms == nullptr) {
         APP_LOGI("SRDM GetBundleMgr return null");
         return false;
     }
     BundleInfo bundleInfo;
     auto flags = (BundleFlag::GET_BUNDLE_WITH_ABILITIES | BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO);
     bool ret = bms->GetBundleInfo(bundleName, flags, bundleInfo, Constants::ALL_USERID);
-    if (!ret)
-    {
+    if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
     }
     UpdateBundleInfo(bundleInfo);
@@ -84,18 +76,14 @@ bool ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
     APP_LOGD("SRDM UpdateBundleInfo");
     std::vector<IntentInfo> intentInfos;
     std::vector<ServiceInfo> serviceInfos;
-    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos))
-    {
+    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos)) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         auto infoItem = innerServiceInfos_.find(bundleInfo.name);
-        if (infoItem == innerServiceInfos_.end())
-        {
+        if (infoItem == innerServiceInfos_.end()) {
             InnerServiceInfo innerServiceInfo;
             innerServiceInfo.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
             innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
-        }
-        else
-        {
+        } else {
             infoItem->second.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
         }
         return true;
@@ -108,8 +96,7 @@ bool ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
     APP_LOGD("SRDM DeleteBundleInfo");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = innerServiceInfos_.find(bundleName);
-    if (infoItem == innerServiceInfos_.end())
-    {
+    if (infoItem == innerServiceInfos_.end()) {
         APP_LOGE("SRDM inner service info not found by bundleName");
         return false;
     }
@@ -120,25 +107,19 @@ bool ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
 int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const
 {
     APP_LOGD("SRDM QueryServiceInfos");
-    if (serviceType == ExtensionServiceType::UNSPECIFIED)
-    {
+    if (serviceType == ExtensionServiceType::UNSPECIFIED) {
         APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-    if (bundleName.empty())
-    {
-        for (const auto &item : innerServiceInfos_)
-        {
+    if (bundleName.empty()) {
+        for (const auto &item : innerServiceInfos_) {
             item.second.FindServiceInfos(serviceType, serviceInfos);
         }
-    }
-    else
-    {
+    } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
-        if (infoItem == innerServiceInfos_.end())
-        {
+        if (infoItem == innerServiceInfos_.end()) {
             return ERR_OK;
         }
         infoItem->second.FindServiceInfos(serviceType, serviceInfos);
@@ -149,26 +130,20 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
 int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) const
 {
     APP_LOGD("SRDM QueryIntentInfos");
-    if (intentName.empty())
-    {
+    if (intentName.empty()) {
         APP_LOGE("SRDM QueryIntentInfos, intentName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-    if (bundleName.empty())
-    {
-        for (const auto &item : innerServiceInfos_)
-        {
+    if (bundleName.empty()) {
+        for (const auto &item : innerServiceInfos_) {
             item.second.FindIntentInfos(intentName, intentInfos);
         }
-    }
-    else
-    {
+    } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
-        if (infoItem == innerServiceInfos_.end())
-        {
+        if (infoItem == innerServiceInfos_.end()) {
             return ERR_OK;
         }
         infoItem->second.FindIntentInfos(intentName, intentInfos);
@@ -179,10 +154,8 @@ int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::stri
 bool ServiceRouterDataMgr::IsContainsForm(const std::vector<IntentInfo> &intentInfos)
 {
     bool isContainsForm = false;
-    for (auto &intentInfo : intentInfos)
-    {
-        if (intentInfo.componentType == ComponentType::FORM)
-        {
+    for (auto &intentInfo : intentInfos) {
+        if (intentInfo.componentType == ComponentType::FORM) {
             isContainsForm = true;
             break;
         }

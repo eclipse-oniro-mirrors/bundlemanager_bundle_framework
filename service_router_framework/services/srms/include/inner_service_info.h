@@ -87,7 +87,6 @@ public:
         }
         for (const auto &serviceInfo : serviceInfos)
         {
-            serviceInfo.appInfo = appInfo_.get();
             serviceInfos_.emplace_back(serviceInfo);
         }
     }
