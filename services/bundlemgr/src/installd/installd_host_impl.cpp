@@ -213,7 +213,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         }
     }
     std::string distributedfile = Constants::DISTRIBUTED_FILE;
-    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(userid));
+    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for distributedfile");

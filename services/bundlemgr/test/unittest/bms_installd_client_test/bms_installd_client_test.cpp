@@ -325,7 +325,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0300, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0400, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0400 start";
-    CreateDirParam createDirParam; 
+    CreateDirParam createDirParam;
     createDirParam.bundleName = BUNDLE_NAME;
     createDirParam.userId = USERID;
     createDirParam.uid = UID;
