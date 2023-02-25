@@ -17,16 +17,14 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_MODULE_INFO_H
 
 #include <string>
-#include <vector>
 
-#include "message_parcel.h"
 #include "parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 struct SharedModuleInfo : public Parcelable {
     std::string name;
-    uint32_t versionCode;
+    uint32_t versionCode = 0;
     std::string versionName;
     std::string description;
     int32_t descriptionId = 0;

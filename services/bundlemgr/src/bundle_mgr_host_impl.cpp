@@ -2412,35 +2412,6 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(int32_t userId, std::vector<Sh
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    std::vector<SharedModuleInfo> sharedModuleInfos;
-    SharedModuleInfo moduleInfo;
-    moduleInfo.name = "moduleName";
-    moduleInfo.versionCode = 100;
-    moduleInfo.versionName = "versionName";
-    moduleInfo.description = "description";
-    moduleInfo.descriptionId = 1000;
-    SharedModuleInfo moduleInfo2;
-    moduleInfo2.name = "moduleName2";
-    moduleInfo2.versionCode = 101;
-    moduleInfo2.versionName = "versionName2";
-    moduleInfo2.description = "description2";
-    moduleInfo2.descriptionId = 1001;
-    sharedModuleInfos.push_back(moduleInfo);
-    sharedModuleInfos.push_back(moduleInfo2);
-
-    SharedBundleInfo sharedBundleInfo;
-    sharedBundleInfo.name = "bundleName";
-    sharedBundleInfo.compatiblePolicy = CompatiblePolicy::BACK_COMPATIBLE;
-    sharedBundleInfo.sharedModuleInfos = sharedModuleInfos;
-
-    SharedBundleInfo sharedBundleInfo2;
-    sharedBundleInfo.name = "bundleName2";
-    sharedBundleInfo.compatiblePolicy = CompatiblePolicy::BACK_COMPATIBLE;
-    // sharedBundleInfo.sharedModuleInfos = sharedModuleInfos;
-
-    sharedBundles.push_back(sharedBundleInfo);
-    sharedBundles.push_back(sharedBundleInfo2);
-
     return ERR_OK;
 }
 }  // namespace AppExecFwk

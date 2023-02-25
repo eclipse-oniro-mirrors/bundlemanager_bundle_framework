@@ -16,8 +16,6 @@
 #include "shared_bundle_info.h"
 
 #include "app_log_wrapper.h"
-#include "json_util.h"
-#include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "string_ex.h"
 

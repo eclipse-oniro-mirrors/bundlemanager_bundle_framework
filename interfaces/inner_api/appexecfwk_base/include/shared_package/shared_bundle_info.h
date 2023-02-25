@@ -22,15 +22,13 @@
 #include "parcel.h"
 
 #include "application_info.h"
-#include "hap_module_info.h"
-#include "message_parcel.h"
 #include "shared_module_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 struct SharedBundleInfo : public Parcelable {
     std::string name;
-    CompatiblePolicy compatiblePolicy;
+    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
     std::vector<SharedModuleInfo> sharedModuleInfos;
 
     bool ReadFromParcel(Parcel &parcel);
