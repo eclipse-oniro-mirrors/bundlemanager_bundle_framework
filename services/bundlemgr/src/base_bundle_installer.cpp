@@ -1848,14 +1848,13 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         APP_LOGE("fail to generate uid and gid");
         return ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR;
     }
-    CreateDirParam createDirParam = {
-        .bundleName = info.GetBundleName(),
-        .userId = userId_,
-        .uid = newInnerBundleUserInfo.uid,
-        .gid = newInnerBundleUserInfo.uid,
-        .apl = info.GetAppPrivilegeLevel(),
-        .isPreInstallApp = info.IsPreInstallApp()
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = info.GetBundleName();
+    createDirParam.userId = userId_;
+    createDirParam.uid = newInnerBundleUserInfo.uid;
+    createDirParam.gid = newInnerBundleUserInfo.uid;
+    createDirParam.apl = info.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {

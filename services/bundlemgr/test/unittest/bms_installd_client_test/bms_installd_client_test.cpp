@@ -265,14 +265,13 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_RenameModuleDir_0300, Test
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0100, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0100 start";
-    CreateDirParam createDirParam = {
-        .bundleName = EMPTY_STRING,
-        .userId = USERID,
-        .uid = UID,
-        .gid = GID,
-        .apl = APL,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = EMPTY_STRING;
+    createDirParam.userId = USERID;
+    createDirParam.uid = UID;
+    createDirParam.gid = GID;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
     ErrCode result = installClient_->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0100 end";
@@ -286,14 +285,13 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0100, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0200, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0200 start";
-    CreateDirParam createDirParam = {
-        .bundleName = BUNDLE_NAME,
-        .userId = -1,
-        .uid = UID,
-        .gid = GID,
-        .apl = APL,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.userId = -1;
+    createDirParam.uid = UID;
+    createDirParam.gid = GID;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
     ErrCode result = installClient_->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0200 end";
@@ -307,14 +305,13 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0200, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0300, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0300 start";
-    CreateDirParam createDirParam = {
-        .bundleName = BUNDLE_NAME,
-        .userId = USERID,
-        .uid = -1,
-        .gid = GID,
-        .apl = APL,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.userId = USERID;
+    createDirParam.uid = -1;
+    createDirParam.gid = GID;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
     ErrCode result = installClient_->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0300 end";
@@ -328,14 +325,13 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0300, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0400, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0400 start";
-    CreateDirParam createDirParam = {
-        .bundleName = BUNDLE_NAME,
-        .userId = USERID,
-        .uid = UID,
-        .gid = -1,
-        .apl = APL,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam; 
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.userId = USERID;
+    createDirParam.uid = UID;
+    createDirParam.gid = -1;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
     ErrCode result = installClient_->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0400 end";
@@ -349,14 +345,13 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0400, 
 HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CreateBundleDataDir_0500, TestSize.Level1)
 {
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0500 start";
-    CreateDirParam createDirParam = {
-        .bundleName = BUNDLE_NAME,
-        .userId = USERID,
-        .uid = UID,
-        .gid = GID,
-        .apl = APL,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = BUNDLE_NAME;
+    createDirParam.userId = USERID;
+    createDirParam.uid = UID;
+    createDirParam.gid = GID;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
     ErrCode result = installClient_->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(result, installClient_->CallService(&IInstalld::CreateBundleDataDir, createDirParam));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CreateBundleDataDir_0500 end";

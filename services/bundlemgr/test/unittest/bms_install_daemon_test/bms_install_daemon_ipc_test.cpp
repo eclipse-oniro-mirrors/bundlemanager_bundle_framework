@@ -213,14 +213,13 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_0400, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    CreateDirParam createDirParam = {
-        .bundleName = TEST_STRING,
-        .userId = 0,
-        .uid = 0,
-        .gid = 0,
-        .apl = TEST_STRING,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.userId = 0;
+    createDirParam.uid = 0;
+    createDirParam.gid = 0;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
     auto ret = proxy->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_OK);
 }

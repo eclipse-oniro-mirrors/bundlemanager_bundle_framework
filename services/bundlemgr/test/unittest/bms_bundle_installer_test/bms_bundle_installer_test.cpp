@@ -2099,14 +2099,13 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0300, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0400, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    CreateDirParam createDirParam = {
-        .bundleName = "",
-        .userId = INVAILD_CODE,
-        .uid = INVAILD_CODE,
-        .gid = INVAILD_CODE,
-        .apl = TEST_STRING,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = "";
+    createDirParam.userId = INVAILD_CODE;
+    createDirParam.uid = INVAILD_CODE;
+    createDirParam.gid = INVAILD_CODE;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
     auto ret = impl.CreateBundleDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     CreateDirParam createDirParam2 = {

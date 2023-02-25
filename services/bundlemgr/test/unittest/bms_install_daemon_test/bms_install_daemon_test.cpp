@@ -119,14 +119,13 @@ int BmsInstallDaemonTest::CreateBundleDataDir(const std::string &bundleDataDir,
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    CreateDirParam createDirParam = {
-        .bundleName = bundleDataDir,
-        .userId = userid,
-        .uid = uid,
-        .gid = gid,
-        .apl = apl,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleDataDir;
+    createDirParam.userId = userid;
+    createDirParam.uid = uid;
+    createDirParam.gid = gid;
+    createDirParam.apl = apl;
+    createDirParam.isPreInstallApp = false;
     return InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
 }
 

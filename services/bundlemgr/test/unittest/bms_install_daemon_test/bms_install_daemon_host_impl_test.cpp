@@ -134,14 +134,13 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0400, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
-    CreateDirParam createDirParam = {
-        .bundleName = TEST_STRING,
-        .userId = 0,
-        .uid = 0,
-        .gid = 0,
-        .apl = TEST_STRING,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.userId = 0;
+    createDirParam.uid = 0;
+    createDirParam.gid = 0;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
     auto ret = hostImpl->CreateBundleDataDir(createDirParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
@@ -605,14 +604,13 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3200, Function | Sma
 {
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
-    CreateDirParam createDirParam = {
-        .bundleName = TEST_STRING,
-        .userId = -1,
-        .uid = -1,
-        .gid = -1,
-        .apl = TEST_STRING,
-        .isPreInstallApp = false
-    };
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = TEST_STRING;
+    createDirParam.userId = -1;
+    createDirParam.uid = -1;
+    createDirParam.gid = -1;
+    createDirParam.apl = TEST_STRING;
+    createDirParam.isPreInstallApp = false;
     auto ret = hostImpl->CreateBundleDataDir(createDirParam);
     EXPECT_NE(ret, ERR_OK);
 }
