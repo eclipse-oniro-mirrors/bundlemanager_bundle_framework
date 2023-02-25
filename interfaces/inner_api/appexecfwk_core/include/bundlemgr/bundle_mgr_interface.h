@@ -1106,6 +1106,12 @@ public:
         return;
     }
 
+    virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+        std::vector<Metadata> &provisionMetadatas)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1213,6 +1219,7 @@ public:
         REGISTER_BUNDLE_EVENT_CALLBACK,
         UNREGISTER_BUNDLE_EVENT_CALLBACK,
         PROCESS_PRELOAD,
+        GET_PROVISION_METADATA,
     };
 };
 }  // namespace AppExecFwk

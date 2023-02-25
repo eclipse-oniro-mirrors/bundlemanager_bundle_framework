@@ -769,6 +769,8 @@ public:
         uint32_t resId, uint32_t density, int32_t userId) override;
     virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
     virtual ErrCode SetDebugMode(bool isDebug) override;
+    virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+        std::vector<Metadata> &provisionMetadatas) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

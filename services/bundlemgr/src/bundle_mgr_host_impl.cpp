@@ -2197,5 +2197,20 @@ ErrCode BundleMgrHostImpl::SetDebugMode(bool isDebug)
     }
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+    std::vector<Metadata> &provisionMetadatas)
+{
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

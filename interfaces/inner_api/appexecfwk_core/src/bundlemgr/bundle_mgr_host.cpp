@@ -208,6 +208,7 @@ void BundleMgrHost::init()
 #endif
     funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
     funcMap_.emplace(IBundleMgr::Message::PROCESS_PRELOAD, &BundleMgrHost::HandleProcessPreload);
+    funcMap_.emplace(IBundleMgr::Message::GET_PROVISION_METADATA, &BundleMgrHost::HandleGetProvisionMetadata);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2451,6 +2452,31 @@ ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ProcessPreload(*want);
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGI("start to get provision metadata, bundleName is %{public}s, userId is %{public}d",
+        bundleName.c_str(), userId);
+    std::vector<Metadata> provisionMetadatas;
+    ErrCode ret = GetProvisionMetadata(bundleName, userId, provisionMetadatas);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetProvisionMetadata failed");
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVector(provisionMetadatas, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

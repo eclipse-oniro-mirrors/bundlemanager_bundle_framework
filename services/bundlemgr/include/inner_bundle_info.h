@@ -1728,6 +1728,16 @@ public:
         mainAtomicModuleName_ = main;
     }
 
+    void SetAppProvisionMetadata(const std::vector<Metadata> &metadatas)
+    {
+        provisionMetadatas_ = metadatas;
+    }
+
+    std::vector<Metadata> GetAppProvisionMetadata() const
+    {
+        return provisionMetadatas_;
+    }
+
     void SetDisposedStatus(int32_t status);
 
     int32_t GetDisposedStatus() const;
@@ -1828,6 +1838,9 @@ private:
     // atomicService
     bool hasAtomicServiceConfig_ = false;
     std::string mainAtomicModuleName_;
+
+    // provision metadata
+    std::vector<Metadata> provisionMetadatas_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
