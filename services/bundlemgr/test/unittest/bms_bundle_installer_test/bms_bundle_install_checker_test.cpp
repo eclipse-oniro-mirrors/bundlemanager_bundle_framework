@@ -20,8 +20,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "app_provision_info.h"
 #include "base_bundle_installer.h"
 #include "bundle_install_checker.h"
+#include "bundle_verify_mgr.h"
 #include "bundle_util.h"
 #include "directory_ex.h"
 
@@ -809,5 +811,84 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0004, Function | Small
         EXPECT_EQ(eventInfo.hashValue[0], moduleInfo.hashValue);
     }
     baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
+
+/**
+ * @tc.number: ConvertToAppProvisionInfo_0001
+ * @tc.name: test the start function of ConvertToAppProvisionInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    provisionInfo.distributionType = Security::Verify::AppDistType::NONE_TYPE;
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
+    EXPECT_EQ(appProvisionInfo.type, Constants::APP_PROVISION_TYPE_DEBUG);
+    EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_NONE);
+    EXPECT_EQ(appProvisionInfo.apl, "normal");
+}
+
+/**
+ * @tc.number: ConvertToAppProvisionInfo_0002
+ * @tc.name: test the start function of ConvertToAppProvisionInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.distributionType = Security::Verify::AppDistType::APP_GALLERY;
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
+    EXPECT_EQ(appProvisionInfo.type, Constants::APP_PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
+    EXPECT_EQ(appProvisionInfo.apl, "normal");
+}
+
+/**
+ * @tc.number: ConvertToAppProvisionInfo_0003
+ * @tc.name: test the start function of ConvertToAppProvisionInfo
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker bundleInstallChecker;
+    Security::Verify::ProvisionInfo provisionInfo;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    provisionInfo.bundleInfo.apl = "system_basic";
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
+    EXPECT_EQ(appProvisionInfo.type, Constants::APP_PROVISION_TYPE_RELEASE);
+    EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE);
+    EXPECT_EQ(appProvisionInfo.apl, "system_basic");
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::OS_INTEGRATION;
+    appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
+    EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION);
+
+    provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
+    appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
+    EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
+}
+
+/**
+ * @tc.number: AddAppProvisionInfo_0001
+ * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, AddAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::ProvisionInfo appProvisionInfo;
+    auto ret = baseBundleInstaller.AddAppProvisionInfo("", appProvisionInfo);
+    EXPECT_FALSE(ret);
+
+    ret = baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
+    EXPECT_TRUE(ret);
+
+    ret = baseBundleInstaller.DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
 }
 } // OHOS
