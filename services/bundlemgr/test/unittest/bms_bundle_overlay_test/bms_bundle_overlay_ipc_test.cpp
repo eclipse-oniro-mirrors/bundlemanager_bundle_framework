@@ -376,7 +376,7 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_1000, Function | SmallTest | Le
     std::vector<OverlayModuleInfo> overlayModuleInfos;
     auto errCode = overlayProxy->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, "", overlayModuleInfos,
         TEST_USER_ID);
-    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
 }
 
 /**
