@@ -49,6 +49,7 @@ group("unittest") {
       "unittest/bms_ability_manager_helper_test:unittest",
       "unittest/bms_bundle_accesstokenid_test:unittest",
       "unittest/bms_bundle_app_control_test:unittest",
+      "unittest/bms_bundle_app_provision_info_test:unittest",
       "unittest/bms_bundle_crowdtesting_test:unittest",
       "unittest/bms_bundle_data_storage_test:unittest",
       "unittest/bms_bundle_dependencies_test:unittest",

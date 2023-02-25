@@ -304,4 +304,10 @@
      <option name="push" value="bundle_hsp/hsp_D.hsp -> /data/test/resource/bms/hspD/" src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleAppProvisionInfoTest">
+    <preparer>
+      <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+    </preparer>
+  </target>
 </configuration>
