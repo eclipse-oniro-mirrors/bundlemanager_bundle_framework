@@ -28,7 +28,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
-#include "shared_package/shared_package_info.h"
+#include "shared_package/shared_bundle_info.h"
 #include "want.h"
 
 namespace OHOS {
@@ -187,11 +187,11 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     BundleInfo bundleInfo;
 };
 
-struct SharedPackageCallbackInfo : public BaseCallbackInfo {
-    explicit SharedPackageCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+struct SharedBundleCallbackInfo : public BaseCallbackInfo {
+    explicit SharedBundleCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::vector<SharedPackageInfo> sharedPackages;
+    std::vector<SharedBundleInfo> sharedBundles;
 };
 
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
@@ -217,7 +217,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
-napi_value GetAllSharedPackageInfo(napi_env env, napi_callback_info info);
+napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

@@ -765,7 +765,7 @@ public:
         std::vector<Metadata> &provisionMetadatas) override;
     virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName, int32_t userId,
         std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
-    virtual ErrCode GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages) override;
+    virtual ErrCode GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

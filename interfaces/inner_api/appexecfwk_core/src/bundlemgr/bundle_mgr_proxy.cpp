@@ -3207,22 +3207,22 @@ ErrCode BundleMgrProxy::GetBaseSharedPackageInfos(const std::string &bundleName,
         data, baseSharedPackageInfos);
 }
 
-ErrCode BundleMgrProxy::GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+ErrCode BundleMgrProxy::GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetAllSharedPackageInfo");
+    APP_LOGD("begin to GetAllSharedBundleInfo");
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAllSharedPackageInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to GetAllSharedBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAllSharedPackageInfo due to write userId fail");
+        APP_LOGE("fail to GetAllSharedBundleInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<SharedPackageInfo>(IBundleMgr::Message::GET_ALL_SHARED_PACKAGE_INFO,
-        data, sharedPackages);
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO,
+        data, sharedBundles);
 }
 
 template<typename T>
