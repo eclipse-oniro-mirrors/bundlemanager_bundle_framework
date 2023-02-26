@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
+#include "erms_mgr_interface.h"
 #include "free_install_params.h"
 #include "json_util.h"
 #include "parcel.h"
@@ -28,6 +29,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
+using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
 namespace {
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
@@ -275,9 +278,25 @@ bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbili
         APP_LOGE("handler is null");
         return false;
     }
-    auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+
+    ErmsCallerInfo callerInfo;
+    ExperienceRule rule;
+    Want localWant = want;
+    bool ret = CheckEcologicalRule(want, callerInfo, rule);
+    if (!ret) {
+        APP_LOGE("check ecological rule failed, skip.");
+    } else if (rule.isAllow) {
+        APP_LOGI("ecological rule is allow, keep going.");
+    } else if (rule.replaceWant != nullptr) {
+        APP_LOGI("ecological rule is replace want.");
+        localWant.SetParam(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
+    } else {
+        APP_LOGW("ecological rule is not allowed, return.");
+        return false;
+    }
+    auto silentInstallFunc = [this, targetAbilityInfo, localWant, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
-        this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
+        this->SendRequestToServiceCenter(flag, targetAbilityInfo, localWant, userId, freeInstallParams);
     };
     handler_->PostTask(silentInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
     return true;
@@ -959,6 +978,7 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     freeInstallParams->want = want;
     freeInstallParams->userId = userId;
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
+
     this->SilentInstall(*targetAbilityInfo, want, *freeInstallParams, userId);
     return false;
 }
@@ -1054,6 +1074,39 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     freeInstallParams->userId = userId;
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
+}
+
+sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalRuleMgr()
+{
+    // should remove when AG SA online
+    int32_t ECOLOGICAL_RULE_SA_ID = 9999;
+    sptr<ISystemAbilityManager> saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (saMgr == nullptr) {
+        APP_LOGE("saMgr is nullptr");
+        return nullptr;
+    }
+    sptr<IRemoteObject> remoteObject = saMgr->GetSystemAbility(ECOLOGICAL_RULE_SA_ID);
+    if (remoteObject == nullptr) {
+        APP_LOGE("%{public}s error, failed to get ecological rule manager service.", __func__);
+        return nullptr;
+    }
+
+    return iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
+}
+
+bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
+{
+    sptr<AppExecFwk::IEcologicalRuleManager> erms = GetEcologicalRuleMgr();
+    if (!erms) {
+        APP_LOGE("GetEcologicalRuleMgr failed.");
+        return false;
+    }
+    int ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);
+    if (ret != ERR_OK) {
+        APP_LOGE("Failed to query free install experience from erms.");
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

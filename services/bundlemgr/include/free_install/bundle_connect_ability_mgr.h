@@ -20,6 +20,7 @@
 #include <mutex>
 #include <string>
 
+#include "erms_mgr_interface.h"
 #include "event_handler.h"
 #include "event_runner.h"
 #include "free_install_params.h"
@@ -31,6 +32,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
+using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
+using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
 class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
@@ -251,6 +254,10 @@ private:
     bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
     bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
+
+    sptr<AppExecFwk::IEcologicalRuleManager> GetEcologicalRuleMgr();
+
+    bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
