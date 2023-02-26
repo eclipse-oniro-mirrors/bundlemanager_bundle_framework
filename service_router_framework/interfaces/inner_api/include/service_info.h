@@ -23,21 +23,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class ExtensionServiceType
-{
+enum class ExtensionServiceType {
     SHARE = 0,
     UNSPECIFIED = 255
 };
 
-enum class ComponentType
-{
+enum class ComponentType {
     UI_ABILITY = 0,
     FORM = 1,
     UI_EXTENSION = 2
 };
 
-struct AppInfo : public Parcelable
-{
+struct AppInfo : public Parcelable {
     std::string name;
     std::string bundleName;
     int32_t iconId = 0;
@@ -49,8 +46,7 @@ struct AppInfo : public Parcelable
     static AppInfo *Unmarshalling(Parcel &parcel);
 };
 
-struct ServiceInfo : public Parcelable
-{
+struct ServiceInfo : public Parcelable {
     AppInfo appInfo;
     std::string bundleName;
     std::string moduleName;
@@ -66,8 +62,7 @@ struct ServiceInfo : public Parcelable
     static ServiceInfo *Unmarshalling(Parcel &parcel);
 };
 
-struct IntentInfo final : public Parcelable
-{
+struct IntentInfo final : public Parcelable {
     AppInfo appInfo;
     std::string intentName;
     std::string bundleName;

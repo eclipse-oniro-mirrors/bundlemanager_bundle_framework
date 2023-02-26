@@ -18,15 +18,13 @@
 
 #include <string>
 
-namespace OHOS{
-namespace AppExecFwk{
+namespace OHOS {
+namespace AppExecFwk {
 namespace SrConstants {
-const std::string PRAMR_KEY_SERVICE_TYPE = "serviceType";
-const std::string PRAMR_KEY_INTENT_NAME = "intentName";
-const std::string METADATA_SUPPORT_INTENT_KEY = "ohos.extension.supportintent";
+const std::string METADATA_SUPPORTINTENT_KEY = "ohos.extension.supportintent";
 const std::string MUTIL_SPLIT_KEY = "|";
-const std::string FORM_INTENT_SPLIT_KEY = ":";
-const int32_t FORM_INTENT_SPLIT_SIZE = 2;
+const std::string FORM_INTENTCARD_SPLIT_KEY = ":";
+const int32_t FORM_INTENTCARD_SPLIT_SIZE = 2;
 const std::string METADATA_SERVICE_TYPE_KEY = "ohos.extension.servicetype";
 } // namespace SrConstants
 } // namespace AppExecFwk

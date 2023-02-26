@@ -24,17 +24,16 @@ InnerServiceInfo::InnerServiceInfo()
     if (appInfo_ == nullptr) {
         APP_LOGE("appInfo_ is nullptr, create failed");
     }
-    APP_LOGD("inner bundle info instance is created");
 }
 
 InnerServiceInfo::~InnerServiceInfo()
 {
-    APP_LOGD("inner bundle info instance is destroyed");
     serviceInfos_.clear();
     intentInfos_.clear();
 }
 
-void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const
+void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType,
+    std::vector<ServiceInfo> &serviceInfos) const
 {
     for (auto &serviceInfo : serviceInfos_) {
         if (serviceInfo.serviceType == serviceType) {

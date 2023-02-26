@@ -48,16 +48,16 @@ public:
         std::vector<ServiceInfo> &serviceInfos) = 0;
 
     /**
-     * @brief Query the Intent of list by the given Want.
-     * @param want Indicates the information of the intent.
-     * @param intentName Indicates the intent name.
+     * @brief Query the purpose of list by the given Want.
+     * @param want Indicates the information of the purpose.
+     * @param intentName Indicates the purpose name.
      * @param intentInfos Indicates the obtained IntentInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
     virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName,
         std::vector<IntentInfo> &intentInfos) = 0;
 
-    enum Message : uint32_t{
+    enum Message : uint32_t {
         QUERY_SERVICE_INFOS = 0,
         QUERY_INTENT_INFOS,
     };

@@ -21,19 +21,21 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-ServiceRouterMgrProxy::ServiceRouterMgrProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IServiceRouterManager>(object)
+ServiceRouterMgrProxy::ServiceRouterMgrProxy(const sptr<IRemoteObject> &object)
+    : IRemoteProxy<IServiceRouterManager>(object)
 {
-    APP_LOGD("ServiceRouterMgrProxy instance is created");
+    APP_LOGI("ServiceRouterMgrProxy instance is created");
 }
 
 ServiceRouterMgrProxy::~ServiceRouterMgrProxy()
 {
-    APP_LOGD("ServiceRouterMgrProxy instance is destroyed");
+    APP_LOGI("ServiceRouterMgrProxy instance is destroyed");
 }
 
-int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos)
+int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
+    std::vector<ServiceInfo> &serviceInfos)
 {
-    APP_LOGD("ServiceRouterMgrProxy QueryServiceInfos");
+    APP_LOGI("ServiceRouterMgrProxy QueryServiceInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -47,16 +49,18 @@ int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const Extensi
         APP_LOGE("fail to QueryServiceInfos due to write type fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    int32_t res = GetParcelableInfos<ServiceInfo>(ServiceRouterMgrProxy::Message::QUERY_SERVICE_INFOS, data, serviceInfos);
+    int32_t res = GetParcelableInfos<ServiceInfo>(ServiceRouterMgrProxy::Message::QUERY_SERVICE_INFOS, data,
+        serviceInfos);
     if (res != OHOS::NO_ERROR) {
         APP_LOGE("fail to QueryServiceInfos from server, error code: %{public}d", res);
     }
     return res;
 }
 
-int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::string intentName,std::vector<IntentInfo> &intentInfos)
+int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::string intentName,
+    std::vector<IntentInfo> &intentInfos)
 {
-    APP_LOGD("ServiceRouterMgrProxy QueryIntentInfos");
+    APP_LOGI("ServiceRouterMgrProxy QueryIntentInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -77,9 +81,10 @@ int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::str
     return res;
 }
 
-int32_t ServiceRouterMgrProxy::SendRequest(ServiceRouterMgrProxy::Message code, MessageParcel &data, MessageParcel &reply)
+int32_t ServiceRouterMgrProxy::SendRequest(ServiceRouterMgrProxy::Message code, MessageParcel &data,
+    MessageParcel &reply)
 {
-    APP_LOGD("ServiceRouterMgrProxy SendRequest");
+    APP_LOGI("ServiceRouterMgrProxy SendRequest");
     sptr<IRemoteObject> remote = Remote();
     MessageOption option(MessageOption::TF_SYNC);
     if (remote == nullptr) {
@@ -105,20 +110,20 @@ int32_t ServiceRouterMgrProxy::GetParcelableInfos(
     }
 
     if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
+        APP_LOGE("reply's result is false");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    int32_t infoSize = reply.ReadInt32();
-    for (int32_t i = 0; i < infoSize; i++) {
+    int32_t infosSize = reply.ReadInt32();
+    for (int32_t j = 0; j < infosSize; j++) {
         std::unique_ptr<T> info(reply.ReadParcelable<T>());
         if (!info) {
-            APP_LOGE("Read Parcelable infos failed");
+            APP_LOGE("Read parcelableInfos failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
         parcelableInfos.emplace_back(*info);
     }
-    APP_LOGD("get parcelable infos success");
+    APP_LOGI("get parcelableInfos success");
     return OHOS::NO_ERROR;
 }
 }  // namespace AAFwk

@@ -36,8 +36,8 @@ public:
     void FindServiceInfos(const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const;
 
     /**
-     * @brief Find intentInfo by intent name.
-     * @param intentName Indicates the intent name.
+     * @brief Find intentInfo by intentName.
+     * @param intentName Indicates the intentName.
      * @param intentInfos Indicates the IntentInfos to be find.
      * @return Returns the IntentInfo object if find it; returns null otherwise.
      */
@@ -80,33 +80,29 @@ public:
     void UpdateServiceInfos(const std::vector<ServiceInfo> &serviceInfos)
     {
         serviceInfos_.clear();
-        if (serviceInfos.size() == 0)
-        {
+        if (serviceInfos.size() == 0) {
             APP_LOGW("updateServiceInfos, serviceInfos.size is 0");
             return;
         }
-        for (const auto &serviceInfo : serviceInfos)
-        {
+        for (const auto &serviceInfo : serviceInfos) {
             serviceInfos_.emplace_back(serviceInfo);
         }
     }
 
     /**
-     * @brief Update intent infos.
+     * @brief Update intentInfos.
      * @param serviceInfos Indicates the IntentInfos to be add.
      * @return
      */
     void UpdateIntentInfos(const std::vector<IntentInfo> &intentInfos)
     {
         intentInfos_.clear();
-        if (intentInfos.size() == 0)
-        {
+        if (intentInfos.size() == 0) {
             APP_LOGW("updateIntentInfos, intentInfos.size is 0");
             return;
         }
-        for (const auto &intent : intentInfos)
-        {
-            intentInfos_.emplace_back(intent);
+        for (const auto &intentInfo : intentInfos) {
+            intentInfos_.emplace_back(intentInfo);
         }
     }
 

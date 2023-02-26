@@ -28,10 +28,9 @@
 #include "want.h"
 #include "service_info.h"
 
-namespace OHOS{
-namespace AppExecFwk{
-class ServiceRouterDataMgr : public DelayedRefSingleton<ServiceRouterDataMgr>
-{
+namespace OHOS {
+namespace AppExecFwk {
+class ServiceRouterDataMgr : public DelayedRefSingleton<ServiceRouterDataMgr> {
 public:
     using Want = OHOS::AAFwk::Want;
 
@@ -77,8 +76,8 @@ public:
 
     /**
      * @brief Query a IntentInfo of list by the given Want.
-     * @param want Indicates the information of the intent.
-     * @param intentName Indicates the intent name.
+     * @param want Indicates the information of the intentInfo.
+     * @param intentName Indicates the intentName.
      * @param intentInfos Indicates the obtained IntentInfo of list.
      * @return Returns ERR_OK on success, others on failure.
      */

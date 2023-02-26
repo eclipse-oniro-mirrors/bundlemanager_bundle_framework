@@ -25,12 +25,12 @@ namespace OHOS {
 namespace AppExecFwk {
 ServiceRouterDataMgr::ServiceRouterDataMgr()
 {
-    APP_LOGD("SRDM instance is created");
+    APP_LOGI("SRDM instance is created");
 }
 
 ServiceRouterDataMgr::~ServiceRouterDataMgr()
 {
-    APP_LOGD("SRDM instance is destroyed");
+    APP_LOGI("SRDM instance is destroyed");
     innerServiceInfos_.clear();
 }
 
@@ -56,7 +56,7 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
 
 bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
 {
-    APP_LOGD("SRDM LoadBundleInfo");
+    APP_LOGI("SRDM LoadBundleInfo");
     auto bms = SrSamgrHelper::GetInstance().GetBundleMgr();
     if (bms == nullptr) {
         APP_LOGI("SRDM GetBundleMgr return null");
@@ -74,7 +74,7 @@ bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
 
 bool ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
 {
-    APP_LOGD("SRDM UpdateBundleInfo");
+    APP_LOGI("SRDM UpdateBundleInfo");
     std::vector<IntentInfo> intentInfos;
     std::vector<ServiceInfo> serviceInfos;
     if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos)) {
@@ -94,7 +94,7 @@ bool ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
 
 bool ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
 {
-    APP_LOGD("SRDM DeleteBundleInfo");
+    APP_LOGI("SRDM DeleteBundleInfo");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = innerServiceInfos_.find(bundleName);
     if (infoItem == innerServiceInfos_.end()) {
@@ -105,9 +105,10 @@ bool ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
     return true;
 }
 
-int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const
+int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
+    std::vector<ServiceInfo> &serviceInfos) const
 {
-    APP_LOGD("SRDM QueryServiceInfos");
+    APP_LOGI("SRDM QueryServiceInfos");
     if (serviceType == ExtensionServiceType::UNSPECIFIED) {
         APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -128,9 +129,10 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
     return ERR_OK;
 }
 
-int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) const
+int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::string intentName,
+    std::vector<IntentInfo> &intentInfos) const
 {
-    APP_LOGD("SRDM QueryIntentInfos");
+    APP_LOGI("SRDM QueryIntentInfos");
     if (intentName.empty()) {
         APP_LOGE("SRDM QueryIntentInfos, intentName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;

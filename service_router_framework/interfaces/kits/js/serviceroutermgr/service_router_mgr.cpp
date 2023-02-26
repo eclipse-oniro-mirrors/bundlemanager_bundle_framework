@@ -77,7 +77,6 @@ static void ConvertAppInfo(napi_env env, napi_value objAppInfo, const AppInfo &a
     napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
-    APP_LOGD("ConvertAppInfo name=%{public}s.", appInfo.name.c_str());
 
     napi_value nDescriptionId;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, appInfo.descriptionId, &nDescriptionId));
@@ -150,8 +149,7 @@ static void ConvertServiceInfo(napi_env env, const ServiceInfo &serviceInfo, nap
 static void ConvertServiceInfos(napi_env env, const std::vector<ServiceInfo> &serviceInfos,
     napi_value value)
 {
-    for (size_t index = 0; index < serviceInfos.size(); ++index)
-    {
+    for (size_t index = 0; index < serviceInfos.size(); ++index) {
         napi_value objServiceInfo = nullptr;
         napi_create_object(env, &objServiceInfo);
         ConvertServiceInfo(env, serviceInfos[index], objServiceInfo);
@@ -176,7 +174,7 @@ static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
     if (ret != ERR_OK) {
         APP_LOGE("InnerQueryServiceInfos failed");
     }
-    APP_LOGD("InnerQueryServiceInfos ErrCode : %{public}d", ret);
+    APP_LOGI("InnerQueryServiceInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 

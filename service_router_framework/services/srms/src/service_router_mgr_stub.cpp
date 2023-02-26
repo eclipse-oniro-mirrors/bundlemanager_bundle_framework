@@ -35,7 +35,8 @@ ServiceRouterMgrStub::~ServiceRouterMgrStub()
     APP_LOGI("ServiceRouterMgrStub instance is destroyed");
 }
 
-int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
+int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    MessageOption &option)
 {
     std::u16string descriptor = ServiceRouterMgrStub::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();

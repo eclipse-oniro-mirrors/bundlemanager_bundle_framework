@@ -71,9 +71,6 @@ void ServiceRouterMgrService::Init()
     initEventRunnerAndHandler();
     LoadAllBundleInfos();
     subscribeCommonEvent();
-
-    // foundtion进程才有权限调用，待合并到foundation进程后适配
-    // subscribeBundleEvent();
 }
 
 bool ServiceRouterMgrService::LoadAllBundleInfos()
@@ -110,7 +107,7 @@ bool ServiceRouterMgrService::initEventRunnerAndHandler()
 bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
 {
     if (eventSubscriber_ != nullptr) {
-        APP_LOGD("subscribeCommonEvent already subscribed.");
+        APP_LOGI("subscribeCommonEvent already subscribed.");
         return true;
     }
     EventFwk::MatchingSkills matchingSkills;
@@ -150,7 +147,8 @@ bool ServiceRouterMgrService::subscribeBundleEvent()
     return ret;
 }
 
-int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos)
+int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
+    std::vector<ServiceInfo> &serviceInfos)
 {
     APP_LOGI("%{public}s coldStart:", __func__);
     return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);

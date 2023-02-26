@@ -22,8 +22,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 class SrCommonEventSubscriber : public EventFwk::CommonEventSubscriber,
-    public std::enable_shared_from_this<SrCommonEventSubscriber>
-{
+    public std::enable_shared_from_this<SrCommonEventSubscriber> {
 public:
     SrCommonEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
 
