@@ -793,7 +793,7 @@ public:
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
-    ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
+    virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
 
 private:
