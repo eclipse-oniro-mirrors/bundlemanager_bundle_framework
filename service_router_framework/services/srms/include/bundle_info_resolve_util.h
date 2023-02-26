@@ -110,7 +110,7 @@ static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<
 static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInfo,
     std::vector<IntentInfo> &intentInfos)
 {
-    if (extAbilityInfo.type != ExtensionAbilityType::FORM) {
+    if (extAbilityInfo.type != ExtensionAbilityType::FORM && extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
     }
     std::string supportIntent = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SUPPORTINTENT_KEY);
@@ -120,22 +120,30 @@ static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInf
     std::vector<std::string> intents;
     SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intents);
     for (std::string &intentAndCard : intents) {
-        std::vector<std::string> intentNameAndCardName;
-        SplitStr(intentAndCard, SrConstants::FORM_INTENTCARD_SPLIT_KEY, intentNameAndCardName);
-        if (intentNameAndCardName.size() == SrConstants::FORM_INTENTCARD_SPLIT_SIZE) {
-            IntentInfo intentInfo;
-            intentInfo.intentName = intentNameAndCardName[0];
-            intentInfo.cardName = intentNameAndCardName[1];
-            intentInfo.abilityName = extAbilityInfo.name;
-            intentInfo.moduleName = extAbilityInfo.moduleName;
-            intentInfo.bundleName = extAbilityInfo.bundleName;
-            intentInfo.componentType = ComponentType::FORM;
+        IntentInfo intentInfo;
+        intentInfo.abilityName = extAbilityInfo.name;
+        intentInfo.moduleName = extAbilityInfo.moduleName;
+        intentInfo.bundleName = extAbilityInfo.bundleName;
+        if (extAbilityInfo.type == ExtensionAbilityType::UI) {
+            intentInfo.intentName = intentAndCard;
+            intentInfo.componentType = ComponentType::UI_EXTENSION;
             intentInfos.emplace_back(intentInfo);
             APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-                extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
+                extAbilityInfo.name.c_str(), intentAndCard.c_str());
         } else {
-            APP_LOGI("ConvertExtAbilityInfoToIntentInfo invalid supportIntent");
+            std::vector<std::string> intentNameAndCardName;
+            SplitStr(intentAndCard, SrConstants::FORM_INTENTCARD_SPLIT_KEY, intentNameAndCardName);
+            if (intentNameAndCardName.size() == SrConstants::FORM_INTENTCARD_SPLIT_SIZE) {
+                intentInfo.intentName = intentNameAndCardName[0];
+                intentInfo.cardName = intentNameAndCardName[1];
+                APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
+                    extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
+            } else {
+                APP_LOGW("ConvertExtAbilityInfoToIntentInfo invalid supportIntent");
+            }
         }
+       
+        
     }
 }
 
