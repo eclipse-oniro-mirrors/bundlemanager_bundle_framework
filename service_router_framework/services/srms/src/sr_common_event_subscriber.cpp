@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "sr_common_event_subscriber.h"
+#include "app_log_wrapper.h"
 #include "common_event_support.h"
 #include "want.h"
-#include "app_log_wrapper.h"
 #include "service_router_data_mgr.h"
+#include "sr_common_event_subscriber.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -38,8 +38,8 @@ void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     std::string action = want.GetAction();
     std::string bundleName = want.GetElement().GetBundleName();
     int userId = want.GetIntParam("userId", Constants::DEFAULT_USERID);
-    if (action.empty()) {
-        APP_LOGE("%{public}s failed, empty action", __func__);
+    if (action.empty() || eventHandler_ == nullptr) {
+        APP_LOGE("%{public}s failed, empty action: %{public}s, or invalid event handler", __func__, action.c_str());
         return;
     }
     if (bundleName.empty() && action != EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED &&
@@ -48,24 +48,9 @@ void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
             __func__, action.c_str(), bundleName.c_str());
         return;
     }
-    if (eventHandler_ == nullptr) {
-        APP_LOGE("%{public}s fail, event handler invalidate.", __func__);
-        return;
-    }
     APP_LOGI("%{public}s, action:%{public}s.", __func__, action.c_str());
     std::weak_ptr<SrCommonEventSubscriber> weakThis = shared_from_this();
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_REMOVED) {
-        userId = eventData.GetCode();
-        auto task = [weakThis, userId]() {
-            std::shared_ptr<SrCommonEventSubscriber> sharedThis = weakThis.lock();
-            if (sharedThis) {
-                APP_LOGI("%{public}d COMMON_EVENT_USER_REMOVED", userId);
-            }
-        };
-        if (userId != -1) {
-            eventHandler_->PostTask(task);
-        }
-    } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BUNDLE_SCAN_FINISHED) {
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_BUNDLE_SCAN_FINISHED) {
         auto task = [weakThis, userId]() {
             std::shared_ptr<SrCommonEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {

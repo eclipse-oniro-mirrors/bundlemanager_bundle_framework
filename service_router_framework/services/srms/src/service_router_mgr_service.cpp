@@ -53,8 +53,7 @@ void ServiceRouterMgrService::OnStart()
     APP_LOGI("SRMS starting...");
     Init();
     bool ret = Publish(this);
-    if (!ret)
-    {
+    if (!ret) {
         APP_LOGE("Publish SRMS failed!");
         return;
     }
@@ -72,18 +71,18 @@ void ServiceRouterMgrService::Init()
     initEventRunnerAndHandler();
     LoadAllBundleInfos();
     subscribeCommonEvent();
-    // subscribeBundleEvent();  // foundtion进程才有权限调用，待合并到foundation进程后适配
+
+    // foundtion进程才有权限调用，待合并到foundation进程后适配
+    // subscribeBundleEvent();
 }
 
 bool ServiceRouterMgrService::LoadAllBundleInfos()
 {
-    if (handler_ == nullptr)
-    {
+    if (handler_ == nullptr) {
         APP_LOGE("%{public}s fail, handler_ is null", __func__);
         return false;
     }
-    auto task = []()
-    {
+    auto task = []() {
         APP_LOGI("LoadAllBundleInfos start");
         ServiceRouterDataMgr::GetInstance().LoadAllBundleInfos();
         APP_LOGI("LoadAllBundleInfos end");
@@ -96,14 +95,12 @@ bool ServiceRouterMgrService::initEventRunnerAndHandler()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     runner_ = EventRunner::Create(NAME_SERVICE_ROUTER_MGR_SERVICE);
-    if (runner_ == nullptr)
-    {
+    if (runner_ == nullptr) {
         APP_LOGE("%{public}s fail, Failed to init due to create runner error", __func__);
         return false;
     }
     handler_ = std::make_shared<EventHandler>(runner_);
-    if (handler_ == nullptr)
-    {
+    if (handler_ == nullptr) {
         APP_LOGE("%{public}s fail, Failed to init due to create handler error", __func__);
         return false;
     }
@@ -112,8 +109,7 @@ bool ServiceRouterMgrService::initEventRunnerAndHandler()
 
 bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
 {
-    if (eventSubscriber_ != nullptr)
-    {
+    if (eventSubscriber_ != nullptr) {
         APP_LOGD("subscribeCommonEvent already subscribed.");
         return true;
     }
@@ -127,8 +123,7 @@ bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
 
     eventSubscriber_ = std::make_shared<SrCommonEventSubscriber>(subscribeInfo);
     eventSubscriber_->SetEventHandler(handler_);
-    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(eventSubscriber_))
-    {
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(eventSubscriber_)) {
         APP_LOGE("subscribeCommonEvent subscribed failure.");
         return false;
     };
@@ -139,20 +134,17 @@ bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
 bool ServiceRouterMgrService::subscribeBundleEvent()
 {
     bundleEventCallback_ = new (std::nothrow) SrBundleEventCallback(handler_);
-    if (bundleEventCallback_ == nullptr)
-    {
+    if (bundleEventCallback_ == nullptr) {
         APP_LOGE("%{public}s fail, allocate BundleEventCallbackHost failed!", __func__);
         return false;
     }
     sptr<IBundleMgr> iBundleMgr = SrSamgrHelper::GetInstance().GetBundleMgr();
-    if (iBundleMgr == nullptr)
-    {
+    if (iBundleMgr == nullptr) {
         APP_LOGE("%{public}s fail, getBundleMgr failed!", __func__);
         return false;
     }
     bool ret = iBundleMgr->RegisterBundleEventCallback(bundleEventCallback_);
-    if (!ret)
-    {
+    if (!ret) {
         APP_LOGE("%{public}s fail, RegisterBundleEventCallback failed!", __func__);
     }
     return ret;

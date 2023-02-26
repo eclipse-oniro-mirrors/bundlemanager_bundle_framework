@@ -38,15 +38,13 @@ public:
 static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentInfo> &intentInfos,
     std::vector<ServiceInfo> &serviceInfos)
 {
-    if (bundleInfo.name.empty())
-    {
+    if (bundleInfo.name.empty()) {
         APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
         return false;
     }
     ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos);
     ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos);
-    if (intentInfos.empty() && serviceInfos.empty())
-    {
+    if (intentInfos.empty() && serviceInfos.empty()) {
         APP_LOGD("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
         return false;
     }
@@ -56,12 +54,10 @@ static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentIn
 private:
 static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, std::vector<IntentInfo> &intentInfos)
 {
-    if (abilityInfos.empty())
-    {
+    if (abilityInfos.empty()) {
         return;
     }
-    for (const auto &abilityInfo : abilityInfos)
-    {
+    for (const auto &abilityInfo : abilityInfos) {
         ConvertAbilityToIntents(abilityInfo, intentInfos);
     }
 }
@@ -69,12 +65,10 @@ static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, st
 static void ResolveExtAbilityInfos(const std::vector<ExtensionAbilityInfo> &extensionInfos,
     std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos)
 {
-    if (extensionInfos.empty())
-    {
+    if (extensionInfos.empty()) {
         return;
     }
-    for (const auto &extensionInfo : extensionInfos)
-    {
+    for (const auto &extensionInfo : extensionInfos) {
         ConvertExtAbilityToIntents(extensionInfo, intentInfos);
         ConvertExtAbilityToService(extensionInfo, serviceInfos);
     }
@@ -83,15 +77,14 @@ static void ResolveExtAbilityInfos(const std::vector<ExtensionAbilityInfo> &exte
 static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<IntentInfo> &intentInfos)
 {
     std::string supportIntent = GetAbilityMetadataValue(abilityInfo, SrConstants::METADATA_SUPPORT_INTENT_KEY);
-    APP_LOGI("ConvertAbilityToIntents, abilityName: %{public}s, intent: %{public}s", abilityInfo.name.c_str(), supportIntent.c_str());
-    if (supportIntent.empty())
-    {
+    if (supportIntent.empty()) {
         return;
     }
+    APP_LOGI("ConvertAbilityToIntents, abilityName: %{public}s, intent: %{public}s",
+        abilityInfo.name.c_str(), supportIntent.c_str());
     std::vector<std::string> intentNames;
     SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intentNames);
-    for (std::string &name : intentNames)
-    {
+    for (std::string &name : intentNames) {
         IntentInfo intentInfo;
         intentInfo.intentName = name;
         intentInfo.abilityName = abilityInfo.name;
@@ -99,31 +92,29 @@ static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<
         intentInfo.bundleName = abilityInfo.bundleName;
         intentInfo.componentType = ComponentType::UI_ABILITY;
         intentInfos.emplace_back(intentInfo);
-        APP_LOGI("ConvertAbilityToIntents,add intent, abilityName: %{public}s, intent: %{public}s", abilityInfo.name.c_str(), name.c_str());
+        APP_LOGI("ConvertAbilityToIntents,add intent, abilityName: %{public}s, intent: %{public}s",
+            abilityInfo.name.c_str(), name.c_str());
     }
 }
 
 static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInfo,
     std::vector<IntentInfo> &intentInfos)
 {
-    if (extAbilityInfo.type != ExtensionAbilityType::FORM)
-    {
+    if (extAbilityInfo.type != ExtensionAbilityType::FORM) {
         return;
     }
     std::string supportIntent = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SUPPORT_INTENT_KEY);
-    APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intent: %{public}s", extAbilityInfo.name.c_str(), supportIntent.c_str());
-    if (supportIntent.empty())
-    {
+    if (supportIntent.empty()) {
         return;
     }
+    APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intent: %{public}s",
+        extAbilityInfo.name.c_str(), supportIntent.c_str());
     std::vector<std::string> intents;
     SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intents);
-    for (std::string &intent : intents)
-    {
+    for (std::string &intent : intents) {
         std::vector<std::string> intentNameAndCardName;
         SplitStr(intent, SrConstants::FORM_INTENT_SPLIT_KEY, intentNameAndCardName);
-        if (intentNameAndCardName.size() == 2)
-        {
+        if (intentNameAndCardName.size() == SrConstants::FORM_INTENT_SPLIT_SIZE) {
             IntentInfo intentInfo;
             intentInfo.intentName = intentNameAndCardName[0];
             intentInfo.cardName = intentNameAndCardName[1];
@@ -132,26 +123,25 @@ static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInf
             intentInfo.bundleName = extAbilityInfo.bundleName;
             intentInfo.componentType = ComponentType::FORM;
             intentInfos.emplace_back(intentInfo);
-             APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intent: %{public}s", extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
-        }
-        else
-        {
+             APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intent: %{public}s",
+                extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
+        } else {
             APP_LOGI("ConvertExtAbilityInfoToIntentInfo invalid supportIntent");
         }
     }
 }
 
-static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInfo, std::vector<ServiceInfo> &serviceInfos)
+static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInfo,
+    std::vector<ServiceInfo> &serviceInfos)
 {
-    if (extAbilityInfo.type != ExtensionAbilityType::UI)
-    {
+    if (extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
     }
     std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
-    APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s", extAbilityInfo.name.c_str(), serviceType.c_str());
+    APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s",
+        extAbilityInfo.name.c_str(), serviceType.c_str());
     auto item = SERVICE_TYPE_MAP.find(serviceType);
-    if (!serviceType.empty() && item != SERVICE_TYPE_MAP.end())
-    {
+    if (!serviceType.empty() && item != SERVICE_TYPE_MAP.end()) {
         ServiceInfo serviceInfo;
         serviceInfo.abilityName = extAbilityInfo.name;
         serviceInfo.moduleName = extAbilityInfo.moduleName;
@@ -167,14 +157,11 @@ static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInf
 
 static std::string GetAbilityMetadataValue(const AbilityInfo &abilityInfo, const std::string &name)
 {
-    if (abilityInfo.metadata.empty())
-    {
+    if (abilityInfo.metadata.empty()) {
         return Constants::EMPTY_STRING;
     }
-    for (auto &metadata : abilityInfo.metadata)
-    {
-        if (name == metadata.name && !metadata.value.empty())
-        {
+    for (auto &metadata : abilityInfo.metadata) {
+        if (name == metadata.name && !metadata.value.empty()) {
             return metadata.value;
         }
     }
@@ -183,14 +170,11 @@ static std::string GetAbilityMetadataValue(const AbilityInfo &abilityInfo, const
 
 static std::string GetExtAbilityMetadataValue(const ExtensionAbilityInfo &extAbilityInfo, const std::string &name)
 {
-    if (extAbilityInfo.metadata.empty())
-    {
+    if (extAbilityInfo.metadata.empty()) {
         return Constants::EMPTY_STRING;
     }
-    for (auto &metadata : extAbilityInfo.metadata)
-    {
-        if (name == metadata.name && !metadata.value.empty())
-        {
+    for (auto &metadata : extAbilityInfo.metadata) {
+        if (name == metadata.name && !metadata.value.empty()) {
             return metadata.value;
         }
     }

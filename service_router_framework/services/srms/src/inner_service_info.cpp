@@ -21,8 +21,7 @@ namespace AppExecFwk {
 InnerServiceInfo::InnerServiceInfo()
 {
     appInfo_ = std::make_shared<AppInfo>();
-    if (appInfo_ == nullptr)
-    {
+    if (appInfo_ == nullptr) {
         APP_LOGE("appInfo_ is nullptr, create failed");
     }
     APP_LOGD("inner bundle info instance is created");
@@ -37,10 +36,8 @@ InnerServiceInfo::~InnerServiceInfo()
 
 void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const
 {
-    for (auto &serviceInfo : serviceInfos_)
-    {
-        if (serviceInfo.serviceType == serviceType)
-        {
+    for (auto &serviceInfo : serviceInfos_) {
+        if (serviceInfo.serviceType == serviceType) {
             serviceInfos.emplace_back(serviceInfo);
         }
     }
@@ -48,10 +45,8 @@ void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType,
 
 void InnerServiceInfo::FindIntentInfos(const std::string &intentName, std::vector<IntentInfo> &intentInfos) const
 {
-    for (auto &intentInfo : intentInfos_)
-    {
-        if (intentInfo.intentName == intentName)
-        {
+    for (auto &intentInfo : intentInfos_) {
+        if (intentInfo.intentName == intentName) {
             intentInfos.emplace_back(intentInfo);
         }
     }

@@ -48,13 +48,15 @@ public:
      * @param intentInfos Indicates the obtained IntentInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    int32_t QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) override;
+    int32_t QueryIntentInfos(const Want &want, const std::string intentName,
+        std::vector<IntentInfo> &intentInfos) override;
 
 private:
     int32_t SendRequest(IServiceRouterManager::Message code, MessageParcel &data, MessageParcel &reply);
 
     template <typename T>
-    int32_t GetParcelableInfos(IServiceRouterManager::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    int32_t GetParcelableInfos(IServiceRouterManager::Message code, MessageParcel &data,
+        std::vector<T> &parcelableInfos);
 
     static inline BrokerDelegator<ServiceRouterMgrProxy> delegator_;
 };

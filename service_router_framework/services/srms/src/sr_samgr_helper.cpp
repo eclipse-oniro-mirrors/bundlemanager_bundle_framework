@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,12 +13,11 @@
  * limitations under the License.
  */
 
-#include "sr_samgr_helper.h"
-
 #include "app_log_wrapper.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "sr_samgr_helper.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -35,20 +34,20 @@ SrSamgrHelper::~SrSamgrHelper()
  */
 sptr<IBundleMgr> SrSamgrHelper::GetBundleMgr()
 {
-    APP_LOGI("%{public}s called.", __func__);
+    APP_LOGI("GetBundleMgr called.");
     std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     if (iBundleMgr_ == nullptr) {
-        sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        auto remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        if (remoteObject == nullptr) {
-            APP_LOGE("%{public}s error, failed to get bundle manager service.", __func__);
+        sptr<ISystemAbilityManager> saManager =
+            SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        auto remoteObj = saManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (remoteObj == nullptr) {
+            APP_LOGE("%{public}s error, failed to get bms.", __func__);
             return nullptr;
         }
 
-        iBundleMgr_ = iface_cast<IBundleMgr>(remoteObject);
+        iBundleMgr_ = iface_cast<IBundleMgr>(remoteObj);
         if (iBundleMgr_ == nullptr) {
-            APP_LOGE("%{public}s error, failed to get bundle manager service", __func__);
+            APP_LOGE("%{public}s error, failed to get bms", __func__);
             return nullptr;
         }
     }

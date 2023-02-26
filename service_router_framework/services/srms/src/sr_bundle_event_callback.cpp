@@ -66,6 +66,5 @@ void SrBundleEventCallback::OnReceiveEvent(const EventFwk::CommonEventData event
         eventHandler_->PostTask(task);
     }
 }
-
 } // namespace AppExecFwk
 } // namespace OHOS

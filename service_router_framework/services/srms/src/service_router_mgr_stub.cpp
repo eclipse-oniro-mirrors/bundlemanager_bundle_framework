@@ -123,12 +123,12 @@ bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permission
     OHOS::Security::AccessToken::ATokenTypeEnum tokenType =
         OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == OHOS::Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        APP_LOGD("caller tokenType is native, verify success");
+        APP_LOGD("verify success, caller tokenType is native");
         return true;
     }
     int32_t ret = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if (ret == OHOS::Security::AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        APP_LOGE("PERMISSION_DENIED: %{public}s", permissionName.c_str());
         return false;
     }
     APP_LOGD("verify permission success");
@@ -160,7 +160,7 @@ template <typename T>
 bool ServiceRouterMgrStub::WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &reply)
 {
     if (!reply.WriteInt32(parcelableVector.size())) {
-        APP_LOGE("write ParcelableVector failed");
+        APP_LOGE("write ParcelableVector size failed");
         return false;
     }
 

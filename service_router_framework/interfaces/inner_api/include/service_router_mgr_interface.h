@@ -54,7 +54,8 @@ public:
      * @param intentInfos Indicates the obtained IntentInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) = 0;
+    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName,
+        std::vector<IntentInfo> &intentInfos) = 0;
 
     enum Message : uint32_t{
         QUERY_SERVICE_INFOS = 0,

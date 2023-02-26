@@ -17,8 +17,8 @@
 #include "service_info.h"
 #include "string_ex.h"
 
-namespace OHOS{
-namespace AppExecFwk{
+namespace OHOS {
+namespace AppExecFwk {
 bool AppInfo::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
@@ -42,8 +42,7 @@ bool AppInfo::Marshalling(Parcel &parcel) const
 AppInfo *AppInfo::Unmarshalling(Parcel &parcel)
 {
     AppInfo *info = new (std::nothrow) AppInfo();
-    if (info && !info->ReadFromParcel(parcel))
-    {
+    if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
         info = nullptr;
@@ -54,8 +53,7 @@ AppInfo *AppInfo::Unmarshalling(Parcel &parcel)
 bool ServiceInfo::ReadFromParcel(Parcel &parcel)
 {
     std::unique_ptr<AppInfo> app(parcel.ReadParcelable<AppInfo>());
-    if (!app)
-    {
+    if (!app) {
         APP_LOGE("ReadParcelable<AppInfo> failed");
         return false;
     }
@@ -71,8 +69,7 @@ bool ServiceInfo::ReadFromParcel(Parcel &parcel)
     int32_t size;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
     CONTAINER_SECURITY_VERIFY(parcel, size, &permissions);
-    for (int32_t i = 0; i < size; i++)
-    {
+    for (int32_t i = 0; i < size; i++) {
         permissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     
@@ -90,8 +87,7 @@ bool ServiceInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
-    for (auto &permission : permissions)
-    {
+    for (auto &permission : permissions) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
     }
     return true;
@@ -100,8 +96,7 @@ bool ServiceInfo::Marshalling(Parcel &parcel) const
 ServiceInfo *ServiceInfo::Unmarshalling(Parcel &parcel)
 {
     ServiceInfo *info = new (std::nothrow) ServiceInfo();
-    if (info && !info->ReadFromParcel(parcel))
-    {
+    if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
         info = nullptr;
@@ -112,8 +107,7 @@ ServiceInfo *ServiceInfo::Unmarshalling(Parcel &parcel)
 bool IntentInfo::ReadFromParcel(Parcel &parcel)
 {
     std::unique_ptr<AppInfo> app(parcel.ReadParcelable<AppInfo>());
-    if (!app)
-    {
+    if (!app) {
         APP_LOGE("ReadParcelable<AppInfo> failed");
         return false;
     }
@@ -126,8 +120,7 @@ bool IntentInfo::ReadFromParcel(Parcel &parcel)
     int32_t supportDimensionSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
     CONTAINER_SECURITY_VERIFY(parcel, supportDimensionSize, &supportDimensions);
-    for (int32_t i = 0; i < supportDimensionSize; i++)
-    {
+    for (int32_t i = 0; i < supportDimensionSize; i++) {
         supportDimensions.emplace_back(parcel.ReadInt32());
     }
     componentType = static_cast<ComponentType>(parcel.ReadInt32());
@@ -144,8 +137,7 @@ bool IntentInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cardName));
     const auto supportDimensionSize = static_cast<int32_t>(supportDimensions.size());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
-    for (auto i = 0; i < supportDimensionSize; i++)
-    {
+    for (auto i = 0; i < supportDimensionSize; i++) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensions[i]);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(componentType));
@@ -155,8 +147,7 @@ bool IntentInfo::Marshalling(Parcel &parcel) const
 IntentInfo *IntentInfo::Unmarshalling(Parcel &parcel)
 {
     IntentInfo *info = new (std::nothrow) IntentInfo();
-    if (info && !info->ReadFromParcel(parcel))
-    {
+    if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
         info = nullptr;

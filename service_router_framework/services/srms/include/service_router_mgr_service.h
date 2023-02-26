@@ -62,7 +62,8 @@ public:
      * @param serviceInfos Indicates the obtained ServiceInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) override;
+    virtual int32_t QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
+        std::vector<ServiceInfo> &serviceInfos) override;
 
     /**
      * @brief Query the Intent of list by the given Want.
@@ -71,7 +72,8 @@ public:
      * @param intentInfos Indicates the obtained IntentInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) override;
+    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName,
+        std::vector<IntentInfo> &intentInfos) override;
 
 private:
     void Init();

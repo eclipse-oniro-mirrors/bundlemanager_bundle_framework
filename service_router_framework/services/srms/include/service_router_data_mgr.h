@@ -72,7 +72,8 @@ public:
      * @param serviceInfos Indicates the obtained ServiceInfo of list.
      * @return Returns ERR_OK on success, others on failure.
      */
-    int32_t QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const;
+    int32_t QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
+        std::vector<ServiceInfo> &serviceInfos) const;
 
     /**
      * @brief Query a IntentInfo of list by the given Want.
@@ -81,7 +82,8 @@ public:
      * @param intentInfos Indicates the obtained IntentInfo of list.
      * @return Returns ERR_OK on success, others on failure.
      */
-    int32_t QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos) const;
+    int32_t QueryIntentInfos(const Want &want, const std::string intentName,
+        std::vector<IntentInfo> &intentInfos) const;
 
 private:
     bool IsContainsForm(const std::vector<IntentInfo> &intentInfos);
