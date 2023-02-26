@@ -61,12 +61,12 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
 {
     APP_LOGI("ServiceRouterMgrStub handle query service infos");
     if (!VerifySystemApp()) {
-            APP_LOGE("verify system app failed");
-            return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+        APP_LOGE("verify system app failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-            APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-            return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     Want *want = data.ReadParcelable<Want>();
     ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());

@@ -20,9 +20,14 @@
 #include "iservice_registry.h"
 #include "app_log_wrapper.h"
 #include "sr_samgr_helper.h"
+#include "uri.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+    const std::string SCHEME_SEPARATOR = "://";
+    const std::string SCHEME_SERVICE_ROUTER = "servicerouter";
+}
 ServiceRouterDataMgr::ServiceRouterDataMgr()
 {
     APP_LOGI("SRDM instance is created");
@@ -109,7 +114,8 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
     std::vector<ServiceInfo> &serviceInfos) const
 {
     APP_LOGI("SRDM QueryServiceInfos");
-    if (serviceType == ExtensionServiceType::UNSPECIFIED) {
+    ExtensionServiceType validType = GetExtensionServiceType(want, serviceType);
+    if (validType == ExtensionServiceType::UNSPECIFIED) {
         APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
@@ -117,14 +123,14 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
     std::string bundleName = element.GetBundleName();
     if (bundleName.empty()) {
         for (const auto &item : innerServiceInfos_) {
-            item.second.FindServiceInfos(serviceType, serviceInfos);
+            item.second.FindServiceInfos(validType, serviceInfos);
         }
     } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
         if (infoItem == innerServiceInfos_.end()) {
             return ERR_OK;
         }
-        infoItem->second.FindServiceInfos(serviceType, serviceInfos);
+        infoItem->second.FindServiceInfos(validType, serviceInfos);
     }
     return ERR_OK;
 }
@@ -152,6 +158,22 @@ int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::stri
         infoItem->second.FindIntentInfos(intentName, intentInfos);
     }
     return ERR_OK;
+}
+
+ExtensionServiceType ServiceRouterDataMgr::GetExtensionServiceType(const Want &want,
+    const ExtensionServiceType &serviceType) const
+{
+    if (serviceType != ExtensionServiceType::UNSPECIFIED) {
+        return serviceType;
+    }
+    Uri uri = want.GetUri();
+    APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s , %{public}s", uri.GetScheme().c_str(), uri.GetHost().c_str());
+    if (uri.GetScheme().empty() || uri.GetHost().empty() || uri.GetScheme() != SCHEME_SERVICE_ROUTER)
+    {
+        APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s", want.GetUriString().c_str());
+        return ExtensionServiceType::UNSPECIFIED;
+    }
+    return BundleInfoResolveUtil::findExtensionServiceType(uri.GetHost());
 }
 
 bool ServiceRouterDataMgr::IsContainsForm(const std::vector<IntentInfo> &intentInfos)

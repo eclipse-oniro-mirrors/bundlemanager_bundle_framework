@@ -117,8 +117,6 @@ static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInf
     if (supportIntent.empty()) {
         return;
     }
-    APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-        extAbilityInfo.name.c_str(), supportIntent.c_str());
     std::vector<std::string> intents;
     SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intents);
     for (std::string &intentAndCard : intents) {

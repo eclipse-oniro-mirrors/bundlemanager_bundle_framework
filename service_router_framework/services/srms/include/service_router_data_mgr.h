@@ -26,6 +26,7 @@
 #include "bundle_mgr_interface.h"
 #include "inner_service_info.h"
 #include "want.h"
+#include "uri.h"
 #include "service_info.h"
 
 namespace OHOS {
@@ -33,6 +34,7 @@ namespace AppExecFwk {
 class ServiceRouterDataMgr : public DelayedRefSingleton<ServiceRouterDataMgr> {
 public:
     using Want = OHOS::AAFwk::Want;
+    using Uri = OHOS::Uri;
 
     ServiceRouterDataMgr();
     virtual ~ServiceRouterDataMgr();
@@ -86,6 +88,8 @@ public:
 
 private:
     bool IsContainsForm(const std::vector<IntentInfo> &intentInfos);
+
+    ExtensionServiceType GetExtensionServiceType(const Want &want, const ExtensionServiceType &serviceType) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
