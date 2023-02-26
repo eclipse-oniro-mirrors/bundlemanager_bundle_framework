@@ -29,9 +29,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-static std::unordered_map<std::string, ExtensionServiceType> SERVICE_TYPE_MAP = {
-    { "share", ExtensionServiceType::SHARE }
-};
+    static std::unordered_map<std::string, ExtensionServiceType> SERVICE_TYPE_MAP = {
+        {"share", ExtensionServiceType::SHARE}};
 }
 class BundleInfoResolveUtil {
 public:
@@ -45,10 +44,23 @@ static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentIn
     ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos);
     ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos);
     if (intentInfos.empty() && serviceInfos.empty()) {
-        APP_LOGD("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
+        APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
         return false;
     }
     return true;
+}
+
+static ExtensionServiceType findExtensionServiceType(const std::string serviceType)
+{
+    if (serviceType.empty()) {
+        return ExtensionServiceType::UNSPECIFIED;
+    }
+
+    auto item = SERVICE_TYPE_MAP.find(LowerStr(serviceType));
+    if (item != SERVICE_TYPE_MAP.end()) {
+        return item->second;
+    }
+    return ExtensionServiceType::UNSPECIFIED;
 }
 
 private:
@@ -80,8 +92,6 @@ static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<
     if (supportIntent.empty()) {
         return;
     }
-    APP_LOGI("ConvertAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-        abilityInfo.name.c_str(), supportIntent.c_str());
     std::vector<std::string> intentNames;
     SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intentNames);
     for (std::string &name : intentNames) {
@@ -92,7 +102,7 @@ static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<
         intentInfo.bundleName = abilityInfo.bundleName;
         intentInfo.componentType = ComponentType::UI_ABILITY;
         intentInfos.emplace_back(intentInfo);
-        APP_LOGI("ConvertAbilityToIntents,add intent, abilityName: %{public}s, intentName: %{public}s",
+        APP_LOGI("ConvertAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
             abilityInfo.name.c_str(), name.c_str());
     }
 }
@@ -140,8 +150,9 @@ static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInf
     std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
     APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s",
         extAbilityInfo.name.c_str(), serviceType.c_str());
-    auto item = SERVICE_TYPE_MAP.find(serviceType);
-    if (!serviceType.empty() && item != SERVICE_TYPE_MAP.end()) {
+    auto item = SERVICE_TYPE_MAP.find(LowerStr(serviceType));
+    ExtensionServiceType type = findExtensionServiceType(serviceType);
+    if (type != ExtensionServiceType::UNSPECIFIED) {
         ServiceInfo serviceInfo;
         serviceInfo.abilityName = extAbilityInfo.name;
         serviceInfo.moduleName = extAbilityInfo.moduleName;

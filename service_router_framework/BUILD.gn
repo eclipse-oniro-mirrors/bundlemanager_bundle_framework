@@ -18,9 +18,7 @@ group("inner_api_target") {
 }
 
 group("jsapi_target") {
-  deps = [
-    "interfaces/kits/js/serviceroutermgr:jsapi_target",
-  ]
+  deps = [ "interfaces/kits/js/serviceroutermgr:jsapi_target" ]
 }
 
 group("srms_target") {

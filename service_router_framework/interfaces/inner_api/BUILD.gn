@@ -11,7 +11,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import("//build/ohos.gni")
 import("../../srms.gni")
 
@@ -20,9 +19,10 @@ config("srms_fwk_config") {
 }
 
 ohos_shared_library("srms_fwk") {
-  sources = [ 
+  sources = [
     "src/service_info.cpp",
-    "src/service_router_mgr_proxy.cpp", ]
+    "src/service_router_mgr_proxy.cpp",
+  ]
 
   defines = [
     "APP_LOG_TAG = \"ServiceRouterMgrService\"",

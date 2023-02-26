@@ -74,7 +74,7 @@ int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::str
         APP_LOGE("write intentName fail");
         return false;
     }
-    int32_t res = GetParcelableInfos<IntentInfo>(ServiceRouterMgrProxy::Message::QUERY_INTENT_INFOS, data, intentInfos);
+    int32_t res = GetParcelableInfos<IntentInfo>(ServiceRouterMgrProxy::Message::QUERY_INTENTINFOS, data, intentInfos);
     if (res != OHOS::NO_ERROR) {
         APP_LOGE("fail to QueryIntentInfos from server, error code: %{public}d", res);
     }

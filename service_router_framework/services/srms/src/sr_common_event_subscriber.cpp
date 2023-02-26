@@ -24,12 +24,12 @@ namespace AppExecFwk {
 SrCommonEventSubscriber::SrCommonEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
-    APP_LOGD("SrCommonEventSubscriber created");
+    APP_LOGI("SrCommonEventSubscriber created");
 }
 
 SrCommonEventSubscriber::~SrCommonEventSubscriber()
 {
-    APP_LOGD("SrCommonEventSubscriber destroyed");
+    APP_LOGI("SrCommonEventSubscriber destroyed");
 }
 
 void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)

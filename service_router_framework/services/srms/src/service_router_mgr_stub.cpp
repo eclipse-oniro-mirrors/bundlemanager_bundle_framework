@@ -48,7 +48,7 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     switch (code) {
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_SERVICE_INFOS):
             return HandleQueryServiceInfos(data, reply);
-        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_INTENT_INFOS):
+        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_INTENTINFOS):
             return HandleQueryIntentInfos(data, reply);
         default:
             APP_LOGW("DistributedBmsHost receives unknown code, code = %{public}d", code);
@@ -119,7 +119,7 @@ int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessagePar
 
 bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permissionName)
 {
-    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
+    APP_LOGI("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     OHOS::Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     OHOS::Security::AccessToken::ATokenTypeEnum tokenType =
         OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -132,7 +132,6 @@ bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permission
         APP_LOGE("PERMISSION_DENIED: %{public}s", permissionName.c_str());
         return false;
     }
-    APP_LOGD("verify permission success");
     return true;
 }
 
@@ -142,11 +141,9 @@ bool ServiceRouterMgrStub::VerifySystemApp()
     Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL || callingUid == Constants::ROOT_UID) {
-        APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
     uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();

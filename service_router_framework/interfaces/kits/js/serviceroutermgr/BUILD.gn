@@ -22,16 +22,16 @@ ohos_shared_library("servicerouter") {
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
-    "service_router_mgr.cpp",
     "native_module.cpp",
+    "service_router_mgr.cpp",
   ]
 
   configs = [ "${srms_services_path}:srms_config" ]
 
   deps = [
     "${common_path}:libappexecfwk_common",
-    "${srms_inner_api_path}:srms_fwk",
     "${kits_path}/js/common:bundle_napi_common",
+    "${srms_inner_api_path}:srms_fwk",
   ]
 
   external_deps = [

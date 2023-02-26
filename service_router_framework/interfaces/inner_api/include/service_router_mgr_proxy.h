@@ -42,9 +42,9 @@ public:
         std::vector<ServiceInfo> &serviceInfos) override;
 
     /**
-     * @brief Query the purpose of list by the given Want.
+     * @brief Query the IntentInfo of list by the given Want.
      * @param want Indicates the information of the purpose.
-     * @param intentName Indicates the purpose name.
+     * @param intentName Indicates the  intentName.
      * @param intentInfos Indicates the obtained IntentInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */

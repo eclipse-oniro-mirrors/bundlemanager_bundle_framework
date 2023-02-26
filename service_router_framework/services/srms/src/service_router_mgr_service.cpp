@@ -154,7 +154,8 @@ int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const Exten
     return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);
 }
 
-int32_t ServiceRouterMgrService::QueryIntentInfos(const Want &want, const std::string intentName, std::vector<IntentInfo> &intentInfos)
+int32_t ServiceRouterMgrService::QueryIntentInfos(const Want &want, const std::string intentName,
+    std::vector<IntentInfo> &intentInfos)
 {
     APP_LOGI("%{public}s coldStart:", __func__);
     return ServiceRouterDataMgr::GetInstance().QueryIntentInfos(want, intentName, intentInfos);
