@@ -15,5 +15,4 @@ import("../appexecfwk.gni")
 
 srms_inner_api_path =
     "${appexecfwk_path}/service_router_framework/interfaces/inner_api"
-srms_services_path =
-    "${appexecfwk_path}/service_router_framework/services/srms"
+srms_services_path = "${appexecfwk_path}/service_router_framework/services/srms"
