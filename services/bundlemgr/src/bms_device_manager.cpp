@@ -48,47 +48,15 @@ bool BmsDeviceManager::InitDeviceManager()
         APP_LOGE("init device manager failed, ret:%{public}d", ret);
         return false;
     }
-    stateCallback_ = std::make_shared<BmsDeviceStateCallback>();
-    ret =
-        DistributedHardware::DeviceManager::GetInstance().RegisterDevStateCallback(BUNDLE_NAME, "", stateCallback_);
-    if (ret != 0) {
-        APP_LOGE("register devStateCallback failed, ret:%{public}d", ret);
-        return false;
-    }
+
     isInit_ = true;
     APP_LOGI("register device manager success");
     return true;
 }
 
-void BmsDeviceManager::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+void BmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
 {
-    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d add!", systemAbilityId);
-    if (DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID == systemAbilityId) {
-        InitDeviceManager();
-        std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-        if (!GetTrustedDeviceList(deviceList)) {
-            APP_LOGW("deviceManager GetTrustedDeviceList failed");
-            return;
-        }
-        if (deviceList.size() > 0) {
-            StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        }
-    }
-}
-
-void BmsDeviceManager::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
-{
-    APP_LOGI("OnRemoveSystemAbility systemAbilityId:%{public}d removed!", systemAbilityId);
-    if (DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID == systemAbilityId) {
-        std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-        if (!GetTrustedDeviceList(deviceList)) {
-            APP_LOGW("deviceManager GetTrustedDeviceList failed");
-            return;
-        }
-        if (deviceList.size() > 0) {
-            StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-        }
-    }
+    APP_LOGD("DeviceInitCallBack OnRemoteDied");
 }
 
 bool BmsDeviceManager::GetAllDeviceList(std::vector<std::string> &deviceIds)
@@ -128,24 +96,6 @@ bool BmsDeviceManager::GetTrustedDeviceList(std::vector<DistributedHardware::DmD
     return true;
 }
 
-void BmsDeviceManager::StartDynamicSystemProcess(int32_t systemAbilityId)
-{
-    APP_LOGD("StartDynamicSystemProcess systemAbilityId:%{public}d !", systemAbilityId);
-    std::string strExtra = std::to_string(systemAbilityId);
-    auto extraArgv = strExtra.c_str();
-    int ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), START, &extraArgv, 1);
-    APP_LOGI("StartDynamicSystemProcess, ret:%{public}d", ret);
-}
-
-void BmsDeviceManager::StopDynamicSystemProcess(int32_t systemAbilityId)
-{
-    APP_LOGD("StopDynamicSystemProcess systemAbilityId:%{public}d !", systemAbilityId);
-    std::string strExtra = std::to_string(systemAbilityId);
-    auto extraArgv = strExtra.c_str();
-    int ret = ServiceControlWithExtra(SERVICES_NAME.c_str(), STOP, &extraArgv, 1);
-    APP_LOGI("StopDynamicSystemProcess, ret:%{public}d", ret);
-}
-
 int32_t BmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std::string &udid)
 {
     APP_LOGI("GetUdidByNetworkId");
@@ -153,45 +103,6 @@ int32_t BmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std::
         return -1;
     }
     return DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(BUNDLE_NAME, netWorkId, udid);
-}
-
-void BmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
-{
-    APP_LOGD("DeviceInitCallBack OnRemoteDied");
-}
-
-void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    APP_LOGI("DeviceInitCallBack OnDeviceOnline");
-}
-
-void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    APP_LOGI("DeviceInitCallBack OnDeviceOffline");
-    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
-    if (deviceManager == nullptr) {
-        APP_LOGW("deviceManager is nullptr");
-        return;
-    }
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    if (!deviceManager->GetTrustedDeviceList(deviceList)) {
-        APP_LOGW("deviceManager GetTrustedDeviceList failed");
-        return;
-    }
-    if (deviceList.size() == 0) {
-        BmsDeviceManager::StopDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    }
-}
-
-void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    APP_LOGD("DeviceInitCallBack OnDeviceChanged");
-}
-
-void BmsDeviceManager::BmsDeviceStateCallback::OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo)
-{
-    APP_LOGI("DeviceInitCallBack OnDeviceReady");
-    BmsDeviceManager::StartDynamicSystemProcess(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 }
 }

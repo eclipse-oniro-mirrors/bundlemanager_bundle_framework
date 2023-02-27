@@ -28,32 +28,21 @@ namespace AppExecFwk {
 class BmsDeviceManager {
 public:
     BmsDeviceManager();
-    void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
-    void OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId);
+
     int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
     bool GetAllDeviceList(std::vector<std::string> &deviceIds);
 
 private:
-    static void StartDynamicSystemProcess(int32_t systemAbilityId);
-    static void StopDynamicSystemProcess(int32_t systemAbilityId);
     bool InitDeviceManager();
     bool GetTrustedDeviceList(std::vector<DistributedHardware::DmDeviceInfo> &deviceList);
-
+    std::shared_ptr<DistributedHardware::DmInitCallback> initCallback_;
     mutable std::mutex isInitMutex_;
     bool isInit_ = false;
-    std::shared_ptr<DistributedHardware::DmInitCallback> initCallback_;
-    std::shared_ptr<DistributedHardware::DeviceStateCallback> stateCallback_;
 
 class DeviceInitCallBack : public DistributedHardware::DmInitCallback {
     void OnRemoteDied() override;
 };
 
-class BmsDeviceStateCallback : public DistributedHardware::DeviceStateCallback {
-    void OnDeviceOnline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    void OnDeviceOffline(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    void OnDeviceChanged(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-    void OnDeviceReady(const DistributedHardware::DmDeviceInfo &deviceInfo) override;
-};
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
