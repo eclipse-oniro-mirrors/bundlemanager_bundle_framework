@@ -146,14 +146,6 @@ struct Metadata {
     std::string resource;
 };
 
-struct Preload {
-    std::string moduleName;
-};
-
-struct ModuleAtomicService {
-    std::vector<Profile::Preload> preloads;
-};
-
 struct AppShared {
     std::string compatiblePolicy;
 };
