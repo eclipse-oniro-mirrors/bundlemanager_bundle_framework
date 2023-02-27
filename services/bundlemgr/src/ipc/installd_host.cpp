@@ -194,7 +194,8 @@ bool InstalldHost::HandleSetDirApl(MessageParcel &data, MessageParcel &reply)
     std::string dataDir = Str16ToStr8(data.ReadString16());
     std::string bundleName = Str16ToStr8(data.ReadString16());
     std::string apl = Str16ToStr8(data.ReadString16());
-    ErrCode result = SetDirApl(dataDir, bundleName, apl);
+    bool isPreInstallHap = data.ReadBool();
+    ErrCode result = SetDirApl(dataDir, bundleName, apl, isPreInstallHap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

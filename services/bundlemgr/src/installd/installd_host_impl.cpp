@@ -194,7 +194,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                 }
             }
         }
-        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl);
+        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl,
+            createDirParam.isPreInstallApp);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -206,7 +207,8 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             APP_LOGE("CreateBundle databaseDir MkOwnerDir failed");
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
-        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl);
+        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl,
+            createDirParam.isPreInstallApp);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -404,7 +406,8 @@ ErrCode InstalldHostImpl::GetBundleStats(
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
+ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+    bool isPreInstallHap)
 {
 #ifdef WITH_SELINUX
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {

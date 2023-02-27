@@ -75,7 +75,8 @@ ErrCode InstalldClient::GetBundleStats(
     return 0;
 }
 
-ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
+ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+    bool isPreInstallApp)
 {
     return 0;
 }
