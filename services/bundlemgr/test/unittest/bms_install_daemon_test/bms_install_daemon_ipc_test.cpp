@@ -311,7 +311,7 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_1000, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = proxy->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false);
     EXPECT_EQ(ret, ERR_OK);
 }
 

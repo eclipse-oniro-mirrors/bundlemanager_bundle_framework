@@ -170,13 +170,15 @@ ErrCode InstalldProxy::GetBundleStats(
     return ret;
 }
 
-ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
+ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+    bool isPreInstallApp)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(apl));
+    INSTALLD_PARCEL_WRITE(data, Bool, isPreInstallApp);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

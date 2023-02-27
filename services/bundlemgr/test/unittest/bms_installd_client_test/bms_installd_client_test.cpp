@@ -546,7 +546,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0100, TestSize.L
     std::string dir = EMPTY_STRING;
     std::string bundleName = BUNDLE_NAME;
     std::string apl = APL;
-    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
+    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0100 end";
 }
@@ -562,7 +562,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0200, TestSize.L
     std::string dir = DIR;
     std::string bundleName = EMPTY_STRING;
     std::string apl = APL;
-    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
+    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, true);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0200 end";
 }
@@ -578,7 +578,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0300, TestSize.L
     std::string dir = DIR;
     std::string bundleName = BUNDLE_NAME;
     std::string apl = EMPTY_STRING;
-    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
+    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, false);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0300 end";
 }
@@ -594,8 +594,8 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0400, TestSize.L
     std::string dir = DIR;
     std::string bundleName = BUNDLE_NAME;
     std::string apl = APL;
-    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::SetDirApl, dir, bundleName, apl));
+    ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, true);
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::SetDirApl, dir, bundleName, apl, true));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0400 end";
 }
 

@@ -2068,14 +2068,14 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel());
+            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp());
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
             return result;
         }
         std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel());
+            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp());
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;
