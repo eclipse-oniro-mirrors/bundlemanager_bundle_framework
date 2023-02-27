@@ -314,6 +314,9 @@ constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHAN
 constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
+
+// replace want int ecological rule
+constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
