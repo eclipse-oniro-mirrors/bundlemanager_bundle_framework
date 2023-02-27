@@ -574,8 +574,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         JsonType::BOOLEAN,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY
-    );
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)

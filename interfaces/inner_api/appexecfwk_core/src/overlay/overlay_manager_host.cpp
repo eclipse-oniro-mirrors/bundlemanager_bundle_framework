@@ -46,7 +46,6 @@ void OverlayManagerHost::init()
         &OverlayManagerHost::HandleGetOverlayModuleInfoForTarget);
     funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED, &OverlayManagerHost::HandleSetOverlayEnabled);
     funcMap_.emplace(IOverlayManager::Message::VERIFY_SYSTEM_APP, &OverlayManagerHost::HandleVerifySystemApi);
-    
 }
 
 
