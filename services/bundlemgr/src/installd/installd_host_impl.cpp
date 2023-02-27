@@ -407,7 +407,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallHap)
+    bool isPreInstallApp)
 {
 #ifdef WITH_SELINUX
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {

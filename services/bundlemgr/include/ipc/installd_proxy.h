@@ -103,11 +103,11 @@ public:
      * @param dir Indicates the data dir.
      * @param bundleName Indicates the bundle name.
      * @param apl Indicates the apl type.
-     * @param isPreInstallHap Indicates the bundle install type.
+     * @param isPreInstallApp Indicates the bundle install type.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        bool isPreInstallHap) override;
+        bool isPreInstallApp) override;
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.

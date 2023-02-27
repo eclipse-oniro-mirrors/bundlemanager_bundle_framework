@@ -126,14 +126,14 @@ ErrCode InstalldClient::GetBundleStats(
 }
 
 ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallHap)
+    bool isPreInstallApp)
 {
     if (dir.empty() || bundleName.empty() || apl.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallHap);
+    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallApp);
 }
 
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
