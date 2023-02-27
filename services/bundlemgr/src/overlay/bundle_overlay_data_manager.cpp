@@ -514,7 +514,7 @@ ErrCode OverlayDataMgr::SaveInternalOverlayModuleState(const OverlayModuleInfo &
         }
         auto &overlayStates = userInfo.bundleUserInfo.overlayModulesState;
         auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&overlayModuleInfo](const auto &item) {
-            if (item.find(overlayModuleInfo.moduleName) != std::string::npos) {
+            if (item.find(overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
                 return true;
             }
             return false;
@@ -551,7 +551,7 @@ ErrCode OverlayDataMgr::SaveExternalOverlayModuleState(const OverlayModuleInfo &
     }
     auto &overlayStates = userInfo.bundleUserInfo.overlayModulesState;
     auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&overlayModuleInfo](const auto &item) {
-        if (item.find(overlayModuleInfo.moduleName) != std::string::npos) {
+        if (item.find(overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
             return true;
         }
         return false;
@@ -861,7 +861,7 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
     // 4. set enable state
     auto &statesVec = userInfo.bundleUserInfo.overlayModulesState;
     for (auto &item : statesVec) {
-        if (item.find(moduleName) == std::string::npos) {
+        if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
             continue;
         }
         item = isEnabled ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
