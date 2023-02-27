@@ -34,6 +34,7 @@ constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
+const std::string HSP_VERSION_PREFIX = "v";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char FILE_SEPARATOR_CHAR = '/';

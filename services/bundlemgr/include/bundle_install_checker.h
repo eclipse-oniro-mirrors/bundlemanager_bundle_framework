@@ -29,6 +29,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+// muliple hap or hsp file parse result, key is file path
+using FilesParseResult = std::unordered_map<std::string, InnerBundleInfo>;
+
 struct InstallCheckParam {
     bool isPreInstallApp = false;
     bool removable = true;
@@ -71,6 +74,8 @@ public:
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    ErrCode CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
@@ -105,9 +110,11 @@ public:
     /**
      * @brief To check dependency whether or not exists.
      * @param infos Indicates all innerBundleInfo for all haps need to be installed.
+     * @param hsps Indicates all hsps for all haps need to be installed, grouped by bundle name
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
-    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        std::unordered_map<std::string, FilesParseResult> &hsps);
 
     void ResetProperties();
 
@@ -180,6 +187,11 @@ private:
     bool FindModuleInInstalledPackage(
         const std::string &moduleName,
         const std::string &bundleName);
+
+    bool FindModuleInInstallingPackage(const Dependency &dependency,
+        const std::unordered_map<std::string, FilesParseResult> &infos);
+
+    bool FindModuleInInstalledPackage(const Dependency &dependency);
 
     bool isContainEntry_ = false;
 

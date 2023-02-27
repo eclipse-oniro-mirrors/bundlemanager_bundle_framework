@@ -18,6 +18,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 #include "bundle_constants.h"
 #include "parcel.h"
@@ -58,6 +59,8 @@ struct InstallParam : public Parcelable {
     bool copyHapToInstallPath = true;
     // is aging Cause uninstall.
     bool isAgingUninstall = false;
+    // shared pacakge directory paths
+    std::vector<std::string> sharedBundleDirPaths;
 
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);

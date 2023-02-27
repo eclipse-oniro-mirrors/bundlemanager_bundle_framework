@@ -345,7 +345,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     }
 
     std::vector<std::string> realPaths;
-    if (!BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
+    if (!bundleFilePaths.empty() && !BundleFileUtil::CheckFilePath(bundleFilePaths, realPaths)) {
         APP_LOGE("stream install failed due to check file failed");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
@@ -361,6 +361,24 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
             APP_LOGE("WriteFileToStream failed due to %{public}d", res);
             return res;
+        }
+    }
+
+    // write shared bundles
+    for (size_t i = 0; i < installParam.sharedBundleDirPaths.size(); ++i) {
+        realPaths.clear();
+        std::vector<std::string> sharedBundleDir = {installParam.sharedBundleDirPaths[i]};
+        if (!BundleFileUtil::CheckFilePath(sharedBundleDir, realPaths)) {
+            APP_LOGE("stream install failed due to check shared package files failed");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        for (const auto &path : realPaths) {
+            ErrCode res = WriteSharedFileToStream(streamInstaller, path, i);
+            if (res != ERR_OK) {
+                DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
+                APP_LOGE("WriteSharedFileToStream(sharedBundleDirPaths) failed due to %{public}d", res);
+                return res;
+            }
         }
     }
 
@@ -397,6 +415,59 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
 
     APP_LOGD("write file stream of bundle path %{public}s and hap name %{public}s", path.c_str(), hapName.c_str());
     int32_t outputFd = streamInstaller->CreateStream(hapName);
+    if (outputFd < 0) {
+        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    int32_t inputFd = open(path.c_str(), O_RDONLY);
+    if (inputFd < 0) {
+        close(outputFd);
+        APP_LOGE("write file to stream failed due to open the hap file");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    char buffer[DEFAULT_BUFFER_SIZE] = {0};
+    int offset = -1;
+    while ((offset = read(inputFd, buffer, sizeof(buffer))) > 0) {
+        if (write(outputFd, buffer, offset) < 0) {
+            close(inputFd);
+            close(outputFd);
+            APP_LOGE("write file to the temp dir failed");
+            return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+        }
+    }
+
+    close(inputFd);
+    fsync(outputFd);
+    close(outputFd);
+
+    APP_LOGD("write file stream to service terminal end");
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
+    const std::string &path, uint32_t index)
+{
+    APP_LOGD("write shared file stream to service terminal start");
+    if (streamInstaller == nullptr) {
+        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    // find hap file name
+    size_t pos = path.find_last_of(SEPARATOR);
+    if (pos == std::string::npos) {
+        APP_LOGE("write file to stream failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    std::string hspName = path.substr(pos + 1);
+    if (hspName.empty()) {
+        APP_LOGE("write file to stream failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    APP_LOGD("write file stream of bundle path %{public}s and hsp name %{public}s", path.c_str(), hspName.c_str());
+    int32_t outputFd = streamInstaller->CreateSharedBundleStream(hspName, index);
     if (outputFd < 0) {
         APP_LOGE("write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;

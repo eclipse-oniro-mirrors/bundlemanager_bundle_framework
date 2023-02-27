@@ -478,6 +478,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: dependent module does not exist.",
     },
     {
+        IStatusReceiver::ERR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED,
+        "error: disallowed to share library",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_COMPATIBLE_POLICY_NOT_SAME,
+        "error: compatible policy not same",
+    },
+    {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR,
         "error: internal error of overlay installation.",
     },

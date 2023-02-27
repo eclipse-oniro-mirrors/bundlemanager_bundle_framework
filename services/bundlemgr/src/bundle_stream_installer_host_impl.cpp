@@ -45,6 +45,16 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
         return false;
     }
     tempDir_ = tempDir;
+
+    installParam_.sharedBundleDirPaths.clear();
+    for (size_t i = 0; i < installParam.sharedBundleDirPaths.size(); ++i) {
+        tempDir = BundleUtil::CreateSharedPacakgeTempDir(installerId_, i);
+        if (tempDir.empty()) {
+            APP_LOGE("create temp dir for hsp failed");
+            return false;
+        }
+        installParam_.sharedBundleDirPaths.emplace_back(tempDir);
+    }
     return true;
 }
 
@@ -54,6 +64,9 @@ void BundleStreamInstallerHostImpl::UnInit()
         tempDir_.c_str());
     BundleUtil::CloseFileDescriptor(streamFdVec_);
     BundleUtil::DeleteDir(tempDir_);
+    for (const auto &path : installParam_.sharedBundleDirPaths) {
+        BundleUtil::DeleteDir(path);
+    }
 }
 
 int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
@@ -75,6 +88,41 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
         return -1;
     }
     std::string bundlePath = tempDir_ + hapName;
+    int32_t fd = -1;
+    if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
+        APP_LOGE("stream installer create file descriptor failed");
+    }
+    if (fd > 0) {
+        streamFdVec_.emplace_back(fd);
+    }
+    return fd;
+}
+
+int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("CreateSharedBundleStream permission denied");
+        return -1;
+    }
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != installedUid_ || isInstallStarted_) {
+        APP_LOGE("calling uid is inconsistent");
+        return -1;
+    }
+
+    if (!BundleUtil::CheckFileType(hspName, Constants::INSTALL_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(hspName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap or hsp");
+        return -1;
+    }
+
+    if (index >= installParam_.sharedBundleDirPaths.size()) {
+        APP_LOGE("invalid shared bundle index");
+        return -1;
+    }
+
+    std::string bundlePath = installParam_.sharedBundleDirPaths[index] + hspName;
     int32_t fd = -1;
     if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");

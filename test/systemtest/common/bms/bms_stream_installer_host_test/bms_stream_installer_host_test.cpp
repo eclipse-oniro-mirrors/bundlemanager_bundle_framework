@@ -31,6 +31,7 @@ public:
     virtual ~BundleStreamInstallerHostMock() = default;
 
     MOCK_METHOD1(CreateStream, int32_t(const std::string &hapName));
+    MOCK_METHOD2(CreateSharedBundleStream, int32_t(const std::string &hspName, uint32_t index));
     MOCK_METHOD0(Install, bool());
 
     uint32_t GetInstallerId() const override
@@ -80,7 +81,7 @@ void BmsStreamInstallerHostTest::TearDown() {}
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_001, TestSize.Level1)
 {
     auto size = static_cast<int32_t>(streamInstallerHost_->funcMap_.size());
-    EXPECT_EQ(size, 2);
+    EXPECT_EQ(size, 3);
 }
 
 /**

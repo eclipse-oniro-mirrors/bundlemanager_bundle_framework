@@ -315,19 +315,8 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
     }
 }
 
-std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)
+static std::string CreateTempDir(const std::string &tempDir)
 {
-    std::time_t curTime = std::time(0);
-    std::string tempDir = Constants::HAP_COPY_PATH;
-    if (type == DirType::STREAM_INSTALL_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
-    } else if (type == DirType::QUICK_FIX_DIR) {
-        tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
-    } else {
-        return "";
-    }
-    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
-        std::to_string(installerId) + Constants::PATH_SEPARATOR;
     if (!OHOS::ForceCreateDirectory(tempDir)) {
         APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
         return "";
@@ -342,6 +331,32 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         return "";
     }
     return tempDir;
+}
+
+std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)
+{
+    std::time_t curTime = std::time(0);
+    std::string tempDir = Constants::HAP_COPY_PATH;
+    if (type == DirType::STREAM_INSTALL_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+    } else if (type == DirType::QUICK_FIX_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    } else {
+        return "";
+    }
+    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
+        std::to_string(installerId) + Constants::PATH_SEPARATOR;
+    return CreateTempDir(tempDir);
+}
+
+std::string BundleUtil::CreateSharedPacakgeTempDir(uint32_t installerId, uint32_t index)
+{
+    std::time_t curTime = std::time(0);
+    std::string tempDir = Constants::HAP_COPY_PATH;
+    tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
+    tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
+        std::to_string(installerId) + Constants::FILE_UNDERLINE + std::to_string(index) + Constants::PATH_SEPARATOR;
+    return CreateTempDir(tempDir);
 }
 
 int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long long offset)

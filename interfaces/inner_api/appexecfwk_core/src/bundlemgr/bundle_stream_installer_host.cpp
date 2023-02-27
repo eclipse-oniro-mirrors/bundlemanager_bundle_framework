@@ -59,6 +59,18 @@ ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, Messa
     return ERR_OK;
 }
 
+ErrCode BundleStreamInstallerHost::HandleCreateSharedBundleStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string hspName = data.ReadString();
+    int sharedBundleIdx = data.ReadUint32();
+    int32_t fd = CreateSharedBundleStream(hspName, sharedBundleIdx);
+    if (!reply.WriteFileDescriptor(fd)) {
+        APP_LOGE("write fd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessageParcel &reply)
 {
     if (!Install()) {
@@ -75,6 +87,10 @@ void BundleStreamInstallerHost::init()
     funcMap_.emplace(StreamMessage::CREATE_STREAM, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
         return this->HandleCreateStream(data, reply);
     });
+    funcMap_.emplace(StreamMessage::CREATE_SHARED_BUNDLE_STREAM,
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateSharedBundleStream(data, reply);
+        });
     funcMap_.emplace(StreamMessage::STREAM_INSTALL, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
         return this->HandleInstall(data, reply);
     });
