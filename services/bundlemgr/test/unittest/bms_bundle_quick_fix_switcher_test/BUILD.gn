@@ -79,6 +79,7 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   if (configpolicy_enable) {
