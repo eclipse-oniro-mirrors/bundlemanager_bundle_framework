@@ -2438,5 +2438,38 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(int32_t userId, std::vector<Sh
 
     return ERR_OK;
 }
+
+ErrCode BundleMgrHostImpl::GetSharedBundleInfoBySelf(const std::string &bundleName,
+    SharedBundleInfo &sharedBundleInfo)
+{
+    APP_LOGD("begin to GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSharedBundleInfoBySelf(bundleName, sharedBundleInfo);
+}
+
+ErrCode BundleMgrHostImpl::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+    std::vector<Dependency> &dependencies)
+{
+    APP_LOGD("GetSharedDependencies: bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSharedDependencies(bundleName, moduleName, dependencies);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -766,6 +766,10 @@ public:
     virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName, int32_t userId,
         std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
     virtual ErrCode GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles) override;
+    virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,
+        SharedBundleInfo &sharedBundleInfo) override;
+    virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+        std::vector<Dependency> &dependencies) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();

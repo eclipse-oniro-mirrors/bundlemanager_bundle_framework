@@ -4500,5 +4500,40 @@ ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32
     // Reserved interface
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
+{
+    APP_LOGD("GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("GetSharedBundleInfoBySelf failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
+    APP_LOGD("GetSharedBundleInfoBySelf(%{public}s) successfully)", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+    std::vector<Dependency> &dependencies)
+{
+    APP_LOGD("GetSharedDependencies bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("GetSharedDependencies failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    innerBundleInfo.GetSharedDependencies(moduleName, dependencies);
+    APP_LOGD("GetSharedDependencies(bundle %{public}s, module %{public}s) successfully)",
+        bundleName.c_str(), moduleName.c_str());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

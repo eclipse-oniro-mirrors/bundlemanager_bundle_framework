@@ -34,6 +34,7 @@
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
 #include "shared_package/base_shared_package_info.h"
+#include "shared_package/shared_bundle_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1998,6 +1999,8 @@ public:
         BaseSharedPackageInfo &baseSharedPackageInfo) const;
     void InsertInnerSharedPackageModuleInfo(const std::string &moduleName, const InnerModuleInfo &innerModuleInfo);
     void SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath);
+    bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
+    bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
 
 private:
     bool IsExistLauncherAbility() const;

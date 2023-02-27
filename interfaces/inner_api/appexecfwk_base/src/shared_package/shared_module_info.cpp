@@ -16,11 +16,21 @@
 #include "shared_module_info.h"
 
 #include "app_log_wrapper.h"
+#include "json_util.h"
+#include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SHARED_MODULE_INFO_NAME = "name";
+const std::string SHARED_MODULE_INFO_VERSION_CODE = "versionCode";
+const std::string SHARED_MODULE_INFO_VERSION_NAME = "versionName";
+const std::string SHARED_MODULE_INFO_DESCRIPTION = "description";
+const std::string SHARED_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
+}
+
 bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
@@ -50,6 +60,66 @@ SharedModuleInfo *SharedModuleInfo::Unmarshalling(Parcel &parcel)
         info = nullptr;
     }
     return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInfo)
+{
+    jsonObject = nlohmann::json {
+        {SHARED_MODULE_INFO_NAME, sharedModuleInfo.name},
+        {SHARED_MODULE_INFO_VERSION_CODE, sharedModuleInfo.versionCode},
+        {SHARED_MODULE_INFO_VERSION_NAME, sharedModuleInfo.versionName},
+        {SHARED_MODULE_INFO_DESCRIPTION, sharedModuleInfo.description},
+        {SHARED_MODULE_INFO_DESCRIPTION_ID, sharedModuleInfo.descriptionId}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFO_NAME,
+        sharedModuleInfo.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFO_VERSION_CODE,
+        sharedModuleInfo.versionCode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFO_VERSION_NAME,
+        sharedModuleInfo.versionName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFO_DESCRIPTION,
+        sharedModuleInfo.description,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFO_DESCRIPTION_ID,
+        sharedModuleInfo.descriptionId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read SharedModuleInfo error, error code : %{public}d", parseResult);
+    }
 }
 } // AppExecFwk
 } // OHOS

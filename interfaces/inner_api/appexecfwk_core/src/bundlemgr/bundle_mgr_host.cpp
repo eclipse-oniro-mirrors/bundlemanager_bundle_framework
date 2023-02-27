@@ -209,6 +209,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
         &BundleMgrHost::HandleGetBaseSharedPackageInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetAllSharedBundleInfo);
+    funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
+        &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
+    funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2443,6 +2446,41 @@ ErrCode BundleMgrHost::HandleGetAllSharedBundleInfo(MessageParcel &data, Message
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(infos, reply)) {
         APP_LOGE("write infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    SharedBundleInfo shareBundleInfo;
+    ErrCode ret = GetSharedBundleInfoBySelf(bundleName, shareBundleInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetSharedBundleInfoBySelf write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteParcelable(&shareBundleInfo)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::vector<Dependency> dependencies;
+    ErrCode ret = GetSharedDependencies(bundleName, moduleName, dependencies);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetSharedDependencies write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(dependencies, reply)) {
+        APP_LOGE("write dependencies failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
