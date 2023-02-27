@@ -51,7 +51,7 @@ const int32_t MAX_OVERLAY_ARGUEMENTS_NUMBER = 8;
 const int32_t MINIMUM_WAITTING_TIME = 180; // 3 mins
 const int32_t MAXIMUM_WAITTING_TIME = 600; // 10 mins
 
-const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:";
+const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:s:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-path", required_argument, nullptr, 'p'},
@@ -66,6 +66,7 @@ const struct option LONG_OPTIONS[] = {
     {"user-id", required_argument, nullptr, 'u'},
     {"waitting-time", required_argument, nullptr, 'w'},
     {"keep-data", no_argument, nullptr, 'k'},
+    {"shared-bundle-dir-path", required_argument, nullptr, 's'},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -205,13 +206,30 @@ ErrCode BundleManagerShellCommand::RunAsHelpCommand()
     return OHOS::ERR_OK;
 }
 
+bool BundleManagerShellCommand::IsInstallOption(int index) const
+{
+    if (index >= argc_ || index < INDEX_OFFSET) {
+        return false;
+    }
+    if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
+        argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
+        argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
+        argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time" ||
+        argList_[index - INDEX_OFFSET] == "-s" || argList_[index - INDEX_OFFSET] == "--shared-bundle-dir-path") {
+        return true;
+    }
+    return false;
+}
+
 ErrCode BundleManagerShellCommand::RunAsInstallCommand()
 {
     int result = OHOS::ERR_OK;
     InstallFlag installFlag = InstallFlag::REPLACE_EXISTING;
     int counter = 0;
     std::vector<std::string> bundlePath;
+    std::vector<std::string> sharedBundleDirPaths;
     int index = 0;
+    int hspIndex = 0;
     int32_t userId = Constants::ALL_USERID;
     int32_t waittingTime = MINIMUM_WAITTING_TIME;
     while (true) {
@@ -323,6 +341,19 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                 }
                 break;
             }
+            case 's': {
+                // 'bm install -s <hsp-dir-path>'
+                // 'bm install --shared-bundle-dir-path <hsp-dir-path>'
+                APP_LOGD("'bm install %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (GetBundlePath(optarg, sharedBundleDirPaths) != OHOS::ERR_OK) {
+                    APP_LOGD("'bm install -s' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                hspIndex = optind;
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -331,10 +362,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     }
 
     for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
-        if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
-            argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
-            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
-            argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time") {
+        if (IsInstallOption(index)) {
             break;
         }
         if (GetBundlePath(argList_[index - INDEX_OFFSET], bundlePath) != OHOS::ERR_OK) {
@@ -345,12 +373,29 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         }
     }
 
+    // hsp list
+    for (; hspIndex < argc_ && hspIndex >= INDEX_OFFSET; ++hspIndex) {
+        if (IsInstallOption(hspIndex)) {
+            break;
+        }
+        if (GetBundlePath(argList_[hspIndex - INDEX_OFFSET], sharedBundleDirPaths) != OHOS::ERR_OK) {
+            sharedBundleDirPaths.clear();
+            APP_LOGD("'bm install -s' with error arguments.");
+            resultReceiver_.append("error value for the chosen option");
+            result = OHOS::ERR_INVALID_VALUE;
+        }
+    }
+
     for (auto &path : bundlePath) {
         APP_LOGD("install hap path %{private}s", path.c_str());
     }
 
+    for (auto &path : sharedBundleDirPaths) {
+        APP_LOGD("install hsp path %{private}s", path.c_str());
+    }
+
     if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && bundlePath.empty()) {
+        if (resultReceiver_ == "" && bundlePath.empty() && sharedBundleDirPaths.empty()) {
             // 'bm install ...' with no bundle path option
             APP_LOGD("'bm install' with no bundle path option.");
             resultReceiver_.append(HELP_MSG_NO_BUNDLE_PATH_OPTION + "\n");
@@ -364,6 +409,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         InstallParam installParam;
         installParam.installFlag = installFlag;
         installParam.userId = userId;
+        installParam.sharedBundleDirPaths = sharedBundleDirPaths;
         int32_t installResult = InstallOperation(bundlePath, installParam, waittingTime);
         if (installResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_INSTALL_BUNDLE_OK + "\n";
@@ -1676,11 +1722,11 @@ std::string BundleManagerShellCommand::DumpDependentModuleNames(
     return dumpResults;
 }
 
-int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
-    InstallParam &installParam, int32_t waittingTime) const
+void BundleManagerShellCommand::GetAbsPaths(
+    const std::vector<std::string> &paths, std::vector<std::string> &absPaths) const
 {
     std::vector<std::string> realPathVec;
-    for (auto &bundlePath : bundlePaths) {
+    for (auto &bundlePath : paths) {
         std::string absoluteBundlePath = "";
         if (bundlePath.empty()) {
             continue;
@@ -1702,12 +1748,24 @@ int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::strin
         }
         realPathVec.emplace_back(absoluteBundlePath);
     }
-    std::vector<std::string> pathVec;
+
     for (const auto &path : realPathVec) {
-        if (std::find(pathVec.begin(), pathVec.end(), path) == pathVec.end()) {
-            pathVec.emplace_back(path);
+        if (std::find(absPaths.begin(), absPaths.end(), path) == absPaths.end()) {
+            absPaths.emplace_back(path);
         }
     }
+}
+
+int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
+    InstallParam &installParam, int32_t waittingTime) const
+{
+    std::vector<std::string> pathVec;
+    GetAbsPaths(bundlePaths, pathVec);
+
+    std::vector<std::string> hspPathVec;
+    GetAbsPaths(installParam.sharedBundleDirPaths, hspPathVec);
+    installParam.sharedBundleDirPaths = hspPathVec;
+
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl(waittingTime));
     if (statusReceiver == nullptr) {
         APP_LOGE("statusReceiver is null");
