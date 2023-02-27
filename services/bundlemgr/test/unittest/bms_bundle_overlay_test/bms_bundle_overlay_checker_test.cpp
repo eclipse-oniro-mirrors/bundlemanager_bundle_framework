@@ -1060,7 +1060,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2000, Function | SmallTest 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
     ErrCode res = overlayDataMgr.GetOverlayModuleInfoForTarget(
         TEST_BUNDLE_NAME, TARGET_MODULE_NAME, overlayModuleInfos, Constants::NOT_EXIST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE);
 
     res = overlayDataMgr.GetOverlayModuleInfoForTarget(
         TEST_BUNDLE_NAME, TEST_MODULE_NAME, overlayModuleInfos, Constants::NOT_EXIST_USERID);
@@ -1072,7 +1072,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2000, Function | SmallTest 
 
     res = overlayDataMgr.GetOverlayModuleInfoForTarget(
         TEST_BUNDLE_NAME, "", overlayModuleInfos, Constants::NOT_EXIST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_MODULE_INFO);
+    EXPECT_EQ(res, ERR_OK);
 
     res = overlayDataMgr.GetOverlayModuleInfoForTarget(
         "", "", overlayModuleInfos, USERID);
