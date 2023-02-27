@@ -961,7 +961,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         return;
     }
 
-    std::vector<std::string> allBundleNames;
+    std::unordered_set<std::string> allBundleNames;
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
         APP_LOGW("GetAllAppProvisionInfoBundleName failed");
     }
@@ -1058,7 +1058,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             UpdateRemovable(bundleName, removable);
 #endif
             // not exist in appProvisionInfo table, then parse profile info and save it
-            if (std::find(allBundleNames.cbegin(), allBundleNames.cend(), bundleName) == allBundleNames.cend()) {
+            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
                 AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
             }
             continue;
@@ -1573,7 +1573,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     Security::Verify::HapVerifyResult hapVerifyResult;
     auto ret = BundleVerifyMgr::HapVerify(filePath, hapVerifyResult);
     if (ret != ERR_OK) {
-        APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{publics}, errCode: %{public}d",
+        APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
             bundleName.c_str(), ret);
         return;
     }
