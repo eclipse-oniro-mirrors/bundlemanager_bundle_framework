@@ -163,71 +163,73 @@ static void CreateShareDir(const std::string &bundleName, const int userid, cons
     }
 }
 
-ErrCode InstalldHostImpl::CreateBundleDataDir(const std::string &bundleName,
-    const int userid, const int uid, const int gid, const std::string &apl)
+ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (bundleName.empty() || userid < 0 || uid < 0 || gid < 0) {
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0 ||
+        createDirParam.uid < 0 || createDirParam.gid < 0) {
         APP_LOGE("Calling the function CreateBundleDataDir with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &el : Constants::BUNDLE_EL) {
-        std::string bundleDataDir = GetBundleDataDir(el, userid) + Constants::BASE;
+        std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + Constants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
             APP_LOGW("CreateBundleDataDir base directory does not existed.");
             return ERR_OK;
         }
-        bundleDataDir += bundleName;
-        if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, uid, gid)) {
+        bundleDataDir += createDirParam.bundleName;
+        if (!InstalldOperator::MkOwnerDir(bundleDataDir, S_IRWXU, createDirParam.uid, createDirParam.gid)) {
             APP_LOGE("CreateBundledatadir MkOwnerDir failed");
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
         if (el == Constants::BUNDLE_EL[1]) {
             for (const auto &dir : Constants::BUNDLE_DATA_DIR) {
-                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU, uid, gid)) {
+                if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
+                    createDirParam.uid, createDirParam.gid)) {
                     APP_LOGE("CreateBundledatadir MkOwnerDir el2 failed");
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
         }
-        ErrCode ret = SetDirApl(bundleDataDir, bundleName, apl);
+        ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
         }
-        std::string databaseDir = GetBundleDataDir(el, userid) + Constants::DATABASE + bundleName;
+        std::string databaseDir = GetBundleDataDir(el, createDirParam.userId) + Constants::DATABASE
+            + createDirParam.bundleName;
         if (!InstalldOperator::MkOwnerDir(
-            databaseDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::DATABASE_DIR_GID)) {
+            databaseDir, S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DATABASE_DIR_GID)) {
             APP_LOGE("CreateBundle databaseDir MkOwnerDir failed");
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
-        ret = SetDirApl(databaseDir, bundleName, apl);
+        ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
         }
     }
     std::string distributedfile = Constants::DISTRIBUTED_FILE;
-    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::MkOwnerDir(distributedfile + bundleName,
-        S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::DFS_GID)) {
+    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
+    if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
+        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for distributedfile");
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
     distributedfile = Constants::DISTRIBUTED_FILE_NON_ACCOUNT;
-    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(userid));
-    if (!InstalldOperator::MkOwnerDir(distributedfile + bundleName,
-        S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::DFS_GID)) {
+    distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
+    if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
+        S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for non account distributedfile");
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
-    CreateBackupExtHomeDir(bundleName, userid, uid);
-    CreateShareDir(bundleName, userid, uid, gid);
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid);
+    CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
     return ERR_OK;
 }
 

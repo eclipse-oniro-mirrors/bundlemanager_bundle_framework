@@ -38,8 +38,7 @@ ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::s
     return 0;
 }
 
-ErrCode InstalldClient::CreateBundleDataDir(
-    const std::string &bundleName, const int userid, const int uid, const int gid, const std::string &apl)
+ErrCode InstalldClient::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
     return 0;
 }

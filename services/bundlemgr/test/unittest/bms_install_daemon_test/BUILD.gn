@@ -73,6 +73,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
@@ -118,6 +119,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   sources = [
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
@@ -164,6 +166,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   sources = [
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
+    "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   ]
 

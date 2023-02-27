@@ -131,12 +131,12 @@ bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &rep
 
 bool InstalldHost::HandleCreateBundleDataDir(MessageParcel &data, MessageParcel &reply)
 {
-    std::string bundleName = Str16ToStr8(data.ReadString16());
-    int userid = data.ReadInt32();
-    int uid = data.ReadInt32();
-    int gid = data.ReadInt32();
-    std::string apl = Str16ToStr8(data.ReadString16());
-    ErrCode result = CreateBundleDataDir(bundleName, userid, uid, gid, apl);
+    std::unique_ptr<CreateDirParam> info(data.ReadParcelable<CreateDirParam>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+    ErrCode result = CreateBundleDataDir(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
