@@ -9437,4 +9437,153 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0007, Function | SmallTest
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: SharedPackageInfoTest
+ * @tc.name: Test struct BaseSharedPackageInfo
+ * @tc.desc: 1.Test parcel of BaseSharedPackageInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, SharedPackageInfoTest, Function | SmallTest | Level1)
+{
+    BaseSharedPackageInfo info;
+    info.bundleName = BUNDLE_NAME;
+    OHOS::Parcel parcel;
+    bool res = info.Marshalling(parcel);
+    EXPECT_EQ(res, true);
+    BaseSharedPackageInfo newInfo;
+    newInfo.Unmarshalling(parcel);
+    res = newInfo.ReadFromParcel(parcel);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: GetBaseSharedPackageInfos_0100
+ * @tc.name: Test use different param with GetBaseSharedPackageInfos
+ * @tc.desc: 1.Test GetBaseSharedPackageInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBaseSharedPackageInfos_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::vector<BaseSharedPackageInfo> baseSharedPackageInfos;
+    auto ret = bundleMgrProxy->GetBaseSharedPackageInfos(
+            BUNDLE_NAME_TEST, ALL_USERID, baseSharedPackageInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = bundleMgrProxy->GetBaseSharedPackageInfos("", ALL_USERID, baseSharedPackageInfos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBaseSharedPackageInfos_0200
+ * @tc.name: Test use different param with GetBaseSharedPackageInfos
+ * @tc.desc: 1.Test GetBaseSharedPackageInfos
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBaseSharedPackageInfos_0200, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<BaseSharedPackageInfo> infos;
+    bool ret = hostImpl->GetBaseSharedPackageInfos(BUNDLE_NAME_TEST, ALL_USERID, infos);
+    EXPECT_EQ(ret, false);
+    ret = hostImpl->GetBaseSharedPackageInfos("", ALL_USERID, infos);
+    EXPECT_EQ(ret, true);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: BaseSharedPackageInfo_0100
+ * @tc.name: Test GetMaxVerBaseSharedPackageInfo
+ * @tc.desc: 1.Test GetMaxVerBaseSharedPackageInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, BaseSharedPackageInfo_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BaseSharedPackageInfo packageInfo;
+    bool ret = info.GetMaxVerBaseSharedPackageInfo("", packageInfo);
+    EXPECT_EQ(ret, false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedPackageInfo("entry", packageInfo);
+    EXPECT_EQ(ret, false);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.compatiblePolicy = CompatiblePolicy::NORMAL;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedPackageInfo("entry", packageInfo);
+    EXPECT_EQ(ret, false);
+
+    moduleInfos.clear();
+    moduleInfo.compatiblePolicy = CompatiblePolicy::PRECISE_MATCH;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedPackageInfo("entry", packageInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseSharedPackageInfo_0200
+ * @tc.name: Test GetBaseSharedPackageInfo
+ * @tc.desc: 1.Test GetBaseSharedPackageInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, BaseSharedPackageInfo_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BaseSharedPackageInfo packageInfo;
+    bool ret = info.GetBaseSharedPackageInfo("", BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_EQ(ret, false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetBaseSharedPackageInfo("entry", BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_EQ(ret, false);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.compatiblePolicy = CompatiblePolicy::NORMAL;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetBaseSharedPackageInfo("entry", BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_EQ(ret, false);
+
+    moduleInfos.clear();
+    moduleInfo.compatiblePolicy = CompatiblePolicy::PRECISE_MATCH;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetBaseSharedPackageInfo("entry", BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_EQ(ret, false);
+
+    moduleInfos.clear();
+    moduleInfo.versionCode = BUNDLE_VERSION_CODE;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    ret = info.GetBaseSharedPackageInfo("entry", BUNDLE_VERSION_CODE, packageInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BaseSharedPackageInfo_0300
+ * @tc.name: Test SetSharedPackageModuleNativeLibraryPath
+ * @tc.desc: 1.Test SetSharedPackageModuleNativeLibraryPath of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, BaseSharedPackageInfo_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetCurrentModulePackage("entry");
+    std::string nativeLibraryPath = "";
+    info.SetSharedPackageModuleNativeLibraryPath(nativeLibraryPath);
+    EXPECT_EQ(nativeLibraryPath.empty(), true);
+
+    nativeLibraryPath = "libs/arm";
+    std::vector<InnerModuleInfo> moduleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.versionCode = BUNDLE_VERSION_CODE;
+    moduleInfos.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_["entry"] = moduleInfos;
+    info.InsertInnerModuleInfo("entry", moduleInfo);
+    info.SetSharedPackageModuleNativeLibraryPath(nativeLibraryPath);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+}
 }
