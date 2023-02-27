@@ -70,7 +70,8 @@ ohos_shared_library("appexecfwk_base") {
     "src/quick_fix/hqf_info.cpp",
     "src/remote_ability_info.cpp",
     "src/shared_package/base_shared_package_info.cpp",
-    "src/shared_package/shared_package_info.cpp",
+    "src/shared_package/shared_bundle_info.cpp",
+    "src/shared_package/shared_module_info.cpp",
     "src/shortcut_info.cpp",
   ]
 

@@ -118,7 +118,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("BundleType", nBundleType),
         DECLARE_NAPI_PROPERTY("AtomicServiceModuleType", nAtomicServiceModuleType),
         DECLARE_NAPI_PROPERTY("CompatiblePolicy", nCompatiblePolicy),
-        DECLARE_NAPI_FUNCTION("getAllSharedPackageInfo", GetAllSharedPackageInfo),
+        DECLARE_NAPI_FUNCTION("getAllSharedBundleInfo", GetAllSharedBundleInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

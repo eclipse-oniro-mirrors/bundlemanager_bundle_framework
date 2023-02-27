@@ -617,7 +617,7 @@ private:
 
     ErrCode HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAllSharedPackageInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

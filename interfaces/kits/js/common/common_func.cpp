@@ -1619,62 +1619,69 @@ std::string CommonFunc::ObtainCallingBundleName()
     return callingBundleName;
 }
 
-void CommonFunc::ConvertSharedPackageInfo(napi_env env, napi_value value, const SharedPackageInfo &packageInfo)
+void CommonFunc::ConvertSharedModuleInfo(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo)
 {
-    napi_value nBundleName;
+    napi_value nName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, packageInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_NAME, nBundleName));
-
-    napi_value nModuleName;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, packageInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
+        env, moduleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
 
     napi_value nVersionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, packageInfo.versionCode, &nVersionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, moduleInfo.versionCode, &nVersionCode));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionCode", nVersionCode));
 
     napi_value nVersionName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, packageInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &nVersionName));
+        env, moduleInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &nVersionName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "versionName", nVersionName));
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, packageInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
+        env, moduleInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DESCRIPTION, nDescription));
+
+    napi_value nDescriptionId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, moduleInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, DESCRIPTION_ID, nDescriptionId));
+}
+
+void CommonFunc::ConvertSharedBundleInfo(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo)
+{
+    napi_value nName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, bundleInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, NAME, nName));
 
     napi_value nCompatiblePolicy;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(
-        env, static_cast<int32_t>(packageInfo.compatiblePolicy), &nCompatiblePolicy));
+        env, static_cast<int32_t>(bundleInfo.compatiblePolicy), &nCompatiblePolicy));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "compatiblePolicy", nCompatiblePolicy));
 
-    napi_value nDependencies;
-    size_t size = packageInfo.dependencies.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nDependencies));
+    napi_value nSharedModuleInfos;
+    size_t size = bundleInfo.sharedModuleInfos.size();
+    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nSharedModuleInfos));
     for (size_t index = 0; index < size; ++index) {
-        napi_value nDependency;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nDependency));
-        ConvertDependency(env, packageInfo.dependencies[index], nDependency);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDependencies, index, nDependency));
+        napi_value nModuleInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nModuleInfo));
+        ConvertSharedModuleInfo(env, nModuleInfo, bundleInfo.sharedModuleInfos[index]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nSharedModuleInfos, index, nModuleInfo));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "dependencies", nDependencies));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "sharedModuleInfo", nSharedModuleInfos));
 }
 
-void CommonFunc::ConvertAllSharedPackageInfo(napi_env env, napi_value value,
-    const std::vector<SharedPackageInfo> &sharedPackages)
+void CommonFunc::ConvertAllSharedBundleInfo(napi_env env, napi_value value,
+    const std::vector<SharedBundleInfo> &sharedBundles)
 {
-    if (sharedPackages.empty()) {
-        APP_LOGD("sharedPackages is empty");
+    if (sharedBundles.empty()) {
+        APP_LOGD("sharedBundles is empty");
         return;
     }
     size_t index = 0;
-    for (const auto &item : sharedPackages) {
-        napi_value objPackageInfo;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objPackageInfo));
-        ConvertSharedPackageInfo(env, objPackageInfo, item);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objPackageInfo));
+    for (const auto &item : sharedBundles) {
+        napi_value objInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
+        ConvertSharedBundleInfo(env, objInfo, item);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
         index++;
     }
 }
