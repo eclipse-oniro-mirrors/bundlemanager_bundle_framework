@@ -21,6 +21,8 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "app_log_wrapper.h"
+#include "app_provision_info.h"
+#include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
@@ -990,6 +992,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         return;
     }
 
+    std::unordered_set<std::string> allBundleNames;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
+        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
+    }
+
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
@@ -1081,6 +1088,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
+            // not exist in appProvisionInfo table, then parse profile info and save it
+            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
+                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
+            }
             continue;
         }
 
@@ -1584,6 +1595,27 @@ bool BMSEventHandler::FetchInnerBundleInfo(
     }
 
     return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+}
+
+void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
+{
+    APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
+    // parse profile info
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    auto ret = BundleVerifyMgr::HapVerify(filePath, hapVerifyResult);
+    if (ret != ERR_OK) {
+        APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
+            bundleName.c_str(), ret);
+        return;
+    }
+
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(
+        hapVerifyResult.GetProvisionInfo());
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
+        APP_LOGE("AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

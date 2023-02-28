@@ -16,7 +16,7 @@
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_PROVISION_INFO_MANAGER_RDB_H
 
 #include <string>
-#include <vector>
+#include <unordered_set>
 
 #include "appexecfwk_errors.h"
 #include "app_provision_info.h"
@@ -31,7 +31,7 @@ public:
     bool AddAppProvisionInfo(const std::string &bundleName, const AppProvisionInfo &appProvisionInfo);
     bool DeleteAppProvisionInfo(const std::string &bundleName);
     bool GetAppProvisionInfo(const std::string &bundleName, AppProvisionInfo &appProvisionInfo);
-    bool GetAllAppProvisionInfoBundleName(std::vector<std::string> &bundleNames);
+    bool GetAllAppProvisionInfoBundleName(std::unordered_set<std::string> &bundleNames);
 private:
     bool ConvertToAppProvision(const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
         AppProvisionInfo &appProvisionInfo);

@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_PROVISION_INFO_MANAGER_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_PROVISION_INFO_MANAGER_H
 
+#include <unordered_set>
+
 #include "app_provision_info_rdb.h"
 #include "singleton.h"
 
@@ -28,7 +30,7 @@ public:
     bool AddAppProvisionInfo(const std::string &bundleName, const AppProvisionInfo &appProvisionInfo);
     bool DeleteAppProvisionInfo(const std::string &bundleName);
     bool GetAppProvisionInfo(const std::string &bundleName, AppProvisionInfo &appProvisionInfo);
-    bool GetAllAppProvisionInfoBundleName(std::vector<std::string> &bundleNames);
+    bool GetAllAppProvisionInfoBundleName(std::unordered_set<std::string> &bundleNames);
 private:
     std::shared_ptr<AppProvisionInfoManagerRdb> AppProvisionInfoManagerDb_;
 };
