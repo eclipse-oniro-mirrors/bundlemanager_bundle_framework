@@ -38,7 +38,9 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  get          obtain device udid\n"
                              "  quickfix     quick fix, including query and install\n"
                              "  dump-overlay dump overlay info of the specific overlay bundle\n"
-                             "  dump-target-overlay dump overlay info of the specific target bundle\n";
+                             "  dump-target-overlay dump overlay info of the specific target bundle\n"
+                             "  dump-shared-dependencies dump shared dependencies by app bundle name and module name\n"
+                             "  dump-shared dump shared library information by shared library bundle name\n";
 
 const std::string HELP_MSG_INSTALL =
     "usage: bm install <options>\n"
@@ -141,6 +143,21 @@ const std::string HELP_MSG_OVERLAY_TARGET =
     "  -m, --module-name <module-name>                    module name of the target overlay bundle\n"
     "  -u, --user-id <user-id>                            specify a user id\n";
 
+const std::string HELP_MSG_DUMP_SHARED =
+    "usage: bm dump-shared <options>\n"
+    "eg:bm dump-shared -n <bundle-name> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       dump shared library information by shared library bundleName\n";
+
+const std::string HELP_MSG_DUMP_SHARED_DEPENDENCIES =
+    "usage: bm dump-shared-dependencies <options>\n"
+    "eg:bm dump-shared-dependencies -n <bundle-name> -m <module-name> \n"
+    "options list:\n"
+    "  -h, --help                             list available commands\n"
+    "  -n, --bundle-name  <bundle-name>       dump app module shared dependencies by app bundleName and moduleName\n"
+    "  -m, --module-name  <module-name>       dump app module shared dependencies by app bundleName and moduleName\n";
+
 const std::string STRING_INCORRECT_OPTION = "error: incorrect option";
 const std::string HELP_MSG_NO_BUNDLE_PATH_OPTION =
     "error: you must specify a bundle path with '-p' or '--bundle-path'.";
@@ -209,12 +226,16 @@ private:
     ErrCode RunAsQuickFixCommand();
     ErrCode RunAsDumpOverlay();
     ErrCode RunAsDumpTargetOverlay();
+    ErrCode RunAsDumpSharedDependenciesCommand();
+    ErrCode RunAsDumpSharedCommand();
 
     std::string DumpBundleList(int32_t userId) const;
     std::string DumpBundleInfo(const std::string &bundleName, int32_t userId) const;
     std::string DumpShortcutInfos(const std::string &bundleName, int32_t userId) const;
     std::string DumpDistributedBundleInfo(const std::string &deviceId, const std::string &bundleName);
     std::string DumpDependentModuleNames(const std::string &bundleName, const std::string &moduleName) const;
+    std::string DumpSharedDependencies(const std::string &bundleName, const std::string &moduleName) const;
+    std::string DumpShared(const std::string &bundleName) const;
 
     int32_t InstallOperation(const std::vector<std::string> &bundlePaths, InstallParam &installParam,
         int32_t waittingTime) const;
@@ -234,6 +255,8 @@ private:
         const std::string &targetModuleName, int32_t userId);
     std::string DumpTargetOverlayInfo(const std::string &bundleName, const std::string &moduleName, int32_t userId);
     ErrCode ParseDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
+    ErrCode ParseSharedDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
+    ErrCode ParseSharedCommand(int32_t option, std::string &bundleName);
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
 };

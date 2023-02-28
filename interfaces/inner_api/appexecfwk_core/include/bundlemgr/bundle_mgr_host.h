@@ -619,6 +619,10 @@ private:
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

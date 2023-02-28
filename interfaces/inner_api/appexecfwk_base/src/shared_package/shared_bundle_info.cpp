@@ -16,11 +16,19 @@
 #include "shared_bundle_info.h"
 
 #include "app_log_wrapper.h"
+#include "json_util.h"
+#include "nlohmann/json.hpp"
 #include "parcel_macro.h"
 #include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SHARED_BUNDLE_INFO_NAME = "name";
+const std::string SHARED_BUNDLE_INFO_COMPATIBLE_POLICY = "compatiblePolicy";
+const std::string SHARED_MODULE_INFOS = "sharedModuleInfos";
+}
+
 bool SharedBundleInfo::ReadFromParcel(Parcel &parcel)
 {
     name = Str16ToStr8(parcel.ReadString16());
@@ -62,6 +70,48 @@ SharedBundleInfo *SharedBundleInfo::Unmarshalling(Parcel &parcel)
         info = nullptr;
     }
     return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const SharedBundleInfo &sharedBundleInfo)
+{
+    jsonObject = nlohmann::json {
+        {SHARED_BUNDLE_INFO_NAME, sharedBundleInfo.name},
+        {SHARED_BUNDLE_INFO_COMPATIBLE_POLICY, sharedBundleInfo.compatiblePolicy},
+        {SHARED_MODULE_INFOS, sharedBundleInfo.sharedModuleInfos}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, SharedBundleInfo &sharedBundleInfo)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        SHARED_BUNDLE_INFO_NAME,
+        sharedBundleInfo.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<CompatiblePolicy>(jsonObject,
+        jsonObjectEnd,
+        SHARED_BUNDLE_INFO_COMPATIBLE_POLICY,
+        sharedBundleInfo.compatiblePolicy,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<SharedModuleInfo>>(jsonObject,
+        jsonObjectEnd,
+        SHARED_MODULE_INFOS,
+        sharedBundleInfo.sharedModuleInfos,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read SharedBundleInfo error, error code : %{public}d", parseResult);
+    }
 }
 } // AppExecFwk
 } // OHOS

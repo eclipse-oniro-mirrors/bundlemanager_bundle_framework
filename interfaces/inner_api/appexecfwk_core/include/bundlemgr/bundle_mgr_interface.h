@@ -1119,6 +1119,17 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+        std::vector<Dependency> &dependencies)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1227,6 +1238,8 @@ public:
         GET_PROVISION_METADATA,
         GET_BASE_SHARED_PACKAGE_INFOS,
         GET_ALL_SHARED_BUNDLE_INFO,
+        GET_SHARED_BUNDLE_INFO_BY_SELF,
+        GET_SHARED_DEPENDENCIES,
     };
 };
 }  // namespace AppExecFwk

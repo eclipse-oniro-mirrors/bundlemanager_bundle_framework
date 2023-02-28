@@ -2140,6 +2140,35 @@ void InnerBundleInfo::SetSharedPackageModuleNativeLibraryPath(const std::string 
     innerSharedPackageModuleInfos_[currentPackage_] = innerModuleInfoVector;
 }
 
+bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const
+{
+    sharedBundleInfo.name = GetBundleName();
+    sharedBundleInfo.compatiblePolicy = GetBaseApplicationInfo().compatiblePolicy;
+    std::vector<SharedModuleInfo> sharedModuleInfos;
+    for (const auto &infoVector : innerSharedPackageModuleInfos_) {
+        for (const auto &info : infoVector.second) {
+            SharedModuleInfo sharedModuleInfo;
+            sharedModuleInfo.name = info.name;
+            sharedModuleInfo.versionCode = info.versionCode;
+            sharedModuleInfo.description = info.description;
+            sharedModuleInfo.descriptionId = info.descriptionId;
+            sharedModuleInfos.emplace_back(sharedModuleInfo);
+        }
+    }
+    sharedBundleInfo.sharedModuleInfos = sharedModuleInfos;
+    return true;
+}
+
+bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
+    std::vector<Dependency> &dependencies) const
+{
+    if (innerModuleInfos_.find(moduleName) != innerModuleInfos_.end()) {
+        dependencies = innerModuleInfos_.at(moduleName).dependencies;
+        return true;
+    }
+    return false;
+}
+
 void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
 {
     auto it = innerModuleInfos_.find(modulePackage);

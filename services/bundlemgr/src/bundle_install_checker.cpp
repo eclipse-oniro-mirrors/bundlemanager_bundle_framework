@@ -299,15 +299,6 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     return result;
 }
 
-static void to_json(nlohmann::json &jsonObject, const Dependency &dependency)
-{
-    jsonObject = nlohmann::json {
-        {Profile::DEPENDENCIES_MODULE_NAME, dependency.moduleName},
-        {Profile::DEPENDENCIES_BUNDLE_NAME, dependency.bundleName},
-        {Profile::APP_VERSION_CODE, dependency.versionCode}
-    };
-}
-
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
     std::unordered_map<std::string, FilesParseResult> &hsps)
 {

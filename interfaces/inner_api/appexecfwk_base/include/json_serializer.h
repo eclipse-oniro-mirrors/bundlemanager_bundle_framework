@@ -29,6 +29,8 @@
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
 #include "quick_fix/app_quick_fix.h"
+#include "shared_package/shared_bundle_info.h"
+#include "shared_package/shared_module_info.h"
 #include "shortcut_info.h"
 
 namespace OHOS {
@@ -131,6 +133,12 @@ void to_json(nlohmann::json &jsonObject, const OverlayBundleInfo &overlayBundleI
 void from_json(const nlohmann::json &jsonObject, OverlayBundleInfo &overlayBundleInfo);
 void to_json(nlohmann::json &jsonObject, const OverlayModuleInfo &overlayModuleInfo);
 void from_json(const nlohmann::json &jsonObject, OverlayModuleInfo &overlayModuleInfo);
+void to_json(nlohmann::json &jsonObject, const Dependency &dependency);
+void from_json(const nlohmann::json &jsonObject, Dependency &dependency);
+void to_json(nlohmann::json &jsonObject, const SharedBundleInfo &sharedBundleInfo);
+void from_json(const nlohmann::json &jsonObject, SharedBundleInfo &sharedBundleInfo);
+void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInfo);
+void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H
