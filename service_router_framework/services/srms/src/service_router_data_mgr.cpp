@@ -49,7 +49,7 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
     }
     auto flags = (BundleFlag::GET_BUNDLE_WITH_ABILITIES | BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO);
     std::vector<BundleInfo> bundleInfos;
-    bool ret = bms->GetBundleInfos(flags, bundleInfos, Constants::ALL_USERID);
+    bool ret = bms->GetBundleInfos(flags, bundleInfos, SrSamgrHelper::GetCurrentActiveUserId());
     if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
     }
@@ -69,7 +69,7 @@ bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
     }
     BundleInfo bundleInfo;
     auto flags = (BundleFlag::GET_BUNDLE_WITH_ABILITIES | BundleFlag::GET_BUNDLE_WITH_EXTENSION_INFO);
-    bool ret = bms->GetBundleInfo(bundleName, flags, bundleInfo, Constants::ALL_USERID);
+    bool ret = bms->GetBundleInfo(bundleName, flags, bundleInfo, SrSamgrHelper::GetCurrentActiveUserId());
     if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
     }
@@ -77,21 +77,29 @@ bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
     return ret;
 }
 
+InnerServiceInfo ServiceRouterDataMgr::GetInnerServiceInfo(const std::string name)
+{
+    auto infoItem = innerServiceInfos_.find(name);
+    if (infoItem == innerServiceInfos_.end()) {
+        InnerServiceInfo innerServiceInfo;
+        return innerServiceInfo;
+    } else {
+        return infoItem->second;
+    }
+}
+
 bool ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
 {
     APP_LOGI("SRDM UpdateBundleInfo");
     std::vector<IntentInfo> intentInfos;
     std::vector<ServiceInfo> serviceInfos;
-    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos)) {
+
+    InnerServiceInfo innerServiceInfo = GetInnerServiceInfo(bundleInfo.name);
+    innerServiceInfo.UpdateAppInfo(bundleInfo.applicationInfo);
+    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos, innerServiceInfo.GetAppInfo())) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-        auto infoItem = innerServiceInfos_.find(bundleInfo.name);
-        if (infoItem == innerServiceInfos_.end()) {
-            InnerServiceInfo innerServiceInfo;
-            innerServiceInfo.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
-            innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
-        } else {
-            infoItem->second.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
-        }
+        innerServiceInfo.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
+        innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
         return true;
     }
     return false;
@@ -115,7 +123,7 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
 {
     APP_LOGI("SRDM QueryServiceInfos");
     ExtensionServiceType validType = GetExtensionServiceType(want, serviceType);
-    if (validType == ExtensionServiceType::UNSPECIFIED) {
+    if (validType != ExtensionServiceType::SHARE) {
         APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
@@ -163,7 +171,7 @@ int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::stri
 ExtensionServiceType ServiceRouterDataMgr::GetExtensionServiceType(const Want &want,
     const ExtensionServiceType &serviceType) const
 {
-    if (serviceType != ExtensionServiceType::UNSPECIFIED) {
+    if (serviceType == ExtensionServiceType::SHARE) {
         return serviceType;
     }
     Uri uri = want.GetUri();
@@ -174,18 +182,6 @@ ExtensionServiceType ServiceRouterDataMgr::GetExtensionServiceType(const Want &w
         return ExtensionServiceType::UNSPECIFIED;
     }
     return BundleInfoResolveUtil::findExtensionServiceType(uri.GetHost());
-}
-
-bool ServiceRouterDataMgr::IsContainsForm(const std::vector<IntentInfo> &intentInfos)
-{
-    bool isContainsForm = false;
-    for (auto &intentInfo : intentInfos) {
-        if (intentInfo.componentType == ComponentType::FORM) {
-            isContainsForm = true;
-            break;
-        }
-    }
-    return isContainsForm;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

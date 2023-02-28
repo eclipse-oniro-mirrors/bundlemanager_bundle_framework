@@ -13,17 +13,12 @@
  * limitations under the License.
  */
 
-#include "json_util.h"
 #include "inner_service_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 InnerServiceInfo::InnerServiceInfo()
 {
-    appInfo_ = std::make_shared<AppInfo>();
-    if (appInfo_ == nullptr) {
-        APP_LOGE("appInfo_ is nullptr, create failed");
-    }
 }
 
 InnerServiceInfo::~InnerServiceInfo()

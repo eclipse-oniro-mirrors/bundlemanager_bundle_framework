@@ -63,6 +63,11 @@ ohos_shared_library("libsrms") {
     "samgr:samgr_proxy",
   ]
 
+  if (account_enable) {
+    external_deps += [ "os_account:os_account_innerkits" ]
+    defines += [ "ACCOUNT_ENABLE" ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }

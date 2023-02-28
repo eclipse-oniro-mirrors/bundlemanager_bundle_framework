@@ -87,7 +87,7 @@ public:
         std::vector<IntentInfo> &intentInfos) const;
 
 private:
-    bool IsContainsForm(const std::vector<IntentInfo> &intentInfos);
+    InnerServiceInfo GetInnerServiceInfo(const std::string bundleName);
 
     ExtensionServiceType GetExtensionServiceType(const Want &want, const ExtensionServiceType &serviceType) const;
 

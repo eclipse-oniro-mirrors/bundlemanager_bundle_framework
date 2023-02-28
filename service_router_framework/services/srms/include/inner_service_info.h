@@ -20,6 +20,8 @@
 #include "nocopyable.h"
 #include "service_info.h"
 #include "want.h"
+#include "bundle_info.h"
+#include "application_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -53,7 +55,6 @@ public:
     void UpdateInnerServiceInfo(const BundleInfo &bundleInfo, std::vector<IntentInfo> &intentInfos,
         std::vector<ServiceInfo> &serviceInfos)
     {
-        UpdateAppInfo(bundleInfo.applicationInfo);
         UpdateIntentInfos(intentInfos);
         UpdateServiceInfos(serviceInfos);
     }
@@ -65,11 +66,11 @@ public:
      */
     void UpdateAppInfo(const ApplicationInfo &applicationInfo)
     {
-        appInfo_->name = applicationInfo.name;
-        appInfo_->bundleName = applicationInfo.bundleName;
-        appInfo_->iconId = applicationInfo.iconId;
-        appInfo_->labelId = applicationInfo.labelId;
-        appInfo_->descriptionId = applicationInfo.descriptionId;
+        appInfo_.name = applicationInfo.name;
+        appInfo_.bundleName = applicationInfo.bundleName;
+        appInfo_.iconId = applicationInfo.iconId;
+        appInfo_.labelId = applicationInfo.labelId;
+        appInfo_.descriptionId = applicationInfo.descriptionId;
     }
 
     /**
@@ -117,12 +118,21 @@ public:
     }
 
     /**
+     * @brief Get bundle name.
+     * @return Return bundle name
+     */
+    const AppInfo GetAppInfo() const
+    {
+        return appInfo_;
+    }
+
+    /**
      * @brief Get application name.
      * @return Return application name
      */
     std::string GetApplicationName() const
     {
-        return appInfo_->name;
+        return appInfo_.name;
     }
 
     /**
@@ -131,10 +141,10 @@ public:
      */
     const std::string GetBundleName() const
     {
-        return appInfo_->bundleName;
+        return appInfo_.bundleName;
     }
 private:
-    std::shared_ptr<AppInfo> appInfo_;
+    AppInfo appInfo_;
     std::vector<ServiceInfo> serviceInfos_;
     std::vector<IntentInfo> intentInfos_;
 };

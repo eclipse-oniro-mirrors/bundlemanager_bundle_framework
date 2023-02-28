@@ -35,14 +35,14 @@ namespace {
 class BundleInfoResolveUtil {
 public:
 static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentInfo> &intentInfos,
-    std::vector<ServiceInfo> &serviceInfos)
+    std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
 {
     if (bundleInfo.name.empty()) {
         APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
         return false;
     }
-    ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos);
-    ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos);
+    ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos, appInfo);
+    ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos, appInfo);
     if (intentInfos.empty() && serviceInfos.empty()) {
         APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
         return false;
@@ -64,29 +64,31 @@ static ExtensionServiceType findExtensionServiceType(const std::string serviceTy
 }
 
 private:
-static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, std::vector<IntentInfo> &intentInfos)
+static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, std::vector<IntentInfo> &intentInfos
+    , const AppInfo appInfo)
 {
     if (abilityInfos.empty()) {
         return;
     }
     for (const auto &abilityInfo : abilityInfos) {
-        ConvertAbilityToIntents(abilityInfo, intentInfos);
+        ConvertAbilityToIntents(abilityInfo, intentInfos, appInfo);
     }
 }
 
 static void ResolveExtAbilityInfos(const std::vector<ExtensionAbilityInfo> &extensionInfos,
-    std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos)
+    std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
 {
     if (extensionInfos.empty()) {
         return;
     }
     for (const auto &extensionInfo : extensionInfos) {
-        ConvertExtAbilityToIntents(extensionInfo, intentInfos);
-        ConvertExtAbilityToService(extensionInfo, serviceInfos);
+        ConvertExtAbilityToIntents(extensionInfo, intentInfos, appInfo);
+        ConvertExtAbilityToService(extensionInfo, serviceInfos, appInfo);
     }
 }
 
-static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<IntentInfo> &intentInfos)
+static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<IntentInfo> &intentInfos,
+    const AppInfo appInfo)
 {
     std::string supportIntent = GetAbilityMetadataValue(abilityInfo, SrConstants::METADATA_SUPPORTINTENT_KEY);
     if (supportIntent.empty()) {
@@ -101,14 +103,15 @@ static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<
         intentInfo.moduleName = abilityInfo.moduleName;
         intentInfo.bundleName = abilityInfo.bundleName;
         intentInfo.componentType = ComponentType::UI_ABILITY;
+        intentInfo.appInfo = appInfo;
         intentInfos.emplace_back(intentInfo);
-        APP_LOGI("ConvertAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-            abilityInfo.name.c_str(), name.c_str());
+        APP_LOGI("AbilityToIntents, bundle: %{public}s ,ability: %{public}s, intentName: %{public}s",
+            abilityInfo.bundleName.c_str(), abilityInfo.name.c_str(), name.c_str());
     }
 }
 
 static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInfo,
-    std::vector<IntentInfo> &intentInfos)
+    std::vector<IntentInfo> &intentInfos, const AppInfo appInfo)
 {
     if (extAbilityInfo.type != ExtensionAbilityType::FORM && extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
@@ -124,42 +127,44 @@ static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInf
         intentInfo.abilityName = extAbilityInfo.name;
         intentInfo.moduleName = extAbilityInfo.moduleName;
         intentInfo.bundleName = extAbilityInfo.bundleName;
+        intentInfo.appInfo = appInfo;
         if (extAbilityInfo.type == ExtensionAbilityType::UI) {
             intentInfo.intentName = intentAndCard;
             intentInfo.componentType = ComponentType::UI_EXTENSION;
             intentInfos.emplace_back(intentInfo);
-            APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-                extAbilityInfo.name.c_str(), intentAndCard.c_str());
+            APP_LOGI("UIExtToIntents, bundle: %{public}s, abilityName: %{public}s, intentName: %{public}s",
+                extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), intentAndCard.c_str());
         } else {
             std::vector<std::string> intentNameAndCardName;
             SplitStr(intentAndCard, SrConstants::FORM_INTENTCARD_SPLIT_KEY, intentNameAndCardName);
             if (intentNameAndCardName.size() == SrConstants::FORM_INTENTCARD_SPLIT_SIZE) {
                 intentInfo.intentName = intentNameAndCardName[0];
                 intentInfo.cardName = intentNameAndCardName[1];
-                APP_LOGI("ConvertExtAbilityToIntents, abilityName: %{public}s, intentName: %{public}s",
-                    extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
+                intentInfo.componentType = ComponentType::FORM;
+                intentInfos.emplace_back(intentInfo);
+                APP_LOGI("FormToIntents, bundle: %{public}s, abilityName: %{public}s, intentName: %{public}s",
+                    extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
             } else {
-                APP_LOGW("ConvertExtAbilityInfoToIntentInfo invalid supportIntent");
+                APP_LOGW("FormToIntents invalid supportIntent");
             }
         }
-       
-        
     }
 }
 
 static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInfo,
-    std::vector<ServiceInfo> &serviceInfos)
+    std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
 {
     if (extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
     }
     std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
-    APP_LOGI("ConvertExtAbilityToService, abilityName: %{public}s, serviceType: %{public}s",
+    APP_LOGI("ToService, abilityName: %{public}s, serviceType: %{public}s",
         extAbilityInfo.name.c_str(), serviceType.c_str());
     auto item = SERVICE_TYPE_MAP.find(LowerStr(serviceType));
     ExtensionServiceType type = findExtensionServiceType(serviceType);
     if (type != ExtensionServiceType::UNSPECIFIED) {
         ServiceInfo serviceInfo;
+        serviceInfo.appInfo = appInfo;
         serviceInfo.abilityName = extAbilityInfo.name;
         serviceInfo.moduleName = extAbilityInfo.moduleName;
         serviceInfo.bundleName = extAbilityInfo.bundleName;

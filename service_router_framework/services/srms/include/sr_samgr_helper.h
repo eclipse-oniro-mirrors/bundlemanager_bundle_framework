@@ -39,6 +39,12 @@ public:
      */
     sptr<IBundleMgr> GetBundleMgr();
 
+    /**
+     * @brief Get current active userId,
+     * @return current active userId.
+     */
+    static int32_t GetCurrentActiveUserId();
+
 private:
     std::mutex bundleMgrMutex_;
     sptr<IBundleMgr> iBundleMgr_ = nullptr;
