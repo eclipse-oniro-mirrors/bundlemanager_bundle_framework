@@ -269,6 +269,9 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->moduleName,
             overlayCbInfo->overlayModuleInfo);
+        if (ret == ERR_OK) {
+            overlayCbInfo->infoVec.emplace_back(overlayCbInfo->overlayModuleInfo);
+        }
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetAllOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
@@ -305,8 +308,13 @@ void GetOverlayModuleInfoComplete(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     if (overlayCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertOverlayModuleInfo(env, overlayCallbackInfo->overlayModuleInfo, result[ARGS_POS_ONE]);
+        if (overlayCallbackInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertOverlayModuleInfo(env, overlayCallbackInfo->overlayModuleInfo, result[ARGS_POS_ONE]);
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertOverlayModuleInfos(env, overlayCallbackInfo->infoVec, result[ARGS_POS_ONE]);
+        }
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
             GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);

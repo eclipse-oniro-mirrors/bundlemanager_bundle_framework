@@ -1600,6 +1600,7 @@ void CommonFunc::ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo 
 void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos,
     napi_value objInfos)
 {
+    APP_LOGD("start to convert overlayModuleInfos and size of Infos is %{public}u", Infos.size());
     for (size_t index = 0; index < Infos.size(); ++index) {
         napi_value objInfo= nullptr;
         napi_create_object(env, &objInfo);

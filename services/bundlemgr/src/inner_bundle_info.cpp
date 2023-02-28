@@ -2923,7 +2923,7 @@ void InnerBundleInfo::SetOverlayModuleState(const std::string &moduleName, int32
 
         auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
         bool isSetSucc = std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
-            if (item.find(moduleName) != std::string::npos) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
                 item = moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
                 return true;
             }
@@ -2946,7 +2946,7 @@ void InnerBundleInfo::SetOverlayModuleState(const std::string &moduleName, int32
     for (auto &innerUserInfo : innerBundleUserInfos_) {
         auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
         bool isSetSucc = std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
-            if (item.find(moduleName) != std::string::npos) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
                 item = moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
                 return true;
             }
@@ -2978,7 +2978,7 @@ bool InnerBundleInfo::GetOverlayModuleState(const std::string &moduleName, int32
         return false;
     }
     for (const auto &item : overlayModulesState) {
-        auto pos = item.find(moduleName);
+        auto pos = item.find(moduleName + Constants::FILE_UNDERLINE);
         if (pos == std::string::npos) {
             continue;
         }
@@ -2994,7 +2994,7 @@ void InnerBundleInfo::ClearOverlayModuleStates(const std::string &moduleName)
     for (auto &innerUserInfo : innerBundleUserInfos_) {
         auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
         auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&moduleName](const auto &item) {
-            if (item.find(moduleName) != std::string::npos) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
                 return true;
             }
             return false;
