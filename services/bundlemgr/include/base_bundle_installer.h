@@ -194,6 +194,7 @@ private:
         std::vector<std::string> &newDirs);
 
     ErrCode MkdirIfNotExist(const std::string &dir, std::vector<std::string> &newDirs);
+
     /**
      * @brief The real procedure function for uninstall a bundle.
      * @param bundleName Indicates the bundle name of the application to uninstall.
@@ -579,6 +580,8 @@ private:
     bool AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     bool DeleteAppProvisionInfo(const std::string &bundleName) const;
+    ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
+    ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

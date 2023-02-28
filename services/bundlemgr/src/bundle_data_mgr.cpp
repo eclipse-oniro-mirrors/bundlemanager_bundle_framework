@@ -344,6 +344,33 @@ bool BundleDataMgr::RemoveModuleInfo(
     return true;
 }
 
+bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::string bundleName = info.GetBundleName();
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundle info not exist");
+        return false;
+    }
+    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    auto statusItem = installStates_.find(bundleName);
+    if (statusItem == installStates_.end()) {
+        APP_LOGE("save info fail, app:%{public}s is not updated", bundleName.c_str());
+        return false;
+    }
+    if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
+        info.DeleteHspModuleByVersion(versionCode);
+        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (dataStorage_->SaveStorageBundleInfo(info)) {
+            APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
+            bundleInfos_.at(bundleName) = info;
+            return true;
+        }
+    }
+    return true;
+}
+
 bool BundleDataMgr::AddInnerBundleUserInfo(
     const std::string &bundleName, const InnerBundleUserInfo& newUserInfo)
 {
@@ -4545,5 +4572,54 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
         bundleName.c_str(), moduleName.c_str());
     return ERR_OK;
 }
+
+bool BundleDataMgr::CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::string hspBundleName = info.GetBundleName();
+    if (versionCode == Constants::ALL_VERSIONCODE) {
+        // uninstall hsp bundle, check other bundle denpendency
+        return CheckHspBundleIsRelied(hspBundleName);
+    }
+    std::vector<std::string> hspModules = info.GetAllHspModuleNamesForVersion(static_cast<uint32_t>(versionCode));
+    // check whether has higher version
+    std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
+    for (const auto &item : versionCodes) {
+        if (item > static_cast<uint32_t>(versionCode)) {
+            return false;
+        }
+    }
+    // check other bundle denpendency
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        if (bundleName == hspBundleName) {
+            continue;
+        }
+        std::vector<Dependency> dependencyList = innerBundleInfo.GetDependencies();
+        for (const auto &dependencyItem : dependencyList) {
+            if (dependencyItem.bundleName == hspBundleName &&
+                std::find(hspModules.begin(), hspModules.end(), dependencyItem.moduleName) != hspModules.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool BundleDataMgr::CheckHspBundleIsRelied(const std::string &hspBundleName) const
+{
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        if (bundleName == hspBundleName) {
+            continue;
+        }
+        std::vector<Dependency> dependencyList = innerBundleInfo.GetDependencies();
+        for (const auto &dependencyItem : dependencyList) {
+            if (dependencyItem.bundleName == hspBundleName) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -106,6 +106,8 @@ public:
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool RemoveModuleInfo(const std::string &bundleName, const std::string &modulePackage, InnerBundleInfo &oldInfo);
+
+    bool RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info);
     /**
      * @brief Update module info of an exist module.
      * @param bundleName Indicates the bundle name.
@@ -800,11 +802,14 @@ public:
         BaseSharedPackageInfo &baseSharedPackageInfo) const;
 
     bool DeleteSharedPackage(const std::string &bundleName);
-
+    
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
 
     ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies);
+
+    bool CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const;
+    bool CheckHspBundleIsRelied(const std::string &hspBundleName) const;
 
 private:
     /**
