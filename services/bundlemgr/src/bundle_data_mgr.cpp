@@ -1705,7 +1705,7 @@ bool BundleDataMgr::GetBundleInfos(
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
         if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
-            APP_LOGD("app %{public}s is cross-app shared package, ignore", innerBundleInfo.GetBundleName().c_str());
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
             continue;
         }
 
@@ -1764,7 +1764,7 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
             continue;
         }
         if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
-            APP_LOGD("app %{public}s is cross-app shared package, ignore", info.GetBundleName().c_str());
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
@@ -1796,6 +1796,11 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         auto flag = GET_BASIC_APPLICATION_INFO;
         if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
@@ -1828,6 +1833,10 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
