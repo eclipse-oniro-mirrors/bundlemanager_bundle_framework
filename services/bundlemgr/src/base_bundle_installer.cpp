@@ -620,7 +620,7 @@ ErrCode BaseBundleInstaller::ParseSharedPackages(const InstallParam &installPara
 
         auto& bundleName = newInfos.begin()->second.GetBundleName();
         newInfosMap[bundleName].insert(newInfos.begin(), newInfos.end());
-        APP_LOGD("bundleName = %s, module count = %u", bundleName.c_str(), newInfos.size());
+        APP_LOGD("bundleName = %s, module count = %zu", bundleName.c_str(), newInfos.size());
     }
     return ERR_OK;
 }
@@ -690,7 +690,7 @@ static std::unordered_set<K> GetKeySet(std::unordered_map<K, V> &map)
 
 ErrCode BaseBundleInstaller::InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos)
 {
-    APP_LOGD("install shared packages, bundles = %u", hspInfos.size());
+    APP_LOGD("install shared packages, bundles = %zu", hspInfos.size());
     if (hspInfos.empty()) {
         return ERR_OK;
     }
