@@ -17,10 +17,11 @@
 #define OHOS_FORM_FWK_MOCK_ECOLOGICAL_RULE_MANAGER_H
 
 #include <vector>
+#include <gmock/gmock.h>
+#include <gtest/gtest.h>
 
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
-#include "gmock/gmock.h"
 #include "iremote_proxy.h"
 #include "iremote_stub.h"
 #include "want.h"
@@ -114,22 +115,24 @@ public:
 class EcologicalRuleMgrService : public EcologicalRuleMgrStub {
 public:
     EcologicalRuleMgrService() {};
-    virtual ~EcologicalRuleMgrService() = default;
+    virtual ~EcologicalRuleMgrService() override = default;
 
     MOCK_METHOD3(QueryFreeInstallExperience, int32_t(const Want &want,
         const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule));
     MOCK_METHOD5(EvaluateResolveInfos, int32_t(const Want &want, const ErmsParams::CallerInfo &callerInfo,
         int32_t type, std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> extensionInfos));
-    MOCK_METHOD3(QueryStartExperience, int32_t(const Want &want, const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule));
+    MOCK_METHOD3(QueryStartExperience, int32_t(const Want &want,
+        const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule));
     MOCK_METHOD2(QueryPublishFormExperience, int32_t(const Want &want, ErmsParams::ExperienceRule &rule));
-    MOCK_METHOD3(IsSupportPublishForm, int32_t(const Want &want, const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule));
+    MOCK_METHOD3(IsSupportPublishForm, int32_t(const Want &want,
+        const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule));
     MOCK_METHOD0(QueryLastSyncTime, long());
 };
 
 class MockEcologicalRuleMgrService : public EcologicalRuleMgrService {
 public:
     MockEcologicalRuleMgrService() = default;
-    virtual ~MockEcologicalRuleMgrService() = default;
+    virtual ~MockEcologicalRuleMgrService() override = default;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

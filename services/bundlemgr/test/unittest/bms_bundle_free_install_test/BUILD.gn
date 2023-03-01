@@ -60,7 +60,12 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+
+  deps = [
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",
@@ -186,7 +191,12 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+
+  deps = [
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",

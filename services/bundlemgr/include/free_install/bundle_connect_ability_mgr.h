@@ -270,6 +270,9 @@ private:
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     std::shared_ptr<EventRunner> runner_;
+    sptr<IEcologicalRuleManager> iErMgr_ = nullptr;
+    // should remove when AG SA online
+    int32_t ECOLOGICAL_RULE_SA_ID = 9999;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
