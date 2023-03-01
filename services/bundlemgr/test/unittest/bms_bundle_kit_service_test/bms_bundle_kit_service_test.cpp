@@ -9586,4 +9586,152 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedPackageInfo_0300, Function | SmallTe
     info.SetSharedPackageModuleNativeLibraryPath(nativeLibraryPath);
     EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
 }
+
+/**
+ * @tc.number: SharedBundleInfoTest
+ * @tc.name: SharedBundleInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, SharedBundleInfoTest, Function | SmallTest | Level1)
+{
+    SharedBundleInfo sharedBundleInfo;
+    sharedBundleInfo.name = COMMON_EVENT_NAME;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, sharedBundleInfo);
+    SharedBundleInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.name, COMMON_EVENT_NAME);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest
+ * @tc.name: SharedModuleInfo to_json and from_json branch cover
+ * @tc.desc: 1.Test to_json and from_json
+ */
+HWTEST_F(BmsBundleKitServiceTest, SharedModuleInfoTest, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = COMMON_EVENT_NAME;
+    nlohmann::json jsonObj;
+    to_json(jsonObj, sharedModuleInfo);
+    SharedModuleInfo result;
+    from_json(jsonObj, result);
+    EXPECT_EQ(result.name, COMMON_EVENT_NAME);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0100
+ * @tc.name: Test GetSharedBundleInfoBySelf
+ * @tc.desc: Test GetSharedBundleInfoBySelf with BundleMgrProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    SharedBundleInfo sharedBundleInfo;
+    auto ret = bundleMgrProxy->GetSharedBundleInfoBySelf("", sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = bundleMgrProxy->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ret = dataMgr->GetSharedBundleInfoBySelf("", sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, info);
+    ret = dataMgr->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0200
+ * @tc.name: Test GetSharedBundleInfo
+ * @tc.desc: Test GetSharedBundleInfo with InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfo_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    SharedBundleInfo sharedBundleInfo;
+    bool ret = info.GetSharedBundleInfo(sharedBundleInfo);
+    EXPECT_EQ(ret, true);
+
+    std::vector<InnerModuleInfo> innerModuleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = BUNDLE_NAME_TEST;
+    innerModuleInfo.emplace_back(moduleInfo);
+    info.innerSharedPackageModuleInfos_.try_emplace(MODULE_NAME_TEST, innerModuleInfo);
+    ret = info.GetSharedBundleInfo(sharedBundleInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetSharedDependencies_0100
+ * @tc.name: Test GetSharedDependencies
+ * @tc.desc: Test GetSharedDependencies with BundleMgrProxy
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0100, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::vector<Dependency> dependencies;
+    auto ret = bundleMgrProxy->GetSharedDependencies("", "", dependencies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = bundleMgrProxy->GetSharedDependencies(
+            BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ret = dataMgr->GetSharedDependencies("", "", dependencies);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    InnerBundleInfo info;
+    dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, info);
+    ret = dataMgr->GetSharedDependencies(
+            BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+    EXPECT_EQ(ret, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    ret = hostImpl->GetSharedDependencies(
+            BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetSharedDependencies_0200
+ * @tc.name: Test GetSharedDependencies
+ * @tc.desc: Test GetSharedDependencies with InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0200 , Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<Dependency> dependencies;
+    bool ret = info.GetSharedDependencies("", dependencies);
+    EXPECT_EQ(ret, false);
+
+    InnerModuleInfo moduleInfo;
+    info.InsertInnerModuleInfo(MODULE_NAME_TEST, moduleInfo);
+    ret = info.GetSharedDependencies(MODULE_NAME_TEST, dependencies);
+    EXPECT_EQ(ret, true);
+}
 }
