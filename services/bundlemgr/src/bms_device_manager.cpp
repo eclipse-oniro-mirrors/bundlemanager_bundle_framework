@@ -48,7 +48,6 @@ bool BmsDeviceManager::InitDeviceManager()
         APP_LOGE("init device manager failed, ret:%{public}d", ret);
         return false;
     }
-
     isInit_ = true;
     APP_LOGI("register device manager success");
     return true;

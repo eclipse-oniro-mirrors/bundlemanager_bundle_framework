@@ -28,7 +28,6 @@ namespace AppExecFwk {
 class BmsDeviceManager {
 public:
     BmsDeviceManager();
-
     int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
     bool GetAllDeviceList(std::vector<std::string> &deviceIds);
 
