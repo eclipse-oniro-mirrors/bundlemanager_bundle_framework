@@ -442,7 +442,7 @@ void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::V
         return;
     }
     std::vector<Metadata> metadatas;
-    for (auto &it : provisionMetadatas) {
+    for (const auto &it : provisionMetadatas) {
         Metadata metadata;
         metadata.name = it.name;
         metadata.value = it.value;
