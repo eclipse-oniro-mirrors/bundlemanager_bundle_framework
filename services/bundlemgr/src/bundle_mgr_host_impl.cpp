@@ -2422,7 +2422,7 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> 
 ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
     std::vector<SharedBundleInfo> &sharedBundles)
 {
-    APP_LOGD("GetSharedDependencies: bundleName: %{public}s, moduleName: %{public}s",
+    APP_LOGD("GetSharedBundleInfo: bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
     if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
