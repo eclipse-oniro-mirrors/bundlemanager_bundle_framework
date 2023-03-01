@@ -2404,9 +2404,26 @@ ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, i
     return dataMgr->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
 }
 
-ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles)
+ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
-    APP_LOGD("begin to GetAllSharedBundleInfo userId: %{public}d", userId);
+    APP_LOGD("begin to GetAllSharedBundleInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission("")) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    APP_LOGD("GetSharedDependencies: bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
     if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;

@@ -619,6 +619,8 @@ private:
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply);
