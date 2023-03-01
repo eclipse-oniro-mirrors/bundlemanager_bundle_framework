@@ -26,27 +26,28 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         Parcel dataMessageParcel;
-        BundleUserInfo info;
-        info.IsInitialState();
-        info.Marshalling(dataMessageParcel);
-        auto infoPtr = BundleUserInfo::Unmarshalling(dataMessageParcel);
-        if (infoPtr == nullptr) {
+        std::string disabledAbilities (reinterpret_cast<const char*>(data), size);
+        BundleUserInfo oldRule;
+        oldRule.disabledAbilities.push_back(disabledAbilities);
+        oldRule.IsInitialState();
+        oldRule.Reset();
+        if (!oldRule.Marshalling(dataMessageParcel)) {
             return false;
         }
-        BundleUserInfo *bundleUserInfo = new (std::nothrow) BundleUserInfo();
-        if (bundleUserInfo == nullptr) {
+        auto rulePtr = BundleUserInfo::Unmarshalling(dataMessageParcel);
+        if (rulePtr == nullptr) {
             return false;
         }
-        bundleUserInfo->ReadFromParcel(dataMessageParcel);
-        delete bundleUserInfo;
-        bundleUserInfo = nullptr;
-        if ((size < 2) || (size % 2 != 0)) {
+        delete rulePtr;
+        rulePtr = nullptr;
+        BundleUserInfo *readRule = new (std::nothrow) BundleUserInfo();
+        if (readRule == nullptr) {
             return false;
         }
-        std::string prefix (reinterpret_cast<const char*>(data), size);
-        info.Dump(prefix, size);
-        info.Reset();
-        return true;
+        bool ret = readRule->ReadFromParcel(dataMessageParcel);
+        delete readRule;
+        readRule = nullptr;
+        return ret;
     }
 }
 
