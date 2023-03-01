@@ -770,15 +770,18 @@ ErrCode BundleInstallChecker::CheckSharedPackageLabelInfo(std::unordered_map<std
     auto& firstBundle = infos.begin()->second;
     bool isBundleExist = dataMgr->FetchInnerBundleInfo(firstBundle.GetBundleName(), oldInfo);
     if (isBundleExist) {
+        if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+            APP_LOGE("old bundle is not shared");
+            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
+        }
         // check old InnerBundleInfo together
         infos.emplace(oldInfo.GetBundleName(), oldInfo);
     } else {
+        if (firstBundle.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+            APP_LOGE("installing bundle is not hsp");
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        }
         oldInfo = firstBundle;
-    }
-
-    if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
-        APP_LOGE("bundle is not hsp");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
     // check compatible policy
