@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "erms_mgr_interface.h"
+#include "erms_mgr_param.h"
 #include "free_install_params.h"
 #include "json_util.h"
 #include "parcel.h"

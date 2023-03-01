@@ -53,6 +53,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/extension_ability_info.cpp",
     "src/extension_form_info.cpp",
     "src/extension_form_profile.cpp",
+    "src/erms_mgr_param.cpp",
     "src/form_info.cpp",
     "src/free_install/dispatch_info.cpp",
     "src/free_install/install_result.cpp",

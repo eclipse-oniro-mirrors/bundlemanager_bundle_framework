@@ -21,6 +21,7 @@
 #include <string>
 
 #include "erms_mgr_interface.h"
+#include "erms_mgr_param.h"
 #include "event_handler.h"
 #include "event_runner.h"
 #include "free_install_params.h"
