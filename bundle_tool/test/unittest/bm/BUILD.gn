@@ -12,6 +12,7 @@
 # limitations under the License.
 
 import("//build/test.gni")
+import("../../../../appexecfwk.gni")
 import("../../../bundletool.gni")
 
 module_output_path = "bundle_tool/tools"
@@ -414,6 +415,11 @@ ohos_unittest("bm_command_overlay_test") {
     "resource_management:global_resmgr",
     "samgr:samgr_proxy",
   ]
+
+  defines = []
+  if (bundle_framework_overlay_install) {
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
 }
 
 group("unittest") {

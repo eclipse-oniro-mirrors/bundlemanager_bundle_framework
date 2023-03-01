@@ -574,12 +574,13 @@ void ApplicationInfo::Dump(std::string prefix, int fd)
 bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
 {
     std::set<std::string> preloadModules;
-    for (const ModuleInfo &moduleInfo : moduleInfos) {
-        if (moduleInfo.moduleName == moduleName) {
-            for (const std::string &name : moduleInfo.preloads) {
-                preloadModules.insert(name);
-            }
-            break;
+    auto it = std::find_if(std::begin(moduleInfos), std::end(moduleInfos),
+        [moduleName](ModuleInfo info) {
+            return info.moduleName == moduleName;
+        });
+    if (it != moduleInfos.end()) {
+        for (const std::string &name : it->preloads) {
+            preloadModules.insert(name);
         }
     }
     if (preloadModules.empty()) {

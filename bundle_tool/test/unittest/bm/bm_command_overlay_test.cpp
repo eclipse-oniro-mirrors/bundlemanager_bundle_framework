@@ -266,7 +266,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0008, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -290,7 +290,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0009, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -314,7 +314,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0010, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -362,7 +362,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0012, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -412,7 +412,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0014, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -440,7 +440,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0015, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -468,7 +468,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Overlay_0016, Function | MediumTest | 
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_OVERLAY_NG + "\n");
 }
 
 /**
@@ -662,7 +662,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Target_Overlay_0007, Function | Medium
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_TARGET_OVERLAY_NG + "\n");
 }
 
 /**
@@ -688,7 +688,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Target_Overlay_0008, Function | Medium
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_TARGET_OVERLAY_NG + "\n");
 }
 
 /**
@@ -736,7 +736,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Target_Overlay_0010, Function | Medium
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_TARGET_OVERLAY_NG + "\n");
 }
 
 
@@ -789,7 +789,7 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Target_Overlay_0012, Function | Medium
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_TARGET_OVERLAY_NG + "\n");
 }
 
 /**
@@ -815,6 +815,6 @@ HWTEST_F(BmCommandOverlayTest, Bm_Command_Target_Overlay_0013, Function | Medium
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), MSG_ERR_BUNDLEMANAGER_OVERLAY_FEATURE_IS_NOT_SUPPORTED);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_DUMP_TARGET_OVERLAY_NG + "\n");
 }
 } // namespace OHOS
