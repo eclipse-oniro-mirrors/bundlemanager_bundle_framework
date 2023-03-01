@@ -63,6 +63,12 @@ protected:
         NON_TO_SINGLETON = 2,
     };
 
+    struct SharedBundleRollBackInfo {
+        std::vector<std::string> newDirs; // record newly created directories, delete when rollback
+        std::vector<std::string> newBundles; // record newly installed bundle, uninstall when rollback
+        std::unordered_map<std::string, InnerBundleInfo> backupBundles; // record initial InnerBundleInfo
+    };
+
     /**
      * @brief The main function for system and normal bundle install.
      * @param bundlePath Indicates the path for storing the HAP file of the application
@@ -181,14 +187,14 @@ private:
     ErrCode ParseSharedPackages(const InstallParam &installParam, const Constants::AppType appType,
         std::unordered_map<std::string, FilesParseResult> &newInfosMap);
 
-    ErrCode InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos);
+    ErrCode InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos,
+        const InstallParam &installParam);
 
     ErrCode InnerInstallSharedPackages(const std::string &bundleName, FilesParseResult &parseResult,
-        std::vector<std::string> &newDirs, std::vector<std::string> &newBundles,
-        std::unordered_map<std::string, InnerBundleInfo> &backupBundles);
+        SharedBundleRollBackInfo &rollbackInfo, const InstallParam &installParam);
 
     bool TryInstallSharedBundleOnly(std::vector<std::string> &bundlePaths,
-        std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result);
+        std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result, const InstallParam &installParam);
 
     ErrCode ExtractSharedPackages(InnerBundleInfo &newInfo, const std::string &bundlePath,
         std::vector<std::string> &newDirs);
