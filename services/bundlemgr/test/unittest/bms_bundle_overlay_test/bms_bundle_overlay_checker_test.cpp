@@ -1296,9 +1296,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
 }
 
 /**
- * @tc.number: OverlayDataMgr_2800
+ * @tc.number: OverlayDataMgr_2900
  * @tc.name: test OverlayDataMgr.
- * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleConnection.
+ * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleInfo.
  *           2.system run normally.
  */
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest | Level0)
@@ -1450,5 +1450,35 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0500, Function | Smal
     res = overlayManagerHostImpl.SetOverlayEnabled(
         "bundleName", "moduleName", isEnabled, Constants::UNSPECIFIED_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0600
+ * @tc.name: test OverlayManagerHostImpl.
+ * @tc.desc: 1.OverlayManagerHostImpl of VerifySystemApi.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0600, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+    ErrCode res = overlayManagerHostImpl.VerifySystemApi();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0700
+ * @tc.name: test OverlayManagerHostImpl.
+ * @tc.desc: 1.OverlayManagerHostImpl of VerifyQueryPermission.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0700, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+    std::string callingBundleName = OverlayDataMgr::GetInstance()->GetCallingBundleName();
+    bool res = overlayManagerHostImpl.VerifyQueryPermission(callingBundleName, "");
+    EXPECT_EQ(res, true);
+
+    res = overlayManagerHostImpl.VerifyQueryPermission("", "");
+    EXPECT_EQ(res, true);
 }
 } // OHOS
