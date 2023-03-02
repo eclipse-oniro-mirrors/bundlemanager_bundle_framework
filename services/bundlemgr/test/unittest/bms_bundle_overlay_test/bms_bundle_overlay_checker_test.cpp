@@ -37,6 +37,8 @@ const std::string OTHER_TARGET_MODULE_NAME = "targetModuleNameTest";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
 const std::string TEST_PATH_FIRST = "testPath1";
 const std::string TEST_PATH_SECOND = "testPath2";
+const std::string TEST_PACK_AGE = "modulePackage";
+const std::string NO_EXIST = "noExist";
 const int32_t INVALID_TARGET_PRIORITY_FIRST = 0;
 const int32_t INVALID_TARGET_PRIORITY_SECOND = 101;
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
@@ -700,9 +702,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0300, Function | SmallTest 
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     res = overlayDataMgr.UpdateInternalOverlayInfo(newInfo, oldInfo);
     EXPECT_EQ(res, ERR_OK);
@@ -744,7 +746,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0400, Function | SmallTest 
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     moduleInfo.moduleName = "moduleName";
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfos);
     res = overlayDataMgr.UpdateExternalOverlayInfo(innerBundleInfo, oldInfo);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
@@ -806,7 +808,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0700, Function | SmallTest 
     InnerBundleInfo oldInfo;
     oldInfo.SetIsPreInstallApp(false);
     ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = "noExist";
+    applicationInfo.bundleName = NO_EXIST;
     oldInfo.SetBaseApplicationInfo(applicationInfo);
     overlayDataMgr.BuildExternalOverlayConnection("", oldInfo, USERID);
 }
@@ -846,7 +848,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0900, Function | SmallTest 
     OverlayDataMgr overlayDataMgr;
     InnerBundleInfo oldInfo;
     oldInfo.SetIsPreInstallApp(true);
-    oldInfo.SetCertificateFingerprint("noExist");
+    oldInfo.SetCertificateFingerprint(NO_EXIST);
     overlayDataMgr.BuildExternalOverlayConnection("", oldInfo, USERID);
 }
 
@@ -909,9 +911,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1300, Function | SmallTest 
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     res = overlayDataMgr.RemoveOverlayModuleConnection(newInfo, oldInfo);
@@ -954,9 +956,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1500, Function | SmallTest 
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
@@ -1185,9 +1187,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2500, Function | SmallTest 
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
@@ -1222,9 +1224,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2600, Function | SmallTest 
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(NON_OVERLAY_TYPE);
@@ -1247,11 +1249,11 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2700, Function | SmallTest 
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
 
     overlayDataMgr.RemoveOverlayBundleInfo(TEST_BUNDLE_NAME, TEST_BUNDLE_NAME);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
@@ -1273,9 +1275,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     newInfo.AddInnerModuleInfo(innerModuleInfos);
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
@@ -1288,7 +1290,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
     applicationInfo.bundleName = TEST_BUNDLE_NAME;
     applicationInfo.targetBundleName = TEST_BUNDLE_NAME;
     oldInfo.SetBaseApplicationInfo(applicationInfo);
-    newInfo.SetTargetBundleName("noExist");
+    newInfo.SetTargetBundleName(NO_EXIST);
     dataMgr->bundleInfos_.insert(
         pair<std::string, InnerBundleInfo>(TEST_BUNDLE_NAME, oldInfo));
     ErrCode res = overlayDataMgr.RemoveOverlayModuleConnection(newInfo, oldInfo);
@@ -1309,28 +1311,28 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest 
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     overlayDataMgr.RemoveOverlayBundleInfo(TEST_BUNDLE_NAME, TEST_BUNDLE_NAME);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
 
     oldInfo.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
 
     oldInfo.SetTargetBundleName(TARGET_MODULE_NAME);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
 
     oldInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
 
     oldInfo.SetTargetBundleName(TARGET_MODULE_NAME);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
 
     oldInfo.SetOverlayType(NON_OVERLAY_TYPE);
-    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, "modulePackage", oldInfo);
-    overlayDataMgr.RemoveOverlayModuleInfo("noExits", "modulePackage", oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_PACK_AGE, oldInfo);
+    overlayDataMgr.RemoveOverlayModuleInfo("noExits", TEST_PACK_AGE, oldInfo);
     UninstallBundleInfo();
 }
 
