@@ -84,8 +84,7 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "fileAccess",
     "thumbnail",
     "preview",
-    "print",
-    "ui"
+    "print"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
