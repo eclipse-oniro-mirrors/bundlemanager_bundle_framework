@@ -20,6 +20,7 @@
 #include "overlay_manager_proxy.h"
 #include "overlay_manager_host.h"
 #undef private
+#include "bundle_overlay_manager_host_impl.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -94,8 +95,8 @@ ErrCode OverlayManagerHostMock::GetOverlayModuleInfoForTarget(const std::string 
     return ERR_OK;
 }
 
-ErrCode OverlayManagerHostMock::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
-    int32_t userId)
+ErrCode OverlayManagerHostMock::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
+    bool isEnabled, int32_t userId)
 {
     return ERR_OK;
 }
@@ -682,5 +683,111 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2300, Function | SmallTest | Le
     EXPECT_EQ(ret, ERR_OK);
     ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2400
+ * @tc.name: test GetAllOverlayModuleInfo interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling GetAllOverlayModuleInfo interface by using OverlayManagerHostImpl instance.
+ *           4.get failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2400, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<OverlayModuleInfo> vec;
+    auto res = hostImpl->GetAllOverlayModuleInfo(TEST_BUNDLE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2500
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling GetOverlayModuleInfo interface by using OverlayManagerHostImpl instance.
+ *           4.get failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2500, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    OverlayModuleInfo info;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, TEST_MODULE_NAME, info);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2600
+ * @tc.name: test GetOverlayBundleInfoForTarget interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling GetOverlayBundleInfoForTarget interface by using OverlayManagerHostImpl instance.
+ *           4.get failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2600, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<OverlayBundleInfo> vec;
+    auto res = hostImpl->GetOverlayBundleInfoForTarget(TEST_TARGET_BUNDLE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2700
+ * @tc.name: test GetOverlayModuleInfoForTarget interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling GetOverlayModuleInfoForTarget interface by using OverlayManagerHostImpl instance.
+ *           4.get failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2700, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<OverlayModuleInfo> vec;
+    auto res = hostImpl->GetOverlayModuleInfoForTarget(TEST_TARGET_BUNDLE_NAME, TEST_TARGET_MODULE_NAME, vec);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2800
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling SetOverlayEnabled interface by using OverlayManagerHostImpl instance.
+ *           4.set failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2800, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2900
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerHostImpl.
+ * @tc.desc: 1.construct OverlayManagerHostImpl instance.
+ *           2.calling SetOverlayEnabled interface by using OverlayManagerHostImpl instance.
+ *           4.set failed.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2900, Function | SmallTest | Level0)
+{
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, false);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
 }
 } // OHOS
