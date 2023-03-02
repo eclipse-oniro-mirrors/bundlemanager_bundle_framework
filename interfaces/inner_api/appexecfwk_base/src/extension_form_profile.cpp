@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,12 @@ const std::map<std::string, FormType> formTypeMap = {
     {"JS", FormType::JS},
     {"eTS", FormType::ETS}
 };
+
+const std::map<std::string, FormType> uiSyntaxMap = {
+    {"hml", FormType::JS},
+    {"arkts", FormType::ETS}
+};
+
 struct Window {
     int32_t designWidth = 720;
     bool autoDesignWidth = false;
@@ -59,6 +65,7 @@ struct ExtensionFormProfileInfo {
     std::string colorMode = "auto";
     std::string formConfigAbility;
     std::string type = "JS";
+    std::string uiSyntax = "hml";
     bool formVisibleNotify = false;
     bool isDefault = false;
     bool updateEnabled = false;
@@ -170,6 +177,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         jsonObjectEnd,
         ExtensionFormProfileReader::TYPE,
         extensionFormProfileInfo.type,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::UI_SYNTAX,
+        extensionFormProfileInfo.uiSyntax,
         JsonType::STRING,
         false,
         parseResult,
@@ -315,9 +330,15 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     if (colorMode != formColorModeMap.end()) {
         info.colorMode = colorMode->second;
     }
+
     auto formType = formTypeMap.find(form.type);
     if (formType != formTypeMap.end()) {
         info.type = formType->second;
+    }
+
+    auto uiSyntaxType = uiSyntaxMap.find(form.uiSyntax);
+    if (uiSyntaxType != uiSyntaxMap.end()) {
+        info.uiSyntax = uiSyntaxType->second;
     }
 
     info.formConfigAbility = form.formConfigAbility;
