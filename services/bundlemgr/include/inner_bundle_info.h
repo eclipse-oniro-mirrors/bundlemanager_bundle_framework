@@ -1394,7 +1394,9 @@ public:
     {
         allowedAcls_.clear();
         for (const auto &acl : allowedAcls) {
-            allowedAcls_.emplace_back(acl);
+            if (!acl.empty()) {
+                allowedAcls_.emplace_back(acl);
+            }
         }
     }
 
