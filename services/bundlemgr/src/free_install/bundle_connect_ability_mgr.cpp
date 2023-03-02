@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "erms_mgr_interface.h"
+#include "erms_mgr_param.h"
 #include "free_install_params.h"
 #include "json_util.h"
 #include "parcel.h"
@@ -1078,8 +1079,10 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
 
 sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalRuleMgr()
 {
-    // should remove when AG SA online
-    int32_t ECOLOGICAL_RULE_SA_ID = 9999;
+    if (iErMgr_ != nullptr) {
+        APP_LOGI("ecological rule mgr already get.");
+        return iErMgr_;
+    }
     sptr<ISystemAbilityManager> saMgr = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saMgr == nullptr) {
         APP_LOGE("saMgr is nullptr");
@@ -1090,8 +1093,8 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalR
         APP_LOGE("%{public}s error, failed to get ecological rule manager service.", __func__);
         return nullptr;
     }
-
-    return iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
+    iErMgr_ = iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
+    return iErMgr_;
 }
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)

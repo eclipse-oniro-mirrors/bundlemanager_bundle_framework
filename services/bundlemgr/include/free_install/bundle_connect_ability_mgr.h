@@ -21,6 +21,7 @@
 #include <string>
 
 #include "erms_mgr_interface.h"
+#include "erms_mgr_param.h"
 #include "event_handler.h"
 #include "event_runner.h"
 #include "free_install_params.h"
@@ -269,6 +270,9 @@ private:
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
     std::shared_ptr<AppExecFwk::EventHandler> handler_;
     std::shared_ptr<EventRunner> runner_;
+    sptr<IEcologicalRuleManager> iErMgr_ = nullptr;
+    // should remove when AG SA online
+    int32_t ECOLOGICAL_RULE_SA_ID = 9999;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
