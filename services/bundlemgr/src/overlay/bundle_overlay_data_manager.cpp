@@ -409,7 +409,7 @@ void OverlayDataMgr::RemoveOverlayModuleInfo(
 }
 
 void OverlayDataMgr::ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
-    const std::string & modulePackage, InnerBundleInfo &oldInfo)
+    const std::string &modulePackage, InnerBundleInfo &oldInfo)
 {
     for (const auto &moduleInfo : innerModuleInfos) {
         if (moduleInfo.second.targetModuleName == modulePackage) {
