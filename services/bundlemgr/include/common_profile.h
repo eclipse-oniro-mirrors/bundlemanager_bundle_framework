@@ -239,8 +239,6 @@ constexpr const char* KEY_SEARCHBOX = "searchbox";
 
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_JS_TYPE_ETS = "ets";
 
-static std::map<std::string, uint32_t> formEntityMap;
-
 extern thread_local int32_t parseResult;
 
 // background modes

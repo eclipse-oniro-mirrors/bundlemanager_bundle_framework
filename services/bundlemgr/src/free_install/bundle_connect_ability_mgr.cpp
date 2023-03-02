@@ -58,6 +58,9 @@ constexpr uint32_t BIT_FIVE = 32;
 constexpr uint32_t BIT_SIX = 64;
 constexpr uint32_t DISCONNECT_DELAY = 20000;
 constexpr uint32_t OUT_TIME = 30000;
+const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
+const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
+constexpr uint32_t FREE_INSTALL_DONE = 0;
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {

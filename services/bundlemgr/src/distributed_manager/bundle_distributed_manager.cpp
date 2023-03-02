@@ -35,6 +35,7 @@ const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
 const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
 const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
+const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 }
 
 void BundleDistributedManager::Init()

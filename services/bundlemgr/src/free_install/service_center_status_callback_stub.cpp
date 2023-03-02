@@ -23,6 +23,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
+}
+
 ServiceCenterStatusCallbackStub::ServiceCenterStatusCallbackStub()
 {
     APP_LOGI("ServiceCenterStatusCallbackStub is created");

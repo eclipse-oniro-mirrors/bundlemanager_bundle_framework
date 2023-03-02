@@ -28,8 +28,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string AVAILABLELEVEL_NORMAL = "normal";
-    const std::string DEFAULT_ENTITY_TYPE = "unspecified";
+    static const std::string AVAILABLELEVEL_NORMAL = "normal";
+    static const std::string DEFAULT_ENTITY_TYPE = "unspecified";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,

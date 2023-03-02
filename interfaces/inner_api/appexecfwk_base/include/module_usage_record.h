@@ -24,14 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace UsageRecordKey {
-    const std::string LAUNCHED_COUNT = "launchedCount";
-    const std::string LAST_LAUNCH_TIME = "lastLaunchTime";
-    const std::string IS_REMOVED = "isRemoved";
-    const std::string ABILITY_NAME = "abilityName";
-    const std::string SCHEMA_LAST_LAUNCH_TIME = "$.lastLaunchTime";
-} // UsageRecordKey
-
 struct ModuleUsageRecord : public Parcelable {
     std::string bundleName;
     uint32_t appLabelId = 0;
