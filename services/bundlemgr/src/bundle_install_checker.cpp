@@ -989,6 +989,9 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
     if (innerModuleInfos.empty()) {
         return ERR_OK;
     }
+    if (innerModuleInfos.cbegin()->second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
+        return ERR_OK;
+    }
     if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
         APP_LOGE("atomic service's mainElement can't be empty.");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
