@@ -33,7 +33,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
 const std::string NAME_SERVICE_ROUTER_MGR_SERVICE = "ServiceRouterMgrService";
+const std::string TASK_NAME = "ServiceRouterUnloadTask";
+const int64_t UNLOAD_DELAY_TIME = 90000;
+}
+
 
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<ServiceRouterMgrService>::GetInstance().get());
@@ -57,6 +62,7 @@ void ServiceRouterMgrService::OnStart()
         APP_LOGE("Publish SRMS failed!");
         return;
     }
+    DelayUnloadTask();
     APP_LOGI("SRMS start success.");
 }
 
@@ -68,27 +74,47 @@ void ServiceRouterMgrService::OnStop()
 void ServiceRouterMgrService::Init()
 {
     APP_LOGI("Init start");
-    initEventRunnerAndHandler();
     LoadAllBundleInfos();
-    subscribeCommonEvent();
+    InitEventRunnerAndHandler();
+    SubscribeCommonEvent();
+}
+
+void ServiceRouterMgrService::DelayUnloadTask()
+{
+    if (handler_ == nullptr) {
+        APP_LOGI("DelayUnloadTask, handler_ is nullptr");
+        return;
+    }
+    
+    std::lock_guard<std::mutex> lock(delayTaskMutex_);
+    handler_->RemoveTask(TASK_NAME);
+    auto task = [this]() {
+        APP_LOGE("UnloadSA start.");
+        sptr<ISystemAbilityManager> saManager = 
+            OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (saManager == nullptr) {
+            APP_LOGE("UnloadSA, GetSystemAbilityManager is null.");
+            return ;
+        }
+        int32_t result = saManager->UnloadSystemAbility(OHOS::SERVICE_ROUTER_MGR_SERVICE_ID);
+        if (result != ERR_OK) {
+            APP_LOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
+            return;
+        }
+        APP_LOGE("UnloadSA success.");
+    };
+    handler_->PostTask(task, TASK_NAME, UNLOAD_DELAY_TIME);
 }
 
 bool ServiceRouterMgrService::LoadAllBundleInfos()
 {
-    if (handler_ == nullptr) {
-        APP_LOGE("%{public}s fail, handler_ is null", __func__);
-        return false;
-    }
-    auto task = []() {
-        APP_LOGI("LoadAllBundleInfos start");
-        ServiceRouterDataMgr::GetInstance().LoadAllBundleInfos();
-        APP_LOGI("LoadAllBundleInfos end");
-    };
-    handler_->PostTask(task);
+    APP_LOGI("LoadAllBundleInfos start");
+    ServiceRouterDataMgr::GetInstance().LoadAllBundleInfos();
+    APP_LOGI("LoadAllBundleInfos end");
     return true;
 }
 
-bool ServiceRouterMgrService::initEventRunnerAndHandler()
+bool ServiceRouterMgrService::InitEventRunnerAndHandler()
 {
     std::lock_guard<std::mutex> lock(mutex_);
     runner_ = EventRunner::Create(NAME_SERVICE_ROUTER_MGR_SERVICE);
@@ -104,7 +130,7 @@ bool ServiceRouterMgrService::initEventRunnerAndHandler()
     return true;
 }
 
-bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
+bool ServiceRouterMgrService::ServiceRouterMgrService::SubscribeCommonEvent()
 {
     if (eventSubscriber_ != nullptr) {
         APP_LOGI("subscribeCommonEvent already subscribed.");
@@ -127,29 +153,11 @@ bool ServiceRouterMgrService::ServiceRouterMgrService::subscribeCommonEvent()
     return true;
 }
 
-bool ServiceRouterMgrService::subscribeBundleEvent()
-{
-    bundleEventCallback_ = new (std::nothrow) SrBundleEventCallback(handler_);
-    if (bundleEventCallback_ == nullptr) {
-        APP_LOGE("%{public}s fail, allocate BundleEventCallbackHost failed!", __func__);
-        return false;
-    }
-    sptr<IBundleMgr> iBundleMgr = SrSamgrHelper::GetInstance().GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("%{public}s fail, getBundleMgr failed!", __func__);
-        return false;
-    }
-    bool ret = iBundleMgr->RegisterBundleEventCallback(bundleEventCallback_);
-    if (!ret) {
-        APP_LOGE("%{public}s fail, RegisterBundleEventCallback failed!", __func__);
-    }
-    return ret;
-}
-
 int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
     std::vector<ServiceInfo> &serviceInfos)
 {
     APP_LOGI("%{public}s coldStart:", __func__);
+    DelayUnloadTask();
     return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);
 }
 
@@ -157,6 +165,7 @@ int32_t ServiceRouterMgrService::QueryIntentInfos(const Want &want, const std::s
     std::vector<IntentInfo> &intentInfos)
 {
     APP_LOGI("%{public}s coldStart:", __func__);
+    DelayUnloadTask();
     return ServiceRouterDataMgr::GetInstance().QueryIntentInfos(want, intentName, intentInfos);
 }
 }  // namespace AAFwk

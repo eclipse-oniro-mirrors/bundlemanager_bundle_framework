@@ -30,7 +30,6 @@ ohos_shared_library("libsrms") {
     "src/service_router_data_mgr.cpp",
     "src/service_router_mgr_service.cpp",
     "src/service_router_mgr_stub.cpp",
-    "src/sr_bundle_event_callback.cpp",
     "src/sr_common_event_subscriber.cpp",
     "src/sr_samgr_helper.cpp",
   ]

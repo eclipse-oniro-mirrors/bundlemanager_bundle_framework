@@ -20,6 +20,7 @@
 #include "sr_samgr_helper.h"
 #include "system_ability_definition.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_proxy.h"
 #ifdef ACCOUNT_ENABLE
 #include "os_account_manager.h"
 #endif
@@ -74,6 +75,5 @@ int32_t SrSamgrHelper::GetCurrentActiveUserId()
     return 0;
 #endif
 }
-
 } // namespace AppExecFwk
 } // namespace OHOS

@@ -94,10 +94,6 @@ int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessagePar
         APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
-        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
     Want *want = data.ReadParcelable<Want>();
     std::string intentName = data.ReadString();
     std::vector<IntentInfo> infos;

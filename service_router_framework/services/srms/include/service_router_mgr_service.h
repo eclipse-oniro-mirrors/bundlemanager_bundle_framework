@@ -20,7 +20,6 @@
 #include "service_info.h"
 #include "service_router_mgr_stub.h"
 #include "sr_common_event_subscriber.h"
-#include "sr_bundle_event_callback.h"
 #include "want.h"
 #include "system_ability.h"
 #include "event_runner.h"
@@ -77,17 +76,18 @@ public:
 
 private:
     void Init();
-    bool initEventRunnerAndHandler();
+    bool InitEventRunnerAndHandler();
     bool LoadAllBundleInfos();
-    bool subscribeCommonEvent();
-    bool subscribeBundleEvent();
+    bool SubscribeCommonEvent();
+    bool SubscribeBundleEvent();
+    void DelayUnloadTask();
 
     std::shared_ptr<EventRunner> runner_ = nullptr;
     std::shared_ptr<EventHandler> handler_ = nullptr;
     std::mutex bundleMgrMutex_;
     std::mutex mutex_;
     std::shared_ptr<SrCommonEventSubscriber> eventSubscriber_ = nullptr;
-    sptr<SrBundleEventCallback> bundleEventCallback_ = nullptr;
+    std::mutex delayTaskMutex_;
 };
 }  // namespace AAFwk
 }  // namespace OHOS

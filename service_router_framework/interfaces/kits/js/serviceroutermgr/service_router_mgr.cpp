@@ -19,6 +19,7 @@
 #include "app_log_wrapper.h"
 #include "service_router_mgr_interface.h"
 #include "service_router_mgr_proxy.h"
+#include "service_router_mgr_helper.h"
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
@@ -50,26 +51,6 @@ constexpr const char* LABEL_ID = "labelId";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
-}
-
-static sptr<IServiceRouterManager> GetServiceRouterMgr()
-{
-    auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityManager == nullptr) {
-        APP_LOGE("systemAbilityManager is null.");
-        return nullptr;
-    }
-    auto serviceRouterMgrSa = systemAbilityManager->GetSystemAbility(OHOS::SERVICE_ROUTER_MGR_SERVICE_ID);
-    if (serviceRouterMgrSa == nullptr) {
-        APP_LOGE("serviceRouterMgrSa is null.");
-        return nullptr;
-    }
-    auto serviceRouterMgr = OHOS::iface_cast<IServiceRouterManager>(serviceRouterMgrSa);
-    if (serviceRouterMgr == nullptr) {
-        APP_LOGE("iface_cast failed.");
-        return nullptr;
-    }
-    return serviceRouterMgr;
 }
 
 static void ConvertAppInfo(napi_env env, napi_value objAppInfo, const AppInfo &appInfo)
@@ -163,7 +144,7 @@ static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
         APP_LOGE("ExtensionCallbackInfo is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    auto serviceRouterMgr = GetServiceRouterMgr();
+    auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
     if (serviceRouterMgr == nullptr) {
         APP_LOGE("can not get serviceRouterMgr");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -171,9 +152,6 @@ static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
 
     ExtensionServiceType type = static_cast<ExtensionServiceType>(info->serviceType);
     auto ret = serviceRouterMgr->QueryServiceInfos(info->want, type, info->serviceInfos);
-    if (ret != ERR_OK) {
-        APP_LOGE("InnerQueryServiceInfos failed");
-    }
     APP_LOGI("InnerQueryServiceInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }

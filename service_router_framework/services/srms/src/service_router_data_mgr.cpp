@@ -175,9 +175,7 @@ ExtensionServiceType ServiceRouterDataMgr::GetExtensionServiceType(const Want &w
         return serviceType;
     }
     Uri uri = want.GetUri();
-    APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s , %{public}s", uri.GetScheme().c_str(), uri.GetHost().c_str());
-    if (uri.GetScheme().empty() || uri.GetHost().empty() || uri.GetScheme() != SCHEME_SERVICE_ROUTER)
-    {
+    if (uri.GetScheme().empty() || uri.GetHost().empty() || uri.GetScheme() != SCHEME_SERVICE_ROUTER) {
         APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s", want.GetUriString().c_str());
         return ExtensionServiceType::UNSPECIFIED;
     }

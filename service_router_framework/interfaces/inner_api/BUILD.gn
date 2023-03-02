@@ -21,6 +21,9 @@ config("srms_fwk_config") {
 ohos_shared_library("srms_fwk") {
   sources = [
     "src/service_info.cpp",
+    "src/service_router_death_recipient.cpp",
+    "src/service_router_load_callback.cpp",
+    "src/service_router_mgr_helper.cpp",
     "src/service_router_mgr_proxy.cpp",
   ]
 
