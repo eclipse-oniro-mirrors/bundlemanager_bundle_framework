@@ -306,7 +306,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
         APP_LOGE("uninstall shared library is relied!");
-        return ERR_APPEXECFWK_UNINSTALL_HARE_APP_LIBRARY_IS_RELIED;
+        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED;
     }
     // if uninstallParam do not contain versionCode, versionCode is ALL_VERSIONCODE
     std::vector<uint32_t> versionCodes = info.GetAllHspVersion();

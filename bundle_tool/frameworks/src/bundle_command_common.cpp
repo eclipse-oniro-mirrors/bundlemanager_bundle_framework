@@ -578,6 +578,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error, install atomic service config is not same",
     },
     {
+        IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST,
+        "error, shared bundle is not exist",
+    },
+    {
+        IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED,
+        "error, shared bundle is relied",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }
