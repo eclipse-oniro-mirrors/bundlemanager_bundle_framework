@@ -54,6 +54,7 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
+    UI = 16,
     UNSPECIFIED = 255
 };
 
