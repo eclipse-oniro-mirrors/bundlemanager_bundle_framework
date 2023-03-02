@@ -719,22 +719,6 @@ public:
         return mark_;
     }
     /**
-     * @brief Set application base data dir.
-     * @param baseDataDir Indicates the dir to be set.
-     */
-    void SetBaseDataDir(const std::string &baseDataDir)
-    {
-        baseDataDir_ = baseDataDir;
-    }
-    /**
-     * @brief Get application base data dir.
-     * @return Return the string object.
-     */
-    std::string GetBaseDataDir() const
-    {
-        return baseDataDir_;
-    }
-    /**
      * @brief Get application data dir.
      * @return Return the string object.
      */
@@ -1085,7 +1069,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetBaseDataDir(oldInfo.GetBaseDataDir());
         SetUid(oldInfo.GetUid());
         SetGid(oldInfo.GetGid());
     }
@@ -1411,7 +1394,9 @@ public:
     {
         allowedAcls_.clear();
         for (const auto &acl : allowedAcls) {
-            allowedAcls_.emplace_back(acl);
+            if (!acl.empty()) {
+                allowedAcls_.emplace_back(acl);
+            }
         }
     }
 
@@ -2036,7 +2021,6 @@ private:
     int uid_ = Constants::INVALID_UID;
     int gid_ = Constants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
-    std::string baseDataDir_;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
     std::shared_ptr<BundleInfo> baseBundleInfo_;  // applicationInfo and abilityInfo empty

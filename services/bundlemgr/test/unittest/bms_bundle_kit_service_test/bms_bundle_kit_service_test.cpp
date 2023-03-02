@@ -9734,4 +9734,45 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0200 , Function | SmallT
     ret = info.GetSharedDependencies(MODULE_NAME_TEST, dependencies);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: SetAllowedAcls_0001
+ * @tc.name: Test SetAllowedAcls
+ * @tc.desc: 1.Test SetAllowedAcls of InnerBundleInfo, acls empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAllowedAcls_0001, Function | SmallTest | Level1)
+{
+    std::vector<std::string> acls;
+    InnerBundleInfo info;
+    info.SetAllowedAcls(acls);
+    EXPECT_TRUE(info.GetAllowedAcls().empty());
+}
+
+/**
+ * @tc.number: SetAllowedAcls_0002
+ * @tc.name: Test SetAllowedAcls
+ * @tc.desc: 1.Test SetAllowedAcls of InnerBundleInfo, acls not empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAllowedAcls_0002, Function | SmallTest | Level1)
+{
+    std::vector<std::string> acls;
+    acls.push_back("");
+    InnerBundleInfo info;
+    info.SetAllowedAcls(acls);
+    EXPECT_TRUE(info.GetAllowedAcls().empty());
+}
+
+/**
+ * @tc.number: SetAllowedAcls_0003
+ * @tc.name: Test SetAllowedAcls
+ * @tc.desc: 1.Test SetAllowedAcls of InnerBundleInfo, acls not empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAllowedAcls_0003, Function | SmallTest | Level1)
+{
+    std::vector<std::string> acls;
+    acls.push_back("ohos.permission.GET_BUNDLE_INFO");
+    InnerBundleInfo info;
+    info.SetAllowedAcls(acls);
+    EXPECT_FALSE(info.GetAllowedAcls().empty());
+}
 }

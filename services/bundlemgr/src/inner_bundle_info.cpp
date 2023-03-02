@@ -32,7 +32,6 @@ namespace {
 const std::string APP_TYPE = "appType";
 const std::string UID = "uid";
 const std::string GID = "gid";
-const std::string BASE_DATA_DIR = "baseDataDir";
 const std::string BUNDLE_STATUS = "bundleStatus";
 const std::string BASE_APPLICATION_INFO = "baseApplicationInfo";
 const std::string BASE_BUNDLE_INFO = "baseBundleInfo";
@@ -393,7 +392,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->uid_ = info.uid_;
     this->gid_ = info.gid_;
     this->userId_ = info.userId_;
-    this->baseDataDir_ = info.baseDataDir_;
     this->bundleStatus_ = info.bundleStatus_;
     this->appFeature_ = info.appFeature_;
     this->allowedAcls_ = info.allowedAcls_;
@@ -582,7 +580,6 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
-    jsonObject[BASE_DATA_DIR] = baseDataDir_;
     jsonObject[BUNDLE_STATUS] = bundleStatus_;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
     jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
@@ -1381,14 +1378,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        BASE_DATA_DIR,
-        baseDataDir_,
-        JsonType::STRING,
-        true,
-        ProfileReader::parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleStatus>(jsonObject,
         jsonObjectEnd,
         BUNDLE_STATUS,

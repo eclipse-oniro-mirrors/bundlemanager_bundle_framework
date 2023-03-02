@@ -476,7 +476,6 @@ protected:
                 "versionCode": 1000000,
                 "versionName": "1.0.0"
             },
-            "baseDataDir": "/data/app/el2/100/base/com.ohos.launcher",
             "baseExtensionInfos_": {
             },
             "bundleStatus": 1,
