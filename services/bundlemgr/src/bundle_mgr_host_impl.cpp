@@ -1065,19 +1065,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     EventReport::SendCleanCacheSysEvent(bundleName, userId, false, false);
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
-        return false;
-    }
-    NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
-        .type = NotifyType::BUNDLE_DATA_CLEARED,
-        .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
-    };
-    NotifyBundleStatus(installRes);
     return true;
 }
 
