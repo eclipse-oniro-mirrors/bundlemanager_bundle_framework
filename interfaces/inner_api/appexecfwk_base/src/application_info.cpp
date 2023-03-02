@@ -575,7 +575,7 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
 {
     std::set<std::string> preloadModules;
     auto it = std::find_if(std::begin(moduleInfos), std::end(moduleInfos),
-        [moduleName](ModuleInfo info) {
+        [&moduleName](ModuleInfo info) {
             return info.moduleName == moduleName;
         });
     if (it != moduleInfos.end()) {
@@ -597,7 +597,7 @@ bool ApplicationInfo::CheckNeedPreload(const std::string &moduleName) const
         APP_LOGD("all preload modules exist locally.");
         return false;
     }
-    APP_LOGI("start to process preload.");
+    APP_LOGD("need to process preload.");
     return true;
 }
 
