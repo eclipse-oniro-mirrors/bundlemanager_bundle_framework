@@ -13,13 +13,13 @@
  * limitations under the License.
  */
 
-#include "service_router_data_mgr.h"
-#include "bundle_info_resolve_util.h"
-#include "sr_constants.h"
-#include "system_ability_definition.h"
-#include "iservice_registry.h"
 #include "app_log_wrapper.h"
+#include "bundle_info_resolve_util.h"
+#include "iservice_registry.h"
+#include "service_router_data_mgr.h"
+#include "sr_constants.h"
 #include "sr_samgr_helper.h"
+#include "system_ability_definition.h"
 #include "uri.h"
 
 namespace OHOS {
@@ -28,20 +28,10 @@ namespace {
     const std::string SCHEME_SEPARATOR = "://";
     const std::string SCHEME_SERVICE_ROUTER = "servicerouter";
 }
-ServiceRouterDataMgr::ServiceRouterDataMgr()
-{
-    APP_LOGI("SRDM instance is created");
-}
-
-ServiceRouterDataMgr::~ServiceRouterDataMgr()
-{
-    APP_LOGI("SRDM instance is destroyed");
-    innerServiceInfos_.clear();
-}
 
 bool ServiceRouterDataMgr::LoadAllBundleInfos()
 {
-    APP_LOGI("SRDM LoadAllBundleInfos");
+    APP_LOGD("SRDM LoadAllBundleInfos");
     auto bms = SrSamgrHelper::GetInstance().GetBundleMgr();
     if (bms == nullptr) {
         APP_LOGE("SRDM GetBundleMgr return null");
@@ -61,7 +51,7 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
 
 bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
 {
-    APP_LOGI("SRDM LoadBundleInfo");
+    APP_LOGD("SRDM LoadBundleInfo");
     auto bms = SrSamgrHelper::GetInstance().GetBundleMgr();
     if (bms == nullptr) {
         APP_LOGI("SRDM GetBundleMgr return null");
@@ -77,51 +67,41 @@ bool ServiceRouterDataMgr::LoadBundleInfo(const std::string &bundleName)
     return ret;
 }
 
-InnerServiceInfo ServiceRouterDataMgr::GetInnerServiceInfo(const std::string name)
+void ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
 {
-    auto infoItem = innerServiceInfos_.find(name);
-    if (infoItem == innerServiceInfos_.end()) {
-        InnerServiceInfo innerServiceInfo;
-        return innerServiceInfo;
-    } else {
-        return infoItem->second;
+    APP_LOGD("SRDM UpdateBundleInfo");
+    InnerServiceInfo innerServiceInfo;
+    auto infoItem = innerServiceInfos_.find(bundleInfo.name);
+    if (infoItem != innerServiceInfos_.end()) {
+        innerServiceInfo = infoItem->second;
     }
-}
+    innerServiceInfo.UpdateAppInfo(bundleInfo.applicationInfo);
 
-bool ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
-{
-    APP_LOGI("SRDM UpdateBundleInfo");
     std::vector<IntentInfo> intentInfos;
     std::vector<ServiceInfo> serviceInfos;
-
-    InnerServiceInfo innerServiceInfo = GetInnerServiceInfo(bundleInfo.name);
-    innerServiceInfo.UpdateAppInfo(bundleInfo.applicationInfo);
     if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos, innerServiceInfo.GetAppInfo())) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         innerServiceInfo.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
         innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
-        return true;
     }
-    return false;
 }
 
-bool ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
+void ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
 {
-    APP_LOGI("SRDM DeleteBundleInfo");
+    APP_LOGD("SRDM DeleteBundleInfo");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = innerServiceInfos_.find(bundleName);
     if (infoItem == innerServiceInfos_.end()) {
         APP_LOGE("SRDM inner service info not found by bundleName");
-        return false;
+        return;
     }
     innerServiceInfos_.erase(bundleName);
-    return true;
 }
 
 int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
     std::vector<ServiceInfo> &serviceInfos) const
 {
-    APP_LOGI("SRDM QueryServiceInfos");
+    APP_LOGD("SRDM QueryServiceInfos");
     ExtensionServiceType validType = GetExtensionServiceType(want, serviceType);
     if (validType != ExtensionServiceType::SHARE) {
         APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
@@ -136,7 +116,8 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
     } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
         if (infoItem == innerServiceInfos_.end()) {
-            return ERR_OK;
+            APP_LOGE("SRDM QueryServiceInfos, not found by bundleName.");
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         infoItem->second.FindServiceInfos(validType, serviceInfos);
     }
@@ -146,7 +127,7 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
 int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::string intentName,
     std::vector<IntentInfo> &intentInfos) const
 {
-    APP_LOGI("SRDM QueryIntentInfos");
+    APP_LOGD("SRDM QueryIntentInfos");
     if (intentName.empty()) {
         APP_LOGE("SRDM QueryIntentInfos, intentName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -161,7 +142,8 @@ int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::stri
     } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
         if (infoItem == innerServiceInfos_.end()) {
-            return ERR_OK;
+            APP_LOGE("SRDM QueryIntentInfos, not found by bundleName.");
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         infoItem->second.FindIntentInfos(intentName, intentInfos);
     }

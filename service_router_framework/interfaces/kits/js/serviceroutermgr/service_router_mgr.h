@@ -13,14 +13,14 @@
  * limitations under the License.
  */
 
-#ifndef KITS_SRMS_SERVICE_ROUTER_MGR_H
-#define KITS_SRMS_SERVICE_ROUTER_MGR_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_KITS_JS_SERVICE_ROUTER_MGR_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_KITS_JS_SERVICE_ROUTER_MGR_H
 
-#include "service_info.h"
 #include "base_cb_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "service_info.h"
 #include "want.h"
 
 namespace OHOS {
@@ -36,4 +36,4 @@ struct ServiceInfosCallbackInfo : public BaseCallbackInfo {
 napi_value QueryServiceInfos(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif /* KITS_SRMS_SERVICE_ROUTER_MGR_H */
+#endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_KITS_JS_SERVICE_ROUTER_MGR_H

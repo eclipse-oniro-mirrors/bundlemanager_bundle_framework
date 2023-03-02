@@ -13,14 +13,15 @@
  * limitations under the License.
  */
 
-#ifndef KITS_SRMS_SERVICE_ROUTER_SA_HEALPER_H
-#define KITS_SRMS_SERVICE_ROUTER_SA_HEALPER_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_INCLUDE_SERVICE_ROUTER_SA_HEALPER_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_INCLUDE_SERVICE_ROUTER_SA_HEALPER_H
 
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 #include <singleton.h>
-#include "service_router_mgr_interface.h"
+
 #include "service_router_death_recipient.h"
+#include "service_router_mgr_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -61,5 +62,4 @@ private:
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif // #define KITS_SRMS_SERVICE_ROUTER_SA_HEALPER_H
-
+#endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_INCLUDE_SERVICE_ROUTER_SA_HEALPER_H

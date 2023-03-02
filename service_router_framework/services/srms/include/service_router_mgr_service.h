@@ -13,17 +13,16 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_SRMS_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H
-#define FOUNDATION_APPEXECFWK_SERVICES_SRMS_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H
 
-
+#include "event_runner.h"
+#include "event_handler.h"
 #include "service_info.h"
 #include "service_router_mgr_stub.h"
 #include "sr_common_event_subscriber.h"
-#include "want.h"
 #include "system_ability.h"
-#include "event_runner.h"
-#include "event_handler.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -91,4 +90,4 @@ private:
 };
 }  // namespace AAFwk
 }  // namespace OHOS
-#endif // FOUNDATION_APPEXECFWK_SERVICES_SRMS_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H
+#endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_MGR_SERVICE_H

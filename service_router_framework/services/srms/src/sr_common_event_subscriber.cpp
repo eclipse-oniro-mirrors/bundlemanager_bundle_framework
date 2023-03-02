@@ -15,21 +15,21 @@
 
 #include "app_log_wrapper.h"
 #include "common_event_support.h"
-#include "want.h"
 #include "service_router_data_mgr.h"
 #include "sr_common_event_subscriber.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 SrCommonEventSubscriber::SrCommonEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
-    APP_LOGI("SrCommonEventSubscriber created");
+    APP_LOGD("SrCommonEventSubscriber created");
 }
 
 SrCommonEventSubscriber::~SrCommonEventSubscriber()
 {
-    APP_LOGI("SrCommonEventSubscriber destroyed");
+    APP_LOGD("SrCommonEventSubscriber destroyed");
 }
 
 void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
@@ -37,7 +37,6 @@ void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     std::string bundleName = want.GetElement().GetBundleName();
-    
     if (action.empty() || eventHandler_ == nullptr) {
         APP_LOGE("%{public}s failed, empty action: %{public}s, or invalid event handler", __func__, action.c_str());
         return;

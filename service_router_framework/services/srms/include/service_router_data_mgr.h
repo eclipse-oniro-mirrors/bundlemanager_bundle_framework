@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_SERVICE_ROUTER_INCLUDE_SERVICE_ROUTER_DATA_MGR_H
-#define FOUNDATION_APPEXECFWK_SERVICES_SERVICE_ROUTER_INCLUDE_SERVICE_ROUTER_DATA_MGR_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_DATA_MGR_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_DATA_MGR_H
 
 #include <map>
 #include <mutex>
@@ -25,9 +25,9 @@
 #include "bundle_info.h"
 #include "bundle_mgr_interface.h"
 #include "inner_service_info.h"
-#include "want.h"
-#include "uri.h"
 #include "service_info.h"
+#include "uri.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,8 +36,8 @@ public:
     using Want = OHOS::AAFwk::Want;
     using Uri = OHOS::Uri;
 
-    ServiceRouterDataMgr();
-    virtual ~ServiceRouterDataMgr();
+    ServiceRouterDataMgr() = default;
+    ~ServiceRouterDataMgr() = default;
 
     /**
      * @brief Load all installed bundle infos.
@@ -55,16 +55,14 @@ public:
     /**
      * @brief update BundleInfo.
      * @param bundleInfo Indicates the bundle info.
-     * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool UpdateBundleInfo(const BundleInfo &bundleInfo);
+    void UpdateBundleInfo(const BundleInfo &bundleInfo);
 
     /**
      * @brief Delete bundle info from an exist BundleInfo.
      * @param bundleName Indicates the bundle name.
-     * @return Returns true if this function is successfully called; returns false otherwise.
      */
-    bool DeleteBundleInfo(const std::string &bundleName);
+    void DeleteBundleInfo(const std::string &bundleName);
 
     /**
      * @brief Query a ServiceInfo of list by the given Want.
@@ -87,8 +85,6 @@ public:
         std::vector<IntentInfo> &intentInfos) const;
 
 private:
-    InnerServiceInfo GetInnerServiceInfo(const std::string bundleName);
-
     ExtensionServiceType GetExtensionServiceType(const Want &want, const ExtensionServiceType &serviceType) const;
 
 private:
@@ -97,4 +93,4 @@ private:
 };
 } // namespace AppExecFwk
 } // namespace OHOS
-#endif // FOUNDATION_APPEXECFWK_SERVICES_SERVICE_ROUTER_INCLUDE_SERVICE_ROUTER_DATA_MGR_H
+#endif // FFOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_DATA_MGR_H

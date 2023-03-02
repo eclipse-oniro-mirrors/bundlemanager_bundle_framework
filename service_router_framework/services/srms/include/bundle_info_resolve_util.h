@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_SR_INCLUDE_SERVICE_ROUTER_UTIL_H
-#define FOUNDATION_APPEXECFWK_SERVICES_SR_INCLUDE_SERVICE_ROUTER_UTIL_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_UTIL_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_UTIL_H
 
 #include <string>
 #include <vector>
 
-#include "bundle_info.h"
-#include "service_info.h"
 #include "bundle_constants.h"
+#include "bundle_info.h"
 #include "inner_service_info.h"
-#include "string_ex.h"
+#include "service_info.h"
 #include "sr_constants.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -205,4 +205,4 @@ static std::string GetExtAbilityMetadataValue(const ExtensionAbilityInfo &extAbi
 }; // namespace ServiceRouterUtil
 } // namespace AppExecFwk
 } // namespace OHOS
-#endif // FOUNDATION_APPEXECFWK_SERVICES_SR_INCLUDE_SERVICE_ROUTER_UTIL_H
+#endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_SERVICE_ROUTER_UTIL_H

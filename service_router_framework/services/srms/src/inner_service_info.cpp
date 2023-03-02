@@ -17,16 +17,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-InnerServiceInfo::InnerServiceInfo()
-{
-}
-
-InnerServiceInfo::~InnerServiceInfo()
-{
-    serviceInfos_.clear();
-    intentInfos_.clear();
-}
-
 void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType,
     std::vector<ServiceInfo> &serviceInfos) const
 {

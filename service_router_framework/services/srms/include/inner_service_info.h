@@ -13,22 +13,22 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H
+#ifndef FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_INNER_BUNDLE_INFO_H
+#define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_INNER_BUNDLE_INFO_H
 
 #include "app_log_wrapper.h"
+#include "application_info.h"
+#include "bundle_info.h"
 #include "nocopyable.h"
 #include "service_info.h"
 #include "want.h"
-#include "bundle_info.h"
-#include "application_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class InnerServiceInfo {
 public:
-    InnerServiceInfo();
-    ~InnerServiceInfo();
+    InnerServiceInfo() = default;
+    ~InnerServiceInfo() = default;
     /**
      * @brief Find serviceInfo of list by service type.
      * @param serviceType Indicates the service type.
@@ -80,14 +80,12 @@ public:
      */
     void UpdateServiceInfos(const std::vector<ServiceInfo> &serviceInfos)
     {
-        serviceInfos_.clear();
         if (serviceInfos.size() == 0) {
             APP_LOGW("updateServiceInfos, serviceInfos.size is 0");
+            serviceInfos_.clear();
             return;
         }
-        for (const auto &serviceInfo : serviceInfos) {
-            serviceInfos_.emplace_back(serviceInfo);
-        }
+        serviceInfos_.assign(serviceInfos.begin(), serviceInfos.end());
     }
 
     /**
@@ -97,24 +95,12 @@ public:
      */
     void UpdateIntentInfos(const std::vector<IntentInfo> &intentInfos)
     {
-        intentInfos_.clear();
         if (intentInfos.size() == 0) {
             APP_LOGW("updateIntentInfos, intentInfos.size is 0");
+            intentInfos_.clear();
             return;
         }
-        for (const auto &intentInfo : intentInfos) {
-            intentInfos_.emplace_back(intentInfo);
-        }
-    }
-
-    /**
-     * @brief clear inner bundle info.
-     * @return
-     */
-    void lear()
-    {
-        serviceInfos_.clear();
-        intentInfos_.clear();
+        intentInfos_.assign(intentInfos.begin(), intentInfos.end());
     }
 
     /**
@@ -124,15 +110,6 @@ public:
     const AppInfo GetAppInfo() const
     {
         return appInfo_;
-    }
-
-    /**
-     * @brief Get application name.
-     * @return Return application name
-     */
-    std::string GetApplicationName() const
-    {
-        return appInfo_.name;
     }
 
     /**
@@ -150,4 +127,4 @@ private:
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INNER_BUNDLE_INFO_H
+#endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_INNER_BUNDLE_INFO_H

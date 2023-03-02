@@ -115,7 +115,7 @@ int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessagePar
 
 bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permissionName)
 {
-    APP_LOGI("VerifyCallingPermission permission %{public}s", permissionName.c_str());
+    APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
     OHOS::Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     OHOS::Security::AccessToken::ATokenTypeEnum tokenType =
         OHOS::Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -132,7 +132,7 @@ bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permission
 
 bool ServiceRouterMgrStub::VerifySystemApp()
 {
-    APP_LOGI("verifying systemApp");
+    APP_LOGD("verifying systemApp");
     Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);

@@ -22,13 +22,13 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "if_system_ability_manager.h"
-#include "service_router_data_mgr.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "service_router_data_mgr.h"
 #include "service_router_mgr_service.h"
 #include "string_ex.h"
-#include "system_ability_definition.h"
 #include "sr_samgr_helper.h"
+#include "system_ability_definition.h"
 #include "want.h"
 
 namespace OHOS {
@@ -38,7 +38,6 @@ const std::string NAME_SERVICE_ROUTER_MGR_SERVICE = "ServiceRouterMgrService";
 const std::string TASK_NAME = "ServiceRouterUnloadTask";
 const int64_t UNLOAD_DELAY_TIME = 90000;
 }
-
 
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<ServiceRouterMgrService>::GetInstance().get());
@@ -108,9 +107,9 @@ void ServiceRouterMgrService::DelayUnloadTask()
 
 bool ServiceRouterMgrService::LoadAllBundleInfos()
 {
-    APP_LOGI("LoadAllBundleInfos start");
+    APP_LOGD("LoadAllBundleInfos start");
     ServiceRouterDataMgr::GetInstance().LoadAllBundleInfos();
-    APP_LOGI("LoadAllBundleInfos end");
+    APP_LOGD("LoadAllBundleInfos end");
     return true;
 }
 
@@ -156,7 +155,7 @@ bool ServiceRouterMgrService::ServiceRouterMgrService::SubscribeCommonEvent()
 int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
     std::vector<ServiceInfo> &serviceInfos)
 {
-    APP_LOGI("%{public}s coldStart:", __func__);
+    APP_LOGD("%{public}s coldStart:", __func__);
     DelayUnloadTask();
     return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);
 }
@@ -164,7 +163,7 @@ int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const Exten
 int32_t ServiceRouterMgrService::QueryIntentInfos(const Want &want, const std::string intentName,
     std::vector<IntentInfo> &intentInfos)
 {
-    APP_LOGI("%{public}s coldStart:", __func__);
+    APP_LOGD("%{public}s coldStart:", __func__);
     DelayUnloadTask();
     return ServiceRouterDataMgr::GetInstance().QueryIntentInfos(want, intentName, intentInfos);
 }
