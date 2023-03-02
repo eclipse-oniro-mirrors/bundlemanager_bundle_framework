@@ -1944,6 +1944,19 @@ public:
         return dependenciesList;
     }
 
+    std::vector<std::string> GetAllHspModuleNamesForVersion(uint32_t versionCode) const
+    {
+        std::vector<std::string> hspModuleNames;
+        for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+            for (const auto &item : modules) {
+                if (item.versionCode == versionCode) {
+                    hspModuleNames.emplace_back(moduleName);
+                }
+            }
+        }
+        return hspModuleNames;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
@@ -2001,6 +2014,8 @@ public:
     void SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath);
     bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
     bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
+    std::vector<uint32_t> GetAllHspVersion() const;
+    void DeleteHspModuleByVersion(int32_t versionCode);
 
 private:
     bool IsExistLauncherAbility() const;

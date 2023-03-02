@@ -123,6 +123,7 @@ const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_PACKAGE_MODULE_INFO = "innerSharedPackageModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
+const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -3638,6 +3639,36 @@ int32_t InnerBundleInfo::GetApplyQuickFixFrequency() const
 void InnerBundleInfo::ResetApplyQuickFixFrequency()
 {
     applyQuickFixFrequency_ = 0;
+}
+
+std::vector<uint32_t> InnerBundleInfo::GetAllHspVersion() const
+{
+    std::vector<uint32_t> versionCodes;
+    for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+        for (const auto &module : modules) {
+            if (std::find(versionCodes.begin(), versionCodes.end(), module.versionCode) == versionCodes.end()) {
+                versionCodes.emplace_back(module.versionCode);
+            }
+        }
+    }
+    return versionCodes;
+}
+
+void InnerBundleInfo::DeleteHspModuleByVersion(int32_t versionCode)
+{
+    for (auto modulesIt = innerSharedPackageModuleInfos_.begin(); modulesIt != innerSharedPackageModuleInfos_.end();) {
+        if (modulesIt->second.size() == SINGLE_HSP_VERSION &&
+            modulesIt->second.front().versionCode == static_cast<uint32_t>(versionCode)) {
+            modulesIt = innerSharedPackageModuleInfos_.erase(modulesIt);
+        } else {
+            modulesIt->second.erase(
+                std::remove_if(modulesIt->second.begin(), modulesIt->second.end(),
+                    [versionCode] (InnerModuleInfo &module) {
+                        return module.versionCode == static_cast<uint32_t>(versionCode);
+                    }));
+            ++modulesIt;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

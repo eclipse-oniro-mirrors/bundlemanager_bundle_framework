@@ -321,6 +321,10 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
             ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST,
+            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST},
+        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_HARE_APP_LIBRARY_IS_RELIED,
+            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED},
     };
 }
 
@@ -830,7 +834,6 @@ void UninstallByUninstallParamExecuter(napi_env env, void* data)
     }
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     iBundleInstaller->Uninstall(asyncCallbackInfo->uninstallParam, callback);
-    // do uninstall by uninstallparam
     installResult.resultMsg = callback->GetResultMsg();
     installResult.resultCode = callback->GetResultCode();
 }
