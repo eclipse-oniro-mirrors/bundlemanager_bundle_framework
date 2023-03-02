@@ -47,13 +47,11 @@ public:
 
     /**
      * @brief Update inner service info.
-     * @param bundelInfo Indicates the BundleInfo object to be update.
      * @param intentInfos Indicates the IntentInfos object to be update.
      * @param serviceInfos Indicates the ServiceInfos to be update.
      * @return
      */
-    void UpdateInnerServiceInfo(const BundleInfo &bundleInfo, std::vector<IntentInfo> &intentInfos,
-        std::vector<ServiceInfo> &serviceInfos)
+    void UpdateInnerServiceInfo(std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos)
     {
         UpdateIntentInfos(intentInfos);
         UpdateServiceInfos(serviceInfos);
@@ -66,7 +64,6 @@ public:
      */
     void UpdateAppInfo(const ApplicationInfo &applicationInfo)
     {
-        appInfo_.name = applicationInfo.name;
         appInfo_.bundleName = applicationInfo.bundleName;
         appInfo_.iconId = applicationInfo.iconId;
         appInfo_.labelId = applicationInfo.labelId;

@@ -59,7 +59,7 @@ public:
 
     enum Message : uint32_t {
         QUERY_SERVICE_INFOS = 0,
-        QUERY_INTENTINFOS,
+        QUERY_INTENTINFOS = 1,
     };
 };
 }  // namespace AAFwk

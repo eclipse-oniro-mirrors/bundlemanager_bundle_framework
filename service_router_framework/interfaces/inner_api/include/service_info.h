@@ -35,7 +35,6 @@ enum class ComponentType {
 };
 
 struct AppInfo : public Parcelable {
-    std::string name;
     std::string bundleName;
     int32_t iconId = 0;
     int32_t labelId = 0;

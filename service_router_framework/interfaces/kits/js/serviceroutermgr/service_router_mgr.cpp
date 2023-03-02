@@ -16,21 +16,21 @@
 
 #include <string>
 
+#include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
-#include "service_router_mgr_interface.h"
-#include "service_router_mgr_proxy.h"
-#include "service_router_mgr_helper.h"
+#include "common_func.h"
 #include "bundle_errors.h"
 #include "business_error.h"
-#include "common_func.h"
 #include "ipc_skeleton.h"
+#include "iservice_registry.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
-#include "appexecfwk_errors.h"
-#include "iservice_registry.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "service_router_mgr_helper.h"
+#include "service_router_mgr_interface.h"
+#include "service_router_mgr_proxy.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -158,7 +158,7 @@ static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
 
 void QueryServiceInfosExec(napi_env env, void *data)
 {
-    APP_LOGE("QueryServiceInfosExec start");
+    APP_LOGD("QueryServiceInfosExec start");
     ServiceInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<ServiceInfosCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
@@ -169,7 +169,7 @@ void QueryServiceInfosExec(napi_env env, void *data)
 
 void QueryServiceInfosComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGE("QueryServiceInfosComplete start");
+    APP_LOGD("QueryServiceInfosComplete start");
     ServiceInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<ServiceInfosCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
