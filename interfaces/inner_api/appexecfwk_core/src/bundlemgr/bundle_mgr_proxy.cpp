@@ -3207,7 +3207,7 @@ ErrCode BundleMgrProxy::GetBaseSharedPackageInfos(const std::string &bundleName,
         data, baseSharedPackageInfos);
 }
 
-ErrCode BundleMgrProxy::GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles)
+ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetAllSharedBundleInfo");
@@ -3217,11 +3217,30 @@ ErrCode BundleMgrProxy::GetAllSharedBundleInfo(int32_t userId, std::vector<Share
         APP_LOGE("fail to GetAllSharedBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAllSharedBundleInfo due to write userId fail");
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO,
+        data, sharedBundles);
+}
+
+ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSharedBundleInfo");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO,
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO,
         data, sharedBundles);
 }
 

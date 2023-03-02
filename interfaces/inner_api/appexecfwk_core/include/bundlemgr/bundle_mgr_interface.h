@@ -1114,7 +1114,13 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles)
+    virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+        std::vector<SharedBundleInfo> &sharedBundles)
     {
         return ERR_OK;
     }
@@ -1238,6 +1244,7 @@ public:
         GET_PROVISION_METADATA,
         GET_BASE_SHARED_PACKAGE_INFOS,
         GET_ALL_SHARED_BUNDLE_INFO,
+        GET_SHARED_BUNDLE_INFO,
         GET_SHARED_BUNDLE_INFO_BY_SELF,
         GET_SHARED_DEPENDENCIES,
     };
