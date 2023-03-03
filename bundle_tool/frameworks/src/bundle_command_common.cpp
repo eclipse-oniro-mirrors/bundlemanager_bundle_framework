@@ -479,11 +479,15 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED,
-        "error: disallowed to share library",
+        "error: disallowed to share library without AllowAppShareLibrary.",
     },
     {
         IStatusReceiver::ERR_INSTALL_COMPATIBLE_POLICY_NOT_SAME,
-        "error: compatible policy not same",
+        "error: compatible policy not same.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_FILE_IS_SHARED_LIBRARY,
+        "error: disallowed to install cross-app shared library.",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR,

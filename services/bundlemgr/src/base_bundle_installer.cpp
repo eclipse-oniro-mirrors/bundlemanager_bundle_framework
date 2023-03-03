@@ -2737,6 +2737,13 @@ ErrCode BaseBundleInstaller::CheckHapHashParams(
 
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    for (const auto &info : infos) {
+        if (info.second.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGE("installing cross-app shared library");
+            return ERR_APPEXECFWK_INSTALL_FILE_IS_SHARED_LIBRARY;
+        }
+    }
+
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         return ret;
