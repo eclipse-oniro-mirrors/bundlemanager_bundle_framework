@@ -445,29 +445,6 @@ void BundleMgrService::NotifyBundleScanStatus()
     }
 }
 
-void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
-{
-    APP_LOGD("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
-#ifdef DEVICE_MANAGER_ENABLE
-    if (deviceManager_) {
-        deviceManager_->OnAddSystemAbility(systemAbilityId, deviceId);
-    }
-#endif
-    if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
-        NotifyBundleScanStatus();
-    }
-}
-
-void BundleMgrService::OnRemoveSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
-{
-    APP_LOGD("OnRemoveSystemAbility systemAbilityId:%{public}d removed!", systemAbilityId);
-#ifdef DEVICE_MANAGER_ENABLE
-    if (deviceManager_) {
-        deviceManager_->OnRemoveSystemAbility(systemAbilityId, deviceId);
-    }
-#endif
-}
-
 bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string& result) const
 {
     if (hidumpHelper_ && hidumpHelper_->Dump(args, result)) {
