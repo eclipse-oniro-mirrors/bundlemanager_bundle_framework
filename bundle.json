@@ -82,7 +82,9 @@
         },
         "build": {
             "sub_component": [
-                "//foundation/bundlemanager/bundle_framework:bms_target"
+                "//foundation/bundlemanager/bundle_framework:bms_target",
+                "//foundation/bundlemanager/bundle_framework/service_router_framework:srms_target",
+                "//foundation/bundlemanager/bundle_framework/service_router_framework:jsapi_target"
             ],
             "inner_kits": [
                 {
@@ -118,7 +120,18 @@
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:appexecfwk_core"
-                  }
+                  },
+                  {
+                    "header": {
+                        "header_base": "//foundation/bundlemanager/bundle_framework/service_router_framework/interfaces/inner_api/include",
+                        "header_files": [
+                            "service_info.h",
+                            "service_router_mgr_interface.h",
+                            "service_router_mgr_proxy.h"
+                        ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/service_router_framework/interfaces/inner_api:srms_fwk"
+                }
             ],
             "test": [
                 "//foundation/bundlemanager/bundle_framework:test_target"
