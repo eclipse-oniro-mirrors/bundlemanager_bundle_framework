@@ -119,7 +119,14 @@ int BmsInstallDaemonTest::CreateBundleDataDir(const std::string &bundleDataDir,
     if (!service_->IsServiceReady()) {
         service_->Start();
     }
-    return InstalldClient::GetInstance()->CreateBundleDataDir(bundleDataDir, userid, uid, gid, apl);
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = bundleDataDir;
+    createDirParam.userId = userid;
+    createDirParam.uid = uid;
+    createDirParam.gid = gid;
+    createDirParam.apl = apl;
+    createDirParam.isPreInstallApp = false;
+    return InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
 }
 
 int BmsInstallDaemonTest::RemoveBundleDir(const std::string &bundleDir) const
@@ -535,11 +542,11 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0100, Function | SmallTest | Level
         service->Start();
     }
     std::string TEST_STRING = "test.string";
-    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING);
+    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "");
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

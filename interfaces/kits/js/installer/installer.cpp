@@ -56,6 +56,7 @@ const std::string HASH_VALUE = "hashValue";
 const std::string HASH_PARAMS = "hashParams";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string VERSION_CODE = "versionCode";
+const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
@@ -288,6 +289,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_DEVICE_TYPE_NOT_SUPPORTED, ERROR_INSTALL_PARSE_FAILED },
         { IStatusReceiver::ERR_INSTALL_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR, ERROR_INSTALL_PARSE_FAILED },
         { IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST, ERROR_INSTALL_DEPENDENT_MODULE_NOT_EXIST },
+        { IStatusReceiver::ERR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED, ERROR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED },
+        { IStatusReceiver::ERR_INSTALL_COMPATIBLE_POLICY_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR, ERROR_BUNDLE_SERVICE_EXCEPTION },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME, ERROR_BUNDLE_NOT_EXIST },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_MODULE_NAME, ERROR_MODULE_NOT_EXIST},
@@ -318,6 +321,10 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME,
             ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
         { IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR, ERROR_BUNDLE_SERVICE_EXCEPTION },
+        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST,
+            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST},
+        { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_HARE_APP_LIBRARY_IS_RELIED,
+            ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED},
     };
 }
 
@@ -544,12 +551,37 @@ static bool ParseCrowdtestDeadline(napi_env env, napi_value args, int64_t &crowd
     return true;
 }
 
+static bool ParseSharedBundleDirPaths(napi_env env, napi_value args, std::vector<std::string> &sharedBundleDirPaths)
+{
+    APP_LOGD("start to parse sharedBundleDirPaths");
+    std::vector<napi_value> valueVec;
+    bool res = CommonFunc::ParsePropertyArray(env, args, SHARED_BUNDLE_DIR_PATHS, valueVec);
+    if (!res) {
+        APP_LOGE("parse sharedBundleDirPaths failed");
+        return res;
+    }
+    if (valueVec.empty()) {
+        APP_LOGD("sharedBundleDirPaths is empty");
+        return true;
+    }
+    for (const auto &value : valueVec) {
+        std::string path;
+        if (!CommonFunc::ParseString(env, value, path)) {
+            APP_LOGE("parse sharedBundleDirPaths element failed");
+            return false;
+        }
+        sharedBundleDirPaths.emplace_back(path);
+    }
+    return true;
+}
+
 static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
     if (!ParseUserId(env, args, installParam.userId) || !ParseInstallFlag(env, args, installParam.installFlag) ||
         !ParseIsKeepData(env, args, installParam.isKeepData) ||
         !ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline) ||
-        !ParseHashParams(env, args, installParam.hashParams)) {
+        !ParseHashParams(env, args, installParam.hashParams) ||
+        !ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
         APP_LOGE("ParseInstallParam failed");
         return false;
     }
@@ -587,7 +619,7 @@ void InstallExecuter(napi_env env, void *data)
     }
     const std::vector<std::string> bundleFilePath = asyncCallbackInfo->hapFiles;
     InstallResult &installResult = asyncCallbackInfo->installResult;
-    if (bundleFilePath.empty()) {
+    if (bundleFilePath.empty() && asyncCallbackInfo->installParam.sharedBundleDirPaths.empty()) {
         installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID);
         return;
     }
@@ -802,7 +834,6 @@ void UninstallByUninstallParamExecuter(napi_env env, void* data)
     }
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
     iBundleInstaller->Uninstall(asyncCallbackInfo->uninstallParam, callback);
-    // do uninstall by uninstallparam
     installResult.resultMsg = callback->GetResultMsg();
     installResult.resultCode = callback->GetResultCode();
 }

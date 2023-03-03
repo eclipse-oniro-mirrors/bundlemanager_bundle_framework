@@ -46,6 +46,7 @@ const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried"
 const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
+const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 }
 
 ErrCode PreBundleProfile::TransformTo(
@@ -307,6 +308,14 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_APP_SHARE_LIBRARY,
+            preBundleConfigInfo.appShareLibrary,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
         if (array.find(ALLOW_APP_DATA_NOT_CLEARED) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_DATA_NOT_CLEARED);
             preBundleConfigInfo.userDataClearable = !preBundleConfigInfo.userDataClearable;
@@ -328,6 +337,9 @@ ErrCode PreBundleProfile::TransformTo(
         }
         if (array.find(ALLOW_FORM_VISIBLE_NOTIFY) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_FORM_VISIBLE_NOTIFY);
+        }
+        if (array.find(ALLOW_APP_SHARE_LIBRARY) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_SHARE_LIBRARY);
         }
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundlename must exist, and it is empty here");

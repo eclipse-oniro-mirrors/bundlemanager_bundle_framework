@@ -47,7 +47,7 @@ bool AppProvisionInfoManager::GetAppProvisionInfo(const std::string &bundleName,
     return AppProvisionInfoManagerDb_->GetAppProvisionInfo(bundleName, appProvisionInfo);
 }
 
-bool AppProvisionInfoManager::GetAllAppProvisionInfoBundleName(std::vector<std::string> &bundleNames)
+bool AppProvisionInfoManager::GetAllAppProvisionInfoBundleName(std::unordered_set<std::string> &bundleNames)
 {
     APP_LOGD("AppProvisionInfoManager::GetAllAppProvisionInfoBundleName");
     return AppProvisionInfoManagerDb_->GetAllAppProvisionInfoBundleName(bundleNames);

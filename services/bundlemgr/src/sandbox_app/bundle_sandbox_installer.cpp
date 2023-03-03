@@ -247,8 +247,14 @@ ErrCode BundleSandboxInstaller::CreateSandboxDataDir(
 {
     APP_LOGD("CreateSandboxDataDir %{public}s _ %{public}d begin", info.GetBundleName().c_str(), appIndex);
     std::string innerDataDir = info.GetBundleName() + Constants::FILE_UNDERLINE + std::to_string(appIndex);
-    auto result = InstalldClient::GetInstance()->CreateBundleDataDir(innerDataDir, userId_, uid, uid,
-        info.GetAppPrivilegeLevel());
+    CreateDirParam createDirParam;
+    createDirParam.bundleName = innerDataDir;
+    createDirParam.userId = userId_;
+    createDirParam.uid = uid;
+    createDirParam.gid = uid;
+    createDirParam.apl = info.GetAppPrivilegeLevel();
+    createDirParam.isPreInstallApp = info.IsPreInstallApp();
+    auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
         APP_LOGE("fail to create sandbox data dir, error is %{public}d", result);
         return result;

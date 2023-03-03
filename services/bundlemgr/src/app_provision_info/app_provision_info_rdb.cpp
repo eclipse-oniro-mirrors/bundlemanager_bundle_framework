@@ -117,7 +117,7 @@ bool AppProvisionInfoManagerRdb::GetAppProvisionInfo(const std::string &bundleNa
     return ConvertToAppProvision(absSharedResultSet, appProvisionInfo);
 }
 
-bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::vector<std::string> &bundleNames)
+bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::unordered_set<std::string> &bundleNames)
 {
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
@@ -133,7 +133,7 @@ bool AppProvisionInfoManagerRdb::GetAllAppProvisionInfoBundleName(std::vector<st
         std::string name;
         ret = absSharedResultSet->GetString(INDEX_BUNDLE_NAME, name);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString bundleName failed, ret: %{public}d");
-        bundleNames.push_back(name);
+        bundleNames.insert(name);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return true;
 }

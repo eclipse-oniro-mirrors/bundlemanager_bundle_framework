@@ -70,6 +70,47 @@ int BundleStreamInstallerProxy::CreateStream(const std::string &hapName)
     return fd;
 }
 
+int BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
+{
+    APP_LOGD("bundle stream installer proxy create shared bundle stream begin");
+    int fd = -1;
+    if (hspName.empty()) {
+        APP_LOGE("BundleStreamInstallerProxy create shared bundle stream faile due to empty hspName");
+        return fd;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(BundleStreamInstallerProxy::GetDescriptor())) {
+        APP_LOGE("fail to CreateSharedBundleStream due to write interface token fail");
+        return fd;
+    }
+    if (!data.WriteString(hspName)) {
+        APP_LOGE("fail to CreateSharedBundleStream due to write hspName fail");
+        return fd;
+    }
+    if (!data.WriteUint32(index)) {
+        APP_LOGE("fail to CreateSharedBundleStream due to write sharedPacakgeIdx fail");
+        return fd;
+    }
+
+    MessageParcel reply;
+    if (!SendStreamInstallRequest(IBundleStreamInstaller::StreamMessage::CREATE_SHARED_BUNDLE_STREAM, data, reply)) {
+        APP_LOGE("fail to SendStreamInstallRequest");
+        return fd;
+    }
+
+    int sharedFd = reply.ReadFileDescriptor();
+    if (sharedFd < 0) {
+        APP_LOGE("fail to CreateSharedBundleStream");
+        return fd;
+    }
+
+    fd = dup(sharedFd);
+    close(sharedFd);
+
+    APP_LOGD("bundle stream installer proxy create shared bundle stream end");
+    return fd;
+}
+
 bool BundleStreamInstallerProxy::Install()
 {
     APP_LOGD("bundle stream installer proxy install begin");

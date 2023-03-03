@@ -344,6 +344,33 @@ bool BundleDataMgr::RemoveModuleInfo(
     return true;
 }
 
+bool BundleDataMgr::RemoveHspModuleByVersionCode(int32_t versionCode, InnerBundleInfo &info)
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::string bundleName = info.GetBundleName();
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundle info not exist");
+        return false;
+    }
+    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    auto statusItem = installStates_.find(bundleName);
+    if (statusItem == installStates_.end()) {
+        APP_LOGE("save info fail, app:%{public}s is not updated", bundleName.c_str());
+        return false;
+    }
+    if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
+        info.DeleteHspModuleByVersion(versionCode);
+        info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
+        if (dataStorage_->SaveStorageBundleInfo(info)) {
+            APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
+            bundleInfos_.at(bundleName) = info;
+            return true;
+        }
+    }
+    return true;
+}
+
 bool BundleDataMgr::AddInnerBundleUserInfo(
     const std::string &bundleName, const InnerBundleUserInfo& newUserInfo)
 {
@@ -1545,7 +1572,8 @@ bool BundleDataMgr::GetBaseSharedPackageInfo(const Dependency &dependency, int32
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     InnerBundleUserInfo innerBundleUserInfo;
-    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
+        !innerBundleInfo.GetInnerBundleUserInfo(Constants::DEFAULT_USERID, innerBundleUserInfo)) {
         APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
         return false;
     }
@@ -1703,6 +1731,11 @@ bool BundleDataMgr::GetBundleInfos(
     bool find = false;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         if (CheckInnerBundleInfoWithFlags(innerBundleInfo, flags, responseUserId) != ERR_OK) {
             continue;
@@ -1757,6 +1790,10 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
+        if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
+            continue;
+        }
         BundleInfo bundleInfo;
         info.GetBundleInfo(flags, bundleInfo, Constants::ALL_USERID);
         bundleInfos.emplace_back(bundleInfo);
@@ -1786,6 +1823,11 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
+        if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
+            continue;
+        }
+
         int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
         auto flag = GET_BASIC_APPLICATION_INFO;
         if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE))
@@ -1818,6 +1860,10 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         const InnerBundleInfo &info = item.second;
         if (info.IsDisabled()) {
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
+            continue;
+        }
+        if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
             continue;
         }
         BundleInfo bundleInfo;
@@ -4491,5 +4537,89 @@ ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32
     // Reserved interface
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
+{
+    APP_LOGD("GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("GetSharedBundleInfoBySelf failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
+    APP_LOGD("GetSharedBundleInfoBySelf(%{public}s) successfully)", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+    std::vector<Dependency> &dependencies)
+{
+    APP_LOGD("GetSharedDependencies bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("GetSharedDependencies failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = item->second;
+    innerBundleInfo.GetSharedDependencies(moduleName, dependencies);
+    APP_LOGD("GetSharedDependencies(bundle %{public}s, module %{public}s) successfully)",
+        bundleName.c_str(), moduleName.c_str());
+    return ERR_OK;
+}
+
+bool BundleDataMgr::CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::string hspBundleName = info.GetBundleName();
+    if (versionCode == Constants::ALL_VERSIONCODE) {
+        // uninstall hsp bundle, check other bundle denpendency
+        return CheckHspBundleIsRelied(hspBundleName);
+    }
+    std::vector<std::string> hspModules = info.GetAllHspModuleNamesForVersion(static_cast<uint32_t>(versionCode));
+    // check whether has higher version
+    std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
+    for (const auto &item : versionCodes) {
+        if (item > static_cast<uint32_t>(versionCode)) {
+            return false;
+        }
+    }
+    // check other bundle denpendency
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        if (bundleName == hspBundleName) {
+            continue;
+        }
+        std::vector<Dependency> dependencyList = innerBundleInfo.GetDependencies();
+        for (const auto &dependencyItem : dependencyList) {
+            if (dependencyItem.bundleName == hspBundleName &&
+                std::find(hspModules.begin(), hspModules.end(), dependencyItem.moduleName) != hspModules.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool BundleDataMgr::CheckHspBundleIsRelied(const std::string &hspBundleName) const
+{
+    for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
+        if (bundleName == hspBundleName) {
+            continue;
+        }
+        std::vector<Dependency> dependencyList = innerBundleInfo.GetDependencies();
+        for (const auto &dependencyItem : dependencyList) {
+            if (dependencyItem.bundleName == hspBundleName) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -59,15 +59,10 @@ public:
     virtual ErrCode RenameModuleDir(const std::string &oldPath, const std::string &newPath) override;
     /**
      * @brief Create a bundle data directory through a proxy object.
-     * @param bundleName Indicates bundleName to be set to the directory.
-     * @param userid Indicates userid to be set to the directory.
-     * @param uid Indicates uid to be set to the directory.
-     * @param gid Indicates gid to be set to the directory.
-     * @param apl Indicates apl to be set to the directory.
+     * @param createDirParam Indicates param to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDataDir(const std::string &bundleName, const int userid,
-        const int uid, const int gid, const std::string &apl) override;
+    virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirPara) override;
     /**
      * @brief Remove a bundle data directory through a proxy object.
      * @param bundleDir Indicates the bundle data directory path that to be created.
@@ -108,9 +103,11 @@ public:
      * @param dir Indicates the data dir.
      * @param bundleName Indicates the bundle name.
      * @param apl Indicates the apl type.
+     * @param isPreInstallApp Indicates the bundle install type.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
-    virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl) override;
+    virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+        bool isPreInstallApp) override;
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.

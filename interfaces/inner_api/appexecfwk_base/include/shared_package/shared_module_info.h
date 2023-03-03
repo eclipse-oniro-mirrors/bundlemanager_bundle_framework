@@ -13,33 +13,26 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_PACKAGE_INFO_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_PACKAGE_INFO_H
+#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_MODULE_INFO_H
+#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_MODULE_INFO_H
 
 #include <string>
-#include <vector>
 
 #include "parcel.h"
 
-#include "application_info.h"
-#include "hap_module_info.h"
-#include "message_parcel.h"
-
 namespace OHOS {
 namespace AppExecFwk {
-struct SharedPackageInfo : public Parcelable {
-    std::string bundleName;
-    std::string moduleName;
-    uint32_t versionCode;
+struct SharedModuleInfo : public Parcelable {
+    std::string name;
+    uint32_t versionCode = 0;
     std::string versionName;
     std::string description;
-    CompatiblePolicy compatiblePolicy;
-    std::vector<Dependency> dependencies;
+    int32_t descriptionId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static SharedPackageInfo *Unmarshalling(Parcel &parcel);
+    static SharedModuleInfo *Unmarshalling(Parcel &parcel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_BUNDLE_INFO_H
+#endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_MODULE_INFO_H

@@ -22,6 +22,7 @@
 #include "iremote_broker.h"
 
 #include "appexecfwk_errors.h"
+#include "ipc/create_dir_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
 #include "installd/installd_constants.h"
@@ -62,15 +63,10 @@ public:
     virtual ErrCode RenameModuleDir(const std::string &oldDir, const std::string &newDir) = 0;
     /**
      * @brief Create a bundle data directory.
-     * @param bundleName Indicates bundleName to be set to the directory.
-     * @param userid Indicates userid to be set to the directory.
-     * @param uid Indicates uid to be set to the directory.
-     * @param gid Indicates gid to be set to the directory.
-     * @param apl Indicates apl to be set to the directory.
+     * @param createDirParam Indicates param to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDataDir(const std::string &bundleName,
-        const int userid, const int uid, const int gid, const std::string &apl) = 0;
+    virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirParam) = 0;
     /**
      * @brief Remove a bundle data directory.
      * @param bundleDir Indicates the bundle data directory path that to be created.
@@ -111,9 +107,11 @@ public:
      * @param dir Indicates the data dir.
      * @param bundleName Indicates the bundle name.
      * @param apl Indicates the apl type.
+     * @param isPreInstallApp Indicates the bundle install type.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
-    virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl) = 0;
+    virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+        bool isPreInstallApp) = 0;
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.

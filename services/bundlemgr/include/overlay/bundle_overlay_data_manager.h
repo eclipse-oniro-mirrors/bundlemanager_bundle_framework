@@ -60,7 +60,7 @@ public:
         const std::string &targetBundleName, int32_t userId, InnerBundleInfo &innerBundleInfo);
 
     void ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
-        const std::string & modulePackage, InnerBundleInfo &oldInfo);
+        const std::string &modulePackage, InnerBundleInfo &oldInfo);
 
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
 

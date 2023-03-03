@@ -409,7 +409,7 @@ void OverlayDataMgr::RemoveOverlayModuleInfo(
 }
 
 void OverlayDataMgr::ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
-    const std::string & modulePackage, InnerBundleInfo &oldInfo)
+    const std::string &modulePackage, InnerBundleInfo &oldInfo)
 {
     for (const auto &moduleInfo : innerModuleInfos) {
         if (moduleInfo.second.targetModuleName == modulePackage) {
@@ -514,7 +514,7 @@ ErrCode OverlayDataMgr::SaveInternalOverlayModuleState(const OverlayModuleInfo &
         }
         auto &overlayStates = userInfo.bundleUserInfo.overlayModulesState;
         auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&overlayModuleInfo](const auto &item) {
-            if (item.find(overlayModuleInfo.moduleName) != std::string::npos) {
+            if (item.find(overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
                 return true;
             }
             return false;
@@ -522,7 +522,8 @@ ErrCode OverlayDataMgr::SaveInternalOverlayModuleState(const OverlayModuleInfo &
         if (iter != overlayStates.end()) {
             overlayStates.erase(iter);
         }
-        std::string overlayModuleState = overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
+        std::string overlayModuleState =
+            overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE + std::to_string(state);
         overlayStates.emplace_back(overlayModuleState);
         innerBundleInfo.AddInnerBundleUserInfo(userInfo);
     }
@@ -551,7 +552,7 @@ ErrCode OverlayDataMgr::SaveExternalOverlayModuleState(const OverlayModuleInfo &
     }
     auto &overlayStates = userInfo.bundleUserInfo.overlayModulesState;
     auto iter = std::find_if(overlayStates.begin(), overlayStates.end(), [&overlayModuleInfo](const auto &item) {
-        if (item.find(overlayModuleInfo.moduleName) != std::string::npos) {
+        if (item.find(overlayModuleInfo.moduleName + Constants::FILE_UNDERLINE) != std::string::npos) {
             return true;
         }
         return false;
@@ -841,7 +842,7 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID;
     }
     // 2. whether bundle is overlay bundle
-    if (innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+    if ((GetCallingBundleName() != bundleName) && innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
         APP_LOGE("current bundle %{public}s is non-overlay bundle", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE;
     }
@@ -861,7 +862,7 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
     // 4. set enable state
     auto &statesVec = userInfo.bundleUserInfo.overlayModulesState;
     for (auto &item : statesVec) {
-        if (item.find(moduleName) == std::string::npos) {
+        if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
             continue;
         }
         item = isEnabled ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
@@ -934,7 +935,6 @@ void OverlayDataMgr::AddOverlayModuleStates(const InnerBundleInfo &innerBundleIn
             bool isTargetModuleExisted = innerBundleInfo.FindModule(moduleInfo.targetModuleName);
             item = isTargetModuleExisted ? (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_ENABLE)) :
                 (moduleName + Constants::FILE_UNDERLINE + std::to_string(OVERLAY_INVALID));
-
         }
         if (innerBundleInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
             std::string targetBundleName = innerBundleInfo.GetTargetBundleName();

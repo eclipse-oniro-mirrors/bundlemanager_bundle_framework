@@ -114,6 +114,9 @@ private:
         MessageOption& option);
     ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
 
+    ErrCode WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
+        const std::string &path, uint32_t index);
+
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };
 }  // namespace AppExecFwk

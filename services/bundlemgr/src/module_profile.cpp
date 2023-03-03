@@ -84,7 +84,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "fileAccess",
     "thumbnail",
     "preview",
-    "print"
+    "print",
+    "ui"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -144,14 +145,6 @@ struct Metadata {
     std::string name;
     std::string value;
     std::string resource;
-};
-
-struct Preload {
-    std::string moduleName;
-};
-
-struct ModuleAtomicService {
-    std::vector<Profile::Preload> preloads;
 };
 
 struct AppShared {
@@ -574,8 +567,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         JsonType::BOOLEAN,
         false,
         parseResult,
-        ArrayType::NOT_ARRAY
-    );
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Extension &extension)

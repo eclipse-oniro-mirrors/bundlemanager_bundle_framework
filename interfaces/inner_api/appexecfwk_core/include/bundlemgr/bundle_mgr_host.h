@@ -617,7 +617,13 @@ private:
 
     ErrCode HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetAllSharedPackageInfo(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

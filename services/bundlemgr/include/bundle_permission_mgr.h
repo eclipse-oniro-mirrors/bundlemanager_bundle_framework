@@ -98,6 +98,8 @@ public:
 
     static int32_t GetHapApiVersion();
 
+    static bool IsNativeTokenType();
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

@@ -66,7 +66,8 @@ const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
 const std::string GET_BUNDLE_INFO_SYNC = "GetBundleInfoSync";
 const std::string GET_APPLICATION_INFO_SYNC = "GetApplicationInfoSync";
-const std::string GET_ALL_SHARED_PACKAGE_INFO = "GetAllSharedPackageInfo";
+const std::string GET_ALL_SHARED_BUNDLE_INFO = "GetAllSharedBundleInfo";
+const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
 } // namespace
@@ -2059,6 +2060,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::PRINT), &nPrint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PRINT", nPrint));
 
+    napi_value nUI;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::UI), &nUI));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI", nUI));
+
     napi_value nUnspecified;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
@@ -2745,45 +2751,44 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+static ErrCode InnerGetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    ErrCode ret = iBundleMgr->GetAllSharedPackageInfo(userId, sharedPackages);
+    ErrCode ret = iBundleMgr->GetAllSharedBundleInfo(sharedBundles);
     return CommonFunc::ConvertErrCode(ret);
 }
 
-void GetAllSharedPackageInfoExec(napi_env env, void *data)
+void GetAllSharedBundleInfoExec(napi_env env, void *data)
 {
-    SharedPackageCallbackInfo *asyncCallbackInfo = reinterpret_cast<SharedPackageCallbackInfo *>(data);
+    SharedBundleCallbackInfo *asyncCallbackInfo = reinterpret_cast<SharedBundleCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerGetAllSharedPackageInfo(
-        asyncCallbackInfo->userId, asyncCallbackInfo->sharedPackages);
+    asyncCallbackInfo->err = InnerGetAllSharedBundleInfo(asyncCallbackInfo->sharedBundles);
 }
 
-void GetAllSharedPackageInfoComplete(napi_env env, napi_status status, void *data)
+void GetAllSharedBundleInfoComplete(napi_env env, napi_status status, void *data)
 {
-    SharedPackageCallbackInfo *asyncCallbackInfo =
-        reinterpret_cast<SharedPackageCallbackInfo *>(data);
+    SharedBundleCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SharedBundleCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    std::unique_ptr<SharedPackageCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertAllSharedPackageInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->sharedPackages);
+        CommonFunc::ConvertAllSharedBundleInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->sharedBundles);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_ALL_SHARED_PACKAGE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            GET_ALL_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -2800,22 +2805,21 @@ void GetAllSharedPackageInfoComplete(napi_env env, napi_status status, void *dat
     }
 }
 
-napi_value GetAllSharedPackageInfo(napi_env env, napi_callback_info info)
+napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI_GetAllSharedPackageInfo called");
+    APP_LOGD("NAPI_GetAllSharedBundleInfo called");
     NapiArg args(env, info);
-    SharedPackageCallbackInfo *asyncCallbackInfo = new (std::nothrow) SharedPackageCallbackInfo(env);
+    SharedBundleCallbackInfo *asyncCallbackInfo = new (std::nothrow) SharedBundleCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null.");
         return nullptr;
     }
-    std::unique_ptr<SharedPackageCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_TWO)) {
+    std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() < ARGS_SIZE_ZERO) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -2824,17 +2828,7 @@ napi_value GetAllSharedPackageInfo(napi_env env, napi_callback_info info)
     for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
-            }
-            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
-            }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_function)) {
+        if ((i == ARGS_POS_ZERO) && (valueType == napi_function)) {
             NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             break;
         } else {
@@ -2843,10 +2837,121 @@ napi_value GetAllSharedPackageInfo(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    auto promise = CommonFunc::AsyncCallNativeMethod<SharedPackageCallbackInfo>(env, asyncCallbackInfo,
-        GET_ALL_SHARED_PACKAGE_INFO, GetAllSharedPackageInfoExec, GetAllSharedPackageInfoComplete);
+    auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
+        GET_ALL_SHARED_BUNDLE_INFO, GetAllSharedBundleInfoExec, GetAllSharedBundleInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call NAPI_GetAllSharedPackageInfo done.");
+    APP_LOGD("call NAPI_GetAllSharedBundleInfo done.");
+    return promise;
+}
+
+static ErrCode InnerGetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetSharedBundleInfoExec(napi_env env, void *data)
+{
+    SharedBundleCallbackInfo *asyncCallbackInfo = reinterpret_cast<SharedBundleCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetSharedBundleInfo(asyncCallbackInfo->bundleName, asyncCallbackInfo->moduleName,
+        asyncCallbackInfo->sharedBundles);
+}
+
+void GetSharedBundleInfoComplete(napi_env env, napi_status status, void *data)
+{
+    SharedBundleCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<SharedBundleCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertAllSharedBundleInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->sharedBundles);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == NO_ERROR) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
+    }
+}
+
+napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetSharedBundleInfo called");
+    NapiArg args(env, info);
+    SharedBundleCallbackInfo *asyncCallbackInfo = new (std::nothrow) SharedBundleCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        return nullptr;
+    }
+    std::unique_ptr<SharedBundleCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    if (args.GetMaxArgc() < ARGS_SIZE_TWO) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < args.GetMaxArgc(); i++) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
+                APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->moduleName)) {
+                APP_LOGE("appId %{public}s invalid!", asyncCallbackInfo->moduleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+
+    auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
+        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetSharedBundleInfo done.");
     return promise;
 }
 

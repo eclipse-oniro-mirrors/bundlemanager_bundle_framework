@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BASE_BUNDLE_INSTALLER_H
 
 #include <map>
+#include <unordered_map>
 #include <string>
 
 #include "nocopyable.h"
@@ -60,6 +61,12 @@ protected:
         DEFAULT,
         SINGLETON_TO_NON = 1,
         NON_TO_SINGLETON = 2,
+    };
+
+    struct SharedBundleRollBackInfo {
+        std::vector<std::string> newDirs; // record newly created directories, delete when rollback
+        std::vector<std::string> newBundles; // record newly installed bundle, uninstall when rollback
+        std::unordered_map<std::string, InnerBundleInfo> backupBundles; // record initial InnerBundleInfo
     };
 
     /**
@@ -176,6 +183,24 @@ private:
 
     ErrCode InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid);
+
+    ErrCode ParseSharedPackages(const InstallParam &installParam, const Constants::AppType appType,
+        std::unordered_map<std::string, FilesParseResult> &newInfosMap);
+
+    ErrCode InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos,
+        const InstallParam &installParam);
+
+    ErrCode InnerInstallSharedPackages(const std::string &bundleName, FilesParseResult &parseResult,
+        SharedBundleRollBackInfo &rollbackInfo, const InstallParam &installParam);
+
+    bool TryInstallSharedBundleOnly(std::vector<std::string> &bundlePaths,
+        std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result, const InstallParam &installParam);
+
+    ErrCode ExtractSharedPackages(InnerBundleInfo &newInfo, const std::string &bundlePath,
+        std::vector<std::string> &newDirs);
+
+    ErrCode MkdirIfNotExist(const std::string &dir, std::vector<std::string> &newDirs);
+
     /**
      * @brief The real procedure function for uninstall a bundle.
      * @param bundleName Indicates the bundle name of the application to uninstall.
@@ -355,9 +380,12 @@ private:
     /**
      * @brief To check dependency whether or not exists.
      * @param infos Indicates all innerBundleInfo for all haps need to be installed.
+     * @param hsps Indicates all hsps for all haps need to be installed, grouped by bundle name
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
-    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
+        std::unordered_map<std::string, FilesParseResult> &hsps);
+
     /**
      * @brief To check the hap hash param.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
@@ -373,6 +401,8 @@ private:
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    ErrCode CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
@@ -556,6 +586,8 @@ private:
     bool AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     bool DeleteAppProvisionInfo(const std::string &bundleName) const;
+    ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
+    ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

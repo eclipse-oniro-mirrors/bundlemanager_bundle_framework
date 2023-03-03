@@ -275,9 +275,12 @@
       "OHOS::AppExecFwk::RemoteAbilityInfo::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::RequestPermission::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::RequestPermissionUsedScene::Marshalling(OHOS::Parcel&) const";
-      "OHOS::AppExecFwk::SharedPackageInfo::Marshalling(OHOS::Parcel&) const";
-      "OHOS::AppExecFwk::SharedPackageInfo::ReadFromParcel(OHOS::Parcel&)";
-      "OHOS::AppExecFwk::SharedPackageInfo::Unmarshalling(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::SharedBundleInfo::Marshalling(OHOS::Parcel&) const";
+      "OHOS::AppExecFwk::SharedBundleInfo::ReadFromParcel(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::SharedBundleInfo::Unmarshalling(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::SharedModuleInfo::Marshalling(OHOS::Parcel&) const";
+      "OHOS::AppExecFwk::SharedModuleInfo::ReadFromParcel(OHOS::Parcel&)";
+      "OHOS::AppExecFwk::SharedModuleInfo::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::ShortcutInfo::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::ShortcutInfo::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::ShortcutInfo::Unmarshalling(OHOS::Parcel&)";
@@ -374,7 +377,8 @@
       "vtable for OHOS::AppExecFwk::RequestPermission";
       "vtable for OHOS::AppExecFwk::RequestPermissionUsedScene";
       "vtable for OHOS::AppExecFwk::Resource";
-      "vtable for OHOS::AppExecFwk::SharedPackageInfo";
+      "vtable for OHOS::AppExecFwk::SharedBundleInfo";
+      "vtable for OHOS::AppExecFwk::SharedModuleInfo";
       "vtable for OHOS::AppExecFwk::ShortcutInfo";
       "vtable for OHOS::AppExecFwk::SignatureInfo";
       "VTT for OHOS::AppExecFwk::AppProvisionInfo";
@@ -399,7 +403,8 @@
       "VTT for OHOS::AppExecFwk::RequestPermission";
       "VTT for OHOS::AppExecFwk::RequestPermissionUsedScene";
       "VTT for OHOS::AppExecFwk::Resource";
-      "VTT for OHOS::AppExecFwk::SharedPackageInfo";
+      "VTT for OHOS::AppExecFwk::SharedBundleInfo";
+      "VTT for OHOS::AppExecFwk::SharedModuleInfo";
       "VTT for OHOS::AppExecFwk::ShortcutInfo";
       "VTT for OHOS::AppExecFwk::SignatureInfo";
       vtable?for?OHOS::AppExecFwk::AbilityInfo;

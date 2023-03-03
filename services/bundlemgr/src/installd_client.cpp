@@ -62,15 +62,15 @@ ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::s
     return CallService(&IInstalld::RenameModuleDir, oldPath, newPath);
 }
 
-ErrCode InstalldClient::CreateBundleDataDir(const std::string &bundleName,
-    const int userid, const int uid, const int gid, const std::string &apl)
+ErrCode InstalldClient::CreateBundleDataDir(const CreateDirParam &createDirParam)
 {
-    if (bundleName.empty() || userid < 0 || uid < 0 || gid < 0) {
+    if (createDirParam.bundleName.empty() || createDirParam.userId < 0
+        || createDirParam.uid < 0 || createDirParam.gid < 0) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::CreateBundleDataDir, bundleName, userid, uid, gid, apl);
+    return CallService(&IInstalld::CreateBundleDataDir, createDirParam);
 }
 
 ErrCode InstalldClient::RemoveBundleDataDir(
@@ -125,14 +125,15 @@ ErrCode InstalldClient::GetBundleStats(
     return CallService(&IInstalld::GetBundleStats, bundleName, userId, bundleStats);
 }
 
-ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl)
+ErrCode InstalldClient::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
+    bool isPreInstallApp)
 {
     if (dir.empty() || bundleName.empty() || apl.empty()) {
         APP_LOGE("params are invalid");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
 
-    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl);
+    return CallService(&IInstalld::SetDirApl, dir, bundleName, apl, isPreInstallApp);
 }
 
 ErrCode InstalldClient::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)

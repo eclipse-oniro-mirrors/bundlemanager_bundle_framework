@@ -103,8 +103,8 @@ void SetOverlayEnabledComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         APP_LOGE("SetOverlayEnabledComplete err = %{public}d", overlayCallbackInfo->err);
-        result[0] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err, SET_OVERLAY_ENABLED,
-            Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE);
+        result[0] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
+            SET_OVERLAY_ENABLED_BY_BUNDLE_NAME, Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE);
     }
     if (overlayCallbackInfo->deferred) {
         if (overlayCallbackInfo->err == NO_ERROR) {
@@ -140,7 +140,8 @@ napi_value SetOverlayEnabled(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName) ||
+                overlayCallbackInfo->moduleName.empty()) {
                 APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
@@ -195,13 +196,15 @@ napi_value SetOverlayEnabledByBundleName(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->bundleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->bundleName) ||
+                overlayCallbackInfo->bundleName.empty()) {
                 APP_LOGE("bundleName %{public}s invalid!", overlayCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName) ||
+                overlayCallbackInfo->moduleName.empty()) {
                 APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
@@ -259,18 +262,22 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
     }
 
     if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
-        ret = overlayMgrProxy->GetOverlayModuleInfo(bundleName, overlayCbInfo->moduleName, overlayCbInfo->overlayModuleInfo);
+        ret = overlayMgrProxy->GetOverlayModuleInfo(bundleName, overlayCbInfo->moduleName,
+            overlayCbInfo->overlayModuleInfo);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_TARGET_MODULE_INFO) {
         ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(bundleName, overlayCbInfo->targetModuleName,
             overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->moduleName,
             overlayCbInfo->overlayModuleInfo);
+        if (ret == ERR_OK) {
+            overlayCbInfo->infoVec.emplace_back(overlayCbInfo->overlayModuleInfo);
+        }
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetAllOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName, overlayCbInfo->moduleName,
-            overlayCbInfo->infoVec);
+        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName,
+            overlayCbInfo->moduleName, overlayCbInfo->infoVec);
     } else {
         APP_LOGE("invalid overlay option");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
@@ -302,11 +309,16 @@ void GetOverlayModuleInfoComplete(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     if (overlayCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertOverlayModuleInfo(env, overlayCallbackInfo->overlayModuleInfo, result[ARGS_POS_ONE]);
+        if (overlayCallbackInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertOverlayModuleInfo(env, overlayCallbackInfo->overlayModuleInfo, result[ARGS_POS_ONE]);
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertOverlayModuleInfos(env, overlayCallbackInfo->infoVec, result[ARGS_POS_ONE]);
+        }
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
-            GET_OVERLAY_MODULE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (overlayCallbackInfo->deferred) {
         if (overlayCallbackInfo->err == NO_ERROR) {
@@ -343,7 +355,8 @@ napi_value GetOverlayModuleInfo(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName) ||
+                overlayCallbackInfo->moduleName.empty()) {
                 APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
@@ -382,7 +395,7 @@ void GetTargetOverlayModuleInfosComplete(napi_env env, napi_status status, void 
         CommonFunc::ConvertOverlayModuleInfos(env, overlayCallbackInfo->infoVec, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
-            GET_OVERLAY_MODULE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (overlayCallbackInfo->deferred) {
         if (overlayCallbackInfo->err == NO_ERROR) {
@@ -419,7 +432,8 @@ napi_value GetTargetOverlayModuleInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->targetModuleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->targetModuleName) ||
+                overlayCallbackInfo->targetModuleName.empty()) {
                 APP_LOGE("targetModuleName %{public}s invalid!", overlayCallbackInfo->targetModuleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TARGET_MODULE_NAME, TYPE_STRING);
                 return nullptr;
@@ -455,7 +469,7 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
     }
 
     std::unique_ptr<OverlayCallbackInfo> callbackPtr {overlayCallbackInfo};
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -464,7 +478,8 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->bundleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->bundleName) ||
+                overlayCallbackInfo->bundleName.empty()) {
                 APP_LOGE("bundleName %{public}s invalid!", overlayCallbackInfo->bundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
                 return nullptr;
@@ -513,7 +528,7 @@ napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_i
     }
     overlayCallbackInfo->option = OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME;
     std::unique_ptr<OverlayCallbackInfo> callbackPtr {overlayCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -522,7 +537,8 @@ napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_i
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->targetBundleName)) {
+            if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->targetBundleName) ||
+                overlayCallbackInfo->targetBundleName.empty()) {
                 APP_LOGE("targetBundleName %{public}s invalid!", overlayCallbackInfo->targetBundleName.c_str());
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TARGET_BUNDLE_NAME, TYPE_STRING);
                 return nullptr;

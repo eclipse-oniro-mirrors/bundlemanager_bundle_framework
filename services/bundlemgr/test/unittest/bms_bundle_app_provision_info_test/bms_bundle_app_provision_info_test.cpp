@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 #include "app_provision_info.h"
@@ -318,7 +319,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0007, Functio
     EXPECT_FALSE(ret);
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
-    std::vector<std::string> bundleNames;
+    std::unordered_set<std::string> bundleNames;
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(bundleNames);
     EXPECT_TRUE(ret);
     EXPECT_FALSE(bundleNames.empty());

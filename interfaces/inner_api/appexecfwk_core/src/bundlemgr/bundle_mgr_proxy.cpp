@@ -3207,23 +3207,83 @@ ErrCode BundleMgrProxy::GetBaseSharedPackageInfos(const std::string &bundleName,
         data, baseSharedPackageInfos);
 }
 
-ErrCode BundleMgrProxy::GetAllSharedPackageInfo(int32_t userId, std::vector<SharedPackageInfo> &sharedPackages)
+ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    APP_LOGD("begin to GetAllSharedPackageInfo");
+    APP_LOGD("begin to GetAllSharedBundleInfo");
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAllSharedPackageInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to GetAllSharedBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetAllSharedPackageInfo due to write userId fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return GetParcelableInfosWithErrCode<SharedPackageInfo>(IBundleMgr::Message::GET_ALL_SHARED_PACKAGE_INFO,
-        data, sharedPackages);
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO,
+        data, sharedBundles);
 }
+
+ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSharedBundleInfo");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetSharedBundleInfo due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO,
+        data, sharedBundles);
+}
+
+ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSharedBundleInfoBySelf");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSharedBundleInfoBySelf due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSharedBundleInfoBySelf due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfoWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
+        data, sharedBundleInfo);
+}
+
+ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
+    std::vector<Dependency> &dependencies)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetSharedDependencies");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSharedDependencies due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSharedDependencies due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetSharedDependencies due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
+}
+
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)

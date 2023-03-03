@@ -34,6 +34,7 @@
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
 #include "shared_package/base_shared_package_info.h"
+#include "shared_package/shared_bundle_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -718,22 +719,6 @@ public:
         return mark_;
     }
     /**
-     * @brief Set application base data dir.
-     * @param baseDataDir Indicates the dir to be set.
-     */
-    void SetBaseDataDir(const std::string &baseDataDir)
-    {
-        baseDataDir_ = baseDataDir;
-    }
-    /**
-     * @brief Get application base data dir.
-     * @return Return the string object.
-     */
-    std::string GetBaseDataDir() const
-    {
-        return baseDataDir_;
-    }
-    /**
      * @brief Get application data dir.
      * @return Return the string object.
      */
@@ -1084,7 +1069,6 @@ public:
     void RestoreFromOldInfo(const InnerBundleInfo &oldInfo)
     {
         SetAppCodePath(oldInfo.GetAppCodePath());
-        SetBaseDataDir(oldInfo.GetBaseDataDir());
         SetUid(oldInfo.GetUid());
         SetGid(oldInfo.GetGid());
     }
@@ -1410,7 +1394,9 @@ public:
     {
         allowedAcls_.clear();
         for (const auto &acl : allowedAcls) {
-            allowedAcls_.emplace_back(acl);
+            if (!acl.empty()) {
+                allowedAcls_.emplace_back(acl);
+            }
         }
     }
 
@@ -1816,7 +1802,7 @@ public:
                 innerModuleInfo.second.overlayModuleInfo.begin(), innerModuleInfo.second.overlayModuleInfo.end(),
                 [&bundleName](const auto &overlayInfo) {
                     return overlayInfo.bundleName == bundleName;
-            }), innerModuleInfo.second.overlayModuleInfo.end());
+                }), innerModuleInfo.second.overlayModuleInfo.end());
         }
     }
 
@@ -1943,6 +1929,19 @@ public:
         return dependenciesList;
     }
 
+    std::vector<std::string> GetAllHspModuleNamesForVersion(uint32_t versionCode) const
+    {
+        std::vector<std::string> hspModuleNames;
+        for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+            for (const auto &item : modules) {
+                if (item.versionCode == versionCode) {
+                    hspModuleNames.emplace_back(moduleName);
+                }
+            }
+        }
+        return hspModuleNames;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
@@ -1998,6 +1997,10 @@ public:
         BaseSharedPackageInfo &baseSharedPackageInfo) const;
     void InsertInnerSharedPackageModuleInfo(const std::string &moduleName, const InnerModuleInfo &innerModuleInfo);
     void SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath);
+    bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
+    bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
+    std::vector<uint32_t> GetAllHspVersion() const;
+    void DeleteHspModuleByVersion(int32_t versionCode);
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2018,7 +2021,6 @@ private:
     int uid_ = Constants::INVALID_UID;
     int gid_ = Constants::INVALID_GID;
     int userId_ = Constants::DEFAULT_USERID;
-    std::string baseDataDir_;
     BundleStatus bundleStatus_ = BundleStatus::ENABLED;
     std::shared_ptr<ApplicationInfo> baseApplicationInfo_;
     std::shared_ptr<BundleInfo> baseBundleInfo_;  // applicationInfo and abilityInfo empty

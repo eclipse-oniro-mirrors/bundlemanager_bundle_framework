@@ -91,6 +91,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -243,6 +244,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -366,6 +368,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -478,6 +481,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -596,6 +600,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "hitrace_native:hitrace_meter",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -700,6 +705,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "hitrace_native:hitrace_meter",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]

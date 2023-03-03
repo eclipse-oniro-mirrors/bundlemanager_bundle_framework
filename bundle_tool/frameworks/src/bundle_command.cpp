@@ -43,6 +43,8 @@ const std::string BUNDLE_NAME_EMPTY = "";
 const std::string OVERLAY_MODULE_INFOS = "overlayModuleInfos";
 const std::string OVERLAY_BUNDLE_INFOS = "overlayBundleInfos";
 const std::string OVERLAY_MODULE_INFO = "overlayModuleInfo";
+const std::string SHARED_BUNDLE_INFO = "sharedBundleInfo";
+const std::string DEPENDENCIES = "dependencies";
 const int32_t INDEX_OFFSET = 2;
 const int32_t MAX_WAITING_TIME = 3000;
 const int32_t DEVICE_UDID_LENGTH = 65;
@@ -51,7 +53,7 @@ const int32_t MAX_OVERLAY_ARGUEMENTS_NUMBER = 8;
 const int32_t MINIMUM_WAITTING_TIME = 180; // 3 mins
 const int32_t MAXIMUM_WAITTING_TIME = 600; // 10 mins
 
-const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:";
+const std::string SHORT_OPTIONS = "hp:rn:m:a:cdu:w:s:";
 const struct option LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-path", required_argument, nullptr, 'p'},
@@ -66,6 +68,7 @@ const struct option LONG_OPTIONS[] = {
     {"user-id", required_argument, nullptr, 'u'},
     {"waitting-time", required_argument, nullptr, 'w'},
     {"keep-data", no_argument, nullptr, 'k'},
+    {"shared-bundle-dir-path", required_argument, nullptr, 's'},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -111,6 +114,21 @@ const struct option LONG_OPTIONS_OVERLAY_TARGET[] = {
     {"bundle-name", required_argument, nullptr, 'b'},
     {"module-name", required_argument, nullptr, 'm'},
     {"user-id", required_argument, nullptr, 'u'},
+    {nullptr, 0, nullptr, 0},
+};
+
+const std::string SHORT_OPTIONS_DUMP_SHARED_DEPENDENCIES = "hn:m:";
+const struct option LONG_OPTIONS_DUMP_SHARED_DEPENDENCIES[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"bundle-name", required_argument, nullptr, 'n'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {nullptr, 0, nullptr, 0},
+};
+
+const std::string SHORT_OPTIONS_DUMP_SHARED = "hn:";
+const struct option LONG_OPTIONS_DUMP_SHARED[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"bundle-name", required_argument, nullptr, 'n'},
     {nullptr, 0, nullptr, 0},
 };
 }  // namespace
@@ -166,6 +184,8 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"quickfix", std::bind(&BundleManagerShellCommand::RunAsQuickFixCommand, this)},
         {"dump-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpOverlay, this)},
         {"dump-target-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpTargetOverlay, this)},
+        {"dump-shared-dependencies", std::bind(&BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand, this)},
+        {"dump-shared", std::bind(&BundleManagerShellCommand::RunAsDumpSharedCommand, this)},
     };
 
     return OHOS::ERR_OK;
@@ -205,13 +225,30 @@ ErrCode BundleManagerShellCommand::RunAsHelpCommand()
     return OHOS::ERR_OK;
 }
 
+bool BundleManagerShellCommand::IsInstallOption(int index) const
+{
+    if (index >= argc_ || index < INDEX_OFFSET) {
+        return false;
+    }
+    if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
+        argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
+        argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
+        argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time" ||
+        argList_[index - INDEX_OFFSET] == "-s" || argList_[index - INDEX_OFFSET] == "--shared-bundle-dir-path") {
+        return true;
+    }
+    return false;
+}
+
 ErrCode BundleManagerShellCommand::RunAsInstallCommand()
 {
     int result = OHOS::ERR_OK;
     InstallFlag installFlag = InstallFlag::REPLACE_EXISTING;
     int counter = 0;
     std::vector<std::string> bundlePath;
+    std::vector<std::string> sharedBundleDirPaths;
     int index = 0;
+    int hspIndex = 0;
     int32_t userId = Constants::ALL_USERID;
     int32_t waittingTime = MINIMUM_WAITTING_TIME;
     while (true) {
@@ -323,6 +360,19 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
                 }
                 break;
             }
+            case 's': {
+                // 'bm install -s <hsp-dir-path>'
+                // 'bm install --shared-bundle-dir-path <hsp-dir-path>'
+                APP_LOGD("'bm install %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (GetBundlePath(optarg, sharedBundleDirPaths) != OHOS::ERR_OK) {
+                    APP_LOGD("'bm install -s' with no argument.");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                hspIndex = optind;
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -331,10 +381,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
     }
 
     for (; index < argc_ && index >= INDEX_OFFSET; ++index) {
-        if (argList_[index - INDEX_OFFSET] == "-r" || argList_[index - INDEX_OFFSET] == "--replace" ||
-            argList_[index - INDEX_OFFSET] == "-p" || argList_[index - INDEX_OFFSET] == "--bundle-path" ||
-            argList_[index - INDEX_OFFSET] == "-u" || argList_[index - INDEX_OFFSET] == "--user-id" ||
-            argList_[index - INDEX_OFFSET] == "-w" || argList_[index - INDEX_OFFSET] == "--waitting-time") {
+        if (IsInstallOption(index)) {
             break;
         }
         if (GetBundlePath(argList_[index - INDEX_OFFSET], bundlePath) != OHOS::ERR_OK) {
@@ -345,12 +392,29 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         }
     }
 
+    // hsp list
+    for (; hspIndex < argc_ && hspIndex >= INDEX_OFFSET; ++hspIndex) {
+        if (IsInstallOption(hspIndex)) {
+            break;
+        }
+        if (GetBundlePath(argList_[hspIndex - INDEX_OFFSET], sharedBundleDirPaths) != OHOS::ERR_OK) {
+            sharedBundleDirPaths.clear();
+            APP_LOGD("'bm install -s' with error arguments.");
+            resultReceiver_.append("error value for the chosen option");
+            result = OHOS::ERR_INVALID_VALUE;
+        }
+    }
+
     for (auto &path : bundlePath) {
         APP_LOGD("install hap path %{private}s", path.c_str());
     }
 
+    for (auto &path : sharedBundleDirPaths) {
+        APP_LOGD("install hsp path %{private}s", path.c_str());
+    }
+
     if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && bundlePath.empty()) {
+        if (resultReceiver_ == "" && bundlePath.empty() && sharedBundleDirPaths.empty()) {
             // 'bm install ...' with no bundle path option
             APP_LOGD("'bm install' with no bundle path option.");
             resultReceiver_.append(HELP_MSG_NO_BUNDLE_PATH_OPTION + "\n");
@@ -364,6 +428,7 @@ ErrCode BundleManagerShellCommand::RunAsInstallCommand()
         InstallParam installParam;
         installParam.installFlag = installFlag;
         installParam.userId = userId;
+        installParam.sharedBundleDirPaths = sharedBundleDirPaths;
         int32_t installResult = InstallOperation(bundlePath, installParam, waittingTime);
         if (installResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_INSTALL_BUNDLE_OK + "\n";
@@ -1676,11 +1741,11 @@ std::string BundleManagerShellCommand::DumpDependentModuleNames(
     return dumpResults;
 }
 
-int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
-    InstallParam &installParam, int32_t waittingTime) const
+void BundleManagerShellCommand::GetAbsPaths(
+    const std::vector<std::string> &paths, std::vector<std::string> &absPaths) const
 {
     std::vector<std::string> realPathVec;
-    for (auto &bundlePath : bundlePaths) {
+    for (auto &bundlePath : paths) {
         std::string absoluteBundlePath = "";
         if (bundlePath.empty()) {
             continue;
@@ -1702,12 +1767,24 @@ int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::strin
         }
         realPathVec.emplace_back(absoluteBundlePath);
     }
-    std::vector<std::string> pathVec;
+
     for (const auto &path : realPathVec) {
-        if (std::find(pathVec.begin(), pathVec.end(), path) == pathVec.end()) {
-            pathVec.emplace_back(path);
+        if (std::find(absPaths.begin(), absPaths.end(), path) == absPaths.end()) {
+            absPaths.emplace_back(path);
         }
     }
+}
+
+int32_t BundleManagerShellCommand::InstallOperation(const std::vector<std::string> &bundlePaths,
+    InstallParam &installParam, int32_t waittingTime) const
+{
+    std::vector<std::string> pathVec;
+    GetAbsPaths(bundlePaths, pathVec);
+
+    std::vector<std::string> hspPathVec;
+    GetAbsPaths(installParam.sharedBundleDirPaths, hspPathVec);
+    installParam.sharedBundleDirPaths = hspPathVec;
+
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl(waittingTime));
     if (statusReceiver == nullptr) {
         APP_LOGE("statusReceiver is null");
@@ -1902,5 +1979,241 @@ std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &
     }
     return overlayInfoJson.dump(Constants::DUMP_INDENT);
 }
+
+ErrCode BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t counter = 0;
+    std::string bundleName;
+    std::string moduleName;
+    while (true) {
+        counter++;
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_SHARED_DEPENDENCIES.c_str(),
+            LONG_OPTIONS_DUMP_SHARED_DEPENDENCIES, nullptr);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if (counter == 1) {
+                // When scanning the first argument
+                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                    // 'bm dump-shared-dependencies' with no option: bm dump-shared-dependencies
+                    // 'bm dump-shared-dependencies' with a wrong argument: bm dump-shared-dependencies xxx
+                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                    result = OHOS::ERR_INVALID_VALUE;
+                }
+            }
+            break;
+        }
+        result = ParseSharedDependenciesCommand(option, bundleName, moduleName);
+        if (option == '?') {
+            break;
+        }
+    }
+    if (result == OHOS::ERR_OK) {
+        if ((resultReceiver_ == "") && (bundleName.size() == 0 || moduleName.size() == 0)) {
+            // 'bm dump-shared-dependencies -n -m ...' with no bundle name option
+            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
+            result = OHOS::ERR_INVALID_VALUE;
+        }
+    }
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DUMP_SHARED_DEPENDENCIES);
+    } else {
+        std::string dumpResults = DumpSharedDependencies(bundleName, moduleName);
+        if (dumpResults.empty() || (dumpResults == "")) {
+            dumpResults = HELP_MSG_DUMP_FAILED + "\n";
+        }
+        resultReceiver_.append(dumpResults);
+    }
+    return result;
+}
+
+ErrCode BundleManagerShellCommand::ParseSharedDependenciesCommand(int32_t option, std::string &bundleName,
+    std::string &moduleName)
+{
+    int32_t result = OHOS::ERR_OK;
+    if (option == '?') {
+        switch (optopt) {
+            case 'n': {
+                // 'bm dump-shared-dependcies -n' with no argument: bm dump-shared-dependcies -n
+                // 'bm dump-shared-dependcies --bundle-name' with no argument: bm dump-shared-dependcies --bundle-name
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            case 'm': {
+                // 'bm dump-shared-dependcies -m' with no argument: bm dump-shared-dependcies -m
+                // 'bm dump-shared-dependcies --module-name' with no argument: bm dump-shared-dependcies --module-name
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            default: {
+                // 'bm dump-shared-dependcies' with an unknown option: bm dump-shared-dependcies -x
+                // 'bm dump-shared-dependcies' with an unknown option: bm dump-shared-dependcies -xxx
+                std::string unknownOption = "";
+                std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                resultReceiver_.append(unknownOptionMsg);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    } else {
+        switch (option) {
+            case 'h': {
+                // 'bm dump-shared-dependcies -h'
+                // 'bm dump-shared-dependcies --help'
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            case 'n': {
+                // 'bm dump-shared-dependcies -n xxx'
+                // 'bm dump-shared-dependcies --bundle-name xxx'
+                bundleName = optarg;
+                break;
+            }
+            case 'm': {
+                // 'bm dump-shared-dependcies -m xxx'
+                // 'bm dump-shared-dependcies --module-name xxx'
+                moduleName = optarg;
+                break;
+            }
+            default: {
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+std::string BundleManagerShellCommand::DumpSharedDependencies(const std::string &bundleName,
+    const std::string &moduleName) const
+{
+    APP_LOGD("DumpSharedDependencies bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
+    std::string dumpResults = "";
+    std::vector<Dependency> dependencies;
+    ErrCode ret = bundleMgrProxy_->GetSharedDependencies(bundleName, moduleName, dependencies);
+    nlohmann::json dependenciesJson;
+    if (ret != ERR_OK || dependencies.empty()) {
+        APP_LOGE("dump-shared failed due to errcode %{public}d", ret);
+        return dumpResults;
+    } else {
+        dependenciesJson = nlohmann::json {{DEPENDENCIES, dependencies}};
+    }
+    return dependenciesJson.dump(Constants::DUMP_INDENT);
+}
+
+ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
+{
+    int32_t result = OHOS::ERR_OK;
+    int32_t counter = 0;
+    std::string bundleName;
+    while (true) {
+        counter++;
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_SHARED.c_str(),
+            LONG_OPTIONS_DUMP_SHARED, nullptr);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if (counter == 1) {
+                // When scanning the first argument
+                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
+                    // 'bm dump-shared' with no option: bm dump-shared
+                    // 'bm dump-shared' with a wrong argument: bm dump-shared xxx
+                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
+                    result = OHOS::ERR_INVALID_VALUE;
+                }
+            }
+            break;
+        }
+        result = ParseSharedCommand(option, bundleName);
+        if (option == '?') {
+            break;
+        }
+    }
+    if (result == OHOS::ERR_OK) {
+        if ((resultReceiver_ == "") && (bundleName.size() == 0)) {
+            // 'bm dump-shared -n ...' with no bundle name option
+            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
+            result = OHOS::ERR_INVALID_VALUE;
+        }
+    }
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DUMP_SHARED);
+    } else {
+        std::string dumpResults = DumpShared(bundleName);
+        if (dumpResults.empty() || (dumpResults == "")) {
+            dumpResults = HELP_MSG_DUMP_FAILED + "\n";
+        }
+        resultReceiver_.append(dumpResults);
+    }
+    return result;
+}
+
+ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::string &bundleName)
+{
+    int32_t result = OHOS::ERR_OK;
+    if (option == '?') {
+        switch (optopt) {
+            case 'n': {
+                // 'bm dump-shared -n' with no argument: bm dump-shared -n
+                // 'bm dump-shared --bundle-name' with no argument: bm dump-shared --bundle-name
+                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            default: {
+                // 'bm dump-shared' with an unknown option: bm dump-shared -x
+                // 'bm dump-shared' with an unknown option: bm dump-shared -xxx
+                std::string unknownOption = "";
+                std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
+                resultReceiver_.append(unknownOptionMsg);
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    } else {
+        switch (option) {
+            case 'h': {
+                // 'bm dump-shared -h'
+                // 'bm dump-shared --help'
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+            case 'n': {
+                // 'bm dump-shared -n xxx'
+                // 'bm dump-shared --bundle-name xxx'
+                bundleName = optarg;
+                break;
+            }
+            default: {
+                result = OHOS::ERR_INVALID_VALUE;
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+std::string BundleManagerShellCommand::DumpShared(const std::string &bundleName) const
+{
+    APP_LOGD("DumpShared bundleName: %{public}s", bundleName.c_str());
+    std::string dumpResults = "";
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = bundleMgrProxy_->GetSharedBundleInfoBySelf(bundleName, sharedBundleInfo);
+    nlohmann::json sharedBundleInfoJson;
+    if (ret != ERR_OK) {
+        APP_LOGE("dump-shared failed due to errcode %{public}d", ret);
+        return dumpResults;
+    } else {
+        sharedBundleInfoJson = nlohmann::json {{SHARED_BUNDLE_INFO, sharedBundleInfo}};
+    }
+    return sharedBundleInfoJson.dump(Constants::DUMP_INDENT);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

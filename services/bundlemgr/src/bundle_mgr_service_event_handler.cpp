@@ -21,6 +21,8 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "app_log_wrapper.h"
+#include "app_provision_info.h"
+#include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
@@ -47,6 +49,7 @@ namespace {
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
+const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string BMS_TEST_UPGRADE = "persist.bms.test-upgrade";
 // this metadata used to indicate those system application update by hotpatch upgrade.
 const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
@@ -818,15 +821,28 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
 
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
+    std::list<std::string> hspDirs;
+    std::list<PreScanInfo> normalSystemApps;
     for (const auto &installInfo : installList_) {
         APP_LOGD("Inner process boot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
             APP_LOGW("bundle(%{public}s) not allowed installed when boot", installInfo.bundleDir.c_str());
             continue;
         }
+        if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
+            APP_LOGD("found hsp path: %{public}s", installInfo.bundleDir.c_str());
+            hspDirs.emplace_back(installInfo.bundleDir);
+        } else {
+            normalSystemApps.emplace_back(installInfo);
+        }
+    }
 
-        ProcessSystemBundleInstall(
-            installInfo, Constants::AppType::SYSTEM_APP, userId);
+    for (const auto &hspDir : hspDirs) {
+        ProcessSystemSharedBundleInstall(hspDir, userId);
+    }
+
+    for (const auto &installInfo : normalSystemApps) {
+        ProcessSystemBundleInstall(installInfo, Constants::AppType::SYSTEM_APP, userId);
     }
 }
 
@@ -863,6 +879,23 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     SystemBundleInstaller installer;
     if (!installer.InstallSystemBundle(bundleDir, installParam, appType)) {
         APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
+    }
+}
+
+void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, int32_t userId)
+{
+    APP_LOGD("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
+    InstallParam installParam;
+    installParam.userId = userId;
+    installParam.isPreInstallApp = true;
+    installParam.noSkipsKill = false;
+    installParam.needSendEvent = false;
+    installParam.removable = false;
+    installParam.needSavePreInstallInfo = true;
+    installParam.sharedBundleDirPaths = {sharedBundlePath};
+    SystemBundleInstaller installer;
+    if (!installer.InstallSystemSharedBundle(installParam)) {
+        APP_LOGW("install system shared bundle: %{public}s error", sharedBundlePath.c_str());
     }
 }
 
@@ -959,6 +992,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         return;
     }
 
+    std::unordered_set<std::string> allBundleNames;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
+        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
+    }
+
     for (auto &scanPathIter : scanPathList) {
         APP_LOGD("reboot scan bundle path: %{public}s ", scanPathIter.c_str());
         bool removable = IsPreInstallRemovable(scanPathIter);
@@ -1050,6 +1088,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
+            // not exist in appProvisionInfo table, then parse profile info and save it
+            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
+                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
+            }
             continue;
         }
 
@@ -1553,6 +1595,27 @@ bool BMSEventHandler::FetchInnerBundleInfo(
     }
 
     return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+}
+
+void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
+{
+    APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
+    // parse profile info
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    auto ret = BundleVerifyMgr::HapVerify(filePath, hapVerifyResult);
+    if (ret != ERR_OK) {
+        APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
+            bundleName.c_str(), ret);
+        return;
+    }
+
+    std::unique_ptr<BundleInstallChecker> bundleInstallChecker =
+        std::make_unique<BundleInstallChecker>();
+    AppProvisionInfo appProvisionInfo = bundleInstallChecker->ConvertToAppProvisionInfo(
+        hapVerifyResult.GetProvisionInfo());
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
+        APP_LOGE("AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
