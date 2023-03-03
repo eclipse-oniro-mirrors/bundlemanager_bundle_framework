@@ -2425,7 +2425,12 @@ ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> 
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    return ERR_OK;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllSharedBundleInfo(sharedBundles);
 }
 
 ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -2442,7 +2447,12 @@ ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, co
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    return ERR_OK;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSharedBundleInfo(bundleName, moduleName, sharedBundles);
 }
 
 ErrCode BundleMgrHostImpl::GetSharedBundleInfoBySelf(const std::string &bundleName,
