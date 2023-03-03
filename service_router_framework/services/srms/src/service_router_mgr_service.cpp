@@ -45,12 +45,12 @@ const bool REGISTER_RESULT =
 
 ServiceRouterMgrService::ServiceRouterMgrService() : SystemAbility(SERVICE_ROUTER_MGR_SERVICE_ID, true)
 {
-    APP_LOGI("SRMS instance create");
+    APP_LOGD("SRMS instance create");
 }
 
 ServiceRouterMgrService::~ServiceRouterMgrService()
 {
-    APP_LOGI("SRMS instance destroy");
+    APP_LOGD("SRMS instance destroy");
 }
 
 void ServiceRouterMgrService::OnStart()
@@ -73,7 +73,6 @@ void ServiceRouterMgrService::OnStop()
 
 void ServiceRouterMgrService::Init()
 {
-    APP_LOGI("Init start");
     LoadAllBundleInfos();
     InitEventRunnerAndHandler();
     SubscribeCommonEvent();

@@ -25,12 +25,12 @@ namespace AppExecFwk {
 ServiceRouterMgrProxy::ServiceRouterMgrProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IServiceRouterManager>(object)
 {
-    APP_LOGI("ServiceRouterMgrProxy instance is created");
+    APP_LOGD("ServiceRouterMgrProxy instance is created");
 }
 
 ServiceRouterMgrProxy::~ServiceRouterMgrProxy()
 {
-    APP_LOGI("ServiceRouterMgrProxy instance is destroyed");
+    APP_LOGD("ServiceRouterMgrProxy instance is destroyed");
 }
 
 int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,

@@ -21,7 +21,7 @@ namespace OHOS {
 namespace AppExecFwk {
 void ServiceRouterDeathRecipient::OnRemoteDied(const wptr<IRemoteObject> &object)
 {
-    APP_LOGE("OnRemoteDied.");
+    APP_LOGI("OnRemoteDied.");
     ServiceRouterMgrHelper::GetInstance().OnRemoteDiedHandle();
 }
 } // namespace AppExecFwk

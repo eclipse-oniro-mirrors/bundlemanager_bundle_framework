@@ -29,12 +29,12 @@ namespace OHOS {
 namespace AppExecFwk {
 ServiceRouterMgrStub::ServiceRouterMgrStub()
 {
-    APP_LOGI("ServiceRouterMgrStub instance is created");
+    APP_LOGD("ServiceRouterMgrStub instance is created");
 }
 
 ServiceRouterMgrStub::~ServiceRouterMgrStub()
 {
-    APP_LOGI("ServiceRouterMgrStub instance is destroyed");
+    APP_LOGD("ServiceRouterMgrStub instance is destroyed");
 }
 
 int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply,
