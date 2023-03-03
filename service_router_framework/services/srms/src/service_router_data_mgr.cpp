@@ -77,11 +77,11 @@ void ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
     }
     innerServiceInfo.UpdateAppInfo(bundleInfo.applicationInfo);
 
-    std::vector<IntentInfo> intentInfos;
+    std::vector<PurposeInfo> purposeInfos;
     std::vector<ServiceInfo> serviceInfos;
-    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, intentInfos, serviceInfos, innerServiceInfo.GetAppInfo())) {
+    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, purposeInfos, serviceInfos, innerServiceInfo.GetAppInfo())) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-        innerServiceInfo.UpdateInnerServiceInfo(bundleInfo, intentInfos, serviceInfos);
+        innerServiceInfo.UpdateInnerServiceInfo(purposeInfos, serviceInfos);
         innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
     }
 }
@@ -124,12 +124,12 @@ int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const Extensio
     return ERR_OK;
 }
 
-int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::string intentName,
-    std::vector<IntentInfo> &intentInfos) const
+int32_t ServiceRouterDataMgr::QueryPurposeInfos(const Want &want, const std::string purposeName,
+    std::vector<PurposeInfo> &purposeInfos) const
 {
-    APP_LOGD("SRDM QueryIntentInfos");
-    if (intentName.empty()) {
-        APP_LOGE("SRDM QueryIntentInfos, intentName is empty");
+    APP_LOGD("SRDM QueryPurposeInfos");
+    if (purposeName.empty()) {
+        APP_LOGE("SRDM QueryPurposeInfos, purposeName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
 
@@ -137,15 +137,15 @@ int32_t ServiceRouterDataMgr::QueryIntentInfos(const Want &want, const std::stri
     std::string bundleName = element.GetBundleName();
     if (bundleName.empty()) {
         for (const auto &item : innerServiceInfos_) {
-            item.second.FindIntentInfos(intentName, intentInfos);
+            item.second.FindPurposeInfos(purposeName, purposeInfos);
         }
     } else {
         auto infoItem = innerServiceInfos_.find(bundleName);
         if (infoItem == innerServiceInfos_.end()) {
-            APP_LOGE("SRDM QueryIntentInfos, not found by bundleName.");
+            APP_LOGE("SRDM QueryPurposeInfos, not found by bundleName.");
             return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
-        infoItem->second.FindIntentInfos(intentName, intentInfos);
+        infoItem->second.FindPurposeInfos(purposeName, purposeInfos);
     }
     return ERR_OK;
 }

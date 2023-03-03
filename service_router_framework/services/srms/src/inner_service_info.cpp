@@ -27,11 +27,11 @@ void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType,
     }
 }
 
-void InnerServiceInfo::FindIntentInfos(const std::string &intentName, std::vector<IntentInfo> &intentInfos) const
+void InnerServiceInfo::FindPurposeInfos(const std::string &purposeName, std::vector<PurposeInfo> &purposeInfos) const
 {
-    for (auto &intentInfo : intentInfos_) {
-        if (intentInfo.intentName == intentName) {
-            intentInfos.emplace_back(intentInfo);
+    for (auto &purposeInfo : purposeInfos_) {
+        if (purposeInfo.purposeName == purposeName) {
+            purposeInfos.emplace_back(purposeInfo);
         }
     }
 }

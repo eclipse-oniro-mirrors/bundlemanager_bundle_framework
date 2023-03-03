@@ -48,8 +48,8 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     switch (code) {
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_SERVICE_INFOS):
             return HandleQueryServiceInfos(data, reply);
-        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_INTENTINFOS):
-            return HandleQueryIntentInfos(data, reply);
+        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_PURPOSE_INFOS):
+            return HandleQueryPurposeInfos(data, reply);
         default:
             APP_LOGW("DistributedBmsHost receives unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -87,7 +87,7 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
     return NO_ERROR;
 }
 
-int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessageParcel &reply)
+int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("ServiceRouterMgrStub handle query service infos with muti param");
     if (!VerifySystemApp()) {
@@ -95,19 +95,19 @@ int ServiceRouterMgrStub::HandleQueryIntentInfos(MessageParcel &data, MessagePar
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
     Want *want = data.ReadParcelable<Want>();
-    std::string intentName = data.ReadString();
-    std::vector<IntentInfo> infos;
-    int ret = QueryIntentInfos(*want, intentName, infos);
+    std::string purposeName = data.ReadString();
+    std::vector<PurposeInfo> infos;
+    int ret = QueryPurposeInfos(*want, purposeName, infos);
     if (ret != NO_ERROR) {
         APP_LOGE("QueryServiceInfos result:%{public}d", ret);
         return ret;
     }
     if (!reply.WriteBool(true)) {
-        APP_LOGE("QueryIntentInfos write failed");
+        APP_LOGE("QueryPurposeInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector<IntentInfo>(infos, reply)) {
-        APP_LOGE("QueryIntentInfos write failed");
+    if (!WriteParcelableVector<PurposeInfo>(infos, reply)) {
+        APP_LOGE("QueryPurposeInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return NO_ERROR;

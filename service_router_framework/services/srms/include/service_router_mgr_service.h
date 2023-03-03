@@ -64,14 +64,14 @@ public:
         std::vector<ServiceInfo> &serviceInfos) override;
 
     /**
-     * @brief Query the IntentInfo of list by the given Want.
+     * @brief Query the PurposeInfo of list by the given Want.
      * @param want Indicates the information of the want.
-     * @param intentName Indicates the intentName.
-     * @param intentInfos Indicates the obtained IntentInfos object.
+     * @param purposeName Indicates the purposeName.
+     * @param purposeInfos Indicates the obtained PurposeInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName,
-        std::vector<IntentInfo> &intentInfos) override;
+    virtual int32_t QueryPurposeInfos(const Want &want, const std::string purposeName,
+        std::vector<PurposeInfo> &purposeInfos) override;
 
 private:
     void Init();

@@ -48,18 +48,18 @@ public:
         std::vector<ServiceInfo> &serviceInfos) = 0;
 
     /**
-     * @brief Query the IntentInfo of list by the given Want.
+     * @brief Query the PurposeInfo of list by the given Want.
      * @param want Indicates the information of the purpose.
-     * @param intentName Indicates the intentName.
-     * @param intentInfos Indicates the obtained IntentInfos object.
+     * @param purposeName Indicates the purposeName.
+     * @param purposeInfos Indicates the obtained PurposeInfos object.
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryIntentInfos(const Want &want, const std::string intentName,
-        std::vector<IntentInfo> &intentInfos) = 0;
+    virtual int32_t QueryPurposeInfos(const Want &want, const std::string purposeName,
+        std::vector<PurposeInfo> &purposeInfos) = 0;
 
     enum Message : uint32_t {
         QUERY_SERVICE_INFOS = 0,
-        QUERY_INTENTINFOS = 1,
+        QUERY_PURPOSE_INFOS = 1,
     };
 };
 }  // namespace AAFwk

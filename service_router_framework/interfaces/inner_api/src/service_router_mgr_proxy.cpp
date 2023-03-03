@@ -57,10 +57,10 @@ int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const Extensi
     return res;
 }
 
-int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::string intentName,
-    std::vector<IntentInfo> &intentInfos)
+int32_t ServiceRouterMgrProxy::QueryPurposeInfos(const Want &want, const std::string purposeName,
+    std::vector<PurposeInfo> &purposeInfos)
 {
-    APP_LOGI("ServiceRouterMgrProxy QueryIntentInfos");
+    APP_LOGI("ServiceRouterMgrProxy QueryPurposeInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -70,13 +70,13 @@ int32_t ServiceRouterMgrProxy::QueryIntentInfos(const Want &want, const std::str
         APP_LOGE("write want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteString(intentName)) {
-        APP_LOGE("write intentName fail");
+    if (!data.WriteString(purposeName)) {
+        APP_LOGE("write purposeName fail");
         return false;
     }
-    int32_t res = GetParcelableInfos<IntentInfo>(ServiceRouterMgrProxy::Message::QUERY_INTENTINFOS, data, intentInfos);
+    int32_t res = GetParcelableInfos<PurposeInfo>(ServiceRouterMgrProxy::Message::QUERY_PURPOSE_INFOS, data, purposeInfos);
     if (res != OHOS::NO_ERROR) {
-        APP_LOGE("fail to QueryIntentInfos from server, error code: %{public}d", res);
+        APP_LOGE("fail to QueryPurposeInfos from server, error code: %{public}d", res);
     }
     return res;
 }

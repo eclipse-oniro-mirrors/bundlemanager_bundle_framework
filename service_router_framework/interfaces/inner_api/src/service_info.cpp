@@ -21,7 +21,6 @@ namespace OHOS {
 namespace AppExecFwk {
 bool AppInfo::ReadFromParcel(Parcel &parcel)
 {
-    name = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
     iconId = parcel.ReadInt32();
     labelId = parcel.ReadInt32();
@@ -31,7 +30,6 @@ bool AppInfo::ReadFromParcel(Parcel &parcel)
 
 bool AppInfo::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
@@ -104,7 +102,7 @@ ServiceInfo *ServiceInfo::Unmarshalling(Parcel &parcel)
     return info;
 }
 
-bool IntentInfo::ReadFromParcel(Parcel &parcel)
+bool PurposeInfo::ReadFromParcel(Parcel &parcel)
 {
     std::unique_ptr<AppInfo> app(parcel.ReadParcelable<AppInfo>());
     if (!app) {
@@ -112,7 +110,7 @@ bool IntentInfo::ReadFromParcel(Parcel &parcel)
         return false;
     }
     appInfo = *app;
-    intentName = Str16ToStr8(parcel.ReadString16());
+    purposeName = Str16ToStr8(parcel.ReadString16());
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     abilityName = Str16ToStr8(parcel.ReadString16());
@@ -127,10 +125,10 @@ bool IntentInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-bool IntentInfo::Marshalling(Parcel &parcel) const
+bool PurposeInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appInfo);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(intentName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(purposeName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
@@ -144,9 +142,9 @@ bool IntentInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-IntentInfo *IntentInfo::Unmarshalling(Parcel &parcel)
+PurposeInfo *PurposeInfo::Unmarshalling(Parcel &parcel)
 {
-    IntentInfo *info = new (std::nothrow) IntentInfo();
+    PurposeInfo *info = new (std::nothrow) PurposeInfo();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;

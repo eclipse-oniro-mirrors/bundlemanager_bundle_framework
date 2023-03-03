@@ -34,20 +34,22 @@ namespace {
 }
 class BundleInfoResolveUtil {
 public:
-static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<IntentInfo> &intentInfos,
-    std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
-{
-    if (bundleInfo.name.empty()) {
-        APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
-        return false;
-    }
-    ResolveAbilityInfos(bundleInfo.abilityInfos, intentInfos, appInfo);
-    ResolveExtAbilityInfos(bundleInfo.extensionInfos, intentInfos, serviceInfos, appInfo);
-    if (intentInfos.empty() && serviceInfos.empty()) {
-        APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
-        return false;
-    }
-    return true;
+    static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<PurposeInfo> &purposeInfos,
+                                  std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
+    {
+        if (bundleInfo.name.empty())
+        {
+            APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
+            return false;
+        }
+        ResolveAbilityInfos(bundleInfo.abilityInfos, purposeInfos, appInfo);
+        ResolveExtAbilityInfos(bundleInfo.extensionInfos, purposeInfos, serviceInfos, appInfo);
+        if (purposeInfos.empty() && serviceInfos.empty())
+        {
+            APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
+            return false;
+        }
+        return true;
 }
 
 static ExtensionServiceType findExtensionServiceType(const std::string serviceType)
@@ -64,88 +66,88 @@ static ExtensionServiceType findExtensionServiceType(const std::string serviceTy
 }
 
 private:
-static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos, std::vector<IntentInfo> &intentInfos
-    , const AppInfo appInfo)
-{
+    static void ResolveAbilityInfos(const std::vector<AbilityInfo> &abilityInfos,
+        std::vector<PurposeInfo> &purposeInfos, const AppInfo appInfo)
+    {
     if (abilityInfos.empty()) {
         return;
     }
     for (const auto &abilityInfo : abilityInfos) {
-        ConvertAbilityToIntents(abilityInfo, intentInfos, appInfo);
+        ConvertAbilityToPurposes(abilityInfo, purposeInfos, appInfo);
     }
 }
 
 static void ResolveExtAbilityInfos(const std::vector<ExtensionAbilityInfo> &extensionInfos,
-    std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
+    std::vector<PurposeInfo> &purposeInfos, std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
 {
     if (extensionInfos.empty()) {
         return;
     }
     for (const auto &extensionInfo : extensionInfos) {
-        ConvertExtAbilityToIntents(extensionInfo, intentInfos, appInfo);
+        ConvertExtAbilityToPurposes(extensionInfo, purposeInfos, appInfo);
         ConvertExtAbilityToService(extensionInfo, serviceInfos, appInfo);
     }
 }
 
-static void ConvertAbilityToIntents(const AbilityInfo &abilityInfo, std::vector<IntentInfo> &intentInfos,
+static void ConvertAbilityToPurposes(const AbilityInfo &abilityInfo, std::vector<PurposeInfo> &purposeInfos,
     const AppInfo appInfo)
 {
-    std::string supportIntent = GetAbilityMetadataValue(abilityInfo, SrConstants::METADATA_SUPPORTINTENT_KEY);
-    if (supportIntent.empty()) {
+    std::string supportPurpose = GetAbilityMetadataValue(abilityInfo, SrConstants::METADATA_SUPPORT_PURPOSE_KEY);
+    if (supportPurpose.empty()) {
         return;
     }
-    std::vector<std::string> intentNames;
-    SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intentNames);
-    for (std::string &name : intentNames) {
-        IntentInfo intentInfo;
-        intentInfo.intentName = name;
-        intentInfo.abilityName = abilityInfo.name;
-        intentInfo.moduleName = abilityInfo.moduleName;
-        intentInfo.bundleName = abilityInfo.bundleName;
-        intentInfo.componentType = ComponentType::UI_ABILITY;
-        intentInfo.appInfo = appInfo;
-        intentInfos.emplace_back(intentInfo);
-        APP_LOGI("AbilityToIntents, bundle: %{public}s ,ability: %{public}s, intentName: %{public}s",
+    std::vector<std::string> purposeNames;
+    SplitStr(supportPurpose, SrConstants::MUTIL_SPLIT_KEY, purposeNames);
+    for (std::string &name : purposeNames) {
+        PurposeInfo purposeInfo;
+        purposeInfo.purposeName = name;
+        purposeInfo.abilityName = abilityInfo.name;
+        purposeInfo.moduleName = abilityInfo.moduleName;
+        purposeInfo.bundleName = abilityInfo.bundleName;
+        purposeInfo.componentType = ComponentType::UI_ABILITY;
+        purposeInfo.appInfo = appInfo;
+        purposeInfos.emplace_back(purposeInfo);
+        APP_LOGI("AbilityToPurposes, bundle: %{public}s ,ability: %{public}s, purposeName: %{public}s",
             abilityInfo.bundleName.c_str(), abilityInfo.name.c_str(), name.c_str());
     }
 }
 
-static void ConvertExtAbilityToIntents(const ExtensionAbilityInfo &extAbilityInfo,
-    std::vector<IntentInfo> &intentInfos, const AppInfo appInfo)
+static void ConvertExtAbilityToPurposes(const ExtensionAbilityInfo &extAbilityInfo,
+    std::vector<PurposeInfo> &purposeInfos, const AppInfo appInfo)
 {
     if (extAbilityInfo.type != ExtensionAbilityType::FORM && extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
     }
-    std::string supportIntent = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SUPPORTINTENT_KEY);
-    if (supportIntent.empty()) {
+    std::string supportPurpose = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SUPPORT_PURPOSE_KEY);
+    if (supportPurpose.empty()) {
         return;
     }
-    std::vector<std::string> intents;
-    SplitStr(supportIntent, SrConstants::MUTIL_SPLIT_KEY, intents);
-    for (std::string &intentAndCard : intents) {
-        IntentInfo intentInfo;
-        intentInfo.abilityName = extAbilityInfo.name;
-        intentInfo.moduleName = extAbilityInfo.moduleName;
-        intentInfo.bundleName = extAbilityInfo.bundleName;
-        intentInfo.appInfo = appInfo;
+    std::vector<std::string> purposes;
+    SplitStr(supportPurpose, SrConstants::MUTIL_SPLIT_KEY, purposes);
+    for (std::string &purposeAndCard : purposes) {
+        PurposeInfo purposeInfo;
+        purposeInfo.abilityName = extAbilityInfo.name;
+        purposeInfo.moduleName = extAbilityInfo.moduleName;
+        purposeInfo.bundleName = extAbilityInfo.bundleName;
+        purposeInfo.appInfo = appInfo;
         if (extAbilityInfo.type == ExtensionAbilityType::UI) {
-            intentInfo.intentName = intentAndCard;
-            intentInfo.componentType = ComponentType::UI_EXTENSION;
-            intentInfos.emplace_back(intentInfo);
-            APP_LOGI("UIExtToIntents, bundle: %{public}s, abilityName: %{public}s, intentName: %{public}s",
-                extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), intentAndCard.c_str());
+            purposeInfo.purposeName = purposeAndCard;
+            purposeInfo.componentType = ComponentType::UI_EXTENSION;
+            purposeInfos.emplace_back(purposeInfo);
+            APP_LOGI("UIExtToPurposes, bundle: %{public}s, abilityName: %{public}s, purposeName: %{public}s",
+                extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), purposeAndCard.c_str());
         } else {
-            std::vector<std::string> intentNameAndCardName;
-            SplitStr(intentAndCard, SrConstants::FORM_INTENTCARD_SPLIT_KEY, intentNameAndCardName);
-            if (intentNameAndCardName.size() == SrConstants::FORM_INTENTCARD_SPLIT_SIZE) {
-                intentInfo.intentName = intentNameAndCardName[0];
-                intentInfo.cardName = intentNameAndCardName[1];
-                intentInfo.componentType = ComponentType::FORM;
-                intentInfos.emplace_back(intentInfo);
-                APP_LOGI("FormToIntents, bundle: %{public}s, abilityName: %{public}s, intentName: %{public}s",
-                    extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), intentInfo.intentName.c_str());
+            std::vector<std::string> purposeNameAndCardName;
+            SplitStr(purposeAndCard, SrConstants::FORM_PURPOSE_CARD_SPLIT_KEY, purposeNameAndCardName);
+            if (purposeNameAndCardName.size() == SrConstants::FORM_PURPOSE_CARD_SPLIT_SIZE) {
+                purposeInfo.purposeName = purposeNameAndCardName[0];
+                purposeInfo.cardName = purposeNameAndCardName[1];
+                purposeInfo.componentType = ComponentType::FORM;
+                purposeInfos.emplace_back(purposeInfo);
+                APP_LOGI("FormToPurposes, bundle: %{public}s, abilityName: %{public}s, purposeName: %{public}s",
+                    extAbilityInfo.bundleName.c_str(), extAbilityInfo.name.c_str(), purposeInfo.purposeName.c_str());
             } else {
-                APP_LOGW("FormToIntents invalid supportIntent");
+                APP_LOGW("FormToPurposes invalid supportPurpose");
             }
         }
     }

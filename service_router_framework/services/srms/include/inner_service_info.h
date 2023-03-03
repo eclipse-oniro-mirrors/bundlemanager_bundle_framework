@@ -38,22 +38,22 @@ public:
     void FindServiceInfos(const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const;
 
     /**
-     * @brief Find intentInfo by intentName.
-     * @param intentName Indicates the intentName.
-     * @param intentInfos Indicates the IntentInfos to be find.
-     * @return Returns the IntentInfo object if find it; returns null otherwise.
+     * @brief Find purposeInfo by purposeName.
+     * @param purposeName Indicates the purposeName.
+     * @param purposeInfos Indicates the PurposeInfos to be find.
+     * @return Returns the PurposeInfo object if find it; returns null otherwise.
      */
-    void FindIntentInfos(const std::string &intentName, std::vector<IntentInfo> &intentInfos) const;
+    void FindPurposeInfos(const std::string &purposeName, std::vector<PurposeInfo> &purposeInfos) const;
 
     /**
      * @brief Update inner service info.
-     * @param intentInfos Indicates the IntentInfos object to be update.
+     * @param purposeInfos Indicates the PurposeInfos object to be update.
      * @param serviceInfos Indicates the ServiceInfos to be update.
      * @return
      */
-    void UpdateInnerServiceInfo(std::vector<IntentInfo> &intentInfos, std::vector<ServiceInfo> &serviceInfos)
+    void UpdateInnerServiceInfo(std::vector<PurposeInfo> &purposeInfos, std::vector<ServiceInfo> &serviceInfos)
     {
-        UpdateIntentInfos(intentInfos);
+        UpdatePurposeInfos(purposeInfos);
         UpdateServiceInfos(serviceInfos);
     }
 
@@ -86,18 +86,18 @@ public:
     }
 
     /**
-     * @brief Update intentInfos.
-     * @param serviceInfos Indicates the IntentInfos to be add.
+     * @brief Update purposeInfos.
+     * @param serviceInfos Indicates the PurposeInfos to be add.
      * @return
      */
-    void UpdateIntentInfos(const std::vector<IntentInfo> &intentInfos)
+    void UpdatePurposeInfos(const std::vector<PurposeInfo> &purposeInfos)
     {
-        if (intentInfos.size() == 0) {
-            APP_LOGW("updateIntentInfos, intentInfos.size is 0");
-            intentInfos_.clear();
+        if (purposeInfos.size() == 0) {
+            APP_LOGW("updatePurposeInfos, purposeInfos.size is 0");
+            purposeInfos_.clear();
             return;
         }
-        intentInfos_.assign(intentInfos.begin(), intentInfos.end());
+        purposeInfos_.assign(purposeInfos.begin(), purposeInfos.end());
     }
 
     /**
@@ -120,7 +120,7 @@ public:
 private:
     AppInfo appInfo_;
     std::vector<ServiceInfo> serviceInfos_;
-    std::vector<IntentInfo> intentInfos_;
+    std::vector<PurposeInfo> purposeInfos_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

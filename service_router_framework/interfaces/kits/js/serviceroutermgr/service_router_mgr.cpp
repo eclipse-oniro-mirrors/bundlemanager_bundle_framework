@@ -56,7 +56,7 @@ constexpr const char* APPLICATION_INFO = "applicationInfo";
 static void ConvertAppInfo(napi_env env, napi_value objAppInfo, const AppInfo &appInfo)
 {
     napi_value nName;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.name.c_str(), NAPI_AUTO_LENGTH, &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, appInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nName));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, NAME, nName));
 
     napi_value nDescriptionId;
@@ -118,7 +118,7 @@ static void ConvertServiceInfo(napi_env env, const ServiceInfo &serviceInfo, nap
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, PERMISSIONS, nPermissions));
 
     napi_value nAppInfo;
-    if (!serviceInfo.appInfo.name.empty()) {
+    if (!serviceInfo.appInfo.bundleName.empty()) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nAppInfo));
         ConvertAppInfo(env, nAppInfo, serviceInfo.appInfo);
     } else {

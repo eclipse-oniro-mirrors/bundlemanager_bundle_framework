@@ -75,14 +75,14 @@ public:
         std::vector<ServiceInfo> &serviceInfos) const;
 
     /**
-     * @brief Query a IntentInfo of list by the given Want.
-     * @param want Indicates the information of the intentInfo.
-     * @param intentName Indicates the intentName.
-     * @param intentInfos Indicates the obtained IntentInfo of list.
+     * @brief Query a PurposeInfo of list by the given Want.
+     * @param want Indicates the information of the purposeInfo.
+     * @param purposeName Indicates the purposeName.
+     * @param purposeInfos Indicates the obtained PurposeInfo of list.
      * @return Returns ERR_OK on success, others on failure.
      */
-    int32_t QueryIntentInfos(const Want &want, const std::string intentName,
-        std::vector<IntentInfo> &intentInfos) const;
+    int32_t QueryPurposeInfos(const Want &want, const std::string purposeName,
+        std::vector<PurposeInfo> &purposeInfos) const;
 
 private:
     ExtensionServiceType GetExtensionServiceType(const Want &want, const ExtensionServiceType &serviceType) const;

@@ -160,12 +160,12 @@ int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const Exten
     return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);
 }
 
-int32_t ServiceRouterMgrService::QueryIntentInfos(const Want &want, const std::string intentName,
-    std::vector<IntentInfo> &intentInfos)
+int32_t ServiceRouterMgrService::QueryPurposeInfos(const Want &want, const std::string purposeName,
+    std::vector<PurposeInfo> &purposeInfos)
 {
     APP_LOGD("%{public}s coldStart:", __func__);
     DelayUnloadTask();
-    return ServiceRouterDataMgr::GetInstance().QueryIntentInfos(want, intentName, intentInfos);
+    return ServiceRouterDataMgr::GetInstance().QueryPurposeInfos(want, purposeName, purposeInfos);
 }
 }  // namespace AAFwk
 }  // namespace OHOS

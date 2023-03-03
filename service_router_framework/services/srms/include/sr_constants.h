@@ -21,10 +21,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace SrConstants {
-const std::string METADATA_SUPPORTINTENT_KEY = "ohos.extension.supportintent";
+const std::string METADATA_SUPPORT_PURPOSE_KEY = "ohos.extension.supportpurpose";
 const std::string MUTIL_SPLIT_KEY = "|";
-const std::string FORM_INTENTCARD_SPLIT_KEY = ":";
-const int32_t FORM_INTENTCARD_SPLIT_SIZE = 2;
+const std::string FORM_PURPOSE_CARD_SPLIT_KEY = ":";
+const int32_t FORM_PURPOSE_CARD_SPLIT_SIZE = 2;
 const std::string METADATA_SERVICE_TYPE_KEY = "ohos.extension.servicetype";
 } // namespace SrConstants
 } // namespace AppExecFwk

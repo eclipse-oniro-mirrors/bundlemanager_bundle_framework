@@ -61,9 +61,9 @@ struct ServiceInfo : public Parcelable {
     static ServiceInfo *Unmarshalling(Parcel &parcel);
 };
 
-struct IntentInfo final : public Parcelable {
+struct PurposeInfo final : public Parcelable {
     AppInfo appInfo;
-    std::string intentName;
+    std::string purposeName;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
@@ -73,7 +73,7 @@ struct IntentInfo final : public Parcelable {
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static IntentInfo *Unmarshalling(Parcel &parcel);
+    static PurposeInfo *Unmarshalling(Parcel &parcel);
 };
 } // AppExecFwk
 } // OHOS
