@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#include "service_router_mgr_service.h"
+
 #include <memory>
 #include <string>
 
@@ -25,7 +27,6 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "service_router_data_mgr.h"
-#include "service_router_mgr_service.h"
 #include "string_ex.h"
 #include "sr_samgr_helper.h"
 #include "system_ability_definition.h"
@@ -93,14 +94,14 @@ void ServiceRouterMgrService::DelayUnloadTask()
             OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (saManager == nullptr) {
             APP_LOGE("UnloadSA, GetSystemAbilityManager is null.");
-            return ;
+            return;
         }
         int32_t result = saManager->UnloadSystemAbility(OHOS::SERVICE_ROUTER_MGR_SERVICE_ID);
         if (result != ERR_OK) {
             APP_LOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
             return;
         }
-        APP_LOGE("UnloadSA success.");
+        APP_LOGI("UnloadSA success.");
     };
     handler_->PostTask(task, TASK_NAME, UNLOAD_DELAY_TIME);
 }

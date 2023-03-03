@@ -20,6 +20,7 @@
 #include "event_handler.h"
 #include "service_info.h"
 #include "service_router_mgr_stub.h"
+#include "singleton.h"
 #include "sr_common_event_subscriber.h"
 #include "system_ability.h"
 #include "want.h"

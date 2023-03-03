@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "service_router_death_recipient.h"
 
 #include "app_log_wrapper.h"
 #include "service_router_mgr_helper.h"
-#include "service_router_death_recipient.h"
 
 namespace OHOS {
 namespace AppExecFwk {

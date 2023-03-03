@@ -44,7 +44,6 @@ public:
     sptr<IServiceRouterManager> GetServiceRouterMgr();
 
     void LoadSA();
-    void UnloadSA();
     void FinishStartSAFail();
     void FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject);
     void OnRemoteDiedHandle();

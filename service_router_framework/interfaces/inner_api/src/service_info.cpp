@@ -13,8 +13,9 @@
  * limitations under the License.
  */
 
-#include "parcel_macro.h"
 #include "service_info.h"
+
+#include "parcel_macro.h"
 #include "string_ex.h"
 
 namespace OHOS {

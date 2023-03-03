@@ -12,11 +12,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "service_router_data_mgr.h"
 
 #include "app_log_wrapper.h"
 #include "bundle_info_resolve_util.h"
 #include "iservice_registry.h"
-#include "service_router_data_mgr.h"
 #include "sr_constants.h"
 #include "sr_samgr_helper.h"
 #include "system_ability_definition.h"

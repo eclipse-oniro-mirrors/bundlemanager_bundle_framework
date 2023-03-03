@@ -13,15 +13,17 @@
  * limitations under the License.
  */
 
+#include "service_router_mgr_stub.h"
+
 #include <vector>
+
+#include "accesstoken_kit.h"
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
-#include "service_router_mgr_stub.h"
-#include "service_info.h"
-#include "accesstoken_kit.h"
-#include "ipc_skeleton.h"
-#include "tokenid_kit.h"
 #include "bundle_constants.h"
+#include "ipc_skeleton.h"
+#include "service_info.h"
+#include "tokenid_kit.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,7 +43,7 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     std::u16string descriptor = ServiceRouterMgrStub::GetDescriptor();
     std::u16string remoteDescriptor = data.ReadInterfaceToken();
     if (descriptor != remoteDescriptor) {
-        APP_LOGI("local descriptor is not equal to remote");
+        APP_LOGE("local descriptor is not equal to remote");
         return ERR_INVALID_STATE;
     }
 
@@ -51,10 +53,9 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_PURPOSE_INFOS):
             return HandleQueryPurposeInfos(data, reply);
         default:
-            APP_LOGW("DistributedBmsHost receives unknown code, code = %{public}d", code);
+            APP_LOGW("ServiceRouterMgrStub receives unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    return NO_ERROR;
 }
 
 int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply)
@@ -69,48 +70,48 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     Want *want = data.ReadParcelable<Want>();
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());
     std::vector<ServiceInfo> infos;
     int ret = QueryServiceInfos(*want, type, infos);
-    if (ret != NO_ERROR) {
-        APP_LOGE("QueryServiceInfos result:%{public}d", ret);
-        return ret;
-    }
-    if (!reply.WriteBool(true)) {
-        APP_LOGE("QueryServiceInfos write failed");
+    if (!reply.WriteBool(ret == ERR_OK)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector<ServiceInfo>(infos, reply)) {
-        APP_LOGE("QueryServiceInfos write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVector<ServiceInfo>(infos, reply)) {
+            APP_LOGE("QueryServiceInfos write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
-    return NO_ERROR;
+    return ERR_OK;
 }
 
 int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGI("ServiceRouterMgrStub handle query service infos with muti param");
-    if (!VerifySystemApp()) {
-        APP_LOGE("verify system app failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     Want *want = data.ReadParcelable<Want>();
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     std::string purposeName = data.ReadString();
     std::vector<PurposeInfo> infos;
     int ret = QueryPurposeInfos(*want, purposeName, infos);
-    if (ret != NO_ERROR) {
-        APP_LOGE("QueryServiceInfos result:%{public}d", ret);
-        return ret;
-    }
-    if (!reply.WriteBool(true)) {
-        APP_LOGE("QueryPurposeInfos write failed");
+    if (!reply.WriteBool(ret == ERR_OK)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!WriteParcelableVector<PurposeInfo>(infos, reply)) {
-        APP_LOGE("QueryPurposeInfos write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVector<PurposeInfo>(infos, reply)) {
+            APP_LOGE("QueryPurposeInfos write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
-    return NO_ERROR;
+    return ERR_OK;
 }
 
 bool ServiceRouterMgrStub::VerifyCallingPermission(const std::string &permissionName)
@@ -136,9 +137,9 @@ bool ServiceRouterMgrStub::VerifySystemApp()
     Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL || callingUid == Constants::ROOT_UID) {
+        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL
+        || IPCSkeleton::GetCallingUid() == Constants::ROOT_UID) {
         return true;
     }
     uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();

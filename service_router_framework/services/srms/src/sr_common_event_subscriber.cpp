@@ -13,10 +13,11 @@
  * limitations under the License.
  */
 
+#include "sr_common_event_subscriber.h"
+
 #include "app_log_wrapper.h"
 #include "common_event_support.h"
 #include "service_router_data_mgr.h"
-#include "sr_common_event_subscriber.h"
 #include "want.h"
 
 namespace OHOS {

@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "service_router_load_callback.h"
 
 #include "app_log_wrapper.h"
 #include "service_router_mgr_helper.h"
-#include "service_router_load_callback.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {

@@ -13,13 +13,14 @@
  * limitations under the License.
  */
 
+#include "sr_samgr_helper.h"
+
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_proxy.h"
 #include "if_system_ability_manager.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
-#include "sr_samgr_helper.h"
 #ifdef ACCOUNT_ENABLE
 #include "os_account_manager.h"
 #endif

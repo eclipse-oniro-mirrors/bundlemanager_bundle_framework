@@ -12,12 +12,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "service_router_mgr_interface.h"
+
 #include "service_router_mgr_proxy.h"
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "parcel_macro.h"
+#include "service_router_mgr_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {

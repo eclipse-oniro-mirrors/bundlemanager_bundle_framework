@@ -12,14 +12,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "service_router_mgr_helper.h"
+
+#include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "iservice_registry.h"
-#include "service_router_mgr_helper.h"
 #include "service_router_load_callback.h"
 #include "system_ability_definition.h"
-#include "bundle_constants.h"
-#include <unistd.h>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -74,21 +75,6 @@ void ServiceRouterMgrHelper::LoadSA()
         APP_LOGE("LoadSA, LoadSystemAbility result: %{public}d", result);
         return;
     }
-}
-
-void ServiceRouterMgrHelper::UnloadSA()
-{
-    sptr<ISystemAbilityManager> saManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (saManager == nullptr) {
-        APP_LOGE("UnloadSA, GetSystemAbilityManager is null.");
-        return;
-    }
-    int32_t result = saManager->UnloadSystemAbility(OHOS::SERVICE_ROUTER_MGR_SERVICE_ID);
-    if (result != ERR_OK) {
-        APP_LOGE("UnloadSA, UnloadSystemAbility result: %{public}d", result);
-        return;
-    }
-    APP_LOGI("UnloadSA success");
 }
 
 void ServiceRouterMgrHelper::FinishStartSASuccess(const sptr<IRemoteObject> &remoteObject)
