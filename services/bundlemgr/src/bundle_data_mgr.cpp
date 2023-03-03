@@ -4516,8 +4516,7 @@ ErrCode BundleDataMgr::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sha
     APP_LOGD("GetAllSharedBundleInfo");
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
 
-    for (auto& infoItem : bundleInfos_) {
-        const InnerBundleInfo &innerBundleInfo = infoItem.second;
+    for (const auto& [key, innerBundleInfo] : bundleInfos_) {
         if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
             continue;
         }
@@ -4532,6 +4531,7 @@ ErrCode BundleDataMgr::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sha
 ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
     std::vector<SharedBundleInfo> &sharedBundles)
 {
+    APP_LOGD("GetSharedBundleInfo");
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("bundleName or moduleName is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
@@ -4544,7 +4544,7 @@ ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, const 
         return errCode;
     }
 
-    for (auto& dep : dependencies) {
+    for (const auto& dep : dependencies) {
         SharedBundleInfo sharedBundleInfo;
         errCode = GetSharedBundleInfoBySelf(dep.bundleName, sharedBundleInfo);
         if (errCode != ERR_OK) {
