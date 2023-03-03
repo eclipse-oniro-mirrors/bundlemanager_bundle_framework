@@ -16,16 +16,19 @@
 #define private public
 
 #include <fstream>
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <sstream>
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "bundle_connect_ability_mgr.h"
 #include "bundle_info.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_pack_info.h"
+#include "mock_ecological_rule_manager.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
 #include "installd/installd_service.h"
@@ -38,7 +41,13 @@
 using namespace testing::ext;
 using namespace std::chrono_literals;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS::AAFwk;
 using OHOS::AAFwk::Want;
+using ::testing::_;
+using ::testing::Invoke;
+using ::testing::DoAll;
+using ::testing::Return;
+using ::testing::SetArgReferee;
 
 namespace OHOS {
 namespace {
@@ -1179,7 +1188,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | Smal
     connectAbilityMgr.handler_ = nullptr;
     bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_FALSE(res);
-    
+
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
@@ -1401,6 +1410,91 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
     bool res = connectAbilityMgr.IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
     EXPECT_FALSE(res);
     SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0025
+ * Function: SilentInstall
+ * @tc.name: test SilentInstall
+ * @tc.desc: test SilentInstall successed when erms not exist.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    connectAbilityMgr.iErMgr_ = nullptr;
+    TargetAbilityInfo targetAbilityInfo;
+    Want want;
+    FreeInstallParams freeInstallParams;
+    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0026
+ * Function: SilentInstall
+ * @tc.name: test SilentInstall
+ * @tc.desc: test SilentInstall successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
+    connectAbilityMgr.iErMgr_ = erms;
+    TargetAbilityInfo targetAbilityInfo;
+    Want want;
+    FreeInstallParams freeInstallParams;
+    ExperienceRule rule;
+    rule.isAllow = true;
+    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
+    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0027
+ * Function: SilentInstall
+ * @tc.name: test SilentInstall
+ * @tc.desc: test SilentInstall successed when erms not allow with replace want.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
+    connectAbilityMgr.iErMgr_ = erms;
+    TargetAbilityInfo targetAbilityInfo;
+    Want want;
+    FreeInstallParams freeInstallParams;
+    ExperienceRule rule;
+    rule.isAllow = false;
+    rule.replaceWant = std::make_shared<Want>();
+    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
+    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0028
+ * Function: SilentInstall
+ * @tc.name: test SilentInstall
+ * @tc.desc: test SilentInstall failed when erms not allow without replace want.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0028, Function | SmallTest | Level0)
+{
+    BundleConnectAbilityMgr connectAbilityMgr;
+    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
+    connectAbilityMgr.iErMgr_ = erms;
+    TargetAbilityInfo targetAbilityInfo;
+    Want want;
+    FreeInstallParams freeInstallParams;
+    ExperienceRule rule;
+    rule.isAllow = false;
+    rule.replaceWant = nullptr;
+    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
+        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
+    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    EXPECT_FALSE(res);
 }
 
 /**

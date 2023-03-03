@@ -23,6 +23,7 @@
 #include "iremote_object.h"
 
 #include "ability_info.h"
+#include "erms_mgr_param.h"
 #include "parcel.h"
 #include "want.h"
 
@@ -32,40 +33,13 @@ using Want = OHOS::AAFwk::Want;
 using AbilityInfo = OHOS::AppExecFwk::AbilityInfo;
 using ExtensionAbilityInfo = OHOS::AppExecFwk::ExtensionAbilityInfo;
 
-namespace ErmsParams {
-struct ExperienceRule : public Parcelable {
-    bool isAllow = false;
-    std::shared_ptr <Want> replaceWant = nullptr;
-    int64_t sceneCode = 0L;
-    std::vector <int64_t> allowTypes;
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static ExperienceRule *Unmarshalling(Parcel &parcel);
-};
-
-struct CallerInfo : public Parcelable {
-    std::string packageName;
-    int64_t uid = 0L;
-    int64_t pid = 0L;
-
-    bool ReadFromParcel(Parcel &parcel);
-
-    virtual bool Marshalling(Parcel &parcel) const override;
-
-    static CallerInfo *Unmarshalling(Parcel &parcel);
-};
-}
-
 // when AG support the SA, this file needs to be removed.
-class IEcologicalRuleManager : public IRemoteBroker {
+class IEcologicalRuleManager : public OHOS::IRemoteBroker {
 public:
-    explicit IEcologicalRuleManager();
+    IEcologicalRuleManager() = default;
     virtual ~IEcologicalRuleManager() = default;
 
-    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundlemanager.IEcologicalRuleManagerService");
+    DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.IEcologicalRuleManagerService");
 
     virtual int32_t QueryFreeInstallExperience(const Want &want,
         const ErmsParams::CallerInfo &callerInfo, ErmsParams::ExperienceRule &rule)

@@ -133,17 +133,41 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
 ohos_unittest("BmsBundleOverlayIpcTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/json/include" ]
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "${services_path}/bundlemgr/test/mock/include/parameter",
+    "//base/startup/init/interfaces/innerkits/include",
+  ]
   sources = [
     "${core_path}/src/overlay/overlay_manager_host.cpp",
     "${core_path}/src/overlay/overlay_manager_proxy.cpp",
   ]
 
+  sources += bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += bundle_install_sources
+
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
+    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+  ]
+
   defines = []
   if (bundle_framework_overlay_install) {
     include_dirs += [ "${core_path}/include/overlay" ]
+    sources += overlay_installation
     sources += [ "bms_bundle_overlay_ipc_test.cpp" ]
-    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+    defines += [
+      "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE",
+      "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION",
+    ]
   }
 
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
@@ -153,16 +177,25 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
 
   deps = [ "${common_path}:libappexecfwk_common" ]
+  deps += bundle_install_deps
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "c_utils:utils",
+    "ability_base:want",
+    "access_token:libtokenid_sdk",
+    "appverify:libhapverify",
+    "bundle_framework:appexecfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
-    "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
 
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -173,6 +206,24 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     external_deps += [ "selinux:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
+
+  if (hicollie_enable) {
+    external_deps += [ "hicollie_native:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (hisysevent_enable) {
+    sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
+    external_deps += [ "hisysevent_native:libhisysevent" ]
+    defines += [ "HISYSEVENT_ENABLE" ]
+  }
+  configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+  external_deps += [ "relational_store:native_rdb" ]
+  sources += [
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
+  ]
 }
 
 ohos_unittest("BmsBundleManagerOverlayIpcTest") {
@@ -201,6 +252,93 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   if (bundle_framework_overlay_install) {
     sources += overlay_installation
     sources += [ "bms_bundle_manager_overlay_ipc_test.cpp" ]
+    defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
+  }
+
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = []
+
+  deps += bundle_install_deps
+
+  external_deps = [
+    "ability_base:want",
+    "access_token:libtokenid_sdk",
+    "appverify:libhapverify",
+    "bundle_framework:appexecfwk_core",
+    "common_event_service:cesfwk_innerkits",
+    "eventhandler:libeventhandler",
+    "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "storage_service:storage_manager_sa_proxy",
+  ]
+  if (bundle_framework_graphics) {
+    external_deps += [ "multimedia_image_framework:image_native" ]
+  }
+
+  if (configpolicy_enable) {
+    external_deps += [ "config_policy:configpolicy_util" ]
+    defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
+
+  if (build_selinux) {
+    external_deps += [ "selinux:libhap_restorecon" ]
+    cflags += [ "-DWITH_SELINUX" ]
+  }
+
+  if (hicollie_enable) {
+    external_deps += [ "hicollie_native:libhicollie" ]
+    defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (hisysevent_enable) {
+    sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
+    external_deps += [ "hisysevent_native:libhisysevent" ]
+    defines += [ "HISYSEVENT_ENABLE" ]
+  }
+  configs += [ "../../../../../services/bundlemgr:rdb_config" ]
+  external_deps += [ "relational_store:native_rdb" ]
+  sources += [
+    "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
+    "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
+    "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
+  ]
+}
+
+ohos_unittest("BmsBundleSetOverlayEnabledTest") {
+  use_exceptions = true
+  module_out_path = module_output_path
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "${services_path}/bundlemgr/test/mock/include/parameter",
+    "//base/startup/init/interfaces/innerkits/include",
+  ]
+  sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
+  sources += bundle_install_sources
+
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
+  sources += [
+    "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/systemcapability.cpp",
+    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
+  ]
+
+  defines = []
+  if (bundle_framework_overlay_install) {
+    sources += overlay_installation
+    sources += [ "bms_bundle_set_overlay_enabled_test.cpp" ]
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
 
@@ -268,6 +406,7 @@ group("unittest") {
       ":BmsBundleOverlayCheckerTest",
       ":BmsBundleOverlayInfoTest",
       ":BmsBundleOverlayIpcTest",
+      ":BmsBundleSetOverlayEnabledTest",
     ]
   }
 }

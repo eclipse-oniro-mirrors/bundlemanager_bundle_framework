@@ -32,7 +32,6 @@ namespace {
 const std::string APP_TYPE = "appType";
 const std::string UID = "uid";
 const std::string GID = "gid";
-const std::string BASE_DATA_DIR = "baseDataDir";
 const std::string BUNDLE_STATUS = "bundleStatus";
 const std::string BASE_APPLICATION_INFO = "baseApplicationInfo";
 const std::string BASE_BUNDLE_INFO = "baseBundleInfo";
@@ -123,6 +122,7 @@ const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_PACKAGE_MODULE_INFO = "innerSharedPackageModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
+const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -392,7 +392,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->uid_ = info.uid_;
     this->gid_ = info.gid_;
     this->userId_ = info.userId_;
-    this->baseDataDir_ = info.baseDataDir_;
     this->bundleStatus_ = info.bundleStatus_;
     this->appFeature_ = info.appFeature_;
     this->allowedAcls_ = info.allowedAcls_;
@@ -581,7 +580,6 @@ void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandbox
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
-    jsonObject[BASE_DATA_DIR] = baseDataDir_;
     jsonObject[BUNDLE_STATUS] = bundleStatus_;
     jsonObject[ALLOWED_ACLS] = allowedAcls_;
     jsonObject[BASE_APPLICATION_INFO] = *baseApplicationInfo_;
@@ -1380,14 +1378,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         ProfileReader::parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        BASE_DATA_DIR,
-        baseDataDir_,
-        JsonType::STRING,
-        true,
-        ProfileReader::parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleStatus>(jsonObject,
         jsonObjectEnd,
         BUNDLE_STATUS,
@@ -3638,6 +3628,36 @@ int32_t InnerBundleInfo::GetApplyQuickFixFrequency() const
 void InnerBundleInfo::ResetApplyQuickFixFrequency()
 {
     applyQuickFixFrequency_ = 0;
+}
+
+std::vector<uint32_t> InnerBundleInfo::GetAllHspVersion() const
+{
+    std::vector<uint32_t> versionCodes;
+    for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+        for (const auto &module : modules) {
+            if (std::find(versionCodes.begin(), versionCodes.end(), module.versionCode) == versionCodes.end()) {
+                versionCodes.emplace_back(module.versionCode);
+            }
+        }
+    }
+    return versionCodes;
+}
+
+void InnerBundleInfo::DeleteHspModuleByVersion(int32_t versionCode)
+{
+    for (auto modulesIt = innerSharedPackageModuleInfos_.begin(); modulesIt != innerSharedPackageModuleInfos_.end();) {
+        if (modulesIt->second.size() == SINGLE_HSP_VERSION &&
+            modulesIt->second.front().versionCode == static_cast<uint32_t>(versionCode)) {
+            modulesIt = innerSharedPackageModuleInfos_.erase(modulesIt);
+        } else {
+            modulesIt->second.erase(
+                std::remove_if(modulesIt->second.begin(), modulesIt->second.end(),
+                    [versionCode] (InnerModuleInfo &module) {
+                        return module.versionCode == static_cast<uint32_t>(versionCode);
+                    }));
+            ++modulesIt;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -71,7 +71,7 @@ struct InstallParam : public Parcelable {
 struct UninstallParam : public Parcelable {
     std::string bundleName;
     std::string moduleName;
-    int32_t versionCode;
+    int32_t versionCode = Constants::ALL_VERSIONCODE;
     int32_t userId;
 
     bool ReadFromParcel(Parcel &parcel);

@@ -262,7 +262,8 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
     }
 
     if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
-        ret = overlayMgrProxy->GetOverlayModuleInfo(bundleName, overlayCbInfo->moduleName, overlayCbInfo->overlayModuleInfo);
+        ret = overlayMgrProxy->GetOverlayModuleInfo(bundleName, overlayCbInfo->moduleName,
+            overlayCbInfo->overlayModuleInfo);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_TARGET_MODULE_INFO) {
         ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(bundleName, overlayCbInfo->targetModuleName,
             overlayCbInfo->infoVec);
@@ -275,8 +276,8 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetAllOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName, overlayCbInfo->moduleName,
-            overlayCbInfo->infoVec);
+        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName,
+            overlayCbInfo->moduleName, overlayCbInfo->infoVec);
     } else {
         APP_LOGE("invalid overlay option");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;

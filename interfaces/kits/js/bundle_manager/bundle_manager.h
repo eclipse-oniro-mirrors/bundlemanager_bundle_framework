@@ -190,7 +190,8 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
 struct SharedBundleCallbackInfo : public BaseCallbackInfo {
     explicit SharedBundleCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
 
-    int32_t userId = Constants::UNSPECIFIED_USERID;
+    std::string bundleName;
+    std::string moduleName;
     std::vector<SharedBundleInfo> sharedBundles;
 };
 
@@ -218,6 +219,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);

@@ -508,7 +508,7 @@ void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::V
         return;
     }
     std::vector<Metadata> metadatas;
-    for (auto &it : provisionMetadatas) {
+    for (const auto &it : provisionMetadatas) {
         Metadata metadata;
         metadata.name = it.name;
         metadata.value = it.value;
@@ -770,15 +770,18 @@ ErrCode BundleInstallChecker::CheckSharedPackageLabelInfo(std::unordered_map<std
     auto& firstBundle = infos.begin()->second;
     bool isBundleExist = dataMgr->FetchInnerBundleInfo(firstBundle.GetBundleName(), oldInfo);
     if (isBundleExist) {
+        if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+            APP_LOGE("old bundle is not shared");
+            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
+        }
         // check old InnerBundleInfo together
         infos.emplace(oldInfo.GetBundleName(), oldInfo);
     } else {
+        if (firstBundle.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+            APP_LOGE("installing bundle is not hsp");
+            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+        }
         oldInfo = firstBundle;
-    }
-
-    if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
-        APP_LOGE("bundle is not hsp");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
     // check compatible policy
@@ -984,6 +987,9 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
 {
     const std::map<std::string, InnerModuleInfo> &innerModuleInfos = info.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
+        return ERR_OK;
+    }
+    if (innerModuleInfos.cbegin()->second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
         return ERR_OK;
     }
     if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {

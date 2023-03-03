@@ -60,7 +60,12 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+
+  deps = [
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",
@@ -186,7 +191,12 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+
+  deps = [
+    "//third_party/googletest:gmock_main",
+    "//third_party/googletest:gtest_main",
+  ]
+
   if (bundle_framework_graphics) {
     include_dirs += [
       "//foundation/multimedia/image_framework/interfaces/innerkits/include",
@@ -201,6 +211,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "battery_manager:batterysrv_client",
+    "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",

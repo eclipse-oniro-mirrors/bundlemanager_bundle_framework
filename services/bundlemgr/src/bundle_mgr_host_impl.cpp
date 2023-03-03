@@ -332,6 +332,10 @@ bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleNa
 bool BundleMgrHostImpl::GetBundlesForUid(const int uid, std::vector<std::string> &bundleNames)
 {
     APP_LOGD("start GetBundlesForUid, uid : %{public}d", uid);
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -363,6 +367,10 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
 bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
 {
     APP_LOGD("start GetBundleGids, bundleName : %{public}s", bundleName.c_str());
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -462,6 +470,10 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 bool BundleMgrHostImpl::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     auto elementName = want.GetElement();
     if (elementName.GetDeviceID().empty() || elementName.GetBundleName().empty() ||
         elementName.GetAbilityName().empty()) {
@@ -1059,19 +1071,6 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     }
 
     EventReport::SendCleanCacheSysEvent(bundleName, userId, false, false);
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
-        return false;
-    }
-    NotifyBundleEvents installRes = {
-        .bundleName = bundleName,
-        .resultCode = ERR_OK,
-        .type = NotifyType::BUNDLE_DATA_CLEARED,
-        .uid = innerBundleUserInfo.uid,
-        .accessTokenId = innerBundleUserInfo.accessTokenId
-    };
-    NotifyBundleStatus(installRes);
     return true;
 }
 
@@ -2414,9 +2413,26 @@ ErrCode BundleMgrHostImpl::GetProvisionMetadata(const std::string &bundleName, i
     return dataMgr->GetProvisionMetadata(bundleName, userId, provisionMetadatas);
 }
 
-ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(int32_t userId, std::vector<SharedBundleInfo> &sharedBundles)
+ErrCode BundleMgrHostImpl::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
 {
-    APP_LOGD("begin to GetAllSharedBundleInfo userId: %{public}d", userId);
+    APP_LOGD("begin to GetAllSharedBundleInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission("")) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    APP_LOGD("GetSharedBundleInfo: bundleName: %{public}s, moduleName: %{public}s",
+        bundleName.c_str(), moduleName.c_str());
     if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;

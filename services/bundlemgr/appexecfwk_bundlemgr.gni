@@ -38,7 +38,6 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/bundle_stream_installer_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",
-  "${services_path}/bundlemgr/src/erms_mgr_interface.cpp",
   "${services_path}/bundlemgr/src/event_report.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",

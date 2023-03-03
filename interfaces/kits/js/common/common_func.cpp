@@ -1601,7 +1601,7 @@ void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<Overl
     napi_value objInfos)
 {
     for (size_t index = 0; index < Infos.size(); ++index) {
-        napi_value objInfo= nullptr;
+        napi_value objInfo = nullptr;
         napi_create_object(env, &objInfo);
         ConvertOverlayModuleInfo(env, Infos[index], objInfo);
         napi_set_element(env, objInfos, index, objInfo);
