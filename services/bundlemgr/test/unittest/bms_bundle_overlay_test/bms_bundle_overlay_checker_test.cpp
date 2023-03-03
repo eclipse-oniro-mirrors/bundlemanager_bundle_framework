@@ -1337,6 +1337,121 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest 
 }
 
 /**
+ * @tc.number: OverlayDataMgr_3000
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleConnection.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    // construct target module
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
+
+    info.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    bool res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info);
+    EXPECT_EQ(res, true);
+
+    info.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
+    res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info);
+    EXPECT_EQ(res, true);
+
+    UninstallBundleInfo();
+}
+
+/**
+ * @tc.number: OverlayDataMgr_3100
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleConnection.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    // construct target module
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
+
+    info.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    bool res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info);
+    EXPECT_EQ(res, true);
+
+    UninstallBundleInfo();
+}
+
+/**
+ * @tc.number: OverlayDataMgr_3200
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleConnection.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3200, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo();
+
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    // construct target module
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    bool res = dataMgr->AddNewModuleInfo(TEST_BUNDLE_NAME, newInfo, oldInfo);
+    EXPECT_EQ(res, false);
+
+    UninstallBundleInfo();
+}
+
+/**
+ * @tc.number: OverlayDataMgr_3300
+ * @tc.name: AddBundleInfo
+ * @tc.desc: 1. add module info to the data manager
+ *           2. query data then verify
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = TEST_BUNDLE_NAME;
+    bundleInfo1.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.name = TEST_BUNDLE_NAME;
+    applicationInfo1.bundleName = TEST_BUNDLE_NAME;
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetBaseApplicationInfo(applicationInfo1);
+
+    InnerBundleInfo info2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = TEST_BUNDLE_NAME;
+    bundleInfo2.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.name = TEST_BUNDLE_NAME;
+    applicationInfo2.bundleName = TEST_BUNDLE_NAME;
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetBaseApplicationInfo(applicationInfo2);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info1);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_START);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+    info1.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
+    info2.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    bool ret = dataMgr->AddNewModuleInfo(TEST_BUNDLE_NAME, info2, info1);
+    EXPECT_FALSE(ret);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_SUCCESS);
+}
+
+/**
  * @tc.number: OverlayManagerHostImpl_0100
  * @tc.name: test overlayManagerHostImpl.
  * @tc.desc: 1.overlayManagerHostImpl of GetAllOverlayModuleInfo.
