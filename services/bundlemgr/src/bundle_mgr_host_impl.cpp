@@ -454,8 +454,9 @@ bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sp
 
 void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 {
-    if (!BundlePermissionMgr::IsNativeTokenType()) {
-        APP_LOGE("verify token type failed");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("UpgradeAtomicService verify failed.");
         return;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
@@ -489,6 +490,11 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 
 void BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("ProcessPreload verify failed.");
+        return;
+    }
     APP_LOGD("begin to process preload.");
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
