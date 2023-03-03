@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -30,9 +32,18 @@
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::JsonConstants;
-
+namespace OHOS {
 namespace {
+const std::string BUNDLE_NAME{"com.ohos.test"};
+const std::string BUNDLE_NAME_WITH_USERID{"com.ohos.test_100"};
 const std::string NORMAL_BUNDLE_NAME{"com.example.test"};
+const std::string MODULE_NAME_TEST{"test"};
+const std::string MODULE_PACKGE{"com.example.test.entry"};
+const std::string MODULE_STATE_0{"test_0"};
+const std::string MODULE_STATE_1{"test_1"};
+const std::string MODULE_NAME{"entry"};
+int32_t state = 0;
+int32_t versionCode = 0;
 }  // namespace
 
 class BmsBundleDataStorageDatabaseTest : public testing::Test {
@@ -51,6 +62,8 @@ protected:
         ABILITY_INFO,
     };
     void CheckInvalidPropDeserialize(const nlohmann::json infoJson, const InfoType infoType) const;
+    void CheckOverlayModuleState(
+            const InnerBundleInfo &info, const std::string &moduleName, int32_t state) const;
 
 protected:
     nlohmann::json innerBundleInfoJson_ = R"(
@@ -824,6 +837,22 @@ void BmsBundleDataStorageDatabaseTest::CheckInvalidPropDeserialize(
     innerBundleInfoJson["baseBundleInfo"] = bundleInfoJson;
     InnerBundleInfo fromJsonInfo;
     EXPECT_FALSE(fromJsonInfo.FromJson(innerBundleInfoJson));
+}
+
+void BmsBundleDataStorageDatabaseTest::CheckOverlayModuleState(
+    const InnerBundleInfo &info, const std::string &moduleName, int32_t state) const
+{
+    for (auto &innerUserInfo : info.GetInnerBundleUserInfos()) {
+        auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
+        std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
+                EXPECT_FALSE(true);
+                return false;
+            }
+            EXPECT_EQ(item, MODULE_STATE_0);
+            return true;
+        });
+    }
 }
 
 void BmsBundleDataStorageDatabaseTest::SetUpTestCase()
@@ -1622,3 +1651,180 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | S
     tokenIdEx = info.GetAccessTokenIdEx(userId);
     EXPECT_EQ(tokenIdEx, accessTokenIdEx.tokenIDEx);
 }
+
+/**
+ * @tc.number: GetMaxVerBaseSharedPackageInfoTest
+ * @tc.name: Test GetMaxVerBaseSharedPackageInfo
+ * @tc.desc: Test the GetMaxVerBaseSharedPackageInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetMaxVerBaseSharedPackageInfoTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BaseSharedPackageInfo sharedPackageInfo;
+    bool ret = info.GetMaxVerBaseSharedPackageInfo(MODULE_NAME_TEST, sharedPackageInfo);
+    EXPECT_EQ(ret, false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedPackageInfo(MODULE_NAME_TEST, sharedPackageInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InsertInnerSharedPackageModuleInfo
+ * @tc.name: Test InsertInnerSharedPackageModuleInfo
+ * @tc.desc: Test the InsertInnerSharedPackageModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InsertInnerSharedPackageModuleInfo, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.versionCode = Constants::ALL_VERSIONCODE;
+    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    moduleInfos.emplace_back(innerModuleInfo);
+    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    moduleInfos.clear();
+    InnerModuleInfo newInfo;
+    newInfo.versionCode = versionCode;
+    moduleInfos.emplace_back(newInfo);
+    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+}
+
+/**
+ * @tc.number: SharedPackageModuleNativeLibraryPathTest
+ * @tc.name: Test different nativeLibraryPath param
+ * @tc.desc: Test the SetSharedPackageModuleNativeLibraryPath of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedPackageModuleNativeLibraryPathTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetCurrentModulePackage(MODULE_PACKGE);
+    info.SetSharedPackageModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), true);
+
+    std::vector<InnerModuleInfo> moduleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.versionCode = versionCode;
+    moduleInfos.emplace_back(innerModuleInfo);
+    info.InsertInnerModuleInfo(MODULE_PACKGE, innerModuleInfo);
+    info.innerSharedPackageModuleInfos_[MODULE_PACKGE] = moduleInfos;
+    info.SetSharedPackageModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0100
+ * @tc.name: Test different moduleName and state param
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state, Constants::START_USERID);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[MODULE_NAME] = userInfo;
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state, Constants::DEFAULT_USERID);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0200
+ * @tc.name: Test different moduleName and state param
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+}
+
+/**
+ * @tc.number: GetOverlayModuleStateTest
+ * @tc.name: Test use different param with GetOverlayModuleState
+ * @tc.desc: Test the GetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetOverlayModuleStateTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    int userId = Constants::NOT_EXIST_USERID;
+    bool ret = info.GetOverlayModuleState("", userId, state);
+    EXPECT_EQ(ret, false);
+
+    userId = Constants::START_USERID;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo oldInfo;
+    innerBundleUserInfos[MODULE_NAME] = oldInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, false);
+
+    InnerBundleUserInfo newInfo;
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, false);
+
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_1);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, true);
+
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ClearOverlayModuleStatesTest
+ * @tc.name: Test use different param with ClearOverlayModuleStates
+ * @tc.desc: Test the ClearOverlayModuleStates of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ClearOverlayModuleStatesTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    bool ret =
+        info.innerBundleUserInfos_[MODULE_NAME_TEST].bundleUserInfo.overlayModulesState.empty();
+    EXPECT_EQ(ret, false);
+    info.ClearOverlayModuleStates(MODULE_NAME_TEST);
+    ret = info.innerBundleUserInfos_[MODULE_NAME_TEST].bundleUserInfo.overlayModulesState.empty();
+    EXPECT_EQ(ret, true);
+}
+} // OHOS
