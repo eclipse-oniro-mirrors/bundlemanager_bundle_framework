@@ -799,6 +799,11 @@ public:
     bool GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
         BaseSharedPackageInfo &baseSharedPackageInfo) const;
 
+    ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) const;
+
+    ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+        std::vector<SharedBundleInfo> &sharedBundles);
+
     bool DeleteSharedPackage(const std::string &bundleName);
 
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);

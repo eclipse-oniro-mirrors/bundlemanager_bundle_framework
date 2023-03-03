@@ -4511,6 +4511,52 @@ ErrCode BundleDataMgr::GetProvisionMetadata(const std::string &bundleName, int32
     return ERR_OK;
 }
 
+ErrCode BundleDataMgr::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) const
+{
+    APP_LOGD("GetAllSharedBundleInfo");
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+
+    for (auto& infoItem : bundleInfos_) {
+        const InnerBundleInfo &innerBundleInfo = infoItem.second;
+        if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+            continue;
+        }
+        SharedBundleInfo sharedBundleInfo;
+        innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
+        sharedBundles.emplace_back(sharedBundleInfo);
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+    std::vector<SharedBundleInfo> &sharedBundles)
+{
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    std::vector<Dependency> dependencies;
+    ErrCode errCode = GetSharedDependencies(bundleName, moduleName, dependencies);
+    if (errCode != ERR_OK) {
+        APP_LOGE("GetSharedDependencies failed errCode is %{public}d", errCode);
+        return errCode;
+    }
+
+    for (auto& dep : dependencies) {
+        SharedBundleInfo sharedBundleInfo;
+        errCode = GetSharedBundleInfoBySelf(dep.bundleName, sharedBundleInfo);
+        if (errCode != ERR_OK) {
+            APP_LOGE("GetSharedBundleInfoBySelf failed errCode is %{public}d", errCode);
+            return errCode;
+        }
+        sharedBundles.emplace_back(sharedBundleInfo);
+    }
+
+    return ERR_OK;
+}
+
 ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo)
 {
     APP_LOGD("GetSharedBundleInfoBySelf bundleName: %{public}s", bundleName.c_str());
@@ -4535,12 +4581,14 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
-        APP_LOGE("GetSharedDependencies failed, can not find bundle %{public}s",
-            bundleName.c_str());
+        APP_LOGE("GetSharedDependencies failed, can not find bundle %{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    innerBundleInfo.GetSharedDependencies(moduleName, dependencies);
+    if (!innerBundleInfo.GetSharedDependencies(moduleName, dependencies)) {
+        APP_LOGE("GetSharedDependencies failed, can not find module %{public}s", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
     APP_LOGD("GetSharedDependencies(bundle %{public}s, module %{public}s) successfully)",
         bundleName.c_str(), moduleName.c_str());
     return ERR_OK;
