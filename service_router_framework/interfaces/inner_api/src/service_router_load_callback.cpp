@@ -20,7 +20,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-void ServiceRouterLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject)
+void ServiceRouterLoadCallback::OnLoadSystemAbilitySuccess(int32_t systemAbilityId,
+    const sptr<IRemoteObject> &remoteObject)
 {
     if (systemAbilityId != OHOS::SERVICE_ROUTER_MGR_SERVICE_ID) {
         APP_LOGE("OnLoadSystemAbilitySuccess, not matched systemAbilityId: %{public}d", systemAbilityId);

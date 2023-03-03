@@ -74,7 +74,8 @@ int32_t ServiceRouterMgrProxy::QueryPurposeInfos(const Want &want, const std::st
         APP_LOGE("write purposeName fail");
         return false;
     }
-    int32_t res = GetParcelableInfos<PurposeInfo>(ServiceRouterMgrProxy::Message::QUERY_PURPOSE_INFOS, data, purposeInfos);
+    int32_t res = GetParcelableInfos<PurposeInfo>(ServiceRouterMgrProxy::Message::QUERY_PURPOSE_INFOS, data,
+        purposeInfos);
     if (res != OHOS::NO_ERROR) {
         APP_LOGE("fail to QueryPurposeInfos from server, error code: %{public}d", res);
     }

@@ -19,7 +19,7 @@
 #include "service_router_load_callback.h"
 #include "system_ability_definition.h"
 #include "bundle_constants.h"
-#include <unistd.h> 
+#include <unistd.h>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -32,7 +32,8 @@ ServiceRouterMgrHelper::ServiceRouterMgrHelper()
 ServiceRouterMgrHelper::~ServiceRouterMgrHelper()
 {}
 
-void ServiceRouterMgrHelper:: OnRemoteDiedHandle() {
+void ServiceRouterMgrHelper:: OnRemoteDiedHandle()
+{
     APP_LOGE("Remove service died.");
     SetServiceRouterMgr(nullptr);
     std::unique_lock<std::mutex> lock(cvLock_);
@@ -60,7 +61,7 @@ void ServiceRouterMgrHelper::LoadSA()
     sptr<ISystemAbilityManager> saManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         APP_LOGE("LoadSA, GetSystemAbilityManager is null.");
-        return ;
+        return;
     }
 
     sptr<ServiceRouterLoadCallback> loadCallback = new (std::nothrow) ServiceRouterLoadCallback();
@@ -80,7 +81,7 @@ void ServiceRouterMgrHelper::UnloadSA()
     sptr<ISystemAbilityManager> saManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         APP_LOGE("UnloadSA, GetSystemAbilityManager is null.");
-        return ;
+        return;
     }
     int32_t result = saManager->UnloadSystemAbility(OHOS::SERVICE_ROUTER_MGR_SERVICE_ID);
     if (result != ERR_OK) {
@@ -131,7 +132,7 @@ sptr<IServiceRouterManager> ServiceRouterMgrHelper::GetServiceRouterMgr()
     {
         std::unique_lock<std::mutex> lock(cvLock_);
         auto waitState = mgrConn_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-            [this](){ return isReady; });
+            [this] (){ return isReady; });
         if (!waitState) {
             return nullptr;
         }

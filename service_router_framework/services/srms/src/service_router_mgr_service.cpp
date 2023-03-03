@@ -89,7 +89,7 @@ void ServiceRouterMgrService::DelayUnloadTask()
     handler_->RemoveTask(TASK_NAME);
     auto task = [this]() {
         APP_LOGE("UnloadSA start.");
-        sptr<ISystemAbilityManager> saManager = 
+        sptr<ISystemAbilityManager> saManager =
             OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
         if (saManager == nullptr) {
             APP_LOGE("UnloadSA, GetSystemAbilityManager is null.");

@@ -79,7 +79,8 @@ void ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
 
     std::vector<PurposeInfo> purposeInfos;
     std::vector<ServiceInfo> serviceInfos;
-    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, purposeInfos, serviceInfos, innerServiceInfo.GetAppInfo())) {
+    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, purposeInfos, serviceInfos,
+        innerServiceInfo.GetAppInfo())) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         innerServiceInfo.UpdateInnerServiceInfo(purposeInfos, serviceInfos);
         innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
