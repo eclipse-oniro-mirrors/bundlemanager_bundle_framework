@@ -213,6 +213,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
         &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
+    funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -397,6 +398,25 @@ ErrCode BundleMgrHost::HandleGetBundleInfoForSelf(MessageParcel &data, MessagePa
     BundleInfo info;
     reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     auto ret = GetBundleInfoForSelf(flags, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetDependentBundleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    APP_LOGD("GetDependentBundleInfo, bundle %{public}s", name.c_str());
+    BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = GetDependentBundleInfo(name, info);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

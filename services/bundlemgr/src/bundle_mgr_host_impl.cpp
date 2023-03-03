@@ -225,6 +225,24 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
 }
 
+ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo)
+{
+    if (!VerifyDependency(sharedBundleName)) {
+        APP_LOGE("verify dependency failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+    return dataMgr->GetBundleInfoV9(sharedBundleName, flag, sharedBundleInfo, Constants::ANY_USERID);
+}
+
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
@@ -2486,6 +2504,40 @@ ErrCode BundleMgrHostImpl::GetSharedDependencies(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetSharedDependencies(bundleName, moduleName, dependencies);
+}
+
+bool BundleMgrHostImpl::VerifyDependency(const std::string &sharedBundleName)
+{
+    std::string callingBundleName;
+    bool ret = GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (!ret) {
+        APP_LOGE("GetBundleNameForUid failed");
+        return false;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+
+    InnerBundleInfo callingBundleInfo;
+    if (!dataMgr->FetchInnerBundleInfo(callingBundleName, callingBundleInfo)) {
+        APP_LOGE("get callingBundleInfo failed");
+        return false;
+    }
+
+    // check whether callingBundleName is dependent on sharedBundleName
+    const auto& dependencies = callingBundleInfo.GetDependencies();
+    auto iter = std::find_if(dependencies.begin(), dependencies.end(), [&sharedBundleName](const auto &dependency) {
+        return dependency.bundleName == sharedBundleName;
+    });
+    if (iter == dependencies.end()) {
+        APP_LOGE("%{public}s is not dependent on %{public}s", callingBundleName.c_str(), sharedBundleName.c_str());
+        return false;
+    }
+    APP_LOGD("verify dependency successfully");
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

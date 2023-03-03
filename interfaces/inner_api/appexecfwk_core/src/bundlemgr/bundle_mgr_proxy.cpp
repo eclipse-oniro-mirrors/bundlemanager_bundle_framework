@@ -396,6 +396,29 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get dependent bundle info");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetDependentBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetDependentBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetDependentBundleInfo from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrProxy::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
