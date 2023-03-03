@@ -27,6 +27,9 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t PERIOD_ANNUALLY = 4;
+const std::string SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
+const std::string SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
+const std::string AGING_THREAD = "AgingThread";
 
 void StatisticsUsageStats(
     const std::vector<DeviceUsageStats::BundleActivePackageStats> &useStats,
@@ -66,7 +69,7 @@ BundleAgingMgr::~BundleAgingMgr()
 
 void BundleAgingMgr::InitAgingRunner()
 {
-    auto agingRunner = EventRunner::Create(AgingConstants::AGING_THREAD);
+    auto agingRunner = EventRunner::Create(AGING_THREAD);
     if (agingRunner == nullptr) {
         APP_LOGE("create aging runner failed");
         return;
@@ -80,7 +83,7 @@ void BundleAgingMgr::InitAgingRunner()
 void BundleAgingMgr::InitAgingTimerInterval()
 {
     char szTimerThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_TIMER_INTERVAL.c_str(), "", szTimerThresold,
+    int32_t ret = GetParameter(SYSTEM_PARAM_AGING_TIMER_INTERVAL.c_str(), "", szTimerThresold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szTimerThresold is %{public}d", ret, atoi(szTimerThresold));
     if (ret <= 0) {
@@ -97,7 +100,7 @@ void BundleAgingMgr::InitAgingTimerInterval()
 void BundleAgingMgr::InitAgingBatteryThresold()
 {
     char szBatteryThresold[AgingConstants::THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(AgingConstants::SYSTEM_PARAM_AGING_BATTER_THRESHOLD.c_str(), "", szBatteryThresold,
+    int32_t ret = GetParameter(SYSTEM_PARAM_AGING_BATTER_THRESHOLD.c_str(), "", szBatteryThresold,
         AgingConstants::THRESHOLD_VAL_LEN);
     APP_LOGD("ret is %{public}d, szBatteryThresold is %{public}d", ret, atoi(szBatteryThresold));
     if (ret <= 0) {

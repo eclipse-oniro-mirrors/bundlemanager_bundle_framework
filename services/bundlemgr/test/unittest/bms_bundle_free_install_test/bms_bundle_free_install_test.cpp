@@ -61,6 +61,7 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
 const int32_t INVALID_USER_ID = -1;
 const std::string EMPTY_STRING = "";
+const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
 }  // namespace
 
 class BmsBundleFreeInstallTest : public testing::Test {
