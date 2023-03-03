@@ -35,17 +35,15 @@ namespace {
 class BundleInfoResolveUtil {
 public:
     static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<PurposeInfo> &purposeInfos,
-                                  std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
+        std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
     {
-        if (bundleInfo.name.empty())
-        {
+        if (bundleInfo.name.empty()) {
             APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
             return false;
         }
         ResolveAbilityInfos(bundleInfo.abilityInfos, purposeInfos, appInfo);
         ResolveExtAbilityInfos(bundleInfo.extensionInfos, purposeInfos, serviceInfos, appInfo);
-        if (purposeInfos.empty() && serviceInfos.empty())
-        {
+        if (purposeInfos.empty() && serviceInfos.empty()) {
             APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
             return false;
         }
