@@ -83,10 +83,6 @@ void BundleMgrService::OnStart()
     }
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
-#ifdef DEVICE_MANAGER_ENABLE
-    AddSystemAbilityListener(DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
-    AddSystemAbilityListener(DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-#endif
 }
 
 void BundleMgrService::OnStop()
@@ -442,6 +438,14 @@ void BundleMgrService::NotifyBundleScanStatus()
         APP_LOGE("PublishCommonEvent for bundle scan finished failed.");
     } else {
         APP_LOGD("PublishCommonEvent for bundle scan finished succeed.");
+    }
+}
+
+void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
+{
+    APP_LOGD("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
+        NotifyBundleScanStatus();
     }
 }
 

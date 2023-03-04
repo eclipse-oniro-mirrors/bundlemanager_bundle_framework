@@ -140,6 +140,9 @@ public:
     sptr<IOverlayManager> GetOverlayManagerProxy() const;
 #endif
 
+protected:
+    void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
+
 private:
     bool Init();
     void SelfClean();
