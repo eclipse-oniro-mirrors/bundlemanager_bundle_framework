@@ -807,7 +807,7 @@ public:
         std::vector<SharedBundleInfo> &sharedBundles);
 
     bool DeleteSharedPackage(const std::string &bundleName);
-    
+
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
 
     ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
