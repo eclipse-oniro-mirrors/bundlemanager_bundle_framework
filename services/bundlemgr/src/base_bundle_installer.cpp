@@ -1265,6 +1265,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        APP_LOGE("uninstall bundle is shared library.");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
+    }
+
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
@@ -1379,6 +1384,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGE("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+
+    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        APP_LOGE("uninstall bundle is shared library");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
