@@ -197,6 +197,11 @@ int32_t DistributedBms::GetRemoteAbilityInfo(
 int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName &elementName,
     const std::string &localeInfo, RemoteAbilityInfo &remoteAbilityInfo)
 {
+    auto iBundleMgr = GetBundleMgr();
+    if (!iBundleMgr->VerifySystemApi()) {
+        APP_LOGE("verify system app failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     auto iDistBundleMgr = GetDistributedBundleMgr(elementName.GetDeviceID());
     int32_t resultCode;
     if (!iDistBundleMgr) {
@@ -224,6 +229,11 @@ int32_t DistributedBms::GetRemoteAbilityInfos(
 int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &elementNames,
     const std::string &localeInfo, std::vector<RemoteAbilityInfo> &remoteAbilityInfos)
 {
+    auto iBundleMgr = GetBundleMgr();
+    if (!iBundleMgr->VerifySystemApi()) {
+        APP_LOGE("verify system app failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     if (elementNames.empty()) {
         APP_LOGE("GetDistributedBundle failed due to elementNames empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
