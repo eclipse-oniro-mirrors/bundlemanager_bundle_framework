@@ -70,6 +70,7 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string RELEASE = "Release";
+const std::string HSP_VERSION_PREFIX = "v";
 
 #ifdef QUOTA_SET_FOR_TEST
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
@@ -320,7 +321,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         versionCodes.size() == SINGLE_HSP_VERSION) {
         return UninstallHspBundle(uninstallDir, info.GetBundleName());
     } else {
-        uninstallDir += Constants::PATH_SEPARATOR + Constants::HSP_VERSION_PREFIX + std::to_string(versionCode);
+        uninstallDir += Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
         return UninstallHspVersion(uninstallDir, versionCode, info);
     }
 }
@@ -759,7 +760,7 @@ ErrCode BaseBundleInstaller::ExtractSharedPackages(InnerBundleInfo &newInfo, con
     newInfo.SetAppCodePath(bundleDir);
 
     uint32_t versionCode = newInfo.GetVersionCode();
-    std::string versionDir = bundleDir + Constants::PATH_SEPARATOR + Constants::HSP_VERSION_PREFIX
+    std::string versionDir = bundleDir + Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX
         + std::to_string(versionCode);
     result = MkdirIfNotExist(versionDir, newDirs);
     CHECK_RESULT(result, "check version dir failed %{public}d");
