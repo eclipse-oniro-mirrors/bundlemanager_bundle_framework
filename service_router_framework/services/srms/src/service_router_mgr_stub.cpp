@@ -92,7 +92,11 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
 
 int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("ServiceRouterMgrStub handle query service infos with muti param");
+    APP_LOGI("ServiceRouterMgrStub handle query purpose infos with muti param");
+    if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     Want *want = data.ReadParcelable<Want>();
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -138,7 +142,6 @@ bool ServiceRouterMgrStub::VerifySystemApp()
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL
         || IPCSkeleton::GetCallingUid() == Constants::ROOT_UID) {
         return true;
     }
