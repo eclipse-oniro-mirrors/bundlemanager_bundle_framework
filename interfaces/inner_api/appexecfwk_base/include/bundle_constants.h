@@ -34,7 +34,6 @@ constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
-const std::string HSP_VERSION_PREFIX = "v";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char FILE_SEPARATOR_CHAR = '/';
@@ -72,14 +71,6 @@ constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
-const std::vector<std::string> BUNDLE_DATA_DIR = {
-    "/cache",
-    "/files",
-    "/temp",
-    "/preferences",
-    "/haps"
-};
-
 constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
 constexpr const char* QUICK_FIX_MGR = "QuickFixMgr";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
