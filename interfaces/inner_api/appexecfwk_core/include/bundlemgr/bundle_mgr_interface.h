@@ -36,7 +36,6 @@
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
-#include "module_usage_record.h"
 #include "permission_define.h"
 #include "shared_package/base_shared_package_info.h"
 #include "shared_package/shared_bundle_info.h"

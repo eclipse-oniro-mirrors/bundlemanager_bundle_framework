@@ -200,13 +200,6 @@
       "OHOS::AppExecFwk::ModuleInfo::Marshalling(OHOS::Parcel&) const";
       "OHOS::AppExecFwk::ModuleInfo::ReadFromParcel(OHOS::Parcel&)";
       "OHOS::AppExecFwk::ModuleInfo::Unmarshalling(OHOS::Parcel&)";
-      "OHOS::AppExecFwk::ModuleUsageRecord::FromJsonString(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const& ... )";
-      "OHOS::AppExecFwk::ModuleUsageRecord::FromJsonString(std::__1::basic_string<char, std::__1::char_traits<char>, std::__1::allocator<char> > const&)";
-      "OHOS::AppExecFwk::ModuleUsageRecord::FromJsonString(std::__h::basic_string<char, std::__h::char_traits<char>, std::__h::allocator<char> > const&)";
-      "OHOS::AppExecFwk::ModuleUsageRecord::Marshalling(OHOS::Parcel&) const";
-      "OHOS::AppExecFwk::ModuleUsageRecord::ReadFromParcel(OHOS::Parcel&)";
-      "OHOS::AppExecFwk::ModuleUsageRecord::ToString() const";
-      "OHOS::AppExecFwk::ModuleUsageRecord::Unmarshalling(OHOS::Parcel&)";
       "OHOS::AppExecFwk::PerfProfile::Dump() const";
       "OHOS::AppExecFwk::PerfProfile::GetAbilityLoadEndTime() const";
       "OHOS::AppExecFwk::PerfProfile::GetAbilityLoadStartTime() const";
@@ -417,7 +410,6 @@
       vtable?for?OHOS::AppExecFwk::DefaultAppProxy;
       vtable?for?OHOS::AppExecFwk::InstallParam;
       vtable?for?OHOS::AppExecFwk::InstallResult;
-      vtable?for?OHOS::AppExecFwk::ModuleUsageRecord;
       vtable?for?OHOS::AppExecFwk::Progress;
       vtable?for?OHOS::AppExecFwk::Result;
       vtable?for?OHOS::AppExecFwk::RpcIdResult;
@@ -435,7 +427,6 @@
       VTT?for?OHOS::AppExecFwk::DefaultAppProxy;
       VTT?for?OHOS::AppExecFwk::InstallParam;
       VTT?for?OHOS::AppExecFwk::InstallResult;
-      VTT?for?OHOS::AppExecFwk::ModuleUsageRecord;
       VTT?for?OHOS::AppExecFwk::Progress;
       VTT?for?OHOS::AppExecFwk::Result;
       VTT?for?OHOS::AppExecFwk::RpcIdResult;

@@ -30,7 +30,6 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
-#include "module_usage_record.h"
 #include "remote_ability_info.h"
 
 using namespace testing::ext;
