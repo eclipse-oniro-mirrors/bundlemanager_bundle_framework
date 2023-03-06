@@ -35,6 +35,7 @@ const std::string TEST_MODULE_NAME_SECOND = "testModuleNameSecond";
 const std::string TARGET_MODULE_NAME = "targetModuleName";
 const std::string OTHER_TARGET_MODULE_NAME = "targetModuleNameTest";
 const std::string TEST_BUNDLE_NAME = "testBundleName";
+const std::string TEST_BUNDLE_NAME2 = "testBundleName2";
 const std::string TEST_PATH_FIRST = "testPath1";
 const std::string TEST_PATH_SECOND = "testPath2";
 const std::string TEST_PACK_AGE = "modulePackage";
@@ -1355,8 +1356,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest 
     bool res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info);
     EXPECT_EQ(res, true);
 
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME2, InstallState::INSTALL_START);
     info.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
-    res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info);
+    res = dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME2, info);
     EXPECT_EQ(res, true);
 
     UninstallBundleInfo();
