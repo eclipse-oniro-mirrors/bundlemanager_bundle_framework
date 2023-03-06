@@ -93,10 +93,6 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
 int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("ServiceRouterMgrStub handle query purpose infos");
-    if (!VerifySystemApp()) {
-        APP_LOGE("verify system app failed");
-        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
-    }
     if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
