@@ -89,6 +89,7 @@ bool RecentlyUnuseBundleAgingHandler::UnInstallBundle(const std::string &bundleN
     InstallParam installParam;
     installParam.userId = AccountHelper::GetCurrentActiveUserId();
     installParam.installFlag = InstallFlag::FREE_INSTALL;
+    installParam.isAgingUninstall = true;
     bundleInstaller->Uninstall(bundleName, installParam, userReceiverImpl);
     return true;
 }

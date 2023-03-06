@@ -49,6 +49,7 @@ struct NotifyBundleEvents {
     NotifyType type = NotifyType::INSTALL;
     int32_t uid = 0;
     uint32_t accessTokenId = 0;
+    bool isAgingUninstall = false;
 };
 
 class BundleCommonEventMgr {

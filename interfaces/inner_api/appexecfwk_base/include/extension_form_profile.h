@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -34,6 +34,7 @@ const std::string WINDOW_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 const std::string COLOR_MODE = "colorMode";
 const std::string FORM_CONFIG_ABILITY = "formConfigAbility";
 const std::string TYPE = "type";
+const std::string UI_SYNTAX = "uiSyntax";
 const std::string FORM_VISIBLE_NOTIFY = "formVisibleNotify";
 const std::string IS_DEFAULT = "isDefault";
 const std::string UPDATE_ENABLED = "updateEnabled";

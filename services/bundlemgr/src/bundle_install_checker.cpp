@@ -427,11 +427,28 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetCertificateFingerprint(provisionInfo.fingerprint);
     newInfo.SetAppDistributionType(GetAppDistributionType(provisionInfo.distributionType));
     newInfo.SetAppProvisionType(GetAppProvisionType(provisionInfo.type));
+    SetAppProvisionMetadata(provisionInfo.metadatas, newInfo);
 #ifdef USE_PRE_BUNDLE_PROFILE
     newInfo.SetUserDataClearable(appPrivilegeCapability.userDataClearable);
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
+}
+
+void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
+    InnerBundleInfo &newInfo)
+{
+    if (provisionMetadatas.empty()) {
+        return;
+    }
+    std::vector<Metadata> metadatas;
+    for (const auto &it : provisionMetadatas) {
+        Metadata metadata;
+        metadata.name = it.name;
+        metadata.value = it.value;
+        metadatas.emplace_back(metadata);
+    }
+    newInfo.SetAppProvisionMetadata(metadatas);
 }
 
 void BundleInstallChecker::GetPrivilegeCapability(
@@ -830,6 +847,9 @@ ErrCode BundleInstallChecker::CheckMainElement(const InnerBundleInfo &info)
 {
     const std::map<std::string, InnerModuleInfo> &innerModuleInfos = info.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
+        return ERR_OK;
+    }
+    if (innerModuleInfos.cbegin()->second.distro.moduleType == Profile::MODULE_TYPE_SHARED) {
         return ERR_OK;
     }
     if (info.GetEntryInstallationFree() && innerModuleInfos.cbegin()->second.mainAbility.empty()) {
