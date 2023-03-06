@@ -712,7 +712,8 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
-        || callingUid == Constants::ROOT_UID) {
+        || callingUid == Constants::ROOT_UID
+        || callingUid == Constants::BMS_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
