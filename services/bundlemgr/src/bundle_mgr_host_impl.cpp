@@ -2018,6 +2018,10 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::INVALID_UID;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2212,6 +2216,10 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::EMPTY_STRING;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2223,6 +2231,10 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
 std::string BundleMgrHostImpl::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::EMPTY_STRING;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
