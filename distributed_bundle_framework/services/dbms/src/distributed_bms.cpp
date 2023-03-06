@@ -243,13 +243,13 @@ int32_t DistributedBms::GetRemoteAbilityInfos(const std::vector<ElementName> &el
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
-        APP_LOGD("GetDistributedBundleMgr get remote d-bms");
 #ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfos", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
-        resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
 #endif
+        APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+        resultCode = iDistBundleMgr->GetAbilityInfos(elementNames, localeInfo, remoteAbilityInfos);
     }
 #ifdef HISYSEVENT_ENABLE
     EventReport::SendSystemEvent(
