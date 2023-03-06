@@ -61,7 +61,6 @@ ohos_shared_library("appexecfwk_base") {
     "src/hap_module_info.cpp",
     "src/install_param.cpp",
     "src/module_info.cpp",
-    "src/module_usage_record.cpp",
     "src/overlay/overlay_bundle_info.cpp",
     "src/overlay/overlay_module_info.cpp",
     "src/perf_profile.cpp",

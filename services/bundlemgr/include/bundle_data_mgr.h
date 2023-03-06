@@ -38,7 +38,6 @@
 #include "common_event_data.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
-#include "module_usage_record.h"
 #include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"

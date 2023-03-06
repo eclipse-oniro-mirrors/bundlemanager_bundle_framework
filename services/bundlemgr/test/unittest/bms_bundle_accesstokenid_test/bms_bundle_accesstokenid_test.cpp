@@ -28,7 +28,6 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
-#include "module_usage_record.h"
 #include "permission_define.h"
 #include "remote_ability_info.h"
 
@@ -57,7 +56,6 @@ const int32_t USERID = 100;
 const uint32_t ZERO = 0;
 const uint32_t INVALID_ACCESSTOKENID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
-const int32_t ABILITYID = 1;
 }  // namespace
 
 class BmsBundleAccessTokenIdTest : public testing::Test {
@@ -458,54 +456,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleAccessTokenId_1200, Function | Sma
     EXPECT_TRUE(ret);
     result = info.ReadMetaDataFromParcel(parcel);
     EXPECT_EQ(result, true);
-}
-
-/**
- * @tc.number: ModuleUsageRecord_0001
- * @tc.name: test FromJsonString
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test FromJsonString and ToString
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, ModuleUsageRecord_0001, Function | SmallTest | Level0)
-{
-    ModuleUsageRecord moduleUsageRecord;
-    std::string value = moduleUsageRecord.ToString();
-    auto res = moduleUsageRecord.FromJsonString(value);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: DbmsServicesKitTest_0022
- * @tc.name: test ModuleUsageRecord
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test Marshalling and Unmarshalling
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, ModuleUsageRecord_0002, Function | SmallTest | Level0)
-{
-    ModuleUsageRecord moduleUsageRecord;
-    moduleUsageRecord.bundleName = "bundleName";
-    moduleUsageRecord.appLabelId = ABILITYID;
-    moduleUsageRecord.name = "name";
-    moduleUsageRecord.abilityLabelId = ABILITYID;
-    moduleUsageRecord.abilityDescriptionId = ABILITYID;
-    moduleUsageRecord.abilityIconId = ABILITYID;
-    moduleUsageRecord.installationFreeSupported = false;
-
-    Parcel parcel;
-    auto unmarshalledResult = ModuleUsageRecord::Unmarshalling(parcel);
-    EXPECT_NE(unmarshalledResult->bundleName, "bundleName");
-    bool ret = moduleUsageRecord.Marshalling(parcel);
-    EXPECT_TRUE(ret);
-    unmarshalledResult = ModuleUsageRecord::Unmarshalling(parcel);
-    EXPECT_EQ(unmarshalledResult->bundleName, "bundleName");
-    EXPECT_EQ(unmarshalledResult->appLabelId, ABILITYID);
-    EXPECT_EQ(unmarshalledResult->name, "name");
-    EXPECT_EQ(unmarshalledResult->abilityLabelId, ABILITYID);
-    EXPECT_EQ(unmarshalledResult->abilityDescriptionId, ABILITYID);
-    EXPECT_EQ(unmarshalledResult->abilityIconId, ABILITYID);
-    EXPECT_EQ(unmarshalledResult->installationFreeSupported, false);
 }
 
 /**
