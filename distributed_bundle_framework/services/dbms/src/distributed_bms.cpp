@@ -208,13 +208,13 @@ int32_t DistributedBms::GetRemoteAbilityInfo(const OHOS::AppExecFwk::ElementName
         APP_LOGE("GetDistributedBundle object failed");
         resultCode = ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST;
     } else {
-        APP_LOGD("GetDistributedBundleMgr get remote d-bms");
 #ifdef HICOLLIE_ENABLE
         int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetRemoteAbilityInfo", REMOTE_TIME_OUT_SECONDS,
             nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
-        resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
         HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
 #endif
+        APP_LOGD("GetDistributedBundleMgr get remote d-bms");
+        resultCode = iDistBundleMgr->GetAbilityInfo(elementName, localeInfo, remoteAbilityInfo);
     }
 
 #ifdef HISYSEVENT_ENABLE
