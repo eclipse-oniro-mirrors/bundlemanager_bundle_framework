@@ -227,6 +227,11 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
 
 ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
     if (!VerifyDependency(sharedBundleName)) {
         APP_LOGE("verify dependency failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
