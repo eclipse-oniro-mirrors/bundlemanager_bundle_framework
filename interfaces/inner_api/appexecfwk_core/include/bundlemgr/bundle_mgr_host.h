@@ -199,6 +199,14 @@ private:
     ErrCode HandleQueryAbilityInfoWithCallback(MessageParcel &data, MessageParcel &reply);
 
     /**
+     * @brief Handles the SilentInstall function called from a IBundleMgr proxy.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleSilentInstall(MessageParcel &data, MessageParcel &reply);
+
+    /**
      * @brief Handles the UpgradeAtomicService function called from a IBundleMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
