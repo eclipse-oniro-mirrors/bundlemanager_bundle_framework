@@ -77,7 +77,7 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
     ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());
     std::vector<ServiceInfo> infos;
     int ret = QueryServiceInfos(*want, type, infos);
-    if (!reply.WriteBool(ret == ERR_OK)) {
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -105,7 +105,7 @@ int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessagePa
     std::string purposeName = data.ReadString();
     std::vector<PurposeInfo> infos;
     int ret = QueryPurposeInfos(*want, purposeName, infos);
-    if (!reply.WriteBool(ret == ERR_OK)) {
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
