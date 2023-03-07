@@ -1728,7 +1728,7 @@ ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string
                 {return abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName;});
         if(it != hapModuleInfo.abilityInfos.end()){
             ifExists = true;
-            targetAbilityInfo = hapModuleInfo.abilityInfos;
+            targetAbilityInfo = hapModuleInfo;
             break;
         }
         if (ifExists) {
@@ -1752,7 +1752,7 @@ ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
                 {return extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName;});
         if(it != hapModuleInfo.extensionInfos.end()){
             ifExists = true;
-            targetExtensionInfo = hapModuleInfo.extensionInfos;
+            targetExtensionInfo = hapModuleInfo;
             break;
         }
         if (ifExists) {
