@@ -11,24 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("//build/ohos.gni")
-
-group("inner_api_target") {
-  deps = [ "interfaces/inner_api:srms_fwk" ]
-}
-
-group("jsapi_target") {
-  deps = [ "interfaces/kits/js/serviceroutermgr:jsapi_target" ]
-}
-
-group("srms_target") {
-  deps = [
-    "services/srms:srms_target",
-    "services/srms/sa_profile:srms",
-  ]
-}
-
-group("test_target") {
+group("unittest") {
   testonly = true
-  deps = [ "services/srms/test:unittest" ]
+  deps = [ "unittest/service_router_mgr_interface_test:unittest" ]
 }

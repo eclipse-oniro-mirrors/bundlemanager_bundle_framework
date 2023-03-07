@@ -134,7 +134,8 @@
                 }
             ],
             "test": [
-                "//foundation/bundlemanager/bundle_framework:test_target"
+                "//foundation/bundlemanager/bundle_framework:test_target",
+                "//foundation/bundlemanager/bundle_framework/service_router_framework:test_target"
             ]
         }
     }
