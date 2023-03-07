@@ -25,7 +25,6 @@ const int32_t MIN_ARGS_SIZE = 1;
 const int32_t MAX_ARGS_SIZE = 2;
 const int32_t FIRST_PARAM = 0;
 const int32_t SECOND_PARAM = 1;
-const int32_t NON_ANONYMIZE_LEN = 4;
 const std::string ARGS_HELP = "-h";
 const std::string ARGS_ABILITY = "-ability";
 const std::string ARGS_ABILITY_LIST = "-ability-list";
@@ -43,22 +42,6 @@ const std::unordered_map<std::string, HidumpFlag> ARGS_MAP = {
     { ARGS_BUNDLE_LIST, HidumpFlag::GET_BUNDLE_LIST },
     { ARGS_DEVICEID, HidumpFlag::GET_DEVICEID },
 };
-
-std::string AnonymizeDeviceId(const std::string &deviceId)
-{
-    int32_t totalLen = static_cast<int32_t>(strlen(deviceId.c_str()));
-    int32_t anonymizeCharNum = totalLen - NON_ANONYMIZE_LEN - NON_ANONYMIZE_LEN;
-    if (anonymizeCharNum <= 0) {
-        return deviceId;
-    }
-
-    std::string newDeviceId;
-    newDeviceId
-        .append(deviceId.substr(0, NON_ANONYMIZE_LEN))
-        .append(anonymizeCharNum, '*')
-        .append(deviceId.substr(totalLen - NON_ANONYMIZE_LEN, NON_ANONYMIZE_LEN));
-    return newDeviceId;
-}
 }
 
 HidumpHelper::HidumpHelper(const std::weak_ptr<BundleDataMgr> &dataMgr)
@@ -372,22 +355,7 @@ ErrCode HidumpHelper::GetBundleInfoByName(const std::string &name, std::string &
 
 ErrCode HidumpHelper::GetAllDeviced(std::string &result)
 {
-    auto shareDataMgr = dataMgr_.lock();
-    if (shareDataMgr == nullptr) {
-        return ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR;
-    }
-
-    std::vector<std::string> deviceIds;
-    if (!shareDataMgr->QueryAllDeviceIds(deviceIds)) {
-        APP_LOGE("get all deviceId failed");
-        return ERR_APPEXECFWK_HIDUMP_ERROR;
-    }
-
-    for (auto deviceId : deviceIds) {
-        result.append(AnonymizeDeviceId(deviceId));
-        result.append("\n");
-    }
-
+    result = "This command is deprecated. Please use `hidumper -s 4802 -a -getTrustlist` instead.";
     return ERR_OK;
 }
 

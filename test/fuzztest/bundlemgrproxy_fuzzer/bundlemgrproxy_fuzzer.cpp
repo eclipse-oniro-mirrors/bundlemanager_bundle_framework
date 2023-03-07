@@ -113,7 +113,7 @@ namespace OHOS {
         abilityInfos.push_back(abilityInfo);
         bundleMgrProxy.ImplicitQueryInfos(want, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), abilityInfos, extensionInfos);
-        
+
         std::string abilityName (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.GetAbilityInfo(bundleName, abilityName, abilityInfo);
         bundleMgrProxy.GetAbilityInfo(bundleName, moduleName, abilityName, abilityInfo);
@@ -142,7 +142,6 @@ namespace OHOS {
         bundleMgrProxy.GetIconById(bundleName, moduleName, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), reinterpret_cast<uintptr_t>(data));
         std::string udid (reinterpret_cast<const char*>(data), size);
-        bundleMgrProxy.GetUdidByNetworkId(networkId, udid);
         bundleMgrProxy.GetSandboxAbilityInfo(want, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), reinterpret_cast<uintptr_t>(data), abilityInfo);
         bundleMgrProxy.GetSandboxExtAbilityInfos(want, reinterpret_cast<uintptr_t>(data),

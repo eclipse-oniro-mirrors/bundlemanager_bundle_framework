@@ -2231,25 +2231,6 @@ std::string BundleMgrHostImpl::GetIconById(
     return dataMgr->GetIconById(bundleName, moduleName, resId, density, userId);
 }
 
-int32_t BundleMgrHostImpl::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
-{
-#ifdef DEVICE_MANAGER_ENABLE
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return -1;
-    }
-    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
-    if (deviceManager == nullptr) {
-        APP_LOGE("deviceManager is nullptr");
-        return -1;
-    }
-    return deviceManager->GetUdidByNetworkId(networkId, udid);
-#else
-    APP_LOGW("deviceManager is unable");
-    return -1;
-#endif
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 {

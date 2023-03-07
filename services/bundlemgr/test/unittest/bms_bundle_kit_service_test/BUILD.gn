@@ -110,11 +110,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
-  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -231,11 +226,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
-  }
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]

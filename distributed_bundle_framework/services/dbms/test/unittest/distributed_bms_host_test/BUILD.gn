@@ -66,6 +66,12 @@ ohos_unittest("DistributedBmsHostTest") {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
   }
+
+  if (device_manager_enable) {
+    sources += [ "${dbms_services_path}/src/dbms_device_manager.cpp" ]
+    external_deps += [ "device_manager:devicemanagersdk" ]
+    defines += [ "DEVICE_MANAGER_ENABLE" ]
+  }
 }
 
 group("unittest") {

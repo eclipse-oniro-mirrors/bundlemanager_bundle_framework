@@ -194,7 +194,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_DATA, &BundleMgrHost::HandleGetMediaData);
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
-    funcMap_.emplace(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, &BundleMgrHost::HandleGetUdidByNetworkId);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
 #endif
@@ -2009,24 +2008,6 @@ ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &rep
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleGetUdidByNetworkId(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string networkId = data.ReadString();
-    if (networkId.empty()) {
-        return ERR_INVALID_VALUE;
-    }
-    std::string udid;
-    int32_t ret = GetUdidByNetworkId(networkId, udid);
-    if (ret == ERR_OK) {
-        if (!reply.WriteString(udid)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ret;
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

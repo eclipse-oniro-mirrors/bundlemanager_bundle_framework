@@ -25,11 +25,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class BmsDeviceManager {
+class DbmsDeviceManager {
 public:
-    BmsDeviceManager();
+    DbmsDeviceManager();
     int32_t GetUdidByNetworkId(const std::string &netWorkId, std::string &udid);
-    bool GetAllDeviceList(std::vector<std::string> &deviceIds);
 
 private:
     bool InitDeviceManager();
@@ -41,7 +40,6 @@ private:
 class DeviceInitCallBack : public DistributedHardware::DmInitCallback {
     void OnRemoteDied() override;
 };
-
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

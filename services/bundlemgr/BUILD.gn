@@ -286,12 +286,6 @@ ohos_shared_library("libbms") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
 
-  if (device_manager_enable) {
-    sources += [ "src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
-  }
-
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]

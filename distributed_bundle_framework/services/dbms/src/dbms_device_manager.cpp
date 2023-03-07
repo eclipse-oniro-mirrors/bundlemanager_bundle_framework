@@ -13,10 +13,9 @@
  * limitations under the License.
  */
 
-#include "bms_device_manager.h"
+#include "dbms_device_manager.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_mgr_service.h"
 #include "device_manager.h"
 #include "service_control.h"
 #include "system_ability_definition.h"
@@ -24,16 +23,16 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string BUNDLE_NAME = "ohos.appexefwk.appexefwk_standard";
+    const std::string BUNDLE_NAME = "ohos.appexefwk.appexefwk_standard"; //ohos.appexecfwk.IDistributedbms
     const std::string SERVICES_NAME = "d-bms";
 }
 
-BmsDeviceManager::BmsDeviceManager()
+DbmsDeviceManager::DbmsDeviceManager()
 {
-    APP_LOGD("BmsDeviceManager instance is created");
+    APP_LOGD("DbmsDeviceManager instance is created");
 }
 
-bool BmsDeviceManager::InitDeviceManager()
+bool DbmsDeviceManager::InitDeviceManager()
 {
     std::lock_guard<std::mutex> lock(isInitMutex_);
     if (isInit_) {
@@ -53,49 +52,12 @@ bool BmsDeviceManager::InitDeviceManager()
     return true;
 }
 
-void BmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
+void DbmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
 {
     APP_LOGD("DeviceInitCallBack OnRemoteDied");
 }
 
-bool BmsDeviceManager::GetAllDeviceList(std::vector<std::string> &deviceIds)
-{
-    std::vector<DistributedHardware::DmDeviceInfo> deviceList;
-    if (!GetTrustedDeviceList(deviceList)) {
-        APP_LOGE("GetTrustedDeviceList failed");
-        return false;
-    }
-    for (const auto &item : deviceList) {
-        deviceIds.push_back(item.deviceId);
-    }
-
-    DistributedHardware::DmDeviceInfo dmDeviceInfo;
-    int32_t ret =
-        DistributedHardware::DeviceManager::GetInstance().GetLocalDeviceInfo(BUNDLE_NAME, dmDeviceInfo);
-    if (ret != 0) {
-        APP_LOGE("GetLocalDeviceInfo failed");
-        return false;
-    }
-    deviceIds.emplace_back(dmDeviceInfo.deviceId);
-    return true;
-}
-
-bool BmsDeviceManager::GetTrustedDeviceList(std::vector<DistributedHardware::DmDeviceInfo> &deviceList)
-{
-    if (!InitDeviceManager()) {
-        return false;
-    }
-    int32_t ret =
-        DistributedHardware::DeviceManager::GetInstance().GetTrustedDeviceList(BUNDLE_NAME, "", deviceList);
-    if (ret != 0) {
-        APP_LOGW("GetTrustedDeviceList failed, ret:%{public}d", ret);
-        return false;
-    }
-    APP_LOGD("GetTrustedDeviceList size :%{public}ud", static_cast<uint32_t>(deviceList.size()));
-    return true;
-}
-
-int32_t BmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std::string &udid)
+int32_t DbmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std::string &udid)
 {
     APP_LOGI("GetUdidByNetworkId");
     if (!InitDeviceManager()) {

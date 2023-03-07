@@ -113,11 +113,6 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
-  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -243,11 +238,6 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
-  }
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]

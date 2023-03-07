@@ -2810,27 +2810,6 @@ std::string BundleMgrProxy::GetIconById(
     return reply.ReadString();
 }
 
-int32_t BundleMgrProxy::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
-{
-    APP_LOGD("begin to GetUdidByNetworkId.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetUdidByNetworkId due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(networkId)) {
-        APP_LOGE("fail to GetUdidByNetworkId due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, data, reply)) {
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    udid = reply.ReadString();
-    return NO_ERROR;
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 {

@@ -25,9 +25,6 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
 #endif
-#ifdef DEVICE_MANAGER_ENABLE
-#include "bms_device_manager.h"
-#endif
 #include "bms_param.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
