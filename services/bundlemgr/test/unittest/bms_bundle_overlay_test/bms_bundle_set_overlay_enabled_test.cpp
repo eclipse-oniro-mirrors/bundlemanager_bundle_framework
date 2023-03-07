@@ -181,7 +181,7 @@ const std::shared_ptr<OverlayManagerHostImpl> BmsBundleSetOverlayEnabledTest::Ge
 
 /**
  * @tc.number: SetOverlayEnabledTest_0100
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.param check and bundleName is empty.
  *           2.set failed.
  * @tc.require: issueI6F3H9
@@ -198,7 +198,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0100, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0200
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.param check and bundleName is empty.
  *           2.set failed.
  * @tc.require: issueI6F3H9
@@ -215,7 +215,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0200, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0300
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.param check and moduleName is empty.
  *           2.set failed.
  * @tc.require: issueI6F3H9
@@ -232,7 +232,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0300, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0400
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.param check and moduleName is empty.
  *           2.set failed.
  * @tc.require: issueI6F3H9
@@ -249,7 +249,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0400, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_500
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify userId.
  *           2.invalid userId and set failed.
  * @tc.require: issueI6F3H9
@@ -265,7 +265,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_500, Function | S
 
 /**
  * @tc.number: SetOverlayEnabledTest_0600
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify bundleName.
  *           2.bundleName is not existed and set failed.
  * @tc.require: issueI6F3H9
@@ -281,7 +281,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0600, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0700
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.bundle is not installed at specified userId.
  *           3.set failed
@@ -302,7 +302,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0700, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0800
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.the specified bundle is not overlay bundle.
  *           3.set failed
@@ -323,7 +323,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0800, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_0900
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.the specified module is not existed.
  *           3.set failed
@@ -344,7 +344,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0900, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_1000
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.the specified module is not overlay module.
  *           3.set failed
@@ -365,7 +365,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_1000, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_1100
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.the specified module is overlay module.
  *           3.set successfully
@@ -388,7 +388,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_1100, Function | 
 
 /**
  * @tc.number: SetOverlayEnabledTest_1200
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
+ * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
  * @tc.desc: 1.verify innerBundleUserInfo.
  *           2.the specified module is overlay module.
  *           3.set successfully
