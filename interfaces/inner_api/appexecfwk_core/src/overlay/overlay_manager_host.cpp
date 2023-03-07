@@ -38,14 +38,21 @@ void OverlayManagerHost::init()
 {
     funcMap_.emplace(IOverlayManager::Message::GET_ALL_OVERLAY_MODULE_INFO,
         &OverlayManagerHost::HandleGetAllOverlayModuleInfo);
+    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME,
+        &OverlayManagerHost::HandleGetOverlayModuleInfoByName);
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO,
         &OverlayManagerHost::HandleGetOverlayModuleInfo);
+    funcMap_.emplace(IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS,
+        &OverlayManagerHost::HandleGetTargetOverlayModuleInfo);
+    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME,
+        &OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName);
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET,
         &OverlayManagerHost::HandleGetOverlayBundleInfoForTarget);
     funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET,
         &OverlayManagerHost::HandleGetOverlayModuleInfoForTarget);
     funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED, &OverlayManagerHost::HandleSetOverlayEnabled);
-    funcMap_.emplace(IOverlayManager::Message::VERIFY_SYSTEM_APP, &OverlayManagerHost::HandleVerifySystemApi);
+    funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF,
+        &OverlayManagerHost::HandleSetOverlayEnabledForSelf);
 }
 
 
@@ -76,7 +83,7 @@ ErrCode OverlayManagerHost::HandleGetAllOverlayModuleInfo(MessageParcel &data, M
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    int userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, userId %{public}d", bundleName.c_str(), userId);
 
     std::vector<OverlayModuleInfo> infos;
@@ -94,12 +101,12 @@ ErrCode OverlayManagerHost::HandleGetAllOverlayModuleInfo(MessageParcel &data, M
     return ERR_OK;
 }
 
-ErrCode OverlayManagerHost::HandleGetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
+ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByName(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
-    int userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
     APP_LOGD("bundleName %{public}s, moduleName %{public}s, userId %{public}d", bundleName.c_str(),
         moduleName.c_str(), userId);
 
@@ -118,11 +125,78 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfo(MessageParcel &data, Mess
     return ERR_OK;
 }
 
+ErrCode OverlayManagerHost::HandleGetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("moduleName %{public}s, userId %{public}d", moduleName.c_str(), userId);
+
+    OverlayModuleInfo info;
+    auto res = GetOverlayModuleInfo(moduleName, info, userId);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (res == ERR_OK) {
+        if (!reply.WriteParcelable(&info)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHost::HandleGetTargetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string targetModuleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto res = GetTargetOverlayModuleInfo(targetModuleName, overlayModuleInfos, userId);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (res == ERR_OK) {
+        if (!WriteParcelableVector(overlayModuleInfos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    APP_LOGD("bundleName %{public}s, userId %{public}d", bundleName.c_str(), userId);
+
+    std::vector<OverlayModuleInfo> infos;
+    auto res = GetOverlayModuleInfoByBundleName(bundleName, moduleName, infos, userId);
+    if (!reply.WriteInt32(res)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (res == ERR_OK) {
+        if (!WriteParcelableVector(infos, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
 ErrCode OverlayManagerHost::HandleGetOverlayBundleInfoForTarget(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string targetBundleName = data.ReadString();
-    int userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
     auto res = GetOverlayBundleInfoForTarget(targetBundleName, overlayBundleInfo, userId);
@@ -145,7 +219,7 @@ ErrCode OverlayManagerHost::HandleGetOverlayModuleInfoForTarget(MessageParcel &d
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string targetBundleName = data.ReadString();
     std::string targetModuleName = data.ReadString();
-    int userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     auto res = GetOverlayModuleInfoForTarget(targetBundleName, targetModuleName, overlayModuleInfo, userId);
@@ -169,7 +243,7 @@ ErrCode OverlayManagerHost::HandleSetOverlayEnabled(MessageParcel &data, Message
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
     bool isEnabled = data.ReadBool();
-    int userId = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
 
     auto res = SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);
     if (!reply.WriteInt32(res)) {
@@ -179,10 +253,14 @@ ErrCode OverlayManagerHost::HandleSetOverlayEnabled(MessageParcel &data, Message
     return ERR_OK;
 }
 
-ErrCode OverlayManagerHost::HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply)
+ErrCode OverlayManagerHost::HandleSetOverlayEnabledForSelf(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    auto res = VerifySystemApi();
+    std::string moduleName = data.ReadString();
+    bool isEnabled = data.ReadBool();
+    int32_t userId = data.ReadInt32();
+
+    auto res = SetOverlayEnabledForSelf(moduleName, isEnabled, userId);
     if (!reply.WriteInt32(res)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
