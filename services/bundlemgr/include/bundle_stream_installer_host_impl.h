@@ -47,6 +47,7 @@ private:
     int32_t installedUid_;
     bool isInstallStarted_ = false;
     sptr<IStatusReceiver> receiver_ = nullptr;
+    bool isInstallSharedBundlesOnly_ = true;
 };
 } // AppExecFwk
 } // OHOS

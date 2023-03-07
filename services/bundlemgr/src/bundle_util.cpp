@@ -349,7 +349,7 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     return CreateTempDir(tempDir);
 }
 
-std::string BundleUtil::CreateSharedPacakgeTempDir(uint32_t installerId, uint32_t index)
+std::string BundleUtil::CreateSharedBundleTempDir(uint32_t installerId, uint32_t index)
 {
     std::time_t curTime = std::time(0);
     std::string tempDir = Constants::HAP_COPY_PATH;

@@ -50,6 +50,7 @@ void BundleStreamInstallerHostImpl::UnInit()
 
 int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
 {
+    isInstallSharedBundlesOnly_ = false;
     return -1;
 }
 
