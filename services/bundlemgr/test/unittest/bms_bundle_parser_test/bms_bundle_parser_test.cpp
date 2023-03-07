@@ -2557,7 +2557,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5900, Function | SmallTest | Level1)
 /**
  * @tc.name: TestParse_6000
  * @tc.desc: 1. system running normally
- *           2. test ParserAtomicConfig split not exist 
+ *           2. test ParserAtomicConfig split not exist
  * @tc.type: FUNC
  */
 HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
@@ -2567,7 +2567,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson["app"]["atomicService"] = "";
-       profileJson["module"]["installationFree"] = true;
+    profileJson["module"]["installationFree"] = true;
     
     profileFileBuffer << profileJson.dump();
 
@@ -2688,8 +2688,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_6400, Function | SmallTest | Level1)
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
-
-
 /**
  * @tc.name: TestParse_6500
  * @tc.desc: 1. system running normally
@@ -2755,8 +2753,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_6700, Function | SmallTest | Level1)
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
-
-
 
 /**
  * @tc.name: TestParse_6800
@@ -2836,6 +2832,249 @@ HWTEST_F(BmsBundleParserTest, TestParse_7000, Function | SmallTest | Level1)
         }
     )"_json;
     nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7100
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7100, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["name"] = "empty";
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7200
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7200, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "split": true,
+            "main": "entry",
+            "preloads": [
+                {
+                    "moduleName": "xx"
+                }
+            ]
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7300
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7300, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "app": {
+                "bundleName": "com.example.backuptest",
+                "atomicService": ""
+            },
+            "module": {
+                "name": "entry"
+            }
+            }
+    )"_json;
+    nlohmann::json profileJson = ATOMIC_SERVICE;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7400
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7400, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "main": ""
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7500
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7500, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "split": false,
+            "main": "entry"
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7600
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7600, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "split": true,
+            "main": "entry",
+            "preloads": [
+                {
+                    "name": "test"
+                }
+            ]
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["module"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7700
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7700, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "split": true,
+            "main": "entry",
+            "preloads": [
+                {
+                    "name": "test"
+                }
+            ]
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["compatiblePolicy"] = 3;
+    profileJson["module"]["atomicService"] = ATOMIC_SERVICE;
+    profileJson["module"]["installationFree"] = true;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor("");
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_7800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_7800, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    const nlohmann::json ATOMIC_SERVICE = R"(
+        {
+            "split": true,
+            "main": "entry",
+            "preloads": [
+                {
+                    "name": "test"
+                }
+            ]
+        }
+    )"_json;
+    nlohmann::json profileJson = MODULE_JSON_2;
+    profileJson["app"]["bundleName"] = "ohos.global.systemres";
     profileJson["module"]["atomicService"] = ATOMIC_SERVICE;
     profileJson["module"]["installationFree"] = true;
     profileFileBuffer << profileJson.dump();
