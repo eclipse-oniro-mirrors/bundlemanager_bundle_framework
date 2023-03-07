@@ -1723,12 +1723,13 @@ ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string
 {
     bool ifExists = false;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
-            if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
-                ifExists = true;
-                targetAbilityInfo = abilityInfo;
-                break;
-            }
+        auto it = std::find_if(std::begin(hapModuleInfo.abilityInfos),
+            std::end(hapModuleInfo.abilityInfos), [abilityName, moduleName]
+                {return abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName;});
+        if(it != hapModuleInfo.abilityInfos.end()){
+            ifExists = true;
+            targetAbilityInfo = abilityInfo;
+            break;
         }
         if (ifExists) {
             break;
@@ -1746,12 +1747,13 @@ ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
 {
     bool ifExists = false;
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
-        for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
-            if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
-                ifExists = true;
-                targetExtensionInfo = extensionInfo;
-                break;
-            }
+        auto it = std::find_if(std::begin(hapModuleInfo.extensionInfos),
+            std::end(hapModuleInfo.extensionInfos), [abilityName, moduleName]
+                {return extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName;});
+        if(it != hapModuleInfo.extensionInfos.end()){
+            ifExists = true;
+            targetExtensionInfo = extensionInfo;
+            break;
         }
         if (ifExists) {
             break;
