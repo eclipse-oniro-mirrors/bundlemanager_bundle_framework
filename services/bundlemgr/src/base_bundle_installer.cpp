@@ -1159,7 +1159,6 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
 {
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s start", bundleName_.c_str());
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
-    bool needUpdateTokenIdEx = oldInfo.GetAppType() != newInfo.GetAppType();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
             continue;
@@ -1167,6 +1166,9 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
         std::vector<std::string> newRequestPermName;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
+        if (accessTokenIdEx.tokenIDEx == 0) {
+            accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenId;
+        }
         if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(accessTokenIdEx, oldInfo,
             newInfo, newRequestPermName)) {
             APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
@@ -1176,8 +1178,7 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdateTokenIdEx) {
-            APP_LOGD("update accessTokenIdEx tokenAttr: %{public}u", accessTokenIdEx.tokenIdExStruct.tokenAttr);
+        if (accessTokenIdEx.tokenIDEx != uerInfo.second.accessTokenIdEx) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
@@ -1810,6 +1811,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         }
         Security::AccessToken::AccessTokenIDEx tokenIdEx;
         tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
+        if (tokenIdEx.tokenIDEx == 0) {
+            tokenIdEx.tokenIDEx = info.second.accessTokenId;
+        }
         std::vector<std::string> newRequestPermName;
         if (!BundlePermissionMgr::AddDefineAndRequestPermissions(tokenIdEx, newInfo, newRequestPermName)) {
             APP_LOGE("BundlePermissionMgr::AddDefineAndRequestPermissions failed %{public}s", bundleName_.c_str());
@@ -1818,6 +1822,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         if (!BundlePermissionMgr::GrantRequestPermissions(newInfo, newRequestPermName, info.second.accessTokenId)) {
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        if (tokenIdEx.tokenIDEx != info.second.accessTokenIdEx) {
+            newInfo.SetAccessTokenIdEx(tokenIdEx, info.second.bundleUserInfo.userId);
         }
         // add new module does not update tokenId, GetAppType will be the same.
     }
