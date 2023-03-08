@@ -1648,6 +1648,20 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4000, Function | SmallTest 
 }
 
 /**
+ * @tc.number: OverlayDataMgr_4100
+ * @tc.name: test bundleName is empty.
+ * @tc.desc: 1.OverlayDataMgr with SetOverlayEnabled.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4100, Function | SmallTest | Level0)
+{
+    OverlayDataMgr overlayDataMgr;
+    bool isEnabled = false;
+    ErrCode res = overlayDataMgr.SetOverlayEnabled("", TEST_MODULE_NAME, isEnabled, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
+}
+
+/**
  * @tc.number: OverlayManagerHostImpl_0100
  * @tc.name: test overlayManagerHostImpl.
  * @tc.desc: 1.overlayManagerHostImpl of GetAllOverlayModuleInfo.
@@ -1793,5 +1807,34 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0700, Function | Smal
 
     res = overlayManagerHostImpl.VerifyQueryPermission("", "");
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfo_0800
+ * @tc.name: test overlayManagerHostImpl.
+ * @tc.desc: 1.OverlayManagerHostImpl with GetOverlayBundleInfoForTarget.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0800, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+    std::vector<OverlayBundleInfo> overlayBundleInfo;
+    ErrCode res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME,
+        overlayBundleInfo, Constants::INVALID_USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CheckTargetBundle_0100
+ * @tc.name: check bundle target priority range
+ * @tc.desc: Test CheckTargetBundle
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckTargetBundle_0100, Function | SmallTest | Level0)
+{
+    BundleOverlayInstallChecker checker;
+    auto code = checker.CheckTargetBundle("", "", "", USERID);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME);
+    code = checker.CheckTargetBundle(TEST_BUNDLE_NAME, "", "", USERID);
+    EXPECT_EQ(code,ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
 }
 } // OHOS
