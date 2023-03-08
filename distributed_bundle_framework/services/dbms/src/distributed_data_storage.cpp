@@ -228,8 +228,8 @@ Status DistributedDataStorage::GetKvStore()
         .encrypt = false,
         .autoSync = true,
         .securityLevel = SecurityLevel::S1,
-        .kvStoreType = KvStoreType::SINGLE_VERSION,
         .area = EL1,
+        .kvStoreType = KvStoreType::SINGLE_VERSION,
         .baseDir = BMS_KV_BASE_DIR + appId_.appId
     };
     Status status = dataManager_.GetSingleKvStore(options, appId_, storeId_, kvStorePtr_);
