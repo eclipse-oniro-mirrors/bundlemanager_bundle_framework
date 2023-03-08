@@ -214,6 +214,7 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
     funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
+    funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1761,6 +1762,20 @@ ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParc
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
     int32_t uid = GetUidByBundleName(bundleName, userId);
+    APP_LOGD("uid is %{public}d", uid);
+    if (!reply.WriteInt32(uid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetUidByDebugBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t uid = GetUidByDebugBundleName(bundleName, userId);
     APP_LOGD("uid is %{public}d", uid);
     if (!reply.WriteInt32(uid)) {
         APP_LOGE("write failed");

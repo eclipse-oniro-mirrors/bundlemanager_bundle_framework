@@ -589,6 +589,39 @@ int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int 
     return uid;
 }
 
+int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const int userId)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
+        return Constants::INVALID_UID;
+    }
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetUidByBundleName due to write InterfaceToken fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetUidByBundleName due to write bundleName fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetUidByBundleName due to write uid fail");
+        return Constants::INVALID_UID;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, data, reply)) {
+        APP_LOGE("failed to GetUidByBundleName from server");
+        return Constants::INVALID_UID;
+    }
+    int32_t uid = reply.ReadInt32();
+    APP_LOGD("uid is %{public}d", uid);
+    return uid;
+}
+
 std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {
