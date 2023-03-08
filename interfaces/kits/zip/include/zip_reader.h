@@ -112,12 +112,12 @@ public:
         FilePath filePath_;
         int64_t originalSize_ = 0;
         struct tm lastModified_ {
-            .tm_year = 0,
-            .tm_mon = 0,
-            .tm_mday = 0,
-            .tm_hour = 0,
+            .tm_sec = 0,
             .tm_min = 0,
-            .tm_sec = 0
+            .tm_hour = 0,
+            .tm_mday = 0,
+            .tm_mon = 0,
+            .tm_year = 0
         };
         bool isDirectory_ = false;
         bool isUnsafe_ = false;
