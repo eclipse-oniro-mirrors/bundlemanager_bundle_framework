@@ -70,10 +70,9 @@ static ErrCode InnerSetOverlayEnabledExec(napi_env, OverlayCallbackInfo *callbac
     }
     ErrCode ret = ERR_OK;
     if (callback->option == OverlayOption::OPTION_SET_OVERLAY_ENABLED_BY_BUNDLE) {
-        ret = overlayMgrProxy->VerifySystemApi();
-    }
-    if (ret == ERR_OK) {
         ret = overlayMgrProxy->SetOverlayEnabled(callback->bundleName, callback->moduleName, callback->isEnabled);
+    } else {
+        ret = overlayMgrProxy->SetOverlayEnabledForSelf(callback->moduleName, callback->isEnabled);
     }
     return CommonFunc::ConvertErrCode(ret);
 }
@@ -164,11 +163,6 @@ napi_value SetOverlayEnabled(napi_env env, napi_callback_info info)
         }
     }
 
-    overlayCallbackInfo->bundleName = CommonFunc::ObtainCallingBundleName();
-    if (overlayCallbackInfo->bundleName.empty()) {
-        APP_LOGE("get calling bundle name failed!");
-        overlayCallbackInfo->err = ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
     overlayCallbackInfo->option = OverlayOption::OPTION_SET_OVERLAY_ENABLED;
     auto promise = CommonFunc::AsyncCallNativeMethod<OverlayCallbackInfo>(
         env, overlayCallbackInfo, SET_OVERLAY_ENABLED, SetOverlayEnabledExec, SetOverlayEnabledComplete);
@@ -252,29 +246,15 @@ static ErrCode InnerGetOverlayModuleInfoExec(napi_env, OverlayCallbackInfo *over
     }
 
     ErrCode ret = ERR_OK;
-    if (overlayCbInfo->option == OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME ||
-        overlayCbInfo->option == OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME ||
-        overlayCbInfo->option == OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->VerifySystemApi();
-    }
-    if (ret != ERR_OK) {
-        return CommonFunc::ConvertErrCode(ret);
-    }
-
     if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO) {
-        ret = overlayMgrProxy->GetOverlayModuleInfo(bundleName, overlayCbInfo->moduleName,
+        ret = overlayMgrProxy->GetOverlayModuleInfo(overlayCbInfo->moduleName,
             overlayCbInfo->overlayModuleInfo);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_TARGET_MODULE_INFO) {
-        ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(bundleName, overlayCbInfo->targetModuleName,
+        ret = overlayMgrProxy->GetTargetOverlayModuleInfo(overlayCbInfo->targetModuleName,
             overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->moduleName,
-            overlayCbInfo->overlayModuleInfo);
-        if (ret == ERR_OK) {
-            overlayCbInfo->infoVec.emplace_back(overlayCbInfo->overlayModuleInfo);
-        }
-    } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
-        ret = overlayMgrProxy->GetAllOverlayModuleInfo(overlayCbInfo->bundleName, overlayCbInfo->infoVec);
+        ret = overlayMgrProxy->GetOverlayModuleInfoByBundleName(overlayCbInfo->bundleName, overlayCbInfo->moduleName,
+            overlayCbInfo->infoVec);
     } else if (overlayCbInfo->option == OverlayOption::OPTION_GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME) {
         ret = overlayMgrProxy->GetOverlayModuleInfoForTarget(overlayCbInfo->targetBundleName,
             overlayCbInfo->moduleName, overlayCbInfo->infoVec);
@@ -467,7 +447,7 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
         APP_LOGE("overlayCallbackInfo is null.");
         return nullptr;
     }
-
+    overlayCallbackInfo->option = OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME;
     std::unique_ptr<OverlayCallbackInfo> callbackPtr {overlayCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
@@ -491,7 +471,7 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
             }
             if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
                 APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
                 return nullptr;
             }
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
@@ -502,11 +482,6 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
             return nullptr;
         }
-    }
-    if (!overlayCallbackInfo->moduleName.empty()) {
-        overlayCallbackInfo->option = OverlayOption::OPTION_GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME;
-    } else {
-        overlayCallbackInfo->option = OverlayOption::OPTION_GET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME;
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<OverlayCallbackInfo>(

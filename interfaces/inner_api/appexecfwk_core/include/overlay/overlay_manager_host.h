@@ -32,7 +32,13 @@ public:
 private:
     ErrCode HandleGetAllOverlayModuleInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetOverlayModuleInfoByName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetTargetOverlayModuleInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetOverlayModuleInfoByBundleName(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetOverlayBundleInfoForTarget(MessageParcel &data, MessageParcel &reply);
 
@@ -40,7 +46,7 @@ private:
 
     ErrCode HandleSetOverlayEnabled(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleVerifySystemApi(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetOverlayEnabledForSelf(MessageParcel &data, MessageParcel &reply);
 
     void init();
 
