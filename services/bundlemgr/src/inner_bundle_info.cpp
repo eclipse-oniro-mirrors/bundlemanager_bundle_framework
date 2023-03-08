@@ -2086,7 +2086,7 @@ void InnerBundleInfo::InsertInnerSharedPackageModuleInfo(const std::string &modu
     if (iterator != innerSharedPackageModuleInfos_.end()) {
         auto innerModuleInfoVector = iterator->second;
         bool insertFlag = false;
-        for (int i = 0; i < innerModuleInfoVector.size(); i++) {
+        for (unsigned long i = 0; i < innerModuleInfoVector.size(); i++) {
             if (innerModuleInfo.versionCode == innerModuleInfoVector.at(i).versionCode) {
                 // if the inserted versionCode same as the existing one, replace old innerModuleInfo.
                 innerModuleInfoVector.at(i) = innerModuleInfo;
