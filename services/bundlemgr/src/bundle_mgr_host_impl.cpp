@@ -443,12 +443,9 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, AbilityInfo &abilityI
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
-        APP_LOGD("non-system app calling system api");
-        return true;
-    }
-    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
-        APP_LOGE("verify permission failed");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("QueryAbilityInfo verify failed.");
         return false;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
