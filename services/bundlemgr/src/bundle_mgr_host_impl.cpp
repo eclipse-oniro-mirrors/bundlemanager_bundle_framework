@@ -2040,6 +2040,32 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
     return uid;
 }
 
+int BundleMgrHostImpl::GetUidByDebugBundleName(const std::string &bundleName, const int userId)
+{
+    APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::INVALID_UID;
+    }
+    std::vector<ApplicationInfo> appInfos;
+    int32_t uid = Constants::INVALID_UID;
+    bool ret = dataMgr->GetApplicationInfos(GET_BUNDLE_DEFAULT, userId, appInfos);
+    if (ret) {
+        for (auto appInfo : appInfos) {
+            if (appInfo.bundleName == bundleName && appInfo.debug) {
+                uid = appInfo.uid;
+                break;
+            }
+        }
+        APP_LOGD("get debug bundle uid success");
+    } else {
+        APP_LOGE("can not get bundleInfo's uid");
+    }
+    APP_LOGD("uid is %{public}d", uid);
+    return uid;
+}
+
 bool BundleMgrHostImpl::GetAbilityInfo(
     const std::string &bundleName, const std::string &abilityName, AbilityInfo &abilityInfo)
 {

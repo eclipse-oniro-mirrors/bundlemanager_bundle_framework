@@ -640,7 +640,7 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_BUNDLE_NAME, data, reply)) {
+    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, data, reply)) {
         APP_LOGE("failed to GetUidByBundleName from server");
         return Constants::INVALID_UID;
     }
@@ -648,7 +648,6 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
     APP_LOGD("uid is %{public}d", uid);
     return uid;
 }
-
 
 std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {

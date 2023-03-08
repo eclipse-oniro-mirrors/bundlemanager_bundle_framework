@@ -698,6 +698,8 @@ public:
 
     virtual int GetUidByBundleName(const std::string &bundleName, const int userId) override;
 
+    virtual int GetUidByDebugBundleName(const std::string &bundleName, const int userId) override;
+
     virtual bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) override;
 

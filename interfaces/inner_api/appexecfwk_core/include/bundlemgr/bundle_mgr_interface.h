@@ -1268,6 +1268,7 @@ public:
         PROCESS_PRELOAD,
         GET_PROVISION_METADATA,
         SILENT_INSTALL,
+        GET_UID_BY_DEBUG_BUNDLE_NAME,
     };
 };
 }  // namespace AppExecFwk
