@@ -719,5 +719,25 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     }
     return VerifySystemAppForHap(beginSystemApiVersion);
 }
+
+bool BundlePermissionMgr::IsNativeTokenType()
+{
+    APP_LOGD("begin to verify token type");
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
+        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
+        APP_LOGD("caller tokenType is native, verify success");
+        return true;
+    }
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGD("calling uid is %{public}d", callingUid);
+    if (callingUid == Constants::ROOT_UID || callingUid == Constants::FOUNDATION_UID) {
+        APP_LOGD("caller is root or foundation, verify success");
+        return true;
+    }
+    APP_LOGE("caller tokenType not native, verify failed");
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
