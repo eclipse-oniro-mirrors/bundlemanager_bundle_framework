@@ -609,8 +609,7 @@ ErrCode OverlayDataMgr::GetAllOverlayModuleInfo(const std::string &bundleName,
     }
 
     if (overlayModuleInfos.empty()) {
-        APP_LOGE("no overlay moduleInfo can be queried of bundleName %{public}s", bundleName.c_str());
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_MODULE_INFO;
+        APP_LOGW("no overlay moduleInfo can be queried of bundleName %{public}s", bundleName.c_str());
     }
     return ERR_OK;
 }
@@ -689,8 +688,7 @@ ErrCode OverlayDataMgr::GetOverlayBundleInfoForTarget(const std::string &targetB
 
     overlayBundleInfo = targetInnerBundleInfo.GetOverlayBundleInfo();
     if (overlayBundleInfo.empty()) {
-        APP_LOGE("no overlay bundle info in data mgr");
-        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_BUNDLE_INFO;
+        APP_LOGW("no overlay bundle info in data mgr");
     }
     return ERR_OK;
 }

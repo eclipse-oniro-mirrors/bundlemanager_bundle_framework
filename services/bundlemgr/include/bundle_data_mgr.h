@@ -38,7 +38,6 @@
 #include "common_event_data.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
-#include "module_usage_record.h"
 #include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -801,8 +800,13 @@ public:
     bool GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
         BaseSharedPackageInfo &baseSharedPackageInfo) const;
 
+    ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) const;
+
+    ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
+        std::vector<SharedBundleInfo> &sharedBundles);
+
     bool DeleteSharedPackage(const std::string &bundleName);
-    
+
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
 
     ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,

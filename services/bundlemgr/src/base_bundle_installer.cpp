@@ -70,6 +70,7 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string RELEASE = "Release";
+const std::string HSP_VERSION_PREFIX = "v";
 
 #ifdef QUOTA_SET_FOR_TEST
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
@@ -306,7 +307,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
         APP_LOGE("uninstall shared library is relied!");
-        return ERR_APPEXECFWK_UNINSTALL_HARE_APP_LIBRARY_IS_RELIED;
+        return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED;
     }
     // if uninstallParam do not contain versionCode, versionCode is ALL_VERSIONCODE
     std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
@@ -320,7 +321,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         versionCodes.size() == SINGLE_HSP_VERSION) {
         return UninstallHspBundle(uninstallDir, info.GetBundleName());
     } else {
-        uninstallDir += Constants::PATH_SEPARATOR + Constants::HSP_VERSION_PREFIX + std::to_string(versionCode);
+        uninstallDir += Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
         return UninstallHspVersion(uninstallDir, versionCode, info);
     }
 }
@@ -759,7 +760,7 @@ ErrCode BaseBundleInstaller::ExtractSharedPackages(InnerBundleInfo &newInfo, con
     newInfo.SetAppCodePath(bundleDir);
 
     uint32_t versionCode = newInfo.GetVersionCode();
-    std::string versionDir = bundleDir + Constants::PATH_SEPARATOR + Constants::HSP_VERSION_PREFIX
+    std::string versionDir = bundleDir + Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX
         + std::to_string(versionCode);
     result = MkdirIfNotExist(versionDir, newDirs);
     CHECK_RESULT(result, "check version dir failed %{public}d");
@@ -1158,7 +1159,6 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
 {
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s start", bundleName_.c_str());
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
-    bool needUpdateTokenIdEx = oldInfo.GetAppType() != newInfo.GetAppType();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
             continue;
@@ -1166,6 +1166,9 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
         std::vector<std::string> newRequestPermName;
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
+        if (accessTokenIdEx.tokenIDEx == 0) {
+            accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenId;
+        }
         if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(accessTokenIdEx, oldInfo,
             newInfo, newRequestPermName)) {
             APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
@@ -1175,8 +1178,7 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (needUpdateTokenIdEx) {
-            APP_LOGD("update accessTokenIdEx tokenAttr: %{public}u", accessTokenIdEx.tokenIdExStruct.tokenAttr);
+        if (accessTokenIdEx.tokenIDEx != uerInfo.second.accessTokenIdEx) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
     }
@@ -1263,6 +1265,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGE("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+
+    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        APP_LOGE("uninstall bundle is shared library.");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1379,6 +1386,11 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGE("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+
+    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        APP_LOGE("uninstall bundle is shared library");
+        return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1799,6 +1811,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         }
         Security::AccessToken::AccessTokenIDEx tokenIdEx;
         tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
+        if (tokenIdEx.tokenIDEx == 0) {
+            tokenIdEx.tokenIDEx = info.second.accessTokenId;
+        }
         std::vector<std::string> newRequestPermName;
         if (!BundlePermissionMgr::AddDefineAndRequestPermissions(tokenIdEx, newInfo, newRequestPermName)) {
             APP_LOGE("BundlePermissionMgr::AddDefineAndRequestPermissions failed %{public}s", bundleName_.c_str());
@@ -1807,6 +1822,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         if (!BundlePermissionMgr::GrantRequestPermissions(newInfo, newRequestPermName, info.second.accessTokenId)) {
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
+        }
+        if (tokenIdEx.tokenIDEx != info.second.accessTokenIdEx) {
+            newInfo.SetAccessTokenIdEx(tokenIdEx, info.second.bundleUserInfo.userId);
         }
         // add new module does not update tokenId, GetAppType will be the same.
     }
@@ -2726,6 +2744,13 @@ ErrCode BaseBundleInstaller::CheckHapHashParams(
 
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    for (const auto &info : infos) {
+        if (info.second.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            APP_LOGE("installing cross-app shared library");
+            return ERR_APPEXECFWK_INSTALL_FILE_IS_SHARED_LIBRARY;
+        }
+    }
+
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         return ret;

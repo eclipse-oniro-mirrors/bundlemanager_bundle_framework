@@ -479,11 +479,15 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     },
     {
         IStatusReceiver::ERR_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED,
-        "error: disallowed to share library",
+        "error: disallowed to share library without AllowAppShareLibrary.",
     },
     {
         IStatusReceiver::ERR_INSTALL_COMPATIBLE_POLICY_NOT_SAME,
-        "error: compatible policy not same",
+        "error: compatible policy not same.",
+    },
+    {
+        IStatusReceiver::ERR_INSTALL_FILE_IS_SHARED_LIBRARY,
+        "error: disallowed to install cross-app shared library.",
     },
     {
         IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR,
@@ -576,6 +580,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     {
         IStatusReceiver::ERR_INSTALL_ATOMIC_SERVICE_NOT_SAME,
         "error, install atomic service config is not same",
+    },
+    {
+        IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST,
+        "error, shared bundle is not exist",
+    },
+    {
+        IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED,
+        "error, shared bundle is relied",
     },
     {
         IStatusReceiver::ERR_UNKNOWN,

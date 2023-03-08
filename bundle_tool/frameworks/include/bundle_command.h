@@ -67,6 +67,13 @@ const std::string HELP_MSG_UNINSTALL =
     "  -u, --user-id <user-id>              specify a user id\n"
     "  -k, --keep-data                      keep the user data after uninstall\n";
 
+const std::string HELP_MSG_UNINSTALL_SHARE = 
+    "usage: bm uninstall-shared <options>\n"
+    "options list:\n"
+    "  -h, --help                           list available commands\n"
+    "  -n, --bundle-name <bundle-name>      uninstall a share library by bundle name\n"
+    "  -v, --version <versionCode>          uninstall a share library by versionCode\n";
+
 const std::string HELP_MSG_DUMP =
     "usage: bm dump <options>\n"
     "options list:\n"
@@ -217,6 +224,7 @@ private:
     ErrCode RunAsHelpCommand();
     ErrCode RunAsInstallCommand();
     ErrCode RunAsUninstallCommand();
+    ErrCode RunAsUninstallShareCommand();
     ErrCode RunAsDumpCommand();
     ErrCode RunAsDumpDependenciesCommand();
     ErrCode RunAsCleanCommand();
@@ -241,6 +249,7 @@ private:
         int32_t waittingTime) const;
     int32_t UninstallOperation(const std::string &bundleName, const std::string &moduleName,
                                InstallParam &installParam) const;
+    int32_t UninstallSharedOperation(const UninstallParam &uninstallParam) const;
     std::string GetUdid() const;
     bool IsInstallOption(int index) const;
     void GetAbsPaths(const std::vector<std::string> &paths, std::vector<std::string> &absPaths) const;

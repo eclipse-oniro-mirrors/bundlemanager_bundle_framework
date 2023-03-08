@@ -36,7 +36,6 @@
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
-#include "module_usage_record.h"
 #include "permission_define.h"
 #include "shared_package/base_shared_package_info.h"
 #include "shared_package/shared_bundle_info.h"
@@ -185,6 +184,16 @@ public:
      * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
      */
     virtual ErrCode GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    /**
+     * @brief Obtains the BundleInfo based on a given bundle name, which the calling app depends on.
+     * @param sharedBundleName Indicates the bundle name to be queried.
+     * @param sharedBundleInfo Indicates the obtained BundleInfo object.
+     * @return Returns ERR_OK if the BundleInfo is successfully obtained; returns error code otherwise.
+     */
+    virtual ErrCode GetDependentBundleInfo(const std::string &sharedBundleName, BundleInfo &sharedBundleInfo)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1247,6 +1256,7 @@ public:
         GET_SHARED_BUNDLE_INFO,
         GET_SHARED_BUNDLE_INFO_BY_SELF,
         GET_SHARED_DEPENDENCIES,
+        GET_DEPENDENT_BUNDLE_INFO,
     };
 };
 }  // namespace AppExecFwk

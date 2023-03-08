@@ -29,9 +29,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string DEVICEID = "100";
-    const int32_t DEVICEMANAGER_SA_ID = 4802;
-    const int32_t SYSTEM_ABILITY_ID = 4801;
-    const int32_t SYS_ABILITY_ID = 402;
     const std::string EMPTY_STRING = "";
 }
 class BmsDeviceManagerTest : public testing::Test {
@@ -89,78 +86,6 @@ HWTEST_F(BmsDeviceManagerTest, InitDeviceManager_0200, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: OnAddSystemAbility_0100
- * @tc.name: test OnAddSystemAbility
- * @tc.desc: 1.systemAbilityId = DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID.
- *           2.deviceId = "100"
- */
-HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = SYSTEM_ABILITY_ID;
-    std::string deviceId = DEVICEID;
-    deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
-    EXPECT_NE(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
-}
-
-/**
- * @tc.number: OnAddSystemAbility_0200
- * @tc.name: test OnAddSystemAbility
- * @tc.desc: 1.systemAbilityId = DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID.
- *           2.deviceId = EMPTY_STRING
- */
-HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0200, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = DEVICEMANAGER_SA_ID;
-    std::string deviceId = EMPTY_STRING;
-    deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
-    EXPECT_EQ(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
-}
-
-/**
- * @tc.number: OnAddSystemAbility_0300
- * @tc.name: test OnAddSystemAbility
- * @tc.desc: systemAbilityId != DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID.
- */
-HWTEST_F(BmsDeviceManagerTest, OnAddSystemAbility_0300, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = SYSTEM_ABILITY_ID;
-    std::string deviceId = EMPTY_STRING;
-    deviceManager.OnAddSystemAbility(systemAbilityId, deviceId);
-    EXPECT_NE(systemAbilityId, DISTRIBUTED_HARDWARE_DEVICEMANAGER_SA_ID);
-}
-
-/**
- * @tc.number: OnRemoveSystemAbility_0100
- * @tc.name: test OnRemoveSystemAbility
- * @tc.desc: systemAbilityId = DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID.
- */
-HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = SYS_ABILITY_ID;
-    std::string deviceId = EMPTY_STRING;
-    deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
-    EXPECT_EQ(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-}
-
-/**
- * @tc.number: OnRemoveSystemAbility_0200
- * @tc.name: test OnRemoveSystemAbility
- * @tc.desc: systemAbilityId != DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID.
- */
-HWTEST_F(BmsDeviceManagerTest, OnRemoveSystemAbility_0200, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = SYSTEM_ABILITY_ID;
-    std::string deviceId = EMPTY_STRING;
-    deviceManager.OnRemoveSystemAbility(systemAbilityId, deviceId);
-    EXPECT_NE(systemAbilityId, DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-}
-
-/**
  * @tc.number: GetAllDeviceList_0100
  * @tc.name: test GetAllDeviceList
  * @tc.desc: GetAllDeviceList is success
@@ -200,18 +125,6 @@ HWTEST_F(BmsDeviceManagerTest, GetTrustedDeviceList_0200, Function | SmallTest |
     deviceManager.isInit_ = true;
     bool res = deviceManager.GetTrustedDeviceList(deviceList);
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: StartDynamicSystemProcess_0100
- * @tc.name: test StartDynamicSystemProcess
- * @tc.desc: systemAbilityId != DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID.
- */
-HWTEST_F(BmsDeviceManagerTest, StartDynamicSystemProcess_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    int32_t systemAbilityId = 0;
-    deviceManager.StartDynamicSystemProcess(systemAbilityId);
 }
 
 /**

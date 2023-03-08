@@ -778,7 +778,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
         std::string value = wantParams.GetStringByType(info, typeId);
         extValues.emplace(it.first, value);
     }
-    int32_t callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGD("callingUid: %{public}d", callingUid);
 
     targetAbilityInfo->targetExtSetting.extValues = extValues;
@@ -869,6 +869,7 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
         targetAbilityInfo->targetExtSetting = *targetExtSetting;
         targetAbilityInfo->version = DEFAULT_VERSION;
         this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+        targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
         if (targetAbilityInfo->targetInfo.moduleName.empty()) {
             targetAbilityInfo->targetInfo.moduleName = moduleName;
         }
@@ -973,6 +974,7 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1061,6 +1063,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
     if (targetAbilityInfo->targetInfo.moduleName.empty()) {
         auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
         for (const auto& info : baseAbilitiesInfo) {
