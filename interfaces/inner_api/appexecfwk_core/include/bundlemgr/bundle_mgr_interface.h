@@ -258,6 +258,16 @@ public:
         return Constants::INVALID_UID;
     }
     /**
+     * @brief Obtains the debug application UID based on the given bundle name and user ID.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @return Returns the uid if successfully obtained; returns -1 otherwise.
+     */
+    virtual int GetUidByDebugBundleName(const std::string &bundleName, const int userId)
+    {
+        return Constants::INVALID_UID;
+    }
+    /**
      * @brief Obtains the application ID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
