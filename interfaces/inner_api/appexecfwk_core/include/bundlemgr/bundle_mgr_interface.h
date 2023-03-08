@@ -381,6 +381,17 @@ public:
         return false;
     }
     /**
+     * @brief Silent install by the given Want.
+     * @param want Indicates the information of the want.
+     * @param userId Indicates the user ID.
+     * @param callBack Indicates the callback to be invoked for return the operation result.
+     * @return Returns true if silent install successfully; returns false otherwise.
+     */
+    virtual bool SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+    {
+        return false;
+    }
+    /**
      * @brief Upgrade atomic service
      * @param want Indicates the information of the ability.
      * @param userId Indicates the user ID.
@@ -1256,6 +1267,7 @@ public:
         VERIFY_SYSTEM_API,
         PROCESS_PRELOAD,
         GET_PROVISION_METADATA,
+        SILENT_INSTALL,
     };
 };
 }  // namespace AppExecFwk

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -943,6 +943,44 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
     this->SilentInstall(*targetAbilityInfo, want, *freeInstallParams, userId);
     return false;
+}
+
+bool BundleConnectAbilityMgr::SilentInstall(const Want &want, int32_t userId, const sptr<IRemoteObject> &callBack)
+{
+    APP_LOGD("SilentInstall");
+    sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
+    if (targetAbilityInfo == nullptr) {
+        APP_LOGE("targetAbilityInfo is nullptr");
+        return false;
+    }
+    sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
+    if (targetInfo == nullptr) {
+        APP_LOGE("targetInfo is nullptr");
+        return false;
+    }
+    sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
+    if (targetExtSetting == nullptr) {
+        APP_LOGE("targetExtSetting is nullptr");
+        return false;
+    }
+
+    targetAbilityInfo->targetInfo = *targetInfo;
+    targetAbilityInfo->targetExtSetting = *targetExtSetting;
+    targetAbilityInfo->version = DEFAULT_VERSION;
+    InnerBundleInfo innerBundleInfo;
+    GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
+    if (freeInstallParams == nullptr) {
+        APP_LOGE("freeInstallParams is nullptr");
+        return false;
+    }
+
+    freeInstallParams->callback = callBack;
+    freeInstallParams->want = want;
+    freeInstallParams->userId = userId;
+    freeInstallParams->serviceCenterFunction = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
+    SilentInstall(*targetAbilityInfo, want, *freeInstallParams, userId);
+    return true;
 }
 
 void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t userId)
