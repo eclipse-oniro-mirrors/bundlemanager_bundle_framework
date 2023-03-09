@@ -306,14 +306,14 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     if (dataMgr_->CheckHspVersionIsRelied(versionCode, info)) {
-        APP_LOGE("uninstall shared library is relied!");
+        APP_LOGE("uninstall shared library is relied");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED;
     }
     // if uninstallParam do not contain versionCode, versionCode is ALL_VERSIONCODE
     std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
     if (versionCode != Constants::ALL_VERSIONCODE &&
         std::find(versionCodes.begin(), versionCodes.end(), versionCode) == versionCodes.end()) {
-        APP_LOGE("input versionCode is not exist!");
+        APP_LOGE("input versionCode is not exist");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
     std::string uninstallDir = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
