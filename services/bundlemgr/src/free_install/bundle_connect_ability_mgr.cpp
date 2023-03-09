@@ -752,13 +752,14 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
         std::string value = wantParams.GetStringByType(info, typeId);
         extValues.emplace(it.first, value);
     }
+    auto callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
 
     targetAbilityInfo->targetExtSetting.extValues = extValues;
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
     targetAbilityInfo->targetInfo.bundleName = bundleName;
     targetAbilityInfo->targetInfo.moduleName = moduleName;
     targetAbilityInfo->targetInfo.abilityName = abilityName;
-    targetAbilityInfo->targetInfo.callingUid = IPCSkeleton::GetCallingUid();
+    targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     std::string callingAppId = want.GetStringParam(PARAM_FREEINSTALL_APPID);
     if (!callingAppId.empty()) {
@@ -766,7 +767,6 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     }
     callingBundleNames = want.GetStringArrayParam(PARAM_FREEINSTALL_BUNDLENAMES);
     if (callingAppids.empty() && callingBundleNames.empty()) {
-        int32_t callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
         this->GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
     }
     targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
@@ -969,6 +969,13 @@ bool BundleConnectAbilityMgr::SilentInstall(const Want &want, int32_t userId, co
     targetAbilityInfo->version = DEFAULT_VERSION;
     InnerBundleInfo innerBundleInfo;
     GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    std::vector<std::string> callingBundleNames;
+    std::vector<std::string> callingAppids;
+    GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
+    targetAbilityInfo->targetInfo.callingUid = callingUid;
+    targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
+    targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");

@@ -400,12 +400,9 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, AbilityInfo &abilityI
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
-        APP_LOGD("non-system app calling system api");
-        return true;
-    }
-    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
-        APP_LOGE("verify permission failed");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("QueryAbilityInfo verify failed.");
         return false;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
@@ -429,6 +426,11 @@ bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sp
 
 void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("UpgradeAtomicService verify failed.");
+        return;
+    }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
@@ -440,6 +442,10 @@ void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 bool BundleMgrHostImpl::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     auto elementName = want.GetElement();
     if (elementName.GetDeviceID().empty() || elementName.GetBundleName().empty() ||
         elementName.GetAbilityName().empty()) {
@@ -456,6 +462,11 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 
 void BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("ProcessPreload verify failed.");
+        return;
+    }
     APP_LOGD("begin to process preload.");
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
