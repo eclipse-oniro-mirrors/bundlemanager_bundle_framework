@@ -1137,13 +1137,6 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
     if (ret != ERR_OK) {
         return;
     }
-    if (preInfo.GetAppType() != oldInfo.GetAppType()) {
-        APP_LOGD("RollBack bundleName: %{public}s modified app attribute.", bundleName_.c_str());
-        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
-            APP_LOGE("save UpdateInnerBundleInfo failed");
-            return;
-        }
-    }
     APP_LOGD("finish rollback due to install failed");
 }
 
@@ -1152,6 +1145,7 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
 {
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s start", bundleName_.c_str());
     auto bundleUserInfos = newInfo.GetInnerBundleUserInfos();
+    bool needUpdateToken = oldInfo.GetAppType() != newInfo.GetAppType();
     for (const auto &uerInfo : bundleUserInfos) {
         if (uerInfo.second.accessTokenId == 0) {
             continue;
@@ -1160,6 +1154,7 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
         Security::AccessToken::AccessTokenIDEx accessTokenIdEx;
         accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenIdEx;
         if (accessTokenIdEx.tokenIDEx == 0) {
+            needUpdateToken = true;
             accessTokenIdEx.tokenIDEx = uerInfo.second.accessTokenId;
         }
         if (!BundlePermissionMgr::UpdateDefineAndRequestPermissions(accessTokenIdEx, oldInfo,
@@ -1171,9 +1166,13 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (accessTokenIdEx.tokenIDEx != uerInfo.second.accessTokenIdEx) {
+        if (needUpdateToken) {
             newInfo.SetAccessTokenIdEx(accessTokenIdEx, uerInfo.second.bundleUserInfo.userId);
         }
+    }
+    if (needUpdateToken && !dataMgr_->UpdateInnerBundleInfo(newInfo)) {
+        APP_LOGE("save UpdateInnerBundleInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
     APP_LOGD("UpdateDefineAndRequestPermissions %{public}s end", bundleName_.c_str());
     return ERR_OK;
@@ -1804,7 +1803,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         }
         Security::AccessToken::AccessTokenIDEx tokenIdEx;
         tokenIdEx.tokenIDEx = info.second.accessTokenIdEx;
+        bool needUpdateToken = false;
         if (tokenIdEx.tokenIDEx == 0) {
+            needUpdateToken = true;
             tokenIdEx.tokenIDEx = info.second.accessTokenId;
         }
         std::vector<std::string> newRequestPermName;
@@ -1816,10 +1817,9 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             APP_LOGE("BundlePermissionMgr::GrantRequestPermissions failed %{public}s", bundleName_.c_str());
             return ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED;
         }
-        if (tokenIdEx.tokenIDEx != info.second.accessTokenIdEx) {
-            newInfo.SetAccessTokenIdEx(tokenIdEx, info.second.bundleUserInfo.userId);
+        if (needUpdateToken) {
+            oldInfo.SetAccessTokenIdEx(tokenIdEx, info.second.bundleUserInfo.userId);
         }
-        // add new module does not update tokenId, GetAppType will be the same.
     }
 
     oldInfo.SetBundleUpdateTime(BundleUtil::GetCurrentTimeMs(), userId_);
@@ -1947,14 +1947,6 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     if (ret != ERR_OK) {
         APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
         return ret;
-    }
-    // update tokenIdex
-    if (noUpdateInfo.GetAppType() != oldInfo.GetAppType()) {
-        APP_LOGD("bundleName: %{public}s modified app attribute.", bundleName_.c_str());
-        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
-            APP_LOGE("save UpdateInnerBundleInfo failed");
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
     }
 
     if (noUpdateInfo.GetAppPrivilegeLevel() != oldInfo.GetAppPrivilegeLevel()) {
