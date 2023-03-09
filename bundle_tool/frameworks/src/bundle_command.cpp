@@ -72,11 +72,15 @@ const struct option LONG_OPTIONS[] = {
     {nullptr, 0, nullptr, 0},
 };
 
-const std::string UNINSTALL_SHARE_LIBRARY_OPTIONS = "hn:v:";
-const struct option UNINSTALL_SHARE_LIBRARY_LONG_OPTIONS[] = {
+const std::string UNINSTALL_OPTIONS = "hn:m:u:v:s";
+const struct option UNINSTALL_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle_name", required_argument, nullptr, 'n'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {"user-id", required_argument, nullptr, 'u'},
+    {"keep-data", no_argument, nullptr, 'k'},
     {"version", required_argument, nullptr, 'v'},
+    {"shared", no_argument, nullptr, 's'},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -183,7 +187,6 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"help", std::bind(&BundleManagerShellCommand::RunAsHelpCommand, this)},
         {"install", std::bind(&BundleManagerShellCommand::RunAsInstallCommand, this)},
         {"uninstall", std::bind(&BundleManagerShellCommand::RunAsUninstallCommand, this)},
-        {"uninstall-shared", std::bind(&BundleManagerShellCommand::RunAsUninstallShareCommand, this)},
         {"dump", std::bind(&BundleManagerShellCommand::RunAsDumpCommand, this)},
         {"dump-dependencies", std::bind(&BundleManagerShellCommand::RunAsDumpDependenciesCommand, this)},
         {"clean", std::bind(&BundleManagerShellCommand::RunAsCleanCommand, this)},
@@ -473,9 +476,11 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
     std::string moduleName = "";
     int32_t userId = Constants::ALL_USERID;
     bool isKeepData = false;
+    bool isShared = false;
+    int32_t versionCode = Constants::ALL_VERSIONCODE;
     while (true) {
         counter++;
-        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, UNINSTALL_OPTIONS.c_str(), UNINSTALL_LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -525,6 +530,17 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
                     // 'bm uninstall --bundle-name <bundleName> --keep-data'
                     APP_LOGD("'bm uninstall -k'");
                     isKeepData = true;
+                    break;
+                }
+                case 's': {
+                    APP_LOGD("'bm uninstall -s'");
+                    isShared = true;
+                    break;
+                }
+                case 'v': {
+                    APP_LOGD("'bm uninstall -v'");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
                     break;
                 }
                 default: {
@@ -581,6 +597,20 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
                 isKeepData = true;
                 break;
             }
+            case 's': {
+                APP_LOGD("'bm uninstall -s'");
+                isShared = true;
+                break;
+            }
+            case 'v': {
+                APP_LOGD("'bm uninstall %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (!OHOS::StrToInt(optarg, versionCode) || versionCode < 0) {
+                    APP_LOGE("bm uninstall with error versionCode %{private}s", optarg);
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -596,127 +626,28 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
             result = OHOS::ERR_INVALID_VALUE;
         }
     }
-
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_UNINSTALL);
-    } else {
-        InstallParam installParam;
-        installParam.userId = userId;
-        installParam.isKeepData = isKeepData;
-        int32_t uninstallResult = UninstallOperation(bundleName, moduleName, installParam);
+        return result;
+    }
+
+    if (isShared) {
+        UninstallParam uninstallParam;
+        uninstallParam.bundleName = bundleName;
+        uninstallParam.versionCode = versionCode;
+        APP_LOGE("version code is %{public}d", versionCode);
+        int32_t uninstallResult = UninstallSharedOperation(uninstallParam);
         if (uninstallResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_OK + "\n";
         } else {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_NG + "\n";
             resultReceiver_.append(GetMessageFromCode(uninstallResult));
         }
-    }
-
-    return result;
-}
-
-ErrCode BundleManagerShellCommand::RunAsUninstallShareCommand()
-{
-    int32_t result = OHOS::ERR_OK;
-    int32_t counter = 0;
-    UninstallParam uninstallParam;
-    while (true) {
-        counter++;
-        int32_t option = getopt_long(argc_, argv_, UNINSTALL_SHARE_LIBRARY_OPTIONS.c_str(),
-            UNINSTALL_SHARE_LIBRARY_LONG_OPTIONS, nullptr);
-        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
-        if (optind < 0 || optind > argc_) {
-            return OHOS::ERR_INVALID_VALUE;
-        }
-        if (option == -1) {
-            if (counter == 1) {
-                // When scanning the first argument
-                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm uninstall-shared' with no option: bm uninstall-shared
-                    // 'bm uninstall-shared' with a wrong argument: bm uninstall-shared xxx
-                    APP_LOGD("'bm uninstall-shared' %{public}s", HELP_MSG_NO_OPTION.c_str());
-                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                }
-            }
-            break;
-        }
-
-        if (option == '?') {
-            switch (optopt) {
-                case 'n': {
-                    // 'bm uninstall-shared -n' with no argument: bm uninstall-shared -n
-                    // 'bm uninstall-shared --bundle-name' with no argument: bm uninstall-shared --bundle-name
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'v': {
-                    // 'bm uninstall-shared -n <bundleName> -v <versionCode>'
-                    // 'bm uninstall-shared shared bundle'
-                    APP_LOGD("'bm uninstall-shared -v'");
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                default: {
-                    // 'bm uninstall-shared' with an unknown option: bm uninstall-shared -x
-                    // 'bm uninstall-shared' with an unknown option: bm uninstall-shared -xxx
-                    std::string unknownOption = "";
-                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                    APP_LOGD("'bm uninstall-shared' with an unknown option.");
-                    resultReceiver_.append(unknownOptionMsg);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-            }
-            break;
-        }
-
-        switch (option) {
-            case 'h': {
-                // 'bm uninstall-shared -h'
-                // 'bm uninstall-shared --help'
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'n': {
-                // 'bm uninstall-shared -n xxx'
-                // 'bm uninstall-shared --bundle-name xxx'
-                APP_LOGD("'bm uninstall-shared %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
-                uninstallParam.bundleName = optarg;
-                break;
-            }
-            case 'v': {
-                // 'bm uninstall-shared -n <bundleName> -v <versionCode>'
-                APP_LOGD("bm uninstall-shared %{public}s %{public}s", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
-                if (!OHOS::StrToInt(optarg, uninstallParam.versionCode) || uninstallParam.versionCode < 0) {
-                    APP_LOGE("bm uninstall-shared with error versionCode %{private}s", optarg);
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    return OHOS::ERR_INVALID_VALUE;
-                }
-                break;
-            }
-            default: {
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    }
-
-    if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && uninstallParam.bundleName.size() == 0) {
-            // 'bm uninstall-shared ...' with no bundle name option
-            APP_LOGD("'bm uninstall-shared' with bundle name option.");
-            resultReceiver_.append(HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n");
-            result = OHOS::ERR_INVALID_VALUE;
-        }
-    }
-
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_UNINSTALL_SHARE);
     } else {
-        int32_t uninstallResult = UninstallSharedOperation(uninstallParam);
+        InstallParam installParam;
+        installParam.userId = userId;
+        installParam.isKeepData = isKeepData;
+        int32_t uninstallResult = UninstallOperation(bundleName, moduleName, installParam);
         if (uninstallResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_OK + "\n";
         } else {

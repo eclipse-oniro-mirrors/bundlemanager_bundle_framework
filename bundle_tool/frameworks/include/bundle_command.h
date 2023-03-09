@@ -65,7 +65,9 @@ const std::string HELP_MSG_UNINSTALL =
     "  -n, --bundle-name <bundle-name>      uninstall a bundle by bundle name\n"
     "  -m, --module-name <module-name>      uninstall a module by module name\n"
     "  -u, --user-id <user-id>              specify a user id\n"
-    "  -k, --keep-data                      keep the user data after uninstall\n";
+    "  -k, --keep-data                      keep the user data after uninstall\n"
+    "  -s, --shared                         uninstall shared library\n"
+    "  -v, --version                        uninstall a shared library by versionCode\n";
 
 const std::string HELP_MSG_UNINSTALL_SHARE = 
     "usage: bm uninstall-shared <options>\n"
@@ -224,7 +226,6 @@ private:
     ErrCode RunAsHelpCommand();
     ErrCode RunAsInstallCommand();
     ErrCode RunAsUninstallCommand();
-    ErrCode RunAsUninstallShareCommand();
     ErrCode RunAsDumpCommand();
     ErrCode RunAsDumpDependenciesCommand();
     ErrCode RunAsCleanCommand();
