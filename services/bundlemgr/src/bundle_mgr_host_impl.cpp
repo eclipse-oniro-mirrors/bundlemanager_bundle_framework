@@ -859,6 +859,10 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModu
 bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t userId, HapModuleInfo &hapModuleInfo)
 {
     APP_LOGD("start GetHapModuleInfo with userId: %{public}d", userId);
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return false;
+    }
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -1665,6 +1669,10 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 {
     APP_LOGD("start GetDistributedBundleInfo, bundleName : %{public}s", bundleName.c_str());
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return false;
+    }
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -2147,7 +2155,7 @@ bool BundleMgrHostImpl::GetAllDependentModuleNames(const std::string &bundleName
 ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
     const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info)
 {
-    APP_LOGD("start GetSandboxBundleInfo, bundleName : %{public}s, appindex : %{public}d, userId : %{public}d",
+    APP_LOGD("start GetSandboxBundleInfo, bundleName : %{public}s, appIndex : %{public}d, userId : %{public}d",
         bundleName.c_str(), appIndex, userId);
     // check bundle name
     if (bundleName.empty()) {
@@ -2283,6 +2291,15 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
     AbilityInfo &info)
 {
     APP_LOGD("start GetSandboxAbilityInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
@@ -2304,6 +2321,15 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
     int32_t userId, std::vector<ExtensionAbilityInfo> &infos)
 {
     APP_LOGD("start GetSandboxExtAbilityInfos appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -2325,6 +2351,15 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
     HapModuleInfo &info)
 {
     APP_LOGD("start GetSandboxHapModuleInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;

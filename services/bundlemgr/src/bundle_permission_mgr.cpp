@@ -709,6 +709,7 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     APP_LOGD("verifying systemApp");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
@@ -739,6 +740,7 @@ bool BundlePermissionMgr::IsNativeTokenType()
     APP_LOGD("begin to verify token type");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
         APP_LOGD("caller tokenType is native, verify success");

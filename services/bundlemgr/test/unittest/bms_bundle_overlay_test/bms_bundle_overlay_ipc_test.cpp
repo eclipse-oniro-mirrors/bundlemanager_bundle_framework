@@ -94,7 +94,7 @@ ErrCode OverlayManagerHostMock::GetOverlayModuleInfo(const std::string &moduleNa
 }
 
 ErrCode OverlayManagerHostMock::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
-    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId )
+    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
     overlayModuleInfos.emplace_back(moduleInfo);
@@ -799,7 +799,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3000, Function | SmallTest | Le
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
-    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME, data, reply, option);
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME, data, reply,
+        option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -825,7 +826,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3100, Function | SmallTest | Le
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
-    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS, data, reply, option);
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS, data, reply,
+        option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -853,7 +855,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3200, Function | SmallTest | Le
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
-    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data, reply, option);
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data,
+        reply, option);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = reply.ReadInt32();
@@ -881,7 +884,8 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3300, Function | SmallTest | Le
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
-    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF, data, reply, option);
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF, data, reply,
+        option);
     EXPECT_EQ(ret, ERR_OK);
     ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_OK);
