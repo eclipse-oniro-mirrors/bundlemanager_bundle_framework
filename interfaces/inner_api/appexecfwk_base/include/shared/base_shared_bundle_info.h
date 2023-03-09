@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_PACKAGE_INFO_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_PACKAGE_INFO_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_BUNDLE_INFO_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_BUNDLE_INFO_H
 
 #include <string>
 
@@ -22,7 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct BaseSharedPackageInfo : public Parcelable {
+struct BaseSharedBundleInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     uint32_t versionCode;
@@ -30,8 +30,8 @@ struct BaseSharedPackageInfo : public Parcelable {
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static BaseSharedPackageInfo *Unmarshalling(Parcel &parcel);
+    static BaseSharedBundleInfo *Unmarshalling(Parcel &parcel);
 };
 }
 }
-#endif  // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_PACKAGE_INFO_H
+#endif  // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_BUNDLE_INFO_H

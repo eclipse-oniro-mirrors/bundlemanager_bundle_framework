@@ -37,8 +37,8 @@
 #include "form_info.h"
 #include "hap_module_info.h"
 #include "permission_define.h"
-#include "shared_package/base_shared_package_info.h"
-#include "shared_package/shared_bundle_info.h"
+#include "shared/base_shared_bundle_info.h"
+#include "shared/shared_bundle_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1117,8 +1117,8 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
-        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos)
+    virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
@@ -1251,7 +1251,7 @@ public:
         PROCESS_PRELOAD,
         GET_APP_PROVISION_INFO,
         GET_PROVISION_METADATA,
-        GET_BASE_SHARED_PACKAGE_INFOS,
+        GET_BASE_SHARED_BUNDLE_INFOS,
         GET_ALL_SHARED_BUNDLE_INFO,
         GET_SHARED_BUNDLE_INFO,
         GET_SHARED_BUNDLE_INFO_BY_SELF,

@@ -622,7 +622,7 @@ private:
 
     ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 

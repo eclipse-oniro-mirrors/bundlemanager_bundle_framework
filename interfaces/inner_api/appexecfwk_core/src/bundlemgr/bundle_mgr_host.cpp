@@ -206,8 +206,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::PROCESS_PRELOAD, &BundleMgrHost::HandleProcessPreload);
     funcMap_.emplace(IBundleMgr::Message::GET_APP_PROVISION_INFO, &BundleMgrHost::HandleGetAppProvisionInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_PROVISION_METADATA, &BundleMgrHost::HandleGetProvisionMetadata);
-    funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
-        &BundleMgrHost::HandleGetBaseSharedPackageInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_BUNDLE_INFOS,
+        &BundleMgrHost::HandleGetBaseSharedBundleInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetAllSharedBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetSharedBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
@@ -2432,15 +2432,14 @@ ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessagePa
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGD("start to process HandleGetBaseSharedPackageInfos message");
+    APP_LOGD("start to process HandleGetBaseSharedBundleInfos message");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    int32_t userId = data.ReadInt32();
 
-    std::vector<BaseSharedPackageInfo> infos;
-    ErrCode ret = GetBaseSharedPackageInfos(bundleName, userId, infos);
+    std::vector<BaseSharedBundleInfo> infos;
+    ErrCode ret = GetBaseSharedBundleInfos(bundleName, infos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

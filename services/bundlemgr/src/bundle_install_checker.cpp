@@ -431,8 +431,8 @@ bool BundleInstallChecker::FindModuleInInstallingPackage(const Dependency &depen
     }
     for (const auto& bundleInfo : iter->second) {
         APP_LOGD("bundle:%s", bundleInfo.second.GetBundleName().c_str());
-        BaseSharedPackageInfo hsp;
-        bool isModuleExist = bundleInfo.second.GetMaxVerBaseSharedPackageInfo(dependency.moduleName, hsp);
+        BaseSharedBundleInfo hsp;
+        bool isModuleExist = bundleInfo.second.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, hsp);
         if (isModuleExist && dependency.versionCode <= hsp.versionCode) {
             return true;
         }
@@ -456,8 +456,8 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(const Dependency &depend
         APP_LOGE("the bundle: %{public}s is not install", dependency.bundleName.c_str());
         return false;
     }
-    BaseSharedPackageInfo hsp;
-    bool isModuleExist = bundleInfo.GetMaxVerBaseSharedPackageInfo(dependency.moduleName, hsp);
+    BaseSharedBundleInfo hsp;
+    bool isModuleExist = bundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, hsp);
     if (isModuleExist && dependency.versionCode <= hsp.versionCode) {
         return true;
     }
@@ -755,7 +755,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     return ret;
 }
 
-ErrCode BundleInstallChecker::CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos)
+ErrCode BundleInstallChecker::CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     if (infos.empty()) {
         return ERR_OK;
@@ -787,16 +787,16 @@ ErrCode BundleInstallChecker::CheckSharedPackageLabelInfo(std::unordered_map<std
     // check compatible policy
     if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::BACK_COMPATIBLE) {
         for (const auto& item : infos) {
-            auto& sharedPackageModules = item.second.GetInnerSharedPackageModuleInfos();
-            if (sharedPackageModules.empty() || sharedPackageModules.begin()->second.empty()) {
-                APP_LOGW("inner shared package module infos not found (%s)", item.second.GetBundleName().c_str());
+            auto& sharedModules = item.second.GetInnerSharedModuleInfos();
+            if (sharedModules.empty() || sharedModules.begin()->second.empty()) {
+                APP_LOGW("inner shared module infos not found (%s)", item.second.GetBundleName().c_str());
                 continue;
             }
-            auto& sharedPackageModule = sharedPackageModules.begin()->second.front();
-            BaseSharedPackageInfo installedSharedPackage;
-            if (oldInfo.GetMaxVerBaseSharedPackageInfo(sharedPackageModule.moduleName, installedSharedPackage) &&
-                installedSharedPackage.versionCode > sharedPackageModule.versionCode) {
-                APP_LOGE("installing lower version shared package");
+            auto& sharedModule = sharedModules.begin()->second.front();
+            BaseSharedBundleInfo installedSharedBundle;
+            if (oldInfo.GetMaxVerBaseSharedBundleInfo(sharedModule.moduleName, installedSharedBundle) &&
+                installedSharedBundle.versionCode > sharedModule.versionCode) {
+                APP_LOGE("installing lower version shared library");
                 return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
             }
         }

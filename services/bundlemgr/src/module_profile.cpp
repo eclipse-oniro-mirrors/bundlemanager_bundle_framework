@@ -1422,7 +1422,7 @@ void UpdateNativeSoAttrs(
 
     innerBundleInfo.SetModuleNativeLibraryPath(
         innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
-    innerBundleInfo.SetSharedPackageModuleNativeLibraryPath(
+    innerBundleInfo.SetSharedModuleNativeLibraryPath(
         innerBundleInfo.GetCurModuleName() + Constants::PATH_SEPARATOR + soRelativePath);
     innerBundleInfo.SetModuleCpuAbi(cpuAbi);
 }
@@ -2184,7 +2184,7 @@ bool ToInnerBundleInfo(
     if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
         innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
         innerModuleInfo.versionCode = applicationInfo.versionCode;
-        innerBundleInfo.InsertInnerSharedPackageModuleInfo(moduleJson.module.name, innerModuleInfo);
+        innerBundleInfo.InsertInnerSharedModuleInfo(moduleJson.module.name, innerModuleInfo);
     }
 
     innerBundleInfo.InsertInnerModuleInfo(moduleJson.module.name, innerModuleInfo);

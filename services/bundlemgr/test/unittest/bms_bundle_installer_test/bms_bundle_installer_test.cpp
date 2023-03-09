@@ -1359,59 +1359,55 @@ HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1600, Function | SmallTest
 }
 
 /**
- * @tc.number: GetBaseSharedPackageInfosTest
- * @tc.name: Test use different param with GetBaseSharedPackageInfos
- * @tc.desc: 1.Test the GetBaseSharedPackageInfos with BundleDataMgr
+ * @tc.number: GetBaseSharedBundleInfosTest
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the GetBaseSharedBundleInfos with BundleDataMgr
 */
-HWTEST_F(BmsBundleInstallerTest, GetBaseSharedPackageInfosTest, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfosTest, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    std::vector<BaseSharedPackageInfo> infos;
-    auto ret = dataMgr->GetBaseSharedPackageInfos(BUNDLE_NAME, Constants::INVALID_USERID, infos);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
-    ret = dataMgr->GetBaseSharedPackageInfos("", USERID, infos);
+    std::vector<BaseSharedBundleInfo> infos;
+    auto ret = dataMgr->GetBaseSharedBundleInfos("", infos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
- * @tc.number: GetBaseSharedPackageInfoTest
- * @tc.name: Test use different param with GetBaseSharedPackageInfos
- * @tc.desc: 1.Test the GetBaseSharedPackageInfo with BundleDataMgr
+ * @tc.number: GetBaseSharedBundleInfoTest
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the GetBaseSharedBundleInfo with BundleDataMgr
 */
-HWTEST_F(BmsBundleInstallerTest, GetBaseSharedPackageInfoTest, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfoTest, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
     Dependency dependency;
-    BaseSharedPackageInfo info;
-    auto ret = dataMgr->GetBaseSharedPackageInfo(dependency, USERID, info);
+    BaseSharedBundleInfo info;
+    auto ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, false);
     dependency.bundleName = BUNDLE_NAME;
     InnerBundleInfo innerBundleInfo;
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
-    ret = dataMgr->GetBaseSharedPackageInfo(dependency, Constants::ALL_USERID, info);
-    EXPECT_EQ(ret, false);
-    ret = dataMgr->GetBaseSharedPackageInfo(dependency, Constants::NOT_EXIST_USERID, info);
+    ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, false);
     dataMgr->bundleInfos_.clear();
     innerBundleInfo.baseApplicationInfo_->compatiblePolicy = CompatiblePolicy::BACK_COMPATIBLE;
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
-    ret = dataMgr->GetBaseSharedPackageInfo(dependency, Constants::NOT_EXIST_USERID, info);
+    ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, true);
 }
 
 /**
- * @tc.number: DeleteSharedPackageTest
- * @tc.name: Test use different param with GetBaseSharedPackageInfos
- * @tc.desc: 1.Test the DeleteSharedPackage with BundleDataMgr
+ * @tc.number: DeleteSharedBundleTest
+ * @tc.name: Test use different param with GetBaseSharedBundleInfos
+ * @tc.desc: 1.Test the DeleteSharedBundle with BundleDataMgr
 */
-HWTEST_F(BmsBundleInstallerTest, DeleteSharedPackageTest, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, DeleteSharedBundleTest, Function | SmallTest | Level0)
 {
     auto dataMgr = GetBundleDataMgr();
-    bool ret = dataMgr->DeleteSharedPackage("");
+    bool ret = dataMgr->DeleteSharedBundleInfo("");
     EXPECT_EQ(ret, false);
     InnerBundleInfo innerBundleInfo;
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
-    ret = dataMgr->DeleteSharedPackage(BUNDLE_NAME);
+    ret = dataMgr->DeleteSharedBundleInfo(BUNDLE_NAME);
     EXPECT_EQ(ret, true);
 }
 

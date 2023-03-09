@@ -782,8 +782,8 @@ public:
 
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
-    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
-        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
+    virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) override;
 
     virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,
         SharedBundleInfo &sharedBundleInfo) override;

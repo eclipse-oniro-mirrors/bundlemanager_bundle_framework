@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "base_shared_package_info.h"
+#include "base_shared_bundle_info.h"
 
 #include "app_log_wrapper.h"
 #include "json_util.h"
@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-bool BaseSharedPackageInfo::ReadFromParcel(Parcel &parcel)
+bool BaseSharedBundleInfo::ReadFromParcel(Parcel &parcel)
 {
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
@@ -32,7 +32,7 @@ bool BaseSharedPackageInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-bool BaseSharedPackageInfo::Marshalling(Parcel &parcel) const
+bool BaseSharedBundleInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
@@ -41,9 +41,9 @@ bool BaseSharedPackageInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-BaseSharedPackageInfo *BaseSharedPackageInfo::Unmarshalling(Parcel &parcel)
+BaseSharedBundleInfo *BaseSharedBundleInfo::Unmarshalling(Parcel &parcel)
 {
-    BaseSharedPackageInfo *info = new (std::nothrow) BaseSharedPackageInfo();
+    BaseSharedBundleInfo *info = new (std::nothrow) BaseSharedBundleInfo();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
