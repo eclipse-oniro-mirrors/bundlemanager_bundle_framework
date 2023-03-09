@@ -281,12 +281,9 @@ private:
     /**
      * @brief Install system shared bundle.
      * @param sharedBundlePath Indicates the path of shared bundle.
-     * @param userId Indicates userId.
      * @return
      */
-    void ProcessSystemSharedBundleInstall(
-        const std::string &sharedBundlePath,
-        int32_t userId = Constants::UNSPECIFIED_USERID);
+    void ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath);
     /**
      * @brief start reboot scan.
      * @return

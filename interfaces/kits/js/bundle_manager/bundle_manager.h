@@ -29,7 +29,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
-#include "shared_package/shared_bundle_info.h"
+#include "shared/shared_bundle_info.h"
 #include "want.h"
 
 namespace OHOS {

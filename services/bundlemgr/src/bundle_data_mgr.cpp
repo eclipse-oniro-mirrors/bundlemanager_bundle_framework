@@ -1533,65 +1533,51 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     return ERR_OK;
 }
 
-ErrCode BundleDataMgr::GetBaseSharedPackageInfos(const std::string &bundleName,
-    int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) const
+ErrCode BundleDataMgr::GetBaseSharedBundleInfos(const std::string &bundleName,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const
 {
-    int32_t requestUserId = GetUserId(userId);
-    if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("GetBaseSharedPackageInfos input invalid userid");
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-    }
-
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGE("GetBaseSharedPackageInfos get bundleInfo failed");
+        APP_LOGE("GetBaseSharedBundleInfos get bundleInfo failed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
     std::vector<Dependency> dependencies = innerBundleInfo.GetDependencies();
     for (const auto &item : dependencies) {
-        BaseSharedPackageInfo baseSharedPackageInfo;
-        if (GetBaseSharedPackageInfo(item, requestUserId, baseSharedPackageInfo)) {
-            baseSharedPackageInfos.emplace_back(baseSharedPackageInfo);
+        BaseSharedBundleInfo baseSharedBundleInfo;
+        if (GetBaseSharedBundleInfo(item, baseSharedBundleInfo)) {
+            baseSharedBundleInfos.emplace_back(baseSharedBundleInfo);
         }
     }
-    APP_LOGD("GetBaseSharedPackageInfos(%{public}s) successfully in user(%{public}d)", bundleName.c_str(),
-        requestUserId);
+    APP_LOGD("GetBaseSharedBundleInfos(%{public}s) successfully", bundleName.c_str());
     return ERR_OK;
 }
 
-bool BundleDataMgr::GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
-    BaseSharedPackageInfo &baseSharedPackageInfo) const
+bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
+    BaseSharedBundleInfo &baseSharedBundleInfo) const
 {
     auto infoItem = bundleInfos_.find(dependency.bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGE("GetBaseSharedPackageInfo failed, can not find dependency bundle %{public}s",
+        APP_LOGE("GetBaseSharedBundleInfo failed, can not find dependency bundle %{public}s",
             dependency.bundleName.c_str());
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    InnerBundleUserInfo innerBundleUserInfo;
-    if (!innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo) &&
-        !innerBundleInfo.GetInnerBundleUserInfo(Constants::DEFAULT_USERID, innerBundleUserInfo)) {
-        APP_LOGE("can not find bundleUserInfo in userId: %{public}d", userId);
-        return false;
-    }
     if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::BACK_COMPATIBLE) {
-        innerBundleInfo.GetMaxVerBaseSharedPackageInfo(dependency.moduleName, baseSharedPackageInfo);
+        innerBundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, baseSharedBundleInfo);
     } else if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::PRECISE_MATCH) {
-        innerBundleInfo.GetBaseSharedPackageInfo(dependency.moduleName, dependency.versionCode, baseSharedPackageInfo);
+        innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName, dependency.versionCode, baseSharedBundleInfo);
     } else {
-        APP_LOGE("GetBaseSharedPackageInfo failed, can not find compatiblePolicy %{public}d",
+        APP_LOGE("GetBaseSharedBundleInfo failed, can not find compatiblePolicy %{public}d",
             innerBundleInfo.GetCompatiblePolicy());
         return false;
     }
-    APP_LOGD("GetBaseSharedPackageInfo(%{public}s) successfully in user(%{public}d)",
-        dependency.bundleName.c_str(), userId);
+    APP_LOGD("GetBaseSharedBundleInfo(%{public}s) successfully)", dependency.bundleName.c_str());
     return true;
 }
 
-bool BundleDataMgr::DeleteSharedPackage(const std::string &bundleName)
+bool BundleDataMgr::DeleteSharedBundleInfo(const std::string &bundleName)
 {
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {

@@ -21,7 +21,7 @@ config("appexecfwk_base_sdk_config") {
     "include/distributed_manager",
     "include/overlay",
     "include/quick_fix",
-    "include/shared_package",
+    "include/shared",
     "//third_party/json/include",
   ]
 }
@@ -69,9 +69,9 @@ ohos_shared_library("appexecfwk_base") {
     "src/quick_fix/appqf_info.cpp",
     "src/quick_fix/hqf_info.cpp",
     "src/remote_ability_info.cpp",
-    "src/shared_package/base_shared_package_info.cpp",
-    "src/shared_package/shared_bundle_info.cpp",
-    "src/shared_package/shared_module_info.cpp",
+    "src/shared/base_shared_bundle_info.cpp",
+    "src/shared/shared_bundle_info.cpp",
+    "src/shared/shared_module_info.cpp",
     "src/shortcut_info.cpp",
   ]
 

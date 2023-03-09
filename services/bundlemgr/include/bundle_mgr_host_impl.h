@@ -772,8 +772,8 @@ public:
         AppProvisionInfo &appProvisionInfo) override;
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) override;
-    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName, int32_t userId,
-        std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
+    virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) override;
     virtual ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) override;
     virtual ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles) override;

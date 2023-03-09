@@ -33,8 +33,8 @@
 #include "json_util.h"
 #include "quick_fix/app_quick_fix.h"
 #include "quick_fix/hqf_info.h"
-#include "shared_package/base_shared_package_info.h"
-#include "shared_package/shared_bundle_info.h"
+#include "shared/base_shared_bundle_info.h"
+#include "shared/shared_bundle_info.h"
 #include "shortcut_info.h"
 #include "want.h"
 
@@ -1913,9 +1913,9 @@ public:
         return provisionMetadatas_;
     }
 
-    const std::map<std::string, std::vector<InnerModuleInfo>> &GetInnerSharedPackageModuleInfos() const
+    const std::map<std::string, std::vector<InnerModuleInfo>> &GetInnerSharedModuleInfos() const
     {
-        return innerSharedPackageModuleInfos_;
+        return innerSharedModuleInfos_;
     }
 
     std::vector<Dependency> GetDependencies() const
@@ -1932,7 +1932,7 @@ public:
     std::vector<std::string> GetAllHspModuleNamesForVersion(uint32_t versionCode) const
     {
         std::vector<std::string> hspModuleNames;
-        for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+        for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
             for (const auto &item : modules) {
                 if (item.versionCode == versionCode) {
                     hspModuleNames.emplace_back(moduleName);
@@ -1991,12 +1991,12 @@ public:
 
     void ClearOverlayModuleStates(const std::string &moduleName);
 
-    bool GetBaseSharedPackageInfo(const std::string &moduleName, uint32_t versionCode,
-        BaseSharedPackageInfo &baseSharedPackageInfo) const;
-    bool GetMaxVerBaseSharedPackageInfo(const std::string &moduleName,
-        BaseSharedPackageInfo &baseSharedPackageInfo) const;
-    void InsertInnerSharedPackageModuleInfo(const std::string &moduleName, const InnerModuleInfo &innerModuleInfo);
-    void SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath);
+    bool GetBaseSharedBundleInfo(const std::string &moduleName, uint32_t versionCode,
+        BaseSharedBundleInfo &baseSharedBundleInfo) const;
+    bool GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
+        BaseSharedBundleInfo &baseSharedBundleInfo) const;
+    void InsertInnerSharedModuleInfo(const std::string &moduleName, const InnerModuleInfo &innerModuleInfo);
+    void SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath);
     bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
     bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
     std::vector<uint32_t> GetAllHspVersion() const;
@@ -2071,8 +2071,8 @@ private:
     // provision metadata
     std::vector<Metadata> provisionMetadatas_;
 
-    // shared package info
-    std::map<std::string, std::vector<InnerModuleInfo>> innerSharedPackageModuleInfos_ ;
+    // shared module info
+    std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

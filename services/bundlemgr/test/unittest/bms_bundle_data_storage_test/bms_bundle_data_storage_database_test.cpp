@@ -783,7 +783,7 @@ protected:
             "uid": -1,
             "userId_": 100,
             "provisionMetadatas": {},
-            "innerSharedPackageModuleInfos": {}
+            "innerSharedBundleModuleInfos": {}
         }
     )"_json;
 
@@ -1653,70 +1653,70 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | S
 }
 
 /**
- * @tc.number: GetMaxVerBaseSharedPackageInfoTest
- * @tc.name: Test GetMaxVerBaseSharedPackageInfo
- * @tc.desc: Test the GetMaxVerBaseSharedPackageInfo of InnerBundleInfo
+ * @tc.number: GetMaxVerBaseSharedBundleInfoTest
+ * @tc.name: Test GetMaxVerBaseSharedBundleInfo
+ * @tc.desc: Test the GetMaxVerBaseSharedBundleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, GetMaxVerBaseSharedPackageInfoTest, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetMaxVerBaseSharedBundleInfoTest, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    BaseSharedPackageInfo sharedPackageInfo;
-    bool ret = info.GetMaxVerBaseSharedPackageInfo(MODULE_NAME_TEST, sharedPackageInfo);
+    BaseSharedBundleInfo sharedBundleInfo;
+    bool ret = info.GetMaxVerBaseSharedBundleInfo(MODULE_NAME_TEST, sharedBundleInfo);
     EXPECT_EQ(ret, false);
     std::vector<InnerModuleInfo> moduleInfos;
-    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
-    ret = info.GetMaxVerBaseSharedPackageInfo(MODULE_NAME_TEST, sharedPackageInfo);
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedBundleInfo(MODULE_NAME_TEST, sharedBundleInfo);
     EXPECT_EQ(ret, false);
 }
 
 /**
- * @tc.number: InsertInnerSharedPackageModuleInfo
- * @tc.name: Test InsertInnerSharedPackageModuleInfo
- * @tc.desc: Test the InsertInnerSharedPackageModuleInfo of InnerBundleInfo
+ * @tc.number: InsertInnerSharedModuleInfo
+ * @tc.name: Test InsertInnerSharedModuleInfo
+ * @tc.desc: Test the InsertInnerSharedModuleInfo of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InsertInnerSharedPackageModuleInfo, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InsertInnerSharedModuleInfo, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.versionCode = Constants::ALL_VERSIONCODE;
-    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
     std::vector<InnerModuleInfo> moduleInfos;
-    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
-    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
     moduleInfos.emplace_back(innerModuleInfo);
-    info.innerSharedPackageModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
-    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
     moduleInfos.clear();
     InnerModuleInfo newInfo;
     newInfo.versionCode = versionCode;
     moduleInfos.emplace_back(newInfo);
-    info.InsertInnerSharedPackageModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
 }
 
 /**
- * @tc.number: SharedPackageModuleNativeLibraryPathTest
+ * @tc.number: SharedModuleNativeLibraryPathTest
  * @tc.name: Test different nativeLibraryPath param
- * @tc.desc: Test the SetSharedPackageModuleNativeLibraryPath of InnerBundleInfo
+ * @tc.desc: Test the SetSharedModuleNativeLibraryPath of InnerBundleInfo
  */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedPackageModuleNativeLibraryPathTest, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedModuleNativeLibraryPathTest, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
     info.SetCurrentModulePackage(MODULE_PACKGE);
-    info.SetSharedPackageModuleNativeLibraryPath(MODULE_PACKGE);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), true);
+    info.SetSharedModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), true);
 
     std::vector<InnerModuleInfo> moduleInfos;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.versionCode = versionCode;
     moduleInfos.emplace_back(innerModuleInfo);
     info.InsertInnerModuleInfo(MODULE_PACKGE, innerModuleInfo);
-    info.innerSharedPackageModuleInfos_[MODULE_PACKGE] = moduleInfos;
-    info.SetSharedPackageModuleNativeLibraryPath(MODULE_PACKGE);
-    EXPECT_EQ(info.GetInnerSharedPackageModuleInfos().empty(), false);
+    info.innerSharedModuleInfos_[MODULE_PACKGE] = moduleInfos;
+    info.SetSharedModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
 }
 
 /**

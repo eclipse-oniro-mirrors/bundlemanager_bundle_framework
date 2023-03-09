@@ -25,8 +25,8 @@
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "shared_package/shared_bundle_info.h"
-#include "shared_package/shared_module_info.h"
+#include "shared/shared_bundle_info.h"
+#include "shared/shared_module_info.h"
 #include "want.h"
 
 namespace OHOS {

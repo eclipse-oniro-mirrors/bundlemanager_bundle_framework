@@ -184,19 +184,19 @@ private:
     ErrCode InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid);
 
-    ErrCode ParseSharedPackages(const InstallParam &installParam, const Constants::AppType appType,
+    ErrCode ParseSharedBundles(const InstallParam &installParam, const Constants::AppType appType,
         std::unordered_map<std::string, FilesParseResult> &newInfosMap);
 
-    ErrCode InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos,
+    ErrCode InstallSharedBundles(std::unordered_map<std::string, FilesParseResult> &hspInfos,
         const InstallParam &installParam);
 
-    ErrCode InnerInstallSharedPackages(const std::string &bundleName, FilesParseResult &parseResult,
+    ErrCode InnerInstallSharedBundles(const std::string &bundleName, FilesParseResult &parseResult,
         SharedBundleRollBackInfo &rollbackInfo, const InstallParam &installParam);
 
     bool TryInstallSharedBundleOnly(std::vector<std::string> &bundlePaths,
         std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result, const InstallParam &installParam);
 
-    ErrCode ExtractSharedPackages(InnerBundleInfo &newInfo, const std::string &bundlePath,
+    ErrCode ExtractSharedBundles(InnerBundleInfo &newInfo, const std::string &bundlePath,
         std::vector<std::string> &newDirs);
 
     ErrCode MkdirIfNotExist(const std::string &dir, std::vector<std::string> &newDirs);
@@ -402,7 +402,7 @@ private:
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
-    ErrCode CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.

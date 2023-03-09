@@ -838,7 +838,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     }
 
     for (const auto &hspDir : hspDirs) {
-        ProcessSystemSharedBundleInstall(hspDir, userId);
+        ProcessSystemSharedBundleInstall(hspDir);
     }
 
     for (const auto &installInfo : normalSystemApps) {
@@ -882,11 +882,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     }
 }
 
-void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, int32_t userId)
+void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath)
 {
     APP_LOGD("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
-    installParam.userId = userId;
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;

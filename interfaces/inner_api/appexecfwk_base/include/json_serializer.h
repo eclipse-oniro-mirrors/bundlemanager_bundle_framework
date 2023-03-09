@@ -29,8 +29,8 @@
 #include "free_install/target_ability_info.h"
 #include "nlohmann/json.hpp"
 #include "quick_fix/app_quick_fix.h"
-#include "shared_package/shared_bundle_info.h"
-#include "shared_package/shared_module_info.h"
+#include "shared/shared_bundle_info.h"
+#include "shared/shared_module_info.h"
 #include "shortcut_info.h"
 
 namespace OHOS {

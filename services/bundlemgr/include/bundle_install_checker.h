@@ -75,7 +75,7 @@ public:
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
-    ErrCode CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
