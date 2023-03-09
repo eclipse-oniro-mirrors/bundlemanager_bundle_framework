@@ -48,6 +48,7 @@ const int32_t LOWER_TEST_VERSION_CODE = 999999;
 const int32_t HIGHER_TEST_VERSION_CODE = 1000001;
 const int32_t USERID = 100;
 const int32_t FOUR = 4;
+const int32_t DEFAULT_OVERLAY_BUNDLE_INFO = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
 } // namespace
 
@@ -1058,7 +1059,8 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1900, Function | SmallTest 
     AddInnerBundleInfo();
     res = overlayDataMgr.GetOverlayBundleInfoForTarget(
         TEST_BUNDLE_NAME, overlayBundleInfo, Constants::NOT_EXIST_USERID);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NO_OVERLAY_BUNDLE_INFO);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_EQ(overlayBundleInfo.size(), DEFAULT_OVERLAY_BUNDLE_INFO);
 
     res = overlayDataMgr.GetOverlayBundleInfoForTarget(
         TEST_BUNDLE_NAME, overlayBundleInfo, Constants::INVALID_USERID);
