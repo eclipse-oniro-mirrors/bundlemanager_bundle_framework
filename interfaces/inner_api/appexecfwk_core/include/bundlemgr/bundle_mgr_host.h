@@ -562,6 +562,8 @@ private:
 
     ErrCode HandleGetUidByBundleName(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetUidByDebugBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAbilityInfoWithModuleName(MessageParcel &data, MessageParcel &reply);
