@@ -1944,8 +1944,7 @@ bool ToExtensionInfo(
     extensionInfo.moduleName = moduleJson.module.name;
 
     if (extensionInfo.type != ExtensionAbilityType::SERVICE &&
-        extensionInfo.type != ExtensionAbilityType::DATASHARE &&
-        extensionInfo.type != ExtensionAbilityType::FILEACCESS_EXTENSION) {
+        extensionInfo.type != ExtensionAbilityType::DATASHARE) {
         extensionInfo.process = extensionInfo.bundleName;
         extensionInfo.process.append(".");
         extensionInfo.process.append(extensionInfo.moduleName);

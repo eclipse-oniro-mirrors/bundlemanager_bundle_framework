@@ -1132,6 +1132,13 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
             iter->second.priority = 0;
         }
 #endif
+        if (appPrivilegeCapability.allowMultiProcess) {
+            APP_LOGD("bundleName: %{public}s support allowMultiProcess", iter->second.bundleName.c_str());
+            auto hapModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(iter->second.moduleName);
+            if (hapModuleInfo && !hapModuleInfo->process.empty()) {
+                iter->second.process = hapModuleInfo->process;
+            }
+        }
     }
     // process InnerModuleInfo
     auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();
