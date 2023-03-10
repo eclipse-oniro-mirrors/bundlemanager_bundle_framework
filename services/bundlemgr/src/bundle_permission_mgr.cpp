@@ -732,11 +732,28 @@ bool BundlePermissionMgr::IsNativeTokenType()
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGD("calling uid is %{public}d", callingUid);
-    if (callingUid == Constants::ROOT_UID || callingUid == Constants::FOUNDATION_UID) {
-        APP_LOGD("caller is root or foundation, verify success");
+    if (callingUid == Constants::ROOT_UID
+        || callingUid == Constants::FOUNDATION_UID
+        || callingUid == Constants::BMS_UID) {
+        APP_LOGD("caller is root or foundation or BMS_UID, verify success");
         return true;
     }
     APP_LOGE("caller tokenType not native, verify failed");
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    APP_LOGD("begin to verify calling uid");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGD("calling uid is %{public}d", callingUid);
+    if (callingUid == Constants::ROOT_UID
+        || callingUid == Constants::FOUNDATION_UID
+        || callingUid == Constants::BMS_UID) {
+        APP_LOGD("caller is root or foundation or BMS_UID, verify success");
+        return true;
+    }
+    APP_LOGE("verify calling uid failed");
     return false;
 }
 }  // namespace AppExecFwk

@@ -100,6 +100,8 @@ public:
 
     static bool IsNativeTokenType();
 
+    static bool VerifyCallingUid();
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
