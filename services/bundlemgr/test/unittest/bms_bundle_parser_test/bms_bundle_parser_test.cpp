@@ -2557,7 +2557,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5900, Function | SmallTest | Level1)
 /**
  * @tc.name: TestParse_6000
  * @tc.desc: 1. system running normally
- *           2. test ParserAtomicConfig split not exist 
+ *           2. test ParserAtomicConfig split not exist
  * @tc.type: FUNC
  */
 HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
@@ -2567,7 +2567,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson["app"]["atomicService"] = "";
-       profileJson["module"]["installationFree"] = true;
+    profileJson["module"]["installationFree"] = true;
     
     profileFileBuffer << profileJson.dump();
 
@@ -2688,8 +2688,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_6400, Function | SmallTest | Level1)
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
-
-
 /**
  * @tc.name: TestParse_6500
  * @tc.desc: 1. system running normally
@@ -2755,8 +2753,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_6700, Function | SmallTest | Level1)
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
-
-
 
 /**
  * @tc.name: TestParse_6800
