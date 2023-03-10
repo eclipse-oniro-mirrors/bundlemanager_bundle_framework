@@ -496,6 +496,8 @@ protected:
             },
             "extensionSkillInfos_": {
             },
+            "innerSharedModuleInfos": {
+            },
             "formInfos": {
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": [
                 ],
