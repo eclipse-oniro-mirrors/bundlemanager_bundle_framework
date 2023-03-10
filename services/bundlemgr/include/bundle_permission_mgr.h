@@ -102,6 +102,8 @@ public:
 
     static bool VerifyCallingUid();
 
+    static bool VerifyPreload(const AAFwk::Want &want);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

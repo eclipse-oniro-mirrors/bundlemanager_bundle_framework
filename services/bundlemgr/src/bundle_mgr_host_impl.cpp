@@ -502,7 +502,7 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 
 void BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
-    if (!BundlePermissionMgr::VerifyCallingUid()) {
+    if (!BundlePermissionMgr::VerifyPreload(want)) {
         APP_LOGE("ProcessPreload verify failed.");
         return;
     }
