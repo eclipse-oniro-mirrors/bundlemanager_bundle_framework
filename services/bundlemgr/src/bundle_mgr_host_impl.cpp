@@ -408,8 +408,7 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, AbilityInfo &abilityI
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::FOUNDATION_UID) {
+    if (!BundlePermissionMgr::VerifyCallingUid()) {
         APP_LOGE("QueryAbilityInfo verify failed.");
         return false;
     }
@@ -434,8 +433,7 @@ bool BundleMgrHostImpl::SilentInstall(const Want &want, int32_t userId, const sp
 
 void BundleMgrHostImpl::UpgradeAtomicService(const Want &want, int32_t userId)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::FOUNDATION_UID) {
+    if (!BundlePermissionMgr::VerifyCallingUid()) {
         APP_LOGE("UpgradeAtomicService verify failed.");
         return;
     }
@@ -470,8 +468,7 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
 
 void BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != Constants::FOUNDATION_UID) {
+    if (!BundlePermissionMgr::VerifyCallingUid()) {
         APP_LOGE("ProcessPreload verify failed.");
         return;
     }
