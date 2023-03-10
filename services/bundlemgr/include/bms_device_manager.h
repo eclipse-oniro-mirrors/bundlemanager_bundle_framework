@@ -41,7 +41,6 @@ private:
 class DeviceInitCallBack : public DistributedHardware::DmInitCallback {
     void OnRemoteDied() override;
 };
-
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
