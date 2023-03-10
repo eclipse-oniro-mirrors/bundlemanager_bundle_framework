@@ -69,7 +69,7 @@ const std::string HELP_MSG_UNINSTALL =
     "  -s, --shared                         uninstall shared library\n"
     "  -v, --version                        uninstall a shared library by versionCode\n";
 
-const std::string HELP_MSG_UNINSTALL_SHARE = 
+const std::string HELP_MSG_UNINSTALL_SHARE =
     "usage: bm uninstall-shared <options>\n"
     "options list:\n"
     "  -h, --help                           list available commands\n"
