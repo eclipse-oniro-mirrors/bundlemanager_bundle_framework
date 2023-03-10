@@ -734,7 +734,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0400, Function | SmallTest 
     applicationInfo.bundleName = TEST_BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -938,7 +937,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1400, Function | SmallTest 
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1203,7 +1201,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2500, Function | SmallTest 
     ErrCode res = overlayDataMgr.RemoveOverlayModuleConnection(newInfo, oldInfo);
     EXPECT_EQ(res, ERR_OK);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1288,7 +1285,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1351,7 +1347,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest 
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1378,7 +1373,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest 
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3100, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1404,7 +1398,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3200, Function | SmallTest 
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1495,7 +1488,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3500, Function | SmallTest 
     applicationInfo.targetBundleName = TEST_BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1552,7 +1544,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3700, Function | SmallTest 
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 

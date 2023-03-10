@@ -312,7 +312,7 @@ public:
      */
     virtual void UpgradeAtomicService(const Want &want, int32_t userId) override;
 
-    virtual void ProcessPreload(const Want &want) override;
+    virtual bool ProcessPreload(const Want &want) override;
 #endif
     /**
      * @brief Query the AbilityInfo of list by the given Want.

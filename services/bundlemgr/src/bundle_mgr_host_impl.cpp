@@ -502,20 +502,20 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
     return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, userId, callback);
 }
 
-void BundleMgrHostImpl::ProcessPreload(const Want &want)
+bool BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != Constants::FOUNDATION_UID) {
         APP_LOGE("ProcessPreload verify failed.");
-        return;
+        return false;
     }
     APP_LOGD("begin to process preload.");
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
-        return;
+        return false;
     }
-    connectAbilityMgr->ProcessPreload(want);
+    return connectAbilityMgr->ProcessPreload(want);
 }
 #endif
 

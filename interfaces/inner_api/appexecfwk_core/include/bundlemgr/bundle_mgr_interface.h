@@ -1110,9 +1110,9 @@ public:
         return nullptr;
     }
 
-    virtual void ProcessPreload(const Want &want)
+    virtual bool ProcessPreload(const Want &want)
     {
-        return;
+        return false;
     }
 
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,

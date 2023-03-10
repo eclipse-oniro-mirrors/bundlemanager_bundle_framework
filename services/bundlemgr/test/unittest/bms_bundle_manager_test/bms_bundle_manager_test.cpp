@@ -58,6 +58,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
+const int32_t FLAG = 0;
 const int32_t WRONG_UID = -1;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
@@ -70,6 +71,7 @@ const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
+const std::string TYPE_001 = "type001";
 const std::string OVER_MAX_SIZE(300, 'x');
 const size_t NUMBER_ONE = 1;
 }  // namespace
@@ -3145,7 +3147,11 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0025, Function | SmallTest | Leve
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     bool testRet = GetBundleDataMgr()->ImplicitQueryInfoByPriority(
-        want, 0, Constants::INVALID_USERID, abilityInfo, extensionInfo);
+        want, FLAG, Constants::INVALID_USERID, abilityInfo, extensionInfo);
+    EXPECT_EQ(testRet, false);
+
+    testRet = GetBundleDataMgr()->ImplicitQueryInfoByPriority(
+        want, FLAG, USERID, abilityInfo, extensionInfo);
     EXPECT_EQ(testRet, false);
 }
 
@@ -3183,6 +3189,11 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0027, Function | SmallTest | Leve
         innerBundleInfo,
             ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, Constants::INVALID_USERID);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    testRet = GetBundleDataMgr()->CheckInnerBundleInfoWithFlags(
+        innerBundleInfo, ApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE, USERID);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -4104,6 +4115,9 @@ HWTEST_F(BmsBundleManagerTest, GetBundleStats_0100, Function | SmallTest | Level
     bool result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, USERID, bundleStats);
     EXPECT_EQ(result, true);
 
+    result = dataMgr->GetBundleStats(BUNDLE_PREVIEW_NAME, Constants::INVALID_USERID, bundleStats);
+    EXPECT_EQ(result, true);
+
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 
@@ -4123,6 +4137,24 @@ HWTEST_F(BmsBundleManagerTest, GetBundleStats_0200, Function | SmallTest | Level
     EXPECT_EQ(result, false);
 }
 
+
+/**
+ * @tc.name: GetBundleGids_0100
+ * @tc.desc: 1.install the hap
+ *           2.query bundle gids
+ * @tc.type: FUNC
+ * @tc.require: issueI5MZ33
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleGids_0100, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<int> gids;
+
+    bool result = dataMgr->GetBundleGids(BUNDLE_PREVIEW_NAME, gids);
+    EXPECT_EQ(result, false);
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100
@@ -4135,6 +4167,32 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | 
     int64_t size = 0;
     int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME);
     EXPECT_EQ(ret, size);
+}
+
+/**
+ * @tc.number: GetBundleSpaceSize_0200
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0200, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    int64_t size = 0;
+    int64_t ret = dataMgr->GetAllFreeInstallBundleSpaceSize();
+    EXPECT_EQ(ret, size);
+}
+
+/**
+ * @tc.number: GetBundleSpaceSize_0300
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    std::map<std::string, std::vector<std::string>> freeInstallModules;
+    bool ret = dataMgr->GetFreeInstallModules(freeInstallModules);
+    EXPECT_EQ(ret, false);
 }
 #endif
 
@@ -4280,4 +4338,67 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0100, Function | SmallTest |
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
+
+/**
+ * @tc.number: ImplicitQueryInfoByPriority_0001
+ * @tc.name: test ImplicitQueryInfoByPriority
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, ImplicitQueryInfoByPriority_0001, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "", "", MODULE_NAME);
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryInfoByPriority(
+        want, FLAG, USERID, abilityInfo, extensionInfo);
+    EXPECT_EQ(testRet, true);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfo_0001
+ * @tc.name: test GetAllSharedBundleInfo
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetAllSharedBundleInfo_0001, Function | SmallTest | Level1)
+{
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode testRet = GetBundleDataMgr()->GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(testRet, ERR_OK);
+}
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+/**
+ * @tc.number: ImplicitQueryInfos_0001
+ * @tc.name: test ImplicitQueryInfos
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, ImplicitQueryInfos_0001, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    AAFwk::Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", "", "", MODULE_NAME);
+    want.SetType(TYPE_001);
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool testRet = GetBundleDataMgr()->ImplicitQueryInfos(
+        want, FLAG, USERID, abilityInfos, extensionInfos);
+    EXPECT_EQ(testRet, true);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+#endif
 } // OHOS

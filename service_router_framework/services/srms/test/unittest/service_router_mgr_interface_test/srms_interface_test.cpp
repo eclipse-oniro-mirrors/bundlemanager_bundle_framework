@@ -31,6 +31,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
 const std::string WRONG_BUNDLE_NAME = "wrong";
+const std::string BUNDLE_NAME = "bundleName";
 const std::string PURPOSE_NAME = "pay";
 }  // namespace
 
@@ -176,5 +177,58 @@ HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0006, Func
         auto ret = serviceRouterMgr->QueryPurposeInfos(want, PURPOSE_NAME, purposeInfos);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
+}
+
+/**
+ * @tc.number: ServiceRouterMgrInterfaceTest_0007
+ * Function: AppInfo
+ * @tc.name: test AppInfo
+ * @tc.desc: AppInfo
+ */
+HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0007, Function | SmallTest | Level0)
+{
+    AppInfo info;
+    info.bundleName = BUNDLE_NAME;
+    Parcel parcel;
+    auto result = AppInfo::Unmarshalling(parcel);
+    EXPECT_NE(result->bundleName, BUNDLE_NAME);
+    auto ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    result = AppInfo::Unmarshalling(parcel);
+    EXPECT_EQ(result->bundleName, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ServiceRouterMgrInterfaceTest_0008
+ * Function: ServiceInfo
+ * @tc.name: test ServiceInfo
+ * @tc.desc: ServiceInfo
+ */
+HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0008, Function | SmallTest | Level0)
+{
+    ServiceInfo info;
+    info.bundleName = BUNDLE_NAME;
+    Parcel parcel;
+    auto ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto result = ServiceInfo::Unmarshalling(parcel);
+    EXPECT_EQ(result->bundleName, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ServiceRouterMgrInterfaceTest_0009
+ * Function: PurposeInfo
+ * @tc.name: test PurposeInfo
+ * @tc.desc: PurposeInfo
+ */
+HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0009, Function | SmallTest | Level0)
+{
+    PurposeInfo info;
+    info.bundleName = BUNDLE_NAME;
+    Parcel parcel;
+    auto ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    auto result = PurposeInfo::Unmarshalling(parcel);
+    EXPECT_EQ(result->bundleName, BUNDLE_NAME);
 }
 } // OHOS
