@@ -51,6 +51,31 @@ public:
     int32_t QueryPurposeInfos(const Want &want, const std::string purposeName,
                               std::vector<PurposeInfo> &purposeInfos) override;
 
+    /**
+     * Start ui extension ability with want, send want to ability manager service.
+     *
+     * @param want, the want of the ability to start.
+     * @param sessionInfo the extension session info of the ability to start.
+     * @param userId, Designation User ID.
+     * @param extensionType If an ExtensionAbilityType is set, only extension of that type can be started.
+     * @return Returns ERR_OK on success, others on failure.
+     */
+    int32_t StartUIExtensionAbility(const Want &want, const sptr<SessionInfo> &sessionInfo,
+        int32_t userId = DEFAULT_INVAL_VALUE,
+        ExtensionAbilityType extensionType = ExtensionAbilityType::UNSPECIFIED) override;
+
+    /**
+     * Connect ui extension ability with want, connect session with service ability.
+     *
+     * @param want, Special want for service type's ability.
+     * @param connect, Callback used to notify caller the result of connecting or disconnecting.
+     * @param sessionInfo the extension session info of the ability to start.
+     * @param userId, Designation User ID.
+     * @return Returns ERR_OK on success, others on failure.
+     */
+    int32_t ConnectUIExtensionAbility(const Want &want, const sptr<IAbilityConnection> &connect,
+        const sptr<SessionInfo> &sessionInfo, int32_t userId = DEFAULT_INVAL_VALUE) override;
+
 private:
     int32_t SendRequest(IServiceRouterManager::Message code, MessageParcel &data, MessageParcel &reply);
 

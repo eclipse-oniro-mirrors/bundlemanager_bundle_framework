@@ -34,6 +34,8 @@ struct ServiceInfosCallbackInfo : public BaseCallbackInfo {
 };
 
 napi_value QueryServiceInfos(napi_env env, napi_callback_info info);
+//napi_value StartUIExtensionAbility(napi_env env, napi_callback_info info);
+//napi_value ConnectUIExtensionAbility(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_KITS_JS_SERVICE_ROUTER_MGR_H

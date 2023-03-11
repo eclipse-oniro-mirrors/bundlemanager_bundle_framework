@@ -37,6 +37,8 @@ public:
 private:
     int HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply);
     int HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply);
+    int HandleStartUIExtensionAbility(MessageParcel &data, MessageParcel &reply);
+    int HandleConnectUIExtensionAbility(MessageParcel &data, MessageParcel &reply);
     bool VerifyCallingPermission(const std::string &permissionName);
     bool VerifySystemApp();
     template <typename T>
