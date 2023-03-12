@@ -28,24 +28,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-static std::string GetAppDistributionType(Security::Verify::AppDistType type)
-{
-    std::unordered_map<Security::Verify::AppDistType, std::string> AppDistributionTypeMaps = {
-        { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
-        { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
-        { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
-        { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
-        { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
-    };
-    auto typeIter = AppDistributionTypeMaps.find(type);
-    if (typeIter == AppDistributionTypeMaps.end()) {
-        return Constants::APP_DISTRIBUTION_TYPE_NONE;
-    }
-    return typeIter->second;
-}
-}
-
 QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
 {}
 
@@ -226,7 +208,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployStart(
         APP_LOGE("check AppQuickFixInfos with installed bundle failed, errcode : %{public}d", ret);
         return ret;
     }
-    appDistributionType_ = GetAppDistributionType(provisionInfo.distributionType);
+    appDistributionType_ = checker.GetAppDistributionType(provisionInfo.distributionType);
     APP_LOGI("ProcessPatchDeployStart end.");
     return ERR_OK;
 }
