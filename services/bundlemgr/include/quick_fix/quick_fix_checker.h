@@ -46,13 +46,13 @@ public:
     ErrCode CheckSignatureInfo(const BundleInfo &bundleInfo,
         const Security::Verify::ProvisionInfo &provisionInfo);
 
+    std::string GetAppDistributionType(const Security::Verify::AppDistType &type);
+
 private:
     ErrCode CheckCommonWithInstalledBundle(const AppQuickFix &appQuickFix, const BundleInfo &bundleInfo);
 
     ErrCode CheckModuleNameExist(const BundleInfo &bundleInfo,
         const std::unordered_map<std::string, AppQuickFix> &infos);
-
-    std::string GetAppDistributionType(const Security::Verify::AppDistType &type);
 
     std::string GetAppProvisionType(const Security::Verify::ProvisionType &type);
 
