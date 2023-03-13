@@ -1423,7 +1423,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         INNER_SHARED_MODULE_INFO,
         innerSharedModuleInfos_,
         JsonType::OBJECT,
-        true,
+        false,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
