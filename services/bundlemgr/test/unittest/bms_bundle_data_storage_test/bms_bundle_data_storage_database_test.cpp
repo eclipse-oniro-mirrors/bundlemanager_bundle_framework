@@ -42,8 +42,10 @@ const std::string MODULE_PACKGE{"com.example.test.entry"};
 const std::string MODULE_STATE_0{"test_0"};
 const std::string MODULE_STATE_1{"test_1"};
 const std::string MODULE_NAME{"entry"};
+const std::string TEST_PACK_AGE = "modulePackage";
 int32_t state = 0;
 int32_t versionCode = 0;
+int32_t FLAG = 0;
 // This field is used to ensure OTA upgrade and cannot be added randomly.
 const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
 {
@@ -2149,6 +2151,142 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | Smal
 }
 
 /**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test FindExtensionInfos
+ * @tc.desc: 1.Test the FindExtensionInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "com.ohos.test";
+    auto ret = info.FindExtensionInfos();
+    EXPECT_EQ(ret, std::nullopt);
+
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.bundleName = bundleName;
+    info.InsertExtensionInfo("key", extensionInfo);
+    ret = info.FindExtensionInfos();
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test ProcessBundleWithHapModuleInfoFlag
+ * @tc.desc: 1.Test the ProcessBundleWithHapModuleInfoFlag of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.ProcessBundleWithHapModuleInfoFlag(FLAG, bundleInfo, Constants::START_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+
+    int32_t flag = 2;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = TEST_PACK_AGE;
+    hqfInfos.emplace_back(hqfInfo);
+    info.SetQuickFixHqfInfos(hqfInfos);
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    info.InsertInnerModuleInfo(TEST_PACK_AGE, moduleInfo);
+    info.ProcessBundleWithHapModuleInfoFlag(flag, bundleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2500
+ * @tc.name: Test GetBundleWithAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    info.GetBundleWithAbilitiesV9(FLAG, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = hapModuleInfo.moduleName;
+    abilityInfo.name = "";
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    int32_t flag = 4;
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), false);
+
+    abilityInfo.moduleName = BUNDLE_NAME;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    hapModuleInfo.moduleName = "entry1";
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2600
+ * @tc.name: Test GetBundleWithExtensionAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithExtensionAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    std::string moduleName = "entry";
+    info.GetBundleWithExtensionAbilitiesV9(FLAG, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    ExtensionAbilityInfo extensionInfo;
+    int32_t flag = 8;
+    extensionInfo.moduleName = moduleName;
+    extensionInfo.enabled = false;
+    info.InsertExtensionInfo("key", extensionInfo);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    std::map<std::string, ExtensionAbilityInfo> extensionInfos;
+    extensionInfo.enabled = true;
+    hapModuleInfo.moduleName = extensionInfo.moduleName;
+    extensionInfos["baseExtensionInfos_"] = extensionInfo;
+    info.AddModuleExtensionInfos(extensionInfos);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2700
+ * @tc.name: Test GetRemovableModules
+ * @tc.desc: 1.Test the GetRemovableModules of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<std::string> moduleToDelete;
+    bool ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.installationFree = false;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    moduleInfo.installationFree = true;
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: Test_0500
  * @tc.name: Test Unmarshalling
  * @tc.desc: 1.Test the Unmarshalling of Parcel
@@ -2414,6 +2552,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0200, Function 
     info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
     innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
     info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    info.overlayType_ = OverlayType::NON_OVERLAY_TYPE;
     info.SetOverlayModuleState(MODULE_NAME_TEST, state);
     CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
 }
