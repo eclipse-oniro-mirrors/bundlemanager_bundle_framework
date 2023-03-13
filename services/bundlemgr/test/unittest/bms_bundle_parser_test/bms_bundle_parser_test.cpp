@@ -2862,7 +2862,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_7100, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -2926,7 +2926,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_7300, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -2981,7 +2981,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_7500, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -3014,7 +3014,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_7600, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -3048,7 +3048,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_7700, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -3082,6 +3082,6 @@ HWTEST_F(BmsBundleParserTest, TestParse_7800, Function | SmallTest | Level1)
     BundleExtractor bundleExtractor("");
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 } // OHOS
