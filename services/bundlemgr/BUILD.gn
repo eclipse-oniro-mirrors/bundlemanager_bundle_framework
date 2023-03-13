@@ -339,7 +339,7 @@ ohos_shared_library("libbms") {
   }
 
   if (build_variant == "root") {
-    defines += [ "QUOTA_SET_FOR_TEST" ]
+    defines += [ "QUOTA_PARAM_SET_ENABLE" ]
   }
 
   subsystem_name = "bundlemanager"
