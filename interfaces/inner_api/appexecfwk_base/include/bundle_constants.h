@@ -239,8 +239,6 @@ constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
 constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
-constexpr const char* JOURNAL_MODE = "WAL";
-constexpr const char* SYNC_MODE = "MODE_OFF";
 const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
