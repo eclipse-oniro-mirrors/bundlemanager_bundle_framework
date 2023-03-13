@@ -1997,6 +1997,37 @@ HWTEST_F(BundleMgrClientSystemTest, GetBundlePackInfo001, TestSize.Level1)
 }
 
 /**
+ * @tc.number: client GetNameForUid test
+ * @tc.name: client GetNameForUid test
+ * @tc.desc: 1.install
+ *           2.get uid by bundleName, then get bundleName by uid
+ */
+HWTEST_F(BundleMgrClientSystemTest, GetNameForUid001, TestSize.Level1)
+{
+    auto name = std::string("GetNameForUid001");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    int uid = bundleMgrProxy->GetUidByBundleName(BUNDLE_NAME, DEFAULT_USERID);
+    
+    std::string bundleName;
+    BundleMgrClient bundleMgrClient;
+    auto ret = bundleMgrClient.GetNameForUid(uid, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(bundleName, BUNDLE_NAME);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
  * @tc.number: CreateNewUser_001
  * @tc.name: CreateNewUser
  * @tc.desc: 1.Test CreateNewUser and then remove it
@@ -2228,6 +2259,10 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     BundleMgrClient client;
     client.impl_ = nullptr;
     std::string bundleName = "";
+
+    auto ret = client.GetNameForUid(DEFAULT_USERID, bundleName);
+    EXPECT_NE(ret, ERR_OK);
+
     auto res = client.GetBundleNameForUid(DEFAULT_USERID, bundleName);
     EXPECT_FALSE(res);
 

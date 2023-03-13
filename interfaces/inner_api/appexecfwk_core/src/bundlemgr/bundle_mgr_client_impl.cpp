@@ -51,6 +51,16 @@ BundleMgrClientImpl::~BundleMgrClientImpl()
     }
 }
 
+ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
+{
+    if (Connect() != ERR_OK) {
+        APP_LOGE("failed to connect");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    return bundleMgr_->GetNameForUid(uid, name);
+}
+
 bool BundleMgrClientImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
     APP_LOGI("GetBundleNameForUid begin");
