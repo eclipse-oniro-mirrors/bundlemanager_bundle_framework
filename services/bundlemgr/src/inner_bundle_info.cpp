@@ -122,6 +122,7 @@ const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
+const std::string MODULE_VERSION_NAME = "versionName";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -533,7 +534,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
         {MODULE_PRELOADS, info.preloads},
         {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
-        {MODULE_VERSION_CODE, info.versionCode}
+        {MODULE_VERSION_CODE, info.versionCode},
+        {MODULE_VERSION_NAME, info.versionName},
     };
 }
 
@@ -1028,6 +1030,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         MODULE_VERSION_CODE,
         info.versionCode,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_VERSION_NAME,
+        info.versionName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -2140,6 +2150,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             SharedModuleInfo sharedModuleInfo;
             sharedModuleInfo.name = info.name;
             sharedModuleInfo.versionCode = info.versionCode;
+            sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
@@ -2451,6 +2462,14 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
     }
     ProcessBundleFlags(flags, userId, bundleInfo);
     return ERR_OK;
+}
+
+bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const
+{
+    bundleInfo = *baseBundleInfo_;
+    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
+    bundleInfo.applicationInfo = *baseApplicationInfo_;
+    return true;
 }
 
 void InnerBundleInfo::ProcessBundleFlags(

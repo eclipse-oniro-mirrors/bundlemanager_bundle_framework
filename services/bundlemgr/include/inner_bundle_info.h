@@ -116,6 +116,7 @@ struct InnerModuleInfo {
     std::vector<std::string> preloads;
     CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
     uint32_t versionCode = 0;
+    std::string versionName;
 };
 
 struct SkillUri {
@@ -2001,6 +2002,7 @@ public:
     bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
     std::vector<uint32_t> GetAllHspVersion() const;
     void DeleteHspModuleByVersion(int32_t versionCode);
+    bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;

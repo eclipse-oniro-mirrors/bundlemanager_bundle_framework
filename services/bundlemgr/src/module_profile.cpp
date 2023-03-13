@@ -2184,6 +2184,7 @@ bool ToInnerBundleInfo(
     if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
         innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
         innerModuleInfo.versionCode = applicationInfo.versionCode;
+        innerModuleInfo.versionName = applicationInfo.versionName;
         innerBundleInfo.InsertInnerSharedModuleInfo(moduleJson.module.name, innerModuleInfo);
     }
 
