@@ -58,9 +58,9 @@
 
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
-#ifdef QUOTA_SET_FOR_TEST
+#ifdef QUOTA_PARAM_SET_ENABLE
 #include "parameter.h"
-#endif // QUOTA_SET_FOR_TEST
+#endif // QUOTA_PARAM_SET_ENABLE
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -72,11 +72,11 @@ const std::string LOG = "log";
 const std::string RELEASE = "Release";
 const std::string HSP_VERSION_PREFIX = "v";
 
-#ifdef QUOTA_SET_FOR_TEST
+#ifdef QUOTA_PARAM_SET_ENABLE
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
 const int32_t THRESHOLD_VAL_LEN = 20;
-#endif // QUOTA_SET_FOR_TEST
+#endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 const int32_t SINGLE_HSP_VERSION = 1;
@@ -2019,7 +2019,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, const std::string &bundleDataDirPath)
 {
     int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
-#ifdef QUOTA_SET_FOR_TEST
+#ifdef QUOTA_PARAM_SET_ENABLE
     char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
         szAtomicDatasizeThresholdMb, THRESHOLD_VAL_LEN);
@@ -2033,7 +2033,7 @@ static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, 
         APP_LOGW("no need to prepare quota");
         return;
     }
-#endif
+#endif // QUOTA_PARAM_SET_ENABLE
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 
