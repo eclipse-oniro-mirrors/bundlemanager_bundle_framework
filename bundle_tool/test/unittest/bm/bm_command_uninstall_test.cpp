@@ -612,5 +612,5 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2200, Function | MediumTes
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_UNINSTALL);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_UNINSTALL);
 }
