@@ -237,9 +237,9 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    return dataMgr->GetBundleInfoV9(sharedBundleName, flag, sharedBundleInfo, Constants::ANY_USERID);
+    return dataMgr->GetSharedBundleInfo(sharedBundleName, flags, sharedBundleInfo);
 }
 
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
