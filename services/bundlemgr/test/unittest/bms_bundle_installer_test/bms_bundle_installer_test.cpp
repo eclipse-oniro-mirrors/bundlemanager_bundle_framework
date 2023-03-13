@@ -2546,9 +2546,8 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0300, Function | SmallTest | Lev
 HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Level0)
 {
     std::unordered_map<std::string, InnerBundleInfo> infos;
-    std::unordered_map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hsps;
     BundleInstallChecker installChecker;
-    auto ret = installChecker.CheckDependency(infos, hsps);
+    auto ret = installChecker.CheckDependency(infos);
     EXPECT_EQ(ret, ERR_OK);
 
     InnerBundleInfo innerBundleInfo;
@@ -2565,8 +2564,8 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0400, Function | SmallTest | Lev
         pair<std::string, InnerModuleInfo>("moduleName", innerModuleInfo));
     infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
 
-    ret = installChecker.CheckDependency(infos, hsps);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST);
+    ret = installChecker.CheckDependency(infos);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2584,13 +2583,13 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0500, Function | SmallTest | Lev
     Dependency dependency;
     dependency.bundleName = "bundleName2";
     auto ret = installChecker.NeedCheckDependency(dependency, innerBundleInfo);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     BundlePackInfo bundlePackInfo;
     PackageModule packageModule;
     bundlePackInfo.summary.modules.push_back(packageModule);
     innerBundleInfo.SetBundlePackInfo(bundlePackInfo);
     ret = installChecker.NeedCheckDependency(dependency, innerBundleInfo);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**

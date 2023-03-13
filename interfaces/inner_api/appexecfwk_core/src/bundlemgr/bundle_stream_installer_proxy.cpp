@@ -88,7 +88,7 @@ int BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &hspN
         return fd;
     }
     if (!data.WriteUint32(index)) {
-        APP_LOGE("fail to CreateSharedBundleStream due to write sharedPacakgeIdx fail");
+        APP_LOGE("fail to CreateSharedBundleStream due to write sharedBundleIdx fail");
         return fd;
     }
 

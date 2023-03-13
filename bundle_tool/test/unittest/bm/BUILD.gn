@@ -25,6 +25,7 @@ config("tools_bm_config_mock") {
     "${appexecfwk_path}/services/bundlemgr/include",
     "${appexecfwk_path}/services/bundlemgr/include/quick_fix",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
+    "${appexecfwk_path}/services/bundlemgr/include/shared",
     "${bundletool_test_path}/mock",
     "//base/notification/eventhandler/interfaces/inner_api",
     "//base/security/permission/interfaces/innerkits/permission_standard/permissionsdk/main/cpp/include",
