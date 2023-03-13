@@ -15,8 +15,13 @@ group("bundle_share_library") {
   testonly = true
   deps = [
     # deps file
+    "host2_hap:host2_hap",
     "host_hap:host_hap",
+    "libA_normal_hap:libA_normal_hap",
+    "libA_v10000:libA_v10000",
     "libA_v10001:libA_v10001",
     "libA_v10002:libA_v10002",
+    "libA_without_provision:libA_without_provision",
+    "libB_v10001:libB_v10001",
   ]
 }
