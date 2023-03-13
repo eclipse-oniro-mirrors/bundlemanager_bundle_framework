@@ -450,7 +450,7 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         return false;
     }
     manager_->CreateUninstallTask(uninstallParam, statusReceiver);
-    return false;
+    return true;
 }
 
 bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
