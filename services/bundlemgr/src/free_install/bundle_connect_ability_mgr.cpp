@@ -213,7 +213,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
         APP_LOGD("All preload modules exist locally.");
         return false;
     }
-    targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().signatureInfo.appId);
+    targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().appId);
     for (const auto &item : preloadModuleNames) {
         targetAbilityInfo->targetInfo.preloadModuleNames.emplace_back(item);
     }
