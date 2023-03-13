@@ -79,6 +79,7 @@ const std::string MODULE_HASH_VALUE = "hashValue";
 const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
+const std::string PARAM_SEPARATOR = "?";
 const std::string IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string INSTALL_MARK = "installMark";
 const char WILDCARD = '*';
@@ -270,6 +271,15 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
 
+std::string GetOptParamUri(const std::string &uriString) const
+{
+    std::size_t pos = uriString.rfind(PARAM_SEPARATOR);
+    if (pos == std::string::npos) {
+        return uriString;
+    }
+    return uriString.substr(0, pos);
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (skillUri.scheme.empty()) {
@@ -284,6 +294,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 4.scheme://
         return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
     }
+    std::string optParamUri = GetOptParamUri(uriString);
     std::string skillUriString;
     skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
     if (!skillUri.port.empty()) {
@@ -300,9 +311,9 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 1.scheme://host
         // 2.scheme://host/path
         // 3.scheme://host:port     scheme://host:port/path
-        bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
+        bool ret = (optParamUri == skillUriString || StartsWith(optParamUri, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(optParamUri, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -312,7 +323,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // path match
         std::string pathUri(skillUriString);
         pathUri.append(skillUri.path);
-        if (uriString == pathUri) {
+        if (optParamUri == pathUri) {
             return true;
         }
     }
@@ -320,7 +331,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathStartWith match
         std::string pathStartWithUri(skillUriString);
         pathStartWithUri.append(skillUri.pathStartWith);
-        if (StartsWith(uriString, pathStartWithUri)) {
+        if (StartsWith(optParamUri, pathStartWithUri)) {
             return true;
         }
     }
@@ -330,7 +341,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         pathRegexUri.append(skillUri.pathRegex);
         try {
             std::regex regex(pathRegexUri);
-            if (regex_match(uriString, regex)) {
+            if (regex_match(optParamUri, regex)) {
                 return true;
             }
         } catch(...) {

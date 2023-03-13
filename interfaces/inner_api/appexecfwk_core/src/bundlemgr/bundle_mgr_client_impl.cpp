@@ -57,7 +57,6 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("failed to connect");
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
