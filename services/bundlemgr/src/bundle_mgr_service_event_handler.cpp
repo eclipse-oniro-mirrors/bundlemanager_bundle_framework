@@ -1060,6 +1060,14 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 continue;
             }
 
+            // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
+            if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
+                APP_LOGD("OTA update module(%{public}s) by path(%{private}s), accessTokenIdEx is equal to 0",
+                    parserModuleNames[0].c_str(), item.first.c_str());
+                filePaths.emplace_back(item.first);
+                continue;
+            }
+
             // Generally, when the versionCode of Hap is greater than the installed versionCode,
             // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
             if (hasInstalledInfo.versionCode < hapVersionCode) {
