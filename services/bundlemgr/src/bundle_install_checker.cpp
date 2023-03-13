@@ -226,9 +226,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 {
     APP_LOGD("Parse hap file");
     ErrCode result = ERR_OK;
-    BundlePackInfo packInfo;
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
+        BundlePackInfo packInfo;
         newInfo.SetAppType(checkParam.appType);
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
@@ -682,6 +682,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool split = (infos.begin()->second).GetBaseApplicationInfo().split;
     std::string main = (infos.begin()->second).GetAtomicMainModuleName();
     CompatiblePolicy compatiblePolicy = (infos.begin()->second).GetCompatiblePolicy();
+    bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -745,6 +746,10 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
                 main != info.second.GetAtomicMainModuleName()) {
             APP_LOGE("atomicService config is not same.");
             return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
+        }
+        if (isHmService != info.second.GetEntryInstallationFree()) {
+            APP_LOGE("application and hm service are not allowed installed simultaneously.");
+            return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
     }
     // check api sdk version
