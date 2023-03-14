@@ -308,6 +308,7 @@ constexpr const char* VISIBLE = "visible";
 constexpr const char* EXPORTED = "exported";
 constexpr const char* SRC_LANGUAGE = "srcLanguage";
 constexpr const char* PRIORITY = "priority";
+constexpr const char* ATOMIC_SERVICE = "atomicService";
 // module.json
 constexpr const char* APP = "app";
 constexpr const char* MODULE = "module";
@@ -340,6 +341,7 @@ constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
 constexpr const char* APP_ASAN_ENABLED = "asanEnabled";
 constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
+constexpr const char* BUNDLE_TYPE = "bundleType";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";
@@ -447,6 +449,14 @@ constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 
 constexpr const char* SYSTEM_RESOURCES_APP = "ohos.global.systemres";
 extern thread_local int32_t parseResult;
+
+// app shared package
+constexpr const char* APP_COMPATIBLE_POLICY = "compatiblePolicy";
+constexpr const char* APP_SHARED = "shared";
+
+// bundleType
+constexpr const char* BUNDLE_TYPE_APP = "app";
+constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

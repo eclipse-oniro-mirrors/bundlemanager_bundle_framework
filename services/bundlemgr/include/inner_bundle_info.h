@@ -1680,13 +1680,14 @@ public:
         }
     }
 
-    void SetApplicationSplit(bool split)
-    {
-        baseApplicationInfo_->split = split;
-    }
     void SetApplicationBundleType(BundleType type)
     {
         baseApplicationInfo_->bundleType = type;
+    }
+
+    BundleType GetApplicationBundleType() const
+    {
+        return baseApplicationInfo_->bundleType;
     }
 
     bool SetInnerModuleAtomicPreload(const std::string &moduleName, const std::vector<std::string> &preloads)

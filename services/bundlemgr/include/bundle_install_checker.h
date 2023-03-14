@@ -137,6 +137,8 @@ private:
     void SetEntryInstallationFree(
         const BundlePackInfo &bundlePackInfo,
         InnerBundleInfo &innerBundleInfo);
+    
+    void SetPackInstallationFree(BundlePackInfo &bundlePackInfo, const InnerBundleInfo &innerBundleInfo) const;
 
     void CollectProvisionInfo(
         const Security::Verify::ProvisionInfo &provisionInfo,

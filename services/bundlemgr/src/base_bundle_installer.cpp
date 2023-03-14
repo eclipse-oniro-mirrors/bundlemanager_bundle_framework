@@ -822,6 +822,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
+
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -936,6 +937,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
+
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -2584,15 +2586,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("asanEnabled is not supported in Release");
         return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
-    if (oldInfo.GetHasAtomicServiceConfig() != newInfo.GetHasAtomicServiceConfig()) {
-        APP_LOGE("atomicService config is not same.");
-        return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-    } else if (oldInfo.GetHasAtomicServiceConfig() && newInfo.GetHasAtomicServiceConfig()) {
-        if (oldInfo.GetBaseApplicationInfo().split != newInfo.GetBaseApplicationInfo().split ||
-            oldInfo.GetAtomicMainModuleName() != newInfo.GetAtomicMainModuleName()) {
-            APP_LOGE("atomicService config is not same.");
-            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-        }
+    if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+        return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;

@@ -2775,17 +2775,6 @@ void CreateBundleTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ATOMIC_SERVICE", nAtomicService));
 }
 
-void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value)
-{
-    napi_value nNormal;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(AtomicServiceModuleType::NORMAL), &nNormal));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NORMAL", nNormal));
-    napi_value nMain;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AtomicServiceModuleType::MAIN), &nMain));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN", nMain));
-}
-
 void CreateDisplayOrientationObject(napi_env env, napi_value value)
 {
     napi_value nUnspecified;
