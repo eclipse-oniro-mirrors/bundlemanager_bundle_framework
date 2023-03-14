@@ -635,13 +635,109 @@ HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0001, Fu
     newInfo.SetBaseApplicationInfo(applicationInfo);
     newInfo.AddInnerBundleUserInfo(userInfo);
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
+}
 
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0002
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0002
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0002, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 100;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
     oldInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
     newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
-    ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_OK);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    bool ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    EXPECT_TRUE(ret);
+    ret =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, oldInfo);
+    EXPECT_TRUE(ret);
+
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_OK);
+    ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0003
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0003
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0003, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 0;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    bool ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    EXPECT_TRUE(ret);
+    ret =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, oldInfo);
+    EXPECT_TRUE(ret);
+
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_OK);
+    ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0004
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0004
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0004, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 0;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
 }
 
 /**
