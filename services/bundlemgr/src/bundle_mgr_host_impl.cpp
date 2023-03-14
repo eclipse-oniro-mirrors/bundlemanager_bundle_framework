@@ -1085,6 +1085,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     createDirParam.uid = innerBundleUserInfo.uid;
     createDirParam.gid = innerBundleUserInfo.uid;
     createDirParam.apl = GetAppPrivilegeLevel(bundleName, userId);
+    createDirParam.isPreInstallApp = IsPreInstallApp(bundleName);
     if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam)) {
         APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
@@ -2605,6 +2606,16 @@ bool BundleMgrHostImpl::VerifyDependency(const std::string &sharedBundleName)
     }
     APP_LOGD("verify dependency successfully");
     return true;
+}
+
+bool BundleMgrHostImpl::IsPreInstallApp(const std::string &bundleName)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->IsPreInstallApp(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

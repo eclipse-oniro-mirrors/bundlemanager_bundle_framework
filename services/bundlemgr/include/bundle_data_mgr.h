@@ -803,6 +803,7 @@ public:
 
     bool CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const;
     bool CheckHspBundleIsRelied(const std::string &hspBundleName) const;
+    bool IsPreInstallApp(const std::string &bundleName);
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
 

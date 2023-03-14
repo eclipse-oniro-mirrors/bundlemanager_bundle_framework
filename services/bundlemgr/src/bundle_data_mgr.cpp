@@ -4679,5 +4679,18 @@ ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, int32_
     innerBundleInfo.GetSharedBundleInfo(flags, bundleInfo);
     return ERR_OK;
 }
+
+bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
+{
+    APP_LOGD("IsPreInstallApp bundleName: %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("IsPreInstallApp failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return false;
+    }
+    return item->second.IsPreInstallApp();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
