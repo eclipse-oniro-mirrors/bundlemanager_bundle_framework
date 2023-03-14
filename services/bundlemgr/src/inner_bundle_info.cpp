@@ -2178,7 +2178,39 @@ bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
         dependencies = innerModuleInfos_.at(moduleName).dependencies;
         return true;
     }
+    APP_LOGE("GetSharedDependencies can not find module %{public}s", moduleName.c_str());
     return false;
+}
+
+bool InnerBundleInfo::GetAllSharedDependencies(const std::string &moduleName,
+    std::vector<Dependency> &dependencies) const
+{
+    if (!GetSharedDependencies(moduleName, dependencies)) {
+        return false;
+    }
+    std::deque<Dependency> dependenciesDeque;
+    std::copy(dependencies.begin(), dependencies.end(), std::back_inserter(dependenciesDeque));
+    dependencies.clear();
+    while (!dependenciesDeque.empty()) {
+        bool isAdd = true;
+        Dependency itemDependency = dependenciesDeque.front();
+        dependenciesDeque.pop_front();
+        for (const auto &item : dependencies) {
+            if (item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
+                item.versionCode == itemDependency.versionCode) {
+                isAdd = false;
+                break;
+            }
+        }
+        if (isAdd) {
+            dependencies.push_back(itemDependency);
+            std::vector<Dependency> tempDependencies;
+            if (GetSharedDependencies(itemDependency.moduleName, tempDependencies)) {
+                std::copy(tempDependencies.begin(), tempDependencies.end(), std::back_inserter(dependenciesDeque));
+            }
+        }
+    }
+    return true;
 }
 
 void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)

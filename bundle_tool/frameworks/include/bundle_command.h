@@ -31,7 +31,6 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  install      install a bundle with options\n"
                              "  uninstall    uninstall a bundle with options\n"
                              "  dump         dump the bundle info\n"
-                             "  dump-dependencies dump the dependent moduleNames by given bundle name and module name\n"
                              "  clean        clean the bundle data\n"
                              "  enable       enable the bundle\n"
                              "  disable      disable the bundle\n"
@@ -39,7 +38,7 @@ const std::string HELP_MSG = "usage: bm <command> <options>\n"
                              "  quickfix     quick fix, including query and install\n"
                              "  dump-overlay dump overlay info of the specific overlay bundle\n"
                              "  dump-target-overlay dump overlay info of the specific target bundle\n"
-                             "  dump-shared-dependencies dump shared dependencies by app bundle name and module name\n"
+                             "  dump-dependencies dump dependencies by given bundle name and module name\n"
                              "  dump-shared dump shared library information by shared library bundle name\n";
 
 const std::string HELP_MSG_INSTALL =
@@ -116,14 +115,6 @@ const std::string HELP_MSG_GET =
     "options list:\n"
     "  -u, --udid                             obtain udid of the current device\n";
 
-const std::string HELP_MSG_DUMP_DEPENDENCIES =
-    "usage: bm dump-dependencies <options>\n"
-    "eg:bm dump-dependencies -n <bundle-name> -m <module-name> \n"
-    "options list:\n"
-    "  -h, --help                             list available commands\n"
-    "  -n, --bundle-name  <bundle-name>       dump dependent moduleNames by bundleName and moduleName\n"
-    "  -m, --module-name  <module-name>       dump dependent moduleNames by bundleName and moduleName\n";
-
 const std::string HELP_MSG_QUICK_FIX =
     "usage: bm quickfix <options>\n"
     "options list:\n"
@@ -160,12 +151,12 @@ const std::string HELP_MSG_DUMP_SHARED =
     "  -n, --bundle-name  <bundle-name>       dump shared library information by shared library bundleName\n";
 
 const std::string HELP_MSG_DUMP_SHARED_DEPENDENCIES =
-    "usage: bm dump-shared-dependencies <options>\n"
-    "eg:bm dump-shared-dependencies -n <bundle-name> -m <module-name> \n"
+    "usage: bm dump-dependencies <options>\n"
+    "eg:bm dump-dependencies -n <bundle-name> -m <module-name> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -n, --bundle-name  <bundle-name>       dump app module shared dependencies by app bundleName and moduleName\n"
-    "  -m, --module-name  <module-name>       dump app module shared dependencies by app bundleName and moduleName\n";
+    "  -n, --bundle-name  <bundle-name>       dump dependencies by bundleName and moduleName\n"
+    "  -m, --module-name  <module-name>       dump dependencies by bundleName and moduleName\n";
 
 const std::string STRING_INCORRECT_OPTION = "error: incorrect option";
 const std::string HELP_MSG_NO_BUNDLE_PATH_OPTION =
@@ -227,7 +218,6 @@ private:
     ErrCode RunAsInstallCommand();
     ErrCode RunAsUninstallCommand();
     ErrCode RunAsDumpCommand();
-    ErrCode RunAsDumpDependenciesCommand();
     ErrCode RunAsCleanCommand();
     ErrCode RunAsEnableCommand();
     ErrCode RunAsDisableCommand();
@@ -264,7 +254,6 @@ private:
     std::string DumpOverlayInfo(const std::string &bundleName, const std::string &moduleName,
         const std::string &targetModuleName, int32_t userId);
     std::string DumpTargetOverlayInfo(const std::string &bundleName, const std::string &moduleName, int32_t userId);
-    ErrCode ParseDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
     ErrCode ParseSharedDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
     ErrCode ParseSharedCommand(int32_t option, std::string &bundleName);
     sptr<IBundleMgr> bundleMgrProxy_;
