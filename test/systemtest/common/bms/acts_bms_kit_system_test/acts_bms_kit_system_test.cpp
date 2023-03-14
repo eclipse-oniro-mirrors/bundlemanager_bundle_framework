@@ -7658,10 +7658,9 @@ HWTEST_F(ActsBmsKitSystemTest, ProcessPreload_0100, Function | SmallTest | Level
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
     Want want;
-    want.SetAction("action.system.home");
-    want.AddEntity("entity.system.home");
+    want.SetElementName("", BASE_ABILITY_NAME, BASE_ABILITY_NAME, BASE_MODULE_NAME);
     bool res = bundleMgrProxy->ProcessPreload(want);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 }
 
 /**
