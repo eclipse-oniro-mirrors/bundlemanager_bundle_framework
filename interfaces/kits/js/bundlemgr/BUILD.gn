@@ -20,7 +20,7 @@ ohos_shared_library("bundle") {
     "//third_party/node/src",
     "//third_party/libuv/include",
     "//utils/system/safwk/native/include",
-    "${kits_path}/bundlemgr_graphics/include",
+    "${inner_api_path}/bundlemgr_graphics/include",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -53,7 +53,7 @@ ohos_shared_library("bundle") {
 
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-    deps += [ "${kits_path}/bundlemgr_graphics:bundlemgr_graphics" ]
+    deps += [ "${inner_api_path}/bundlemgr_graphics:bundlemgr_graphics" ]
     external_deps += [ "multimedia_image_framework:image" ]
   }
 
