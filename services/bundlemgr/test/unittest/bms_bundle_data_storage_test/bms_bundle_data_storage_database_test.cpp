@@ -373,7 +373,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     },
     "baseBundleInfo":{
         "abilityInfos":[],
-        "appId":"com.example.myapplication_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
+        "appId":"com.example.myapplication_BNtg4JBClbl92Rgc3jm"
+            "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
         "appIndex":0,
         "applicationInfo":{
             "accessTokenId":0,
