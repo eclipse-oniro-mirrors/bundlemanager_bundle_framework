@@ -12,12 +12,12 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("../../../appexecfwk.gni")
+import("../../../../appexecfwk.gni")
 
 config("zip_config") {
   include_dirs = [
     "include",
-    "kits/napi",
+    "napi",
     "//commonlibrary/c_utils/base/include",
     "//third_party/libuv/include",
     "//third_party/node/src",
@@ -35,10 +35,10 @@ ohos_shared_library("zlib") {
   public_configs = [ ":zip_config" ]
 
   sources = [
-    "kits/napi/napi_zlib.cpp",
-    "kits/napi/napi_zlib_common.cpp",
-    "kits/napi/native_module.cpp",
-    "kits/napi/zlib_callback_info.cpp",
+    "napi/napi_zlib.cpp",
+    "napi/napi_zlib_common.cpp",
+    "napi/native_module.cpp",
+    "napi/zlib_callback_info.cpp",
     "src/file_path.cpp",
     "src/zip.cpp",
     "src/zip_internal.cpp",
