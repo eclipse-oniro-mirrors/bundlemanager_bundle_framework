@@ -2001,6 +2001,7 @@ public:
     void SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath);
     bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
     bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
+    bool GetAllSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
     std::vector<uint32_t> GetAllHspVersion() const;
     void DeleteHspModuleByVersion(int32_t versionCode);
     bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;

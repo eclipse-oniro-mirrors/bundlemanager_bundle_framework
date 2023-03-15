@@ -4581,6 +4581,11 @@ ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+        APP_LOGE("GetSharedBundleInfoBySelf failed, the bundle(%{public}s) is not shared library",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
     APP_LOGD("GetSharedBundleInfoBySelf(%{public}s) successfully)", bundleName.c_str());
     return ERR_OK;
@@ -4598,7 +4603,7 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    if (!innerBundleInfo.GetSharedDependencies(moduleName, dependencies)) {
+    if (!innerBundleInfo.GetAllSharedDependencies(moduleName, dependencies)) {
         APP_LOGE("GetSharedDependencies failed, can not find module %{public}s", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
