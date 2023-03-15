@@ -973,6 +973,7 @@ protected:
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,
+                "bundleType": "app",
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
