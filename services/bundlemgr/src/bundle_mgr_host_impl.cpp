@@ -858,7 +858,17 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModu
 
 bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t userId, HapModuleInfo &hapModuleInfo)
 {
-    APP_LOGD("start GetHapModuleInfo with userId: %{public}d", userId);
+    APP_LOGD("start GetHapModuleInfo with bundleName %{public}s and userId: %{public}d",
+        abilityInfo.bundleName.c_str(), userId);
+    std::string callingBundleName = "";
+    GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
+
+    if (!BundlePermissionMgr::IsNativeTokenType() && (callingBundleName != abilityInfo.bundleName)) {
+        APP_LOGE("invalid token or get module info of other bundle");
+        return false;
+    }
+
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
