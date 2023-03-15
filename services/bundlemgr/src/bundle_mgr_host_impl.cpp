@@ -858,10 +858,6 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModu
 bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t userId, HapModuleInfo &hapModuleInfo)
 {
     APP_LOGD("start GetHapModuleInfo with userId: %{public}d", userId);
-    if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("invalid token is not allowed to call this function");
-        return false;
-    }
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
