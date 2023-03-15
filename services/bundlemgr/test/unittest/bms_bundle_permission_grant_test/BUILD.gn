@@ -64,13 +64,9 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   ]
 
   if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
     deps += [
       "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
       "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
-      "//foundation/multimedia/image_framework/interfaces/innerkits:image_native",
     ]
   }
 
