@@ -485,6 +485,16 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
         return ERR_OK;
     }
 
+    if (disallowedAppIds.empty()) {
+        for (const auto &installAppId : installAppIds) {
+            if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
+                APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+                return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+            }
+        }
+        return ERR_OK;
+    }
+
     for (const auto &installAppId : installAppIds) {
         if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
             APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
