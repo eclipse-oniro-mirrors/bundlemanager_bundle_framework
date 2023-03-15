@@ -1878,7 +1878,9 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
     baseBundleInfo_->singleton = bundleInfo.singleton;
-    baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    if (!baseBundleInfo_->isPreInstallApp) {
+        baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    }
 
     baseBundleInfo_->vendor = bundleInfo.vendor;
     baseBundleInfo_->releaseType = bundleInfo.releaseType;
