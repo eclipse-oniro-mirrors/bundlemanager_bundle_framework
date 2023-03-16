@@ -67,7 +67,6 @@ ohos_unittest("bm_command_dump_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -121,7 +120,6 @@ ohos_unittest("bm_command_dump_dependencies_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -175,7 +173,6 @@ ohos_unittest("bm_command_install_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -229,7 +226,6 @@ ohos_unittest("bm_command_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -283,7 +279,6 @@ ohos_unittest("bm_command_uninstall_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -337,7 +332,6 @@ ohos_unittest("bm_command_quickfix_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
@@ -391,7 +385,6 @@ ohos_unittest("bm_command_overlay_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
     "${appexecfwk_path}/common:libappexecfwk_common",
     "${appexecfwk_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",

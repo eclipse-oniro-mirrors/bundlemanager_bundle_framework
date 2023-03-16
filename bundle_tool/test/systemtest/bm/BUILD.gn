@@ -20,13 +20,12 @@ ohos_systemtest("bm_command_install_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_install_system_test.cpp",
+    "tool_system_test.cpp",
   ]
 
   configs = [
@@ -40,7 +39,6 @@ ohos_systemtest("bm_command_install_system_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
@@ -62,13 +60,12 @@ ohos_systemtest("bm_command_uninstall_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_uninstall_system_test.cpp",
+    "tool_system_test.cpp",
   ]
 
   configs = [
@@ -82,7 +79,6 @@ ohos_systemtest("bm_command_uninstall_system_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
@@ -104,13 +100,12 @@ ohos_systemtest("bm_command_dump_system_test") {
   module_out_path = module_output_path
 
   include_dirs = [
-    "${ability_runtime_path}/tools/test/systemtest/aa",
     "//third_party/jsoncpp/include",
   ]
 
   sources = [
-    "${ability_runtime_path}/tools/test/systemtest/aa/tool_system_test.cpp",
     "bm_command_dump_system_test.cpp",
+    "tool_system_test.cpp",
   ]
 
   configs = [
@@ -124,7 +119,6 @@ ohos_systemtest("bm_command_dump_system_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/tools/aa:tools_aa_source_set",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",

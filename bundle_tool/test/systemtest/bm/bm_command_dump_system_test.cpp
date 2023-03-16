@@ -21,7 +21,6 @@
 
 using namespace testing::ext;
 using namespace OHOS;
-using namespace OHOS::AAFwk;
 using namespace OHOS::AppExecFwk;
 
 namespace {
