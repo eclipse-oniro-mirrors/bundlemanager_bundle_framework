@@ -19,10 +19,6 @@ module_output_path = "bundle_tool/tools"
 ohos_systemtest("bm_command_install_system_test") {
   module_out_path = module_output_path
 
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-  ]
-
   sources = [
     "bm_command_install_system_test.cpp",
     "tool_system_test.cpp",
@@ -43,7 +39,6 @@ ohos_systemtest("bm_command_install_system_test") {
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
-    "//third_party/jsoncpp:jsoncpp",
   ]
 
   external_deps = [
@@ -58,10 +53,6 @@ ohos_systemtest("bm_command_install_system_test") {
 
 ohos_systemtest("bm_command_uninstall_system_test") {
   module_out_path = module_output_path
-
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-  ]
 
   sources = [
     "bm_command_uninstall_system_test.cpp",
@@ -83,7 +74,6 @@ ohos_systemtest("bm_command_uninstall_system_test") {
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
-    "//third_party/jsoncpp:jsoncpp",
   ]
 
   external_deps = [
@@ -98,10 +88,6 @@ ohos_systemtest("bm_command_uninstall_system_test") {
 
 ohos_systemtest("bm_command_dump_system_test") {
   module_out_path = module_output_path
-
-  include_dirs = [
-    "//third_party/jsoncpp/include",
-  ]
 
   sources = [
     "bm_command_dump_system_test.cpp",
@@ -123,7 +109,6 @@ ohos_systemtest("bm_command_dump_system_test") {
     "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
     "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
-    "//third_party/jsoncpp:jsoncpp",
   ]
 
   external_deps = [
