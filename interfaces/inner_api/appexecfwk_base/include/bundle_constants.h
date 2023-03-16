@@ -302,9 +302,6 @@ constexpr int32_t DEFAULT_OVERLAY_ENABLE_STATUS = 1;
 constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
-constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
-constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
-constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 
