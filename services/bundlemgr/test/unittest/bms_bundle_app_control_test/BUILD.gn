@@ -58,12 +58,6 @@ ohos_unittest("BmsBundleAppControlTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle1:bmsThirdBundle1",
   ]
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
   deps += bundle_install_deps
 
   external_deps = [
