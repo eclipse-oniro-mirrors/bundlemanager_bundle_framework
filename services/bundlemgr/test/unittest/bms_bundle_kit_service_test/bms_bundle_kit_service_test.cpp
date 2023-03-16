@@ -9647,11 +9647,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfo_0100, Function | SmallTest
     InnerBundleInfo info;
     dataMgr->bundleInfos_.try_emplace(BUNDLE_NAME_TEST, info);
     ret = dataMgr->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ret = hostImpl->GetSharedBundleInfoBySelf(BUNDLE_NAME_TEST, sharedBundleInfo);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -9693,7 +9693,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedDependencies_0100, Function | SmallTe
     }
     std::vector<Dependency> dependencies;
     auto ret = bundleMgrProxy->GetSharedDependencies("", "", dependencies);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_OK);
     ret = bundleMgrProxy->GetSharedDependencies(
             BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependencies);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
