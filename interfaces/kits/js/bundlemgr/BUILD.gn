@@ -16,7 +16,7 @@ import("../../../../appexecfwk.gni")
 
 ohos_shared_library("bundle") {
   include_dirs = [
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
+    "${kits_path}/js/common",
     "//third_party/node/src",
     "//third_party/libuv/include",
     "//utils/system/safwk/native/include",
