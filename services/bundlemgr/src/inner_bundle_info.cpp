@@ -2506,7 +2506,7 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
