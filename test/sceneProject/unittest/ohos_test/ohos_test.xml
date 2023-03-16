@@ -304,6 +304,13 @@
      <option name="push" value="bundle_hsp/hsp_D.hsp -> /data/test/resource/bms/hspD/" src="res" />
     </preparer>
   </target>
+  <target name="BmsBundleSharedLibraryUninstallTest">
+  <preparer>
+     <option name="push" value="bundle_share_library/host_hap.hap -> /data/test/resource/bms/sharelibrary/" src="res" />
+     <option name="push" value="bundle_share_library/libA_v10001.hsp -> /data/test/resource/bms/sharelibrary/" src="res" />
+     <option name="push" value="bundle_share_library/libA_v10002.hsp -> /data/test/resource/bms/sharelibrary/" src="res" />
+    </preparer>
+  </target>
   <target name="BmsBundleAppProvisionInfoTest">
     <preparer>
       <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
