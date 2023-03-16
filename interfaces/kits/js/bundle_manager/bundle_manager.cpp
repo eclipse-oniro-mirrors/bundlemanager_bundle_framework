@@ -2728,17 +2728,6 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return nullptr;
-    }
-    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
-    if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
-        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
-    }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
