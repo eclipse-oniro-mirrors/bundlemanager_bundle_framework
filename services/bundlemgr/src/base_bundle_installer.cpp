@@ -806,10 +806,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // check hap is allow install by app control
     if (!installParam.isPreInstallApp) {
-        for (const auto &info : newInfos) {
-            result = InstallNormalAppControl(info.second.GetAppId(), userId_);
-            CHECK_RESULT(result, "install app control failed %{public}d");
-        }
+        auto installAppId = (newInfos.begin()->second).GetAppId();
+        result = InstallNormalAppControl(installAppId, userId_);
+        CHECK_RESULT(result, "install app control failed %{public}d");
     }
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
