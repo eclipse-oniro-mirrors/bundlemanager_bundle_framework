@@ -991,7 +991,7 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
 
     napi_value ndebug;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.debug, &ndebug));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "debug", ndebug)); 
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "debug", ndebug));
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
