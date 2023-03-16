@@ -989,9 +989,9 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "bundleType", nBundleType));
 
-    napi_value ndebug;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.debug, &ndebug));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "debug", ndebug));
+    napi_value nDebug;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.debug, &nDebug));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "debug", nDebug));
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
