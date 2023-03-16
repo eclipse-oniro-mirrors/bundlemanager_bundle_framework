@@ -481,8 +481,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
-    ErrCode InstallNormalAppControl(
-        const std::vector<std::string> &installAppIds, int32_t userId);
+    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId);
 
 private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;

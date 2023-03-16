@@ -77,7 +77,7 @@ const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
 const std::string LOG = "log";
-const int32_t UID = 537;
+const int32_t EDM_UID = 537;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -2115,9 +2115,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3100, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3200, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    std::vector<std::string> installAppIds;
+    std::string installAppId = APPID;
     int32_t userId = Constants::DEFAULT_USERID;;
-    OHOS::ErrCode ret = installer.InstallNormalAppControl(installAppIds, userId);
+    OHOS::ErrCode ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_OK);
 }
 
@@ -2926,19 +2926,6 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | L
 }
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-/**
- * @tc.number: baseBundleInstaller_3400
- * @tc.name: test InstallNormalAppControl
- * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest | Level0)
-{
-    std::vector<std::string> installAppIds;
-    BaseBundleInstaller installer;
-    int32_t userId = Constants::DEFAULT_USERID;
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
-    EXPECT_EQ(ret, OHOS::ERR_OK);
-}
 
 /**
  * @tc.number: baseBundleInstaller_3500
@@ -2947,8 +2934,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
-    installAppIds.emplace_back(APPID);
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
@@ -2959,7 +2945,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
         appIds, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlDisallow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL);
     
     auto resultDeleteAppInstallAppControlDisallow = DelayedSingleton<AppControlManager>::GetInstance()->
@@ -2975,19 +2961,18 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3600, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
     appIds.emplace_back(SYSTEMFIEID_NAME);
-    installAppIds.emplace_back(APPID);
 
     auto resultAddAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
         AddAppInstallControlRule(AppControlConstants::EDM_CALLING,
         appIds, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlAllow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_OK);
 
     auto resultDeleteAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
@@ -3003,13 +2988,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3600, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
-    installAppIds.emplace_back(APPID);
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
     appIds.emplace_back(APPID);
-    seteuid(UID);
+    seteuid(EDM_UID);
     auto resultAddAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
         AddAppInstallControlRule(AppControlConstants::EDM_CALLING,
         appIds, AppControlConstants::APP_ALLOWED_INSTALL, userId);
@@ -3020,7 +3004,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest 
         appIds, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlDisallow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL);
 
     auto resultDeleteAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
@@ -3041,15 +3025,14 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
-    installAppIds.emplace_back(APPID);
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
     std::vector<std::string> appIdsAllow;
     appIds.emplace_back(APPID);
     appIdsAllow.emplace_back(SYSTEMFIEID_NAME);
-    seteuid(UID);
+    seteuid(EDM_UID);
     auto resultAddAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
         AddAppInstallControlRule(AppControlConstants::EDM_CALLING,
         appIdsAllow, AppControlConstants::APP_ALLOWED_INSTALL, userId);
@@ -3060,7 +3043,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest 
         appIds, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlDisallow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL);
 
     auto resultDeleteAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
@@ -3081,15 +3064,14 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
-    installAppIds.emplace_back(APPID);
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
     std::vector<std::string> appIdsAllow;
     appIds.emplace_back(APPID);
     appIdsAllow.emplace_back(SYSTEMFIEID_NAME);
-    seteuid(UID);
+    seteuid(EDM_UID);
     auto resultAddAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
         AddAppInstallControlRule(AppControlConstants::EDM_CALLING,
         appIds, AppControlConstants::APP_ALLOWED_INSTALL, userId);
@@ -3100,7 +3082,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
         appIdsAllow, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlDisallow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_OK);
 
     auto resultDeleteAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
@@ -3121,14 +3103,13 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest | Level0)
 {
-    std::vector<std::string> installAppIds;
-    installAppIds.emplace_back(APPID);
+    std::string installAppId = APPID;
     BaseBundleInstaller installer;
     int32_t userId = Constants::DEFAULT_USERID;
     std::vector<std::string> appIds;
     std::vector<std::string> appIdsAllow;
     appIds.emplace_back(SYSTEMFIEID_NAME);
-    seteuid(UID);
+    seteuid(EDM_UID);
     auto resultAddAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
         AddAppInstallControlRule(AppControlConstants::EDM_CALLING,
         appIds, AppControlConstants::APP_ALLOWED_INSTALL, userId);
@@ -3139,7 +3120,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest 
         appIds, AppControlConstants::APP_DISALLOWED_INSTALL, userId);
     EXPECT_EQ(resultAddAppInstallAppControlDisallow, OHOS::ERR_OK);
 
-    auto ret = installer.InstallNormalAppControl(installAppIds, userId);
+    auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL);
 
     auto resultDeleteAppInstallAppControlAllow = DelayedSingleton<AppControlManager>::GetInstance()->
