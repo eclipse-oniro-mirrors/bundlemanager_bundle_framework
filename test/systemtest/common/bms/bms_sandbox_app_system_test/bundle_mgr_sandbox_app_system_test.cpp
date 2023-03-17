@@ -23,6 +23,7 @@
 #include <gtest/gtest.h>
 
 #include "app_log_wrapper.h"
+#include "bundle_common_event.h"
 #include "bundle_info.h"
 #include "bundle_installer_interface.h"
 #include "bundle_mgr_client.h"
@@ -126,10 +127,10 @@ CommonEventSubscriberTest::CommonEventSubscriberTest(const CommonEventSubscribeI
 void CommonEventSubscriberTest::OnReceiveEvent(const CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_ADDED) {
+    if (action == COMMON_EVENT_SANDBOX_PACKAGE_ADDED) {
         g_ReceivedInstallSandbox = true;
     }
-    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED) {
+    if (action == COMMON_EVENT_SANDBOX_PACKAGE_REMOVED) {
         g_RceivedUninstallSandbox = true;
     }
     auto accessTokenId = data.GetWant().GetParams().GetIntParam(ACCESS_TOKEN_ID, 0);
