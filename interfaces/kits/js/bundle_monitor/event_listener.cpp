@@ -123,8 +123,8 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
             napi_value result[ARGS_SIZE_ONE] = { 0 };
             napi_value placeHolder = nullptr;
             napi_get_reference_value(asyncCallbackInfo->env, asyncCallbackInfo->callbackRef, &callback);
-            NAPI_CALL_RETURN_VOID(asyncCallbackInfo->env,
-                napi_create_object(asyncCallbackInfo->env, &result[ARGS_POS_ZERO]));
+            CHKRV_SCOPE(asyncCallbackInfo->env, napi_create_object(asyncCallbackInfo->env,
+                &result[ARGS_POS_ZERO]), scope);
             CommonFunc::ConvertBundleChangeInfo(asyncCallbackInfo->env, asyncCallbackInfo->bundleName,
                 asyncCallbackInfo->userId, result[0]);
             napi_call_function(asyncCallbackInfo->env, nullptr,
