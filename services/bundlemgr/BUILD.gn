@@ -30,6 +30,7 @@ config("bundlemgr_common_config") {
     "//base/powermgr/power_manager/interfaces/innerkits/native/include",
     "//utils/system/safwk/native/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
+    "//foundation/filemanagement/storage_service/services/storage_manager/include/ipc",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
