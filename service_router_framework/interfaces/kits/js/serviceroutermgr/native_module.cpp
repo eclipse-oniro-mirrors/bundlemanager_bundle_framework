@@ -53,7 +53,7 @@ static napi_value ServiceRouterExport(napi_env env, napi_value exports)
 {
     napi_value extServiceType = InitExtServiceTypeObject(env);
     if (extServiceType == nullptr) {
-        APP_LOGE("failed to create launch reason object");
+        APP_LOGE("failed to create extension service type object");
         return nullptr;
     }
 
