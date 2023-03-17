@@ -25,8 +25,6 @@ struct BmsRdbConfig {
     std::string dbName;
     std::string tableName;
     std::string createTableSql;
-    std::string journalMode { Constants::JOURNAL_MODE };
-    std::string syncMode { Constants::SYNC_MODE };
     int32_t version { Constants::BUNDLE_RDB_VERSION };
 };
 }  // namespace AppExecFwk

@@ -195,6 +195,14 @@ public:
      */
     virtual int GetUidByBundleName(const std::string &bundleName, const int userId) override;
     /**
+     * @brief Obtains the debug application UID based on the given bundle name and user ID through the proxy object.
+     * @param bundleName Indicates the bundle name of the application.
+     * @param userId Indicates the user ID.
+     * @return Returns the uid if successfully obtained; returns -1 otherwise.
+     */
+    virtual int GetUidByDebugBundleName(const std::string &bundleName, const int userId) override;
+
+    /**
      * @brief Obtains the application ID based on the given bundle name and user ID.
      * @param bundleName Indicates the bundle name of the application.
      * @param userId Indicates the user ID.
@@ -731,7 +739,7 @@ public:
      * @param want Indicates the information of the ability.
      * @param preload Specifies whether to preload modules in atomicService.
      */
-    virtual void ProcessPreload(const Want &want) override;
+    virtual bool ProcessPreload(const Want &want) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 
@@ -780,8 +788,8 @@ public:
 
     virtual sptr<IOverlayManager> GetOverlayManagerProxy() override;
 
-    virtual ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
-        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) override;
+    virtual ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) override;
 
     virtual ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName,
         SharedBundleInfo &sharedBundleInfo) override;

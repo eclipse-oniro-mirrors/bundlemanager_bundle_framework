@@ -32,7 +32,6 @@ OverlayManagerProxy::~OverlayManagerProxy()
     APP_LOGI("destroy OverlayManagerProxy.");
 }
 
-
 ErrCode OverlayManagerProxy::GetAllOverlayModuleInfo(const std::string &bundleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
@@ -80,7 +79,35 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &bundleName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("write bundleName failed.");
+        APP_LOGE("write moduleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetOverlayModuleInfo due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfo(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME, data, overlayModuleInfo);
+}
+
+ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &moduleName,
+    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+{
+    APP_LOGD("begin to call GetOverlayModuleInfo.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (moduleName.empty()) {
+        APP_LOGE("GetOverlayModuleInfo failed due to params error.");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(moduleName)) {
@@ -95,14 +122,14 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &bundleName,
     return GetParcelableInfo(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO, data, overlayModuleInfo);
 }
 
-ErrCode OverlayManagerProxy::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
-    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
+ErrCode OverlayManagerProxy::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
+    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
-    APP_LOGD("begin to call GetOverlayBundleInfoForTarget.");
+    APP_LOGD("begin to call GetTargetOverlayModuleInfo.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
 
-    if (targetBundleName.empty()) {
-        APP_LOGE("GetOverlayBundleInfoForTarget failed due to params error.");
+    if (targetModuleName.empty()) {
+        APP_LOGE("GetTargetOverlayModuleInfo failed due to params error.");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
@@ -111,18 +138,51 @@ ErrCode OverlayManagerProxy::GetOverlayBundleInfoForTarget(const std::string &ta
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteString(targetBundleName)) {
-        APP_LOGE("write targetBundleName failed.");
+
+    if (!data.WriteString(targetModuleName)) {
+        APP_LOGE("write targetModuleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
     if (!data.WriteInt32(userId)) {
-        APP_LOGE("failed to GetOverlayBundleInfoForTarget due to write userId fail");
+        APP_LOGE("failed to GetTargetOverlayModuleInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfosWithErrCode<OverlayBundleInfo>(
-        IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET, data, overlayBundleInfo);
+    return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
+        IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS, data, overlayModuleInfos);
+}
+
+ErrCode OverlayManagerProxy::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
+    const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+{
+    APP_LOGD("begin to call GetOverlayModuleInfoByBundleName.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (bundleName.empty()) {
+        APP_LOGE("GetOverlayModuleInfoByBundleName failed due to params error.");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetOverlayModuleInfoByBundleName due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
+        IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data, overlayModuleInfos);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
@@ -157,6 +217,47 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &ta
 
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
         IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET, data, overlayModuleInfo);
+}
+
+ErrCode OverlayManagerProxy::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
+    int32_t userId)
+{
+    APP_LOGD("begin to call SetOverlayEnabledForSelf.");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (moduleName.empty()) {
+        APP_LOGE("SetOverlayEnabledForSelf failed due to params error.");
+        return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isEnabled)) {
+        APP_LOGE("failed to SetOverlayEnabledForSelf due to write isEnabled fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to SetOverlayEnabledForSelf due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("failed to SetOverlayEnabledForSelf due to error %{public}d", res);
+    }
+    return res;
 }
 
 ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
@@ -203,27 +304,34 @@ ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, co
     return res;
 }
 
-ErrCode OverlayManagerProxy::VerifySystemApi()
+ErrCode OverlayManagerProxy::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
+    std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
-    APP_LOGD("begin to call VerifySystemApi.");
+    APP_LOGD("begin to call GetOverlayBundleInfoForTarget.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+
+    if (targetBundleName.empty()) {
+        APP_LOGE("GetOverlayBundleInfoForTarget failed due to params error.");
+        return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
+    }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(IOverlayManager::Message::VERIFY_SYSTEM_APP, data, reply)) {
-        APP_LOGE("SendTransactCmd failed");
+    if (!data.WriteString(targetBundleName)) {
+        APP_LOGE("write targetBundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    auto res = reply.ReadInt32();
-    if (res != ERR_OK) {
-        APP_LOGE("failed to VerifySystemApi due to error %{public}d", res);
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetOverlayBundleInfoForTarget due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return res;
+
+    return GetParcelableInfosWithErrCode<OverlayBundleInfo>(
+        IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET, data, overlayBundleInfo);
 }
 
 template<typename T>

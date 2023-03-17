@@ -589,6 +589,39 @@ int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int 
     return uid;
 }
 
+int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const int userId)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("failed to GetUidByBundleName due to bundleName empty");
+        return Constants::INVALID_UID;
+    }
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to get uid of %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("failed to GetUidByBundleName due to write InterfaceToken fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("failed to GetUidByBundleName due to write bundleName fail");
+        return Constants::INVALID_UID;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("failed to GetUidByBundleName due to write uid fail");
+        return Constants::INVALID_UID;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, data, reply)) {
+        APP_LOGE("failed to GetUidByBundleName from server");
+        return Constants::INVALID_UID;
+    }
+    int32_t uid = reply.ReadInt32();
+    APP_LOGD("uid is %{public}d", uid);
+    return uid;
+}
+
 std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     if (bundleName.empty()) {
@@ -3110,24 +3143,26 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
     return reply.ReadBool();
 }
 
-void BundleMgrProxy::ProcessPreload(const Want &want)
+bool BundleMgrProxy::ProcessPreload(const Want &want)
 {
     APP_LOGD("BundleMgrProxy::ProcessPreload is called.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to ProcessPreload due to write InterfaceToken fail");
-        return;
+        return false;
     }
     if (!data.WriteParcelable(&want)) {
         APP_LOGE("fail to ProcessPreload due to write want fail");
-        return;
+        return false;
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     auto res = Remote()->SendRequest(IBundleMgr::Message::PROCESS_PRELOAD, data, reply, option);
     if (res != ERR_OK) {
         APP_LOGE("SendRequest fail, error: %{public}d", res);
+        return false;
     }
+    return reply.ReadBool();
 }
 
 sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
@@ -3183,30 +3218,26 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
         data, appProvisionInfo);
 }
 
-ErrCode BundleMgrProxy::GetBaseSharedPackageInfos(const std::string &bundleName,
-    int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos)
+ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get base shared package infos");
     if (bundleName.empty()) {
-        APP_LOGE("fail to GetBaseSharedPackageInfos due to bundleName empty");
+        APP_LOGE("fail to GetBaseSharedBundleInfos due to bundleName empty");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBaseSharedPackageInfos due to write InterfaceToken fail");
+        APP_LOGE("fail to GetBaseSharedBundleInfos due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBaseSharedPackageInfos due to write bundleName fail");
+        APP_LOGE("fail to GetBaseSharedBundleInfos due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetBaseSharedPackageInfos due to write userId fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    return GetParcelableInfosWithErrCode<BaseSharedPackageInfo>(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
-        data, baseSharedPackageInfos);
+    return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(IBundleMgr::Message::GET_BASE_SHARED_BUNDLE_INFOS,
+        data, baseSharedBundleInfos);
 }
 
 ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles)
@@ -3267,8 +3298,12 @@ ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName,
 ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
     std::vector<Dependency> &dependencies)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedDependencies");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return false;
+    }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3285,7 +3320,6 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     }
     return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
 }
-
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)

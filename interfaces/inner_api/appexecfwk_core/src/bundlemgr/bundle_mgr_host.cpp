@@ -205,14 +205,15 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::PROCESS_PRELOAD, &BundleMgrHost::HandleProcessPreload);
     funcMap_.emplace(IBundleMgr::Message::GET_APP_PROVISION_INFO, &BundleMgrHost::HandleGetAppProvisionInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_PROVISION_METADATA, &BundleMgrHost::HandleGetProvisionMetadata);
-    funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_PACKAGE_INFOS,
-        &BundleMgrHost::HandleGetBaseSharedPackageInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_BUNDLE_INFOS,
+        &BundleMgrHost::HandleGetBaseSharedBundleInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetAllSharedBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetSharedBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
         &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
     funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
+    funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1768,6 +1769,20 @@ ErrCode BundleMgrHost::HandleGetUidByBundleName(MessageParcel &data, MessageParc
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetUidByDebugBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t uid = GetUidByDebugBundleName(bundleName, userId);
+    APP_LOGD("uid is %{public}d", uid);
+    if (!reply.WriteInt32(uid)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHost::HandleIsModuleRemovable(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -2366,7 +2381,11 @@ ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &
         APP_LOGE("ReadParcelable<want> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ProcessPreload(*want);
+    auto ret = ProcessPreload(*want);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 
@@ -2413,15 +2432,14 @@ ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessagePa
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply)
+ErrCode BundleMgrHost::HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGD("start to process HandleGetBaseSharedPackageInfos message");
+    APP_LOGD("start to process HandleGetBaseSharedBundleInfos message");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
-    int32_t userId = data.ReadInt32();
 
-    std::vector<BaseSharedPackageInfo> infos;
-    ErrCode ret = GetBaseSharedPackageInfos(bundleName, userId, infos);
+    std::vector<BaseSharedBundleInfo> infos;
+    ErrCode ret = GetBaseSharedBundleInfos(bundleName, infos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

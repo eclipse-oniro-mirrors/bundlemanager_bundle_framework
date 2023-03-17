@@ -41,6 +41,13 @@ namespace AppExecFwk {
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::vector<std::string> BUNDLE_DATA_DIR = {
+    "/cache",
+    "/files",
+    "/temp",
+    "/preferences",
+    "/haps"
+};
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -186,7 +193,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
         if (el == Constants::BUNDLE_EL[1]) {
-            for (const auto &dir : Constants::BUNDLE_DATA_DIR) {
+            for (const auto &dir : BUNDLE_DATA_DIR) {
                 if (!InstalldOperator::MkOwnerDir(bundleDataDir + dir, S_IRWXU,
                     createDirParam.uid, createDirParam.gid)) {
                     APP_LOGE("CreateBundledatadir MkOwnerDir el2 failed");
@@ -367,7 +374,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
             std::to_string(userId) + Constants::BASE + bundleName;
         allBundleLocalSize += InstalldOperator::GetDiskUsage(filePath);
         if (el == Constants::BUNDLE_EL[1]) {
-            for (const auto &dataDir : Constants::BUNDLE_DATA_DIR) {
+            for (const auto &dataDir : BUNDLE_DATA_DIR) {
                 bundlePath.push_back(filePath + dataDir);
             }
         } else {

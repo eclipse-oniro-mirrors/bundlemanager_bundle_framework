@@ -27,3 +27,8 @@ group("srms_target") {
     "services/srms/sa_profile:srms",
   ]
 }
+
+group("test_target") {
+  testonly = true
+  deps = [ "services/srms/test:unittest" ]
+}

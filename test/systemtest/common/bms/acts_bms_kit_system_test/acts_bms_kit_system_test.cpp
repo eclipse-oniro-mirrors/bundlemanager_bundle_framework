@@ -7602,5 +7602,50 @@ HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0200, Function | SmallTest | Lev
     bool res = applicationInfo.CheckNeedPreload(moduleName);
     EXPECT_EQ(res, true);
 }
+
+/**
+ * @tc.number: SilentInstall_0100
+ * @tc.name: test SilentInstall proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    bool ret = bundleMgrProxy->SilentInstall(want, USERID, nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessPreload_0100
+ * @tc.name: test ProcessPreload proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, ProcessPreload_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetElementName("", BASE_ABILITY_NAME, BASE_ABILITY_NAME, BASE_MODULE_NAME);
+    bool res = bundleMgrProxy->ProcessPreload(want);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfo_0100
+ * @tc.name: test GetAllSharedBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrProxy->GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(ret, ERR_OK);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

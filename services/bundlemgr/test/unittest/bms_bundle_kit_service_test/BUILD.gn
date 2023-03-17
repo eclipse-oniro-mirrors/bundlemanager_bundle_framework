@@ -55,14 +55,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/bundle_kit/test:test",
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -172,14 +164,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

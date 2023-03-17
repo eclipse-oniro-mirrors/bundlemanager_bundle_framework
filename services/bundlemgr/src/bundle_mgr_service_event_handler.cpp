@@ -838,7 +838,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     }
 
     for (const auto &hspDir : hspDirs) {
-        ProcessSystemSharedBundleInstall(hspDir, userId);
+        ProcessSystemSharedBundleInstall(hspDir);
     }
 
     for (const auto &installInfo : normalSystemApps) {
@@ -882,11 +882,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     }
 }
 
-void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, int32_t userId)
+void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath)
 {
     APP_LOGD("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
-    installParam.userId = userId;
     installParam.isPreInstallApp = true;
     installParam.noSkipsKill = false;
     installParam.needSendEvent = false;
@@ -1058,6 +1057,14 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (HasModuleSavedInPreInstalledDb(bundleName, item.first) && !hasModuleInstalled) {
                 APP_LOGW("module(%{public}s) has been uninstalled and do not OTA install",
                     parserModuleNames[0].c_str());
+                continue;
+            }
+
+            // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
+            if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
+                APP_LOGD("OTA update module(%{public}s) by path(%{private}s), accessTokenIdEx is equal to 0",
+                    parserModuleNames[0].c_str(), item.first.c_str());
+                filePaths.emplace_back(item.first);
                 continue;
             }
 

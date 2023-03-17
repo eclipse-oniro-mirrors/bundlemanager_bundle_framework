@@ -111,9 +111,10 @@ int32_t ServiceRouterMgrProxy::GetParcelableInfos(
         return result;
     }
 
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply's result is false");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
+    int32_t res = reply.ReadInt32();
+    if (res != ERR_OK) {
+        APP_LOGE("reply's result is %{public}d", res);
+        return res;
     }
 
     int32_t infosSize = reply.ReadInt32();

@@ -48,7 +48,7 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
 
     installParam_.sharedBundleDirPaths.clear();
     for (size_t i = 0; i < installParam.sharedBundleDirPaths.size(); ++i) {
-        tempDir = BundleUtil::CreateSharedPacakgeTempDir(installerId_, i);
+        tempDir = BundleUtil::CreateSharedBundleTempDir(installerId_, i);
         if (tempDir.empty()) {
             APP_LOGE("create temp dir for hsp failed");
             return false;
@@ -94,6 +94,7 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
     }
     if (fd > 0) {
         streamFdVec_.emplace_back(fd);
+        isInstallSharedBundlesOnly_ = false;
     }
     return fd;
 }
@@ -147,7 +148,9 @@ bool BundleStreamInstallerHostImpl::Install()
         return false;
     }
     std::vector<std::string> pathVec;
-    pathVec.emplace_back(tempDir_);
+    if (!isInstallSharedBundlesOnly_) {
+        pathVec.emplace_back(tempDir_);
+    }
     auto res = installer->Install(pathVec, installParam_, receiver_);
     if (!res) {
         APP_LOGE("install bundle failed");

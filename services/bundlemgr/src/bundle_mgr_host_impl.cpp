@@ -168,11 +168,10 @@ bool BundleMgrHostImpl::GetBundleInfo(
     return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
 }
 
-ErrCode BundleMgrHostImpl::GetBaseSharedPackageInfos(const std::string &bundleName,
-    int32_t userId, std::vector<BaseSharedPackageInfo> &BaseSharedPackageInfos)
+ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleName,
+    std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos)
 {
-    APP_LOGD("start GetBaseSharedPackageInfos, bundleName : %{public}s, userId : %{public}d",
-        bundleName.c_str(), userId);
+    APP_LOGD("start GetBaseSharedBundleInfos, bundleName : %{public}s", bundleName.c_str());
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -182,7 +181,7 @@ ErrCode BundleMgrHostImpl::GetBaseSharedPackageInfos(const std::string &bundleNa
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetBaseSharedPackageInfos(bundleName, userId, BaseSharedPackageInfos);
+    return dataMgr->GetBaseSharedBundleInfos(bundleName, baseSharedBundleInfos);
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfoV9(
@@ -238,9 +237,9 @@ ErrCode BundleMgrHostImpl::GetDependentBundleInfo(const std::string &sharedBundl
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
-    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+    int32_t flags = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
-    return dataMgr->GetBundleInfoV9(sharedBundleName, flag, sharedBundleInfo, Constants::ANY_USERID);
+    return dataMgr->GetSharedBundleInfo(sharedBundleName, flags, sharedBundleInfo);
 }
 
 ErrCode BundleMgrHostImpl::GetBundlePackInfo(
@@ -443,12 +442,9 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, AbilityInfo &abilityI
 bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_t userId,
     AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
-        APP_LOGD("non-system app calling system api");
-        return true;
-    }
-    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
-        APP_LOGE("verify permission failed");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != Constants::FOUNDATION_UID) {
+        APP_LOGE("QueryAbilityInfo verify failed.");
         return false;
     }
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
@@ -506,20 +502,20 @@ bool BundleMgrHostImpl::CheckAbilityEnableInstall(
     return bundleDistributedManager->CheckAbilityEnableInstall(want, missionId, userId, callback);
 }
 
-void BundleMgrHostImpl::ProcessPreload(const Want &want)
+bool BundleMgrHostImpl::ProcessPreload(const Want &want)
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != Constants::FOUNDATION_UID) {
         APP_LOGE("ProcessPreload verify failed.");
-        return;
+        return false;
     }
     APP_LOGD("begin to process preload.");
     auto connectAbilityMgr = GetConnectAbilityMgrFromService();
     if (connectAbilityMgr == nullptr) {
         APP_LOGE("connectAbilityMgr is nullptr");
-        return;
+        return false;
     }
-    connectAbilityMgr->ProcessPreload(want);
+    return connectAbilityMgr->ProcessPreload(want);
 }
 #endif
 
@@ -861,7 +857,17 @@ bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModu
 
 bool BundleMgrHostImpl::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t userId, HapModuleInfo &hapModuleInfo)
 {
-    APP_LOGD("start GetHapModuleInfo with userId: %{public}d", userId);
+    APP_LOGD("start GetHapModuleInfo with bundleName %{public}s and userId: %{public}d",
+        abilityInfo.bundleName.c_str(), userId);
+    std::string callingBundleName = "";
+    GetBundleNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    APP_LOGD("callingBundleName : %{public}s", callingBundleName.c_str());
+
+    if (!BundlePermissionMgr::IsNativeTokenType() && (callingBundleName != abilityInfo.bundleName)) {
+        APP_LOGE("invalid token or get module info of other bundle");
+        return false;
+    }
+
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -1294,6 +1300,7 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     result.append(":\n");
     nlohmann::json jsonObject = bundleInfo;
     jsonObject.erase("abilityInfos");
+    jsonObject.erase("signatureInfo");
     jsonObject.erase("extensionAbilityInfo");
     jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
     jsonObject["userInfo"] = innerBundleUserInfos;
@@ -1668,6 +1675,10 @@ bool BundleMgrHostImpl::GetDistributedBundleInfo(const std::string &networkId, c
 {
     APP_LOGD("start GetDistributedBundleInfo, bundleName : %{public}s", bundleName.c_str());
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return false;
+    }
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
         return false;
@@ -2018,6 +2029,10 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
 int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::INVALID_UID;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2038,6 +2053,26 @@ int BundleMgrHostImpl::GetUidByBundleName(const std::string &bundleName, const i
         APP_LOGE("can not get bundleInfo's uid");
     }
     APP_LOGD("uid is %{public}d", uid);
+    return uid;
+}
+
+int BundleMgrHostImpl::GetUidByDebugBundleName(const std::string &bundleName, const int userId)
+{
+    APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return Constants::INVALID_UID;
+    }
+    ApplicationInfo appInfo;
+    int32_t uid = Constants::INVALID_UID;
+    bool ret = dataMgr->GetApplicationInfo(bundleName, GET_BUNDLE_DEFAULT, userId, appInfo);
+    if (ret && appInfo.debug) {
+        uid = appInfo.uid;
+        APP_LOGD("get debug bundle uid success, uid is %{public}d", uid);
+    } else {
+        APP_LOGE("can not get bundleInfo's uid");
+    }
     return uid;
 }
 
@@ -2150,7 +2185,7 @@ bool BundleMgrHostImpl::GetAllDependentModuleNames(const std::string &bundleName
 ErrCode BundleMgrHostImpl::GetSandboxBundleInfo(
     const std::string &bundleName, int32_t appIndex, int32_t userId, BundleInfo &info)
 {
-    APP_LOGD("start GetSandboxBundleInfo, bundleName : %{public}s, appindex : %{public}d, userId : %{public}d",
+    APP_LOGD("start GetSandboxBundleInfo, bundleName : %{public}s, appIndex : %{public}d, userId : %{public}d",
         bundleName.c_str(), appIndex, userId);
     // check bundle name
     if (bundleName.empty()) {
@@ -2212,6 +2247,10 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
 std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::EMPTY_STRING;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2223,6 +2262,10 @@ std::string BundleMgrHostImpl::GetStringById(const std::string &bundleName, cons
 std::string BundleMgrHostImpl::GetIconById(
     const std::string &bundleName, const std::string &moduleName, uint32_t resId, uint32_t density, int32_t userId)
 {
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return Constants::EMPTY_STRING;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -2267,6 +2310,15 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
     AbilityInfo &info)
 {
     APP_LOGD("start GetSandboxAbilityInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
@@ -2288,6 +2340,15 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
     int32_t userId, std::vector<ExtensionAbilityInfo> &infos)
 {
     APP_LOGD("start GetSandboxExtAbilityInfos appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -2309,6 +2370,15 @@ ErrCode BundleMgrHostImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityInf
     HapModuleInfo &info)
 {
     APP_LOGD("start GetSandboxHapModuleInfo appIndex : %{public}d, userId : %{public}d", appIndex, userId);
+    // check appIndex
+    if (appIndex <= Constants::INITIAL_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
+        APP_LOGE("the appIndex %{public}d is invalid", appIndex);
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("invalid token is not allowed to call this function");
+        return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
+    }
     if (!VerifyQueryPermission(abilityInfo.bundleName)) {
         APP_LOGE("verify permission failed");
         return false;

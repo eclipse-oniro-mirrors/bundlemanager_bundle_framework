@@ -539,6 +539,8 @@ private:
 
     ErrCode HandleGetUidByBundleName(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetUidByDebugBundleName(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAbilityInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAbilityInfoWithModuleName(MessageParcel &data, MessageParcel &reply);
@@ -620,7 +622,7 @@ private:
 
     ErrCode HandleGetProvisionMetadata(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetBaseSharedPackageInfos(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleGetBaseSharedBundleInfos(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetAllSharedBundleInfo(MessageParcel &data, MessageParcel &reply);
 

@@ -50,6 +50,12 @@ public:
         std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
         OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
         std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
@@ -57,7 +63,8 @@ public:
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
-    virtual ErrCode VerifySystemApi() override;
+    virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     OverlayModuleInfo CreateOverlayModuleInfo();
@@ -76,6 +83,29 @@ ErrCode OverlayManagerHostMock::GetOverlayModuleInfo(const std::string &bundleNa
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
     overlayModuleInfo = CreateOverlayModuleInfo();
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHostMock::GetOverlayModuleInfo(const std::string &moduleName,
+    OverlayModuleInfo &overlayModuleInfo, int32_t userId)
+{
+    overlayModuleInfo = CreateOverlayModuleInfo();
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHostMock::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
+    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+{
+    OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
+    overlayModuleInfos.emplace_back(moduleInfo);
+    return ERR_OK;
+}
+
+ErrCode OverlayManagerHostMock::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
+    const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+{
+    OverlayModuleInfo moduleInfo = CreateOverlayModuleInfo();
+    overlayModuleInfos.emplace_back(moduleInfo);
     return ERR_OK;
 }
 
@@ -101,7 +131,8 @@ ErrCode OverlayManagerHostMock::SetOverlayEnabled(const std::string &bundleName,
     return ERR_OK;
 }
 
-ErrCode OverlayManagerHostMock::VerifySystemApi()
+ErrCode OverlayManagerHostMock::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
+    int32_t userId)
 {
     return ERR_OK;
 }
@@ -623,23 +654,6 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2000, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: OverlayIpcTest_2100
- * @tc.name: test GetOverlayModuleInfoForTarget interface in OverlayManagerProxy.
- * @tc.desc: 1.construct OverlayManagerProxy instance.
- *           2.calling GetOverlayModuleInfoForTarget interface by using OverlayManagerProxy instance.
- * @tc.require: issueI6F3H9
- */
-HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2100, Function | SmallTest | Level0)
-{
-    auto overlayProxy = GetOverlayProxy();
-    EXPECT_NE(overlayProxy, nullptr);
-
-    std::vector<OverlayModuleInfo> overlayModuleInfos;
-    auto errCode = overlayProxy->VerifySystemApi();
-    EXPECT_EQ(errCode, ERR_APPEXECFWK_PARCEL_ERROR);
-}
-
-/**
  * @tc.number: OverlayIpcTest_2200
  * @tc.name: test HandleSetOverlayEnabled interface in OverlayManagerHost.
  * @tc.desc: 1.construct OverlayManagerHost instance.
@@ -657,29 +671,6 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2200, Function | SmallTest | Le
     MessageOption option;
     data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
     auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::SET_OVERLAY_ENABLED, data, reply, option);
-    EXPECT_EQ(ret, ERR_OK);
-    ret = reply.ReadInt32();
-    EXPECT_EQ(ret, ERR_OK);
-}
-
-/**
- * @tc.number: OverlayIpcTest_2300
- * @tc.name: test HandleVerifySystemApi interface in OverlayManagerHost.
- * @tc.desc: 1.construct OverlayManagerHost instance.
- *           2.calling HandleVerifySystemApi interface by using OverlayManagerHost instance.
- *           4.return ERR_OK.
- * @tc.require: issueI6F3H9
- */
-HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2300, Function | SmallTest | Level0)
-{
-    auto overlayHost = GetOverlayHost();
-    EXPECT_NE(overlayHost, nullptr);
-
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
-    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::VERIFY_SYSTEM_APP, data, reply, option);
     EXPECT_EQ(ret, ERR_OK);
     ret = reply.ReadInt32();
     EXPECT_EQ(ret, ERR_OK);
@@ -789,5 +780,114 @@ HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_2900, Function | SmallTest | Le
 
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, false);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_3000
+ * @tc.name: test HandleGetOverlayModuleInfoByName interface in OverlayManagerHost.
+ * @tc.desc: 1.construct OverlayManagerHost instance.
+ *           2.calling HandleGetOverlayModuleInfoByName interface by using OverlayManagerHost instance.
+ *           4.return ERR_OK.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3000, Function | SmallTest | Level0)
+{
+    auto overlayHost = GetOverlayHost();
+    EXPECT_NE(overlayHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME, data, reply,
+        option);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_OK);
+    OverlayModuleInfo overlayModuleInfo = ReadOverlayInfo<OverlayModuleInfo>(reply);
+    CheckOverlayModuleInfo(overlayModuleInfo);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_3100
+ * @tc.name: test HandleGetOverlayModuleInfoByName interface in OverlayManagerHost.
+ * @tc.desc: 1.construct OverlayManagerHost instance.
+ *           2.calling HandleGetOverlayModuleInfoByName interface by using OverlayManagerHost instance.
+ *           4.return ERR_OK.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3100, Function | SmallTest | Level0)
+{
+    auto overlayHost = GetOverlayHost();
+    EXPECT_NE(overlayHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS, data, reply,
+        option);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_OK);
+    auto size = reply.ReadInt32();
+    EXPECT_EQ(size, OVERLAY_INFO_SIZE);
+    OverlayModuleInfo overlayModuleInfo = ReadOverlayInfo<OverlayModuleInfo>(reply);
+    CheckOverlayModuleInfo(overlayModuleInfo);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_3200
+ * @tc.name: test HandleGetOverlayModuleInfoByBundleName interface in OverlayManagerHost.
+ * @tc.desc: 1.construct OverlayManagerHost instance.
+ *           2.calling HandleGetOverlayModuleInfoByBundleName interface by using OverlayManagerHost instance.
+ *           4.return ERR_OK.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3200, Function | SmallTest | Level0)
+{
+    auto overlayHost = GetOverlayHost();
+    EXPECT_NE(overlayHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data,
+        reply, option);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_OK);
+    auto size = reply.ReadInt32();
+    EXPECT_EQ(size, OVERLAY_INFO_SIZE);
+    OverlayModuleInfo overlayModuleInfo = ReadOverlayInfo<OverlayModuleInfo>(reply);
+    CheckOverlayModuleInfo(overlayModuleInfo);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_3300
+ * @tc.name: test HandleSetOverlayEnabled interface in OverlayManagerHost.
+ * @tc.desc: 1.construct OverlayManagerHost instance.
+ *           2.calling HandleSetOverlayEnabled interface by using OverlayManagerHost instance.
+ *           4.return ERR_OK.
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayIpcTest, OverlayIpcTest_3300, Function | SmallTest | Level0)
+{
+    auto overlayHost = GetOverlayHost();
+    EXPECT_NE(overlayHost, nullptr);
+
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(OverlayManagerHost::GetDescriptor());
+    auto ret = overlayHost->OnRemoteRequest(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF, data, reply,
+        option);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = reply.ReadInt32();
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS

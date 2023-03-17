@@ -19,5 +19,5 @@ int main(int argc, char *argv[])
 {
     OHOS::AppExecFwk::BundleManagerShellCommand cmd(argc, argv);
     std::cout << cmd.ExecCommand();
-    return 0;
+    quick_exit(0);
 }

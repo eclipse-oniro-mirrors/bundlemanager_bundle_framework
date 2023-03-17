@@ -24,6 +24,7 @@ config("bundlemgr_test_config") {
     "${inner_api_path}/appexecfwk_core/include/free_install",
     "${appexecfwk_path}/services/bundlemgr/include/overlay",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
+    "${appexecfwk_path}/services/bundlemgr/include/shared",
     "mock/include",
   ]
 

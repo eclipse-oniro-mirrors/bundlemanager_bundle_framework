@@ -71,7 +71,6 @@ group("fuzztest") {
     "installparamunmarshalling_fuzzer:InstallParamUnmarshallingFuzzTest",
     "launcherservice_fuzzer:LauncherServiceFuzzTest",
     "moduleinfo_fuzzer:ModuleInfoFuzzTest",
-    "moduleusagerecord_fuzzer:ModuleUsageRecordFuzzTest",
     "parsesyscap_fuzzer:ParseSysCapFuzzTest",
     "permissiondef_fuzzer:PermissionDefFuzzTest",
     "queryabilityinfo_fuzzer:QueryAbilityInfoFuzzTest",

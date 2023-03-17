@@ -41,6 +41,10 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
@@ -56,6 +60,10 @@ ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, b
     if (bundleName.empty() || (statusCallback == nullptr)) {
         APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
     }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::SwitchQuickFix quickFixerMgr is nullptr");
@@ -73,6 +81,10 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
         APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix wrong parms");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     if (!GetQuickFixMgr()) {
         APP_LOGE("QuickFixManagerHostImpl::DeleteQuickFix quickFixerMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
@@ -84,6 +96,10 @@ ErrCode QuickFixManagerHostImpl::DeleteQuickFix(const std::string &bundleName,
 ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
     APP_LOGD("QuickFixManagerHostImpl::CreateFd start.");
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app is not allowed call this function");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PERMISSION_DENIED;

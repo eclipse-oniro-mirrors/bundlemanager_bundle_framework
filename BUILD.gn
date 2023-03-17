@@ -22,12 +22,11 @@ group("bms_target") {
     "interfaces/kits/js:napi_packages",
     "interfaces/kits/native/app_detail_ability:app_detail_ability",
     "interfaces/kits/native/bundle:bundle_ndk",
-    "interfaces/kits/zip:tools_zip",
     "sa_profile:appexecfwk_sa_profile",
     "services/bundlemgr:bms_target",
   ]
   if (bundle_framework_graphics) {
-    deps += [ "interfaces/kits/bundlemgr_graphics:bundlemgr_graphics" ]
+    deps += [ "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics" ]
   }
 }
 
@@ -35,7 +34,7 @@ group("test_target") {
   testonly = true
 
   deps = [
-    "interfaces/kits/zip/test:unittest",
+    "interfaces/kits/js/zip/test:unittest",
     "services/bundlemgr/test:unittest",
     "services/test/moduletest/common/bms:moduletest",
     "test/benchmarktest:benchmarktest",

@@ -72,11 +72,15 @@ const struct option LONG_OPTIONS[] = {
     {nullptr, 0, nullptr, 0},
 };
 
-const std::string UNINSTALL_SHARE_LIBRARY_OPTIONS = "hn:v:";
-const struct option UNINSTALL_SHARE_LIBRARY_LONG_OPTIONS[] = {
+const std::string UNINSTALL_OPTIONS = "hn:m:u:v:s";
+const struct option UNINSTALL_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle_name", required_argument, nullptr, 'n'},
+    {"module-name", required_argument, nullptr, 'm'},
+    {"user-id", required_argument, nullptr, 'u'},
+    {"keep-data", no_argument, nullptr, 'k'},
     {"version", required_argument, nullptr, 'v'},
+    {"shared", no_argument, nullptr, 's'},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -96,13 +100,6 @@ const std::string SHORT_OPTIONS_GET = "hu";
 const struct option LONG_OPTIONS_GET[] = {
     {"help", no_argument, nullptr, 'h'},
     {"udid", no_argument, nullptr, 'u'},
-    {nullptr, 0, nullptr, 0},
-};
-const std::string SHORT_OPTIONS_DUMP_DEPENDENCIES = "hn:m:";
-const struct option LONG_OPTIONS_DUMP_DEPENDENCIES[] = {
-    {"help", no_argument, nullptr, 'h'},
-    {"bundle-name", required_argument, nullptr, 'n'},
-    {"module-name", required_argument, nullptr, 'm'},
     {nullptr, 0, nullptr, 0},
 };
 
@@ -133,10 +130,11 @@ const struct option LONG_OPTIONS_DUMP_SHARED_DEPENDENCIES[] = {
     {nullptr, 0, nullptr, 0},
 };
 
-const std::string SHORT_OPTIONS_DUMP_SHARED = "hn:";
+const std::string SHORT_OPTIONS_DUMP_SHARED = "hn:a";
 const struct option LONG_OPTIONS_DUMP_SHARED[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-name", required_argument, nullptr, 'n'},
+    {"all", no_argument, nullptr, 'a'},
     {nullptr, 0, nullptr, 0},
 };
 }  // namespace
@@ -183,9 +181,7 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"help", std::bind(&BundleManagerShellCommand::RunAsHelpCommand, this)},
         {"install", std::bind(&BundleManagerShellCommand::RunAsInstallCommand, this)},
         {"uninstall", std::bind(&BundleManagerShellCommand::RunAsUninstallCommand, this)},
-        {"uninstall-shared", std::bind(&BundleManagerShellCommand::RunAsUninstallShareCommand, this)},
         {"dump", std::bind(&BundleManagerShellCommand::RunAsDumpCommand, this)},
-        {"dump-dependencies", std::bind(&BundleManagerShellCommand::RunAsDumpDependenciesCommand, this)},
         {"clean", std::bind(&BundleManagerShellCommand::RunAsCleanCommand, this)},
         {"enable", std::bind(&BundleManagerShellCommand::RunAsEnableCommand, this)},
         {"disable", std::bind(&BundleManagerShellCommand::RunAsDisableCommand, this)},
@@ -193,7 +189,7 @@ ErrCode BundleManagerShellCommand::CreateCommandMap()
         {"quickfix", std::bind(&BundleManagerShellCommand::RunAsQuickFixCommand, this)},
         {"dump-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpOverlay, this)},
         {"dump-target-overlay", std::bind(&BundleManagerShellCommand::RunAsDumpTargetOverlay, this)},
-        {"dump-shared-dependencies", std::bind(&BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand, this)},
+        {"dump-dependencies", std::bind(&BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand, this)},
         {"dump-shared", std::bind(&BundleManagerShellCommand::RunAsDumpSharedCommand, this)},
     };
 
@@ -473,9 +469,11 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
     std::string moduleName = "";
     int32_t userId = Constants::ALL_USERID;
     bool isKeepData = false;
+    bool isShared = false;
+    int32_t versionCode = Constants::ALL_VERSIONCODE;
     while (true) {
         counter++;
-        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS.c_str(), LONG_OPTIONS, nullptr);
+        int32_t option = getopt_long(argc_, argv_, UNINSTALL_OPTIONS.c_str(), UNINSTALL_LONG_OPTIONS, nullptr);
         APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
         if (optind < 0 || optind > argc_) {
             return OHOS::ERR_INVALID_VALUE;
@@ -525,6 +523,17 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
                     // 'bm uninstall --bundle-name <bundleName> --keep-data'
                     APP_LOGD("'bm uninstall -k'");
                     isKeepData = true;
+                    break;
+                }
+                case 's': {
+                    APP_LOGD("'bm uninstall -s'");
+                    isShared = true;
+                    break;
+                }
+                case 'v': {
+                    APP_LOGD("'bm uninstall -v'");
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    result = OHOS::ERR_INVALID_VALUE;
                     break;
                 }
                 default: {
@@ -581,6 +590,20 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
                 isKeepData = true;
                 break;
             }
+            case 's': {
+                APP_LOGD("'bm uninstall -s'");
+                isShared = true;
+                break;
+            }
+            case 'v': {
+                APP_LOGD("'bm uninstall %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
+                if (!OHOS::StrToInt(optarg, versionCode) || versionCode < 0) {
+                    APP_LOGE("bm uninstall with error versionCode %{private}s", optarg);
+                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
+                    return OHOS::ERR_INVALID_VALUE;
+                }
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -596,127 +619,28 @@ ErrCode BundleManagerShellCommand::RunAsUninstallCommand()
             result = OHOS::ERR_INVALID_VALUE;
         }
     }
-
     if (result != OHOS::ERR_OK) {
         resultReceiver_.append(HELP_MSG_UNINSTALL);
-    } else {
-        InstallParam installParam;
-        installParam.userId = userId;
-        installParam.isKeepData = isKeepData;
-        int32_t uninstallResult = UninstallOperation(bundleName, moduleName, installParam);
+        return result;
+    }
+
+    if (isShared) {
+        UninstallParam uninstallParam;
+        uninstallParam.bundleName = bundleName;
+        uninstallParam.versionCode = versionCode;
+        APP_LOGE("version code is %{public}d", versionCode);
+        int32_t uninstallResult = UninstallSharedOperation(uninstallParam);
         if (uninstallResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_OK + "\n";
         } else {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_NG + "\n";
             resultReceiver_.append(GetMessageFromCode(uninstallResult));
         }
-    }
-
-    return result;
-}
-
-ErrCode BundleManagerShellCommand::RunAsUninstallShareCommand()
-{
-    int32_t result = OHOS::ERR_OK;
-    int32_t counter = 0;
-    UninstallParam uninstallParam;
-    while (true) {
-        counter++;
-        int32_t option = getopt_long(argc_, argv_, UNINSTALL_SHARE_LIBRARY_OPTIONS.c_str(),
-            UNINSTALL_SHARE_LIBRARY_LONG_OPTIONS, nullptr);
-        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
-        if (optind < 0 || optind > argc_) {
-            return OHOS::ERR_INVALID_VALUE;
-        }
-        if (option == -1) {
-            if (counter == 1) {
-                // When scanning the first argument
-                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm uninstall-shared' with no option: bm uninstall-shared
-                    // 'bm uninstall-shared' with a wrong argument: bm uninstall-shared xxx
-                    APP_LOGD("'bm uninstall-shared' %{public}s", HELP_MSG_NO_OPTION.c_str());
-                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                }
-            }
-            break;
-        }
-
-        if (option == '?') {
-            switch (optopt) {
-                case 'n': {
-                    // 'bm uninstall-shared -n' with no argument: bm uninstall-shared -n
-                    // 'bm uninstall-shared --bundle-name' with no argument: bm uninstall-shared --bundle-name
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                case 'v': {
-                    // 'bm uninstall-shared -n <bundleName> -v <versionCode>'
-                    // 'bm uninstall-shared shared bundle'
-                    APP_LOGD("'bm uninstall-shared -v'");
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-                default: {
-                    // 'bm uninstall-shared' with an unknown option: bm uninstall-shared -x
-                    // 'bm uninstall-shared' with an unknown option: bm uninstall-shared -xxx
-                    std::string unknownOption = "";
-                    std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                    APP_LOGD("'bm uninstall-shared' with an unknown option.");
-                    resultReceiver_.append(unknownOptionMsg);
-                    result = OHOS::ERR_INVALID_VALUE;
-                    break;
-                }
-            }
-            break;
-        }
-
-        switch (option) {
-            case 'h': {
-                // 'bm uninstall-shared -h'
-                // 'bm uninstall-shared --help'
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'n': {
-                // 'bm uninstall-shared -n xxx'
-                // 'bm uninstall-shared --bundle-name xxx'
-                APP_LOGD("'bm uninstall-shared %{public}s %{public}s'", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
-                uninstallParam.bundleName = optarg;
-                break;
-            }
-            case 'v': {
-                // 'bm uninstall-shared -n <bundleName> -v <versionCode>'
-                APP_LOGD("bm uninstall-shared %{public}s %{public}s", argv_[optind - OFFSET_REQUIRED_ARGUMENT], optarg);
-                if (!OHOS::StrToInt(optarg, uninstallParam.versionCode) || uninstallParam.versionCode < 0) {
-                    APP_LOGE("bm uninstall-shared with error versionCode %{private}s", optarg);
-                    resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                    return OHOS::ERR_INVALID_VALUE;
-                }
-                break;
-            }
-            default: {
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    }
-
-    if (result == OHOS::ERR_OK) {
-        if (resultReceiver_ == "" && uninstallParam.bundleName.size() == 0) {
-            // 'bm uninstall-shared ...' with no bundle name option
-            APP_LOGD("'bm uninstall-shared' with bundle name option.");
-            resultReceiver_.append(HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n");
-            result = OHOS::ERR_INVALID_VALUE;
-        }
-    }
-
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_UNINSTALL_SHARE);
     } else {
-        int32_t uninstallResult = UninstallSharedOperation(uninstallParam);
+        InstallParam installParam;
+        installParam.userId = userId;
+        installParam.isKeepData = isKeepData;
+        int32_t uninstallResult = UninstallOperation(bundleName, moduleName, installParam);
         if (uninstallResult == OHOS::ERR_OK) {
             resultReceiver_ = STRING_UNINSTALL_BUNDLE_OK + "\n";
         } else {
@@ -887,114 +811,6 @@ ErrCode BundleManagerShellCommand::RunAsDumpCommand()
         resultReceiver_.append(dumpResults);
     }
 
-    return result;
-}
-
-ErrCode BundleManagerShellCommand::RunAsDumpDependenciesCommand()
-{
-    int32_t result = OHOS::ERR_OK;
-    int32_t counter = 0;
-    std::string bundleName;
-    std::string moduleName;
-    while (true) {
-        counter++;
-        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_DEPENDENCIES.c_str(),
-            LONG_OPTIONS_DUMP_DEPENDENCIES, nullptr);
-        if (optind < 0 || optind > argc_) {
-            return OHOS::ERR_INVALID_VALUE;
-        }
-        if (option == -1) {
-            if (counter == 1) {
-                // When scanning the first argument
-                if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm dump-dependencies' with no option: bm dump-dependencies
-                    // 'bm dump-dependencies' with a wrong argument: bm dump-dependencies xxx
-                    resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
-                    result = OHOS::ERR_INVALID_VALUE;
-                }
-            }
-            break;
-        }
-        result = ParseDependenciesCommand(option, bundleName, moduleName);
-        if (option == '?') {
-            break;
-        }
-    }
-    if (result == OHOS::ERR_OK) {
-        if ((resultReceiver_ == "") && (bundleName.size() == 0 || moduleName.size() == 0)) {
-            // 'bm dump-dependencies -n -m ...' with no bundle name option
-            resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
-            result = OHOS::ERR_INVALID_VALUE;
-        }
-    }
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_DUMP_DEPENDENCIES);
-    } else {
-        std::string dumpResults = DumpDependentModuleNames(bundleName, moduleName);
-        if (dumpResults.empty() || (dumpResults == "")) {
-            dumpResults = HELP_MSG_DUMP_FAILED + "\n";
-        }
-        resultReceiver_.append(dumpResults);
-    }
-    return result;
-}
-
-ErrCode BundleManagerShellCommand::ParseDependenciesCommand(int32_t option, std::string &bundleName,
-    std::string &moduleName)
-{
-    int32_t result = OHOS::ERR_OK;
-    if (option == '?') {
-        switch (optopt) {
-            case 'n': {
-                // 'bm dump-dependencies -n' with no argument: bm dump-dependencies -n
-                // 'bm dump-dependencies --bundle-name' with no argument: bm dump-dependencies --bundle-name
-                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'm': {
-                // 'bm dump-dependencies -m' with no argument: bm dump-dependencies -m
-                // 'bm dump-dependencies --module-name' with no argument: bm dump-dependencies --module-name
-                resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            default: {
-                // 'bm dump-dependencies' with an unknown option: bm dump-dependencies -x
-                // 'bm dump-dependencies' with an unknown option: bm dump-dependencies -xxx
-                std::string unknownOption = "";
-                std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
-                resultReceiver_.append(unknownOptionMsg);
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    } else {
-        switch (option) {
-            case 'h': {
-                // 'bm dump-dependencies -h'
-                // 'bm dump-dependencies --help'
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-            case 'n': {
-                // 'bm dump-dependencies -n xxx'
-                // 'bm dump-dependencies --bundle-name xxx'
-                bundleName = optarg;
-                break;
-            }
-            case 'm': {
-                // 'bm dump-dependencies -m xxx'
-                // 'bm dump-dependencies --module-name xxx'
-                moduleName = optarg;
-                break;
-            }
-            default: {
-                result = OHOS::ERR_INVALID_VALUE;
-                break;
-            }
-        }
-    }
     return result;
 }
 
@@ -2138,8 +1954,8 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand()
             if (counter == 1) {
                 // When scanning the first argument
                 if (strcmp(argv_[optind], cmd_.c_str()) == 0) {
-                    // 'bm dump-shared-dependencies' with no option: bm dump-shared-dependencies
-                    // 'bm dump-shared-dependencies' with a wrong argument: bm dump-shared-dependencies xxx
+                    // 'bm dump-dependencies' with no option: bm dump-dependencies
+                    // 'bm dump-dependencies' with a wrong argument: bm dump-dependencies xxx
                     resultReceiver_.append(HELP_MSG_NO_OPTION + "\n");
                     result = OHOS::ERR_INVALID_VALUE;
                 }
@@ -2153,7 +1969,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedDependenciesCommand()
     }
     if (result == OHOS::ERR_OK) {
         if ((resultReceiver_ == "") && (bundleName.size() == 0 || moduleName.size() == 0)) {
-            // 'bm dump-shared-dependencies -n -m ...' with no bundle name option
+            // 'bm dump-dependencies -n -m ...' with no bundle name option
             resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
             result = OHOS::ERR_INVALID_VALUE;
         }
@@ -2177,22 +1993,22 @@ ErrCode BundleManagerShellCommand::ParseSharedDependenciesCommand(int32_t option
     if (option == '?') {
         switch (optopt) {
             case 'n': {
-                // 'bm dump-shared-dependcies -n' with no argument: bm dump-shared-dependcies -n
-                // 'bm dump-shared-dependcies --bundle-name' with no argument: bm dump-shared-dependcies --bundle-name
+                // 'bm dump-dependencies -n' with no argument: bm dump-dependencies -n
+                // 'bm dump-dependencies --bundle-name' with no argument: bm dump-dependencies --bundle-name
                 resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
             }
             case 'm': {
-                // 'bm dump-shared-dependcies -m' with no argument: bm dump-shared-dependcies -m
-                // 'bm dump-shared-dependcies --module-name' with no argument: bm dump-shared-dependcies --module-name
+                // 'bm dump-dependencies -m' with no argument: bm dump-dependencies -m
+                // 'bm dump-dependencies --module-name' with no argument: bm dump-dependencies --module-name
                 resultReceiver_.append(STRING_REQUIRE_CORRECT_VALUE);
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
             }
             default: {
-                // 'bm dump-shared-dependcies' with an unknown option: bm dump-shared-dependcies -x
-                // 'bm dump-shared-dependcies' with an unknown option: bm dump-shared-dependcies -xxx
+                // 'bm dump-dependencies' with an unknown option: bm dump-dependencies -x
+                // 'bm dump-dependencies' with an unknown option: bm dump-dependencies -xxx
                 std::string unknownOption = "";
                 std::string unknownOptionMsg = GetUnknownOptionMsg(unknownOption);
                 resultReceiver_.append(unknownOptionMsg);
@@ -2203,20 +2019,20 @@ ErrCode BundleManagerShellCommand::ParseSharedDependenciesCommand(int32_t option
     } else {
         switch (option) {
             case 'h': {
-                // 'bm dump-shared-dependcies -h'
-                // 'bm dump-shared-dependcies --help'
+                // 'bm dump-dependencies -h'
+                // 'bm dump-dependencies --help'
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
             }
             case 'n': {
-                // 'bm dump-shared-dependcies -n xxx'
-                // 'bm dump-shared-dependcies --bundle-name xxx'
+                // 'bm dump-dependencies -n xxx'
+                // 'bm dump-dependencies --bundle-name xxx'
                 bundleName = optarg;
                 break;
             }
             case 'm': {
-                // 'bm dump-shared-dependcies -m xxx'
-                // 'bm dump-shared-dependcies --module-name xxx'
+                // 'bm dump-dependencies -m xxx'
+                // 'bm dump-dependencies --module-name xxx'
                 moduleName = optarg;
                 break;
             }
@@ -2238,8 +2054,8 @@ std::string BundleManagerShellCommand::DumpSharedDependencies(const std::string 
     std::vector<Dependency> dependencies;
     ErrCode ret = bundleMgrProxy_->GetSharedDependencies(bundleName, moduleName, dependencies);
     nlohmann::json dependenciesJson;
-    if (ret != ERR_OK || dependencies.empty()) {
-        APP_LOGE("dump-shared failed due to errcode %{public}d", ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("dump shared dependencies failed due to errcode %{public}d", ret);
         return dumpResults;
     } else {
         dependenciesJson = nlohmann::json {{DEPENDENCIES, dependencies}};
@@ -2252,6 +2068,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
     int32_t result = OHOS::ERR_OK;
     int32_t counter = 0;
     std::string bundleName;
+    bool dumpSharedAll = false;
     while (true) {
         counter++;
         int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_SHARED.c_str(),
@@ -2271,21 +2088,23 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
             }
             break;
         }
-        result = ParseSharedCommand(option, bundleName);
+        result = ParseSharedCommand(option, bundleName, dumpSharedAll);
         if (option == '?') {
             break;
         }
     }
-    if (result == OHOS::ERR_OK) {
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DUMP_SHARED);
+    } else if (dumpSharedAll) {
+        std::string dumpResults = DumpSharedAll();
+        resultReceiver_.append(dumpResults);
+    } else {
         if ((resultReceiver_ == "") && (bundleName.size() == 0)) {
             // 'bm dump-shared -n ...' with no bundle name option
             resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
             result = OHOS::ERR_INVALID_VALUE;
+            return result;
         }
-    }
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_DUMP_SHARED);
-    } else {
         std::string dumpResults = DumpShared(bundleName);
         if (dumpResults.empty() || (dumpResults == "")) {
             dumpResults = HELP_MSG_DUMP_FAILED + "\n";
@@ -2295,7 +2114,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
     return result;
 }
 
-ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::string &bundleName)
+ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::string &bundleName, bool &dumpSharedAll)
 {
     int32_t result = OHOS::ERR_OK;
     if (option == '?') {
@@ -2331,6 +2150,12 @@ ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::strin
                 bundleName = optarg;
                 break;
             }
+            case 'a': {
+                // 'bm dump-shared -a'
+                // 'bm dump-shared --all'
+                dumpSharedAll = true;
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -2356,5 +2181,22 @@ std::string BundleManagerShellCommand::DumpShared(const std::string &bundleName)
     return sharedBundleInfoJson.dump(Constants::DUMP_INDENT);
 }
 
+std::string BundleManagerShellCommand::DumpSharedAll() const
+{
+    APP_LOGD("DumpSharedAll");
+    std::string dumpResults = "";
+    std::vector<SharedBundleInfo> sharedBundleInfos;
+    ErrCode ret = bundleMgrProxy_->GetAllSharedBundleInfo(sharedBundleInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("dump-shared all failed due to errcode %{public}d", ret);
+        return dumpResults;
+    }
+    for (const auto& item : sharedBundleInfos) {
+        dumpResults.append("\t");
+        dumpResults.append(item.name);
+        dumpResults.append("\n");
+    }
+    return dumpResults;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

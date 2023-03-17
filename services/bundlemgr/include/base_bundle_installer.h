@@ -29,6 +29,7 @@
 #include "event_report.h"
 #include "install_param.h"
 #include "quick_fix/appqf_info.h"
+#include "shared_bundle_installer.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -183,23 +184,6 @@ private:
 
     ErrCode InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid);
-
-    ErrCode ParseSharedPackages(const InstallParam &installParam, const Constants::AppType appType,
-        std::unordered_map<std::string, FilesParseResult> &newInfosMap);
-
-    ErrCode InstallSharedPackages(std::unordered_map<std::string, FilesParseResult> &hspInfos,
-        const InstallParam &installParam);
-
-    ErrCode InnerInstallSharedPackages(const std::string &bundleName, FilesParseResult &parseResult,
-        SharedBundleRollBackInfo &rollbackInfo, const InstallParam &installParam);
-
-    bool TryInstallSharedBundleOnly(std::vector<std::string> &bundlePaths,
-        std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result, const InstallParam &installParam);
-
-    ErrCode ExtractSharedPackages(InnerBundleInfo &newInfo, const std::string &bundlePath,
-        std::vector<std::string> &newDirs);
-
-    ErrCode MkdirIfNotExist(const std::string &dir, std::vector<std::string> &newDirs);
 
     /**
      * @brief The real procedure function for uninstall a bundle.
@@ -380,11 +364,11 @@ private:
     /**
      * @brief To check dependency whether or not exists.
      * @param infos Indicates all innerBundleInfo for all haps need to be installed.
-     * @param hsps Indicates all hsps for all haps need to be installed, grouped by bundle name
+     * @param sharedBundleInstaller Cross-app shared bundle installer
      * @return Returns ERR_OK if haps checking successfully; returns error code otherwise.
      */
     ErrCode CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
-        std::unordered_map<std::string, FilesParseResult> &hsps);
+        const SharedBundleInstaller &sharedBundleInstaller);
 
     /**
      * @brief To check the hap hash param.
@@ -402,7 +386,7 @@ private:
      */
     ErrCode CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
-    ErrCode CheckSharedPackageLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos);
     /**
      * @brief To check native file in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.

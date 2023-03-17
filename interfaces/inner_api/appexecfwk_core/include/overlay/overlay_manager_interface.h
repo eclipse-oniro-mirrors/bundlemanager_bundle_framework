@@ -41,6 +41,24 @@ public:
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
+    }
+
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
         std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
@@ -60,18 +78,22 @@ public:
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
 
-    virtual ErrCode VerifySystemApi()
+    virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
-    
+
     enum Message : uint32_t {
         GET_ALL_OVERLAY_MODULE_INFO = 0,
-        GET_OVERLAY_MODULE_INFO = 1,
-        GET_OVERLAY_BUNDLE_INFO_FOR_TARGET = 2,
-        GET_OVERLAY_MODULE_INFO_FOR_TARGET = 3,
-        SET_OVERLAY_ENABLED = 4,
-        VERIFY_SYSTEM_APP = 5,
+        GET_OVERLAY_MODULE_INFO_BY_NAME = 1,
+        GET_OVERLAY_MODULE_INFO = 2,
+        GET_TARGET_OVERLAY_MODULE_INFOS = 3,
+        GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = 4,
+        GET_OVERLAY_BUNDLE_INFO_FOR_TARGET = 5,
+        GET_OVERLAY_MODULE_INFO_FOR_TARGET = 6,
+        SET_OVERLAY_ENABLED = 7,
+        SET_OVERLAY_ENABLED_FOR_SELF = 8,
     };
 };
 } // AppExecFwk

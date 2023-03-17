@@ -38,7 +38,6 @@
 #include "common_event_data.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
-#include "module_usage_record.h"
 #include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -793,18 +792,17 @@ public:
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
         std::vector<Metadata> &provisionMetadatas) const;
 
-    ErrCode GetBaseSharedPackageInfos(const std::string &bundleName,
-        int32_t userId, std::vector<BaseSharedPackageInfo> &baseSharedPackageInfos) const;
+    ErrCode GetBaseSharedBundleInfos(const std::string &bundleName,
+        std::vector<BaseSharedBundleInfo> &baseSharedBundleInfos) const;
 
-    bool GetBaseSharedPackageInfo(const Dependency &dependency, int32_t userId,
-        BaseSharedPackageInfo &baseSharedPackageInfo) const;
+    bool GetBaseSharedBundleInfo(const Dependency &dependency, BaseSharedBundleInfo &baseSharedBundleInfo) const;
 
     ErrCode GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sharedBundles) const;
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, const std::string &moduleName,
         std::vector<SharedBundleInfo> &sharedBundles);
 
-    bool DeleteSharedPackage(const std::string &bundleName);
+    bool DeleteSharedBundleInfo(const std::string &bundleName);
 
     ErrCode GetSharedBundleInfoBySelf(const std::string &bundleName, SharedBundleInfo &sharedBundleInfo);
 
@@ -813,6 +811,8 @@ public:
 
     bool CheckHspVersionIsRelied(int32_t versionCode, const InnerBundleInfo &info) const;
     bool CheckHspBundleIsRelied(const std::string &hspBundleName) const;
+
+    ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
 
 private:
     /**

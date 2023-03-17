@@ -70,14 +70,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -218,14 +210,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -336,15 +320,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-
   deps = []
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -444,15 +420,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-
   deps = []
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -559,15 +527,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-
   deps = []
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

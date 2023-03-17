@@ -60,7 +60,7 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
 
 int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("ServiceRouterMgrStub handle query service infos");
+    APP_LOGD("ServiceRouterMgrStub handle query service infos");
     if (!VerifySystemApp()) {
         APP_LOGE("verify system app failed");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
@@ -77,7 +77,7 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
     ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());
     std::vector<ServiceInfo> infos;
     int ret = QueryServiceInfos(*want, type, infos);
-    if (!reply.WriteBool(ret == ERR_OK)) {
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -92,7 +92,11 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
 
 int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("ServiceRouterMgrStub handle query service infos with muti param");
+    APP_LOGD("ServiceRouterMgrStub handle query purpose infos");
+    if (!VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
     Want *want = data.ReadParcelable<Want>();
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<want> failed");
@@ -101,7 +105,7 @@ int ServiceRouterMgrStub::HandleQueryPurposeInfos(MessageParcel &data, MessagePa
     std::string purposeName = data.ReadString();
     std::vector<PurposeInfo> infos;
     int ret = QueryPurposeInfos(*want, purposeName, infos);
-    if (!reply.WriteBool(ret == ERR_OK)) {
+    if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -138,7 +142,6 @@ bool ServiceRouterMgrStub::VerifySystemApp()
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL
         || IPCSkeleton::GetCallingUid() == Constants::ROOT_UID) {
         return true;
     }

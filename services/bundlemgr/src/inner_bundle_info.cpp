@@ -79,6 +79,7 @@ const std::string MODULE_HASH_VALUE = "hashValue";
 const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
+const std::string PARAM_SEPARATOR = "?";
 const std::string IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string INSTALL_MARK = "installMark";
 const char WILDCARD = '*';
@@ -119,9 +120,10 @@ const std::string MODULE_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string MODULE_PRELOADS = "preloads";
 const std::string HAS_ATOMIC_SERVICE_CONFIG = "hasAtomicServiceConfig";
 const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
-const std::string INNER_SHARED_PACKAGE_MODULE_INFO = "innerSharedPackageModuleInfos";
+const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
+const std::string MODULE_VERSION_NAME = "versionName";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -270,6 +272,15 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
 
+std::string Skill::GetOptParamUri(const std::string &uriString) const
+{
+    std::size_t pos = uriString.rfind(PARAM_SEPARATOR);
+    if (pos == std::string::npos) {
+        return uriString;
+    }
+    return uriString.substr(0, pos);
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (skillUri.scheme.empty()) {
@@ -284,6 +295,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 4.scheme://
         return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
     }
+    std::string optParamUri = GetOptParamUri(uriString);
     std::string skillUriString;
     skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
     if (!skillUri.port.empty()) {
@@ -300,9 +312,9 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 1.scheme://host
         // 2.scheme://host/path
         // 3.scheme://host:port     scheme://host:port/path
-        bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
+        bool ret = (optParamUri == skillUriString || StartsWith(optParamUri, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(optParamUri, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -312,7 +324,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // path match
         std::string pathUri(skillUriString);
         pathUri.append(skillUri.path);
-        if (uriString == pathUri) {
+        if (optParamUri == pathUri) {
             return true;
         }
     }
@@ -320,7 +332,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathStartWith match
         std::string pathStartWithUri(skillUriString);
         pathStartWithUri.append(skillUri.pathStartWith);
-        if (StartsWith(uriString, pathStartWithUri)) {
+        if (StartsWith(optParamUri, pathStartWithUri)) {
             return true;
         }
     }
@@ -330,7 +342,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         pathRegexUri.append(skillUri.pathRegex);
         try {
             std::regex regex(pathRegexUri);
-            if (regex_match(uriString, regex)) {
+            if (regex_match(optParamUri, regex)) {
                 return true;
             }
         } catch(...) {
@@ -401,7 +413,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->currentPackage_ = info.currentPackage_;
     this->onlyCreateBundleUser_ = info.onlyCreateBundleUser_;
     this->innerModuleInfos_ = info.innerModuleInfos_;
-    this->innerSharedPackageModuleInfos_ = info.innerSharedPackageModuleInfos_;
+    this->innerSharedModuleInfos_ = info.innerSharedModuleInfos_;
     this->formInfos_ = info.formInfos_;
     this->commonEvents_ = info.commonEvents_;
     this->shortcutInfos_ = info.shortcutInfos_;
@@ -533,7 +545,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
         {MODULE_PRELOADS, info.preloads},
         {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
-        {MODULE_VERSION_CODE, info.versionCode}
+        {MODULE_VERSION_CODE, info.versionCode},
+        {MODULE_VERSION_NAME, info.versionName},
     };
 }
 
@@ -586,7 +599,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BASE_BUNDLE_INFO] = *baseBundleInfo_;
     jsonObject[BASE_ABILITY_INFO] = baseAbilityInfos_;
     jsonObject[INNER_MODULE_INFO] = innerModuleInfos_;
-    jsonObject[INNER_SHARED_PACKAGE_MODULE_INFO] = innerSharedPackageModuleInfos_;
+    jsonObject[INNER_SHARED_MODULE_INFO] = innerSharedModuleInfos_;
     jsonObject[SKILL_INFOS] = skillInfos_;
     jsonObject[USER_ID] = userId_;
     jsonObject[APP_FEATURE] = appFeature_;
@@ -1031,6 +1044,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_VERSION_NAME,
+        info.versionName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1420,10 +1441,10 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<InnerModuleInfo>>>(jsonObject,
         jsonObjectEnd,
-        INNER_SHARED_PACKAGE_MODULE_INFO,
-        innerSharedPackageModuleInfos_,
+        INNER_SHARED_MODULE_INFO,
+        innerSharedModuleInfos_,
         JsonType::OBJECT,
-        true,
+        false,
         ProfileReader::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
@@ -2021,72 +2042,72 @@ void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
     AddModuleCommonEvent(newInfo.commonEvents_);
 }
 
-bool InnerBundleInfo::GetMaxVerBaseSharedPackageInfo(const std::string &moduleName,
-    BaseSharedPackageInfo &baseSharedPackageInfo) const
+bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
+    BaseSharedBundleInfo &baseSharedBundleInfo) const
 {
-    auto it = innerSharedPackageModuleInfos_.find(moduleName);
-    if (it == innerSharedPackageModuleInfos_.end()) {
-        APP_LOGE("The shared library module(%{public}s) infomation does not exist", moduleName.c_str());
+    auto it = innerSharedModuleInfos_.find(moduleName);
+    if (it == innerSharedModuleInfos_.end()) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
         return false;
     }
-    auto sharedPackageModuleInfoVector = it->second;
-    if (sharedPackageModuleInfoVector.empty()) {
-        APP_LOGE("No version exists for the shared library module(%{public}s)", moduleName.c_str());
+    auto sharedModuleInfoVector = it->second;
+    if (sharedModuleInfoVector.empty()) {
+        APP_LOGE("No version exists for the shared module(%{public}s)", moduleName.c_str());
         return false;
     }
-    InnerModuleInfo innerModuleInfo = sharedPackageModuleInfoVector.front();
+    InnerModuleInfo innerModuleInfo = sharedModuleInfoVector.front();
     if (innerModuleInfo.compatiblePolicy != CompatiblePolicy::BACK_COMPATIBLE &&
         innerModuleInfo.compatiblePolicy != CompatiblePolicy::PRECISE_MATCH) {
-        APP_LOGE("getMaxVerBaseSharedPackageInfo failed, compatiblePolicy is invalid!");
+        APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, compatiblePolicy is invalid!");
         return false;
     }
-    baseSharedPackageInfo.bundleName = baseBundleInfo_->name;
-    baseSharedPackageInfo.moduleName = innerModuleInfo.moduleName;
-    baseSharedPackageInfo.versionCode = innerModuleInfo.versionCode;
-    baseSharedPackageInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
+    baseSharedBundleInfo.bundleName = baseBundleInfo_->name;
+    baseSharedBundleInfo.moduleName = innerModuleInfo.moduleName;
+    baseSharedBundleInfo.versionCode = innerModuleInfo.versionCode;
+    baseSharedBundleInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
     return true;
 }
 
-bool InnerBundleInfo::GetBaseSharedPackageInfo(const std::string &moduleName, uint32_t versionCode,
-    BaseSharedPackageInfo &baseSharedPackageInfo) const
+bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uint32_t versionCode,
+    BaseSharedBundleInfo &baseSharedBundleInfo) const
 {
-    auto it = innerSharedPackageModuleInfos_.find(moduleName);
-    if (it == innerSharedPackageModuleInfos_.end()) {
-        APP_LOGE("The shared library module(%{public}s) infomation does not exist", moduleName.c_str());
+    auto it = innerSharedModuleInfos_.find(moduleName);
+    if (it == innerSharedModuleInfos_.end()) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
         return false;
     }
-    auto sharedPackageModuleInfoVector = it->second;
-    if (sharedPackageModuleInfoVector.empty()) {
-        APP_LOGE("No version exists for the shared library module(%{public}s)", moduleName.c_str());
+    auto sharedModuleInfoVector = it->second;
+    if (sharedModuleInfoVector.empty()) {
+        APP_LOGE("No version exists for the shared module(%{public}s)", moduleName.c_str());
         return false;
     }
-    for (const auto &item : sharedPackageModuleInfoVector) {
+    for (const auto &item : sharedModuleInfoVector) {
         if (item.compatiblePolicy != CompatiblePolicy::BACK_COMPATIBLE &&
             item.compatiblePolicy != CompatiblePolicy::PRECISE_MATCH) {
-            APP_LOGE("getBaseSharedPackageInfo failed, compatiblePolicy is invalid!");
+            APP_LOGE("GetBaseSharedBundleInfo failed, compatiblePolicy is invalid!");
             return false;
         }
         if (item.versionCode == versionCode) {
-            baseSharedPackageInfo.bundleName = baseBundleInfo_->name;
-            baseSharedPackageInfo.moduleName = item.moduleName;
-            baseSharedPackageInfo.versionCode = item.versionCode;
-            baseSharedPackageInfo.nativeLibraryPath = item.nativeLibraryPath;
+            baseSharedBundleInfo.bundleName = baseBundleInfo_->name;
+            baseSharedBundleInfo.moduleName = item.moduleName;
+            baseSharedBundleInfo.versionCode = item.versionCode;
+            baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
             return true;
         }
     }
-    APP_LOGE("getBaseSharedPackageInfo failed, the version(%{public}d) is not exists for this module(%{public}s)",
+    APP_LOGE("GetBaseSharedBundleInfo failed, the version(%{public}d) is not exists for this module(%{public}s)",
         versionCode, moduleName.c_str());
     return false;
 }
 
-void InnerBundleInfo::InsertInnerSharedPackageModuleInfo(const std::string &moduleName,
+void InnerBundleInfo::InsertInnerSharedModuleInfo(const std::string &moduleName,
     const InnerModuleInfo &innerModuleInfo)
 {
-    auto iterator = innerSharedPackageModuleInfos_.find(moduleName);
-    if (iterator != innerSharedPackageModuleInfos_.end()) {
+    auto iterator = innerSharedModuleInfos_.find(moduleName);
+    if (iterator != innerSharedModuleInfos_.end()) {
         auto innerModuleInfoVector = iterator->second;
         bool insertFlag = false;
-        for (int i = 0; i < innerModuleInfoVector.size(); i++) {
+        for (unsigned long i = 0; i < innerModuleInfoVector.size(); i++) {
             if (innerModuleInfo.versionCode == innerModuleInfoVector.at(i).versionCode) {
                 // if the inserted versionCode same as the existing one, replace old innerModuleInfo.
                 innerModuleInfoVector.at(i) = innerModuleInfo;
@@ -2105,19 +2126,19 @@ void InnerBundleInfo::InsertInnerSharedPackageModuleInfo(const std::string &modu
             // insert innerModuleInfo in last location.
             innerModuleInfoVector.emplace(innerModuleInfoVector.end(), innerModuleInfo);
         }
-        innerSharedPackageModuleInfos_[moduleName] = innerModuleInfoVector;
+        innerSharedModuleInfos_[moduleName] = innerModuleInfoVector;
     } else {
         std::vector<InnerModuleInfo> newInnerModuleInfoVector;
         newInnerModuleInfoVector.emplace_back(innerModuleInfo);
-        innerSharedPackageModuleInfos_.try_emplace(moduleName, newInnerModuleInfoVector);
+        innerSharedModuleInfos_.try_emplace(moduleName, newInnerModuleInfoVector);
     }
 }
 
-void InnerBundleInfo::SetSharedPackageModuleNativeLibraryPath(const std::string &nativeLibraryPath)
+void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath)
 {
-    auto iterator = innerSharedPackageModuleInfos_.find(currentPackage_);
-    if (iterator == innerSharedPackageModuleInfos_.end()) {
-        APP_LOGE("The shared library module(%{public}s) infomation does not exist", currentPackage_.c_str());
+    auto iterator = innerSharedModuleInfos_.find(currentPackage_);
+    if (iterator == innerSharedModuleInfos_.end()) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
         return;
     }
     auto innerModuleInfoVector = iterator->second;
@@ -2127,7 +2148,7 @@ void InnerBundleInfo::SetSharedPackageModuleNativeLibraryPath(const std::string 
             break;
         }
     }
-    innerSharedPackageModuleInfos_[currentPackage_] = innerModuleInfoVector;
+    innerSharedModuleInfos_[currentPackage_] = innerModuleInfoVector;
 }
 
 bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const
@@ -2135,11 +2156,12 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
     sharedBundleInfo.name = GetBundleName();
     sharedBundleInfo.compatiblePolicy = GetBaseApplicationInfo().compatiblePolicy;
     std::vector<SharedModuleInfo> sharedModuleInfos;
-    for (const auto &infoVector : innerSharedPackageModuleInfos_) {
+    for (const auto &infoVector : innerSharedModuleInfos_) {
         for (const auto &info : infoVector.second) {
             SharedModuleInfo sharedModuleInfo;
             sharedModuleInfo.name = info.name;
             sharedModuleInfo.versionCode = info.versionCode;
+            sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
@@ -2156,7 +2178,39 @@ bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
         dependencies = innerModuleInfos_.at(moduleName).dependencies;
         return true;
     }
+    APP_LOGE("GetSharedDependencies can not find module %{public}s", moduleName.c_str());
     return false;
+}
+
+bool InnerBundleInfo::GetAllSharedDependencies(const std::string &moduleName,
+    std::vector<Dependency> &dependencies) const
+{
+    if (!GetSharedDependencies(moduleName, dependencies)) {
+        return false;
+    }
+    std::deque<Dependency> dependenciesDeque;
+    std::copy(dependencies.begin(), dependencies.end(), std::back_inserter(dependenciesDeque));
+    dependencies.clear();
+    while (!dependenciesDeque.empty()) {
+        bool isAdd = true;
+        Dependency itemDependency = dependenciesDeque.front();
+        dependenciesDeque.pop_front();
+        for (const auto &item : dependencies) {
+            if (item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
+                item.versionCode == itemDependency.versionCode) {
+                isAdd = false;
+                break;
+            }
+        }
+        if (isAdd) {
+            dependencies.push_back(itemDependency);
+            std::vector<Dependency> tempDependencies;
+            if (GetSharedDependencies(itemDependency.moduleName, tempDependencies)) {
+                std::copy(tempDependencies.begin(), tempDependencies.end(), std::back_inserter(dependenciesDeque));
+            }
+        }
+    }
+    return true;
 }
 
 void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
@@ -2453,6 +2507,14 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
     return ERR_OK;
 }
 
+bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const
+{
+    bundleInfo = *baseBundleInfo_;
+    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
+    bundleInfo.applicationInfo = *baseApplicationInfo_;
+    return true;
+}
+
 void InnerBundleInfo::ProcessBundleFlags(
     int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
@@ -2476,7 +2538,7 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
@@ -3633,7 +3695,7 @@ void InnerBundleInfo::ResetApplyQuickFixFrequency()
 std::vector<uint32_t> InnerBundleInfo::GetAllHspVersion() const
 {
     std::vector<uint32_t> versionCodes;
-    for (const auto &[moduleName, modules] : innerSharedPackageModuleInfos_) {
+    for (const auto &[moduleName, modules] : innerSharedModuleInfos_) {
         for (const auto &module : modules) {
             if (std::find(versionCodes.begin(), versionCodes.end(), module.versionCode) == versionCodes.end()) {
                 versionCodes.emplace_back(module.versionCode);
@@ -3645,10 +3707,10 @@ std::vector<uint32_t> InnerBundleInfo::GetAllHspVersion() const
 
 void InnerBundleInfo::DeleteHspModuleByVersion(int32_t versionCode)
 {
-    for (auto modulesIt = innerSharedPackageModuleInfos_.begin(); modulesIt != innerSharedPackageModuleInfos_.end();) {
+    for (auto modulesIt = innerSharedModuleInfos_.begin(); modulesIt != innerSharedModuleInfos_.end();) {
         if (modulesIt->second.size() == SINGLE_HSP_VERSION &&
             modulesIt->second.front().versionCode == static_cast<uint32_t>(versionCode)) {
-            modulesIt = innerSharedPackageModuleInfos_.erase(modulesIt);
+            modulesIt = innerSharedModuleInfos_.erase(modulesIt);
         } else {
             modulesIt->second.erase(
                 std::remove_if(modulesIt->second.begin(), modulesIt->second.end(),

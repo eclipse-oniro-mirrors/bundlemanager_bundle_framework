@@ -17,6 +17,7 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
 
 #include "ability_info.h"
+#include "app_provision_info.h"
 #include "base_cb_info.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
@@ -28,7 +29,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
-#include "shared_package/shared_bundle_info.h"
+#include "shared/shared_bundle_info.h"
 #include "want.h"
 
 namespace OHOS {
@@ -195,6 +196,13 @@ struct SharedBundleCallbackInfo : public BaseCallbackInfo {
     std::vector<SharedBundleInfo> sharedBundles;
 };
 
+struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
+    explicit AppProvisionInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    AppProvisionInfo appProvisionInfo;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -220,6 +228,7 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
@@ -232,7 +241,6 @@ void CreateLaunchTypeObject(napi_env env, napi_value value);
 void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
-void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value);
 void CreateCompatiblePolicyObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -32,6 +32,15 @@ public:
     virtual ErrCode GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
         OverlayModuleInfo &overlayModuleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual ErrCode GetOverlayModuleInfo(const std::string &moduleName, OverlayModuleInfo &overlayModuleInfo,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetTargetOverlayModuleInfo(const std::string &targetModuleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
+    virtual ErrCode GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
+        std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+
     virtual ErrCode GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
         std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
@@ -42,7 +51,8 @@ public:
     virtual ErrCode SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
         bool isEnabled, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
-    virtual ErrCode VerifySystemApi() override;
+    virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     template<typename T>

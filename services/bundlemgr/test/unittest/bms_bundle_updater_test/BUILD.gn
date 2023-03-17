@@ -72,14 +72,6 @@ ohos_unittest("BmsBundleUpdaterTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

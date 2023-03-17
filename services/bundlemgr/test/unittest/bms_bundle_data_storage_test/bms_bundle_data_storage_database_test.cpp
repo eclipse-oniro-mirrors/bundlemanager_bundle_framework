@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 
@@ -30,9 +32,672 @@
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::AppExecFwk::JsonConstants;
-
+namespace OHOS {
 namespace {
+const std::string BUNDLE_NAME{"com.ohos.test"};
+const std::string BUNDLE_NAME_WITH_USERID{"com.ohos.test_100"};
 const std::string NORMAL_BUNDLE_NAME{"com.example.test"};
+const std::string MODULE_NAME_TEST{"test"};
+const std::string MODULE_PACKGE{"com.example.test.entry"};
+const std::string MODULE_STATE_0{"test_0"};
+const std::string MODULE_STATE_1{"test_1"};
+const std::string MODULE_NAME{"entry"};
+const std::string TEST_PACK_AGE = "modulePackage";
+int32_t state = 0;
+int32_t versionCode = 0;
+int32_t FLAG = 0;
+// This field is used to ensure OTA upgrade and cannot be added randomly.
+const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
+{
+    "allowedAcls":[],
+    "appFeature":"hos_system_app",
+    "appIndex":0,
+    "appType":0,
+    "baseAbilityInfos":{
+        "com.example.myapplication.entry.MainAbility":{
+            "applicationInfo":{
+                "accessTokenId":0,
+                "accessible":false,
+                "allowCommonEvent":[
+
+                ],
+                "apiCompatibleVersion":0,
+                "apiReleaseType":"",
+                "apiTargetVersion":0,
+                "appDetailAbilityLibraryPath":"",
+                "appDistributionType":"none",
+                "appPrivilegeLevel":"normal",
+                "appProvisionType":"release",
+                "appQuickFix":{
+                    "bundleName":"",
+                    "deployedAppqfInfo":{
+                        "cpuAbi":"",
+                        "hqfInfos":[
+
+                        ],
+                        "nativeLibraryPath":"",
+                        "type":0,
+                        "versionCode":0,
+                        "versionName":""
+                    },
+                    "deployingAppqfInfo":{
+                        "cpuAbi":"",
+                        "hqfInfos":[
+
+                        ],
+                        "nativeLibraryPath":"",
+                        "type":0,
+                        "versionCode":0,
+                        "versionName":""
+                    },
+                    "versionCode":0,
+                    "versionName":""
+                },
+                "arkNativeFileAbi":"",
+                "arkNativeFilePath":"",
+                "associatedWakeUp":false,
+                "bundleName":"",
+                "cacheDir":"",
+                "codePath":"",
+                "cpuAbi":"",
+                "crowdtestDeadline":-1,
+                "dataBaseDir":"",
+                "dataDir":"",
+                "debug":false,
+                "description":"",
+                "descriptionId":0,
+                "descriptionResource":{
+                    "bundleName":"",
+                    "id":0,
+                    "moduleName":""
+                },
+                "deviceId":"",
+                "distributedNotificationEnabled":true,
+                "enabled":false,
+                "entityType":"unspecified",
+                "entryDir":"",
+                "entryModuleName":"",
+                "fingerprint":"",
+                "flags":0,
+                "formVisibleNotify":false,
+                "hideDesktopIcon":false,
+                "icon":"",
+                "iconId":0,
+                "iconPath":"",
+                "iconResource":{
+                    "bundleName":"",
+                    "id":0,
+                    "moduleName":""
+                },
+                "isCompressNativeLibs":true,
+                "isFreeInstallApp":false,
+                "isLauncherApp":false,
+                "isSystemApp":false,
+                "keepAlive":false,
+                "label":"",
+                "labelId":0,
+                "labelResource":{
+                    "bundleName":"",
+                    "id":0,
+                    "moduleName":""
+                },
+                "metaData":{
+
+                },
+                "metadata":{
+
+                },
+                "minCompatibleVersionCode":0,
+                "moduleInfos":[
+
+                ],
+                "moduleSourceDirs":[
+
+                ],
+                "multiProjects":false,
+                "name":"",
+                "nativeLibraryPath":"",
+                "needAppDetail":false,
+                "permissions":[
+
+                ],
+                "process":"",
+                "removable":true,
+                "runningResourcesApply":false,
+                "signatureKey":"",
+                "singleton":false,
+                "supportedModes":0,
+                "targetBundleList":[
+
+                ],
+                "uid":-1,
+                "userDataClearable":true,
+                "vendor":"",
+                "versionCode":0,
+                "versionName":""
+            },
+            "applicationName":"com.example.myapplication",
+            "backgroundModes":0,
+            "bundleName":"com.example.myapplication",
+            "codePath":"",
+            "compileMode":0,
+            "configChanges":[
+
+            ],
+            "continuable":false,
+            "defaultFormHeight":0,
+            "defaultFormWidth":0,
+            "description":"$string:MainAbility_desc",
+            "descriptionId":16777218,
+            "deviceCapabilities":[
+
+            ],
+            "deviceTypes":[
+                "default",
+                "tablet"
+            ],
+            "enabled":true,
+            "excludeFromMissions":false,
+            "extensionAbilityType":255,
+            "formEnabled":false,
+            "formEntity":0,
+            "hapPath":"/data/app/el1/bundle/public/com.example.myapplication/entry.hap",
+            "iconId":16777222,
+            "iconPath":"$media:icon",
+            "isLauncherAbility":false,
+            "isModuleJson":true,
+            "isNativeAbility":false,
+            "isStageBasedModel":true,
+            "kind":"",
+            "label":"$string:MainAbility_label",
+            "labelId":16777219,
+            "launchMode":0,
+            "maxWindowHeight":0,
+            "maxWindowRatio":0,
+            "maxWindowWidth":0,
+            "metaData":{
+                "customizeData":[
+
+                ]
+            },
+            "metadata":[
+
+            ],
+            "minFormHeight":0,
+            "minFormWidth":0,
+            "minWindowHeight":0,
+            "minWindowRatio":0,
+            "minWindowWidth":0,
+            "moduleName":"entry",
+            "name":"MainAbility",
+            "orientation":0,
+            "package":"entry",
+            "permissions":[
+
+            ],
+            "priority":0,
+            "process":"",
+            "readPermission":"",
+            "removeMissionAfterTerminate":false,
+            "resourcePath":"/data/app/el1/bundle/public/com.example.myapplication/entry/resources.index",
+            "srcEntrance":"./ets/MainAbility/MainAbility.ts",
+            "srcLanguage":"js",
+            "srcPath":"",
+            "startWindowBackground":"$color:white",
+            "startWindowBackgroundId":16777221,
+            "startWindowIcon":"$media:icon",
+            "startWindowIconId":16777222,
+            "supportPipMode":false,
+            "supportWindowMode":[
+                0,
+                1,
+                2
+            ],
+            "targetAbility":"",
+            "theme":"",
+            "type":1,
+            "uid":-1,
+            "uri":"",
+            "visible":true,
+            "writePermission":""
+        }
+    },
+    "baseApplicationInfo":{
+        "accessTokenId":0,
+        "accessible":false,
+        "allowCommonEvent":[
+
+        ],
+        "apiCompatibleVersion":9,
+        "apiReleaseType":"Beta3",
+        "apiTargetVersion":9,
+        "appDetailAbilityLibraryPath":"",
+        "appDistributionType":"os_integration",
+        "appPrivilegeLevel":"system_core",
+        "appProvisionType":"release",
+        "appQuickFix":{
+            "bundleName":"",
+            "deployedAppqfInfo":{
+                "cpuAbi":"",
+                "hqfInfos":[
+
+                ],
+                "nativeLibraryPath":"",
+                "type":0,
+                "versionCode":0,
+                "versionName":""
+            },
+            "deployingAppqfInfo":{
+                "cpuAbi":"",
+                "hqfInfos":[
+
+                ],
+                "nativeLibraryPath":"",
+                "type":0,
+                "versionCode":0,
+                "versionName":""
+            },
+            "versionCode":0,
+            "versionName":""
+        },
+        "arkNativeFileAbi":"",
+        "arkNativeFilePath":"",
+        "associatedWakeUp":false,
+        "bundleName":"com.example.myapplication",
+        "cacheDir":"",
+        "codePath":"/data/app/el1/bundle/public/com.example.myapplication",
+        "cpuAbi":"arm64-v8a",
+        "crowdtestDeadline":-1,
+        "dataBaseDir":"/data/app/el2/database/com.example.myapplication",
+        "dataDir":"",
+        "debug":true,
+        "description":"",
+        "descriptionId":0,
+        "descriptionResource":{
+            "bundleName":"com.example.myapplication",
+            "id":0,
+            "moduleName":"entry"
+        },
+        "deviceId":"PHONE-001",
+        "distributedNotificationEnabled":true,
+        "enabled":true,
+        "entityType":"unspecified",
+        "entryDir":"",
+        "entryModuleName":"",
+        "fingerprint":"8E93863FC32EE238060BF69A9B37E2608FFFB21F93C862DD511CBAC9F30024B5",
+        "flags":0,
+        "formVisibleNotify":false,
+        "hideDesktopIcon":false,
+        "icon":"",
+        "iconId":16777217,
+        "iconPath":"$media:app_icon",
+        "iconResource":{
+            "bundleName":"com.example.myapplication",
+            "id":16777217,
+            "moduleName":"entry"
+        },
+        "isCompressNativeLibs":true,
+        "isFreeInstallApp":false,
+        "isLauncherApp":false,
+        "isSystemApp":true,
+        "keepAlive":false,
+        "label":"$string:app_name",
+        "labelId":16777216,
+        "labelResource":{
+            "bundleName":"com.example.myapplication",
+            "id":16777216,
+            "moduleName":"entry"
+        },
+        "metaData":{},
+        "metadata":{},
+        "minCompatibleVersionCode":1000000,
+        "moduleInfos":[],
+        "moduleSourceDirs":[],
+        "multiProjects":false,
+        "name":"com.example.myapplication",
+        "nativeLibraryPath":"",
+        "needAppDetail":false,
+        "permissions":[],
+        "process":"com.example.myapplication",
+        "removable":true,
+        "runningResourcesApply":false,
+        "signatureKey":"",
+        "singleton":false,
+        "supportedModes":0,
+        "targetBundleList":[],
+        "uid":-1,
+        "userDataClearable":true,
+        "vendor":"example",
+        "versionCode":1000000,
+        "versionName":"1.0.0"
+    },
+    "baseBundleInfo":{
+        "abilityInfos":[],
+        "appId":"com.example.myapplication_BNtg4JBClbl92Rgc3jm"
+            "/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
+        "appIndex":0,
+        "applicationInfo":{
+            "accessTokenId":0,
+            "accessible":false,
+            "allowCommonEvent":[
+
+            ],
+            "apiCompatibleVersion":0,
+            "apiReleaseType":"",
+            "apiTargetVersion":0,
+            "appDetailAbilityLibraryPath":"",
+            "appDistributionType":"none",
+            "appPrivilegeLevel":"normal",
+            "appProvisionType":"release",
+            "appQuickFix":{
+                "bundleName":"",
+                "deployedAppqfInfo":{
+                    "cpuAbi":"",
+                    "hqfInfos":[
+
+                    ],
+                    "nativeLibraryPath":"",
+                    "type":0,
+                    "versionCode":0,
+                    "versionName":""
+                },
+                "deployingAppqfInfo":{
+                    "cpuAbi":"",
+                    "hqfInfos":[
+
+                    ],
+                    "nativeLibraryPath":"",
+                    "type":0,
+                    "versionCode":0,
+                    "versionName":""
+                },
+                "versionCode":0,
+                "versionName":""
+            },
+            "arkNativeFileAbi":"",
+            "arkNativeFilePath":"",
+            "associatedWakeUp":false,
+            "bundleName":"",
+            "cacheDir":"",
+            "codePath":"",
+            "cpuAbi":"",
+            "crowdtestDeadline":-1,
+            "dataBaseDir":"",
+            "dataDir":"",
+            "debug":false,
+            "description":"",
+            "descriptionId":0,
+            "descriptionResource":{
+                "bundleName":"",
+                "id":0,
+                "moduleName":""
+            },
+            "deviceId":"",
+            "distributedNotificationEnabled":true,
+            "enabled":false,
+            "entityType":"unspecified",
+            "entryDir":"",
+            "entryModuleName":"",
+            "fingerprint":"",
+            "flags":0,
+            "formVisibleNotify":false,
+            "hideDesktopIcon":false,
+            "icon":"",
+            "iconId":0,
+            "iconPath":"",
+            "iconResource":{
+                "bundleName":"",
+                "id":0,
+                "moduleName":""
+            },
+            "isCompressNativeLibs":true,
+            "isFreeInstallApp":false,
+            "isLauncherApp":false,
+            "isSystemApp":false,
+            "keepAlive":false,
+            "label":"",
+            "labelId":0,
+            "labelResource":{
+                "bundleName":"",
+                "id":0,
+                "moduleName":""
+            },
+            "metaData":{},
+            "metadata":{},
+            "minCompatibleVersionCode":0,
+            "moduleInfos":[],
+            "moduleSourceDirs":[],
+            "multiProjects":false,
+            "name":"",
+            "nativeLibraryPath":"",
+            "needAppDetail":false,
+            "permissions":[],
+            "process":"",
+            "removable":true,
+            "runningResourcesApply":false,
+            "signatureKey":"",
+            "singleton":false,
+            "supportedModes":0,
+            "targetBundleList":[],
+            "uid":-1,
+            "userDataClearable":true,
+            "vendor":"",
+            "versionCode":0,
+            "versionName":""
+        },
+        "compatibleVersion":9,
+        "cpuAbi":"",
+        "defPermissions":[],
+        "description":"",
+        "entryInstallationFree":false,
+        "entryModuleName":"entry",
+        "extensionAbilityInfo":[],
+        "gid":-1,
+        "hapModuleInfos":[
+
+        ],
+        "hapModuleNames":[],
+        "installTime":0,
+        "isDifferentName":false,
+        "isKeepAlive":false,
+        "isNativeApp":false,
+        "isPreInstallApp":false,
+        "jointUserId":"",
+        "label":"",
+        "mainEntry":"entry",
+        "maxSdkVersion":-1,
+        "minCompatibleVersionCode":1000000,
+        "minSdkVersion":-1,
+        "moduleDirs":[],
+        "moduleNames":[],
+        "modulePublicDirs":[],
+        "moduleResPaths":[],
+        "name":"com.example.myapplication",
+        "releaseType":"Beta3",
+        "reqPermissionDetails":[],
+        "reqPermissionStates":[],
+        "reqPermissions":[],
+        "seInfo":"",
+        "signatureInfo":{
+            "appId":"",
+            "fingerprint":""
+        },
+        "singleton":false,
+        "targetVersion":9,
+        "uid":-1,
+        "updateTime":0,
+        "vendor":"example",
+        "versionCode":1000000,
+        "versionName":"1.0.0"
+    },
+    "baseDataDir":"",
+    "baseExtensionInfos":{},
+    "bundlePackInfo":{
+        "packages":[
+            {
+                "deliveryWithInstall":true,
+                "deviceType":[
+                    "default",
+                    "tablet"
+                ],
+                "moduleType":"entry",
+                "name":"entry-default"
+            }
+        ],
+        "summary":{
+            "app":{
+                "bundleName":"com.example.myapplication",
+                "version":{
+                    "code":1000000,
+                    "minCompatibleVersionCode":0,
+                    "name":"1.0.0"
+                }
+            },
+            "modules":[
+                {
+                    "abilities":[
+                        {
+                            "forms":[],
+                            "label":"$string:MainAbility_label",
+                            "name":"MainAbility",
+                            "visible":true
+                        }
+                    ],
+                    "apiVersion":{
+                        "compatible":9,
+                        "releaseType":"Beta3",
+                        "target":9
+                    },
+                    "deviceType":[
+                        "default",
+                        "tablet"
+                    ],
+                    "distro":{
+                        "deliveryWithInstall":true,
+                        "installationFree":false,
+                        "moduleName":"entry",
+                        "moduleType":"entry"
+                    },
+                    "extensionAbilities":[],
+                    "mainAbility":"MainAbility"
+                }
+            ]
+        }
+    },
+    "bundleStatus":1,
+    "commonEvents":{},
+    "disposedStatus":0,
+    "extensionSkillInfos":{},
+    "formInfos":{},
+    "hqfInfos":[],
+    "innerBundleUserInfos":{
+        "com.example.myapplication_100":{
+            "accessTokenId":537285595,
+            "bundleName":"com.example.myapplication",
+            "bundleUserInfo":{
+                "disabledAbilities":[],
+                "enabled":true,
+                "userId":100
+            },
+            "gids":[
+                20010065
+            ],
+            "installTime":1678677771,
+            "uid":20010065,
+            "updateTime":1678677771
+        }
+    },
+    "innerModuleInfos":{
+        "entry":{
+            "abilityKeys":[
+                "com.example.myapplication.entry.MainAbility"
+            ],
+            "colorMode":-1,
+            "compileMode":"jsbundle",
+            "cpuAbi":"",
+            "definePermissions":[],
+            "dependencies":[],
+            "description":"$string:entry_desc",
+            "descriptionId":16777220,
+            "deviceTypes":[
+                "default",
+                "tablet"
+            ],
+            "distro":{
+                "deliveryWithInstall":true,
+                "installationFree":false,
+                "moduleName":"entry",
+                "moduleType":"entry"
+            },
+            "entryAbilityKey":"com.example.myapplication.entry.MainAbility",
+            "extensionKeys":[],
+            "extensionSkillKeys":[],
+            "hapPath":"/data/app/el1/bundle/public/com.example.myapplication/entry.hap",
+            "hashValue":"",
+            "icon":"$media:icon",
+            "iconId":16777222,
+            "installationFree":false,
+            "isEntry":true,
+            "isLibIsolated":false,
+            "isModuleJson":true,
+            "isRemovable":{},
+            "isStageBasedModel":true,
+            "label":"$string:MainAbility_label",
+            "labelId":16777219,
+            "mainAbility":"MainAbility",
+            "metaData":{
+                "customizeData":[]
+            },
+            "metadata":[],
+            "moduleDataDir":"",
+            "moduleName":"entry",
+            "modulePackage":"entry",
+            "modulePath":"/data/app/el1/bundle/public/com.example.myapplication/entry",
+            "moduleResPath":"/data/app/el1/bundle/public/com.example.myapplication/entry/resources.index",
+            "name":"entry",
+            "nativeLibraryPath":"",
+            "pages":"$profile:main_pages",
+            "process":"com.example.myapplication",
+            "reqCapabilities":[],
+            "requestPermissions":[],
+            "skillKeys":[
+                "com.example.myapplication.entry.MainAbility"
+            ],
+            "srcEntrance":"./ets/Application/MyAbilityStage.ts",
+            "srcPath":"",
+            "uiSyntax":"hml",
+            "upgradeFlag":0,
+            "virtualMachine":"ark"
+        }
+    },
+    "installMark":{
+        "installMarkBundle":"com.example.myapplication",
+        "installMarkPackage":"entry",
+        "installMarkStatus":2
+    },
+    "isNewVersion":true,
+    "isSandboxApp":false,
+    "sandboxPersistentInfo":[
+    ],
+    "shortcutInfos":{
+    },
+    "skillInfos":{
+        "com.example.myapplication.entry.MainAbility":[
+            {
+                "actions":[
+                    "action.system.home"
+                ],
+                "entities":[
+                    "entity.system.home"
+                ],
+                "uris":[
+
+                ]
+            }
+        ]
+    },
+    "userId_":0
+})"_json;
 }  // namespace
 
 class BmsBundleDataStorageDatabaseTest : public testing::Test {
@@ -51,6 +716,8 @@ protected:
         ABILITY_INFO,
     };
     void CheckInvalidPropDeserialize(const nlohmann::json infoJson, const InfoType infoType) const;
+    void CheckOverlayModuleState(
+            const InnerBundleInfo &info, const std::string &moduleName, int32_t state) const;
 
 protected:
     nlohmann::json innerBundleInfoJson_ = R"(
@@ -307,6 +974,7 @@ protected:
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,
+                "bundleType": "app",
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
@@ -482,6 +1150,8 @@ protected:
             "commonEvents": {
             },
             "extensionSkillInfos_": {
+            },
+            "innerSharedModuleInfos": {
             },
             "formInfos": {
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": [
@@ -770,7 +1440,7 @@ protected:
             "uid": -1,
             "userId_": 100,
             "provisionMetadatas": {},
-            "innerSharedPackageModuleInfos": {}
+            "innerSharedBundleModuleInfos": {}
         }
     )"_json;
 
@@ -824,6 +1494,22 @@ void BmsBundleDataStorageDatabaseTest::CheckInvalidPropDeserialize(
     innerBundleInfoJson["baseBundleInfo"] = bundleInfoJson;
     InnerBundleInfo fromJsonInfo;
     EXPECT_FALSE(fromJsonInfo.FromJson(innerBundleInfoJson));
+}
+
+void BmsBundleDataStorageDatabaseTest::CheckOverlayModuleState(
+    const InnerBundleInfo &info, const std::string &moduleName, int32_t state) const
+{
+    for (auto &innerUserInfo : info.GetInnerBundleUserInfos()) {
+        auto &overlayStates = innerUserInfo.second.bundleUserInfo.overlayModulesState;
+        std::any_of(overlayStates.begin(), overlayStates.end(), [&moduleName, &state](auto &item) {
+            if (item.find(moduleName + Constants::FILE_UNDERLINE) == std::string::npos) {
+                EXPECT_FALSE(true);
+                return false;
+            }
+            EXPECT_EQ(item, MODULE_STATE_0);
+            return true;
+        });
+    }
 }
 
 void BmsBundleDataStorageDatabaseTest::SetUpTestCase()
@@ -1467,6 +2153,142 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | Smal
 }
 
 /**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test FindExtensionInfos
+ * @tc.desc: 1.Test the FindExtensionInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = "com.ohos.test";
+    auto ret = info.FindExtensionInfos();
+    EXPECT_EQ(ret, std::nullopt);
+
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.bundleName = bundleName;
+    info.InsertExtensionInfo("key", extensionInfo);
+    ret = info.FindExtensionInfos();
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test ProcessBundleWithHapModuleInfoFlag
+ * @tc.desc: 1.Test the ProcessBundleWithHapModuleInfoFlag of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.ProcessBundleWithHapModuleInfoFlag(FLAG, bundleInfo, Constants::START_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+
+    int32_t flag = 2;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = TEST_PACK_AGE;
+    hqfInfos.emplace_back(hqfInfo);
+    info.SetQuickFixHqfInfos(hqfInfos);
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    info.InsertInnerModuleInfo(TEST_PACK_AGE, moduleInfo);
+    info.ProcessBundleWithHapModuleInfoFlag(flag, bundleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2500
+ * @tc.name: Test GetBundleWithAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    info.GetBundleWithAbilitiesV9(FLAG, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = hapModuleInfo.moduleName;
+    abilityInfo.name = "";
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    int32_t flag = 4;
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), false);
+
+    abilityInfo.moduleName = BUNDLE_NAME;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    hapModuleInfo.moduleName = "entry1";
+    info.InsertAbilitiesInfo("key", abilityInfo);
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2600
+ * @tc.name: Test GetBundleWithExtensionAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithExtensionAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    std::string moduleName = "entry";
+    info.GetBundleWithExtensionAbilitiesV9(FLAG, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    ExtensionAbilityInfo extensionInfo;
+    int32_t flag = 8;
+    extensionInfo.moduleName = moduleName;
+    extensionInfo.enabled = false;
+    info.InsertExtensionInfo("key", extensionInfo);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    std::map<std::string, ExtensionAbilityInfo> extensionInfos;
+    extensionInfo.enabled = true;
+    hapModuleInfo.moduleName = extensionInfo.moduleName;
+    extensionInfos["baseExtensionInfos_"] = extensionInfo;
+    info.AddModuleExtensionInfos(extensionInfos);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2700
+ * @tc.name: Test GetRemovableModules
+ * @tc.desc: 1.Test the GetRemovableModules of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<std::string> moduleToDelete;
+    bool ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.installationFree = false;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    moduleInfo.installationFree = true;
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: Test_0500
  * @tc.name: Test Unmarshalling
  * @tc.desc: 1.Test the Unmarshalling of Parcel
@@ -1622,3 +2444,198 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetAccessTokenIdEx_0100, Function | S
     tokenIdEx = info.GetAccessTokenIdEx(userId);
     EXPECT_EQ(tokenIdEx, accessTokenIdEx.tokenIDEx);
 }
+
+/**
+ * @tc.number: GetMaxVerBaseSharedBundleInfoTest
+ * @tc.name: Test GetMaxVerBaseSharedBundleInfo
+ * @tc.desc: Test the GetMaxVerBaseSharedBundleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetMaxVerBaseSharedBundleInfoTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BaseSharedBundleInfo sharedBundleInfo;
+    bool ret = info.GetMaxVerBaseSharedBundleInfo(MODULE_NAME_TEST, sharedBundleInfo);
+    EXPECT_EQ(ret, false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    ret = info.GetMaxVerBaseSharedBundleInfo(MODULE_NAME_TEST, sharedBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InsertInnerSharedModuleInfo
+ * @tc.name: Test InsertInnerSharedModuleInfo
+ * @tc.desc: Test the InsertInnerSharedModuleInfo of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InsertInnerSharedModuleInfo, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.versionCode = Constants::ALL_VERSIONCODE;
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
+    std::vector<InnerModuleInfo> moduleInfos;
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
+    moduleInfos.emplace_back(innerModuleInfo);
+    info.innerSharedModuleInfos_[MODULE_NAME_TEST] = moduleInfos;
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
+    moduleInfos.clear();
+    InnerModuleInfo newInfo;
+    newInfo.versionCode = versionCode;
+    moduleInfos.emplace_back(newInfo);
+    info.InsertInnerSharedModuleInfo(MODULE_NAME_TEST, innerModuleInfo);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
+}
+
+/**
+ * @tc.number: SharedModuleNativeLibraryPathTest
+ * @tc.name: Test different nativeLibraryPath param
+ * @tc.desc: Test the SetSharedModuleNativeLibraryPath of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SharedModuleNativeLibraryPathTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetCurrentModulePackage(MODULE_PACKGE);
+    info.SetSharedModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), true);
+
+    std::vector<InnerModuleInfo> moduleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.versionCode = versionCode;
+    moduleInfos.emplace_back(innerModuleInfo);
+    info.InsertInnerModuleInfo(MODULE_PACKGE, innerModuleInfo);
+    info.innerSharedModuleInfos_[MODULE_PACKGE] = moduleInfos;
+    info.SetSharedModuleNativeLibraryPath(MODULE_PACKGE);
+    EXPECT_EQ(info.GetInnerSharedModuleInfos().empty(), false);
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0100
+ * @tc.name: Test different moduleName and state param
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state, Constants::START_USERID);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = Constants::START_USERID;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[MODULE_NAME] = userInfo;
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state, Constants::DEFAULT_USERID);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+}
+
+/**
+ * @tc.number: SetOverlayModuleState_0200
+ * @tc.name: Test different moduleName and state param
+ * @tc.desc: Test the SetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    info.overlayType_ = OverlayType::NON_OVERLAY_TYPE;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+}
+
+/**
+ * @tc.number: GetOverlayModuleStateTest
+ * @tc.name: Test use different param with GetOverlayModuleState
+ * @tc.desc: Test the GetOverlayModuleState of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, GetOverlayModuleStateTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    int userId = Constants::NOT_EXIST_USERID;
+    bool ret = info.GetOverlayModuleState("", userId, state);
+    EXPECT_EQ(ret, false);
+
+    userId = Constants::START_USERID;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    info.SetBaseApplicationInfo(applicationInfo);
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo oldInfo;
+    innerBundleUserInfos[MODULE_NAME] = oldInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, false);
+
+    InnerBundleUserInfo newInfo;
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, false);
+
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_1);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, true);
+
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: ClearOverlayModuleStatesTest
+ * @tc.name: Test use different param with ClearOverlayModuleStates
+ * @tc.desc: Test the ClearOverlayModuleStates of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, ClearOverlayModuleStatesTest, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo newInfo;
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
+    info.innerBundleUserInfos_ = innerBundleUserInfos;
+    bool ret =
+        info.innerBundleUserInfos_[MODULE_NAME_TEST].bundleUserInfo.overlayModulesState.empty();
+    EXPECT_EQ(ret, false);
+    info.ClearOverlayModuleStates(MODULE_NAME_TEST);
+    ret = info.innerBundleUserInfos_[MODULE_NAME_TEST].bundleUserInfo.overlayModulesState.empty();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: OTA_InnerBundleInfoJsonSerializer_0001
+ * @tc.name: save bundle installation information to persist storage
+ * @tc.desc: 1.system running normally
+ *           2.successfully deserialize InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, OTA_InnerBundleInfoJsonSerializer_0001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    // deserialize BundleInfo from json, test OTA
+    auto ret = innerBundleInfo.FromJson(INNER_BUNDLE_INFO_JSON_3_2);
+    EXPECT_EQ(ret, 0);
+}
+} // OHOS

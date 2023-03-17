@@ -34,7 +34,6 @@ constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
-const std::string HSP_VERSION_PREFIX = "v";
 constexpr const char* FILE_UNDERLINE = "_";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char FILE_SEPARATOR_CHAR = '/';
@@ -72,14 +71,6 @@ constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
-const std::vector<std::string> BUNDLE_DATA_DIR = {
-    "/cache",
-    "/files",
-    "/temp",
-    "/preferences",
-    "/haps"
-};
-
 constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
 constexpr const char* QUICK_FIX_MGR = "QuickFixMgr";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
@@ -248,8 +239,6 @@ constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
 constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
-constexpr const char* JOURNAL_MODE = "WAL";
-constexpr const char* SYNC_MODE = "MODE_OFF";
 const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
@@ -311,9 +300,6 @@ constexpr int32_t DEFAULT_OVERLAY_ENABLE_STATUS = 1;
 constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
-constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
-constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
-constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 

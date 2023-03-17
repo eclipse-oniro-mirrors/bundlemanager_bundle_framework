@@ -33,6 +33,15 @@ BundleMgrClient::~BundleMgrClient()
     APP_LOGI("destory BundleMgrClient");
 }
 
+ErrCode BundleMgrClient::GetNameForUid(const int uid, std::string &name)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return impl_->GetNameForUid(uid, name);
+}
+
 bool BundleMgrClient::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
     if (impl_ == nullptr) {

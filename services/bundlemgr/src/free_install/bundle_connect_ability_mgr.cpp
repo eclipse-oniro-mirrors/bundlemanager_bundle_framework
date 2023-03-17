@@ -230,7 +230,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
     return true;
 }
 
-void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
+bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 {
     APP_LOGD("BundleConnectAbilityMgr::ProcessPreload is called.");
     std::string bundleName = want.GetElement().GetBundleName();
@@ -241,17 +241,17 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo == nullptr) {
         APP_LOGE("targetAbilityInfo is nullptr");
-        return;
+        return false;
     }
     sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
     if (targetInfo == nullptr) {
         APP_LOGE("targetInfo is nullptr");
-        return;
+        return false;
     }
     sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
     if (targetExtSetting == nullptr) {
         APP_LOGE("targetExtSetting is nullptr");
-        return;
+        return false;
     }
     targetAbilityInfo->targetInfo = *targetInfo;
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
@@ -259,7 +259,7 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 
     if (!GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo)) {
         APP_LOGI("the module have no preload module.");
-        return;
+        return false;
     }
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
     targetAbilityInfo->targetInfo.bundleName = bundleName;
@@ -269,7 +269,11 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->targetInfo.callingUid = uid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     targetAbilityInfo->targetInfo.callingBundleNames.emplace_back(bundleName);
-    ProcessPreloadCheck(*targetAbilityInfo);
+    if (!ProcessPreloadCheck(*targetAbilityInfo)) {
+        APP_LOGE("ProcessPreloadCheck failed.");
+        return false;
+    }
+    return true;
 }
 
 bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
@@ -778,8 +782,7 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
         std::string value = wantParams.GetStringByType(info, typeId);
         extValues.emplace(it.first, value);
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("callingUid: %{public}d", callingUid);
+    auto callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
 
     targetAbilityInfo->targetExtSetting.extValues = extValues;
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
@@ -869,7 +872,6 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
         targetAbilityInfo->targetExtSetting = *targetExtSetting;
         targetAbilityInfo->version = DEFAULT_VERSION;
         this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-        targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
         if (targetAbilityInfo->targetInfo.moduleName.empty()) {
             targetAbilityInfo->targetInfo.moduleName = moduleName;
         }
@@ -974,7 +976,6 @@ bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-    targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1013,6 +1014,13 @@ bool BundleConnectAbilityMgr::SilentInstall(const Want &want, int32_t userId, co
     targetAbilityInfo->version = DEFAULT_VERSION;
     InnerBundleInfo innerBundleInfo;
     GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
+    auto callingUid = IPCSkeleton::GetCallingUid();
+    std::vector<std::string> callingBundleNames;
+    std::vector<std::string> callingAppids;
+    GetCallingInfo(userId, callingUid, callingBundleNames, callingAppids);
+    targetAbilityInfo->targetInfo.callingUid = callingUid;
+    targetAbilityInfo->targetInfo.callingBundleNames = callingBundleNames;
+    targetAbilityInfo->targetInfo.callingAppIds = callingAppids;
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1063,7 +1071,6 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-    targetAbilityInfo->targetInfo.callingUid = want.GetIntParam(PARAM_FREEINSTALL_UID, IPCSkeleton::GetCallingUid());
     if (targetAbilityInfo->targetInfo.moduleName.empty()) {
         auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
         for (const auto& info : baseAbilitiesInfo) {
