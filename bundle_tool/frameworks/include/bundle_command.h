@@ -148,6 +148,7 @@ const std::string HELP_MSG_DUMP_SHARED =
     "eg:bm dump-shared -n <bundle-name> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
+    "  -a, --all                              list all shared library name in system\n"
     "  -n, --bundle-name  <bundle-name>       dump shared library information by shared library bundleName\n";
 
 const std::string HELP_MSG_DUMP_SHARED_DEPENDENCIES =
@@ -235,6 +236,7 @@ private:
     std::string DumpDependentModuleNames(const std::string &bundleName, const std::string &moduleName) const;
     std::string DumpSharedDependencies(const std::string &bundleName, const std::string &moduleName) const;
     std::string DumpShared(const std::string &bundleName) const;
+    std::string DumpSharedAll() const;
 
     int32_t InstallOperation(const std::vector<std::string> &bundlePaths, InstallParam &installParam,
         int32_t waittingTime) const;
@@ -255,7 +257,7 @@ private:
         const std::string &targetModuleName, int32_t userId);
     std::string DumpTargetOverlayInfo(const std::string &bundleName, const std::string &moduleName, int32_t userId);
     ErrCode ParseSharedDependenciesCommand(int32_t option, std::string &bundleName, std::string &moduleName);
-    ErrCode ParseSharedCommand(int32_t option, std::string &bundleName);
+    ErrCode ParseSharedCommand(int32_t option, std::string &bundleName, bool &dumpSharedAll);
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
 };

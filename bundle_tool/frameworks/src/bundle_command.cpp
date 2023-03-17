@@ -130,10 +130,11 @@ const struct option LONG_OPTIONS_DUMP_SHARED_DEPENDENCIES[] = {
     {nullptr, 0, nullptr, 0},
 };
 
-const std::string SHORT_OPTIONS_DUMP_SHARED = "hn:";
+const std::string SHORT_OPTIONS_DUMP_SHARED = "hn:a";
 const struct option LONG_OPTIONS_DUMP_SHARED[] = {
     {"help", no_argument, nullptr, 'h'},
     {"bundle-name", required_argument, nullptr, 'n'},
+    {"all", no_argument, nullptr, 'a'},
     {nullptr, 0, nullptr, 0},
 };
 }  // namespace
@@ -2067,6 +2068,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
     int32_t result = OHOS::ERR_OK;
     int32_t counter = 0;
     std::string bundleName;
+    bool dumpSharedAll = false;
     while (true) {
         counter++;
         int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_DUMP_SHARED.c_str(),
@@ -2086,21 +2088,23 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
             }
             break;
         }
-        result = ParseSharedCommand(option, bundleName);
+        result = ParseSharedCommand(option, bundleName, dumpSharedAll);
         if (option == '?') {
             break;
         }
     }
-    if (result == OHOS::ERR_OK) {
+    if (result != OHOS::ERR_OK) {
+        resultReceiver_.append(HELP_MSG_DUMP_SHARED);
+    } else if (dumpSharedAll) {
+        std::string dumpResults = DumpSharedAll();
+        resultReceiver_.append(dumpResults);
+    } else {
         if ((resultReceiver_ == "") && (bundleName.size() == 0)) {
             // 'bm dump-shared -n ...' with no bundle name option
             resultReceiver_.append(HELP_MSG_NO_REMOVABLE_OPTION);
             result = OHOS::ERR_INVALID_VALUE;
+            return result;
         }
-    }
-    if (result != OHOS::ERR_OK) {
-        resultReceiver_.append(HELP_MSG_DUMP_SHARED);
-    } else {
         std::string dumpResults = DumpShared(bundleName);
         if (dumpResults.empty() || (dumpResults == "")) {
             dumpResults = HELP_MSG_DUMP_FAILED + "\n";
@@ -2110,7 +2114,7 @@ ErrCode BundleManagerShellCommand::RunAsDumpSharedCommand()
     return result;
 }
 
-ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::string &bundleName)
+ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::string &bundleName, bool &dumpSharedAll)
 {
     int32_t result = OHOS::ERR_OK;
     if (option == '?') {
@@ -2146,6 +2150,12 @@ ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::strin
                 bundleName = optarg;
                 break;
             }
+            case 'a': {
+                // 'bm dump-shared -a'
+                // 'bm dump-shared --all'
+                dumpSharedAll = true;
+                break;
+            }
             default: {
                 result = OHOS::ERR_INVALID_VALUE;
                 break;
@@ -2171,5 +2181,22 @@ std::string BundleManagerShellCommand::DumpShared(const std::string &bundleName)
     return sharedBundleInfoJson.dump(Constants::DUMP_INDENT);
 }
 
+std::string BundleManagerShellCommand::DumpSharedAll() const
+{
+    APP_LOGD("DumpSharedAll");
+    std::string dumpResults = "";
+    std::vector<SharedBundleInfo> sharedBundleInfos;
+    ErrCode ret = bundleMgrProxy_->GetAllSharedBundleInfo(sharedBundleInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("dump-shared all failed due to errcode %{public}d", ret);
+        return dumpResults;
+    }
+    for (const auto& item : sharedBundleInfos) {
+        dumpResults.append("\t");
+        dumpResults.append(item.name);
+        dumpResults.append("\n");
+    }
+    return dumpResults;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
