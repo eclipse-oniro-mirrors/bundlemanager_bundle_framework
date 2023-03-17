@@ -19,14 +19,47 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "service_info.h"
 #include "service_router_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+static napi_status SetEnumItem(napi_env env, napi_value object, const char* name, int32_t value)
+{
+    napi_status status;
+    napi_value itemValue;
+    napi_value itemName;
+
+    NAPI_CALL_BASE(env, status = napi_create_string_utf8(env, name, NAPI_AUTO_LENGTH, &itemName), status);
+    NAPI_CALL_BASE(env, status = napi_create_int32(env, value, &itemValue), status);
+    NAPI_CALL_BASE(env, status = napi_set_property(env, object, itemName, itemValue), status);
+    NAPI_CALL_BASE(env, status = napi_set_property(env, object, itemValue, itemName), status);
+    return napi_ok;
+}
+
+static napi_value InitExtServiceTypeObject(napi_env env)
+{
+    napi_value object;
+    NAPI_CALL(env, napi_create_object(env, &object));
+
+    NAPI_CALL(env, SetEnumItem(env, object, "SHARE", static_cast<int32_t>(ExtensionServiceType::SHARE)));
+    NAPI_CALL(env, SetEnumItem(env, object, "UNSPECIFIED", static_cast<int32_t>(ExtensionServiceType::UNSPECIFIED)));
+    return object;
+}
+
 static napi_value ServiceRouterExport(napi_env env, napi_value exports)
 {
+    napi_value extServiceType = InitExtServiceTypeObject(env);
+    if (extServiceType == nullptr) {
+        APP_LOGE("failed to create launch reason object");
+        return nullptr;
+    }
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("queryServiceInfos", QueryServiceInfos),
+        DECLARE_NAPI_PROPERTY("ExtensionServiceType", extServiceType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
