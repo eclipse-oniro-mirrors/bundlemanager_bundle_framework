@@ -127,6 +127,7 @@ public:
      * @return
      */
     virtual void OnStop() override;
+
 private:
     OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
     std::shared_ptr<DbmsDeviceManager> dbmsDeviceManager_;

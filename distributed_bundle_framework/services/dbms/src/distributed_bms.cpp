@@ -139,6 +139,7 @@ void DistributedBms::OnStop()
 void DistributedBms::Init()
 {
     APP_LOGI("DistributedBms: Init");
+    InitDeviceManager();
     DistributedDataStorage::GetInstance();
     if (distributedSub_ == nullptr) {
         EventFwk::MatchingSkills matchingSkills;
@@ -155,18 +156,15 @@ void DistributedBms::Init()
         APP_LOGW("get user id failed");
         return;
     }
-    InitDeviceManager();
     DistributedDataStorage::GetInstance()->UpdateDistributedData(userId);
 }
 
 void DistributedBms::InitDeviceManager()
 {
-#ifdef DEVICE_MANAGER_ENABLE
     if (dbmsDeviceManager_ == nullptr) {
         APP_LOGI("Create device manager");
         dbmsDeviceManager_ = std::make_shared<DbmsDeviceManager>();
     }
-#endif
 }
 
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> DistributedBms::GetBundleMgr()
@@ -194,7 +192,7 @@ int32_t DistributedBms::GetUdidByNetworkId(const std::string &networkId, std::st
 {
     if (dbmsDeviceManager_ == nullptr) {
         APP_LOGE("deviceManager_ is nullptr");
-        return -1;
+        return Constants::INVALID_UDID;
     }
     return dbmsDeviceManager_->GetUdidByNetworkId(networkId, udid);
 }

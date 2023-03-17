@@ -16,6 +16,7 @@
 #include "dbms_device_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "device_manager.h"
 #include "service_control.h"
 #include "system_ability_definition.h"
@@ -23,7 +24,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    const std::string BUNDLE_NAME = "ohos.appexefwk.appexefwk_standard"; //ohos.appexecfwk.IDistributedbms
+    const std::string DISTRIBUTED_BUNDLE_NAME = "distributed_bundle_framework";
     const std::string SERVICES_NAME = "d-bms";
 }
 
@@ -42,7 +43,7 @@ bool DbmsDeviceManager::InitDeviceManager()
 
     initCallback_ = std::make_shared<DeviceInitCallBack>();
     int32_t ret =
-        DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(BUNDLE_NAME, initCallback_);
+        DistributedHardware::DeviceManager::GetInstance().InitDeviceManager(DISTRIBUTED_BUNDLE_NAME, initCallback_);
     if (ret != 0) {
         APP_LOGE("init device manager failed, ret:%{public}d", ret);
         return false;
@@ -61,9 +62,10 @@ int32_t DbmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std:
 {
     APP_LOGI("GetUdidByNetworkId");
     if (!InitDeviceManager()) {
-        return -1;
+        return Constants::INVALID_UDID;
     }
-    return DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(BUNDLE_NAME, netWorkId, udid);
+    return DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(
+        DISTRIBUTED_BUNDLE_NAME, netWorkId, udid);
 }
 }
 }
