@@ -256,7 +256,7 @@ private:
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
     bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
 
-    sptr<AppExecFwk::IEcologicalRuleManager> GetEcologicalRuleMgr();
+    sptr<AppExecFwk::IEcologicalRuleManager> CheckEcologicalRuleMgr();
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
 
