@@ -71,6 +71,11 @@ const std::string HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceMod
 const std::string HAP_MODULE_INFO_PRELOADS = "preloads";
 const std::string PRELOAD_ITEM_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_VERSION_CODE = "versionCode";
+const std::string HAP_MODULE_INFO_PROXY_DATAS = "proxyDatas";
+const std::string PROXY_DATA_URI = "uri";
+const std::string PROXY_DATA_REQUIRED_READ_PERMISSION = "requiredReadPermission";
+const std::string PROXY_DATA_REQUIRED_WRITE_PERMISSION = "requiredWritePermission";
+const std::string PROXY_DATA_METADATA = "metadata";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -187,6 +192,91 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read Dependency error, error code : %{public}d", parseResult);
+    }
+}
+
+bool ProxyData::ReadFromParcel(Parcel &parcel)
+{
+    uri = Str16ToStr8(parcel.ReadString16());
+    requiredReadPermission = Str16ToStr8(parcel.ReadString16());
+    requiredWritePermission = Str16ToStr8(parcel.ReadString16());
+    std::unique_ptr<Metadata> data(parcel.ReadParcelable<Metadata>());
+    if (!data) {
+        APP_LOGE("ReadParcelable<Metadata> failed");
+        return false;
+    }
+    metadata = *data;
+    return true;
+}
+
+bool ProxyData::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(requiredReadPermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(requiredWritePermission));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &metadata);
+    return true;
+}
+
+ProxyData *ProxyData::Unmarshalling(Parcel &parcel)
+{
+    ProxyData *info = new (std::nothrow) ProxyData();
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
+    }
+    return info;
+}
+
+void to_json(nlohmann::json &jsonObject, const ProxyData &proxyData)
+{
+    jsonObject = nlohmann::json {
+        {PROXY_DATA_URI, proxyData.uri},
+        {PROXY_DATA_REQUIRED_READ_PERMISSION, proxyData.requiredReadPermission},
+        {PROXY_DATA_REQUIRED_WRITE_PERMISSION, proxyData.requiredWritePermission},
+        {PROXY_DATA_METADATA, proxyData.metadata}
+    };
+}
+
+void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData)
+{
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        PROXY_DATA_URI,
+        proxyData.uri,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        PROXY_DATA_REQUIRED_READ_PERMISSION,
+        proxyData.requiredReadPermission,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        PROXY_DATA_REQUIRED_WRITE_PERMISSION,
+        proxyData.requiredWritePermission,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Metadata>(jsonObject,
+        jsonObjectEnd,
+        PROXY_DATA_METADATA,
+        proxyData.metadata,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read ProxyData from database error, error code : %{public}d", parseResult);
     }
 }
 
@@ -331,6 +421,17 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         preloads.emplace_back(*preload);
     }
+    int32_t proxyDatasSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, proxyDatasSize);
+    CONTAINER_SECURITY_VERIFY(parcel, proxyDatasSize, &proxyDatas);
+    for (int32_t i = 0; i < proxyDatasSize; ++i) {
+        std::unique_ptr<ProxyData> proxyData(parcel.ReadParcelable<ProxyData>());
+        if (!proxyData) {
+            APP_LOGE("ReadParcelable<ProxyData> failed");
+            return false;
+        }
+        proxyDatas.emplace_back(*proxyData);
+    }
     return true;
 }
 
@@ -433,6 +534,10 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &item : preloads) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, proxyDatas.size());
+    for (auto &item : proxyDatas) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
+    }
     return true;
 }
 
@@ -484,7 +589,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_MODULE_SOURCE_DIR, hapModuleInfo.moduleSourceDir},
         {HAP_OVERLAY_MODULE_INFO, hapModuleInfo.overlayModuleInfos},
         {HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE, hapModuleInfo.atomicServiceModuleType},
-        {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads}
+        {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads},
+        {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas}
     };
 }
 
@@ -856,6 +962,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_PRELOADS,
         hapModuleInfo.preloads,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_PROXY_DATAS,
+        hapModuleInfo.proxyDatas,
         JsonType::ARRAY,
         false,
         parseResult,

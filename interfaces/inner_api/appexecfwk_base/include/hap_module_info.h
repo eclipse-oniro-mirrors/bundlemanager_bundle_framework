@@ -64,6 +64,17 @@ struct Dependency : public Parcelable {
     static Dependency *Unmarshalling(Parcel &parcel);
 };
 
+struct ProxyData : public Parcelable {
+    std::string uri;
+    std::string requiredReadPermission;
+    std::string requiredWritePermission;
+    Metadata metadata;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static ProxyData *Unmarshalling(Parcel &parcel);
+};
+
 // configuration information about an module
 struct HapModuleInfo : public Parcelable {
     std::string name;        // module.name in config.json
@@ -113,6 +124,7 @@ struct HapModuleInfo : public Parcelable {
     ModuleType moduleType = ModuleType::UNKNOWN;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     std::vector<Metadata> metadata;
+    std::vector<ProxyData> proxyDatas;
     int32_t upgradeFlag = 0;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     std::string moduleSourceDir;
