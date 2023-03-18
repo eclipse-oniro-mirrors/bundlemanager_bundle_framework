@@ -563,6 +563,27 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_2100, Function | MediumTest | Level1
 }
 
 /**
+ * @tc.number: Bm_Command_Dump_2200
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -d <device-id>" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_2200, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-d"),
+        const_cast<char*>(DEFAULT_DEVICE_TIME.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n" + HELP_MSG_DUMP);
+}
+
+/**
  * @tc.number: Bm_Command_Shared_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm dump-shared" command.
