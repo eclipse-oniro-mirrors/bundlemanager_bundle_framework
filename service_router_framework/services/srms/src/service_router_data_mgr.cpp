@@ -43,6 +43,9 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
     if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
     }
+    if (!innerServiceInfos_.empty()) {
+        innerServiceInfos_.clear();
+    }
     for (const auto &bundleInfo : bundleInfos) {
         UpdateBundleInfo(bundleInfo);
     }
