@@ -710,10 +710,11 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
-        || callingUid == Constants::ROOT_UID
-        || callingUid == Constants::BMS_UID) {
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL ||
+        callingUid == Constants::ROOT_UID ||
+        callingUid == Constants::BMS_UID ||
+        callingUid == Constants::SHELL_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
@@ -732,9 +733,10 @@ bool BundlePermissionMgr::IsNativeTokenType()
     }
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGD("calling uid is %{public}d", callingUid);
-    if (callingUid == Constants::ROOT_UID
-        || callingUid == Constants::FOUNDATION_UID
-        || callingUid == Constants::BMS_UID) {
+    if (callingUid == Constants::ROOT_UID ||
+        callingUid == Constants::FOUNDATION_UID ||
+        callingUid == Constants::BMS_UID ||
+        callingUid == Constants::SHELL_UID) {
         APP_LOGD("caller is root or foundation or BMS_UID, verify success");
         return true;
     }
@@ -747,9 +749,10 @@ bool BundlePermissionMgr::VerifyCallingUid()
     APP_LOGD("begin to verify calling uid");
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     APP_LOGD("calling uid is %{public}d", callingUid);
-    if (callingUid == Constants::ROOT_UID
-        || callingUid == Constants::FOUNDATION_UID
-        || callingUid == Constants::BMS_UID) {
+    if (callingUid == Constants::ROOT_UID ||
+        callingUid == Constants::FOUNDATION_UID ||
+        callingUid == Constants::BMS_UID ||
+        callingUid == Constants::SHELL_UID) {
         APP_LOGD("caller is root or foundation or BMS_UID, verify success");
         return true;
     }
