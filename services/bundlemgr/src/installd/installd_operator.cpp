@@ -346,7 +346,7 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
             return;
         }
         ChangeFileAttr(path, buf.st_uid, buf.st_gid);
-        mode = S_IRUSR | S_IWUSR;
+        mode = (buf.st_uid == buf.st_gid) ? (S_IRUSR | S_IWUSR) : (S_IRUSR | S_IWUSR | S_IRGRP);
     }
     if (!OHOS::ChangeModeFile(path, mode)) {
         return;

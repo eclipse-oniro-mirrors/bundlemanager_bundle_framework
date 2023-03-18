@@ -46,6 +46,7 @@
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -58,6 +59,9 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string RELEASE = "Release";
+const int32_t DEFAULT_SHELL_UID = 2000;
+const int32_t LEN_SHELL_UID = 16;
+const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -86,6 +90,19 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     auto prefixPath = nativeLibraryPath.substr(0, position);
     auto suffixPath = nativeLibraryPath.substr(position);
     return prefixPath + Constants::TMP_SUFFIX + suffixPath;
+}
+
+int32_t GetShellUid()
+{
+    char shellUid[LEN_SHELL_UID] = {0};
+    int32_t uid = DEFAULT_SHELL_UID;
+    int32_t ret = GetParameter(BMS_KEY_SHELL_UID, "", shellUid, LEN_SHELL_UID);
+    if ((ret > 0) && (strcmp(shellUid, "") != 0)) {
+        if (!StrToInt(shellUid, uid)) {
+            APP_LOGE("BaseBundleInstaller GetShellUid (%{public}s) strToInt failed", shellUid);
+        }
+    }
+    return uid;
 }
 }
 
@@ -1498,8 +1515,10 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
+            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+                oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
-                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), oldInfo.GetUid(userId)) :
+                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
                 DeleteArkProfile(bundleName_, userId);
             if (result != ERR_OK) {
                 APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
@@ -1820,8 +1839,10 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
 
     if (info.GetIsNewVersion()) {
+        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+            newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             APP_LOGE("fail to create ark profile, error is %{public}d", result);
             return result;
@@ -1855,7 +1876,8 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
                   .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
-    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+    int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
+    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
