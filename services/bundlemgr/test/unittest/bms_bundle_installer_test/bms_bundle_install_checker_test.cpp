@@ -614,6 +614,120 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0001, Function | SmallTest |
 }
 
 /**
+ * @tc.number: CheckAppLabel_0002
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->releaseType = "release_type";
+    newInfo.baseBundleInfo_->releaseType = "normal_type";
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0003
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppDistributionType("hos_normal_type");
+    newInfo.SetAppDistributionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0004
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0004, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppProvisionType("hos_normal_type");
+    newInfo.SetAppProvisionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0005
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0005, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetIsNewVersion(false);
+    newInfo.SetIsNewVersion(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0006
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0006, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAsanEnabled(false);
+    newInfo.SetAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0007
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0007, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->releaseType = "Release";
+    newInfo.baseBundleInfo_->releaseType = "Release";
+    oldInfo.SetAsanEnabled(true);
+    newInfo.SetAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0008
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetApplicationBundleType(BundleType::APP);
+    newInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+}
+
+/**
  * @tc.number: UpdateDefineAndRequestPermissions_0001
  * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0001
  * @tc.desc: 1. UpdateDefineAndRequestPermissions

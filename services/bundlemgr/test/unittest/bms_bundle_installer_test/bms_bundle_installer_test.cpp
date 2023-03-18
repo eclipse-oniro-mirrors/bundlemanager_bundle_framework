@@ -34,6 +34,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
 #include "want.h"
 
@@ -2912,4 +2913,82 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | L
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 
+/**
+ * @tc.number: ParseFiles_0100
+ * @tc.name: test the start function of ParseFiles
+ * @tc.desc: 1.Test ParseFiles
+*/
+HWTEST_F(BmsBundleInstallerTest, ParseFiles_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    SharedBundleInstaller installer(installParam, appType);
+    installer.installParam_.sharedBundleDirPaths.clear();
+    auto res = installer.ParseFiles();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckDependency_0100
+ * @tc.name: test the start function of CheckDependency
+ * @tc.desc: 1.Test CheckDependency
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckDependency_0100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    SharedBundleInstaller installer(installParam, appType);
+    Dependency dependency;
+    dependency.bundleName = "";
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.dependencies.push_back(dependency);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = "";
+    innerBundleInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    auto res = installer.CheckDependency(innerBundleInfo);
+    EXPECT_TRUE(res);
+
+    innerBundleInfo.baseApplicationInfo_->bundleName = BUNDLE_NAME;
+    res = installer.CheckDependency(innerBundleInfo);
+    EXPECT_TRUE(res);
+
+    Dependency dependency1;
+    dependency1.bundleName = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo1;
+    innerModuleInfo1.dependencies.push_back(dependency1);
+    innerBundleInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>("2", innerModuleInfo1));
+    res = installer.CheckDependency(innerBundleInfo);
+    EXPECT_TRUE(res);
+
+    innerBundleInfo.baseApplicationInfo_->bundleName = WRONG_BUNDLE_NAME;
+    res = installer.CheckDependency(innerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: CheckDependency_0100
+ * @tc.name: test the start function of CheckDependency
+ * @tc.desc: 1.Test CheckDependency
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckDependency_0200, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    SharedBundleInstaller installer(installParam, appType);
+    Dependency dependency;
+    dependency.bundleName = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.dependencies.push_back(dependency);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleName = WRONG_BUNDLE_NAME;
+    innerBundleInfo.innerModuleInfos_.insert(pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    std::string path = BUNDLE_DATA_DIR;
+    std::shared_ptr<InnerSharedBundleInstaller> innerSharedBundleInstaller =
+        std::make_shared<InnerSharedBundleInstaller>(path);
+    innerSharedBundleInstaller->bundleName_ = WRONG_BUNDLE_NAME;
+    installer.innerInstallers_.insert(pair<std::string,
+        std::shared_ptr<InnerSharedBundleInstaller>>(WRONG_BUNDLE_NAME, innerSharedBundleInstaller));
+    auto res = installer.CheckDependency(innerBundleInfo);
+    EXPECT_FALSE(res);
+}
 } // OHOS
