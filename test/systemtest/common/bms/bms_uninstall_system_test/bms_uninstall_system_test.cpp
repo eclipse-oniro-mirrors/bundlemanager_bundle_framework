@@ -1357,6 +1357,19 @@ HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0100, Function | MediumTest |
 }
 
 /**
+ * @tc.number: BMS_StreamInstall_0200
+ * @tc.name: test StreamInstall
+ * @tc.desc: 1.test StreamInstall
+ */
+HWTEST_F(BmsUninstallSystemTest, BMS_StreamInstall_0200, Function | MediumTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths;
+    std::vector<std::string> resvec;
+    StreamInstall(bundleFilePaths, InstallFlag::NORMAL, resvec);
+    EXPECT_EQ(resvec.empty(), false);
+}
+
+/**
  * @tc.number: BMS_Recover_0100
  * @tc.name: test recover bundle
  * @tc.desc: 1.test recover failed by nullptr
