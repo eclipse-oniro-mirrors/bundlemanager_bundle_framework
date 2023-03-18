@@ -2869,7 +2869,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
         return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetAppType() != newInfo.GetAppType()) {
+    if (oldInfo.GetAppFeature() != newInfo.GetAppFeature()) {
         return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
     if (oldInfo.GetIsNewVersion() != newInfo.GetIsNewVersion()) {

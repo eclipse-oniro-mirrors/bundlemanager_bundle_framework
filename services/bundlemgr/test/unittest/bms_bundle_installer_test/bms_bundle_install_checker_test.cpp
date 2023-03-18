@@ -607,8 +607,8 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0001, Function | SmallTest |
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
-    oldInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
-    newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldInfo.SetAppFeature("hos_normal_app");
+    newInfo.SetAppFeature("hos_system_app");
     ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
 }
