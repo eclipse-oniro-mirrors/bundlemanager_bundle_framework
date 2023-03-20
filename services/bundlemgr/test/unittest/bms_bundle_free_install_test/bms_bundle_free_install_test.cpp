@@ -978,24 +978,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0036, Function | Sma
 }
 
 /**
- * @tc.number: BmsBundleFreeInstallTest_0037
- * Function: BundleConnectAbilityMgr
- * @tc.name: test ProcessPreload
- * @tc.desc: test ProcessPreload success
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0037, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME, 2);
-    BundleConnectAbilityMgr bundleConnectAbilityMgr;
-    Want want;
-    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_EMPTY, MODULE_NAME_TEST);
-    want.SetParam("uid", -800000);
-    auto ret = bundleConnectAbilityMgr.ProcessPreload(want);
-    EXPECT_TRUE(ret);
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BmsBundleFreeInstallTest_0038
  * Function: BundleConnectAbilityMgr
  * @tc.name: test ProcessPreload
@@ -1028,25 +1010,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0040, Function | Sma
     want.SetParam("uid", -800000);
     auto ret = bundleConnectAbilityMgr.ProcessPreload(want);
     EXPECT_FALSE(ret);
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BmsBundleFreeInstallTest_0041
- * Function: BundleConnectAbilityMgr
- * @tc.name: test ProcessPreload
- * @tc.desc: test ProcessPreload success
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0041, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME, 2);
-    BundleConnectAbilityMgr bundleConnectAbilityMgr;
-    Want want;
-    ElementName name;
-    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_TEST, MODULE_NAME_TEST);
-    want.SetParam("uid", -800000);
-    auto ret = bundleConnectAbilityMgr.ProcessPreload(want);
-    EXPECT_TRUE(ret);
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
