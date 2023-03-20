@@ -144,6 +144,34 @@ static ErrCode InnerQueryBusinessAbilityInfos(AbilityInfosCallbackInfo *info)
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static bool ParseBusinessAbilityInfo(napi_env env, napi_value args, BusinessAbilityFilter &filter)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+    napi_value prop = nullptr;
+    int32_t businessType = static_cast<int32_t>(BusinessType::UNSPECIFIED);
+    napi_get_named_property(env, args, BUSINESS_TYPE, &prop);
+    napi_typeof(env, prop, &valueType);
+    if (valueType == napi_number) {
+        napi_get_value_int32(env, prop, &businessType);
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MIME_TYPE, &prop);
+    std::string mimeType = CommonFunc::GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, URI, &prop);
+    std::string uri = CommonFunc::GetStringFromNAPI(env, prop);
+
+    filter.businessType = static_cast<BusinessType>(businessType);
+    filter.mimeType = mimeType;
+    filter.uri = uri;
+    return true;
+}
+
 void QueryBusinessAbilityInfosExec(napi_env env, void *data)
 {
     APP_LOGD("QueryServiceInfosExec start");
@@ -188,37 +216,9 @@ void QueryBusinessAbilityInfosComplete(napi_env env, napi_status status, void *d
     }
 }
 
-bool ParseBusinessAbilityInfo(napi_env env, napi_value args, BusinessAbilityFilter &filter)
-{
-    napi_valuetype valueType;
-    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
-    if (valueType != napi_object) {
-        return false;
-    }
-    napi_value prop = nullptr;
-    int32_t businessType = static_cast<int32_t>(BusinessType::UNSPECIFIED);
-    napi_get_named_property(env, args, BUSINESS_TYPE, &prop);
-    napi_typeof(env, prop, &valueType);
-    if (valueType == napi_number) {
-        napi_get_value_int32(env, prop, &businessType);
-    }
-
-    prop = nullptr;
-    napi_get_named_property(env, args, MIME_TYPE, &prop);
-    std::string mimeType = CommonFunc::GetStringFromNAPI(env, prop);
-    prop = nullptr;
-    napi_get_named_property(env, args, URI, &prop);
-    std::string uri = CommonFunc::GetStringFromNAPI(env, prop);
-    
-    filter.businessType = static_cast<BusinessType>(businessType);
-    filter.mimeType = mimeType;
-    filter.uri = uri;
-    return true;
-}
-
 napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGI("NAPI_QueryServiceInfos start");
+    APP_LOGI("NAPI_QueryBusinessAbilityInfos start");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);

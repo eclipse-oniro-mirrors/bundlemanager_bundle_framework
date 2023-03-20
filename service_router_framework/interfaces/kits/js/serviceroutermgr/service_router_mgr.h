@@ -31,7 +31,6 @@ struct AbilityInfosCallbackInfo : public BaseCallbackInfo {
     std::vector<BusinessAbilityInfo> businessAbilityInfos;
 };
 
-void ParseBusinessAbilityFilter(napi_env env, napi_value args, BusinessAbilityFilter &filter);
 napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
