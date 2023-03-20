@@ -35,7 +35,8 @@ public:
      * @param businessAbilityInfos Indicates the business ability infos to be find.
      * @return
      */
-    void FindBusinessAbilityInfos(const BusinessType &businessType, std::vector<BusinessAbilityInfo> &businessAbilityInfos) const;
+    void FindBusinessAbilityInfos(const BusinessType &businessType,
+        std::vector<BusinessAbilityInfo> &businessAbilityInfos) const;
 
     /**
      * @brief Find purposeInfo by purposeName.
@@ -51,7 +52,8 @@ public:
      * @param businessAbilityInfos Indicates the business ability infos to be update.
      * @return
      */
-    void UpdateInnerServiceInfo(std::vector<PurposeInfo> &purposeInfos, std::vector<BusinessAbilityInfo> &businessAbilityInfos)
+    void UpdateInnerServiceInfo(std::vector<PurposeInfo> &purposeInfos,
+        std::vector<BusinessAbilityInfo> &businessAbilityInfos)
     {
         UpdatePurposeInfos(purposeInfos);
         UpdateBusinessAbilityInfos(businessAbilityInfos);
