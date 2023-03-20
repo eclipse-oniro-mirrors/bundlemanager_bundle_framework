@@ -78,8 +78,6 @@ const int32_t THRESHOLD_VAL_LEN = 20;
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 const int32_t SINGLE_HSP_VERSION = 1;
-const int32_t DEFAULT_SHELL_UID = 2000;
-const int32_t LEN_SHELL_UID = 16;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
@@ -109,19 +107,6 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     auto prefixPath = nativeLibraryPath.substr(0, position);
     auto suffixPath = nativeLibraryPath.substr(position);
     return prefixPath + Constants::TMP_SUFFIX + suffixPath;
-}
-
-int32_t GetShellUid()
-{
-    char shellUid[LEN_SHELL_UID] = {0};
-    int32_t uid = DEFAULT_SHELL_UID;
-    int32_t ret = GetParameter(BMS_KEY_SHELL_UID, "", shellUid, LEN_SHELL_UID);
-    if ((ret > 0) && (strcmp(shellUid, "") != 0)) {
-        if (!StrToInt(shellUid, uid)) {
-            APP_LOGE("BaseBundleInstaller GetShellUid (%{public}s) strToInt failed", shellUid);
-        }
-    }
-    return uid;
 }
 }
 
@@ -2083,7 +2068,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
     }
     if (info.GetIsNewVersion()) {
-        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+            GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
             newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
             info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
@@ -3249,7 +3235,8 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
-            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+                GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
                 oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
                 CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
