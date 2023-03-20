@@ -62,12 +62,6 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/thumbnailTest2:thumbnailTest2",
   ]
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
   deps += bundle_install_deps
 
   external_deps = [

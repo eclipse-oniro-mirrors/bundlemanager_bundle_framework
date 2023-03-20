@@ -25,6 +25,7 @@ config("bundlemgr_common_config") {
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
+    "include/shared",
     "include/quick_fix/state/include",
     "//base/powermgr/power_manager/interfaces/innerkits/native/include",
     "//utils/system/safwk/native/include",
@@ -339,7 +340,7 @@ ohos_shared_library("libbms") {
   }
 
   if (build_variant == "root") {
-    defines += [ "QUOTA_SET_FOR_TEST" ]
+    defines += [ "QUOTA_PARAM_SET_ENABLE" ]
   }
 
   subsystem_name = "bundlemanager"

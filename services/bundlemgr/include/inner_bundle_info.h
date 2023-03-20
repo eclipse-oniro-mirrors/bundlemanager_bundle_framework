@@ -116,6 +116,7 @@ struct InnerModuleInfo {
     std::vector<std::string> preloads;
     CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
     uint32_t versionCode = 0;
+    std::string versionName;
 };
 
 struct SkillUri {
@@ -142,6 +143,7 @@ private:
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
+    std::string GetOptParamUri(const std::string &uriString) const;
 };
 
 enum InstallExceptionStatus : int32_t {
@@ -1854,13 +1856,14 @@ public:
         return baseApplicationInfo_->asanLogPath;
     }
 
-    void SetApplicationSplit(bool split)
-    {
-        baseApplicationInfo_->split = split;
-    }
     void SetApplicationBundleType(BundleType type)
     {
         baseApplicationInfo_->bundleType = type;
+    }
+
+    BundleType GetApplicationBundleType() const
+    {
+        return baseApplicationInfo_->bundleType;
     }
 
     bool SetInnerModuleAtomicPreload(const std::string &moduleName, const std::vector<std::string> &preloads)
@@ -1999,8 +2002,10 @@ public:
     void SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath);
     bool GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const;
     bool GetSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
+    bool GetAllSharedDependencies(const std::string &moduleName, std::vector<Dependency> &dependencies) const;
     std::vector<uint32_t> GetAllHspVersion() const;
     void DeleteHspModuleByVersion(int32_t versionCode);
+    bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2010,7 +2015,7 @@ private:
         int32_t flags, BundleInfo &bundleInfo, int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void BuildDefaultUserInfo();
     void RemoveDuplicateName(std::vector<std::string> &name) const;
-    void GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const;
+    void GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleFlags(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const;
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;

@@ -563,6 +563,27 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_2100, Function | MediumTest | Level1
 }
 
 /**
+ * @tc.number: Bm_Command_Dump_2200
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm dump -d <device-id>" command.
+ */
+HWTEST_F(BmCommandDumpTest, Bm_Command_Dump_2200, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-d"),
+        const_cast<char*>(DEFAULT_DEVICE_TIME.c_str()),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+    BundleManagerShellCommand cmd(argc, argv);
+    // set the mock objects
+    SetMockObjects(cmd);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n" + HELP_MSG_DUMP);
+}
+
+/**
  * @tc.number: Bm_Command_Shared_0001
  * @tc.name: ExecCommand
  * @tc.desc: Verify the "bm dump-shared" command.
@@ -678,142 +699,4 @@ HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_0006, Function | MediumTest | Leve
     EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED);
 }
 
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0001
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0001, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>(""),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_OPTION + "\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
-
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0002
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies -n" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0002, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>("-n"),
-        const_cast<char*>(""),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
-
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0003
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies -xxx" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0003, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>("-xxx"),
-        const_cast<char*>(""),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
-
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0004
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies -m" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0004, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>("-m"),
-        const_cast<char*>(STRING_MODULE_NAME.c_str()),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
-
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0005
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies -h" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0005, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>("-h"),
-        const_cast<char*>(""),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
-
-/**
- * @tc.number: Bm_Command_Shared_Dependencies_0006
- * @tc.name: ExecCommand
- * @tc.desc: Verify the "bm dump-shared-dependencies -n <bundle-name>" command.
- */
-HWTEST_F(BmCommandDumpTest, Bm_Command_Shared_Dependencies_0006, Function | MediumTest | Level1)
-{
-    char *argv[] = {
-        const_cast<char*>(TOOL_NAME.c_str()),
-        const_cast<char*>(sharedDependencies_.c_str()),
-        const_cast<char*>("-n"),
-        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
-        const_cast<char*>("-m"),
-        const_cast<char*>(""),
-    };
-    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
-
-    BundleManagerShellCommand cmd(argc, argv);
-
-    // set the mock objects
-    SetMockObjects(cmd);
-
-    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
-}
 } // namespace OHOS

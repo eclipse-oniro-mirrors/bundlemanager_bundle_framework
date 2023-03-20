@@ -739,7 +739,7 @@ public:
      * @param want Indicates the information of the ability.
      * @param preload Specifies whether to preload modules in atomicService.
      */
-    virtual void ProcessPreload(const Want &want) override;
+    virtual bool ProcessPreload(const Want &want) override;
 
     virtual bool ObtainCallingBundleName(std::string &bundleName) override;
 

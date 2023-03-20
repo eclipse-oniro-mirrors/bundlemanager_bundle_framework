@@ -230,7 +230,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
     return true;
 }
 
-void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
+bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 {
     APP_LOGD("BundleConnectAbilityMgr::ProcessPreload is called.");
     std::string bundleName = want.GetElement().GetBundleName();
@@ -241,17 +241,17 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
     if (targetAbilityInfo == nullptr) {
         APP_LOGE("targetAbilityInfo is nullptr");
-        return;
+        return false;
     }
     sptr<TargetInfo> targetInfo = new(std::nothrow) TargetInfo();
     if (targetInfo == nullptr) {
         APP_LOGE("targetInfo is nullptr");
-        return;
+        return false;
     }
     sptr<TargetExtSetting> targetExtSetting = new(std::nothrow) TargetExtSetting();
     if (targetExtSetting == nullptr) {
         APP_LOGE("targetExtSetting is nullptr");
-        return;
+        return false;
     }
     targetAbilityInfo->targetInfo = *targetInfo;
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
@@ -259,7 +259,7 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 
     if (!GetPreloadList(bundleName, moduleName, userId, targetAbilityInfo)) {
         APP_LOGI("the module have no preload module.");
-        return;
+        return false;
     }
     targetAbilityInfo->targetInfo.transactId = std::to_string(this->GetTransactId());
     targetAbilityInfo->targetInfo.bundleName = bundleName;
@@ -269,7 +269,11 @@ void BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->targetInfo.callingUid = uid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     targetAbilityInfo->targetInfo.callingBundleNames.emplace_back(bundleName);
-    ProcessPreloadCheck(*targetAbilityInfo);
+    if (!ProcessPreloadCheck(*targetAbilityInfo)) {
+        APP_LOGE("ProcessPreloadCheck failed.");
+        return false;
+    }
+    return true;
 }
 
 bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
@@ -1086,7 +1090,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
 }
 
-sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalRuleMgr()
+sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologicalRuleMgr()
 {
     if (iErMgr_ != nullptr) {
         APP_LOGI("ecological rule mgr already get.");
@@ -1097,9 +1101,9 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalR
         APP_LOGE("saMgr is nullptr");
         return nullptr;
     }
-    sptr<IRemoteObject> remoteObject = saMgr->GetSystemAbility(ECOLOGICAL_RULE_SA_ID);
+    sptr<IRemoteObject> remoteObject = saMgr->CheckSystemAbility(ECOLOGICAL_RULE_SA_ID);
     if (remoteObject == nullptr) {
-        APP_LOGE("%{public}s error, failed to get ecological rule manager service.", __func__);
+        APP_LOGE("%{public}s error, failed to check ecological rule manager service.", __func__);
         return nullptr;
     }
     iErMgr_ = iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
@@ -1108,9 +1112,9 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalR
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
 {
-    sptr<AppExecFwk::IEcologicalRuleManager> erms = GetEcologicalRuleMgr();
+    sptr<AppExecFwk::IEcologicalRuleManager> erms = CheckEcologicalRuleMgr();
     if (!erms) {
-        APP_LOGE("GetEcologicalRuleMgr failed.");
+        APP_LOGE("CheckEcologicalRuleMgr failed.");
         return false;
     }
     int ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);

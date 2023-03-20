@@ -23,7 +23,6 @@ ohos_unittest("BmsBundleInstallerManagerTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/include",
-    "${ability_runtime_path}/test/mock/frameworks_kits_appkit_test/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]

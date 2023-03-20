@@ -21,7 +21,7 @@ config("tools_bm_config_moduletest") {
     "${appexecfwk_path}/services/bundlemgr/include/installd",
     "${appexecfwk_path}/services/bundlemgr/include",
     "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
-    "//foundation/systemabilitymgr/safwk/services/safwk/include",
+    "${appexecfwk_path}/services/bundlemgr/include/shared",
     "//third_party/json/include",
     "//third_party/zlib",
     "//third_party/zlib/contrib/minizip",

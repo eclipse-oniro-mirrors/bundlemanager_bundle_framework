@@ -734,7 +734,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0400, Function | SmallTest 
     applicationInfo.bundleName = TEST_BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -796,10 +795,12 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0600, Function | SmallTest 
     std::string moduleName = (moduleInfos.begin()->second).moduleName;
     overlayDataMgr.BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
     overlayDataMgr.BuildExternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    EXPECT_EQ(oldInfo.FetchInnerModuleInfos().empty(), true);
     
     oldInfo.SetOverlayState(OverlayType::OVERLAY_INTERNAL_BUNDLE);
     overlayDataMgr.BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
     overlayDataMgr.BuildExternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    EXPECT_EQ(oldInfo.FetchInnerModuleInfos().empty(), true);
 }
 
 /**
@@ -938,7 +939,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1400, Function | SmallTest 
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1203,7 +1203,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2500, Function | SmallTest 
     ErrCode res = overlayDataMgr.RemoveOverlayModuleConnection(newInfo, oldInfo);
     EXPECT_EQ(res, ERR_OK);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1288,7 +1287,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2800, Function | SmallTest 
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1351,7 +1349,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_2900, Function | SmallTest 
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1378,7 +1375,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3000, Function | SmallTest 
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3100, Function | SmallTest | Level0)
 {
     InnerBundleInfo info;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1404,7 +1400,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3200, Function | SmallTest 
     InnerBundleInfo newInfo;
     InnerBundleInfo oldInfo;
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1495,7 +1490,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3500, Function | SmallTest 
     applicationInfo.targetBundleName = TEST_BUNDLE_NAME;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1552,7 +1546,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_3700, Function | SmallTest 
     oldInfo.AddInnerModuleInfo(innerModuleInfos);
     newInfo.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
 
-    // construct target module
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -1827,6 +1820,76 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0800, Function | Smal
 }
 
 /**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling SetOverlayEnabled interface by using OverlayManagerProxy instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0900, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo("", overlayModuleInfos,
+        USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfos,
+        Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct GetOverlayModuleInfoByBundleName instance.
+ *           2.calling SetOverlayEnabled interface by using GetOverlayModuleInfoByBundleName instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1000, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName("", TEST_MODULE_NAME,
+        overlayModuleInfos, USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, "",
+        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+
+    errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, TEST_MODULE_NAME,
+        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabledForSelf interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct SetOverlayEnabledForSelf instance.
+ *           2.calling SetOverlayEnabled interface by using SetOverlayEnabledForSelf instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1100, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    bool isEnabled = false;
+    auto errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf("",
+        isEnabled, USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf(TEST_MODULE_NAME,
+        isEnabled, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
  * @tc.number: CheckTargetBundle_0100
  * @tc.name: check bundle target priority range
  * @tc.desc: Test CheckTargetBundle
@@ -1837,6 +1900,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckTargetBundle_0100, Function | SmallTe
     auto code = checker.CheckTargetBundle("", "", "", USERID);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME);
     code = checker.CheckTargetBundle(TEST_BUNDLE_NAME, "", "", USERID);
-    EXPECT_EQ(code,ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
 }
 } // OHOS

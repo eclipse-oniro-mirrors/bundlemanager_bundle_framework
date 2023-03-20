@@ -226,9 +226,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 {
     APP_LOGD("Parse hap file");
     ErrCode result = ERR_OK;
-    BundlePackInfo packInfo;
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
+        BundlePackInfo packInfo;
         newInfo.SetAppType(checkParam.appType);
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
@@ -299,8 +299,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     return result;
 }
 
-ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
-    std::unordered_map<std::string, FilesParseResult> &hsps)
+ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     APP_LOGD("CheckDependency");
 
@@ -317,17 +316,6 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             if (!NeedCheckDependency(dependency, info.second)) {
                 APP_LOGD("deliveryWithInstall is false, do not check whether the dependency exists.");
                 continue;
-            }
-
-            if (!dependency.bundleName.empty() && info.second.GetBundleName() != dependency.bundleName) {
-                isModuleExist = FindModuleInInstallingPackage(dependency, hsps) ||
-                    FindModuleInInstalledPackage(dependency);
-                if (isModuleExist) {
-                    APP_LOGE("The dependency is exist : %s", GetJsonStrFromInfo(dependency).c_str());
-                    continue;
-                }
-                APP_LOGE("The dependency is not exist : %s", GetJsonStrFromInfo(dependency).c_str());
-                return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
             }
 
             std::string bundleName =
@@ -354,8 +342,8 @@ bool BundleInstallChecker::NeedCheckDependency(const Dependency &dependency, con
         dependency.moduleName.c_str(), dependency.bundleName.c_str());
 
     if (!dependency.bundleName.empty() && dependency.bundleName != info.GetBundleName()) {
-        APP_LOGD("Cross-app dependencies, need check dependency.");
-        return true;
+        APP_LOGD("Cross-app dependencies, check dependency with shared bundle installer.");
+        return false;
     }
     std::vector<PackageModule> modules = info.GetBundlePackInfo().summary.modules;
     if (modules.empty()) {
@@ -418,50 +406,6 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
     }
 
     return true;
-}
-
-bool BundleInstallChecker::FindModuleInInstallingPackage(const Dependency &dependency,
-    const std::unordered_map<std::string, FilesParseResult> &infos)
-{
-    APP_LOGD("FindModuleInInstallingPackage : dependency = %s", GetJsonStrFromInfo(dependency).c_str());
-    const auto &iter = infos.find(dependency.bundleName);
-    if (iter == infos.end()) {
-        APP_LOGW("no installing shared bundles");
-        return false;
-    }
-    for (const auto& bundleInfo : iter->second) {
-        APP_LOGD("bundle:%s", bundleInfo.second.GetBundleName().c_str());
-        BaseSharedBundleInfo hsp;
-        bool isModuleExist = bundleInfo.second.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, hsp);
-        if (isModuleExist && dependency.versionCode <= hsp.versionCode) {
-            return true;
-        }
-    }
-    APP_LOGW("dependency not found in installing shared bundles");
-    return false;
-}
-
-bool BundleInstallChecker::FindModuleInInstalledPackage(const Dependency &dependency)
-{
-    APP_LOGD("FindModuleInInstalledPackage : dependency = %s", GetJsonStrFromInfo(dependency).c_str());
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
-    }
-
-    InnerBundleInfo bundleInfo;
-    bool isBundleExist = dataMgr->FetchInnerBundleInfo(dependency.bundleName, bundleInfo);
-    if (!isBundleExist) {
-        APP_LOGE("the bundle: %{public}s is not install", dependency.bundleName.c_str());
-        return false;
-    }
-    BaseSharedBundleInfo hsp;
-    bool isModuleExist = bundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, hsp);
-    if (isModuleExist && dependency.versionCode <= hsp.versionCode) {
-        return true;
-    }
-    return false;
 }
 
 ErrCode BundleInstallChecker::CheckBundleName(const std::string &provisionBundleName, const std::string &bundleName)
@@ -549,6 +493,22 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
 }
 
+void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
+    const InnerBundleInfo &innerBundleInfo) const
+{
+    if (innerBundleInfo.GetIsNewVersion()) {
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP) {
+            for (auto &item : bundlePackInfo.summary.modules) {
+                item.distro.installationFree = false;
+            }
+            return;
+        }
+        for (auto &item : bundlePackInfo.summary.modules) {
+            item.distro.installationFree = true;
+        }
+    }
+}
+
 ErrCode BundleInstallChecker::ParseBundleInfo(
     const std::string &bundleFilePath,
     InnerBundleInfo &info,
@@ -568,6 +528,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
             return result;
         }
 
+        SetPackInstallationFree(packInfo, info);
         info.SetBundlePackInfo(packInfo);
         packInfo.SetValid(true);
     }
@@ -592,8 +553,14 @@ void BundleInstallChecker::SetEntryInstallationFree(
     if (installationFree) {
         APP_LOGI("install or update hm service");
     }
+    if (innerBundleInfo.GetIsNewVersion()) {
+        installationFree = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
+    }
 
     innerBundleInfo.SetEntryInstallationFree(installationFree);
+    if (installationFree && !innerBundleInfo.GetIsNewVersion()) {
+        innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    }
     APP_LOGI("SetEntryInstallationFree end");
 }
 
@@ -678,10 +645,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
-    bool hasAtomicServiceConfig = (infos.begin()->second).GetHasAtomicServiceConfig();
-    bool split = (infos.begin()->second).GetBaseApplicationInfo().split;
-    std::string main = (infos.begin()->second).GetAtomicMainModuleName();
+    BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     CompatiblePolicy compatiblePolicy = (infos.begin()->second).GetCompatiblePolicy();
+    bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -740,11 +706,12 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             APP_LOGE("asanEnabled is not supported in Release");
             return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
         }
-        if (hasAtomicServiceConfig != info.second.GetHasAtomicServiceConfig() ||
-                split != info.second.GetBaseApplicationInfo().split ||
-                main != info.second.GetAtomicMainModuleName()) {
-            APP_LOGE("atomicService config is not same.");
-            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
+        if (bundleType != info.second.GetApplicationBundleType()) {
+            return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
+        }
+        if (isHmService != info.second.GetEntryInstallationFree()) {
+            APP_LOGE("application and hm service are not allowed installed simultaneously.");
+            return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
     }
     // check api sdk version
@@ -753,68 +720,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     }
     APP_LOGD("finish check APP label");
     return ret;
-}
-
-ErrCode BundleInstallChecker::CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos)
-{
-    if (infos.empty()) {
-        return ERR_OK;
-    }
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-
-    InnerBundleInfo oldInfo;
-    auto& firstBundle = infos.begin()->second;
-    bool isBundleExist = dataMgr->FetchInnerBundleInfo(firstBundle.GetBundleName(), oldInfo);
-    if (isBundleExist) {
-        if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
-            APP_LOGE("old bundle is not shared");
-            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
-        }
-        // check old InnerBundleInfo together
-        infos.emplace(oldInfo.GetBundleName(), oldInfo);
-    } else {
-        if (firstBundle.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
-            APP_LOGE("installing bundle is not hsp");
-            return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-        }
-        oldInfo = firstBundle;
-    }
-
-    // check compatible policy
-    if (oldInfo.GetCompatiblePolicy() == CompatiblePolicy::BACK_COMPATIBLE) {
-        for (const auto& item : infos) {
-            auto& sharedModules = item.second.GetInnerSharedModuleInfos();
-            if (sharedModules.empty() || sharedModules.begin()->second.empty()) {
-                APP_LOGW("inner shared module infos not found (%s)", item.second.GetBundleName().c_str());
-                continue;
-            }
-            auto& sharedModule = sharedModules.begin()->second.front();
-            BaseSharedBundleInfo installedSharedBundle;
-            if (oldInfo.GetMaxVerBaseSharedBundleInfo(sharedModule.moduleName, installedSharedBundle) &&
-                installedSharedBundle.versionCode > sharedModule.versionCode) {
-                APP_LOGE("installing lower version shared library");
-                return ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE;
-            }
-        }
-    }
-
-    for (const auto& item : infos) {
-        auto& bundle = item.second;
-        if (bundle.GetCompatiblePolicy() != oldInfo.GetCompatiblePolicy()) {
-            APP_LOGE("compatiblePolicy not same");
-            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
-        }
-    }
-
-    ErrCode result = CheckAppLabelInfo(infos);
-    if (isBundleExist) {
-        infos.erase(oldInfo.GetBundleName());
-    }
-    return result;
 }
 
 ErrCode BundleInstallChecker::CheckMultiNativeFile(
@@ -1132,6 +1037,13 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
             iter->second.priority = 0;
         }
 #endif
+        if (appPrivilegeCapability.allowMultiProcess) {
+            APP_LOGD("bundleName: %{public}s support allowMultiProcess", iter->second.bundleName.c_str());
+            auto hapModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(iter->second.moduleName);
+            if (hapModuleInfo && !hapModuleInfo->process.empty()) {
+                iter->second.process = hapModuleInfo->process;
+            }
+        }
     }
     // process InnerModuleInfo
     auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();

@@ -60,6 +60,8 @@ constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
 constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
+constexpr const char* DEBUG = "debug";
+
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
     { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
@@ -989,9 +991,9 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "bundleType", nBundleType));
 
-    napi_value nSplit;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.split, &nSplit));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "split", nSplit));
+    napi_value nDebug;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.debug, &nDebug));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, DEBUG, nDebug));
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
@@ -1288,12 +1290,6 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nDependencies, index, nDependency));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "dependencies", nDependencies));
-
-    napi_value nAtomicServiceModuleType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(hapModuleInfo.atomicServiceModuleType), &nAtomicServiceModuleType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env,
-        objHapModuleInfo, "atomicServiceModuleType", nAtomicServiceModuleType));
 
     napi_value nPreloads;
     size = hapModuleInfo.preloads.size();

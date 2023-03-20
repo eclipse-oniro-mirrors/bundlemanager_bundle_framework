@@ -3164,24 +3164,26 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
     return reply.ReadBool();
 }
 
-void BundleMgrProxy::ProcessPreload(const Want &want)
+bool BundleMgrProxy::ProcessPreload(const Want &want)
 {
     APP_LOGD("BundleMgrProxy::ProcessPreload is called.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to ProcessPreload due to write InterfaceToken fail");
-        return;
+        return false;
     }
     if (!data.WriteParcelable(&want)) {
         APP_LOGE("fail to ProcessPreload due to write want fail");
-        return;
+        return false;
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
     auto res = Remote()->SendRequest(IBundleMgr::Message::PROCESS_PRELOAD, data, reply, option);
     if (res != ERR_OK) {
         APP_LOGE("SendRequest fail, error: %{public}d", res);
+        return false;
     }
+    return reply.ReadBool();
 }
 
 sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
@@ -3317,8 +3319,12 @@ ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName,
 ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
     std::vector<Dependency> &dependencies)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedDependencies");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("bundleName or moduleName is empty");
+        return false;
+    }
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -3335,7 +3341,6 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     }
     return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
 }
-
 
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)

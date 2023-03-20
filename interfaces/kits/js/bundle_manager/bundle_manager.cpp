@@ -2802,17 +2802,6 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return nullptr;
-    }
-    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
-    if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
-        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
-    }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
@@ -3064,17 +3053,6 @@ void CreateBundleTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(BundleType::ATOMIC_SERVICE), &nAtomicService));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ATOMIC_SERVICE", nAtomicService));
-}
-
-void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value)
-{
-    napi_value nNormal;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(AtomicServiceModuleType::NORMAL), &nNormal));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NORMAL", nNormal));
-    napi_value nMain;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AtomicServiceModuleType::MAIN), &nMain));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN", nMain));
 }
 
 void CreateDisplayOrientationObject(napi_env env, napi_value value)

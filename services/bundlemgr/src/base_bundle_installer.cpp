@@ -48,6 +48,7 @@
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -58,9 +59,6 @@
 
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
-#ifdef QUOTA_SET_FOR_TEST
-#include "parameter.h"
-#endif // QUOTA_SET_FOR_TEST
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -72,14 +70,15 @@ const std::string LOG = "log";
 const std::string RELEASE = "Release";
 const std::string HSP_VERSION_PREFIX = "v";
 
-#ifdef QUOTA_SET_FOR_TEST
+#ifdef QUOTA_PARAM_SET_ENABLE
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
 const int32_t THRESHOLD_VAL_LEN = 20;
-#endif // QUOTA_SET_FOR_TEST
+#endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 const int32_t SINGLE_HSP_VERSION = 1;
+const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -154,12 +153,14 @@ ErrCode BaseBundleInstaller::InstallBundle(
         }
     }
 
-    SendBundleSystemEvent(
-        bundleName_,
-        ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
-        installParam,
-        sysEventInfo_.preBundleScene,
-        result);
+    if (!bundleName_.empty()) {
+        SendBundleSystemEvent(
+            bundleName_,
+            ((isAppExist_ && hasInstalledInUser_) ? BundleEventType::UPDATE : BundleEventType::INSTALL),
+            installParam,
+            sysEventInfo_.preBundleScene,
+            result);
+    }
     PerfProfile::GetInstance().SetBundleInstallEndTime(GetTickCount());
     APP_LOGD("finish to process bundle install");
     return result;
@@ -693,262 +694,6 @@ ErrCode BaseBundleInstaller::GrantRequestPermissions(const InnerBundleInfo &info
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ParseSharedBundles(const InstallParam &installParam, const Constants::AppType appType,
-    std::unordered_map<std::string, FilesParseResult> &newInfosMap)
-{
-    ErrCode result = ERR_OK;
-    if (installParam.sharedBundleDirPaths.empty()) {
-        return result;
-    }
-
-    for (const auto& hspDir : installParam.sharedBundleDirPaths) {
-        APP_LOGD("current hspDir = %s", hspDir.c_str());
-        // check hsp paths
-        std::vector<std::string> bundlePaths;
-        result = BundleUtil::CheckFilePath({hspDir}, bundlePaths);
-        CHECK_RESULT(result, "hsp files check failed %{public}d");
-
-        // check syscap
-        result = CheckSysCap(bundlePaths);
-        CHECK_RESULT(result, "hap syscap check failed %{public}d");
-
-        // verify signature info for all haps
-        std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
-        result = CheckMultipleHapsSignInfo(bundlePaths, installParam, hapVerifyResults);
-        CHECK_RESULT(result, "hap files check signature info failed %{public}d");
-
-        // parse the bundle infos for all hsps
-        FilesParseResult newInfos;
-        result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
-        CHECK_RESULT(result, "parse haps file failed %{public}d");
-
-        result = CheckSharedBundleLabelInfo(newInfos);
-        CHECK_RESULT(result, "check hsp labelInfo failed %{public}d");
-
-        // check native file
-        result = CheckMultiNativeFile(newInfos);
-        CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
-
-        auto& bundleName = newInfos.begin()->second.GetBundleName();
-        newInfosMap[bundleName].insert(newInfos.begin(), newInfos.end());
-        APP_LOGD("bundleName = %s, module count = %zu", bundleName.c_str(), newInfos.size());
-    }
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::MkdirIfNotExist(const std::string &dir, std::vector<std::string> &newDirs)
-{
-    bool isDirExist = false;
-    ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
-    CHECK_RESULT(result, "check if dir exist failed %{public}d");
-    if (!isDirExist) {
-        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
-        CHECK_RESULT(result, "create dir failed %{public}d");
-        newDirs.emplace_back(dir);
-    }
-    return result;
-}
-
-ErrCode BaseBundleInstaller::ExtractSharedBundles(InnerBundleInfo &newInfo, const std::string &bundlePath,
-    std::vector<std::string> &newDirs)
-{
-    ErrCode result = ERR_OK;
-    auto &bundleName = newInfo.GetBundleName();
-    std::string bundleDir = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName;
-    result = MkdirIfNotExist(bundleDir, newDirs);
-    CHECK_RESULT(result, "check bundle dir failed %{public}d");
-    newInfo.SetAppCodePath(bundleDir);
-
-    uint32_t versionCode = newInfo.GetVersionCode();
-    std::string versionDir = bundleDir + Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX
-        + std::to_string(versionCode);
-    result = MkdirIfNotExist(versionDir, newDirs);
-    CHECK_RESULT(result, "check version dir failed %{public}d");
-
-    auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
-    std::string moduleDir = versionDir + Constants::PATH_SEPARATOR + moduleName;
-    result = MkdirIfNotExist(moduleDir, newDirs);
-    CHECK_RESULT(result, "check module dir failed %{public}d");
-
-    std::string cpuAbi;
-    std::string nativeLibraryPath;
-    newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath);
-    std::string targetSoPath = versionDir + Constants::PATH_SEPARATOR + nativeLibraryPath + Constants::PATH_SEPARATOR;
-    APP_LOGD("targetSoPath=%s,cpuAbi=%s, bundlePath=%s", targetSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
-
-    result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, targetSoPath, cpuAbi);
-    CHECK_RESULT(result, "extract module files failed %{public}d");
-
-    std::string hspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName + Constants::INSTALL_SHARED_FILE_SUFFIX;
-    result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath);
-    CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
-
-    newInfo.SetModuleHapPath(hspPath);
-    newInfo.AddModuleSrcDir(moduleDir);
-    newInfo.AddModuleResPath(moduleDir);
-    return ERR_OK;
-}
-
-template<class K, class V>
-static std::unordered_set<K> GetKeySet(std::unordered_map<K, V> &map)
-{
-    std::unordered_set<K> res;
-    for (const auto& entry : map) {
-        res.emplace(entry.first);
-    }
-    return res;
-}
-
-ErrCode BaseBundleInstaller::InstallSharedBundles(std::unordered_map<std::string, FilesParseResult> &hspInfos,
-    const InstallParam &installParam)
-{
-    APP_LOGD("install shared bundles, bundles = %zu", hspInfos.size());
-    if (hspInfos.empty()) {
-        return ERR_OK;
-    }
-
-    if (dataMgr_ == nullptr) {
-        APP_LOGE("install hsp failed, dataMgr_ is nullptr");
-        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
-    }
-
-    SharedBundleRollBackInfo rollbackInfo;
-    ScopeGuard installGuard([&] {
-        auto keyset = GetKeySet(rollbackInfo.backupBundles);
-        APP_LOGW("rollback shared bundles : %s,%s,%s", GetJsonStrFromInfo(rollbackInfo.newDirs).c_str(),
-            GetJsonStrFromInfo(rollbackInfo.newBundles).c_str(), GetJsonStrFromInfo(keyset).c_str());
-        for (auto iter = rollbackInfo.newDirs.crbegin(); iter != rollbackInfo.newDirs.crend(); ++iter) {
-            ErrCode err = InstalldClient::GetInstance()->RemoveDir(*iter);
-            if (err != ERR_OK) {
-                APP_LOGE("clean dir failed : %s", iter->c_str());
-            }
-        }
-        // rollback database
-        if (dataMgr_ == nullptr) {
-            APP_LOGE("roll back failed, dataMgr_ is nullptr");
-            return;
-        }
-        for (const auto& entry : rollbackInfo.backupBundles) {
-            if (!dataMgr_->UpdateInnerBundleInfo(entry.second)) {
-                APP_LOGE("rollback old bundle failed : %s", entry.first.c_str());
-            }
-        }
-        for (const auto& bundleName : rollbackInfo.newBundles) {
-            if (!dataMgr_->DeleteSharedBundleInfo(bundleName)) {
-                APP_LOGE("rollback new bundle failed : %s", bundleName.c_str());
-            }
-        }
-    });
-
-    ErrCode result = ERR_OK;
-    for (auto& hspBundles : hspInfos) {
-        result = InnerInstallSharedBundles(hspBundles.first, hspBundles.second, rollbackInfo, installParam);
-        CHECK_RESULT(result, "install hsp failed %{public}d");
-    }
-    installGuard.Dismiss();
-    APP_LOGD("install shared bundles success");
-    return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::InnerInstallSharedBundles(const std::string &bundleName, FilesParseResult &parseResult,
-    SharedBundleRollBackInfo &rollbackInfo, const InstallParam &installParam)
-{
-    if (parseResult.empty()) {
-        return ERR_OK;
-    }
-
-    InnerBundleInfo oldInfo;
-    bool isAppExist = dataMgr_->FetchInnerBundleInfo(bundleName, oldInfo);
-    if (isAppExist) { // backup
-        rollbackInfo.backupBundles[bundleName] = oldInfo; // deep copy
-    } else {
-        rollbackInfo.newBundles.emplace_back(bundleName);
-    }
-
-    // 1. extract files
-    ErrCode result = ERR_OK;
-    for (auto& bundleInfo : parseResult) {
-        result = ExtractSharedBundles(bundleInfo.second, bundleInfo.first, rollbackInfo.newDirs);
-        CHECK_RESULT(result, "extract hsp failed %{public}d");
-    }
-    // 2. merge bundleinfos
-    auto iter = parseResult.begin();
-    if (!isAppExist) {
-        oldInfo = iter->second;
-        ++iter;
-    }
-
-    for (; iter != parseResult.end(); ++iter) {
-        const auto& infos = iter->second.GetInnerSharedModuleInfos();
-        if (infos.empty()) {
-            continue;
-        }
-
-        const auto& innerModuleInfos = infos.begin()->second;
-        if (!innerModuleInfos.empty()) {
-            const auto& innerModuleInfo = innerModuleInfos.front();
-            oldInfo.InsertInnerSharedModuleInfo(innerModuleInfo.modulePackage, innerModuleInfo);
-        }
-        // update version
-        if (oldInfo.GetBaseBundleInfo().versionCode < iter->second.GetBaseBundleInfo().versionCode) {
-            oldInfo.UpdateBaseBundleInfo(iter->second.GetBaseBundleInfo(), false);
-            oldInfo.UpdateBaseApplicationInfo(iter->second.GetBaseApplicationInfo());
-        }
-    }
-
-    // 3. save preinstall bundle info
-    if (installParam.needSavePreInstallInfo) {
-        PreInstallBundleInfo preInstallBundleInfo;
-        dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo);
-        preInstallBundleInfo.SetVersionCode(oldInfo.GetBaseBundleInfo().versionCode);
-        for (const auto &item : parseResult) {
-            preInstallBundleInfo.AddBundlePath(item.first);
-        }
-#ifdef USE_PRE_BUNDLE_PROFILE
-        preInstallBundleInfo.SetRemovable(installParam.removable);
-#else
-        preInstallBundleInfo.SetRemovable(oldInfo.IsRemovable());
-#endif
-        dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
-    }
-
-    // 4. save bundleinfos
-    oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-    oldInfo.SetHideDesktopIcon(true);
-    std::string packageName;
-    oldInfo.SetInstallMark(bundleName, packageName, InstallExceptionStatus::INSTALL_FINISH);
-    if (isAppExist) {
-        if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
-            APP_LOGE("save bundle failed : %s", oldInfo.GetBundleName().c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-        return ERR_OK;
-    }
-
-    dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_START);
-    if (!dataMgr_->AddInnerBundleInfo(bundleName, oldInfo)) {
-        dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_FAIL);
-        APP_LOGE("save bundle failed : %s", oldInfo.GetBundleName().c_str());
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-    dataMgr_->UpdateBundleInstallState(bundleName, InstallState::INSTALL_SUCCESS);
-    return ERR_OK;
-}
-
-bool BaseBundleInstaller::TryInstallSharedBundleOnly(std::vector<std::string> &bundlePaths,
-    std::unordered_map<std::string, FilesParseResult> &hspInfos, ErrCode &result, const InstallParam &installParam)
-{
-    if (!bundlePaths.empty() || hspInfos.empty()) {
-        APP_LOGW("bundlePaths.size = %zu, hspInfos.size = %zu", bundlePaths.size(), hspInfos.size());
-        return false;
-    }
-
-    // install hsp only
-    result = InstallSharedBundles(hspInfos, installParam);
-    sync();
-    return true;
-}
-
 ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string> &inBundlePaths,
     const InstallParam &installParam, const Constants::AppType appType, int32_t &uid)
 {
@@ -962,12 +707,15 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
     }
 
-    // <bundleName, <hspPath, InnerBundleInfo>>
-    std::unordered_map<std::string, FilesParseResult> hspInfos;
-    ErrCode result = ERR_OK;
-    if (!installParam.sharedBundleDirPaths.empty()) {
-        result = ParseSharedBundles(installParam, appType, hspInfos);
-        CHECK_RESULT(result, "parse hsp failed %{public}d");
+    SharedBundleInstaller sharedBundleInstaller(installParam, appType);
+    ErrCode result = sharedBundleInstaller.ParseFiles();
+    CHECK_RESULT(result, "parse cross-app shared bundles failed %{public}d");
+
+    if (inBundlePaths.empty() && sharedBundleInstaller.NeedToInstall()) {
+        result = sharedBundleInstaller.Install(sysEventInfo_);
+        sync();
+        APP_LOGI("install cross-app shared bundles only, result : %{public}d", result);
+        return result;
     }
 
     userId_ = GetUserId(installParam.userId);
@@ -977,10 +725,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::vector<std::string> bundlePaths;
     // check hap paths
     result = BundleUtil::CheckFilePath(inBundlePaths, bundlePaths);
-    if (TryInstallSharedBundleOnly(bundlePaths, hspInfos, result, installParam)) {
-        APP_LOGD("install shared bundle only");
-        return result;
-    }
     CHECK_RESULT(result, "hap file check failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
@@ -1001,7 +745,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
     // check the dependencies whether or not exists
-    result = CheckDependency(newInfos, hspInfos);
+    result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
@@ -1067,8 +811,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         UninstallLowerVersionFeature(uninstallModuleVec_);
     }
 
-    result = InstallSharedBundles(hspInfos, installParam);
-    CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app hsps failed %{public}d", newInfos, oldInfo);
+    result = sharedBundleInstaller.Install(sysEventInfo_);
+    CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
 
     SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
     RemoveEmptyDirs(newInfos);
@@ -1259,13 +1003,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    versionCode_ = oldInfo.GetVersionCode();
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
         APP_LOGE("uninstall bundle is shared library.");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
-    versionCode_ = oldInfo.GetVersionCode();
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -1380,13 +1124,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    versionCode_ = oldInfo.GetVersionCode();
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
         APP_LOGE("uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
-    versionCode_ = oldInfo.GetVersionCode();
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -2274,7 +2018,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, const std::string &bundleDataDirPath)
 {
     int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
-#ifdef QUOTA_SET_FOR_TEST
+#ifdef QUOTA_PARAM_SET_ENABLE
     char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
         szAtomicDatasizeThresholdMb, THRESHOLD_VAL_LEN);
@@ -2288,7 +2032,7 @@ static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, 
         APP_LOGW("no need to prepare quota");
         return;
     }
-#endif
+#endif // QUOTA_PARAM_SET_ENABLE
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 
@@ -2324,8 +2068,11 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
     }
     if (info.GetIsNewVersion()) {
+        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+            GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+            newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             APP_LOGE("fail to create ark profile, error is %{public}d", result);
             return result;
@@ -2358,7 +2105,8 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
                   .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
-    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+    int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
+    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
@@ -2715,9 +2463,16 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
 }
 
 ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
-    std::unordered_map<std::string, FilesParseResult> &hsps)
+    const SharedBundleInstaller &sharedBundleInstaller)
 {
-    return bundleInstallChecker_->CheckDependency(infos, hsps);
+    for (const auto &info : infos) {
+        if (!sharedBundleInstaller.CheckDependency(info.second)) {
+            APP_LOGE("cross-app dependency check failed");
+            return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
+        }
+    }
+
+    return bundleInstallChecker_->CheckDependency(infos);
 }
 
 ErrCode BaseBundleInstaller::CheckHapHashParams(
@@ -2744,11 +2499,6 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
     bundleName_ = (infos.begin()->second).GetBundleName();
     versionCode_ = (infos.begin()->second).GetVersionCode();
     return ERR_OK;
-}
-
-ErrCode BaseBundleInstaller::CheckSharedBundleLabelInfo(std::unordered_map<std::string, InnerBundleInfo> &infos)
-{
-    return bundleInstallChecker_->CheckSharedBundleLabelInfo(infos);
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
@@ -3105,7 +2855,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
         return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetAppType() != newInfo.GetAppType()) {
+    if (oldInfo.GetAppFeature() != newInfo.GetAppFeature()) {
         return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
     if (oldInfo.GetIsNewVersion() != newInfo.GetIsNewVersion()) {
@@ -3128,15 +2878,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("asanEnabled is not supported in Release");
         return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
-    if (oldInfo.GetHasAtomicServiceConfig() != newInfo.GetHasAtomicServiceConfig()) {
-        APP_LOGE("atomicService config is not same.");
-        return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-    } else if (oldInfo.GetHasAtomicServiceConfig() && newInfo.GetHasAtomicServiceConfig()) {
-        if (oldInfo.GetBaseApplicationInfo().split != newInfo.GetBaseApplicationInfo().split ||
-            oldInfo.GetAtomicMainModuleName() != newInfo.GetAtomicMainModuleName()) {
-            APP_LOGE("atomicService config is not same.");
-            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-        }
+    if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+        return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
@@ -3492,8 +3235,11 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
+            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+                GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+                oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
-                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), oldInfo.GetUid(userId)) :
+                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
                 DeleteArkProfile(bundleName_, userId);
             if (result != ERR_OK) {
                 APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",

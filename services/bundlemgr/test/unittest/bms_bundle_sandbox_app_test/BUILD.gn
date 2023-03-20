@@ -55,14 +55,6 @@ ohos_unittest("BmsSandboxAppTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

@@ -2400,7 +2400,11 @@ ErrCode BundleMgrHost::HandleProcessPreload(MessageParcel &data, MessageParcel &
         APP_LOGE("ReadParcelable<want> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ProcessPreload(*want);
+    auto ret = ProcessPreload(*want);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 

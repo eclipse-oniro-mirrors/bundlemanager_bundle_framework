@@ -4581,6 +4581,11 @@ ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+        APP_LOGE("GetSharedBundleInfoBySelf failed, the bundle(%{public}s) is not shared library",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
     APP_LOGD("GetSharedBundleInfoBySelf(%{public}s) successfully)", bundleName.c_str());
     return ERR_OK;
@@ -4598,7 +4603,7 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    if (!innerBundleInfo.GetSharedDependencies(moduleName, dependencies)) {
+    if (!innerBundleInfo.GetAllSharedDependencies(moduleName, dependencies)) {
         APP_LOGE("GetSharedDependencies failed, can not find module %{public}s", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
@@ -4655,5 +4660,22 @@ bool BundleDataMgr::CheckHspBundleIsRelied(const std::string &hspBundleName) con
     return false;
 }
 
+ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo.GetSharedBundleInfo(flags, bundleInfo);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -135,6 +135,7 @@ constexpr int32_t INVALID_BUNDLEID = -1;
 constexpr int32_t INVALID_ACCESS_TOKEN_ID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BMS_UID = 1000;
+constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t ACCOUNT_UID = 3058;
 constexpr int32_t FOUNDATION_UID = 5523;
@@ -239,8 +240,6 @@ constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
 constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
-constexpr const char* JOURNAL_MODE = "WAL";
-constexpr const char* SYNC_MODE = "MODE_OFF";
 const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
@@ -302,9 +301,6 @@ constexpr int32_t DEFAULT_OVERLAY_ENABLE_STATUS = 1;
 constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
-constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
-constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
-constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 

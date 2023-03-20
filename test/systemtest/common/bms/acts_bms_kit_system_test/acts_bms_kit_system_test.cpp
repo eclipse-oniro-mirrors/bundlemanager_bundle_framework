@@ -7631,5 +7631,94 @@ HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0200, Function | SmallTest | Lev
     bool res = applicationInfo.CheckNeedPreload(moduleName);
     EXPECT_EQ(res, true);
 }
+
+/**
+ * @tc.number: SilentInstall_0100
+ * @tc.name: test SilentInstall proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    bool ret = bundleMgrProxy->SilentInstall(want, USERID, nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ProcessPreload_0100
+ * @tc.name: test ProcessPreload proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, ProcessPreload_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    Want want;
+    want.SetElementName("", BASE_ABILITY_NAME, BASE_ABILITY_NAME, BASE_MODULE_NAME);
+    bool res = bundleMgrProxy->ProcessPreload(want);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfo_0100
+ * @tc.name: test GetAllSharedBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrProxy->GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetDependentBundleInfo_0100
+ * @tc.name: test GetDependentBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDependentBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    BundleInfo info;
+    ErrCode ret = bundleMgrProxy->GetDependentBundleInfo(BASE_BUNDLE_NAME, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetUidByDebugBundleName_0100
+ * @tc.name: test GetUidByDebugBundleName proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    int uid = 0;
+    int ret = bundleMgrProxy->GetUidByDebugBundleName(BASE_BUNDLE_NAME, uid);
+    EXPECT_EQ(ret, INVALIED_ID);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0100
+ * @tc.name: test GetSharedBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrProxy->GetSharedBundleInfo(
+        BASE_BUNDLE_NAME, BASE_MODULE_NAME, sharedBundles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
