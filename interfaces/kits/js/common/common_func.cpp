@@ -999,10 +999,6 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "bundleType", nBundleType));
 
-    napi_value nSplit;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.split, &nSplit));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "split", nSplit));
-
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, appInfo.description.c_str(), NAPI_AUTO_LENGTH, &nDescription));
@@ -1290,12 +1286,6 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, hapModuleInfo.moduleSourceDir.c_str(), NAPI_AUTO_LENGTH,
         &nModuleSourceDir));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "moduleSourceDir", nModuleSourceDir));
-
-    napi_value nAtomicServiceModuleType;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(hapModuleInfo.atomicServiceModuleType), &nAtomicServiceModuleType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env,
-        objHapModuleInfo, "atomicServiceModuleType", nAtomicServiceModuleType));
 
     napi_value nPreloads;
     size = hapModuleInfo.preloads.size();

@@ -410,6 +410,7 @@ protected:
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,
+                "bundleType": "app",
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "bundleType": 0,
