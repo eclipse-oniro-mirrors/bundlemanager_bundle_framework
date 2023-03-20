@@ -37,16 +37,15 @@ namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
 namespace {
-const std::string STRING_BUNDLE_NAME = "bundleName";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
-const std::string TYPE_WANT = "want";
-const std::string QUERY_SERVICE_FLAG = "ServiceInfosFlag";
-const std::string QUERY_SERVICE_INFOS = "queryServiceInfos";
+const std::string TYPE_BUSINESS_AIBILITY_FILTER = "businessAbilityFilter";
+const std::string QUERY_BUSINESS_ABILITY_INFO = "queryBusinessAbilityInfo";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* NAME = "name";
-constexpr const char* SERVICE_TYPE = "serviceType";
-constexpr const char* PERMISSIONS = "permissions";
+constexpr const char* BUSINESS_TYPE = "businessType";
+constexpr const char* MIME_TYPE = "mimeType";
+constexpr const char* URI = "uri";
 constexpr const char* LABEL_ID = "labelId";
 constexpr const char* DESCRIPTION_ID = "descriptionId";
 constexpr const char* ICON_ID = "iconId";
@@ -72,76 +71,66 @@ static void ConvertAppInfo(napi_env env, napi_value objAppInfo, const AppInfo &a
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, ICON_ID, nIconId));
 }
 
-static void ConvertServiceInfo(napi_env env, const ServiceInfo &serviceInfo, napi_value objServiceInfo)
+static void ConvertBusinessAbilityInfo(napi_env env, const BusinessAbilityInfo &businessAbilityInfo, napi_value objAbilityInfo)
 {
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, serviceInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, BUNDLE_NAME, nBundleName));
+        env, napi_create_string_utf8(env, businessAbilityInfo.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, BUNDLE_NAME, nBundleName));
 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, serviceInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, MODULE_NAME, nModuleName));
+        env, napi_create_string_utf8(env, businessAbilityInfo.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, MODULE_NAME, nModuleName));
 
     napi_value nName;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, serviceInfo.abilityName.c_str(), NAPI_AUTO_LENGTH, &nName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, NAME, nName));
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, businessAbilityInfo.abilityName.c_str(), NAPI_AUTO_LENGTH,
+        &nName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, NAME, nName));
 
     napi_value nLabelId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, serviceInfo.labelId, &nLabelId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, LABEL_ID, nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, businessAbilityInfo.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, LABEL_ID, nLabelId));
 
     napi_value nDescriptionId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, serviceInfo.descriptionId, &nDescriptionId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, DESCRIPTION_ID, nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, businessAbilityInfo.descriptionId, &nDescriptionId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, DESCRIPTION_ID, nDescriptionId));
 
     napi_value nIconId;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, serviceInfo.iconId, &nIconId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, ICON_ID, nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, businessAbilityInfo.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, ICON_ID, nIconId));
 
-    napi_value nServiceType;
+    napi_value nBusinessType;
     NAPI_CALL_RETURN_VOID(
-        env, napi_create_int32(env, static_cast<int32_t>(serviceInfo.serviceType), &nServiceType));
+        env, napi_create_int32(env, static_cast<int32_t>(businessAbilityInfo.businessType), &nBusinessType));
     NAPI_CALL_RETURN_VOID(env,
-        napi_set_named_property(env, objServiceInfo, SERVICE_TYPE, nServiceType));
-
-    napi_value nPermissions;
-    size_t size = serviceInfo.permissions.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nPermissions));
-    for (size_t i = 0; i < size; ++i) {
-        napi_value permission;
-        NAPI_CALL_RETURN_VOID(
-            env, napi_create_string_utf8(env, serviceInfo.permissions[i].c_str(), NAPI_AUTO_LENGTH, &permission));
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPermissions, i, permission));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, PERMISSIONS, nPermissions));
+        napi_set_named_property(env, objAbilityInfo, BUSINESS_TYPE, nBusinessType));
 
     napi_value nAppInfo;
-    if (!serviceInfo.appInfo.bundleName.empty()) {
+    if (!businessAbilityInfo.appInfo.bundleName.empty()) {
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nAppInfo));
-        ConvertAppInfo(env, nAppInfo, serviceInfo.appInfo);
+        ConvertAppInfo(env, nAppInfo, businessAbilityInfo.appInfo);
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &nAppInfo));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objServiceInfo, APPLICATION_INFO, nAppInfo));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAbilityInfo, APPLICATION_INFO, nAppInfo));
 }
 
-static void ConvertServiceInfos(napi_env env, const std::vector<ServiceInfo> &serviceInfos,
+static void ConvertBusinessAbilityInfos(napi_env env, const std::vector<BusinessAbilityInfo> &businessAbilityInfos,
     napi_value value)
 {
-    for (size_t index = 0; index < serviceInfos.size(); ++index) {
-        napi_value objServiceInfo = nullptr;
-        napi_create_object(env, &objServiceInfo);
-        ConvertServiceInfo(env, serviceInfos[index], objServiceInfo);
-        napi_set_element(env, value, index, objServiceInfo);
+    for (size_t index = 0; index < businessAbilityInfos.size(); ++index) {
+        napi_value objAbilityInfo = nullptr;
+        napi_create_object(env, &objAbilityInfo);
+        ConvertBusinessAbilityInfo(env, businessAbilityInfos[index], objAbilityInfo);
+        napi_set_element(env, value, index, objAbilityInfo);
     }
 }
 
-static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
+static ErrCode InnerQueryBusinessAbilityInfos(AbilityInfosCallbackInfo *info)
 {
     if (info == nullptr) {
-        APP_LOGE("ExtensionCallbackInfo is null");
+        APP_LOGE("CallbackInfo is null");
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
     auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
@@ -150,40 +139,39 @@ static ErrCode InnerQueryServiceInfos(ServiceInfosCallbackInfo *info)
         return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
 
-    ExtensionServiceType type = static_cast<ExtensionServiceType>(info->serviceType);
-    auto ret = serviceRouterMgr->QueryServiceInfos(info->want, type, info->serviceInfos);
-    APP_LOGI("InnerQueryServiceInfos ErrCode : %{public}d", ret);
+    auto ret = serviceRouterMgr->QueryBusinessAbilityInfos(info->filter, info->businessAbilityInfos);
+    APP_LOGI("InnerQueryBusinessAbilityInfos ErrCode : %{public}d", ret);
     return CommonFunc::ConvertErrCode(ret);
 }
 
-void QueryServiceInfosExec(napi_env env, void *data)
+void QueryBusinessAbilityInfosExec(napi_env env, void *data)
 {
     APP_LOGD("QueryServiceInfosExec start");
-    ServiceInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<ServiceInfosCallbackInfo*>(data);
+    AbilityInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityInfosCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("%{public}s, asyncCallbackInfo == nullptr.", __func__);
         return;
     }
-    asyncCallbackInfo->err = InnerQueryServiceInfos(asyncCallbackInfo);
+    asyncCallbackInfo->err = InnerQueryBusinessAbilityInfos(asyncCallbackInfo);
 }
 
-void QueryServiceInfosComplete(napi_env env, napi_status status, void *data)
+void QueryBusinessAbilityInfosComplete(napi_env env, napi_status status, void *data)
 {
-    APP_LOGD("QueryServiceInfosComplete start");
-    ServiceInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<ServiceInfosCallbackInfo*>(data);
+    APP_LOGD("QueryBusinessAbilityInfosComplete start");
+    AbilityInfosCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityInfosCallbackInfo*>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    std::unique_ptr<ServiceInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::unique_ptr<AbilityInfosCallbackInfo> callbackPtr{asyncCallbackInfo};
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        ConvertServiceInfos(env, asyncCallbackInfo->serviceInfos, result[1]);
+        ConvertBusinessAbilityInfos(env, asyncCallbackInfo->businessAbilityInfos, result[1]);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            QUERY_SERVICE_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            QUERY_BUSINESS_ABILITY_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -200,33 +188,57 @@ void QueryServiceInfosComplete(napi_env env, napi_status status, void *data)
     }
 }
 
-napi_value QueryServiceInfos(napi_env env, napi_callback_info info)
+bool ParseBusinessAbilityInfo(napi_env env, napi_value args, BusinessAbilityFilter &filter)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, args, &valueType), false);
+    if (valueType != napi_object) {
+        return false;
+    }
+    napi_value prop = nullptr;
+    int32_t businessType = static_cast<int32_t>(BusinessType::UNSPECIFIED);
+    napi_get_named_property(env, args, BUSINESS_TYPE, &prop);
+    napi_typeof(env, prop, &valueType);
+    if (valueType == napi_number) {
+        napi_get_value_int32(env, prop, &businessType);
+    }
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MIME_TYPE, &prop);
+    std::string mimeType = CommonFunc::GetStringFromNAPI(env, prop);
+    prop = nullptr;
+    napi_get_named_property(env, args, URI, &prop);
+    std::string uri = CommonFunc::GetStringFromNAPI(env, prop);
+    
+    filter.businessType = static_cast<BusinessType>(businessType);
+    filter.mimeType = mimeType;
+    filter.uri = uri;
+    return true;
+}
+
+napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info)
 {
     APP_LOGI("NAPI_QueryServiceInfos start");
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    ServiceInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) ServiceInfosCallbackInfo(env);
+    AbilityInfosCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityInfosCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
         return nullptr;
     }
-    std::unique_ptr<ServiceInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseWantWithoutVerification(env, args[ARGS_POS_ZERO], asyncCallbackInfo->want)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, STRING_BUNDLE_NAME, TYPE_STRING);
+    std::unique_ptr<AbilityInfosCallbackInfo> callbackPtr{asyncCallbackInfo};
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        if (!ParseBusinessAbilityInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->filter)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_BUSINESS_AIBILITY_FILTER, TYPE_STRING);
             return nullptr;
         }
-        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], asyncCallbackInfo->serviceType)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, QUERY_SERVICE_FLAG, TYPE_NUMBER);
-            return nullptr;
-        }
-        if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
             napi_valuetype valueType = napi_undefined;
-            napi_typeof(env, args[ARGS_POS_TWO], &valueType);
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
             if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_TWO],
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
                     NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             }
         }
@@ -235,8 +247,8 @@ napi_value QueryServiceInfos(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    auto promise = CommonFunc::AsyncCallNativeMethod<ServiceInfosCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_SERVICE_INFOS, QueryServiceInfosExec, QueryServiceInfosComplete);
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityInfosCallbackInfo>(
+        env, asyncCallbackInfo, QUERY_BUSINESS_ABILITY_INFO, QueryBusinessAbilityInfosExec, QueryBusinessAbilityInfosComplete);
     callbackPtr.release();
     return promise;
 }

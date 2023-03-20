@@ -38,14 +38,13 @@ public:
     using Want = OHOS::AAFwk::Want;
 
     /**
-     * @brief Query the ServiceInfo of list by the given Want.
-     * @param want Indicates the information of the ability.
-     * @param serviceType Indicates the type of the service.
-     * @param serviceInfos Indicates the obtained ServiceInfos object.
+     * @brief Query the business ability info of list by the given filter.
+     * @param filter Indicates the filter containing the business ability info to be queried.
+     * @param businessAbilityInfos Indicates the obtained business ability info objects
      * @return Returns ERR_OK on success, others on failure.
      */
-    virtual int32_t QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
-        std::vector<ServiceInfo> &serviceInfos) = 0;
+    virtual int32_t QueryBusinessAbilityInfos(const BusinessAbilityFilter &filter,
+        std::vector<BusinessAbilityInfo> &businessAbilityInfos) = 0;
 
     /**
      * @brief Query the PurposeInfo of list by the given Want.
@@ -58,7 +57,7 @@ public:
         std::vector<PurposeInfo> &purposeInfos) = 0;
 
     enum Message : uint32_t {
-        QUERY_SERVICE_INFOS = 0,
+        QUERY_BUSINESS_ABILITY_INFOS = 0,
         QUERY_PURPOSE_INFOS = 1,
     };
 };

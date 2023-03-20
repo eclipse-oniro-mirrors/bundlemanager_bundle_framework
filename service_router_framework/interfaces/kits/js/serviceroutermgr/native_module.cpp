@@ -39,46 +39,46 @@ static napi_status SetEnumItem(napi_env env, napi_value object, const char* name
     return napi_ok;
 }
 
-static napi_value InitExtServiceTypeObject(napi_env env)
+static napi_value InitBusinessTypeObject(napi_env env)
 {
     napi_value object;
     NAPI_CALL(env, napi_create_object(env, &object));
 
-    NAPI_CALL(env, SetEnumItem(env, object, "SHARE", static_cast<int32_t>(ExtensionServiceType::SHARE)));
-    NAPI_CALL(env, SetEnumItem(env, object, "UNSPECIFIED", static_cast<int32_t>(ExtensionServiceType::UNSPECIFIED)));
+    NAPI_CALL(env, SetEnumItem(env, object, "SHARE", static_cast<int32_t>(BusinessType::SHARE)));
+    NAPI_CALL(env, SetEnumItem(env, object, "UNSPECIFIED", static_cast<int32_t>(BusinessType::UNSPECIFIED)));
     return object;
 }
 
-static napi_value ServiceRouterExport(napi_env env, napi_value exports)
+static napi_value BusinessRouterExport(napi_env env, napi_value exports)
 {
-    napi_value extServiceType = InitExtServiceTypeObject(env);
-    if (extServiceType == nullptr) {
-        APP_LOGE("failed to create extension service type object");
+    napi_value businessType = InitBusinessTypeObject(env);
+    if (businessType == nullptr) {
+        APP_LOGE("failed to create business type object");
         return nullptr;
     }
 
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("queryServiceInfos", QueryServiceInfos),
-        DECLARE_NAPI_PROPERTY("ExtensionServiceType", extServiceType),
+        DECLARE_NAPI_FUNCTION("queryBusinessAbilityInfo", QueryBusinessAbilityInfos),
+        DECLARE_NAPI_PROPERTY("BusinessType", businessType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     return exports;
 }
 
-static napi_module service_router_module = {
+static napi_module business_router_module = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
-    .nm_register_func = ServiceRouterExport,
-    .nm_modname = "serviceRouter",
+    .nm_register_func = BusinessRouterExport,
+    .nm_modname = "businessRouter",
     .nm_priv = ((void *)0),
     .reserved = {0}
 };
 
-extern "C" __attribute__((constructor)) void ServiceRouterRegister(void)
+extern "C" __attribute__((constructor)) void BusinessRouterRegister(void)
 {
-    napi_module_register(&service_router_module);
+    napi_module_register(&business_router_module);
 }
 }
 }
