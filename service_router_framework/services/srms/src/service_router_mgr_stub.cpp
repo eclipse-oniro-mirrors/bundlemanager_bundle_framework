@@ -48,8 +48,8 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     }
 
     switch (code) {
-        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_SERVICE_INFOS):
-            return HandleQueryServiceInfos(data, reply);
+        case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_BUSINESS_ABILITY_INFOS):
+            return HandleQueryBusinessAbilityInfos(data, reply);
         case static_cast<uint32_t>(IServiceRouterManager::Message::QUERY_PURPOSE_INFOS):
             return HandleQueryPurposeInfos(data, reply);
         default:
@@ -58,7 +58,7 @@ int ServiceRouterMgrStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
     }
 }
 
-int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply)
+int ServiceRouterMgrStub::HandleQueryBusinessAbilityInfos(MessageParcel &data, MessageParcel &reply)
 {
     APP_LOGD("ServiceRouterMgrStub handle query service infos");
     if (!VerifySystemApp()) {
@@ -69,21 +69,20 @@ int ServiceRouterMgrStub::HandleQueryServiceInfos(MessageParcel &data, MessagePa
         APP_LOGE("verify GET_BUNDLE_INFO_PRIVILEGED failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    Want *want = data.ReadParcelable<Want>();
-    if (want == nullptr) {
-        APP_LOGE("ReadParcelable<want> failed");
+    BusinessAbilityFilter *filter = data.ReadParcelable<BusinessAbilityFilter>();
+    if (filter == nullptr) {
+        APP_LOGE("ReadParcelable<filter> failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ExtensionServiceType type = static_cast<ExtensionServiceType>(data.ReadInt32());
-    std::vector<ServiceInfo> infos;
-    int ret = QueryServiceInfos(*want, type, infos);
+    std::vector<BusinessAbilityInfo> infos;
+    int ret = QueryBusinessAbilityInfos(*filter, infos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK) {
-        if (!WriteParcelableVector<ServiceInfo>(infos, reply)) {
-            APP_LOGE("QueryServiceInfos write failed");
+        if (!WriteParcelableVector<BusinessAbilityInfo>(infos, reply)) {
+            APP_LOGE("QueryBusinessAbilityInfos write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }

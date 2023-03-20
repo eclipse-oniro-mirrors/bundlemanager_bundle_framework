@@ -21,19 +21,18 @@
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
 #include "service_info.h"
-#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-struct ServiceInfosCallbackInfo : public BaseCallbackInfo {
-    explicit ServiceInfosCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+struct AbilityInfosCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityInfosCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    OHOS::AAFwk::Want want;
-    int32_t serviceType = static_cast<int32_t>(ExtensionServiceType::UNSPECIFIED);
-    std::vector<ServiceInfo> serviceInfos;
+    BusinessAbilityFilter filter;
+    std::vector<BusinessAbilityInfo> businessAbilityInfos;
 };
 
-napi_value QueryServiceInfos(napi_env env, napi_callback_info info);
+void ParseBusinessAbilityFilter(napi_env env, napi_value args, BusinessAbilityFilter &filter);
+napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_KITS_JS_SERVICE_ROUTER_MGR_H

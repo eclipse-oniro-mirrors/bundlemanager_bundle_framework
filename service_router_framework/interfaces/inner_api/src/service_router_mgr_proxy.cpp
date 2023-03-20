@@ -33,27 +33,23 @@ ServiceRouterMgrProxy::~ServiceRouterMgrProxy()
     APP_LOGD("ServiceRouterMgrProxy instance is destroyed");
 }
 
-int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
-    std::vector<ServiceInfo> &serviceInfos)
+int32_t ServiceRouterMgrProxy::QueryBusinessAbilityInfos(const BusinessAbilityFilter &filter,
+    std::vector<BusinessAbilityInfo> &abilityInfos)
 {
-    APP_LOGI("ServiceRouterMgrProxy QueryServiceInfos");
+    APP_LOGD("ServiceRouterMgrProxy QueryBusinessAbilityInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteParcelable(&want)) {
-        APP_LOGE("write want failed");
+    if (!data.WriteParcelable(&filter)) {
+        APP_LOGE("write filter failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(static_cast<int32_t>(serviceType))) {
-        APP_LOGE("fail to QueryServiceInfos due to write type fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    int32_t res = GetParcelableInfos<ServiceInfo>(ServiceRouterMgrProxy::Message::QUERY_SERVICE_INFOS, data,
-        serviceInfos);
+    int32_t res = GetParcelableInfos<BusinessAbilityInfo>(ServiceRouterMgrProxy::Message::QUERY_BUSINESS_ABILITY_INFOS,
+        data, abilityInfos);
     if (res != OHOS::NO_ERROR) {
-        APP_LOGE("fail to QueryServiceInfos from server, error code: %{public}d", res);
+        APP_LOGE("fail to QueryBusinessAbilityInfos from server, error code: %{public}d", res);
     }
     return res;
 }
@@ -61,7 +57,7 @@ int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const Extensi
 int32_t ServiceRouterMgrProxy::QueryPurposeInfos(const Want &want, const std::string purposeName,
     std::vector<PurposeInfo> &purposeInfos)
 {
-    APP_LOGI("ServiceRouterMgrProxy QueryPurposeInfos");
+    APP_LOGD("ServiceRouterMgrProxy QueryPurposeInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");

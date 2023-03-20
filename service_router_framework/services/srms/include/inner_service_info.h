@@ -31,11 +31,11 @@ public:
     ~InnerServiceInfo() = default;
     /**
      * @brief Find serviceInfo of list by service type.
-     * @param serviceType Indicates the service type.
-     * @param serviceInfos Indicates the ServiceInfos to be find.
+     * @param businessType Indicates the business type.
+     * @param businessAbilityInfos Indicates the business ability infos to be find.
      * @return
      */
-    void FindServiceInfos(const ExtensionServiceType &serviceType, std::vector<ServiceInfo> &serviceInfos) const;
+    void FindBusinessAbilityInfos(const BusinessType &businessType, std::vector<BusinessAbilityInfo> &businessAbilityInfos) const;
 
     /**
      * @brief Find purposeInfo by purposeName.
@@ -48,13 +48,13 @@ public:
     /**
      * @brief Update inner service info.
      * @param purposeInfos Indicates the PurposeInfos object to be update.
-     * @param serviceInfos Indicates the ServiceInfos to be update.
+     * @param businessAbilityInfos Indicates the business ability infos to be update.
      * @return
      */
-    void UpdateInnerServiceInfo(std::vector<PurposeInfo> &purposeInfos, std::vector<ServiceInfo> &serviceInfos)
+    void UpdateInnerServiceInfo(std::vector<PurposeInfo> &purposeInfos, std::vector<BusinessAbilityInfo> &businessAbilityInfos)
     {
         UpdatePurposeInfos(purposeInfos);
-        UpdateServiceInfos(serviceInfos);
+        UpdateBusinessAbilityInfos(businessAbilityInfos);
     }
 
     /**
@@ -71,23 +71,23 @@ public:
     }
 
     /**
-     * @brief Update service infos.
-     * @param serviceInfos Indicates the ServiceInfos to be add.
+     * @brief Update business ability infos.
+     * @param businessAbilityInfos Indicates the business ability infos to be add.
      * @return
      */
-    void UpdateServiceInfos(const std::vector<ServiceInfo> &serviceInfos)
+    void UpdateBusinessAbilityInfos(const std::vector<BusinessAbilityInfo> &businessAbilityInfos)
     {
-        if (serviceInfos.size() == 0) {
-            APP_LOGW("updateServiceInfos, serviceInfos.size is 0");
-            serviceInfos_.clear();
+        if (businessAbilityInfos.size() == 0) {
+            APP_LOGW("UpdateBusinessAbilityInfos, serviceInfos.size is 0");
+            businessAbilityInfos_.clear();
             return;
         }
-        serviceInfos_.assign(serviceInfos.begin(), serviceInfos.end());
+        businessAbilityInfos_.assign(businessAbilityInfos.begin(), businessAbilityInfos.end());
     }
 
     /**
      * @brief Update purposeInfos.
-     * @param serviceInfos Indicates the PurposeInfos to be add.
+     * @param purposeInfos Indicates the PurposeInfos to be add.
      * @return
      */
     void UpdatePurposeInfos(const std::vector<PurposeInfo> &purposeInfos)
@@ -119,7 +119,7 @@ public:
     }
 private:
     AppInfo appInfo_;
-    std::vector<ServiceInfo> serviceInfos_;
+    std::vector<BusinessAbilityInfo> businessAbilityInfos_;
     std::vector<PurposeInfo> purposeInfos_;
 };
 }  // namespace AppExecFwk
