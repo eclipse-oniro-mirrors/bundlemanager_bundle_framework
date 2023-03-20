@@ -759,5 +759,26 @@ bool BundlePermissionMgr::VerifyCallingUid()
     APP_LOGE("verify calling uid failed");
     return false;
 }
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    if (VerifyCallingUid()) {
+        return true;
+    }
+    std::string callingBundleName;
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
+    if (!ret) {
+        APP_LOGE("getBundleName failed");
+        return false;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
+    return bundleName == callingBundleName;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
