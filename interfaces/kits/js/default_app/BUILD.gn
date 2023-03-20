@@ -18,7 +18,6 @@ ohos_shared_library("defaultappmanager") {
   include_dirs = [
     "//third_party/node/src",
     "//third_party/libuv/include",
-    "//utils/system/safwk/native/include",
     "${kits_path}/js/common",
   ]
   defines = [

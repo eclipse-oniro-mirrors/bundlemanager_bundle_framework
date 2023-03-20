@@ -22,7 +22,6 @@ config("tools_bm_config") {
     "${common_path}/log/include",
     "${kits_path}/js/bundlemgr",
     "//third_party/json/include",
-    "//utils/system/safwk/native/include",
   ]
 
   defines = [

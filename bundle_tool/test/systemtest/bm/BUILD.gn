@@ -35,9 +35,9 @@ ohos_systemtest("bm_command_install_system_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
-    "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
+    "${bundle_framework_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -70,9 +70,9 @@ ohos_systemtest("bm_command_uninstall_system_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
-    "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
+    "${bundle_framework_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
   ]
 
@@ -105,9 +105,9 @@ ohos_systemtest("bm_command_dump_system_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
-    "${appexecfwk_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
-    "${appexecfwk_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForInstall:pageAbilityBundleForInstall",
+    "${bundle_framework_path}/test/sceneProject/tools/bm/pageAbilityBundleForUninstall:pageAbilityBundleForUninstall",
+    "${bundle_framework_path}/test/sceneProject/tools/ohos_test:copy_ohos_test",
     "//third_party/googletest:gtest_main",
   ]
 
