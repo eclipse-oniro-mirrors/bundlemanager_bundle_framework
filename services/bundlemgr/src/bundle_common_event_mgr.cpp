@@ -121,7 +121,10 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
     want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
     EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     return ERR_OK;
 }
 
@@ -138,7 +141,10 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(Constants::OVERLAY_STATE, isEnabled);
     EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
 std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)
