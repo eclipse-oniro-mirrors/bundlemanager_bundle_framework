@@ -58,6 +58,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
+const int32_t UID = 0;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
@@ -2140,14 +2141,13 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest 
     std::vector<std::string> inBundlePaths;
     InstallParam installParam;
     auto appType = Constants::AppType::THIRD_SYSTEM_APP;
-    int32_t uid = 0;
     installer.dataMgr_ = GetBundleDataMgr();
 
     installParam.userId = Constants::DEFAULT_USERID;
     installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
     installParam.installFlag = InstallFlag::FREE_INSTALL;
     ErrCode ret = installer.ProcessBundleInstall(
-        inBundlePaths, installParam, appType, uid);
+        inBundlePaths, installParam, appType, UID);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -2160,12 +2160,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo innerBundleInfo;
-    int32_t uid = 0;
     AbilityInfo info;
     info.uri = "dataability://";
     innerBundleInfo.userId_ = Constants::ALL_USERID;
     innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
+    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, UID);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
 }
 
