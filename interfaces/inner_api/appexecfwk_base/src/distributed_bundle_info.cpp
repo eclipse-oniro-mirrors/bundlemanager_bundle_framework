@@ -35,6 +35,7 @@ const std::string JSON_KEY_TARGET_VERSION_CODE = "targetVersionCode";
 const std::string JSON_KEY_APP_ID = "appId";
 const std::string JSON_KEY_MODULE_INFOS = "moduleInfos";
 const std::string JSON_KEY_ENABLED = "enabled";
+const std::string JSON_KEY_ACCESS_TOKEN_ID = "accessTokenId";
 }
 bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
 {
@@ -59,6 +60,7 @@ bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
         moduleInfos.emplace_back(*distributedModuleInfo);
     }
     enabled = parcel.ReadBool();
+    accessTokenId = parcel.ReadUint32();
     return true;
 }
 
@@ -78,6 +80,7 @@ bool DistributedBundleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &moduleInfo);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, accessTokenId);
     return true;
 }
 
@@ -105,6 +108,7 @@ std::string DistributedBundleInfo::ToString() const
     jsonObject[JSON_KEY_APP_ID] = appId;
     jsonObject[JSON_KEY_MODULE_INFOS] = moduleInfos;
     jsonObject[JSON_KEY_ENABLED] = enabled;
+    jsonObject[JSON_KEY_ACCESS_TOKEN_ID] = accessTokenId;
     return jsonObject.dump();
 }
 
@@ -195,6 +199,14 @@ bool DistributedBundleInfo::FromJsonString(const std::string &jsonString)
         JSON_KEY_ENABLED,
         enabled,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ACCESS_TOKEN_ID,
+        accessTokenId,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

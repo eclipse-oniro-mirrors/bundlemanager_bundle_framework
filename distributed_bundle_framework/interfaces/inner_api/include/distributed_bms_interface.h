@@ -109,6 +109,16 @@ public:
     virtual bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
         DistributedBundleInfo &distributedBundleInfo) = 0;
 
+    /**
+     * @brief get distributedBundleName based on a given accessTokenId and networkId.
+     * @param networkId Indicates the networkId of remote device.
+     * @param accessTokenId AccessTokenId of the application
+     * @param bundleNames distributed bundle name.
+     * @return Returns true if the distributed bundle name is successfully obtained; returns false otherwise.
+     */
+    virtual bool GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+        std::string &bundleName) = 0;
+
     enum class Message {
         GET_REMOTE_ABILITY_INFO = 0,
         GET_REMOTE_ABILITY_INFOS,
@@ -119,6 +129,7 @@ public:
         GET_ABILITY_INFO_WITH_LOCALE,
         GET_ABILITY_INFOS_WITH_LOCALE,
         GET_DISTRIBUTED_BUNDLE_INFO,
+        GET_DISTRIBUTED_BUNDLE_NAME,
     };
 };
 }  // namespace AppExecFwk

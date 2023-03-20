@@ -35,6 +35,7 @@ private:
     int HandleGetAbilityInfo(Parcel &data, Parcel &reply);
     int HandleGetAbilityInfos(Parcel &data, Parcel &reply);
     int HandleGetDistributedBundleInfo(Parcel &data, Parcel &reply);
+    int HandleGetDistributedBundleName(Parcel &data, Parcel &reply);
     bool VerifyCallingPermission(const std::string &permissionName);
     template <typename T>
     bool GetParcelableInfos(Parcel &data, std::vector<T> &parcelableInfos);
