@@ -48,6 +48,7 @@ namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
+const std::string MODULE_NAME = "moduleName";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
@@ -70,6 +71,8 @@ const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
+const std::string TEST_PACK_AGE = "modulePackage";
+const std::string NOEXIST = "noExist";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -1909,6 +1912,9 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2200, Function | SmallTest 
     InnerBundleInfo info;
     ErrCode res = installer.RemoveBundle(info, false);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    res = installer.RemoveBundle(info, true);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
 /**
@@ -2121,6 +2127,197 @@ HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Le
     EXPECT_EQ(installResult, ERR_OK);
 
     UnInstallBundle(BUNDLE_MODULEJSON_NAME);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3400
+ * @tc.name: test ProcessBundleInstall
+ * @tc.desc: 1.Test the ProcessBundleInstall of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> inBundlePaths;
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    int32_t uid = 0;
+    installer.dataMgr_ = GetBundleDataMgr();
+
+    installParam.userId = Constants::DEFAULT_USERID;
+    installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
+    installParam.installFlag = InstallFlag::FREE_INSTALL;
+    ErrCode ret = installer.ProcessBundleInstall(
+        inBundlePaths, installParam, appType, uid);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3500
+ * @tc.name: test ProcessBundleInstallStatus
+ * @tc.desc: 1.Test the ProcessBundleInstallStatus
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    int32_t uid = 0;
+    AbilityInfo info;
+    info.uri = "dataability://";
+    innerBundleInfo.userId_ = Constants::ALL_USERID;
+    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
+    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3600
+ * @tc.name: test ProcessNewModuleInstall
+ * @tc.desc: 1.Test the ProcessNewModuleInstall
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3600, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    newInfo.InsertInnerModuleInfo("", innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo("", innerModuleInfo);
+    ErrCode res = installer.ProcessNewModuleInstall(newInfo, oldInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3700
+ * @tc.name: test ProcessModuleUpdate
+ * @tc.desc: 1.Test the ProcessModuleUpdate
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    newInfo.InsertInnerModuleInfo("", innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo("", innerModuleInfo);
+    installer.modulePackage_ = NOEXIST;
+    ErrCode res = installer.ProcessModuleUpdate(newInfo, oldInfo, false, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3800
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string nativeLibraryPath = "X86";
+    std::string cpuAbi = "armeabi";
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    AppqfInfo appQfInfo;
+    ErrCode ret = installer.UpdateLibAttrs(
+        newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_3900
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.currentPackage_ = MODULE_NAME;
+    ErrCode ret = installer.SetDirApl(newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    bool installResult = InstallSystemBundle(bundleFile);
+    EXPECT_TRUE(installResult);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = RIGHT_BUNDLE;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    ret = installer.SetDirApl(newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    CheckFileExist();
+    ClearBundleInfo();
+}
+
+/**
+ * @tc.number: baseBundleInstaller_4000
+ * @tc.name: test CreateBundleDataDir
+ * @tc.desc: 1.Test the CreateBundleDataDir
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = USERID;
+    InnerBundleInfo info;
+    ErrCode res = installer.CreateBundleDataDir(info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_4100
+ * @tc.name: test ExtractArkNativeFile
+ * @tc.desc: 1.Test the ExtractArkNativeFile of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    std::string modulePath;
+    info.SetArkNativeFilePath("");
+    ErrCode ret = installer.ExtractArkNativeFile(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_4200
+ * @tc.name: test GetModuleNames
+ * @tc.desc: 1.Test the GetModuleNames of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    std::string ret = installer.GetModuleNames(infos);
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_4300
+ * @tc.name: test RemoveModuleDataDir
+ * @tc.desc: 1.Test the RemoveModuleDataDir of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    std::string modulePackage = "";
+    ErrCode res = installer.RemoveModuleAndDataDir(info, modulePackage, USERID, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    res = installer.RemoveModuleDataDir(info, modulePackage, USERID);
+    EXPECT_EQ(res, ERR_NO_INIT);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.innerModuleInfos_ = innerModuleInfos;
+    info.AddInnerModuleInfo(innerModuleInfos);
+
+    res = installer.RemoveModuleDataDir(info, TEST_PACK_AGE, INVAILD_CODE);
+    EXPECT_NE(res, ERR_NO_INIT);
 }
 
 /**
