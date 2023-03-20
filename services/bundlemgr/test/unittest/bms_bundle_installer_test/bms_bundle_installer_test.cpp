@@ -48,7 +48,7 @@ namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
-const std::string MODULE_NAME = "moduleName";
+const std::string MODULE_NAME_TEST = "moduleName";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
@@ -58,7 +58,6 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
-const int32_t UID = 0;
 const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
@@ -2142,12 +2141,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest 
     InstallParam installParam;
     auto appType = Constants::AppType::THIRD_SYSTEM_APP;
     installer.dataMgr_ = GetBundleDataMgr();
-
+    int32_t uid = 0;
     installParam.userId = Constants::DEFAULT_USERID;
     installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
     installParam.installFlag = InstallFlag::FREE_INSTALL;
     ErrCode ret = installer.ProcessBundleInstall(
-        inBundlePaths, installParam, appType, UID);
+        inBundlePaths, installParam, appType, uid);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -2161,10 +2160,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo innerBundleInfo;
     AbilityInfo info;
+    int32_t uid = 0;
     info.uri = "dataability://";
     innerBundleInfo.userId_ = Constants::ALL_USERID;
     innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, UID);
+    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
 }
 
@@ -2216,7 +2216,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest 
     std::string nativeLibraryPath = "X86";
     std::string cpuAbi = "armeabi";
     InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
     AppqfInfo appQfInfo;
     ErrCode ret = installer.UpdateLibAttrs(
         newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
@@ -2232,7 +2232,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
     ErrCode ret = installer.SetDirApl(newInfo);
     EXPECT_EQ(ret, ERR_OK);
 
