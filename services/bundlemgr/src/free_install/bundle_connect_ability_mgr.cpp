@@ -1090,7 +1090,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
 }
 
-sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalRuleMgr()
+sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologicalRuleMgr()
 {
     if (iErMgr_ != nullptr) {
         APP_LOGI("ecological rule mgr already get.");
@@ -1101,9 +1101,9 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalR
         APP_LOGE("saMgr is nullptr");
         return nullptr;
     }
-    sptr<IRemoteObject> remoteObject = saMgr->GetSystemAbility(ECOLOGICAL_RULE_SA_ID);
+    sptr<IRemoteObject> remoteObject = saMgr->CheckSystemAbility(ECOLOGICAL_RULE_SA_ID);
     if (remoteObject == nullptr) {
-        APP_LOGE("%{public}s error, failed to get ecological rule manager service.", __func__);
+        APP_LOGE("%{public}s error, failed to check ecological rule manager service.", __func__);
         return nullptr;
     }
     iErMgr_ = iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
@@ -1112,9 +1112,9 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::GetEcologicalR
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
 {
-    sptr<AppExecFwk::IEcologicalRuleManager> erms = GetEcologicalRuleMgr();
+    sptr<AppExecFwk::IEcologicalRuleManager> erms = CheckEcologicalRuleMgr();
     if (!erms) {
-        APP_LOGE("GetEcologicalRuleMgr failed.");
+        APP_LOGE("CheckEcologicalRuleMgr failed.");
         return false;
     }
     int ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);
