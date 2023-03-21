@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,7 +72,6 @@ constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
-constexpr const char* QUICK_FIX_MGR = "QuickFixMgr";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
@@ -135,6 +134,7 @@ constexpr int32_t INVALID_BUNDLEID = -1;
 constexpr int32_t INVALID_ACCESS_TOKEN_ID = -1;
 constexpr int32_t ROOT_UID = 0;
 constexpr int32_t BMS_UID = 1000;
+constexpr int32_t SHELL_UID = 2000;
 constexpr int32_t BACKU_HOME_GID = 1089;
 constexpr int32_t ACCOUNT_UID = 3058;
 constexpr int32_t FOUNDATION_UID = 5523;
@@ -300,9 +300,6 @@ constexpr int32_t DEFAULT_OVERLAY_ENABLE_STATUS = 1;
 constexpr int32_t DEFAULT_OVERLAY_DISABLE_STATUS = 0;
 constexpr int32_t OVERLAY_MINIMUM_PRIORITY = 1;
 constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
-constexpr const char* OVERLAY_ADD_ACTION = "usual.event.OVERLAY_PACKAGE_ADDED";
-constexpr const char* OVERLAY_CHANGED_ACTION = "usual.event.OVERLAY_PACKAGE_CHANGED";
-constexpr const char* OVERLAY_STATE_CHANGED = "usual.event.OVERLAY_STATE_CHANGED";
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 

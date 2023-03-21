@@ -18,11 +18,10 @@ module_output_path = "bundle_tool/tools"
 
 config("tools_bm_config_moduletest") {
   include_dirs = [
-    "${appexecfwk_path}/services/bundlemgr/include/installd",
-    "${appexecfwk_path}/services/bundlemgr/include",
-    "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
-    "${appexecfwk_path}/services/bundlemgr/include/shared",
-    "//foundation/systemabilitymgr/safwk/services/safwk/include",
+    "${bundle_framework_path}/services/bundlemgr/include/installd",
+    "${bundle_framework_path}/services/bundlemgr/include",
+    "${bundle_framework_path}/services/bundlemgr/include/sandbox_app",
+    "${bundle_framework_path}/services/bundlemgr/include/shared",
     "//third_party/json/include",
     "//third_party/zlib",
     "//third_party/zlib/contrib/minizip",
@@ -59,8 +58,8 @@ ohos_moduletest("bm_command_dump_module_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -109,8 +108,8 @@ ohos_moduletest("bm_command_install_module_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -159,8 +158,8 @@ ohos_moduletest("bm_command_uninstall_module_test") {
   }
 
   deps = [
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]

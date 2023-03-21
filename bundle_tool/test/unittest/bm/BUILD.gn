@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/test.gni")
-import("../../../../appexecfwk.gni")
 import("../../../bundletool.gni")
 
 module_output_path = "bundle_tool/tools"
@@ -22,10 +21,10 @@ config("tools_bm_config_mock") {
     "${inner_api_path}/appexecfwk_base/include",
     "${inner_api_path}/appexecfwk_base/include/quick_fix",
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
-    "${appexecfwk_path}/services/bundlemgr/include",
-    "${appexecfwk_path}/services/bundlemgr/include/quick_fix",
-    "${appexecfwk_path}/services/bundlemgr/include/sandbox_app",
-    "${appexecfwk_path}/services/bundlemgr/include/shared",
+    "${bundle_framework_path}/services/bundlemgr/include",
+    "${bundle_framework_path}/services/bundlemgr/include/quick_fix",
+    "${bundle_framework_path}/services/bundlemgr/include/sandbox_app",
+    "${bundle_framework_path}/services/bundlemgr/include/shared",
     "${bundletool_test_path}/mock",
     "//base/notification/eventhandler/interfaces/inner_api",
     "//base/security/permission/interfaces/innerkits/permission_standard/permissionsdk/main/cpp/include",
@@ -67,9 +66,8 @@ ohos_unittest("bm_command_dump_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -121,9 +119,8 @@ ohos_unittest("bm_command_dump_dependencies_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -175,9 +172,8 @@ ohos_unittest("bm_command_install_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -229,9 +225,8 @@ ohos_unittest("bm_command_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -283,9 +278,8 @@ ohos_unittest("bm_command_uninstall_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -337,9 +331,8 @@ ohos_unittest("bm_command_quickfix_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -391,9 +384,8 @@ ohos_unittest("bm_command_overlay_test") {
   }
 
   deps = [
-    "${ability_runtime_path}/services/abilitymgr:abilityms",
-    "${appexecfwk_path}/common:libappexecfwk_common",
-    "${appexecfwk_path}/services/bundlemgr:libbms",
+    "${bundle_framework_path}/common:libappexecfwk_common",
+    "${bundle_framework_path}/services/bundlemgr:libbms",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -418,7 +410,7 @@ ohos_unittest("bm_command_overlay_test") {
   ]
 
   defines = []
-  if (bundle_framework_overlay_install) {
+  if (overlay_install_bm) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
 }

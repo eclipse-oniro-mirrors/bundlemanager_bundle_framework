@@ -607,10 +607,124 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0001, Function | SmallTest |
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
-    oldInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
-    newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldInfo.SetAppFeature("hos_normal_app");
+    newInfo.SetAppFeature("hos_system_app");
     ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0002
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->releaseType = "release_type";
+    newInfo.baseBundleInfo_->releaseType = "normal_type";
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0003
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppDistributionType("hos_normal_type");
+    newInfo.SetAppDistributionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0004
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0004, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppProvisionType("hos_normal_type");
+    newInfo.SetAppProvisionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0005
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0005, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetIsNewVersion(false);
+    newInfo.SetIsNewVersion(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0006
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0006, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAsanEnabled(false);
+    newInfo.SetAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0007
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0007, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->releaseType = "Release";
+    newInfo.baseBundleInfo_->releaseType = "Release";
+    oldInfo.SetAsanEnabled(true);
+    newInfo.SetAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0008
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetApplicationBundleType(BundleType::APP);
+    newInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
 }
 
 /**
@@ -635,13 +749,109 @@ HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0001, Fu
     newInfo.SetBaseApplicationInfo(applicationInfo);
     newInfo.AddInnerBundleUserInfo(userInfo);
     BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
+}
 
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0002
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0002
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0002, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 100;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
     oldInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
     newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
-    ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_OK);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    bool ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    EXPECT_TRUE(ret);
+    ret =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, oldInfo);
+    EXPECT_TRUE(ret);
+
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_OK);
+    ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0003
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0003
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0003, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 0;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    bool ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    EXPECT_TRUE(ret);
+    ret =  baseBundleInstaller.dataMgr_->AddInnerBundleInfo(BUNDLE_NAME, oldInfo);
+    EXPECT_TRUE(ret);
+
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_OK);
+    ret = baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: UpdateDefineAndRequestPermissions_0004
+ * @tc.name: test the start function of UpdateDefineAndRequestPermissions_0004
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, UpdateDefineAndRequestPermissions_0004, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = Constants::DEFAULT_USERID;
+    userInfo.accessTokenId = 100;
+    userInfo.accessTokenIdEx = 0;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto errCode = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(errCode, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
 }
 
 /**

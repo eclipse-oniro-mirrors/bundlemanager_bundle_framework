@@ -241,7 +241,6 @@ void CreateLaunchTypeObject(napi_env env, napi_value value);
 void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
-void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value);
 void CreateCompatiblePolicyObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS

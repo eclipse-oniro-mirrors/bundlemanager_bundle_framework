@@ -614,3 +614,126 @@ HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2200, Function | MediumTes
 
     EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_UNINSTALL);
 }
+
+/**
+ * @tc.number: Bm_Command_Uninstall_2300
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -n <bundle-name> -k 1 -v 1 -s" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2300, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-k"),
+        const_cast<char*>("1"),
+        const_cast<char*>("-v"),
+        const_cast<char*>("1"),
+        const_cast<char*>("-s"),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_UNINSTALL_BUNDLE_OK + "\n");
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_2400
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -k xxxx" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2400, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-k"),
+        const_cast<char*>("xxxx"),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n" + HELP_MSG_UNINSTALL);
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_2500
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -v 1" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2500, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-v"),
+        const_cast<char*>("1"),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_UNINSTALL);
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_2600
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -s" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2600, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-s"),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_BUNDLE_NAME_OPTION + "\n" + HELP_MSG_UNINSTALL);
+}
+
+/**
+ * @tc.number: Bm_Command_Uninstall_2700
+ * @tc.name: ExecCommand
+ * @tc.desc: Verify the "bm uninstall -n <bundle-name> -k" command.
+ */
+HWTEST_F(BmCommandUninstallTest, Bm_Command_Uninstall_2700, Function | MediumTest | Level1)
+{
+    char *argv[] = {
+        const_cast<char*>(TOOL_NAME.c_str()),
+        const_cast<char*>(cmd_.c_str()),
+        const_cast<char*>("-n"),
+        const_cast<char*>(STRING_BUNDLE_NAME.c_str()),
+        const_cast<char*>("-k"),
+        const_cast<char*>(""),
+    };
+    int argc = sizeof(argv) / sizeof(argv[0]) - 1;
+
+    BundleManagerShellCommand cmd(argc, argv);
+
+    // set the mock objects
+    SetMockObjects(cmd);
+
+    EXPECT_EQ(cmd.ExecCommand(), STRING_UNINSTALL_BUNDLE_OK + "\n");
+}

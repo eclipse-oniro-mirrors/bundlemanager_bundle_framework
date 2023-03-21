@@ -48,4 +48,9 @@ int GetParameter(const char *key, const char *def, char *value, int len)
 {
     return 0;
 }
+
+int GetIntParameter(const char *key, int def)
+{
+    return def;
+}
 } // OHOS

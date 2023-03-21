@@ -51,7 +51,6 @@ public:
     void SetUp();
     void TearDown();
     int64_t installerId_ = 1;
-    std::shared_ptr<EventHandler> handler_ = std::make_shared<EventHandler>();
     sptr<MockStatusReceiver> receiver_ = new (std::nothrow) MockStatusReceiver();
     std::shared_ptr<BundleInstaller> bundleInstaller_ = nullptr;
 };
@@ -64,7 +63,7 @@ void BmsBundleInstallersTest::TearDownTestCase()
 
 void BmsBundleInstallersTest::SetUp()
 {
-    bundleInstaller_ = std::make_shared<BundleInstaller>(installerId_, handler_, receiver_);
+    bundleInstaller_ = std::make_shared<BundleInstaller>(installerId_, receiver_);
 }
 
 void BmsBundleInstallersTest::TearDown()

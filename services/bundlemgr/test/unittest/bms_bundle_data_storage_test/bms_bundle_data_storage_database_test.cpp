@@ -43,6 +43,8 @@ const std::string MODULE_STATE_0{"test_0"};
 const std::string MODULE_STATE_1{"test_1"};
 const std::string MODULE_NAME{"entry"};
 const std::string TEST_PACK_AGE = "modulePackage";
+const std::string TEST_NAME = "com.ohos.launcher";
+const std::string TEST_ABILITY_NAME = "com.ohos.launcher.MainAbility";
 int32_t state = 0;
 int32_t versionCode = 0;
 int32_t FLAG = 0;
@@ -373,7 +375,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     },
     "baseBundleInfo":{
         "abilityInfos":[],
-        "appId":"com.example.myapplication_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
+        "appId":"com.example.myapplication",
         "appIndex":0,
         "applicationInfo":{
             "accessTokenId":0,
@@ -973,6 +975,7 @@ protected:
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,
+                "bundleType": "app",
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
@@ -1547,6 +1550,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Functi
 HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["label"] = NOT_STRING_TYPE;
     typeErrorProps["description"] = NOT_STRING_TYPE;
@@ -1558,10 +1562,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Functi
 
     for (nlohmann::json::iterator iter = typeErrorProps.begin(); iter != typeErrorProps.end(); iter++) {
         for (auto valueIter = iter.value().begin(); valueIter != iter.value().end(); valueIter++) {
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_NAME);
 }
 
 /**
@@ -1589,6 +1594,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0100, Funct
 HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["package"] = NOT_STRING_TYPE;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
@@ -1610,10 +1616,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Funct
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
+            infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_ABILITY_NAME);
 }
 
 /**
@@ -1641,6 +1648,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
     typeErrorProps["sandboxId"] = NOT_NUMBER_TYPE;
@@ -1651,10 +1659,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, F
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_NAME); 
 }
 
 /**

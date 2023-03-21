@@ -104,7 +104,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0100, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_OPTION + "\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_OPTION + "\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -127,7 +127,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0200, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_OPTION + "\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_OPTION + "\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -150,7 +150,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0300, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -173,7 +173,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0400, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -196,7 +196,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0500, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -219,7 +219,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0600, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -242,7 +242,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0700, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -265,7 +265,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0800, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -288,7 +288,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_0900, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -312,7 +312,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_1000, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_REMOVABLE_OPTION + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_REMOVABLE_OPTION + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -332,7 +332,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_1100, F
     BundleManagerShellCommand cmd(argc, argv);
     // set the mock objects
     SetMockObjects(cmd);
-    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), STRING_REQUIRE_CORRECT_VALUE + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -353,7 +353,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_1200, F
     BundleManagerShellCommand cmd(argc, argv);
     // set the mock objects
     SetMockObjects(cmd);
-    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_REMOVABLE_OPTION + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), HELP_MSG_NO_REMOVABLE_OPTION + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -405,7 +405,7 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_1400, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 
 /**
@@ -429,6 +429,6 @@ HWTEST_F(BmCommandDumpDependenciesTest, Bm_Command_Dump_DumpDependencies_1500, F
     // set the mock objects
     SetMockObjects(cmd);
 
-    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_DEPENDENCIES);
+    EXPECT_EQ(cmd.ExecCommand(), "error: unknown option.\n" + HELP_MSG_DUMP_SHARED_DEPENDENCIES);
 }
 } // namespace OHOS

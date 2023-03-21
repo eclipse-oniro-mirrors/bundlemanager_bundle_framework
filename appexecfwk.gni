@@ -25,9 +25,6 @@ if (vendor_config_exist) {
   bundle_mgr_impl_include_dirs = []
 }
 
-ability_runtime_path = "//foundation/ability/ability_runtime"
-ability_runtime_innerkits_path = "${ability_runtime_path}/interfaces/inner_api"
-
 appexecfwk_path = "//foundation/bundlemanager/bundle_framework"
 common_path = "${appexecfwk_path}/common"
 services_path = "${appexecfwk_path}/services"

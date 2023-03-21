@@ -709,10 +709,12 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
     APP_LOGD("verifying systemApp");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
-        || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL
-        || callingUid == Constants::ROOT_UID) {
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE ||
+        tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL ||
+        callingUid == Constants::ROOT_UID ||
+        callingUid == Constants::SHELL_UID) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
@@ -739,19 +741,55 @@ bool BundlePermissionMgr::IsNativeTokenType()
     APP_LOGD("begin to verify token type");
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    APP_LOGD("tokenType is %{private}d", tokenType);
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_NATIVE
         || tokenType == AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
-    int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("calling uid is %{public}d", callingUid);
-    if (callingUid == Constants::ROOT_UID || callingUid == Constants::FOUNDATION_UID) {
-        APP_LOGD("caller is root or foundation, verify success");
+    if (VerifyCallingUid()) {
+        APP_LOGD("caller is root or foundation or BMS_UID, verify success");
         return true;
     }
     APP_LOGE("caller tokenType not native, verify failed");
     return false;
+}
+
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    APP_LOGD("begin to verify calling uid");
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    APP_LOGD("calling uid is %{public}d", callingUid);
+    if (callingUid == Constants::ROOT_UID ||
+        callingUid == Constants::FOUNDATION_UID ||
+        callingUid == Constants::SHELL_UID ||
+        callingUid == Constants::BMS_UID) {
+        APP_LOGD("caller is root or foundation, verify success");
+        return true;
+    }
+    APP_LOGE("verify calling uid failed");
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    if (VerifyCallingUid()) {
+        return true;
+    }
+    std::string callingBundleName;
+    auto uid = IPCSkeleton::GetCallingUid();
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
+    if (!ret) {
+        APP_LOGE("getBundleName failed");
+        return false;
+    }
+    std::string bundleName = want.GetElement().GetBundleName();
+    return bundleName == callingBundleName;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

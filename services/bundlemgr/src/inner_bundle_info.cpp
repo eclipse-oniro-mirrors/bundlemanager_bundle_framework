@@ -1878,7 +1878,9 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
     baseBundleInfo_->singleton = bundleInfo.singleton;
-    baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    if (!baseBundleInfo_->isPreInstallApp) {
+        baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    }
 
     baseBundleInfo_->vendor = bundleInfo.vendor;
     baseBundleInfo_->releaseType = bundleInfo.releaseType;
@@ -2178,7 +2180,39 @@ bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
         dependencies = innerModuleInfos_.at(moduleName).dependencies;
         return true;
     }
+    APP_LOGE("GetSharedDependencies can not find module %{public}s", moduleName.c_str());
     return false;
+}
+
+bool InnerBundleInfo::GetAllSharedDependencies(const std::string &moduleName,
+    std::vector<Dependency> &dependencies) const
+{
+    if (!GetSharedDependencies(moduleName, dependencies)) {
+        return false;
+    }
+    std::deque<Dependency> dependenciesDeque;
+    std::copy(dependencies.begin(), dependencies.end(), std::back_inserter(dependenciesDeque));
+    dependencies.clear();
+    while (!dependenciesDeque.empty()) {
+        bool isAdd = true;
+        Dependency itemDependency = dependenciesDeque.front();
+        dependenciesDeque.pop_front();
+        for (const auto &item : dependencies) {
+            if (item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
+                item.versionCode == itemDependency.versionCode) {
+                isAdd = false;
+                break;
+            }
+        }
+        if (isAdd) {
+            dependencies.push_back(itemDependency);
+            std::vector<Dependency> tempDependencies;
+            if (GetSharedDependencies(itemDependency.moduleName, tempDependencies)) {
+                std::copy(tempDependencies.begin(), tempDependencies.end(), std::back_inserter(dependenciesDeque));
+            }
+        }
+    }
+    return true;
 }
 
 void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
@@ -2506,7 +2540,7 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))

@@ -44,11 +44,14 @@ bool SystemBundleInstaller::InstallSystemBundle(
     return true;
 }
 
-bool SystemBundleInstaller::InstallSystemSharedBundle(InstallParam &installParam)
+bool SystemBundleInstaller::InstallSystemSharedBundle(
+    InstallParam &installParam,
+    bool isOTA,
+    Constants::AppType appType)
 {
-    MarkPreBundleSyeEventBootTag(true);
+    MarkPreBundleSyeEventBootTag(!isOTA);
     std::vector<std::string> bundlePaths{};
-    ErrCode result = InstallBundle(bundlePaths, installParam, Constants::AppType::SYSTEM_APP);
+    ErrCode result = InstallBundle(bundlePaths, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
         return false;

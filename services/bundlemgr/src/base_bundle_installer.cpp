@@ -48,6 +48,7 @@
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
+#include "parameter.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -58,9 +59,6 @@
 
 #include "storage_manager_proxy.h"
 #include "iservice_registry.h"
-#ifdef QUOTA_PARAM_SET_ENABLE
-#include "parameter.h"
-#endif // QUOTA_PARAM_SET_ENABLE
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -80,6 +78,7 @@ const int32_t THRESHOLD_VAL_LEN = 20;
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
 const int32_t SINGLE_HSP_VERSION = 1;
+const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -1036,13 +1035,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    versionCode_ = oldInfo.GetVersionCode();
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
         APP_LOGE("uninstall bundle is shared library.");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
-    versionCode_ = oldInfo.GetVersionCode();
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -1157,13 +1156,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
+    versionCode_ = oldInfo.GetVersionCode();
+    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
         APP_LOGE("uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
 
-    versionCode_ = oldInfo.GetVersionCode();
-    ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     InnerBundleUserInfo curInnerBundleUserInfo;
     if (!oldInfo.GetInnerBundleUserInfo(userId_, curInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user(%{public}d) failed when uninstall.",
@@ -2031,16 +2030,19 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         APP_LOGW("SendToStorageQuota, systemAbilityManager error");
+        return;
     }
 
     auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
     if (!remote) {
         APP_LOGW("SendToStorageQuota, CheckSystemAbility error");
+        return;
     }
 
     auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
     if (!proxy) {
         APP_LOGW("SendToStorageQuotactl, proxy get error");
+        return;
     }
 
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
@@ -2102,8 +2104,11 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
     }
     if (info.GetIsNewVersion()) {
+        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+            GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+            newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
-            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, newInnerBundleUserInfo.uid);
+            info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
         if (result != ERR_OK) {
             APP_LOGE("fail to create ark profile, error is %{public}d", result);
             return result;
@@ -2136,7 +2141,8 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
                   .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
-    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, S_IRWXU, uid, gid);
+    int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
+    return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
 }
 
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
@@ -2885,7 +2891,7 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAppProvisionType() != newInfo.GetAppProvisionType()) {
         return ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetAppType() != newInfo.GetAppType()) {
+    if (oldInfo.GetAppFeature() != newInfo.GetAppFeature()) {
         return ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME;
     }
     if (oldInfo.GetIsNewVersion() != newInfo.GetIsNewVersion()) {
@@ -2908,15 +2914,8 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
         APP_LOGE("asanEnabled is not supported in Release");
         return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
-    if (oldInfo.GetHasAtomicServiceConfig() != newInfo.GetHasAtomicServiceConfig()) {
-        APP_LOGE("atomicService config is not same.");
-        return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-    } else if (oldInfo.GetHasAtomicServiceConfig() && newInfo.GetHasAtomicServiceConfig()) {
-        if (oldInfo.GetBaseApplicationInfo().split != newInfo.GetBaseApplicationInfo().split ||
-            oldInfo.GetAtomicMainModuleName() != newInfo.GetAtomicMainModuleName()) {
-            APP_LOGE("atomicService config is not same.");
-            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
-        }
+    if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+        return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
@@ -3272,8 +3271,11 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
+            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+                GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
+                oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
-                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), oldInfo.GetUid(userId)) :
+                CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
                 DeleteArkProfile(bundleName_, userId);
             if (result != ERR_OK) {
                 APP_LOGE("bundleName: %{public}s CheckArkProfileDir failed, result:%{public}d",
