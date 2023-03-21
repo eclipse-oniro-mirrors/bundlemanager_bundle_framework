@@ -1549,6 +1549,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Functi
 HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["label"] = NOT_STRING_TYPE;
     typeErrorProps["description"] = NOT_STRING_TYPE;
@@ -1560,10 +1561,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Functi
 
     for (nlohmann::json::iterator iter = typeErrorProps.begin(); iter != typeErrorProps.end(); iter++) {
         for (auto valueIter = iter.value().begin(); valueIter != iter.value().end(); valueIter++) {
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_NAME);
 }
 
 /**
@@ -1591,6 +1593,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0100, Funct
 HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["package"] = NOT_STRING_TYPE;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
@@ -1612,10 +1615,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Funct
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
+            infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_ABILITY_NAME);
 }
 
 /**
@@ -1643,6 +1647,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
     typeErrorProps["sandboxId"] = NOT_NUMBER_TYPE;
@@ -1653,10 +1658,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, F
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson["name"], TEST_NAME); 
 }
 
 /**
