@@ -204,25 +204,25 @@ int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &netw
         std::lock_guard<std::mutex> lock(kvStorePtrMutex_);
         if (!CheckKvStore()) {
             APP_LOGE("kvStore is nullptr");
-            return ERR_GET_DISTRIBUTED_BUNDLE_NAME_KVSTORE_IS_NULLPTR;
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
         }
     }
     std::string udid;
     int32_t ret = GetUdidByNetworkId(networkId, udid);
     if (ret != 0) {
         APP_LOGE("can not get udid by networkId error:%{public}d", ret);
-        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_GET_UDID_FAIL;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     if (udid.size() == 0) {
         APP_LOGE("get udid is Empty");
-        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_UDID_IS_EMPTY;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     Key allEntryKeyPrefix("");
     std::vector<Entry> allEntries;
     Status status = kvStorePtr_->GetEntries(allEntryKeyPrefix, allEntries);
     if (status != Status::SUCCESS) {
         APP_LOGE("dataManager_ GetEntries error: %{public}d", status);
-        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_QUERY_DB_FAIL;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     for (auto entry : allEntries) {
         std::string key = entry.key.ToString();
@@ -236,7 +236,7 @@ int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &netw
             return OHOS::NO_ERROR;
         }
     }
-    return ERR_GET_DISTRIBUTED_BUNDLE_NAME_NO_MATCHES;
+    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
 std::string DistributedDataStorage::DeviceAndNameToKey(
