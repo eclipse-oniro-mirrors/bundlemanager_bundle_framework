@@ -408,7 +408,7 @@ int32_t DistributedBms::GetDistributedBundleName(const std::string &networkId,  
     int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleName", LOCAL_TIME_OUT_SECONDS,
         nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
 #endif
-    int ret = DistributedDataStorage::GetInstance()->GetDistributedBundleName(
+    int32_t ret = DistributedDataStorage::GetInstance()->GetDistributedBundleName(
         networkId, accessTokenId, bundleName);
 #ifdef HICOLLIE_ENABLE
     HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);

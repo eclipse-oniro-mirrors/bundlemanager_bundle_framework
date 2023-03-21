@@ -226,7 +226,7 @@ int32_t DistributedBmsHost::HandleGetDistributedBundleName(Parcel &data, Parcel 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     std::string networkId = data.ReadString();
-    uint32_t accessTokenId = data.ReadInt32();
+    uint32_t accessTokenId = data.ReadUInt32();
     std::string bundleName;
     int32_t ret = GetDistributedBundleName(networkId, accessTokenId, bundleName);
     if (ret == NO_ERROR && !reply.WriteString(bundleName)) {
