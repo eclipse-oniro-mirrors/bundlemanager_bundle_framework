@@ -214,15 +214,15 @@ int32_t DistributedBmsProxy::GetDistributedBundleName(const std::string &network
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to get distributed bundleInfo list due to write InterfaceToken fail");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(networkId)) {
         APP_LOGE("distributed mms proxy get distributed bundleInfo list write networkId error");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(accessTokenId)) {
         APP_LOGE("distributed mms proxy get distributed bundleInfo list write accessTokenId error");
-        return false;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
     int32_t result = SendRequest(IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_NAME, data, reply);
