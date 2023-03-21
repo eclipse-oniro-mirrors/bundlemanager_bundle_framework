@@ -71,7 +71,8 @@ static void ConvertAppInfo(napi_env env, napi_value objAppInfo, const AppInfo &a
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, ICON_ID, nIconId));
 }
 
-static void ConvertBusinessAbilityInfo(napi_env env, const BusinessAbilityInfo &businessAbilityInfo, napi_value objAbilityInfo)
+static void ConvertBusinessAbilityInfo(napi_env env, const BusinessAbilityInfo &businessAbilityInfo,
+    napi_value objAbilityInfo)
 {
     napi_value nBundleName;
     NAPI_CALL_RETURN_VOID(
@@ -231,7 +232,8 @@ napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info)
     std::unique_ptr<AbilityInfosCallbackInfo> callbackPtr{asyncCallbackInfo};
     if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
         if (!ParseBusinessAbilityInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->filter)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_BUSINESS_AIBILITY_FILTER, TYPE_STRING);
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_BUSINESS_AIBILITY_FILTER,
+                TYPE_STRING);
             return nullptr;
         }
         if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
@@ -247,8 +249,8 @@ napi_value QueryBusinessAbilityInfos(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityInfosCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_BUSINESS_ABILITY_INFO, QueryBusinessAbilityInfosExec, QueryBusinessAbilityInfosComplete);
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityInfosCallbackInfo>(env, asyncCallbackInfo,
+        QUERY_BUSINESS_ABILITY_INFO, QueryBusinessAbilityInfosExec, QueryBusinessAbilityInfosComplete);
     callbackPtr.release();
     return promise;
 }

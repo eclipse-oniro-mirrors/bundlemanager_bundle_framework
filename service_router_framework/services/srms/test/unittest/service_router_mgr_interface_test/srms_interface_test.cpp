@@ -30,7 +30,7 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
-const std::string WRONG_BUNDLE_NAME = "wrong";
+const std::string MIME_TYPE = "html";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string PURPOSE_NAME = "pay";
 }  // namespace
@@ -65,7 +65,7 @@ void ServiceRouterMgrInterfaceTest::TearDown()
 
 /**
  * @tc.number: ServiceRouterMgrInterfaceTest
- * @tc.name: test QueryServiceInfos
+ * @tc.name: test QueryBusinessAbilityInfos
  * @tc.require: issueI6HQLK
  * @tc.desc: 1. system running normally
  *           2. test serviceType is invalid
@@ -75,16 +75,17 @@ HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0001, Func
     auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
     EXPECT_NE(serviceRouterMgr, nullptr);
     if (serviceRouterMgr != nullptr) {
-        Want want;
-        std::vector<ServiceInfo> serviceInfos;
-        auto ret = serviceRouterMgr->QueryServiceInfos(want, ExtensionServiceType::UNSPECIFIED, serviceInfos);
+        BusinessAbilityFilter filter;
+        filter.businessType = BusinessType::UNSPECIFIED;
+        std::vector<BusinessAbilityInfo> abilityInfos;
+        auto ret = serviceRouterMgr->QueryBusinessAbilityInfos(filter, abilityInfos);
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
 /**
  * @tc.number: ServiceRouterMgrInterfaceTest
- * @tc.name: test QueryServiceInfos
+ * @tc.name: test QueryBusinessAbilityInfos
  * @tc.require: issueI6HQLK
  * @tc.desc: 1. system running normally
  *           2. test serviceType is valid
@@ -94,31 +95,31 @@ HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0002, Func
     auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
     EXPECT_NE(serviceRouterMgr, nullptr);
     if (serviceRouterMgr != nullptr) {
-        Want want;
-        std::vector<ServiceInfo> serviceInfos;
-        auto ret = serviceRouterMgr->QueryServiceInfos(want, ExtensionServiceType::SHARE, serviceInfos);
+        BusinessAbilityFilter filter;
+        filter.businessType = BusinessType::SHARE;
+        std::vector<BusinessAbilityInfo> abilityInfos;
+        auto ret = serviceRouterMgr->QueryBusinessAbilityInfos(filter, abilityInfos);
         EXPECT_EQ(ret, ERR_OK);
     }
 }
 
 /**
- * @tc.number: ServiceRouterMgrInterfaceTest
- * @tc.name: test QueryServiceInfos
- * @tc.require: issueI6HQLK
- * @tc.desc: 1. system running normally
- *           2. test bundleName not found
+ * @tc.number: ServiceRouterMgrInterfaceTest_0003
+ * Function: BusinessAbilityFilter
+ * @tc.name: test BusinessAbilityFilter
+ * @tc.desc: BusinessAbilityFilter
  */
 HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0003, Function | SmallTest | Level0)
 {
-    auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
-    EXPECT_NE(serviceRouterMgr, nullptr);
-    if (serviceRouterMgr != nullptr) {
-        Want want;
-        want.SetElementName(WRONG_BUNDLE_NAME, "");
-        std::vector<ServiceInfo> serviceInfos;
-        auto ret = serviceRouterMgr->QueryServiceInfos(want, ExtensionServiceType::SHARE, serviceInfos);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-    }
+    BusinessAbilityFilter filter;
+    filter.mimeType = MIME_TYPE;
+    Parcel parcel;
+    auto result = BusinessAbilityFilter::Unmarshalling(parcel);
+    EXPECT_NE(result->mimeType, MIME_TYPE);
+    auto ret = filter.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    result = BusinessAbilityFilter::Unmarshalling(parcel);
+    EXPECT_EQ(result->mimeType, MIME_TYPE);
 }
 
 /**
