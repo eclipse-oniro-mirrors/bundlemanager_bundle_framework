@@ -2013,7 +2013,8 @@ bool ToInnerModuleInfo(
     return true;
 }
 
-void SetInstallationFree(InnerModuleInfo &innerModuleInfo, BundleType bundleType) {
+void SetInstallationFree(InnerModuleInfo &innerModuleInfo, BundleType bundleType)
+{
     if (bundleType == BundleType::ATOMIC_SERVICE) {
         innerModuleInfo.distro.installationFree = true;
         innerModuleInfo.installationFree = true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -125,12 +125,7 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
 bool QuickFixManagerHostImpl::GetQuickFixMgr()
 {
     if (quickFixMgr_ == nullptr) {
-        auto quickFixerRunner = EventRunner::Create(Constants::QUICK_FIX_MGR);
-        if (quickFixerRunner == nullptr) {
-            APP_LOGE("create quickFixer runner fail");
-            return false;
-        }
-        quickFixMgr_ = std::make_shared<QuickFixMgr>(quickFixerRunner);
+        quickFixMgr_ = std::make_shared<QuickFixMgr>();
     }
     return true;
 }

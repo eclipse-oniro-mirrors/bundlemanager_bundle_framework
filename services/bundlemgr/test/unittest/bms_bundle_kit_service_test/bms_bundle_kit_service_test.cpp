@@ -183,6 +183,7 @@ const std::string TYPE_IMG_JPEG = "img/jpeg";
 const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
+const std::string PARAM_AND_VALUE = "?param=value";
 const std::string SCHEME_001 = "scheme001";
 const std::string SCHEME_002 = "scheme002";
 const std::string HOST_001 = "host001";
@@ -5668,6 +5669,43 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
     want.SetUri(uri);
     ret = skill.Match(want);
     EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: skill match rules
+ * @tc.name: uri with param match test
+ * @tc.desc: want's uri has param, ignore param then match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriWithParam_001, Function | SmallTest | Level1)
+{
+    // param uri:  scheme001://host001?param=value
+    // config uri: scheme001://host001
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PARAM_AND_VALUE;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // param uri:  scheme001://host001:port001?param=value
+    // config uri: scheme001://host001:port001
+    skill.uris[0].port = PORT_001;
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001 + PARAM_AND_VALUE;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // param uri:  scheme001://host001:port001/path001?param=value
+    // config uri: scheme001://host001:port001/path001
+    skill.uris[0].path = PATH_001;
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001 +
+        PATH_SEPARATOR + PATH_001 + PARAM_AND_VALUE;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
 }
 
 /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,15 +23,13 @@
 #include "nocopyable.h"
 
 #include "base_bundle_installer.h"
-#include "event_handler.h"
 #include "status_receiver_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleInstaller : public BaseBundleInstaller {
 public:
-    BundleInstaller(const int64_t installerId, const std::shared_ptr<EventHandler> &handler,
-        const sptr<IStatusReceiver> &statusReceiver);
+    BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver);
     virtual ~BundleInstaller() override;
     /**
      * @brief Get the installer ID of an installer object.
@@ -100,11 +98,6 @@ public:
 
 private:
     /**
-     * @brief Send an event for requesting to remove this bundle installer object.
-     * @return
-     */
-    void SendRemoveEvent() const;
-    /**
      * @brief Get all exist common userId.
      * @attention This function will get all exist common userId.
      * @return Returns all exist common userId
@@ -113,7 +106,6 @@ private:
 
 private:
     const int64_t installerId_ = 0;
-    const std::weak_ptr<EventHandler> handler_;
     const sptr<IStatusReceiver> statusReceiver_;
 
     DISALLOW_COPY_AND_MOVE(BundleInstaller);

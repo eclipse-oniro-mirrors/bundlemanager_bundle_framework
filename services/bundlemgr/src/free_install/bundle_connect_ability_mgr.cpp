@@ -87,6 +87,7 @@ void BundleConnectAbilityMgr::Init()
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     if (handler_ == nullptr) {
         APP_LOGE("Create handler failed");
+        return;
     }
     handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
         AppExecFwk::EventQueue::Priority::IMMEDIATE);
@@ -223,7 +224,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
         APP_LOGD("All preload modules exist locally.");
         return false;
     }
-    targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().signatureInfo.appId);
+    targetAbilityInfo->targetInfo.callingAppIds.emplace_back(innerBundleInfo.GetBaseBundleInfo().appId);
     for (const auto &item : preloadModuleNames) {
         targetAbilityInfo->targetInfo.preloadModuleNames.emplace_back(item);
     }

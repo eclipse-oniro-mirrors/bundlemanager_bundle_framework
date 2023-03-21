@@ -27,14 +27,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string ADD_INSTALLER_FAIL = "fail to add installer in bundle installer manager";
 const std::string INSTALL_TASK = "Install_Task";
 const std::string UNINSTALL_TASK = "Uninstall_Task";
 const std::string RECOVER_TASK = "Recover_Task";
 const unsigned int TIME_OUT_SECONDS = 60 * 5;
 }
 
-BundleInstallerManager::BundleInstallerManager(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
+BundleInstallerManager::BundleInstallerManager()
 {
     APP_LOGI("create bundle installer manager instance");
 }
@@ -42,18 +41,6 @@ BundleInstallerManager::BundleInstallerManager(const std::shared_ptr<EventRunner
 BundleInstallerManager::~BundleInstallerManager()
 {
     APP_LOGI("destroy bundle installer manager instance");
-}
-
-void BundleInstallerManager::ProcessEvent(const InnerEvent::Pointer &event)
-{
-    APP_LOGD("process event : %{public}u", event->GetInnerEventId());
-    switch (event->GetInnerEventId()) {
-        case REMOVE_BUNDLE_INSTALLER:
-            RemoveInstaller(event->GetParam());
-            break;
-        default:
-            APP_LOGW("the eventId is not supported");
-    }
 }
 
 void BundleInstallerManager::CreateInstallTask(
@@ -172,33 +159,11 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
 {
     int64_t installerId = GetMicroTickCount();
-    auto installer = std::make_shared<BundleInstaller>(installerId, shared_from_this(), statusReceiver);
-    bool isSuccess = false;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto result = installers_.try_emplace(installer->GetInstallerId(), installer);
-        isSuccess = result.second;
-    }
-    if (isSuccess) {
-        APP_LOGD("add the specific %{public}" PRId64 " installer", installerId);
-    } else {
-        APP_LOGE("fail to add bundle installer");
-        installer.reset();
-        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, ADD_INSTALLER_FAIL);
-    }
+    auto installer = std::make_shared<BundleInstaller>(installerId, statusReceiver);
     if (installer != nullptr) {
         installer->SetCallingUid(IPCSkeleton::GetCallingUid());
     }
     return installer;
-}
-
-void BundleInstallerManager::RemoveInstaller(const int64_t installerId)
-{
-    APP_LOGD("start to remove installer the specific %{public}" PRId64 " installer", installerId);
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (installers_.erase(installerId) > 0) {
-        APP_LOGD("erase the specific %{public}" PRId64 " installer", installerId);
-    }
 }
 
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task)
