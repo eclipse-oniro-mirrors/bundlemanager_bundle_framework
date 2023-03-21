@@ -11,9 +11,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import("../appexecfwk.gni")
+bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
 
+common_path = "${bundle_framework_path}/common"
 dbms_inner_api_path =
-    "${appexecfwk_path}/distributed_bundle_framework/interfaces/inner_api"
+    "${bundle_framework_path}/distributed_bundle_framework/interfaces/inner_api"
 dbms_services_path =
-    "${appexecfwk_path}/distributed_bundle_framework/services/dbms"
+    "${bundle_framework_path}/distributed_bundle_framework/services/dbms"
+kits_path = "${bundle_framework_path}/interfaces/kits"
+
+declare_args() {
+  distributed_bundle_framework_graphics = true
+
+  ability_runtime_enable_dbms = true
+  account_enable_dbms = true
+  distributed_bundle_framework_enable = true
+  hisysevent_enable_dbms = true
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.ability_ability_runtime)) {
+    ability_runtime_enable_dbms = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.account_os_account)) {
+    account_enable_dbms = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.bundlemanager_distributed_bundle_framework)) {
+    distributed_bundle_framework_enable = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.hiviewdfx_hisysevent_native)) {
+    hisysevent_enable_dbms = false
+  }
+}
+
+print("distributed_bundle_framework_graphics = " +
+      "$distributed_bundle_framework_graphics")
+print("ability_runtime_enable_dbms = " + "$ability_runtime_enable_dbms")
+print("account_enable_dbms = " + "$account_enable_dbms")
+print("distributed_bundle_framework_enable = " +
+      "$distributed_bundle_framework_enable")
+print("hisysevent_enable_dbms = " + "$hisysevent_enable_dbms")

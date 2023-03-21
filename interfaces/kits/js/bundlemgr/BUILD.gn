@@ -19,7 +19,6 @@ ohos_shared_library("bundle") {
     "${kits_path}/js/common",
     "//third_party/node/src",
     "//third_party/libuv/include",
-    "//utils/system/safwk/native/include",
     "${inner_api_path}/bundlemgr_graphics/include",
   ]
   defines = [

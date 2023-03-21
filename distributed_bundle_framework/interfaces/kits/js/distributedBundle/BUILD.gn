@@ -21,7 +21,7 @@ ohos_shared_library("distributedbundlemanager") {
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [ "native_module.cpp" ]
-  if (distributed_bundle_framework) {
+  if (distributed_bundle_framework_enable) {
     sources += [ "distributed_bundle.cpp" ]
   } else {
     sources += [ "distributed_bundle_unsupported.cpp" ]
@@ -54,7 +54,7 @@ ohos_shared_library("distributedbundlemanager") {
 group("jsapi_target") {
   deps = []
 
-  if (support_jsapi && bundle_framework_graphics) {
+  if (support_jsapi && distributed_bundle_framework_graphics) {
     deps += [ ":distributedbundlemanager" ]
   }
 }
