@@ -112,9 +112,9 @@ public:
      * @param networkId Indicates the networkId of remote device.
      * @param accessTokenId AccessTokenId of the application
      * @param bundleNames distributed bundle name.
-     * @return Returns true if the distributed bundle name is successfully obtained; returns false otherwise.
+     * @return Returns result code  when distributed bundle name.
      */
-    bool GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+    int32_t GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
         std::string &bundleName) override;
 private:
     int32_t SendRequest(IDistributedBms::Message code, MessageParcel &data, MessageParcel &reply);

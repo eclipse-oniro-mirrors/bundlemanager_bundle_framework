@@ -208,7 +208,7 @@ bool DistributedBmsProxy::GetDistributedBundleInfo(const std::string &networkId,
     return false;
 }
 
-bool DistributedBmsProxy::GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+int32_t DistributedBmsProxy::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
     std::string &bundleName)
 {
     MessageParcel data;
@@ -226,16 +226,10 @@ bool DistributedBmsProxy::GetDistributedBundleName(const std::string &networkId,
     }
     MessageParcel reply;
     int32_t result = SendRequest(IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_NAME, data, reply);
-    if (result != OHOS::NO_ERROR) {
-        APP_LOGE("fail to GetDistributedBundleName from server");
-        return false;
+    if (result == OHOS::NO_ERROR) {
+        bundleName = reply.ReadString();
     }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
-    }
-    bundleName = reply.ReadString();
-    return true;
+    return result;
 }
 
 template<typename T>

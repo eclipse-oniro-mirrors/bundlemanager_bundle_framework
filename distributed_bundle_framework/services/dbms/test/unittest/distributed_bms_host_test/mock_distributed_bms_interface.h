@@ -45,7 +45,7 @@ public:
         std::vector<RemoteAbilityInfo> &remoteAbilityInfos) override;
     bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
         DistributedBundleInfo &distributedBundleInfo) override;
-    bool GetDistributedBundleName(const std::string &networkId,  int32_t accessTokenId,
+    int32_t GetDistributedBundleName(const std::string &networkId,  uint32_t accessTokenId,
         std::string &bundleName) override;
 };
 }  // namespace AppExecFwk

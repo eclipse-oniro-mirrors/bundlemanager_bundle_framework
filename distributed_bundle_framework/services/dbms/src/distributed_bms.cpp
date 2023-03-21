@@ -401,14 +401,14 @@ bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, cons
     return ret;
 }
 
-bool DistributedBms::GetDistributedBundleName(const std::string &networkId,  int32_t accessTokenId,
+int32_t DistributedBms::GetDistributedBundleName(const std::string &networkId,  uint32_t accessTokenId,
     std::string &bundleName)
 {
 #ifdef HICOLLIE_ENABLE
     int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleName", LOCAL_TIME_OUT_SECONDS,
         nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
 #endif
-    bool ret = DistributedDataStorage::GetInstance()->GetDistributedBundleName(
+    int ret = DistributedDataStorage::GetInstance()->GetDistributedBundleName(
         networkId, accessTokenId, bundleName);
 #ifdef HICOLLIE_ENABLE
     HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);

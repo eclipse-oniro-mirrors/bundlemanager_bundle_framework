@@ -73,10 +73,10 @@ bool MockDistributedBmsHost::GetDistributedBundleInfo(
     return true;
 }
 
-bool MockDistributedBmsHost::GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+int32_t MockDistributedBmsHost::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
     std::string &bundleName)
 {
-    return true;
+    return 0;
 }
 
 } // namespace AppExecFwk

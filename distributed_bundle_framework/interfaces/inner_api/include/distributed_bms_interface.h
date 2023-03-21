@@ -114,9 +114,9 @@ public:
      * @param networkId Indicates the networkId of remote device.
      * @param accessTokenId AccessTokenId of the application
      * @param bundleNames distributed bundle name.
-     * @return Returns true if the distributed bundle name is successfully obtained; returns false otherwise.
+     * @return Returns result code  when distributed bundle name.
      */
-    virtual bool GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+    virtual int32_t GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
         std::string &bundleName) = 0;
 
     enum class Message {

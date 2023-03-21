@@ -42,6 +42,8 @@ private:
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &data);
     bool VerifySystemApp();
+    bool VerifySystemAppForTokenNative();
+    bool VerifySystemAppForTokenShell();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

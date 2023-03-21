@@ -196,7 +196,7 @@ bool DistributedDataStorage::GetStorageDistributeInfo(const std::string &network
     return false;
 }
 
-bool DistributedDataStorage::GetDistributedBundleName(const std::string &networkId, int32_t accessTokenId,
+int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
     std::string &bundleName)
 {
     APP_LOGI("get StorageDistributeInfos By networkId and accessTokenId");
@@ -204,25 +204,25 @@ bool DistributedDataStorage::GetDistributedBundleName(const std::string &network
         std::lock_guard<std::mutex> lock(kvStorePtrMutex_);
         if (!CheckKvStore()) {
             APP_LOGE("kvStore is nullptr");
-            return false;
+            return ERR_GET_DISTRIBUTED_BUNDLE_NAME_KVSTORE_IS_NULLPTR;
         }
     }
     std::string udid;
     int32_t ret = GetUdidByNetworkId(networkId, udid);
     if (ret != 0) {
         APP_LOGE("can not get udid by networkId error:%{public}d", ret);
-        return false;
+        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_GET_UDID_FAIL;
     }
     if (udid.size() == 0) {
         APP_LOGE("get udid is Empty");
-        return false;
+        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_UDID_IS_EMPTY;
     }
     Key allEntryKeyPrefix("");
     std::vector<Entry> allEntries;
     Status status = kvStorePtr_->GetEntries(allEntryKeyPrefix, allEntries);
     if (status != Status::SUCCESS) {
         APP_LOGE("dataManager_ GetEntries error: %{public}d", status);
-        return false;
+        return ERR_GET_DISTRIBUTED_BUNDLE_NAME_QUERY_DB_FAIL;
     }
     for (auto entry : allEntries) {
         std::string key = entry.key.ToString();
@@ -233,10 +233,10 @@ bool DistributedDataStorage::GetDistributedBundleName(const std::string &network
         DistributedBundleInfo distributedBundleInfo;
         if (distributedBundleInfo.FromJsonString(value) && distributedBundleInfo.accessTokenId == accessTokenId) {
             bundleName = distributedBundleInfo.bundleName;
-            break;
+            return OHOS::NO_ERROR;
         }
     }
-    return true;
+    return ERR_GET_DISTRIBUTED_BUNDLE_NAME_NO_MATCHES;
 }
 
 std::string DistributedDataStorage::DeviceAndNameToKey(
