@@ -12,7 +12,6 @@
 # limitations under the License.
 
 import("//build/ohos.gni")
-import("../../appexecfwk.gni")
 import("../bundletool.gni")
 
 config("tools_bm_config") {
@@ -64,12 +63,12 @@ ohos_source_set("tools_bm_source_set") {
   ]
 
   defines = []
-  if (account_enable) {
+  if (account_enable_bm) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
   }
 
-  if (bundle_framework_overlay_install) {
+  if (overlay_install_bm) {
     defines += [ "BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION" ]
   }
 
@@ -122,12 +121,12 @@ ohos_source_set("tools_test_bm_source_set") {
   ]
 
   defines = []
-  if (bundle_framework_quick_fix) {
+  if (quick_fix_bm) {
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
     sources += [ "src/quick_fix_status_callback_host_impl.cpp" ]
   }
 
-  if (account_enable) {
+  if (account_enable_bm) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
   }

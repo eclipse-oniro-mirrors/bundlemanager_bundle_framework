@@ -19,3 +19,18 @@ inner_api_path = "${bundle_framework_path}/interfaces/inner_api"
 
 bundletool_path = "${bundle_framework_path}/bundle_tool/frameworks"
 bundletool_test_path = "${bundle_framework_path}/bundle_tool/test"
+
+declare_args() {
+  account_enable_bm = true
+  overlay_install_bm = true
+  quick_fix_bm = true
+  
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.account_os_account)) {
+    account_enable_bm = false
+  }
+}
+
+print("account_enable_bm = " + "$account_enable_bm")
+print("quick_fix_bm = " + "$quick_fix_bm")
+print("overlay_install_bm = " + "$overlay_install_bm")
