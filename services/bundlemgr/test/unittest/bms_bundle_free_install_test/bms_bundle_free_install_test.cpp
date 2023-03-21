@@ -2062,6 +2062,20 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
 }
 
 /**
+ * @tc.number: CheckEcologicalRule_0001
+ * @tc.name: CheckEcologicalRule
+ * @tc.desc: Check Ecological Rule failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0002, Function | SmallTest | Level0)
+{
+    ErmsCallerInfo info;
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+    info.Unmarshalling(parcel);
+}
+
+/**
  * @tc.number: ExperienceRule_0001
  * Function: PurposeInfo
  * @tc.name: test PurposeInfo
