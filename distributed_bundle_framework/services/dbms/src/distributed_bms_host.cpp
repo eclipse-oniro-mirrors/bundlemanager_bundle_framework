@@ -259,7 +259,7 @@ bool DistributedBmsHost::VerifySystemApp()
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (VerifySystemAppForTokenNative() || VerifySystemAppForTokenShell()
         || callingUid == Constants::ROOT_UID) {
-        APP_LOGD("caller tokenType is native or shell, verify success");
+        APP_LOGI("caller tokenType is native or shell, verify success");
         return true;
     }
     uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
