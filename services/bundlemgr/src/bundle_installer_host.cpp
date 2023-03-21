@@ -30,7 +30,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INSTALL_THREAD = "InstallThread";
 const std::string GET_MANAGER_FAIL = "fail to get bundle installer manager";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
@@ -50,14 +49,7 @@ BundleInstallerHost::~BundleInstallerHost()
 bool BundleInstallerHost::Init()
 {
     APP_LOGD("begin to init");
-    auto installRunner = EventRunner::Create(INSTALL_THREAD);
-    if (!installRunner) {
-        APP_LOGE("create install runner fail");
-        return false;
-    }
-    manager_ = std::make_shared<BundleInstallerManager>(installRunner);
-    manager_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    manager_ = std::make_shared<BundleInstallerManager>();
     APP_LOGD("init successfully");
     return true;
 }

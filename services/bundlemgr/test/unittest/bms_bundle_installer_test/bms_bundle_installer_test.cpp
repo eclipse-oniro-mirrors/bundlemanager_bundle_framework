@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -58,7 +58,6 @@ const std::string WRONG_BUNDLE_NAME = "wrong_bundle_name.ha";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.l3jsdemo";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const int32_t USERID = 100;
-const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_MODULEJSON_TEST = "moduleJsonTest.hap";
@@ -292,11 +291,7 @@ void BmsBundleInstallerTest::CreateInstallerManager()
     if (manager_ != nullptr) {
         return;
     }
-    auto installRunner = EventRunner::Create(INSTALL_THREAD);
-    if (!installRunner) {
-        return;
-    }
-    manager_ = std::make_shared<BundleInstallerManager>(installRunner);
+    manager_ = std::make_shared<BundleInstallerManager>();
     EXPECT_NE(nullptr, manager_);
 }
 

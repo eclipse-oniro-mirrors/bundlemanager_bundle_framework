@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -72,7 +72,6 @@ constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
 constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
-constexpr const char* QUICK_FIX_MGR = "QuickFixMgr";
 constexpr const char* INSTALLD_SERVICE_NAME = "installd";
 constexpr const char* SYSTEM_APP = "system";
 constexpr const char* THIRD_PARTY_APP = "third-party";
