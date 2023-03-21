@@ -22,7 +22,7 @@ kits_path = "${bundle_framework_path}/interfaces/kits"
 
 declare_args() {
   distributed_bundle_framework_graphics = true
-  
+
   ability_runtime_enable_dbms = true
   account_enable_dbms = true
   distributed_bundle_framework_enable = true
@@ -49,8 +49,10 @@ declare_args() {
   }
 }
 
-print("distributed_bundle_framework_graphics = " + "$distributed_bundle_framework_graphics")
+print("distributed_bundle_framework_graphics = " +
+      "$distributed_bundle_framework_graphics")
 print("ability_runtime_enable_dbms = " + "$ability_runtime_enable_dbms")
 print("account_enable_dbms = " + "$account_enable_dbms")
-print("distributed_bundle_framework_enable = " + "$distributed_bundle_framework_enable")
+print("distributed_bundle_framework_enable = " +
+      "$distributed_bundle_framework_enable")
 print("hisysevent_enable_dbms = " + "$hisysevent_enable_dbms")
