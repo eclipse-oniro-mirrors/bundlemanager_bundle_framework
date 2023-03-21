@@ -50,7 +50,7 @@ ohos_shared_library("distributedbundle") {
 group("jsapi_target") {
   deps = []
 
-  if (support_jsapi && bundle_framework_graphics) {
+  if (support_jsapi && distributed_bundle_framework_graphics) {
     deps += [ ":distributedbundle" ]
   }
 }
