@@ -87,6 +87,7 @@ void BundleConnectAbilityMgr::Init()
     handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
     if (handler_ == nullptr) {
         APP_LOGE("Create handler failed");
+        return;
     }
     handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
         AppExecFwk::EventQueue::Priority::IMMEDIATE);

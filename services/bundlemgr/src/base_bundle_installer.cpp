@@ -1997,16 +1997,19 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         APP_LOGW("SendToStorageQuota, systemAbilityManager error");
+        return;
     }
 
     auto remote = systemAbilityManager->CheckSystemAbility(STORAGE_MANAGER_MANAGER_ID);
     if (!remote) {
         APP_LOGW("SendToStorageQuota, CheckSystemAbility error");
+        return;
     }
 
     auto proxy = iface_cast<StorageManager::IStorageManager>(remote);
     if (!proxy) {
         APP_LOGW("SendToStorageQuotactl, proxy get error");
+        return;
     }
 
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
