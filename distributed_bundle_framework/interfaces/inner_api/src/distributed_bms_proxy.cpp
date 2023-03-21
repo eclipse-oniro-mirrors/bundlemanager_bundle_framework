@@ -220,7 +220,7 @@ int32_t DistributedBmsProxy::GetDistributedBundleName(const std::string &network
         APP_LOGE("distributed mms proxy get distributed bundleInfo list write networkId error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteUInt32(accessTokenId)) {
+    if (!data.WriteUint32(accessTokenId)) {
         APP_LOGE("distributed mms proxy get distributed bundleInfo list write accessTokenId error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
