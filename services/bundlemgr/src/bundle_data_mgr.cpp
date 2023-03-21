@@ -2287,7 +2287,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         OverlayDataMgr::GetInstance()->ResetExternalOverlayModuleState(bundleName);
     }
 #endif
-    if (!infoItem && infoItem != bundleInfos_.end()) {
+    if (infoItem != bundleInfos_.end()) {
         APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
         const InnerBundleInfo &innerBundleInfo = infoItem->second;
         RecycleUidAndGid(innerBundleInfo);

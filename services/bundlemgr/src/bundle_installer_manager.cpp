@@ -186,7 +186,7 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
         installer.reset();
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, ADD_INSTALLER_FAIL);
     }
-    if (!installer) {
+    if (installer != nullptr) {
         installer->SetCallingUid(IPCSkeleton::GetCallingUid());
     }
     return installer;
