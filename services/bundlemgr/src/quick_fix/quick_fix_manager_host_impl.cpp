@@ -125,12 +125,7 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
 bool QuickFixManagerHostImpl::GetQuickFixMgr()
 {
     if (quickFixMgr_ == nullptr) {
-        auto quickFixerRunner = EventRunner::Create(Constants::QUICK_FIX_MGR);
-        if (quickFixerRunner == nullptr) {
-            APP_LOGE("create quickFixer runner fail");
-            return false;
-        }
-        quickFixMgr_ = std::make_shared<QuickFixMgr>(quickFixerRunner);
+        quickFixMgr_ = std::make_shared<QuickFixMgr>();
     }
     return true;
 }

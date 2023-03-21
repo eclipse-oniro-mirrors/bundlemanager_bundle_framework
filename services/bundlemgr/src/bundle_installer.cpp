@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,14 +18,12 @@
 #include <cinttypes>
 
 #include "app_log_wrapper.h"
-#include "bundle_installer_manager.h"
 #include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-BundleInstaller::BundleInstaller(const int64_t installerId, const std::shared_ptr<EventHandler> &handler,
-    const sptr<IStatusReceiver> &statusReceiver)
-    : installerId_(installerId), handler_(handler), statusReceiver_(statusReceiver)
+BundleInstaller::BundleInstaller(const int64_t installerId, const sptr<IStatusReceiver> &statusReceiver)
+    : installerId_(installerId), statusReceiver_(statusReceiver)
 {
     APP_LOGI("create bundle installer instance, the installer id is %{public}" PRId64 "", installerId_);
 }
@@ -54,7 +52,6 @@ void BundleInstaller::Install(const std::string &bundleFilePath, const InstallPa
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::Recover(const std::string &bundleName, const InstallParam &installParam)
@@ -75,7 +72,6 @@ void BundleInstaller::Recover(const std::string &bundleName, const InstallParam 
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam)
@@ -96,7 +92,6 @@ void BundleInstaller::Install(const std::vector<std::string> &bundleFilePaths, c
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::InstallByBundleName(const std::string &bundleName, const InstallParam &installParam)
@@ -105,7 +100,6 @@ void BundleInstaller::InstallByBundleName(const std::string &bundleName, const I
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::Uninstall(const std::string &bundleName, const InstallParam &installParam)
@@ -139,7 +133,6 @@ void BundleInstaller::Uninstall(const std::string &bundleName, const InstallPara
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::Uninstall(const UninstallParam &uninstallParam)
@@ -149,7 +142,6 @@ void BundleInstaller::Uninstall(const UninstallParam &uninstallParam)
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::Uninstall(
@@ -184,7 +176,6 @@ void BundleInstaller::Uninstall(
     if (statusReceiver_ != nullptr) {
         statusReceiver_->OnFinished(resultCode, "");
     }
-    SendRemoveEvent();
 }
 
 void BundleInstaller::UpdateInstallerState(const InstallerState state)
@@ -193,16 +184,6 @@ void BundleInstaller::UpdateInstallerState(const InstallerState state)
     SetInstallerState(state);
     if (statusReceiver_) {
         statusReceiver_->OnStatusNotify(static_cast<int>(state));
-    }
-}
-
-void BundleInstaller::SendRemoveEvent() const
-{
-    if (auto handler = handler_.lock()) {
-        uint32_t eventId = static_cast<uint32_t>(BundleInstallerManager::REMOVE_BUNDLE_INSTALLER);
-        handler->SendEvent(InnerEvent::Get(eventId, installerId_));
-    } else {
-        APP_LOGE("fail to remove %{public}" PRId64 " installer due to handler is expired", installerId_);
     }
 }
 

@@ -2014,7 +2014,7 @@ HWTEST_F(BundleMgrClientSystemTest, GetNameForUid001, TestSize.Level1)
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     EXPECT_NE(bundleMgrProxy, nullptr);
     int uid = bundleMgrProxy->GetUidByBundleName(BUNDLE_NAME, DEFAULT_USERID);
-    
+
     std::string bundleName;
     BundleMgrClient bundleMgrClient;
     auto ret = bundleMgrClient.GetNameForUid(uid, bundleName);

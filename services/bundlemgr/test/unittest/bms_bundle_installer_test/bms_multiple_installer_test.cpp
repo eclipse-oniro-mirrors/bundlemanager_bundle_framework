@@ -84,7 +84,6 @@ const std::string PACKAGE_NAME_SECOND = "com.example.l2jsdemo";
 const std::string PACKAGE_NAME_THIRD = "com.example.l1jsdemo";
 const std::string ROOT_DIR = "/data/app";
 const int32_t USERID = 100;
-const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
     "cache",

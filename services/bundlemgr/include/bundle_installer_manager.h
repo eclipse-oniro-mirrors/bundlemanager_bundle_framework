@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,23 +24,16 @@
 #include "nocopyable.h"
 
 #include "bundle_installer.h"
-#include "event_handler.h"
 #include "status_receiver_interface.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleInstallerManager : public EventHandler {
+class BundleInstallerManager {
 public:
     using ThreadPoolTask = std::function<void()>;
 
-    explicit BundleInstallerManager(const std::shared_ptr<EventRunner> &runner);
-    virtual ~BundleInstallerManager() override;
-    /**
-     * @brief Process the event of destroy bundle installer object.
-     * @param event Indicates the event to be processed.
-     * @return
-     */
-    virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
+    BundleInstallerManager();
+    ~BundleInstallerManager();
     /**
      * @brief Create a bundle installer object for installing a bundle.
      * @param bundleFilePath Indicates the path for storing the HAP of the bundle to install or update.
@@ -103,9 +96,6 @@ public:
      * @return
      */
     void CreateUninstallTask(const UninstallParam &uninstallParam, const sptr<IStatusReceiver> &statusReceive);
-    enum {
-        REMOVE_BUNDLE_INSTALLER = 1,
-    };
 
 private:
     /**
@@ -114,19 +104,8 @@ private:
      * @return Returns a pointers to BundleInstaller object.
      */
     std::shared_ptr<BundleInstaller> CreateInstaller(const sptr<IStatusReceiver> &statusReceiver);
-    /**
-     * @brief Remove an installer object with the installer ID.
-     * @param installerId Indicates the installer ID.
-     * @return
-     */
-    void RemoveInstaller(const int64_t installerId);
 
     void AddTask(const ThreadPoolTask &task);
-
-private:
-    std::mutex mutex_;
-    // map key will use timestamp.
-    std::unordered_map<int64_t, std::shared_ptr<BundleInstaller>> installers_;
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 };
