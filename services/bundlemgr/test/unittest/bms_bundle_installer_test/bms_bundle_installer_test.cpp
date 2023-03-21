@@ -48,7 +48,7 @@ namespace {
 const std::string SYSTEMFIEID_NAME = "com.query.test";
 const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
-const std::string MODULE_NAME = "moduleName";
+const std::string MODULE_NAME_TEST = "moduleName";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
@@ -2140,9 +2140,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest 
     std::vector<std::string> inBundlePaths;
     InstallParam installParam;
     auto appType = Constants::AppType::THIRD_SYSTEM_APP;
-    int32_t uid = 0;
     installer.dataMgr_ = GetBundleDataMgr();
-
+    int32_t uid = 0;
     installParam.userId = Constants::DEFAULT_USERID;
     installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
     installParam.installFlag = InstallFlag::FREE_INSTALL;
@@ -2160,8 +2159,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo innerBundleInfo;
-    int32_t uid = 0;
     AbilityInfo info;
+    int32_t uid = 0;
     info.uri = "dataability://";
     innerBundleInfo.userId_ = Constants::ALL_USERID;
     innerBundleInfo.baseAbilityInfos_.emplace("key", info);
@@ -2217,7 +2216,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest 
     std::string nativeLibraryPath = "X86";
     std::string cpuAbi = "armeabi";
     InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
     AppqfInfo appQfInfo;
     ErrCode ret = installer.UpdateLibAttrs(
         newInfo, cpuAbi, nativeLibraryPath, appQfInfo);
@@ -2233,7 +2232,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 {
     BaseBundleInstaller installer;
     InnerBundleInfo newInfo;
-    newInfo.currentPackage_ = MODULE_NAME;
+    newInfo.currentPackage_ = MODULE_NAME_TEST;
     ErrCode ret = installer.SetDirApl(newInfo);
     EXPECT_EQ(ret, ERR_OK);
 

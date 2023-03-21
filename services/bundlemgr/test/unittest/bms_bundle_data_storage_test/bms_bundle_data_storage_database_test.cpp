@@ -43,6 +43,8 @@ const std::string MODULE_STATE_0{"test_0"};
 const std::string MODULE_STATE_1{"test_1"};
 const std::string MODULE_NAME{"entry"};
 const std::string TEST_PACK_AGE = "modulePackage";
+const std::string TEST_NAME = "com.ohos.launcher";
+const std::string TEST_ABILITY_NAME = "com.ohos.launcher.MainAbility";
 int32_t state = 0;
 int32_t versionCode = 0;
 int32_t FLAG = 0;
