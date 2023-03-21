@@ -14,7 +14,7 @@
 import("//build/ohos.gni")
 import("../../../../srms.gni")
 
-ohos_shared_library("servicerouter") {
+ohos_shared_library("businessabilityrouter") {
   include_dirs = [ "${kits_path}/js/common" ]
 
   defines = [
@@ -54,6 +54,6 @@ group("jsapi_target") {
   deps = []
 
   if (support_jsapi && bundle_framework_graphics) {
-    deps += [ ":servicerouter" ]
+    deps += [ ":businessabilityrouter" ]
   }
 }

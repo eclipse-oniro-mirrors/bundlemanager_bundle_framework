@@ -49,7 +49,7 @@ static napi_value InitBusinessTypeObject(napi_env env)
     return object;
 }
 
-static napi_value BusinessRouterExport(napi_env env, napi_value exports)
+static napi_value BusinessAbilityRouterExport(napi_env env, napi_value exports)
 {
     napi_value businessType = InitBusinessTypeObject(env);
     if (businessType == nullptr) {
@@ -66,19 +66,19 @@ static napi_value BusinessRouterExport(napi_env env, napi_value exports)
     return exports;
 }
 
-static napi_module business_router_module = {
+static napi_module business_ability_router_module = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
-    .nm_register_func = BusinessRouterExport,
-    .nm_modname = "businessRouter",
+    .nm_register_func = BusinessAbilityRouterExport,
+    .nm_modname = "businessAbilityRouter",
     .nm_priv = ((void *)0),
     .reserved = {0}
 };
 
-extern "C" __attribute__((constructor)) void BusinessRouterRegister(void)
+extern "C" __attribute__((constructor)) void BusinessAbilityRouterRegister(void)
 {
-    napi_module_register(&business_router_module);
+    napi_module_register(&business_ability_router_module);
 }
 }
 }
