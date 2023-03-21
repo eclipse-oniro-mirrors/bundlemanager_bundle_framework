@@ -59,8 +59,6 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string RELEASE = "Release";
-const int32_t DEFAULT_SHELL_UID = 2000;
-const int32_t LEN_SHELL_UID = 16;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
@@ -90,19 +88,6 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     auto prefixPath = nativeLibraryPath.substr(0, position);
     auto suffixPath = nativeLibraryPath.substr(position);
     return prefixPath + Constants::TMP_SUFFIX + suffixPath;
-}
-
-int32_t GetShellUid()
-{
-    char shellUid[LEN_SHELL_UID] = {0};
-    int32_t uid = DEFAULT_SHELL_UID;
-    int32_t ret = GetParameter(BMS_KEY_SHELL_UID, "", shellUid, LEN_SHELL_UID);
-    if ((ret > 0) && (strcmp(shellUid, "") != 0)) {
-        if (!StrToInt(shellUid, uid)) {
-            APP_LOGE("BaseBundleInstaller GetShellUid (%{public}s) strToInt failed", shellUid);
-        }
-    }
-    return uid;
 }
 }
 
@@ -1517,7 +1502,8 @@ ErrCode BaseBundleInstaller::CheckArkProfileDir(const InnerBundleInfo &newInfo, 
         const auto userInfos = oldInfo.GetInnerBundleUserInfos();
         for (auto iter = userInfos.begin(); iter != userInfos.end(); iter++) {
             int32_t userId = iter->second.bundleUserInfo.userId;
-            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+            int32_t gid = (newInfo.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+                GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
                 oldInfo.GetUid(userId);
             ErrCode result = newInfo.GetIsNewVersion() ?
                 CreateArkProfile(bundleName_, userId, oldInfo.GetUid(userId), gid) :
@@ -1841,7 +1827,8 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     }
 
     if (info.GetIsNewVersion()) {
-        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ? GetShellUid() :
+        int32_t gid = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+            GetIntParameter(BMS_KEY_SHELL_UID, Constants::SHELL_UID) :
             newInnerBundleUserInfo.uid;
         result = CreateArkProfile(
             info.GetBundleName(), userId_, newInnerBundleUserInfo.uid, gid);
