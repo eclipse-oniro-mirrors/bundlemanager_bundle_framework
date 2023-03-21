@@ -30,6 +30,7 @@ using namespace OHOS::AppExecFwk;
 
 namespace OHOS {
 namespace {
+const std::string WRONG_BUNDLE_NAME = "wrong";
 const std::string MIME_TYPE = "html";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string PURPOSE_NAME = "pay";
@@ -201,18 +202,18 @@ HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0007, Func
 
 /**
  * @tc.number: ServiceRouterMgrInterfaceTest_0008
- * Function: ServiceInfo
- * @tc.name: test ServiceInfo
- * @tc.desc: ServiceInfo
+ * Function: BusinessAbilityInfo
+ * @tc.name: test BusinessAbilityInfo
+ * @tc.desc: BusinessAbilityInfo
  */
 HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0008, Function | SmallTest | Level0)
 {
-    ServiceInfo info;
+    BusinessAbilityInfo info;
     info.bundleName = BUNDLE_NAME;
     Parcel parcel;
     auto ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
-    auto result = ServiceInfo::Unmarshalling(parcel);
+    auto result = BusinessAbilityInfo::Unmarshalling(parcel);
     EXPECT_EQ(result->bundleName, BUNDLE_NAME);
 }
 
