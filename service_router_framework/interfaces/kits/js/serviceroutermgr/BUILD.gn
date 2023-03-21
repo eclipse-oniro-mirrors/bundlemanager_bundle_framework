@@ -45,7 +45,7 @@ ohos_shared_library("businessabilityrouter") {
     "samgr:samgr_proxy",
   ]
 
-  relative_install_dir = "module"
+  relative_install_dir = "module/app"
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }

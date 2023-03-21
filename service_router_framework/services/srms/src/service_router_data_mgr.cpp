@@ -146,7 +146,7 @@ int32_t ServiceRouterDataMgr::QueryPurposeInfos(const Want &want, const std::str
 
 BusinessType ServiceRouterDataMgr::GetBusinessType(const BusinessAbilityFilter &filter) const
 {
-    if (filter.businessType != BusinessType::UNSPECIFIED) {
+    if (filter.businessType == BusinessType::SHARE) {
         return filter.businessType;
     }
 
