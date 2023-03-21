@@ -278,7 +278,7 @@ bool DistributedBmsHost::VerifySystemAppForTokenNative()
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_NATIVE) {
-        APP_LOGD("caller tokenType is native, verify success");
+        APP_LOGI("caller tokenType is native, verify success");
         return true;
     }
     APP_LOGE("caller tokenType not native, verify failed");
@@ -293,7 +293,7 @@ bool DistributedBmsHost::VerifySystemAppForTokenShell()
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
     if (tokenType == Security::AccessToken::ATokenTypeEnum::TOKEN_SHELL) {
-        APP_LOGD("caller tokenType is shell, verify success");
+        APP_LOGI("caller tokenType is shell, verify success");
         return true;
     }
     APP_LOGE("caller tokenType not shell, verify failed");
