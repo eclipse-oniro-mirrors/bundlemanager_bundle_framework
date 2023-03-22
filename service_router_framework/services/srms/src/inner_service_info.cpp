@@ -17,12 +17,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-void InnerServiceInfo::FindServiceInfos(const ExtensionServiceType &serviceType,
-    std::vector<ServiceInfo> &serviceInfos) const
+void InnerServiceInfo::FindBusinessAbilityInfos(const BusinessType &businessType,
+    std::vector<BusinessAbilityInfo> &businessAbililtyInfos) const
 {
-    for (auto &serviceInfo : serviceInfos_) {
-        if (serviceInfo.serviceType == serviceType) {
-            serviceInfos.emplace_back(serviceInfo);
+    for (auto &businessAbililtyInfo : businessAbilityInfos_) {
+        if (businessAbililtyInfo.businessType == businessType) {
+            businessAbililtyInfos.emplace_back(businessAbililtyInfo);
         }
     }
 }

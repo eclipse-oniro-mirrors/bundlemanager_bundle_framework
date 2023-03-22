@@ -47,7 +47,7 @@ void ServiceRouterMgrHelper::SetServiceRouterMgr(const sptr<IServiceRouterManage
     routerMgr_ = serviceRouterMgr;
 }
 
-sptr<IServiceRouterManager> ServiceRouterMgrHelper::InnerGetGetServiceRouterMgr()
+sptr<IServiceRouterManager> ServiceRouterMgrHelper::InnerGetServiceRouterMgr()
 {
     std::unique_lock<std::mutex> lock(mgrMutex_);
     return routerMgr_;
@@ -108,13 +108,13 @@ void ServiceRouterMgrHelper::FinishStartSAFail()
 
 sptr<IServiceRouterManager> ServiceRouterMgrHelper::GetServiceRouterMgr()
 {
-    auto routerMgr = InnerGetGetServiceRouterMgr();
+    auto routerMgr = InnerGetServiceRouterMgr();
     if (routerMgr != nullptr) {
         return routerMgr;
     }
 
     LoadSA();
-    
+
     {
         std::unique_lock<std::mutex> lock(cvLock_);
         auto waitState = mgrConn_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
@@ -124,7 +124,7 @@ sptr<IServiceRouterManager> ServiceRouterMgrHelper::GetServiceRouterMgr()
         }
     }
 
-    routerMgr = InnerGetGetServiceRouterMgr();
+    routerMgr = InnerGetServiceRouterMgr();
     if (routerMgr == nullptr) {
         APP_LOGE("GetServiceRouterMgr, after load  routerMgr_ is null");
     }

@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-enum class ExtensionServiceType {
+enum class BusinessType {
     SHARE = 0,
     UNSPECIFIED = 255
 };
@@ -45,12 +45,22 @@ struct AppInfo : public Parcelable {
     static AppInfo *Unmarshalling(Parcel &parcel);
 };
 
-struct ServiceInfo : public Parcelable {
+struct BusinessAbilityFilter : public Parcelable {
+    BusinessType businessType;
+    std::string mimeType;
+    std::string uri;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static BusinessAbilityFilter *Unmarshalling(Parcel &parcel);
+};
+
+struct BusinessAbilityInfo : public Parcelable {
     AppInfo appInfo;
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
-    ExtensionServiceType serviceType;
+    BusinessType businessType;
     int32_t iconId = 0;
     int32_t labelId = 0;
     int32_t descriptionId = 0;
@@ -58,7 +68,7 @@ struct ServiceInfo : public Parcelable {
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static ServiceInfo *Unmarshalling(Parcel &parcel);
+    static BusinessAbilityInfo *Unmarshalling(Parcel &parcel);
 };
 
 struct PurposeInfo final : public Parcelable {
