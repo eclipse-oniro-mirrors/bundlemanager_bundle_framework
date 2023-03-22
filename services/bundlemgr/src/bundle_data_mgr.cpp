@@ -2278,6 +2278,10 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     }
 
     auto infoItem = bundleInfos_.find(bundleName);
+    if(infoItem == bundleInfos_.end()){
+        APP_LOGW("create infoItem fail");
+        return;
+    }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
         OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
@@ -2287,16 +2291,14 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         OverlayDataMgr::GetInstance()->ResetExternalOverlayModuleState(bundleName);
     }
 #endif
-    if (infoItem != bundleInfos_.end()) {
-        APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
-        const InnerBundleInfo &innerBundleInfo = infoItem->second;
-        RecycleUidAndGid(innerBundleInfo);
-        bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
-        if (!ret) {
-            APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
-        }
-        bundleInfos_.erase(bundleName);
+    APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    RecycleUidAndGid(innerBundleInfo);
+    bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
+    if (!ret) {
+        APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
+    bundleInfos_.erase(bundleName);
 }
 
 bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
