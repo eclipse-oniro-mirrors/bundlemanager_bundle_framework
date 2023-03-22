@@ -2197,12 +2197,14 @@ bool InnerBundleInfo::GetAllSharedDependencies(const std::string &moduleName,
         bool isAdd = true;
         Dependency itemDependency = dependenciesDeque.front();
         dependenciesDeque.pop_front();
-        for (const auto &item : dependencies) {
-            if (item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
-                item.versionCode == itemDependency.versionCode) {
-                isAdd = false;
-                break;
-            }
+        auto res = std::any_of(dependencies.begin(), dependencies.end(),
+            [itemDependency](const auto &item) {
+                return item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
+                    item.versionCode == itemDependency.versionCode;
+            });
+        if (res) {
+            isAdd = false;
+            break;
         }
         if (isAdd) {
             dependencies.push_back(itemDependency);

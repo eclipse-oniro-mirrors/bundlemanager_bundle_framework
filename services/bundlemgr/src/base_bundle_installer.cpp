@@ -2487,11 +2487,13 @@ ErrCode BaseBundleInstaller::CheckHapHashParams(
 
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
-    for (const auto &info : infos) {
-        if (info.second.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
-            APP_LOGE("installing cross-app shared library");
+    auto res = std::any_of(infos.begin(), infos.end(),
+        [](const auto &info) {
+            return info.second.GetCompatiblePolicy()!= CompatiblePolicy::NORMAL;
+        });
+    if (res) {
+        APP_LOGE("installing cross-app shared library");
             return ERR_APPEXECFWK_INSTALL_FILE_IS_SHARED_LIBRARY;
-        }
     }
 
     ErrCode ret = bundleInstallChecker_->CheckAppLabelInfo(infos);
@@ -3131,8 +3133,8 @@ void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, In
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
-    for (const auto &info : newInfos) {
-        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+    for (const auto &newInfo : newInfos) {
+        for (const auto &innerModuleInfo : newInfo.second.GetInnerModuleInfos()) {
             sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
             sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
         }

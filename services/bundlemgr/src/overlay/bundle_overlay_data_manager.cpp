@@ -60,10 +60,12 @@ bool OverlayDataMgr::IsExistedNonOverlayHap(const std::string &bundleName)
         APP_LOGE("innerModuleInfo in innerBundleInfo is empty");
         return false;
     }
-    for (const auto &innerModuleInfo : innerModuleInfos) {
-        if (innerModuleInfo.second.targetModuleName.empty()) {
-            return true;
-        }
+    auto res = std::any_of(innerModuleInfos.begin(), innerModuleInfos.end(),
+        [](const auto &innerModuleInfo) {
+            return innerModuleInfo.second.targetModuleName.empty();
+        });
+    if (res) {
+        return true;
     }
     APP_LOGW("only overlay hap existed");
     return false;
@@ -411,11 +413,14 @@ void OverlayDataMgr::RemoveOverlayModuleInfo(
 void OverlayDataMgr::ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
     const std::string &modulePackage, InnerBundleInfo &oldInfo)
 {
-    for (const auto &moduleInfo : innerModuleInfos) {
-        if (moduleInfo.second.targetModuleName == modulePackage) {
-            oldInfo.SetOverlayModuleState(moduleInfo.second.moduleName, OVERLAY_INVALID);
-            return;
-        }
+    auto iter = find_if(innerModuleInfos.begin(), innerModuleInfos.end(),
+        [&modulePackage](const auto &moduleInfo) {
+        return moduleInfo.second.targetModuleName == modulePackage;
+    });
+    if (iter != innerModuleInfos.end()) {
+        auto moduleInfo = *iter;
+        oldInfo.SetOverlayModuleState(moduleInfo.second.moduleName, OVERLAY_INVALID);
+        return;
     }
 }
 
@@ -425,10 +430,12 @@ void OverlayDataMgr::ResetExternalOverlayModuleState(const std::string &bundleNa
         return;
     }
     auto bundleInfos = dataMgr_->GetAllOverlayInnerbundleInfos();
-    for (const auto &info : bundleInfos) {
-        if (info.second.GetTargetBundleName() != bundleName) {
-            continue;
-        }
+    auto iter = find_if(bundleInfos.begin(), bundleInfos.end(),
+        [&bundleName](const auto &info) {
+        return info.second.GetTargetBundleName() != bundleName;
+    });
+    if (iter == bundleInfos.end()) {
+        auto info = *iter;
         const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
         InnerBundleInfo innerBundleInfo = info.second;
         for (const auto &moduleInfo : innerModuleInfos) {

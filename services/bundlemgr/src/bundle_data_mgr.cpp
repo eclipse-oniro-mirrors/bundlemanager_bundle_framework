@@ -4623,10 +4623,12 @@ bool BundleDataMgr::CheckHspVersionIsRelied(int32_t versionCode, const InnerBund
     std::vector<std::string> hspModules = info.GetAllHspModuleNamesForVersion(static_cast<uint32_t>(versionCode));
     // check whether has higher version
     std::vector<uint32_t> versionCodes = info.GetAllHspVersion();
-    for (const auto &item : versionCodes) {
-        if (item > static_cast<uint32_t>(versionCode)) {
-            return false;
-        }
+    auto res = std::any_of(versionCodes.begin(), versionCodes.end(),
+        [versionCode](const auto &item) {
+            return item > static_cast<uint32_t>(versionCode);
+        });
+    if (res) {
+        return false;
     }
     // check other bundle denpendency
     for (const auto &[bundleName, innerBundleInfo] : bundleInfos_) {
@@ -4651,10 +4653,12 @@ bool BundleDataMgr::CheckHspBundleIsRelied(const std::string &hspBundleName) con
             continue;
         }
         std::vector<Dependency> dependencyList = innerBundleInfo.GetDependencies();
-        for (const auto &dependencyItem : dependencyList) {
-            if (dependencyItem.bundleName == hspBundleName) {
-                return true;
-            }
+        auto res = std::any_of(dependencyList.begin(), dependencyList.end(),
+            [hspBundleName](const auto &dependencyItem) {
+                return dependencyItem.bundleName == hspBundleName;
+            });
+        if (res) {
+            return true;
         }
     }
     return false;

@@ -191,11 +191,13 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
 
     // check compatible policy between all parsed bundles
     CompatiblePolicy firstPolicy = parsedBundles_.begin()->second.GetCompatiblePolicy();
-    for (const auto &item : parsedBundles_) {
-        if (item.second.GetCompatiblePolicy() != firstPolicy) {
-            APP_LOGE("compatiblePolicy not same");
-            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
-        }
+    auto res = std::any_of(parsedBundles_.begin(), parsedBundles_.end(),
+        [firstPolicy](const auto &item) {
+            return item.second.GetCompatiblePolicy() != firstPolicy;
+        });
+    if (res) {
+        APP_LOGE("compatiblePolicy not same");
+        return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
     }
 
     ErrCode result = bundleInstallChecker_->CheckAppLabelInfo(parsedBundles_);
