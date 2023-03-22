@@ -3120,11 +3120,11 @@ HWTEST_F(BmsBundleInstallerTest, checkAsanEnabled_0200, Function | SmallTest | L
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 
 /**
- * @tc.number: baseBundleInstaller_3500
+ * @tc.number: baseBundleInstaller_4400
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4400, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3147,11 +3147,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_3600
+ * @tc.number: baseBundleInstaller_4500
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3600, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4500, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3174,11 +3174,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3600, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_3700
+ * @tc.number: baseBundleInstaller_4600
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4600, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3211,11 +3211,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3700, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_3800
+ * @tc.number: baseBundleInstaller_4700
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4700, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3250,11 +3250,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3800, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_3900
+ * @tc.number: baseBundleInstaller_4800
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4800, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3289,11 +3289,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_4000
+ * @tc.number: baseBundleInstaller_4900
  * @tc.name: test InstallNormalAppControl
  * @tc.desc: 1.Test the InstallNormalAppControl of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4900, Function | SmallTest | Level0)
 {
     std::string installAppId = APPID;
     BaseBundleInstaller installer;
@@ -3327,11 +3327,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4000, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_4100
+ * @tc.number: baseBundleInstaller_5000
  * @tc.name: test ProcessBundleInstall
  * @tc.desc: 1.Test the ProcessBundleInstall of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
     std::vector<std::string> inBundlePaths;
@@ -3348,11 +3348,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_4200
+ * @tc.number: baseBundleInstaller_5100
  * @tc.name: test InnerProcessInstallByPreInstallInfo
  * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest | Level0)
 {
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
     BaseBundleInstaller installer;
