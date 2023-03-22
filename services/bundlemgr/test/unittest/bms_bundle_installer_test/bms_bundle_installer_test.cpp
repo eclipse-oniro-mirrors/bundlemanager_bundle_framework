@@ -2117,7 +2117,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3100, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3200, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
-    std::string installAppId = APPID;
+    std::string installAppId;
     int32_t userId = Constants::DEFAULT_USERID;;
     OHOS::ErrCode ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_OK);
