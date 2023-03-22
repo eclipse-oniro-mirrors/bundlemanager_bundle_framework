@@ -18,6 +18,7 @@ ohos_shared_library("innerbundlemanager") {
   include_dirs = [
     "//third_party/libuv/include",
     "//third_party/node/src",
+    "${kits_path}/js/common",
   ]
 
   defines = [
@@ -27,7 +28,10 @@ ohos_shared_library("innerbundlemanager") {
 
   sources = []
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${kits_path}/js/common:bundle_napi_common",
+  ]
 
   external_deps = [
     "c_utils:utils",
