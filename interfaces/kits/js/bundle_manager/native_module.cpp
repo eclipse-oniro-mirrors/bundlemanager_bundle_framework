@@ -104,6 +104,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("PermissionGrantState", permissionGrantState),
         DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
         DECLARE_NAPI_PROPERTY("BundleType", nBundleType),
+        DECLARE_NAPI_PROPERTY("ModuleType", nModuleType),
         DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
         DECLARE_NAPI_PROPERTY("LaunchType", nLaunchType),
         DECLARE_NAPI_PROPERTY("SupportWindowMode", nSupportWindowMode),
