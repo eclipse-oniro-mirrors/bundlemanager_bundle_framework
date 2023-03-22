@@ -74,8 +74,8 @@ const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
-static std::string ownBundleName_;
-static std::mutex ownBundleNameMutex_;
+static std::string ownBundleName;
+static std::mutex ownBundleNameMutex;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
@@ -310,19 +310,19 @@ void GetBundleNameByUidExec(napi_env env, void *data)
     }
     bool queryOwn = (asyncCallbackInfo->uid == IPCSkeleton::GetCallingUid());
     if (queryOwn) {
-        std::lock_guard<std::mutex> lock(ownBundleNameMutex_);
-        if (!ownBundleName_.empty()) {
-            APP_LOGD("bundleName has cache,no need to query from host");
-            asyncCallbackInfo->bundleName = ownBundleName_;
+        std::lock_guard<std::mutex> lock(ownBundleNameMutex);
+        if (!ownBundleName.empty()) {
+            APP_LOGD("query own bundleName, has cache, no need to query from host");
+            asyncCallbackInfo->bundleName = ownBundleName;
             asyncCallbackInfo->err = NO_ERROR;
             return;
         }
     }
     asyncCallbackInfo->err = InnerGetBundleNameByUid(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName);
-    if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && ownBundleName_.empty()) {
+    if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && ownBundleName.empty()) {
         APP_LOGD("put own bundleName to cache");
-        std::lock_guard<std::mutex> lock(ownBundleNameMutex_);
-        ownBundleName_ = asyncCallbackInfo->bundleName;
+        std::lock_guard<std::mutex> lock(ownBundleNameMutex);
+        ownBundleName = asyncCallbackInfo->bundleName;
     }
 }
 
