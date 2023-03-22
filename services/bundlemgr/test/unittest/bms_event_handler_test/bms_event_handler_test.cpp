@@ -175,7 +175,6 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
-    std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
     handler->SaveInstallInfoToCache(info);
