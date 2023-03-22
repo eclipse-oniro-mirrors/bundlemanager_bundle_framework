@@ -2278,7 +2278,7 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     }
 
     auto infoItem = bundleInfos_.find(bundleName);
-    if(infoItem == bundleInfos_.end()){
+    if(infoItem == bundleInfos_.end()) {
         APP_LOGW("create infoItem fail");
         return;
     }
