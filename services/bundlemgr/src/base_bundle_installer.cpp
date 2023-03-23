@@ -3131,8 +3131,8 @@ void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, In
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
-    for (const auto &info : newInfos) {
-        for (const auto &innerModuleInfo : info.second.GetInnerModuleInfos()) {
+    for (const auto &newInfo : newInfos) {
+        for (const auto &innerModuleInfo : newInfo.second.GetInnerModuleInfos()) {
             sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
             sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
         }

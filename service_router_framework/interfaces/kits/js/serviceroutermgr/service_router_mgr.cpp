@@ -192,7 +192,6 @@ void QueryBusinessAbilityInfosComplete(napi_env env, napi_status status, void *d
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    std::unique_ptr<AbilityInfosCallbackInfo> callbackPtr{asyncCallbackInfo};
     napi_value result[2] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
