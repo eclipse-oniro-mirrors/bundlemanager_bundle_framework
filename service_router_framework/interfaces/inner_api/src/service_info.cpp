@@ -49,7 +49,34 @@ AppInfo *AppInfo::Unmarshalling(Parcel &parcel)
     return info;
 }
 
-bool ServiceInfo::ReadFromParcel(Parcel &parcel)
+bool BusinessAbilityFilter::ReadFromParcel(Parcel &parcel)
+{
+    businessType = static_cast<BusinessType>(parcel.ReadInt32());
+    mimeType = Str16ToStr8(parcel.ReadString16());
+    uri = Str16ToStr8(parcel.ReadString16());
+    return true;
+}
+
+bool BusinessAbilityFilter::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(businessType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(mimeType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
+    return true;
+}
+
+BusinessAbilityFilter *BusinessAbilityFilter::Unmarshalling(Parcel &parcel)
+{
+    BusinessAbilityFilter *filter = new (std::nothrow) BusinessAbilityFilter();
+    if (filter && !filter->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete filter;
+        filter = nullptr;
+    }
+    return filter;
+}
+
+bool BusinessAbilityInfo::ReadFromParcel(Parcel &parcel)
 {
     std::unique_ptr<AppInfo> app(parcel.ReadParcelable<AppInfo>());
     if (!app) {
@@ -60,7 +87,7 @@ bool ServiceInfo::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     abilityName = Str16ToStr8(parcel.ReadString16());
-    serviceType = static_cast<ExtensionServiceType>(parcel.ReadInt32());
+    businessType = static_cast<BusinessType>(parcel.ReadInt32());
     iconId = parcel.ReadInt32();
     labelId = parcel.ReadInt32();
     descriptionId = parcel.ReadInt32();
@@ -75,13 +102,13 @@ bool ServiceInfo::ReadFromParcel(Parcel &parcel)
     return true;
 }
 
-bool ServiceInfo::Marshalling(Parcel &parcel) const
+bool BusinessAbilityInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &appInfo);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(serviceType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(businessType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, iconId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
@@ -92,9 +119,9 @@ bool ServiceInfo::Marshalling(Parcel &parcel) const
     return true;
 }
 
-ServiceInfo *ServiceInfo::Unmarshalling(Parcel &parcel)
+BusinessAbilityInfo *BusinessAbilityInfo::Unmarshalling(Parcel &parcel)
 {
-    ServiceInfo *info = new (std::nothrow) ServiceInfo();
+    BusinessAbilityInfo *info = new (std::nothrow) BusinessAbilityInfo();
     if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
