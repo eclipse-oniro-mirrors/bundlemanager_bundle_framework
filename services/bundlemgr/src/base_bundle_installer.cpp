@@ -1087,7 +1087,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     }
 #endif
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
-        APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
+        APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
     }
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
     return ERR_OK;
@@ -3321,7 +3321,7 @@ void BaseBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());;
+        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
     }
 }
 }  // namespace AppExecFwk

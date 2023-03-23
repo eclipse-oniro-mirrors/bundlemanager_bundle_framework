@@ -406,7 +406,7 @@ void InnerSharedBundleInstaller::AddAppProvisionInfo(const std::string &bundleNa
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());;
+        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
     }
 }
 }  // namespace AppExecFwk
