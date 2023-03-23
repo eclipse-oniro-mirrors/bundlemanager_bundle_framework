@@ -125,7 +125,9 @@ void InnerSharedBundleInstaller::RollBack()
         if (dataMgr->DeleteSharedBundleInfo(bundleName_)) {
             APP_LOGE("rollback new bundle failed : %{public}s", bundleName_.c_str());
         }
-        DeleteAppProvisionInfo(bundleName_);
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName_)) {
+            APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed.", bundleName_.c_str());
+        }
         return;
     }
 
@@ -398,25 +400,14 @@ void InnerSharedBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo) const
     }
 }
 
-bool InnerSharedBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
-        const Security::Verify::ProvisionInfo &provisionInfo) const
+void InnerSharedBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
+    const Security::Verify::ProvisionInfo &provisionInfo) const
 {
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGE("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
-        return false;
+        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());;
     }
-    return true;
-}
-
-bool InnerSharedBundleInstaller::DeleteAppProvisionInfo(const std::string &bundleName) const
-{
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
-        APP_LOGE("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
-        return false;
-    }
-    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
