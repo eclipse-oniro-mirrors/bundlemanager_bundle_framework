@@ -29,38 +29,38 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    static std::unordered_map<std::string, ExtensionServiceType> SERVICE_TYPE_MAP = {
-        {"share", ExtensionServiceType::SHARE}};
+    static std::unordered_map<std::string, BusinessType> BUSINESS_TYPE_MAP = {
+        {"share", BusinessType::SHARE}};
 }
 class BundleInfoResolveUtil {
 public:
     static bool ResolveBundleInfo(const BundleInfo &bundleInfo, std::vector<PurposeInfo> &purposeInfos,
-        std::vector<ServiceInfo> &serviceInfos, const AppInfo &appInfo)
+        std::vector<BusinessAbilityInfo> &businessAbilityInfos, const AppInfo &appInfo)
     {
         if (bundleInfo.name.empty()) {
             APP_LOGE("ConvertBundleInfo, bundleInfo invalid");
             return false;
         }
         ResolveAbilityInfos(bundleInfo.abilityInfos, purposeInfos, appInfo);
-        ResolveExtAbilityInfos(bundleInfo.extensionInfos, purposeInfos, serviceInfos, appInfo);
-        if (purposeInfos.empty() && serviceInfos.empty()) {
+        ResolveExtAbilityInfos(bundleInfo.extensionInfos, purposeInfos, businessAbilityInfos, appInfo);
+        if (purposeInfos.empty() && businessAbilityInfos.empty()) {
             APP_LOGI("ResolveBundleInfo, not support, bundleName: %{public}s", bundleInfo.name.c_str());
             return false;
         }
         return true;
 }
 
-static ExtensionServiceType findExtensionServiceType(const std::string serviceType)
+static BusinessType findBusinessType(const std::string businessType)
 {
-    if (serviceType.empty()) {
-        return ExtensionServiceType::UNSPECIFIED;
+    if (businessType.empty()) {
+        return BusinessType::UNSPECIFIED;
     }
 
-    auto item = SERVICE_TYPE_MAP.find(LowerStr(serviceType));
-    if (item != SERVICE_TYPE_MAP.end()) {
+    auto item = BUSINESS_TYPE_MAP.find(LowerStr(businessType));
+    if (item != BUSINESS_TYPE_MAP.end()) {
         return item->second;
     }
-    return ExtensionServiceType::UNSPECIFIED;
+    return BusinessType::UNSPECIFIED;
 }
 
 private:
@@ -76,14 +76,15 @@ private:
 }
 
 static void ResolveExtAbilityInfos(const std::vector<ExtensionAbilityInfo> &extensionInfos,
-    std::vector<PurposeInfo> &purposeInfos, std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
+    std::vector<PurposeInfo> &purposeInfos, std::vector<BusinessAbilityInfo> &businessAbilityInfos,
+    const AppInfo appInfo)
 {
     if (extensionInfos.empty()) {
         return;
     }
     for (const auto &extensionInfo : extensionInfos) {
         ConvertExtAbilityToPurposes(extensionInfo, purposeInfos, appInfo);
-        ConvertExtAbilityToService(extensionInfo, serviceInfos, appInfo);
+        ConvertExtAbilityToService(extensionInfo, businessAbilityInfos, appInfo);
     }
 }
 
@@ -152,28 +153,28 @@ static void ConvertExtAbilityToPurposes(const ExtensionAbilityInfo &extAbilityIn
 }
 
 static void ConvertExtAbilityToService(const ExtensionAbilityInfo &extAbilityInfo,
-    std::vector<ServiceInfo> &serviceInfos, const AppInfo appInfo)
+    std::vector<BusinessAbilityInfo> &businessAbilityInfos, const AppInfo appInfo)
 {
     if (extAbilityInfo.type != ExtensionAbilityType::UI) {
         return;
     }
-    std::string serviceType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
-    APP_LOGI("ToService, abilityName: %{public}s, serviceType: %{public}s",
-        extAbilityInfo.name.c_str(), serviceType.c_str());
-    auto item = SERVICE_TYPE_MAP.find(LowerStr(serviceType));
-    ExtensionServiceType type = findExtensionServiceType(serviceType);
-    if (type != ExtensionServiceType::UNSPECIFIED) {
-        ServiceInfo serviceInfo;
-        serviceInfo.appInfo = appInfo;
-        serviceInfo.abilityName = extAbilityInfo.name;
-        serviceInfo.moduleName = extAbilityInfo.moduleName;
-        serviceInfo.bundleName = extAbilityInfo.bundleName;
-        serviceInfo.serviceType = item->second;
-        serviceInfo.iconId = extAbilityInfo.iconId;
-        serviceInfo.labelId = extAbilityInfo.labelId;
-        serviceInfo.descriptionId = extAbilityInfo.descriptionId;
-        serviceInfo.permissions = extAbilityInfo.permissions;
-        serviceInfos.emplace_back(serviceInfo);
+    std::string businessType = GetExtAbilityMetadataValue(extAbilityInfo, SrConstants::METADATA_SERVICE_TYPE_KEY);
+    APP_LOGI("ToService, abilityName: %{public}s, businessType: %{public}s",
+        extAbilityInfo.name.c_str(), businessType.c_str());
+    auto item = BUSINESS_TYPE_MAP.find(LowerStr(businessType));
+    BusinessType type = findBusinessType(businessType);
+    if (type != BusinessType::UNSPECIFIED) {
+        BusinessAbilityInfo businessAbilityInfo;
+        businessAbilityInfo.appInfo = appInfo;
+        businessAbilityInfo.abilityName = extAbilityInfo.name;
+        businessAbilityInfo.moduleName = extAbilityInfo.moduleName;
+        businessAbilityInfo.bundleName = extAbilityInfo.bundleName;
+        businessAbilityInfo.businessType = item->second;
+        businessAbilityInfo.iconId = extAbilityInfo.iconId;
+        businessAbilityInfo.labelId = extAbilityInfo.labelId;
+        businessAbilityInfo.descriptionId = extAbilityInfo.descriptionId;
+        businessAbilityInfo.permissions = extAbilityInfo.permissions;
+        businessAbilityInfos.emplace_back(businessAbilityInfo);
     }
 }
 

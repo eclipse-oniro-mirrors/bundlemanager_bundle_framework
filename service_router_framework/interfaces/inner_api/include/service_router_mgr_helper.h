@@ -50,8 +50,8 @@ public:
 
 private:
     void SetServiceRouterMgr(const sptr<IServiceRouterManager> &serviceRouterMgr);
-    sptr<IServiceRouterManager> InnerGetGetServiceRouterMgr();
-    
+    sptr<IServiceRouterManager> InnerGetServiceRouterMgr();
+
     std::mutex mgrMutex_;
     std::mutex cvLock_;
     bool isReady = false;
