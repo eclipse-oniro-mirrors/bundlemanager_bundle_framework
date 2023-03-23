@@ -280,7 +280,10 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
         APP_LOGE("%{public}s get_global=%{public}d err:%{public}s", __func__, ret, errorInfo->error_message);
     }
 
-    AsyncZipCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncZipCallbackInfo;
+    AsyncZipCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncZipCallbackInfo {
+        .asyncWork = nullptr,
+        .zlibCallbackInfo = nullptr,
+    };
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("%{public}s asyncCallbackInfo is null", __func__);
         return nullptr;
