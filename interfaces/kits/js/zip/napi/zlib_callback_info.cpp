@@ -80,7 +80,6 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             }
             if (work != nullptr) {
                 delete work;
-                work = nullptr;
             }
             napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
@@ -114,14 +113,7 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         err = CommonFunc::ConvertErrCode(result);
     }
 
-    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
-        .env = env_,
-        .callback = callback_,
-        .deferred = deferred_,
-        .isCallBack = isCallBack_,
-        .callbackResult = err,
-        .deliverErrcode = deliverErrcode_,
-    };
+    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo;
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
         delete work;
