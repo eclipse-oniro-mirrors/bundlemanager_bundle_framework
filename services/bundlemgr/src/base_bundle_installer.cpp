@@ -449,25 +449,57 @@ bool BaseBundleInstaller::UninstallAppControl(const std::string &appId, int32_t 
 #endif
 }
 
-ErrCode BaseBundleInstaller::InstallAppControl(
-    const std::vector<std::string> &installAppIds, int32_t userId)
+ErrCode BaseBundleInstaller::InstallNormalAppControl(
+    const std::string &installAppId, int32_t userId)
 {
+    APP_LOGD("InstallNormalAppControl start ");
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    std::vector<std::string> appIds;
+    std::vector<std::string> allowedAppIds;
     ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_ALLOWED_INSTALL, userId, appIds);
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_ALLOWED_INSTALL, userId, allowedAppIds);
     if (ret != ERR_OK) {
-        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        APP_LOGE("GetAppInstallControlRule allowedInstall failed code:%{public}d", ret);
         return ret;
     }
-    if (appIds.empty()) {
+
+    std::vector<std::string> disallowedAppIds;
+    ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_INSTALL, userId, disallowedAppIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule disallowedInstall failed code:%{public}d", ret);
+        return ret;
+    }
+
+    // disallowed list and allowed list all empty.
+    if (disallowedAppIds.empty() && allowedAppIds.empty()) {
         return ERR_OK;
     }
-    for (const auto &installAppId : installAppIds) {
-        if (std::find(appIds.begin(), appIds.end(), installAppId) == appIds.end()) {
-            APP_LOGE("appId:%{public}s is dis allow install", installAppId.c_str());
+
+    // only allowed list empty.
+    if (allowedAppIds.empty()) {
+        if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
+            APP_LOGE("disallowedAppIds:%{public}s is dis allow install", installAppId.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
+        return ERR_OK;
+    }
+
+    // only disallowed list empty.
+    if (disallowedAppIds.empty()) {
+        if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
+            APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+        }
+        return ERR_OK;
+    }
+
+    // disallowed list and allowed list all not empty.
+    if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
+        APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
+    } else if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
+        APP_LOGE("disallowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
     }
     return ERR_OK;
 #else
@@ -750,13 +782,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
-    // check hap is allow install by app control
-    std::vector<std::string> installAppIds;
-    for (const auto &info : newInfos) {
-        installAppIds.emplace_back(info.second.GetAppId());
-    }
-    result = InstallAppControl(installAppIds, userId_);
-    CHECK_RESULT(result, "install app control failed %{public}d");
 
     // check hap hash param
     result = CheckHapHashParams(newInfos, installParam.hashParams);
@@ -777,6 +802,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 40%
+
+    // check hap is allow install by app control
+    if (!installParam.isPreInstallApp) {
+        auto installAppId = (newInfos.begin()->second).GetAppId();
+        result = InstallNormalAppControl(installAppId, userId_);
+        CHECK_RESULT(result, "install app control failed %{public}d");
+    }
 
     auto &mtx = dataMgr_->GetBundleMutex(bundleName_);
     std::lock_guard lock {mtx};
@@ -1285,11 +1317,12 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
             }
 
-            std::vector<std::string> installAppIds(1, oldInfo.GetAppId());
-            ErrCode result = InstallAppControl(installAppIds, userId_);
-            if (result != ERR_OK) {
-                APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
-                return result;
+            if (!installParam.isPreInstallApp) {
+                ErrCode ret = InstallNormalAppControl(oldInfo.GetAppId(), userId_);
+                if (ret != ERR_OK) {
+                    APP_LOGE("appid:%{private}s check install app control failed", oldInfo.GetAppId().c_str());
+                    return ret;
+                }
             }
 
             bool isSingleton = oldInfo.IsSingleton();
@@ -1308,7 +1341,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             auto accessTokenIdEx = CreateAccessTokenIdEx(oldInfo);
             accessTokenId_ = accessTokenIdEx.tokenIdExStruct.tokenID;
             oldInfo.SetAccessTokenIdEx(accessTokenIdEx, userId_);
-            result = GrantRequestPermissions(oldInfo, accessTokenId_);
+            ErrCode result = GrantRequestPermissions(oldInfo, accessTokenId_);
             if (result != ERR_OK) {
                 return result;
             }
