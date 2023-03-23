@@ -80,6 +80,7 @@ int32_t ZlibCallbackInfo::ExcuteWork(uv_loop_s* loop, uv_work_t* work)
             }
             if (work != nullptr) {
                 delete work;
+                work = nullptr;
             }
             napi_close_handle_scope(asyncCallbackInfo->env, scope);
         });
