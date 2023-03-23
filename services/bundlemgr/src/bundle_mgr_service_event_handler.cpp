@@ -1162,7 +1162,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         if (oldBundleInfo.GetVersionCode() >= versionCode) {
             APP_LOGD("the installed version is up-to-date");
             if (allBundleNames.find(bundleName) == allBundleNames.end()) {
-                AddStockAppProvisionInfoByOTA(bundleName, scanPath);
+                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
             }
             continue;
         }
