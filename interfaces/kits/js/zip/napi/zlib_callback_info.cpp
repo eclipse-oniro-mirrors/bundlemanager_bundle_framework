@@ -114,7 +114,14 @@ void ZlibCallbackInfo::OnZipUnZipFinish(ErrCode result)
         err = CommonFunc::ConvertErrCode(result);
     }
 
-    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo;
+    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
+        .env = env_,
+        .callback = callback_,
+        .deferred = deferred_,
+        .isCallBack = isCallBack_,
+        .callbackResult = err,
+        .deliverErrcode = deliverErrcode_,
+    };
     std::unique_ptr<AsyncCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (asyncCallbackInfo == nullptr) {
         delete work;
