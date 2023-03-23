@@ -75,7 +75,7 @@ const struct option LONG_OPTIONS[] = {
 const std::string UNINSTALL_OPTIONS = "hn:m:u:v:s";
 const struct option UNINSTALL_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
-    {"bundle_name", required_argument, nullptr, 'n'},
+    {"bundle-name", required_argument, nullptr, 'n'},
     {"module-name", required_argument, nullptr, 'm'},
     {"user-id", required_argument, nullptr, 'u'},
     {"keep-data", no_argument, nullptr, 'k'},
