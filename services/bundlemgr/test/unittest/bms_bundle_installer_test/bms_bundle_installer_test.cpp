@@ -653,7 +653,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
 
     UnInstallBundle(SYSTEMFIEID_NAME);
-
 }
 
 /**
