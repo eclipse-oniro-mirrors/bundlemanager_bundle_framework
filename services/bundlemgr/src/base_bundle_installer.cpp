@@ -58,7 +58,6 @@ namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
-const std::string RELEASE = "Release";
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
@@ -2590,10 +2589,6 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAsanEnabled() != newInfo.GetAsanEnabled()) {
         APP_LOGE("asanEnabled is not same");
         return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
-    }
-    if ((newInfo.GetReleaseType()).find(RELEASE) != std::string::npos && newInfo.GetAsanEnabled()) {
-        APP_LOGE("asanEnabled is not supported in Release");
-        return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
