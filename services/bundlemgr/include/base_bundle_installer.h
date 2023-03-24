@@ -566,9 +566,8 @@ private:
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
-    bool AddAppProvisionInfo(const std::string &bundleName,
+    void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
-    bool DeleteAppProvisionInfo(const std::string &bundleName) const;
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
 
