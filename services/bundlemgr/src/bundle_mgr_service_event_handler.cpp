@@ -66,7 +66,6 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
-const std::string APL_NORMAL = "normal";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -1732,7 +1731,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
                 return;
             }
             if (!isExist) {
-                APP_LOGD("baseDir: %{public}s is not exist", baseDataDir.c_str());
+                APP_LOGD("baseDir: %{private}s is not exist", baseDataDir.c_str());
                 continue;
             }
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);

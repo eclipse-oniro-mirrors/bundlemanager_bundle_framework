@@ -810,6 +810,7 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
+
 private:
     std::shared_ptr<BMSEventHandler> handler_;
     const std::string BUNDLE_MGR_THREAD = "BundleMgrThread";
