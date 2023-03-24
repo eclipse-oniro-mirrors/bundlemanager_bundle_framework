@@ -344,6 +344,12 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
     } else {
         return "";
     }
+
+    if (CreateTempDir(tempDir).empty()) {
+        APP_LOGE("create tempDir failed");
+        return "";
+    }
+
     tempDir += Constants::PATH_SEPARATOR + std::to_string(curTime) +
         std::to_string(installerId) + Constants::PATH_SEPARATOR;
     return CreateTempDir(tempDir);
