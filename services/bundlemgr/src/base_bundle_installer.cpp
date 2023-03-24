@@ -67,7 +67,6 @@ namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
-const std::string RELEASE = "Release";
 const std::string HSP_VERSION_PREFIX = "v";
 
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -2876,10 +2875,6 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetAsanEnabled() != newInfo.GetAsanEnabled()) {
         APP_LOGE("asanEnabled is not same");
         return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
-    }
-    if ((newInfo.GetReleaseType()).find(RELEASE) != std::string::npos && newInfo.GetAsanEnabled()) {
-        APP_LOGE("asanEnabled is not supported in Release");
-        return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
     }
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;

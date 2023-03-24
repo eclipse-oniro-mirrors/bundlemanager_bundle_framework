@@ -46,7 +46,6 @@ const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
-const std::string RELEASE = "Release";
 const std::string APL_NORMAL = "normal";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
@@ -701,10 +700,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (asanEnabled != info.second.GetAsanEnabled()) {
             APP_LOGE("asanEnabled is not same");
             return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
-        }
-        if (asanEnabled && info.second.GetReleaseType().find(RELEASE) != std::string::npos) {
-            APP_LOGE("asanEnabled is not supported in Release");
-            return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
         }
         if (bundleType != info.second.GetApplicationBundleType()) {
             return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
