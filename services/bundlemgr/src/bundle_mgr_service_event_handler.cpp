@@ -30,6 +30,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_scanner.h"
 #include "bundle_util.h"
+#include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -123,6 +124,37 @@ public:
 private:
     std::string bundleName_;
 };
+
+class UserUnLockedEventSubscriber final : public CommonEventSubscriber {
+public:
+    explicit UserUnLockedEventSubscriber(const CommonEventSubscribeInfo &subscribeInfo);
+    virtual ~UserUnLockedEventSubscriber();
+    void OnReceiveEvent(const CommonEventData &data) override;
+};
+
+UserUnLockedEventSubscriber::UserUnLockedEventSubscriber(
+    const CommonEventSubscribeInfo &subscribeInfo) : CommonEventSubscriber(subscribeInfo)
+{
+    APP_LOGI("wtt UserUnLockedEventSubscriber create");
+}
+
+UserUnLockedEventSubscriber::~UserUnLockedEventSubscriber()
+{
+    APP_LOGI("wtt UserUnLockedEventSubscriber destroy");
+}
+
+UserUnLockedEventSubscriber::OnReceiveEvent(const CommonEventData &data)
+{
+    // TODO
+    std::string action = data.GetWant().GetAction();
+    APP_LOGI("wtt UserUnLockedEventSubscriber receive action %{public}s", action.c_str());
+    if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
+        int32_t userId = data.GetCode();
+        APP_LOGI("wtt UserUnLockedEventSubscriber userId %{public}d is unlocked", userId);
+        // std::thread removeThread(RemoveSandboxDataDir, userId, toDeleteSandboxDir_);
+        // removeThread.detach();
+    }
+}
 }
 
 BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
@@ -236,6 +268,7 @@ void BMSEventHandler::AfterBmsStart()
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
+    ListeningUserUnlocked();
 }
 
 void BMSEventHandler::ClearCache()
@@ -1691,6 +1724,25 @@ bool BMSEventHandler::FetchInnerBundleInfo(
     }
 
     return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
+}
+
+void BMSEventHandler::ListeningUserUnlocked() const
+{
+    APP_LOGI("wtt BMSEventHandler listen the unlock of someone user start.");
+    Want commonDataWant;
+    commonDataWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    CommonEventData commonEventData(commonDataWant);
+
+    MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<UserUnLockedEventSubscriber>(subscribeInfo);
+    if (!CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
+        APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
+            EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
+    }
+    APP_LOGI("wtt BMSEventHandler listen the unlock of someone user end.");
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
