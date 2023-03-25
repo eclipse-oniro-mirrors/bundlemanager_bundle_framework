@@ -743,7 +743,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4800, Functi
 {
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(
+        want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
