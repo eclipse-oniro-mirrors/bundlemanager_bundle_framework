@@ -42,10 +42,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
   ]
 
   sources += bundle_install_sources
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
