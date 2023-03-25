@@ -2309,7 +2309,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!IsAppRemovableInControlRule(GetAppId(), userId)) {
+    if (!CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2844,7 +2844,7 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     }
 }
 
-bool InnerBundleInfo::IsAppRemovableInControlRule(const std::string &appId, int32_t userId) const
+bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
 {
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     std::vector<std::string> appIds;
@@ -2857,7 +2857,7 @@ bool InnerBundleInfo::IsAppRemovableInControlRule(const std::string &appId, int3
     if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
         return true;
     }
-    APP_LOGD("appId is not removable");
+    APP_LOGW("appId is not removable");
     return false;
 #else
     APP_LOGW("app control is disable");
