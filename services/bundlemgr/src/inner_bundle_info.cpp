@@ -2370,6 +2370,9 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    if (!CheckAppInstallControl(GetAppId(), userId)) {
+        appInfo.removable = false;
+    }
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
@@ -2521,6 +2524,9 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
+    if (!CheckAppInstallControl(GetAppId(), userId)) {
+        appInfo.removable = false;
+    }
     return true;
 }
 
