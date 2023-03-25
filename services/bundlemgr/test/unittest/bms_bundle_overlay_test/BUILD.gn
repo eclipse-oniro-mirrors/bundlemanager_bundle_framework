@@ -136,7 +136,6 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = [
     "${core_path}/src/overlay/overlay_manager_host.cpp",
@@ -188,6 +187,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -232,7 +232,6 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -274,6 +273,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -317,7 +317,6 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -360,6 +359,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -403,7 +403,6 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -446,6 +445,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

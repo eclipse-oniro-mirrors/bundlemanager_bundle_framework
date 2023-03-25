@@ -26,9 +26,6 @@ config("tools_bm_config_mock") {
     "${bundle_framework_path}/services/bundlemgr/include/sandbox_app",
     "${bundle_framework_path}/services/bundlemgr/include/shared",
     "${bundletool_test_path}/mock",
-    "//base/notification/eventhandler/interfaces/inner_api",
-    "//base/security/permission/interfaces/innerkits/permission_standard/permissionsdk/main/cpp/include",
-    "//base/security/appverify/interfaces/innerkits/appverify/include",
     "//third_party/googletest/googlemock/include",
     "//third_party/json/single_include",
   ]
