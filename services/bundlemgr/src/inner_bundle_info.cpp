@@ -2524,9 +2524,6 @@ bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo)
     bundleInfo = *baseBundleInfo_;
     ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
     bundleInfo.applicationInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
-        appInfo.removable = false;
-    }
     return true;
 }
 
