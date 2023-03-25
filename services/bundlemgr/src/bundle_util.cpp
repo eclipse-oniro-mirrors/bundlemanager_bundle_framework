@@ -15,6 +15,7 @@
 
 #include "bundle_util.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 #include <dirent.h>
@@ -36,6 +37,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
+const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
+const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
 }
@@ -146,6 +149,7 @@ bool BundleUtil::CheckFileName(const std::string &fileName)
 
 bool BundleUtil::CheckFileSize(const std::string &bundlePath, const int64_t fileSize)
 {
+    APP_LOGD("fileSize is %{public}" PRId64, fileSize / Constants::ONE_GB);
     struct stat fileInfo = { 0 };
     if (stat(bundlePath.c_str(), &fileInfo) != 0) {
         APP_LOGE("call stat error");
@@ -167,7 +171,8 @@ bool BundleUtil::CheckSystemSize(const std::string &bundlePath, const std::strin
     int64_t freeSize = diskInfo.f_bfree * diskInfo.f_bsize;
     APP_LOGD("left free size in the disk path is %{public}" PRId64, freeSize / Constants::ONE_GB);
 
-    return CheckFileSize(bundlePath, freeSize);
+    // bundleSize + keepSize <= system-freeSize needs to be satisfied
+    return CheckFileSize(bundlePath, freeSize - std::min(freeSize * SAVE_SPACE_PERCENT, static_cast<double>(HALF_GB)));
 }
 
 bool BundleUtil::GetHapFilesFromBundlePath(const std::string& currentBundlePath, std::vector<std::string>& hapFileList)
