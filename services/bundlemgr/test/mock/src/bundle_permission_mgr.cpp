@@ -24,8 +24,54 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
 {
     return false;
 }
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const AccessTokenID tokenId)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const std::vector<std::string> &requestPermName,
+    const AccessTokenID tokenId)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::IsNativeTokenType()
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const AccessTokenID tokenId)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const std::vector<std::string> &requestPermName,
+    const AccessTokenID tokenId)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsNativeTokenType()
 {
     return true;
 }
@@ -87,19 +133,6 @@ bool BundlePermissionMgr::AddDefineAndRequestPermissions(AccessTokenIDEx &tokenI
 int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
 {
     return 0;
-}
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const AccessTokenID tokenId)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<std::string> &requestPermName,
-    const AccessTokenID tokenId)
-{
-    return true;
 }
 
 bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId,
@@ -236,11 +269,6 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
 bool BundlePermissionMgr::GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
     const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
     const std::string &bundleName)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::IsNativeTokenType()
 {
     return true;
 }
