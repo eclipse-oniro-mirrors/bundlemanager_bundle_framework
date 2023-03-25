@@ -21,6 +21,7 @@
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
+#include "app_control_manager.h"
 #endif
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"

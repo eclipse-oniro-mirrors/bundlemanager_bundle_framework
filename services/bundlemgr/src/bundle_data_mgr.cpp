@@ -18,9 +18,6 @@
 #include <chrono>
 #include <cinttypes>
 
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-#include "app_control_constants.h"
-#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
