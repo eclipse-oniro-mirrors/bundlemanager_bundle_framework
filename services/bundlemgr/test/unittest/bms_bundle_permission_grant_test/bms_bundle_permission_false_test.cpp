@@ -63,6 +63,8 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
 private:
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
+    std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
 };
@@ -116,10 +118,8 @@ const std::shared_ptr<BundleDataMgr> BmsBundlePermissionFalseTest::GetBundleData
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     ApplicationInfo appInfo;
-    bool ret = hostImpl->GetApplicationInfo(BUNDLE_NAME, FLAGS, USERID, appInfo);
+    bool ret = bundleMgrHostImpl_->GetApplicationInfo(BUNDLE_NAME, FLAGS, USERID, appInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -131,10 +131,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     ApplicationInfo appInfo;
-    ErrCode ret = hostImpl->GetApplicationInfoV9(BUNDLE_NAME, FLAGS, USERID, appInfo);
+    ErrCode ret = bundleMgrHostImpl_->GetApplicationInfoV9(BUNDLE_NAME, FLAGS, USERID, appInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -146,10 +144,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<ApplicationInfo> appInfos;
-    bool ret = hostImpl->GetApplicationInfos(FLAGS, USERID, appInfos);
+    bool ret = bundleMgrHostImpl_->GetApplicationInfos(FLAGS, USERID, appInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -161,10 +157,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<ApplicationInfo> appInfos;
-    ErrCode ret = hostImpl->GetApplicationInfosV9(FLAGS, USERID, appInfos);
+    ErrCode ret = bundleMgrHostImpl_->GetApplicationInfosV9(FLAGS, USERID, appInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -176,10 +170,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     BundleInfo bundleInfo;
-    bool ret = hostImpl->GetBundleInfo(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
+    bool ret = bundleMgrHostImpl_->GetBundleInfo(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
     EXPECT_EQ(ret, false);
 }
 
@@ -191,10 +183,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
-    ErrCode ret = hostImpl->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
+    ErrCode ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -206,10 +196,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     BundleInfo bundleInfo;
-    ErrCode ret = hostImpl->GetBundleInfoV9(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
+    ErrCode ret = bundleMgrHostImpl_->GetBundleInfoV9(BUNDLE_NAME, FLAGS, bundleInfo, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -221,10 +209,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     BundlePackInfo bundlePackInfo;
-    ErrCode ret = hostImpl->GetBundlePackInfo(BUNDLE_NAME, FLAGS, bundlePackInfo, USERID);
+    ErrCode ret = bundleMgrHostImpl_->GetBundlePackInfo(BUNDLE_NAME, FLAGS, bundlePackInfo, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -236,10 +222,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<BundleInfo> bundleInfos;
-    bool ret = hostImpl->GetBundleInfos(FLAGS, bundleInfos, USERID);
+    bool ret = bundleMgrHostImpl_->GetBundleInfos(FLAGS, bundleInfos, USERID);
     EXPECT_EQ(ret, false);
 }
 
@@ -251,10 +235,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<BundleInfo> bundleInfos;
-    ErrCode ret = hostImpl->GetBundleInfosV9(FLAGS, bundleInfos, USERID);
+    ErrCode ret = bundleMgrHostImpl_->GetBundleInfosV9(FLAGS, bundleInfos, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -266,10 +248,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::string name;
-    ErrCode ret = hostImpl->GetNameForUid(UID, name);
+    ErrCode ret = bundleMgrHostImpl_->GetNameForUid(UID, name);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -281,10 +261,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<BundleInfo> bundleInfos;
-    bool ret = hostImpl->GetBundleInfosByMetaData(BUNDLE_NAME, bundleInfos);
+    bool ret = bundleMgrHostImpl_->GetBundleInfosByMetaData(BUNDLE_NAME, bundleInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -298,12 +276,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     AbilityInfo abilityInfo;
-    hostImpl->UpgradeAtomicService(want, USERID);
-    bool ret = hostImpl->QueryAbilityInfo(want, FLAGS, USERID, abilityInfo, nullptr);
+    bool ret = bundleMgrHostImpl_->QueryAbilityInfo(want, FLAGS, USERID, abilityInfo, nullptr);
     EXPECT_EQ(ret, false);
 }
 
@@ -315,11 +290,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     int32_t missionId = 0;
-    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    bool ret = bundleMgrHostImpl_->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 }
 
@@ -331,10 +304,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
-    bool ret = hostImpl->ProcessPreload(want);
+    bool ret = bundleMgrHostImpl_->ProcessPreload(want);
     EXPECT_EQ(ret, false);
 }
 #endif
@@ -347,11 +318,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     AbilityInfo abilityInfo;
-    bool ret = hostImpl->QueryAbilityInfo(want, FLAGS, USERID, abilityInfo);
+    bool ret = bundleMgrHostImpl_->QueryAbilityInfo(want, FLAGS, USERID, abilityInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -363,11 +332,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<AbilityInfo> abilityInfos;
-    bool ret = hostImpl->QueryAbilityInfos(want, FLAGS, USERID, abilityInfos);
+    bool ret = bundleMgrHostImpl_->QueryAbilityInfos(want, FLAGS, USERID, abilityInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -379,11 +346,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode ret = hostImpl->QueryAbilityInfosV9(want, FLAGS, USERID, abilityInfos);
+    ErrCode ret = bundleMgrHostImpl_->QueryAbilityInfosV9(want, FLAGS, USERID, abilityInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -395,11 +360,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<AbilityInfo> abilityInfos;
-    bool ret = hostImpl->QueryAllAbilityInfos(want, USERID, abilityInfos);
+    bool ret = bundleMgrHostImpl_->QueryAllAbilityInfos(want, USERID, abilityInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -411,10 +374,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_1900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     AbilityInfo abilityInfo;
-    bool ret = hostImpl->QueryAbilityInfoByUri(BUNDLE_NAME, abilityInfo);
+    bool ret = bundleMgrHostImpl_->QueryAbilityInfoByUri(BUNDLE_NAME, abilityInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -426,10 +387,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     AbilityInfo abilityInfo;
-    bool ret = hostImpl->QueryAbilityInfoByUri(BUNDLE_NAME, USERID, abilityInfo);
+    bool ret = bundleMgrHostImpl_->QueryAbilityInfoByUri(BUNDLE_NAME, USERID, abilityInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -441,10 +400,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<BundleInfo> bundleInfos;
-    bool ret = hostImpl->QueryKeepAliveBundleInfos(bundleInfos);
+    bool ret = bundleMgrHostImpl_->QueryKeepAliveBundleInfos(bundleInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -456,9 +413,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    std::string ret = hostImpl->GetAbilityLabel(BUNDLE_NAME, ABILITY_NAME);
+    std::string ret = bundleMgrHostImpl_->GetAbilityLabel(BUNDLE_NAME, ABILITY_NAME);
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
 }
 
@@ -470,10 +425,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::string label;
-    ErrCode ret = hostImpl->GetAbilityLabel(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, label);
+    ErrCode ret = bundleMgrHostImpl_->GetAbilityLabel(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, label);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -485,10 +438,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     BundleInfo bundleInfo;
-    ErrCode ret = hostImpl->GetBundleArchiveInfoV9(HAP_FILE_PATH, FLAGS, bundleInfo);
+    ErrCode ret = bundleMgrHostImpl_->GetBundleArchiveInfoV9(HAP_FILE_PATH, FLAGS, bundleInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -500,12 +451,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     AbilityInfo abilityInfo;
     abilityInfo.bundleName = ABILITY_NAME;
     HapModuleInfo hapModuleInfo;
-    bool ret = hostImpl->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    bool ret = bundleMgrHostImpl_->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -517,10 +466,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
-    ErrCode ret = hostImpl->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID);
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle(BUNDLE_NAME, want, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -532,10 +479,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     PermissionDef permissionDef;
-    ErrCode ret = hostImpl->GetPermissionDef(BUNDLE_NAME, permissionDef);
+    ErrCode ret = bundleMgrHostImpl_->GetPermissionDef(BUNDLE_NAME, permissionDef);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -547,10 +492,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    ErrCode ret = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFiles(BUNDLE_NAME, cleanCache, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -562,9 +505,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_2900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    bool ret = hostImpl->CleanBundleDataFiles(BUNDLE_NAME, USERID);
+    bool ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, false);
 }
 
@@ -576,10 +517,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
-    bool ret = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    bool ret = bundleMgrHostImpl_->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_EQ(ret, false);
 }
 
@@ -591,12 +530,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
-    bool ret = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
+    bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(bundleStatusCallback);
     EXPECT_EQ(ret, false);
-    hostImpl->UnregisterBundleStatusCallback();
+    bundleMgrHostImpl_->UnregisterBundleStatusCallback();
 }
 
 /**
@@ -607,10 +544,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::string result;
-    bool ret = hostImpl->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, BUNDLE_NAME, USERID, result);
+    bool ret = bundleMgrHostImpl_->DumpInfos(DumpFlag::DUMP_BUNDLE_LIST, BUNDLE_NAME, USERID, result);
     EXPECT_EQ(ret, false);
 }
 
@@ -622,10 +557,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     bool isRemovable = false;
-    ErrCode ret = hostImpl->IsModuleRemovable(BUNDLE_NAME, MOUDLE_NAME, isRemovable);
+    ErrCode ret = bundleMgrHostImpl_->IsModuleRemovable(BUNDLE_NAME, MOUDLE_NAME, isRemovable);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -637,10 +570,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     bool isEnable = false;
-    bool ret = hostImpl->SetModuleRemovable(BUNDLE_NAME, MOUDLE_NAME, isEnable);
+    bool ret = bundleMgrHostImpl_->SetModuleRemovable(BUNDLE_NAME, MOUDLE_NAME, isEnable);
     EXPECT_EQ(ret, false);
 }
 
@@ -652,9 +583,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    bool ret = hostImpl->GetModuleUpgradeFlag(BUNDLE_NAME, MOUDLE_NAME);
+    bool ret = bundleMgrHostImpl_->GetModuleUpgradeFlag(BUNDLE_NAME, MOUDLE_NAME);
     EXPECT_EQ(ret, false);
 }
 
@@ -666,10 +595,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     bool upgradeFlag = false;
-    ErrCode ret = hostImpl->SetModuleUpgradeFlag(BUNDLE_NAME, MOUDLE_NAME, upgradeFlag);
+    ErrCode ret = bundleMgrHostImpl_->SetModuleUpgradeFlag(BUNDLE_NAME, MOUDLE_NAME, upgradeFlag);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -681,10 +608,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     bool isEnable = false;
-    ErrCode ret = hostImpl->SetApplicationEnabled(BUNDLE_NAME, isEnable, USERID);
+    ErrCode ret = bundleMgrHostImpl_->SetApplicationEnabled(BUNDLE_NAME, isEnable, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -696,11 +621,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     bool isEnable = false;
     AbilityInfo abilityInfo;
-    ErrCode ret = hostImpl->SetAbilityEnabled(abilityInfo, isEnable, USERID);
+    ErrCode ret = bundleMgrHostImpl_->SetAbilityEnabled(abilityInfo, isEnable, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -712,10 +635,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_3900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<FormInfo> formInfos;
-    bool ret = hostImpl->GetAllFormsInfo(formInfos);
+    bool ret = bundleMgrHostImpl_->GetAllFormsInfo(formInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -727,10 +648,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<FormInfo> formInfos;
-    bool ret = hostImpl->GetFormsInfoByApp(BUNDLE_NAME, formInfos);
+    bool ret = bundleMgrHostImpl_->GetFormsInfoByApp(BUNDLE_NAME, formInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -742,10 +661,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<FormInfo> formInfos;
-    bool ret = hostImpl->GetFormsInfoByModule(BUNDLE_NAME, MOUDLE_NAME, formInfos);
+    bool ret = bundleMgrHostImpl_->GetFormsInfoByModule(BUNDLE_NAME, MOUDLE_NAME, formInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -757,10 +674,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<ShortcutInfo> shortcutInfos;
-    bool ret = hostImpl->GetShortcutInfos(BUNDLE_NAME, USERID, shortcutInfos);
+    bool ret = bundleMgrHostImpl_->GetShortcutInfos(BUNDLE_NAME, USERID, shortcutInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -772,10 +687,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<ShortcutInfo> shortcutInfos;
-    ErrCode ret = hostImpl->GetShortcutInfoV9(BUNDLE_NAME, shortcutInfos);
+    ErrCode ret = bundleMgrHostImpl_->GetShortcutInfoV9(BUNDLE_NAME, shortcutInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -787,10 +700,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<CommonEventInfo> commonEventInfos;
-    bool ret = hostImpl->GetAllCommonEventInfo(BUNDLE_NAME, commonEventInfos);
+    bool ret = bundleMgrHostImpl_->GetAllCommonEventInfo(BUNDLE_NAME, commonEventInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -802,11 +713,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = hostImpl->QueryExtensionAbilityInfos(want, FLAGS, USERID, extensionInfos);
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(want, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -818,11 +727,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    ErrCode ret = hostImpl->QueryExtensionAbilityInfosV9(want, FLAGS, USERID, extensionInfos);
+    ErrCode ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosV9(want, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -834,11 +741,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = hostImpl->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -850,11 +755,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = hostImpl->QueryExtensionAbilityInfos(
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(
         want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, false);
 }
@@ -867,10 +770,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = hostImpl->QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, USERID, extensionInfos);
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(ExtensionAbilityType::FORM, USERID, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -882,10 +783,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     ExtensionAbilityInfo extensionAbilityInfo;
-    bool ret = hostImpl->QueryExtensionAbilityInfoByUri(HAP_FILE_PATH, USERID, extensionAbilityInfo);
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUri(HAP_FILE_PATH, USERID, extensionAbilityInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -897,9 +796,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    std::string ret = hostImpl->GetAppIdByBundleName(BUNDLE_NAME, USERID);
+    std::string ret = bundleMgrHostImpl_->GetAppIdByBundleName(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
 }
 
@@ -911,9 +808,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    std::string ret = hostImpl->GetAppType(BUNDLE_NAME);
+    std::string ret = bundleMgrHostImpl_->GetAppType(BUNDLE_NAME);
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
 }
 
@@ -925,9 +820,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
-    int ret = hostImpl->GetUidByBundleName(BUNDLE_NAME, USERID);
+    int ret = bundleMgrHostImpl_->GetUidByBundleName(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, Constants::INVALID_UID);
 }
 
@@ -939,12 +832,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
-    bool ret = hostImpl->ImplicitQueryInfoByPriority(want, FLAGS, USERID, abilityInfo, extensionInfo);
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfoByPriority(want, FLAGS, USERID, abilityInfo, extensionInfo);
     EXPECT_EQ(ret, false);
 }
 
@@ -956,12 +847,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     Want want;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = hostImpl->ImplicitQueryInfos(want, FLAGS, USERID, abilityInfos, extensionInfos);
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, abilityInfos, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -973,10 +862,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<std::string> dependentModuleNames;
-    bool ret = hostImpl->GetAllDependentModuleNames(BUNDLE_NAME, MOUDLE_NAME, dependentModuleNames);
+    bool ret = bundleMgrHostImpl_->GetAllDependentModuleNames(BUNDLE_NAME, MOUDLE_NAME, dependentModuleNames);
     EXPECT_EQ(ret, false);
 }
 
@@ -988,11 +875,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     int32_t appIndex = 1;
     BundleInfo info;
-    ErrCode ret = hostImpl->GetSandboxBundleInfo(BUNDLE_NAME, appIndex, USERID, info);
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxBundleInfo(BUNDLE_NAME, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
@@ -1004,10 +889,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<int64_t> bundleStats;
-    bool ret = hostImpl->GetBundleStats(BUNDLE_NAME, USERID, bundleStats);
+    bool ret = bundleMgrHostImpl_->GetBundleStats(BUNDLE_NAME, USERID, bundleStats);
     EXPECT_EQ(ret, false);
 }
 
@@ -1019,11 +902,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     uint32_t resId = 0;
     uint32_t density = 0;
-    std::string ret = hostImpl->GetIconById(BUNDLE_NAME, MOUDLE_NAME, resId, density, USERID);
+    std::string ret = bundleMgrHostImpl_->GetIconById(BUNDLE_NAME, MOUDLE_NAME, resId, density, USERID);
     EXPECT_EQ(ret, Constants::EMPTY_STRING);
 }
 
@@ -1035,12 +916,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     int32_t appIndex = 1;
     Want want;
     AbilityInfo info;
-    ErrCode ret = hostImpl->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
 }
 
@@ -1052,12 +931,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     int32_t appIndex = 1;
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
-    ErrCode ret = hostImpl->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
 }
 
@@ -1069,12 +946,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     int32_t appIndex = 1;
     AbilityInfo abilityInfo;
     HapModuleInfo info;
-    ErrCode ret = hostImpl->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
 }
 
@@ -1086,10 +961,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     AppProvisionInfo appProvisionInfo;
-    ErrCode ret = hostImpl->GetAppProvisionInfo(BUNDLE_NAME, USERID, appProvisionInfo);
+    ErrCode ret = bundleMgrHostImpl_->GetAppProvisionInfo(BUNDLE_NAME, USERID, appProvisionInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1101,10 +974,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<Metadata> provisionMetadatas;
-    ErrCode ret = hostImpl->GetProvisionMetadata(BUNDLE_NAME, USERID, provisionMetadatas);
+    ErrCode ret = bundleMgrHostImpl_->GetProvisionMetadata(BUNDLE_NAME, USERID, provisionMetadatas);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1116,10 +987,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<SharedBundleInfo> sharedBundles;
-    ErrCode ret = hostImpl->GetAllSharedBundleInfo(sharedBundles);
+    ErrCode ret = bundleMgrHostImpl_->GetAllSharedBundleInfo(sharedBundles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1131,10 +1000,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6600, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<SharedBundleInfo> sharedBundles;
-    ErrCode ret = hostImpl->GetSharedBundleInfo(BUNDLE_NAME, MOUDLE_NAME, sharedBundles);
+    ErrCode ret = bundleMgrHostImpl_->GetSharedBundleInfo(BUNDLE_NAME, MOUDLE_NAME, sharedBundles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1146,10 +1013,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::vector<Dependency> dependencies;
-    ErrCode ret = hostImpl->GetSharedDependencies(BUNDLE_NAME, MOUDLE_NAME, dependencies);
+    ErrCode ret = bundleMgrHostImpl_->GetSharedDependencies(BUNDLE_NAME, MOUDLE_NAME, dependencies);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1161,11 +1026,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-
     std::unique_ptr<uint8_t[]> mediaDataPtr;
     size_t len = 0;
-    ErrCode ret = hostImpl->GetMediaData(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, mediaDataPtr, len, USERID);
+    ErrCode ret = bundleMgrHostImpl_->GetMediaData(BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, mediaDataPtr, len, USERID);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1177,11 +1040,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6900, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7000, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Install(HAP_FILE_PATH, installParam, receiver);
+    bool ret = bundleInstallerHost_->Install(HAP_FILE_PATH, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
@@ -1193,12 +1054,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7000, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7100, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     std::vector<std::string> bundleFilePaths;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Install(bundleFilePaths, installParam, receiver);
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
@@ -1210,11 +1069,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7100, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7200, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->InstallByBundleName(BUNDLE_NAME, installParam, receiver);
+    bool ret = bundleInstallerHost_->InstallByBundleName(BUNDLE_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
@@ -1226,12 +1083,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7200, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7300, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     int32_t dplType = 1;
     int32_t appIndex = 1;
-    ErrCode ret1 = hostImpl->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
-    ErrCode ret2 = hostImpl->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
+    ErrCode ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    ErrCode ret2 = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
     EXPECT_EQ(ret1, false);
     EXPECT_EQ(ret2, false);
 }
@@ -1244,11 +1099,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7300, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7400, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    sptr<IBundleStreamInstaller> ret = hostImpl->CreateStreamInstaller(installParam, receiver);
+    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, receiver);
     EXPECT_EQ(ret, nullptr);
 }
 
@@ -1260,10 +1113,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7400, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7500, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     uint32_t streamInstallerId = 0;
-    bool ret = hostImpl->DestoryBundleStreamInstaller(streamInstallerId);
+    bool ret = bundleInstallerHost_->DestoryBundleStreamInstaller(streamInstallerId);
     EXPECT_EQ(ret, false);
 }
 
@@ -1275,27 +1126,23 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7500, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7600, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     UninstallParam uninstallParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Uninstall(uninstallParam, receiver);
+    bool ret = bundleInstallerHost_->Uninstall(uninstallParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
 /**
  * @tc.number: BmsBundlePermissionFalseTest_7700
- * @tc.name: test Install of BundleInstallerHost
+ * @tc.name: test Recover of BundleInstallerHost
  * @tc.desc: 1. system running normally
- *           2. Install false by no permission
+ *           2. Recover false by no permission
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7700, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Recover(BUNDLE_NAME, installParam, receiver);
+    bool ret = bundleInstallerHost_->Recover(BUNDLE_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
@@ -1307,11 +1154,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7700, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7800, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Uninstall(BUNDLE_NAME, installParam, receiver);
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 
@@ -1323,11 +1168,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7900, Function | SmallTest | Level0)
 {
-    auto hostImpl = std::make_unique<BundleInstallerHost>();
-
     InstallParam installParam;
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
-    bool ret = hostImpl->Uninstall(BUNDLE_NAME, ABILITY_NAME, installParam, receiver);
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, ABILITY_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
 } // OHOS

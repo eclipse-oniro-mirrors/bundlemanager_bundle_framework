@@ -160,7 +160,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   ]
-  
+
   sources += bundle_install_sources
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
@@ -274,8 +274,8 @@ group("unittest") {
   testonly = true
   if (ability_runtime_enable) {
     deps = [
-      ":BmsBundlePermissionGrantTest",
       ":BmsBundlePermissionFalseTest",
+      ":BmsBundlePermissionGrantTest",
     ]
   }
 }

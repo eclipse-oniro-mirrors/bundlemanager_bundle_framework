@@ -152,12 +152,12 @@ bool ServiceRouterMgrService::ServiceRouterMgrService::SubscribeCommonEvent()
     return true;
 }
 
-int32_t ServiceRouterMgrService::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
-    std::vector<ServiceInfo> &serviceInfos)
+int32_t ServiceRouterMgrService::QueryBusinessAbilityInfos(const BusinessAbilityFilter &filter,
+    std::vector< BusinessAbilityInfo> &businessAbilityInfos)
 {
     APP_LOGD("%{public}s coldStart:", __func__);
     DelayUnloadTask();
-    return ServiceRouterDataMgr::GetInstance().QueryServiceInfos(want, serviceType, serviceInfos);
+    return ServiceRouterDataMgr::GetInstance().QueryBusinessAbilityInfos(filter, businessAbilityInfos);
 }
 
 int32_t ServiceRouterMgrService::QueryPurposeInfos(const Want &want, const std::string purposeName,
