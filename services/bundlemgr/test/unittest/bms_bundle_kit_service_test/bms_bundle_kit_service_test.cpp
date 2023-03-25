@@ -7201,10 +7201,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of CheckAppInstallControl_0100");
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ErrCode ret = GetBundleDataMgr()->CheckAppInstallControl("", 0);
-    EXPECT_EQ(ret, 1);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
+    InnerBundleInfo info;
+    bool ret = info.CheckAppInstallControl("", 0);
+    EXPECT_TRUE(ret);
     APP_LOGI("CheckAppInstallControl_0100 finish");
 }
 
