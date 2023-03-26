@@ -40,21 +40,12 @@ ohos_unittest("BmsDataMgrTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = []
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

@@ -28,6 +28,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+
 namespace Profile {
 thread_local int32_t parseResult;
 
@@ -232,6 +233,7 @@ struct App {
     std::string targetBundle;
     int32_t targetPriority = 0;
     bool asanEnabled = false;
+    std::string bundleType = Profile::BUNDLE_TYPE_APP;
     Profile::AppShared shared;
 };
 
@@ -987,6 +989,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_TYPE,
+        app.bundleType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (jsonObject.find(APP_PHONE) != jsonObjectEnd) {
         DeviceConfig deviceConfig;
         GetValueIfFindKey<DeviceConfig>(jsonObject,
@@ -1393,7 +1403,7 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
     if (moduleName.empty()) {
         return false;
     }
-    if (moduleName.size() <= 0 || moduleName.size() > Constants::MAX_MODULE_NAME) {
+    if (moduleName.size() > Constants::MAX_MODULE_NAME) {
         return false;
     }
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
@@ -1556,55 +1566,14 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
         Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         return false;
     }
-    bool split = true;
     BundleType bundleType = BundleType::APP;
-    AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::MAIN;
-    std::string moduleName = moduleJson.at(Profile::MODULE_NAME);
-    if (appJson.contains(Profile::APP_ATOMIC_SERVICE)) {
-        if (!moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) ||
-            !moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
-            APP_LOGE("invalid installationFree in module.json");
-            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
-            return false;
-        }
-        innerBundleInfo.SetHasAtomicServiceConfig(true);
-        bundleType = BundleType::ATOMIC_SERVICE;
-        nlohmann::json appAtomicObj = appJson.at(Profile::APP_ATOMIC_SERVICE);
-        if (!appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_SPLIT)) {
-            APP_LOGE("app.json file lacks of invalid module or app properties");
-            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
-            return false;
-        }
-        split = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_SPLIT);
-        if (!split && appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
-            APP_LOGE("app.json file lacks of invalid module or app properties");
-            Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
-            return false;
-        }
-        if (appAtomicObj.contains(Profile::APP_ATOMIC_SERVICE_MAIN)) {
-            std::string main = appAtomicObj.at(Profile::APP_ATOMIC_SERVICE_MAIN);
-            innerBundleInfo.SetAtomicMainModuleName(main);
-            if (main != moduleName) {
-                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
-            }
-        }
-    } else {
-        innerBundleInfo.SetHasAtomicServiceConfig(false);
-        if (moduleJson.contains(Profile::MODULE_INSTALLATION_FREE) &&
-                moduleJson.at(Profile::MODULE_INSTALLATION_FREE)) {
+    if (appJson.contains(Profile::BUNDLE_TYPE)) {
+        if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
             bundleType = BundleType::ATOMIC_SERVICE;
-            if (moduleJson.at(Profile::MODULE_TYPE) != "entry") {
-                atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
-            }
-        } else {
-            atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
         }
-        auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
-        split = (moduleInfos.size() != 1);
     }
-    innerBundleInfo.SetApplicationSplit(split);
+
     innerBundleInfo.SetApplicationBundleType(bundleType);
-    innerBundleInfo.SetInnerModuleAtomicType(moduleName, atomicServiceModuleType);
     if (!ParserAtomicModuleConfig(jsonObject, innerBundleInfo)) {
         APP_LOGE("parse module atomicService failed.");
         return false;
@@ -1726,6 +1695,9 @@ bool ToApplicationInfo(
     applicationInfo.entityType = Profile::APP_ENTITY_TYPE_DEFAULT_VALUE;
     applicationInfo.vendor = app.vendor;
     applicationInfo.asanEnabled = app.asanEnabled;
+    if (app.bundleType == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
+        applicationInfo.bundleType = BundleType::ATOMIC_SERVICE;
+    }
 
     // device adapt
     std::string deviceType = GetDeviceType();
@@ -2041,6 +2013,17 @@ bool ToInnerModuleInfo(
     return true;
 }
 
+void SetInstallationFree(InnerModuleInfo &innerModuleInfo, BundleType bundleType)
+{
+    if (bundleType == BundleType::ATOMIC_SERVICE) {
+        innerModuleInfo.distro.installationFree = true;
+        innerModuleInfo.installationFree = true;
+    } else {
+        innerModuleInfo.distro.installationFree = false;
+        innerModuleInfo.installationFree = false;
+    }
+}
+
 bool ToInnerBundleInfo(
     const Profile::ModuleJson &moduleJson,
     const BundleExtractor &bundleExtractor,
@@ -2075,6 +2058,7 @@ bool ToInnerBundleInfo(
 
     InnerModuleInfo innerModuleInfo;
     ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo);
+    SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;
     ToBundleInfo(applicationInfo, innerModuleInfo, transformParam, bundleInfo);
@@ -2184,6 +2168,7 @@ bool ToInnerBundleInfo(
     if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
         innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
         innerModuleInfo.versionCode = applicationInfo.versionCode;
+        innerModuleInfo.versionName = applicationInfo.versionName;
         innerBundleInfo.InsertInnerSharedModuleInfo(moduleJson.module.name, innerModuleInfo);
     }
 

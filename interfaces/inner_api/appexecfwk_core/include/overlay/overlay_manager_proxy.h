@@ -54,7 +54,6 @@ public:
     virtual ErrCode SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
-
 private:
     template<typename T>
     ErrCode GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo);

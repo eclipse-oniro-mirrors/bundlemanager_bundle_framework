@@ -19,6 +19,10 @@
 #include <deque>
 #include <regex>
 
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+#include "app_control_constants.h"
+#include "app_control_manager.h"
+#endif
 #include "bundle_mgr_client.h"
 #include "bundle_permission_mgr.h"
 #include "common_profile.h"
@@ -79,6 +83,7 @@ const std::string MODULE_HASH_VALUE = "hashValue";
 const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
+const std::string PARAM_SEPARATOR = "?";
 const std::string IS_PREINSTALL_APP = "isPreInstallApp";
 const std::string INSTALL_MARK = "installMark";
 const char WILDCARD = '*';
@@ -122,6 +127,7 @@ const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
+const std::string MODULE_VERSION_NAME = "versionName";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -270,6 +276,15 @@ bool Skill::StartsWith(const std::string &sourceString, const std::string &targe
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
 
+std::string Skill::GetOptParamUri(const std::string &uriString) const
+{
+    std::size_t pos = uriString.rfind(PARAM_SEPARATOR);
+    if (pos == std::string::npos) {
+        return uriString;
+    }
+    return uriString.substr(0, pos);
+}
+
 bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) const
 {
     if (skillUri.scheme.empty()) {
@@ -284,6 +299,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 4.scheme://
         return uriString == skillUri.scheme || StartsWith(uriString, skillUri.scheme + PORT_SEPARATOR);
     }
+    std::string optParamUri = GetOptParamUri(uriString);
     std::string skillUriString;
     skillUriString.append(skillUri.scheme).append(SCHEME_SEPARATOR).append(skillUri.host);
     if (!skillUri.port.empty()) {
@@ -300,9 +316,9 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // 1.scheme://host
         // 2.scheme://host/path
         // 3.scheme://host:port     scheme://host:port/path
-        bool ret = (uriString == skillUriString || StartsWith(uriString, skillUriString + PATH_SEPARATOR));
+        bool ret = (optParamUri == skillUriString || StartsWith(optParamUri, skillUriString + PATH_SEPARATOR));
         if (skillUri.port.empty()) {
-            ret = ret || StartsWith(uriString, skillUriString + PORT_SEPARATOR);
+            ret = ret || StartsWith(optParamUri, skillUriString + PORT_SEPARATOR);
         }
         return ret;
     }
@@ -312,7 +328,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // path match
         std::string pathUri(skillUriString);
         pathUri.append(skillUri.path);
-        if (uriString == pathUri) {
+        if (optParamUri == pathUri) {
             return true;
         }
     }
@@ -320,7 +336,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         // pathStartWith match
         std::string pathStartWithUri(skillUriString);
         pathStartWithUri.append(skillUri.pathStartWith);
-        if (StartsWith(uriString, pathStartWithUri)) {
+        if (StartsWith(optParamUri, pathStartWithUri)) {
             return true;
         }
     }
@@ -330,7 +346,7 @@ bool Skill::MatchUri(const std::string &uriString, const SkillUri &skillUri) con
         pathRegexUri.append(skillUri.pathRegex);
         try {
             std::regex regex(pathRegexUri);
-            if (regex_match(uriString, regex)) {
+            if (regex_match(optParamUri, regex)) {
                 return true;
             }
         } catch(...) {
@@ -533,7 +549,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
         {MODULE_PRELOADS, info.preloads},
         {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
-        {MODULE_VERSION_CODE, info.versionCode}
+        {MODULE_VERSION_CODE, info.versionCode},
+        {MODULE_VERSION_NAME, info.versionName},
     };
 }
 
@@ -1028,6 +1045,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         MODULE_VERSION_CODE,
         info.versionCode,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_VERSION_NAME,
+        info.versionName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -1857,7 +1882,9 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
 
     baseBundleInfo_->isKeepAlive = bundleInfo.isKeepAlive;
     baseBundleInfo_->singleton = bundleInfo.singleton;
-    baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    if (!baseBundleInfo_->isPreInstallApp) {
+        baseBundleInfo_->isPreInstallApp = bundleInfo.isPreInstallApp;
+    }
 
     baseBundleInfo_->vendor = bundleInfo.vendor;
     baseBundleInfo_->releaseType = bundleInfo.releaseType;
@@ -2140,6 +2167,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             SharedModuleInfo sharedModuleInfo;
             sharedModuleInfo.name = info.name;
             sharedModuleInfo.versionCode = info.versionCode;
+            sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
@@ -2156,7 +2184,39 @@ bool InnerBundleInfo::GetSharedDependencies(const std::string &moduleName,
         dependencies = innerModuleInfos_.at(moduleName).dependencies;
         return true;
     }
+    APP_LOGE("GetSharedDependencies can not find module %{public}s", moduleName.c_str());
     return false;
+}
+
+bool InnerBundleInfo::GetAllSharedDependencies(const std::string &moduleName,
+    std::vector<Dependency> &dependencies) const
+{
+    if (!GetSharedDependencies(moduleName, dependencies)) {
+        return false;
+    }
+    std::deque<Dependency> dependenciesDeque;
+    std::copy(dependencies.begin(), dependencies.end(), std::back_inserter(dependenciesDeque));
+    dependencies.clear();
+    while (!dependenciesDeque.empty()) {
+        bool isAdd = true;
+        Dependency itemDependency = dependenciesDeque.front();
+        dependenciesDeque.pop_front();
+        for (const auto &item : dependencies) {
+            if (item.bundleName == itemDependency.bundleName && item.moduleName == itemDependency.moduleName &&
+                item.versionCode == itemDependency.versionCode) {
+                isAdd = false;
+                break;
+            }
+        }
+        if (isAdd) {
+            dependencies.push_back(itemDependency);
+            std::vector<Dependency> tempDependencies;
+            if (GetSharedDependencies(itemDependency.moduleName, tempDependencies)) {
+                std::copy(tempDependencies.begin(), tempDependencies.end(), std::back_inserter(dependenciesDeque));
+            }
+        }
+    }
+    return true;
 }
 
 void InnerBundleInfo::RemoveModuleInfo(const std::string &modulePackage)
@@ -2249,6 +2309,9 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
+    if (!CheckAppInstallControl(GetAppId(), userId)) {
+        appInfo.removable = false;
+    }
     if (!GetHasAtomicServiceConfig()) {
         std::vector<std::string> moduleNames;
         GetModuleNames(moduleNames);
@@ -2307,6 +2370,9 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
+    if (!CheckAppInstallControl(GetAppId(), userId)) {
+        appInfo.removable = false;
+    }
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
@@ -2453,6 +2519,14 @@ ErrCode InnerBundleInfo::GetBundleInfoV9(int32_t flags, BundleInfo &bundleInfo, 
     return ERR_OK;
 }
 
+bool InnerBundleInfo::GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const
+{
+    bundleInfo = *baseBundleInfo_;
+    ProcessBundleWithHapModuleInfoFlag(flags, bundleInfo, Constants::ALL_USERID);
+    bundleInfo.applicationInfo = *baseApplicationInfo_;
+    return true;
+}
+
 void InnerBundleInfo::ProcessBundleFlags(
     int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
@@ -2476,7 +2550,7 @@ void InnerBundleInfo::ProcessBundleFlags(
     }
 }
 
-void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, uint32_t userId, BundleInfo &bundleInfo) const
+void InnerBundleInfo::GetBundleWithReqPermissionsV9(int32_t flags, int32_t userId, BundleInfo &bundleInfo) const
 {
     if ((static_cast<uint32_t>(flags) &
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION))
@@ -2771,6 +2845,27 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         moduleNames.emplace_back(innerModuleInfo.second.moduleName);
     }
+}
+
+bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
+        return true;
+    }
+    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
+        return true;
+    }
+    APP_LOGW("appId is not removable");
+    return false;
+#else
+    APP_LOGW("app control is disable");
+    return true;
+#endif
 }
 
 void InnerBundleInfo::ResetBundleState(int32_t userId)

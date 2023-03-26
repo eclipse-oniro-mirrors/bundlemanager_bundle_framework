@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_common_event.h"
 #include "bundle_constants.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
@@ -42,9 +43,8 @@ void BundleCommonEventMgr::Init()
         { NotifyType::APPLICATION_ENABLE, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED },
         { NotifyType::BUNDLE_DATA_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_DATA_CLEARED },
         { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
-        { NotifyType::OVERLAY_INSTALL, Constants::OVERLAY_ADD_ACTION},
-        { NotifyType::OVERLAY_UPDATE, Constants::OVERLAY_CHANGED_ACTION},
-        { NotifyType::OVERLAY_STATE_CHANGED, Constants::OVERLAY_STATE_CHANGED},
+        { NotifyType::OVERLAY_INSTALL, OVERLAY_ADD_ACTION},
+        { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
     };
 }
 
@@ -105,9 +105,9 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
 {
     OHOS::AAFwk::Want want;
     if (type == SandboxInstallType::INSTALL) {
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_ADDED);
+        want.SetAction(COMMON_EVENT_SANDBOX_PACKAGE_ADDED);
     } else if (type == SandboxInstallType::UNINSTALL) {
-        want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_SANDBOX_PACKAGE_REMOVED);
+        want.SetAction(COMMON_EVENT_SANDBOX_PACKAGE_REMOVED);
     } else {
         return ERR_APPEXECFWK_SANDBOX_INSTALL_UNKNOWN_INSTALL_TYPE;
     }
@@ -121,7 +121,10 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
     want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
     EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
     return ERR_OK;
 }
 
@@ -129,7 +132,7 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     const std::string &moduleName, bool isEnabled, int32_t userId, int32_t uid)
 {
     OHOS::AAFwk::Want want;
-    want.SetAction(Constants::OVERLAY_STATE_CHANGED);
+    want.SetAction(OVERLAY_STATE_CHANGED);
     ElementName element;
     element.SetBundleName(bundleName);
     element.SetModuleName(moduleName);
@@ -138,7 +141,10 @@ void BundleCommonEventMgr::NotifyOverlayModuleStateStatus(const std::string &bun
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(Constants::OVERLAY_STATE, isEnabled);
     EventFwk::CommonEventData commonData { want };
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
 std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)

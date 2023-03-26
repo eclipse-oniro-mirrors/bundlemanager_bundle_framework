@@ -42,8 +42,26 @@ const std::string MODULE_PACKGE{"com.example.test.entry"};
 const std::string MODULE_STATE_0{"test_0"};
 const std::string MODULE_STATE_1{"test_1"};
 const std::string MODULE_NAME{"entry"};
+const std::string TEST_PACK_AGE = "modulePackage";
+const std::string TEST_NAME = "com.ohos.launcher";
+const std::string TEST_ABILITY_NAME = "com.ohos.launcher.MainAbility";
+const std::string TEST_BUNDLE_NAME = "bundleName";
+const std::string TEST_UID = "uid";
+const std::string TEST_KEY = "key";
+const std::string TEST_KEY1 = "key1";
+const std::string TEST_KEY2 = "key2";
+const std::string USER = "100";
+const std::string NAME = "name";
+const std::string NAME_UID = "name_100";
+const std::string ABILITY_NAME = "MainAbility";
+const std::string SETTINGS = "settings";
+const std::string WRONG_MODULEPACKAGE = ".modulePackage.";
+const std::string WRONG = ".wrong.";
+const std::string APP_INDEX = "appIndex";
+const std::string USERID = "userId";
 int32_t state = 0;
 int32_t versionCode = 0;
+int32_t FLAG = 0;
 // This field is used to ensure OTA upgrade and cannot be added randomly.
 const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
 {
@@ -371,7 +389,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
     },
     "baseBundleInfo":{
         "abilityInfos":[],
-        "appId":"com.example.myapplication_BNtg4JBClbl92Rgc3jm/RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=",
+        "appId":"com.example.myapplication",
         "appIndex":0,
         "applicationInfo":{
             "accessTokenId":0,
@@ -971,6 +989,7 @@ protected:
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,
+                "bundleType": "app",
                 "asanLogPath": "",
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
@@ -1545,6 +1564,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0100, Functi
 HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["label"] = NOT_STRING_TYPE;
     typeErrorProps["description"] = NOT_STRING_TYPE;
@@ -1556,10 +1576,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, BundleInfoJsonSerializer_0200, Functi
 
     for (nlohmann::json::iterator iter = typeErrorProps.begin(); iter != typeErrorProps.end(); iter++) {
         for (auto valueIter = iter.value().begin(); valueIter != iter.value().end(); valueIter++) {
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_BUNDLE_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson[NAME], TEST_NAME);
 }
 
 /**
@@ -1587,6 +1608,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0100, Funct
 HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["package"] = NOT_STRING_TYPE;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
@@ -1608,10 +1630,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, AbilityInfoJsonSerializer_0200, Funct
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
+            infoJson = innerBundleInfoJson_.at(BASE_ABILITY_INFO).at(abilityName);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson[NAME], TEST_ABILITY_NAME);
 }
 
 /**
@@ -1639,6 +1662,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0100, F
 HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, Function | SmallTest | Level1)
 {
     nlohmann::json typeErrorProps;
+    nlohmann::json infoJson;
     typeErrorProps["name"] = NOT_STRING_TYPE;
     typeErrorProps["bundleName"] = NOT_STRING_TYPE;
     typeErrorProps["sandboxId"] = NOT_NUMBER_TYPE;
@@ -1649,10 +1673,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, F
             APP_LOGD("deserialize check prop key = %{public}s, type = %{public}s",
                 iter.key().c_str(),
                 valueIter.key().c_str());
-            nlohmann::json infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
+            infoJson = innerBundleInfoJson_.at(BASE_APPLICATION_INFO);
             infoJson[iter.key()] = valueIter.value();
         }
     }
+    EXPECT_EQ(infoJson[NAME], TEST_NAME); 
 }
 
 /**
@@ -1707,7 +1732,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0300, Function | SmallTest |
 {
     nlohmann::json jsonObject;
     InnerBundleUserInfo userInfo;
-    userInfo.bundleName = "bundleName";
+    userInfo.bundleName = TEST_BUNDLE_NAME;
     userInfo.uid = Constants::INVALID_UID;
     userInfo.accessTokenId = 0;
     userInfo.gids.push_back(0);
@@ -1715,8 +1740,8 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SaveData_0300, Function | SmallTest |
     userInfo.updateTime = 0;
     userInfo.bundleUserInfo.userId = 100;
     to_json(jsonObject, userInfo);
-    EXPECT_EQ(jsonObject["bundleName"], "bundleName");
-    EXPECT_EQ(jsonObject["uid"], Constants::INVALID_UID);
+    EXPECT_EQ(jsonObject[TEST_BUNDLE_NAME], TEST_BUNDLE_NAME);
+    EXPECT_EQ(jsonObject[TEST_UID], Constants::INVALID_UID);
 }
 
 /**
@@ -1733,13 +1758,13 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0100, Function | Smal
     EXPECT_EQ(ret, false);
 
     std::vector<std::string> actions;
-    actions.emplace_back("action1");
+    actions.emplace_back(NAME);
     skill.actions = actions;
-    want.SetAction("action1");
+    want.SetAction(NAME);
     ret = skill.MatchLauncher(want);
     EXPECT_EQ(ret, true);
 
-    want.AddEntity("entry");
+    want.AddEntity(MODULE_NAME);
     ret = skill.MatchLauncher(want);
     EXPECT_EQ(ret, false);
 }
@@ -1801,9 +1826,9 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0300, Function | SmallTest | Level1)
 {
     nlohmann::json jsonObject;
-    jsonObject["accessTokenId"] = 1;
-    jsonObject["appIndex"] = 1;
-    jsonObject["userId"] = 101;
+    jsonObject[Constants::ACCESS_TOKEN_ID] = 1;
+    jsonObject[APP_INDEX] = 1;
+    jsonObject[USERID] = 101;
     SandboxAppPersistentInfo info;
     from_json(jsonObject, info);
     EXPECT_EQ(info.accessTokenId, 1);
@@ -1821,12 +1846,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0400, Function | Smal
     InnerBundleInfo info;
     BundleInfo bundleInfo;
     ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = "test";
+    applicationInfo.bundleName = NAME;
     info.SetBaseBundleInfo(bundleInfo);
     info.SetBaseApplicationInfo(applicationInfo);
     nlohmann::json jsonObject;
     info.FromJson(jsonObject);
-    EXPECT_EQ(applicationInfo.bundleName, "test");
+    EXPECT_EQ(applicationInfo.bundleName, NAME);
 }
 
 /**
@@ -1839,17 +1864,17 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
     InnerBundleInfo info;
     std::vector<HqfInfo> hqfInfos;
     HqfInfo hqfInfo;
-    hqfInfo.moduleName = "modulePackage";
+    hqfInfo.moduleName = TEST_PACK_AGE;
     hqfInfos.emplace_back(hqfInfo);
     info.SetQuickFixHqfInfos(hqfInfos);
     std::map<std::string, InnerModuleInfo> innerModuleInfos;
     InnerModuleInfo moduleInfo;
-    moduleInfo.moduleName = "modulePackage";
+    moduleInfo.moduleName = TEST_PACK_AGE;
     moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
-    innerModuleInfos["modulePackage"] = moduleInfo;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
     info.AddInnerModuleInfo(innerModuleInfos);
-    auto it = info.FindHapModuleInfo("modulePackage", 100);
-    EXPECT_EQ(it->hqfInfo.moduleName, "modulePackage");
+    auto it = info.FindHapModuleInfo(TEST_PACK_AGE, 100);
+    EXPECT_EQ(it->hqfInfo.moduleName, TEST_PACK_AGE);
 }
 
 /**
@@ -1866,22 +1891,22 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0700, Function | Smal
     CommonEventInfo commonEvent1;
     CommonEventInfo commonEvent2;
     ExtensionAbilityInfo extensionInfo;
-    extensionInfo.name = "key";
+    extensionInfo.name = TEST_KEY;
     std::vector<Skill> skill;
-    innerModuleInfo.extensionKeys.emplace_back("key1");
-    innerModuleInfo.extensionSkillKeys.emplace_back("key2");
-    info.InsertExtensionInfo("key1", extensionInfo);
-    info.InsertExtensionSkillInfo("key2", skill);
-    info.InsertInnerModuleInfo(".modulePackage.", innerModuleInfo);
-    info.InsertShortcutInfos(".wrong.", shortcutInfo1);
-    info.InsertShortcutInfos(".modulePackage.", shortcutInfo2);
-    info.InsertCommonEvents(".wrong.", commonEvent1);
-    info.InsertCommonEvents(".modulePackage.", commonEvent2);
-    info.RemoveModuleInfo(".modulePackage.");
+    innerModuleInfo.extensionKeys.emplace_back(TEST_KEY1);
+    innerModuleInfo.extensionSkillKeys.emplace_back(TEST_KEY2);
+    info.InsertExtensionInfo(TEST_KEY1, extensionInfo);
+    info.InsertExtensionSkillInfo(TEST_KEY2, skill);
+    info.InsertInnerModuleInfo(WRONG_MODULEPACKAGE, innerModuleInfo);
+    info.InsertShortcutInfos(WRONG, shortcutInfo1);
+    info.InsertShortcutInfos(WRONG_MODULEPACKAGE, shortcutInfo2);
+    info.InsertCommonEvents(WRONG, commonEvent1);
+    info.InsertCommonEvents(WRONG_MODULEPACKAGE, commonEvent2);
+    info.RemoveModuleInfo(WRONG_MODULEPACKAGE);
     auto ret1 = info.GetInnerExtensionInfos();
     auto ret2 = info.GetExtensionSkillInfos();
-    EXPECT_EQ(ret1["key1"].name, "");
-    EXPECT_EQ(ret2["key2"].empty(), true);
+    EXPECT_EQ(ret1[TEST_KEY1].name, "");
+    EXPECT_EQ(ret2[TEST_KEY2].empty(), true);
 }
 
 /**
@@ -1893,22 +1918,22 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0800, Function | Smal
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = ".modulePackage.";
+    innerModuleInfo.moduleName = WRONG_MODULEPACKAGE;
     innerModuleInfo.isModuleJson = true;
     std::vector<Metadata> data;
     Metadata data1;
-    data1.name = "data1";
+    data1.name = NAME;
     data.emplace_back(data1);
     innerModuleInfo.metadata = data;
-    info.InsertInnerModuleInfo(".modulePackage.", innerModuleInfo);
+    info.InsertInnerModuleInfo(WRONG_MODULEPACKAGE, innerModuleInfo);
     ApplicationInfo appInfo1;
-    appInfo1.bundleName = "com.ohos.test";
+    appInfo1.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(appInfo1);
     const int32_t failedId = -5;
     const int32_t flags = 0;
     ApplicationInfo appInfo2;
     info.GetApplicationInfo(flags, failedId, appInfo2);
-    EXPECT_EQ(appInfo2.metadata[".modulePackage."].empty(), true);
+    EXPECT_EQ(appInfo2.metadata[WRONG_MODULEPACKAGE].empty(), true);
 }
 
 /**
@@ -1920,10 +1945,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0900, Function | Smal
 {
     InnerBundleInfo info;
     HapModuleInfo hapModuleInfo;
-    hapModuleInfo.name = "infoName";
+    hapModuleInfo.name = NAME;
     const int32_t flags = 0;
     info.GetModuleWithHashValue(flags, "", hapModuleInfo);
-    EXPECT_EQ(hapModuleInfo.name, "infoName");
+    EXPECT_EQ(hapModuleInfo.name, NAME);
 }
 
 /**
@@ -1947,11 +1972,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1100, Function | Smal
 {
     InnerBundleInfo info;
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = "entry";
-    info.InsertInnerModuleInfo("key", innerModuleInfo);
+    innerModuleInfo.moduleName = MODULE_NAME;
+    info.InsertInnerModuleInfo(TEST_KEY, innerModuleInfo);
     std::vector<std::string> moduleNames;
     info.GetModuleNames(moduleNames);
-    EXPECT_EQ(moduleNames[0], "entry");
+    EXPECT_EQ(moduleNames[0], MODULE_NAME);
 }
 
 /**
@@ -1963,7 +1988,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1200, Function | Smal
 {
     InnerBundleInfo info;
     ApplicationInfo appInfo1;
-    appInfo1.bundleName = "com.ohos.test";
+    appInfo1.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(appInfo1);
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleUserInfo.userId = 100;
@@ -1973,10 +1998,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1200, Function | Smal
     const int32_t userId2 = 100;
     info.ResetBundleState(userId1);
     auto ret = info.GetInnerBundleUserInfos();
-    EXPECT_EQ(ret["com.ohos.test_100"].bundleUserInfo.enabled, false);
+    EXPECT_EQ(ret[BUNDLE_NAME_WITH_USERID].bundleUserInfo.enabled, false);
     info.ResetBundleState(userId2);
     ret = info.GetInnerBundleUserInfos();
-    EXPECT_EQ(ret["com.ohos.test_100"].bundleUserInfo.enabled, true);
+    EXPECT_EQ(ret[BUNDLE_NAME_WITH_USERID].bundleUserInfo.enabled, true);
 }
 
 /**
@@ -1988,23 +2013,23 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1300, Function | Smal
 {
     InnerBundleInfo info;
     ApplicationInfo appInfo1;
-    appInfo1.bundleName = "com.ohos.test";
+    appInfo1.bundleName = BUNDLE_NAME;
     info.SetBaseApplicationInfo(appInfo1);
     InnerBundleUserInfo innerBundleUserInfo;
     innerBundleUserInfo.bundleUserInfo.userId = 100;
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = "entry";
-    innerModuleInfo.isRemovable["100"] = true;
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerModuleInfo.isRemovable[USER] = true;
     info.AddInnerBundleUserInfo(innerBundleUserInfo);
-    info.InsertInnerModuleInfo("name_100", innerModuleInfo);
+    info.InsertInnerModuleInfo(NAME_UID, innerModuleInfo);
     const int32_t userId1 = -1;
     const int32_t userId2 = 100;
     info.RemoveInnerBundleUserInfo(userId1);
     auto ret = info.GetInnerModuleInfos();
-    EXPECT_EQ(ret["name_100"].isRemovable["100"], true);
+    EXPECT_EQ(ret[NAME_UID].isRemovable[USER], true);
     info.RemoveInnerBundleUserInfo(userId2);
     ret = info.GetInnerModuleInfos();
-    EXPECT_EQ(ret["name_100"].isRemovable["100"], false);
+    EXPECT_EQ(ret[NAME_UID].isRemovable[USER], false);
 }
 
 /**
@@ -2083,21 +2108,21 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1700, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_1800, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    std::string bundleName = "com.ohos.test";
+    std::string bundleName = BUNDLE_NAME;
     std::string moduleName = "";
     std::string extensionName = "";
     auto ret = info.FindExtensionInfo(moduleName, extensionName);
     EXPECT_EQ(ret, std::nullopt);
 
     ExtensionAbilityInfo extensionInfo;
-    moduleName = "entry";
-    extensionName = "extension";
+    moduleName = MODULE_NAME;
+    extensionName = bundleName;
     extensionInfo.bundleName = bundleName;
     extensionInfo.moduleName = moduleName;
-    extensionInfo.name = "extension";
-    info.InsertExtensionInfo("key", extensionInfo);
+    extensionInfo.name = extensionName;
+    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
     ret = info.FindExtensionInfo(moduleName, extensionName);
-    EXPECT_EQ((*ret).bundleName, "com.ohos.test");
+    EXPECT_EQ((*ret).bundleName, bundleName);
 }
 
 /**
@@ -2112,8 +2137,8 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2000, Function | Smal
     info.SetBaseBundleInfo(bundleInfo);
     info.SetIsPreInstallApp(false);
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = "entry";
-    info.InsertInnerModuleInfo("entry", innerModuleInfo);
+    innerModuleInfo.moduleName = MODULE_NAME;
+    info.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
     bool ret = info.IsBundleRemovable();
     EXPECT_EQ(ret, false);
 }
@@ -2129,10 +2154,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2100, Function | Smal
     BundleInfo bundleInfo;
     info.SetBaseBundleInfo(bundleInfo);
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = "entry";
-    innerModuleInfo.isRemovable.try_emplace("100", true);
-    info.InsertInnerModuleInfo("entry", innerModuleInfo);
-    bool ret = info.IsUserExistModule("entry", Constants::START_USERID);
+    innerModuleInfo.moduleName = MODULE_NAME;
+    innerModuleInfo.isRemovable.try_emplace(USER, true);
+    info.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    bool ret = info.IsUserExistModule(MODULE_NAME, Constants::START_USERID);
     EXPECT_EQ(ret, true);
 }
 
@@ -2144,7 +2169,143 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2100, Function | Smal
 HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2200, Function | SmallTest | Level1)
 {
     InnerBundleInfo info;
-    bool ret = info.SetModuleRemovable("entry", false, Constants::START_USERID);
+    bool ret = info.SetModuleRemovable(MODULE_NAME, false, Constants::START_USERID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test FindExtensionInfos
+ * @tc.desc: 1.Test the FindExtensionInfos of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::string bundleName = BUNDLE_NAME;
+    auto ret = info.FindExtensionInfos();
+    EXPECT_EQ(ret, std::nullopt);
+
+    ExtensionAbilityInfo extensionInfo;
+    extensionInfo.bundleName = bundleName;
+    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
+    ret = info.FindExtensionInfos();
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2300
+ * @tc.name: Test ProcessBundleWithHapModuleInfoFlag
+ * @tc.desc: 1.Test the ProcessBundleWithHapModuleInfoFlag of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    info.ProcessBundleWithHapModuleInfoFlag(FLAG, bundleInfo, Constants::START_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+
+    int32_t flag = 2;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = TEST_PACK_AGE;
+    hqfInfos.emplace_back(hqfInfo);
+    info.SetQuickFixHqfInfos(hqfInfos);
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    info.InsertInnerModuleInfo(TEST_PACK_AGE, moduleInfo);
+    info.ProcessBundleWithHapModuleInfoFlag(flag, bundleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(bundleInfo.hapModuleInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2500
+ * @tc.name: Test GetBundleWithAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    info.GetBundleWithAbilitiesV9(FLAG, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = hapModuleInfo.moduleName;
+    abilityInfo.name = "";
+    info.InsertAbilitiesInfo(TEST_KEY, abilityInfo);
+    int32_t flag = 4;
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::NOT_EXIST_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), false);
+
+    abilityInfo.moduleName = BUNDLE_NAME;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    hapModuleInfo.moduleName = MODULE_NAME;
+    info.InsertAbilitiesInfo(TEST_KEY, abilityInfo);
+    info.GetBundleWithAbilitiesV9(flag, hapModuleInfo, Constants::START_USERID);
+    EXPECT_EQ(hapModuleInfo.abilityInfos.empty(), true);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2600
+ * @tc.name: Test GetBundleWithExtensionAbilitiesV9
+ * @tc.desc: 1.Test the GetBundleWithExtensionAbilitiesV9 of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    HapModuleInfo hapModuleInfo;
+    std::string moduleName = MODULE_NAME;
+    info.GetBundleWithExtensionAbilitiesV9(FLAG, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    ExtensionAbilityInfo extensionInfo;
+    int32_t flag = 8;
+    extensionInfo.moduleName = moduleName;
+    extensionInfo.enabled = false;
+    info.InsertExtensionInfo(TEST_KEY, extensionInfo);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), true);
+
+    std::map<std::string, ExtensionAbilityInfo> extensionInfos;
+    extensionInfo.enabled = true;
+    hapModuleInfo.moduleName = extensionInfo.moduleName;
+    extensionInfos["baseExtensionInfos_"] = extensionInfo;
+    info.AddModuleExtensionInfos(extensionInfos);
+    info.GetBundleWithExtensionAbilitiesV9(flag, hapModuleInfo);
+    EXPECT_EQ(hapModuleInfo.extensionInfos.empty(), false);
+}
+
+/**
+ * @tc.number: InnerBundleInfo_2700
+ * @tc.name: Test GetRemovableModules
+ * @tc.desc: 1.Test the GetRemovableModules of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2700, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<std::string> moduleToDelete;
+    bool ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.installationFree = false;
+    moduleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+
+    moduleInfo.installationFree = true;
+    ret = info.GetRemovableModules(moduleToDelete);
     EXPECT_EQ(ret, false);
 }
 
@@ -2191,7 +2352,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, FormInfo_0200, Function | SmallTest |
 HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function | SmallTest | Level1)
 {
     DistributedModuleInfo info1;
-    info1.moduleName = "entry";
+    info1.moduleName = MODULE_NAME;
     OHOS::Parcel parcel;
     info1.Marshalling(parcel);
     DistributedModuleInfo info2;
@@ -2208,7 +2369,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function 
 HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedAbilityInfo_0100, Function | SmallTest | Level1)
 {
     DistributedAbilityInfo info;
-    info.abilityName = "MainAbility";
+    info.abilityName = ABILITY_NAME;
     OHOS::Parcel parcel;
     info.Marshalling(parcel);
     info.Unmarshalling(parcel);
@@ -2224,7 +2385,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedAbilityInfo_0100, Function
 HWTEST_F(BmsBundleDataStorageDatabaseTest, PerfProfile_0100, Function | SmallTest | Level1)
 {
     DistributedAbilityInfo info;
-    info.abilityName = "MainAbility";
+    info.abilityName = ABILITY_NAME;
     OHOS::Parcel parcel;
     info.Marshalling(parcel);
     info.Unmarshalling(parcel);
@@ -2256,22 +2417,22 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, CheckNeedPreloadTest, Function | Smal
     ApplicationInfo applicationInfo;
     std::vector<ModuleInfo> moduleInfos;
     ModuleInfo info1;
-    info1.moduleName = "settings";
+    info1.moduleName = SETTINGS;
     moduleInfos.emplace_back(info1);
     applicationInfo.moduleInfos = moduleInfos;
-    std::string moduleName = "entry";
+    std::string moduleName = MODULE_NAME;
     bool ret = applicationInfo.CheckNeedPreload(moduleName);
     EXPECT_EQ(ret, false);
     ModuleInfo info2;
-    info2.moduleName = "entry";
-    info2.preloads.emplace_back("entry");
+    info2.moduleName = MODULE_NAME;
+    info2.preloads.emplace_back(MODULE_NAME);
     moduleInfos.emplace_back(info2);
     applicationInfo.moduleInfos = moduleInfos;
     ret = applicationInfo.CheckNeedPreload(moduleName);
     EXPECT_EQ(ret, false);
 
     moduleInfos.clear();
-    info2.preloads.emplace_back("settings");
+    info2.preloads.emplace_back(SETTINGS);
     moduleInfos.emplace_back(info2);
     applicationInfo.moduleInfos = moduleInfos;
     ret = applicationInfo.CheckNeedPreload(moduleName);
@@ -2414,6 +2575,10 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, SetOverlayModuleState_0200, Function 
     info.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
     innerBundleUserInfos[MODULE_NAME_TEST] = newInfo;
     info.innerBundleUserInfos_ = innerBundleUserInfos;
+    info.SetOverlayModuleState(MODULE_NAME_TEST, state);
+    CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
+
+    info.overlayType_ = OverlayType::NON_OVERLAY_TYPE;
     info.SetOverlayModuleState(MODULE_NAME_TEST, state);
     CheckOverlayModuleState(info, MODULE_NAME_TEST, state);
 }

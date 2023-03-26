@@ -30,7 +30,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string INSTALL_THREAD = "InstallThread";
 const std::string GET_MANAGER_FAIL = "fail to get bundle installer manager";
 int32_t INVALID_APP_INDEX = 0;
 int32_t LOWER_DLP_TYPE_BOUND = 0;
@@ -50,14 +49,7 @@ BundleInstallerHost::~BundleInstallerHost()
 bool BundleInstallerHost::Init()
 {
     APP_LOGD("begin to init");
-    auto installRunner = EventRunner::Create(INSTALL_THREAD);
-    if (!installRunner) {
-        APP_LOGE("create install runner fail");
-        return false;
-    }
-    manager_ = std::make_shared<BundleInstallerManager>(installRunner);
-    manager_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
+    manager_ = std::make_shared<BundleInstallerManager>();
     APP_LOGD("init successfully");
     return true;
 }
@@ -450,7 +442,7 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         return false;
     }
     manager_->CreateUninstallTask(uninstallParam, statusReceiver);
-    return false;
+    return true;
 }
 
 bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
@@ -482,6 +474,10 @@ ErrCode BundleInstallerHost::InstallSandboxApp(const std::string &bundleName, in
         APP_LOGE("install sandbox failed due to error parameters");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("InstallSandboxApp permission denied");
         return ERR_APPEXECFWK_PERMISSION_DENIED;
@@ -501,13 +497,17 @@ ErrCode BundleInstallerHost::UninstallSandboxApp(const std::string &bundleName, 
 {
     // check bundle name
     if (bundleName.empty()) {
-        APP_LOGE("install sandbox failed due to empty bundleName");
+        APP_LOGE("uninstall sandbox failed due to empty bundleName");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
     }
     // check appIndex
     if (appIndex <= INVALID_APP_INDEX || appIndex > Constants::MAX_APP_INDEX) {
         APP_LOGE("the appIndex %{public}d is invalid", appIndex);
         return ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR;
+    }
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("UninstallSandboxApp permission denied");
@@ -533,6 +533,15 @@ ErrCode BundleInstallerHost::StreamInstall(const std::vector<std::string> &bundl
 sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const InstallParam &installParam,
     const sptr<IStatusReceiver> &statusReceiver)
 {
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        APP_LOGE("statusReceiver invalid");
+        return nullptr;
+    }
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("Uninstall permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return nullptr;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
@@ -557,6 +566,10 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
 
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("Uninstall permission denied");
+        return false;
+    }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("install permission denied");
         return false;

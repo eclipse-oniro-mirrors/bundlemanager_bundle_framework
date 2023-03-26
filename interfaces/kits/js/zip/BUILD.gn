@@ -1,0 +1,81 @@
+# Copyright (c) 2022 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../../../appexecfwk.gni")
+
+config("zip_config") {
+  include_dirs = [
+    "include",
+    "napi",
+    "//commonlibrary/c_utils/base/include",
+    "//third_party/libuv/include",
+    "//third_party/node/src",
+    "//third_party/zlib",
+    "${kits_path}/js/common",
+  ]
+
+  defines = [
+    "APP_LOG_TAG = \"Zlib\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+}
+
+ohos_shared_library("zlib") {
+  public_configs = [ ":zip_config" ]
+
+  sources = [
+    "napi/napi_zlib.cpp",
+    "napi/napi_zlib_common.cpp",
+    "napi/native_module.cpp",
+    "napi/zlib_callback_info.cpp",
+    "src/file_path.cpp",
+    "src/zip.cpp",
+    "src/zip_internal.cpp",
+    "src/zip_reader.cpp",
+    "src/zip_utils.cpp",
+    "src/zip_writer.cpp",
+  ]
+
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${kits_path}/js/common:bundle_napi_common",
+    "//third_party/zlib:shared_libz",
+  ]
+
+  external_deps = [
+    "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_core",
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog_native:libhilog_base",
+    "hiviewdfx_hilog_native:libhilog",
+    "napi:ace_napi",
+  ]
+
+  install_enable = true
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+  relative_install_dir = "module"
+}
+
+group("tools_zip") {
+  if (support_jsapi) {
+    deps = [ ":zlib" ]
+  }
+}

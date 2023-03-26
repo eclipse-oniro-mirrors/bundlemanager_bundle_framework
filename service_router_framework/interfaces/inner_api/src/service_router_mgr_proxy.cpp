@@ -33,27 +33,23 @@ ServiceRouterMgrProxy::~ServiceRouterMgrProxy()
     APP_LOGD("ServiceRouterMgrProxy instance is destroyed");
 }
 
-int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
-    std::vector<ServiceInfo> &serviceInfos)
+int32_t ServiceRouterMgrProxy::QueryBusinessAbilityInfos(const BusinessAbilityFilter &filter,
+    std::vector<BusinessAbilityInfo> &abilityInfos)
 {
-    APP_LOGI("ServiceRouterMgrProxy QueryServiceInfos");
+    APP_LOGD("ServiceRouterMgrProxy QueryBusinessAbilityInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteParcelable(&want)) {
-        APP_LOGE("write want failed");
+    if (!data.WriteParcelable(&filter)) {
+        APP_LOGE("write filter failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteInt32(static_cast<int32_t>(serviceType))) {
-        APP_LOGE("fail to QueryServiceInfos due to write type fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    int32_t res = GetParcelableInfos<ServiceInfo>(ServiceRouterMgrProxy::Message::QUERY_SERVICE_INFOS, data,
-        serviceInfos);
+    int32_t res = GetParcelableInfos<BusinessAbilityInfo>(ServiceRouterMgrProxy::Message::QUERY_BUSINESS_ABILITY_INFOS,
+        data, abilityInfos);
     if (res != OHOS::NO_ERROR) {
-        APP_LOGE("fail to QueryServiceInfos from server, error code: %{public}d", res);
+        APP_LOGE("fail to QueryBusinessAbilityInfos from server, error code: %{public}d", res);
     }
     return res;
 }
@@ -61,7 +57,7 @@ int32_t ServiceRouterMgrProxy::QueryServiceInfos(const Want &want, const Extensi
 int32_t ServiceRouterMgrProxy::QueryPurposeInfos(const Want &want, const std::string purposeName,
     std::vector<PurposeInfo> &purposeInfos)
 {
-    APP_LOGI("ServiceRouterMgrProxy QueryPurposeInfos");
+    APP_LOGD("ServiceRouterMgrProxy QueryPurposeInfos");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("write interfaceToken failed");
@@ -129,8 +125,7 @@ int32_t ServiceRouterMgrProxy::StartUIExtensionAbility(const Want &want, const s
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    int32_t error = remote->SendRequest(ServiceRouterMgrProxy::Message::START_UI_EXTENSION_ABILITY, data, reply,
-        option);
+    int32_t error = remote->SendRequest(ServiceRouterMgrProxy::Message::START_UI_EXTENSION, data, reply, option);
     if (error != NO_ERROR) {
         APP_LOGE("StartExtensionAbility, Send request error: %{public}d", error);
         return error;
@@ -138,19 +133,15 @@ int32_t ServiceRouterMgrProxy::StartUIExtensionAbility(const Want &want, const s
     return reply.ReadInt32();
 }
 
-int32_t ServiceRouterMgrProxy::ConnectUIExtensionAbility(const Want &want,const sptr<IAbilityConnection> &connect,
-    const sptr<SessionInfo> &sessionInfo,int32_t userId)
+int32_t ServiceRouterMgrProxy::ConnectUIExtensionAbility(const Want &want, const sptr<IAbilityConnection> &connect,
+    const sptr<SessionInfo> &sessionInfo, int32_t userId)
 {
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
 
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("write interfaceToken failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteParcelable(&want)) {
-        APP_LOGE("want write failed.");
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteParcelable(&want)) {
+        APP_LOGE("write interfaceToken or want failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -189,8 +180,7 @@ int32_t ServiceRouterMgrProxy::ConnectUIExtensionAbility(const Want &want,const 
         APP_LOGE("connect ability fail, remote is nullptr");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    int32_t error = Remote()->SendRequest(ServiceRouterMgrProxy::Message::CONNECT_UI_EXTENSION_ABILITY, data, reply,
-        option);
+    int32_t error = Remote()->SendRequest(ServiceRouterMgrProxy::Message::CONNECT_UI_EXTENSION, data, reply, option);
     if (error != NO_ERROR) {
         APP_LOGE("%{public}s, Send request error: %{public}d", __func__, error);
         return error;

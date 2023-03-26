@@ -17,6 +17,7 @@
 
 #include "account_helper.h"
 #include "app_log_wrapper.h"
+#include "bundle_common_event.h"
 #include "bundle_constants.h"
 #include "bundle_distributed_manager.h"
 #include "bundle_memory_guard.h"
@@ -431,7 +432,7 @@ void BundleMgrService::NotifyBundleScanStatus()
 {
     APP_LOGD("PublishCommonEvent for bundle scan finished");
     AAFwk::Want want;
-    want.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_BUNDLE_SCAN_FINISHED);
+    want.SetAction(COMMON_EVENT_BUNDLE_SCAN_FINISHED);
     EventFwk::CommonEventData commonEventData { want };
     if (!EventFwk::CommonEventManager::PublishCommonEvent(commonEventData)) {
         notifyBundleScanStatus = true;

@@ -74,6 +74,8 @@ const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
+static std::string g_ownBundleName;
+static std::mutex g_ownBundleNameMutex;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 
@@ -306,7 +308,22 @@ void GetBundleNameByUidExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
+    bool queryOwn = (asyncCallbackInfo->uid == IPCSkeleton::GetCallingUid());
+    if (queryOwn) {
+        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
+        if (!g_ownBundleName.empty()) {
+            APP_LOGD("query own bundleName, has cache, no need to query from host");
+            asyncCallbackInfo->bundleName = g_ownBundleName;
+            asyncCallbackInfo->err = NO_ERROR;
+            return;
+        }
+    }
     asyncCallbackInfo->err = InnerGetBundleNameByUid(asyncCallbackInfo->uid, asyncCallbackInfo->bundleName);
+    if ((asyncCallbackInfo->err == NO_ERROR) && queryOwn && g_ownBundleName.empty()) {
+        APP_LOGD("put own bundleName to cache");
+        std::lock_guard<std::mutex> lock(g_ownBundleNameMutex);
+        g_ownBundleName = asyncCallbackInfo->bundleName;
+    }
 }
 
 void GetBundleNameByUidComplete(napi_env env, napi_status status, void *data)
@@ -2802,17 +2819,6 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return nullptr;
-    }
-    bool ret = iBundleMgr->GetBundleNameForUid(IPCSkeleton::GetCallingUid(), asyncCallbackInfo->bundleName);
-    if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
-        asyncCallbackInfo->err = ERROR_BUNDLE_NOT_EXIST;
-    }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
         env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
@@ -3066,17 +3072,6 @@ void CreateBundleTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ATOMIC_SERVICE", nAtomicService));
 }
 
-void CreateAtomicServiceModuleTypeObject(napi_env env, napi_value value)
-{
-    napi_value nNormal;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(AtomicServiceModuleType::NORMAL), &nNormal));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NORMAL", nNormal));
-    napi_value nMain;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(AtomicServiceModuleType::MAIN), &nMain));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "MAIN", nMain));
-}
-
 void CreateDisplayOrientationObject(napi_env env, napi_value value)
 {
     napi_value nUnspecified;
@@ -3200,7 +3195,7 @@ void CreateCompatiblePolicyObject(napi_env env, napi_value value)
     napi_value nBackCompatible;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(
         env, static_cast<int32_t>(CompatiblePolicy::BACK_COMPATIBLE), &nBackCompatible));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACK_COMPATIBLE", nBackCompatible));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKWARD_COMPATIBILITY", nBackCompatible));
 }
 
 ErrCode InnerGetAppProvisionInfo(

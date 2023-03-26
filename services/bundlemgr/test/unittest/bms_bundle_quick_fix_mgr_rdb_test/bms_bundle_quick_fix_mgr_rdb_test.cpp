@@ -451,8 +451,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrRdbTest_0012, Function
  */
 HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrTest_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    auto quickFixMgr = std::make_shared<QuickFixMgr>(runner);
+    auto quickFixMgr = std::make_shared<QuickFixMgr>();
     std::vector<std::string> bundleFilePaths;
     sptr<IQuickFixStatusCallback> statusCallback;
     auto result = quickFixMgr->DeployQuickFix(bundleFilePaths, statusCallback);
@@ -466,8 +465,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrTest_0001, Function | 
  */
 HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrTest_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    auto quickFixMgr = std::make_shared<QuickFixMgr>(runner);
+    auto quickFixMgr = std::make_shared<QuickFixMgr>();
     std::string bundleName;
     bool enable = false;
     sptr<IQuickFixStatusCallback> statusCallback;
@@ -482,8 +480,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrTest_0002, Function | 
  */
 HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixMgrTest_0003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    auto quickFixMgr = std::make_shared<QuickFixMgr>(runner);
+    auto quickFixMgr = std::make_shared<QuickFixMgr>();
     std::string bundleName;
     sptr<IQuickFixStatusCallback> statusCallback;
     auto result = quickFixMgr->DeleteQuickFix(bundleName, statusCallback);

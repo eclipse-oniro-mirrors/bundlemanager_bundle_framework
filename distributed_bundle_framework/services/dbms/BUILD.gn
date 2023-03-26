@@ -15,7 +15,7 @@ import("//build/ohos.gni")
 import("../../dbms.gni")
 
 group("dbms_target") {
-  if (bundle_framework_graphics) {
+  if (distributed_bundle_framework_graphics) {
     deps = [ ":libdbms" ]
   }
 }
@@ -65,13 +65,13 @@ ohos_shared_library("libdbms") {
     "samgr:samgr_proxy",
   ]
 
-  if (hisysevent_enable) {
+  if (hisysevent_enable_dbms) {
     sources += [ "src/event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (account_enable) {
+  if (account_enable_dbms) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
   }

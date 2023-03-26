@@ -34,6 +34,8 @@ const std::string RETURN_MOCK_BUNDLE_DIR_FAILED = "mockFailed";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string BUNDLE_NAME_ONE = "bundleName01";
 const std::string TEST_BUNDLE_NAME = "bundleName02";
+const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
+
 class BmsEventHandlerTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -173,7 +175,6 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
     EXPECT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
-    std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
     handler->SaveInstallInfoToCache(info);
@@ -331,4 +332,37 @@ HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0100, Function | Smal
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     handler->ProcessRebootBundleUninstall();
     EXPECT_TRUE(handler->hapParseInfoMap_.empty());
+}
+
+/**
+ * @tc.number: ProcessOTAInstallSystemSharedBundle_0100
+ * @tc.name: ProcessOTAInstallSystemSharedBundle
+ * @tc.desc: test ProcessOTAInstallSystemSharedBundle with empty filePath
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::vector<std::string> filePath;
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    EXPECT_FALSE(handler->OTAInstallSystemSharedBundle(filePath, appType, true));
+}
+
+/**
+ * @tc.number: ProcessOTAInstallSystemSharedBundle_0200
+ * @tc.name: ProcessOTAInstallSystemSharedBundle
+ * @tc.desc: test ProcessOTAInstallSystemSharedBundle with a valid filePath
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::vector<std::string> filePath;
+    filePath.push_back(UNEXIST_SHARED_LIBRARY);
+    Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    EXPECT_FALSE(handler->OTAInstallSystemSharedBundle(filePath, appType, true));
 }

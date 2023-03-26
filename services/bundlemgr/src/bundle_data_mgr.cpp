@@ -18,9 +18,6 @@
 #include <chrono>
 #include <cinttypes>
 
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-#include "app_control_constants.h"
-#endif
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
 #include "os_account_info.h"
@@ -1361,9 +1358,6 @@ bool BundleDataMgr::GetApplicationInfo(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetApplicationInfo(flags, responseUserId, appInfo);
-    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
-        appInfo.removable = false;
-    }
     return true;
 }
 
@@ -1393,9 +1387,6 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     if (ret != ERR_OK) {
         APP_LOGE("GetApplicationInfoV9 failed");
         return ret;
-    }
-    if (!CheckAppInstallControl(innerBundleInfo.GetAppId(), requestUserId)) {
-        appInfo.removable = false;
     }
     return ret;
 }
@@ -2278,6 +2269,10 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
     }
 
     auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGW("create infoItem fail");
+        return;
+    }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
         OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
@@ -2287,16 +2282,14 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         OverlayDataMgr::GetInstance()->ResetExternalOverlayModuleState(bundleName);
     }
 #endif
-    if (infoItem != bundleInfos_.end()) {
-        APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
-        const InnerBundleInfo &innerBundleInfo = infoItem->second;
-        RecycleUidAndGid(innerBundleInfo);
-        bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
-        if (!ret) {
-            APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
-        }
-        bundleInfos_.erase(bundleName);
+    APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    RecycleUidAndGid(innerBundleInfo);
+    bool ret = dataStorage_->DeleteStorageBundleInfo(innerBundleInfo);
+    if (!ret) {
+        APP_LOGW("delete storage error name:%{public}s", bundleName.c_str());
     }
+    bundleInfos_.erase(bundleName);
 }
 
 bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
@@ -4437,27 +4430,6 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
     return false;
 }
 
-bool BundleDataMgr::CheckAppInstallControl(const std::string &appId, int32_t userId) const
-{
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    std::vector<std::string> appIds;
-    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return true;
-    }
-    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        return true;
-    }
-    APP_LOGW("appId is not removable");
-    return false;
-#else
-    APP_LOGW("app control is disable");
-    return true;
-#endif
-}
-
 bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
     APP_LOGI("start to get overlay innerBundleInfo");
@@ -4581,6 +4553,11 @@ ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+        APP_LOGE("GetSharedBundleInfoBySelf failed, the bundle(%{public}s) is not shared library",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     innerBundleInfo.GetSharedBundleInfo(sharedBundleInfo);
     APP_LOGD("GetSharedBundleInfoBySelf(%{public}s) successfully)", bundleName.c_str());
     return ERR_OK;
@@ -4598,7 +4575,7 @@ ErrCode BundleDataMgr::GetSharedDependencies(const std::string &bundleName, cons
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = item->second;
-    if (!innerBundleInfo.GetSharedDependencies(moduleName, dependencies)) {
+    if (!innerBundleInfo.GetAllSharedDependencies(moduleName, dependencies)) {
         APP_LOGE("GetSharedDependencies failed, can not find module %{public}s", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
@@ -4655,5 +4632,22 @@ bool BundleDataMgr::CheckHspBundleIsRelied(const std::string &hspBundleName) con
     return false;
 }
 
+ErrCode BundleDataMgr::GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo)
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &innerBundleInfo = infoItem->second;
+    innerBundleInfo.GetSharedBundleInfo(flags, bundleInfo);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

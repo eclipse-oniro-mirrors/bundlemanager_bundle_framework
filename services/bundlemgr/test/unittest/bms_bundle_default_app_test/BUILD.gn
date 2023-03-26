@@ -44,10 +44,7 @@ ohos_unittest("BmsBundleDefaultAppTest") {
 
   sources += [ "bms_bundle_default_app_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -56,12 +53,6 @@ ohos_unittest("BmsBundleDefaultAppTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/defaultAppTest:defaultAppTest",
   ]
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
   deps += bundle_install_deps
 
   external_deps = [

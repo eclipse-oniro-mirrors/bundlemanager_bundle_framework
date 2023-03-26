@@ -35,7 +35,7 @@ public:
     int OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option) override;
 
 private:
-    int HandleQueryServiceInfos(MessageParcel &data, MessageParcel &reply);
+    int HandleQueryBusinessAbilityInfos(MessageParcel &data, MessageParcel &reply);
     int HandleQueryPurposeInfos(MessageParcel &data, MessageParcel &reply);
     int HandleStartUIExtensionAbility(MessageParcel &data, MessageParcel &reply);
     int HandleConnectUIExtensionAbility(MessageParcel &data, MessageParcel &reply);

@@ -44,7 +44,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -55,14 +54,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/bundle_kit/test:test",
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [
@@ -166,7 +157,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -177,14 +167,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
   ]
-
-  if (bundle_framework_graphics) {
-    include_dirs += [
-      "//foundation/multimedia/image_framework/interfaces/innerkits/include",
-    ]
-    deps += [ "//foundation/multimedia/image_framework/interfaces/innerkits:image_native" ]
-  }
-
   deps += bundle_install_deps
 
   external_deps = [

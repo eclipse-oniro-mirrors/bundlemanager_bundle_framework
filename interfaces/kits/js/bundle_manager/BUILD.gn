@@ -17,7 +17,7 @@ import("../../../../appexecfwk.gni")
 ohos_shared_library("bundlemanager") {
   include_dirs = [
     "//third_party/node/src",
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
+    "${kits_path}/js/common",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",

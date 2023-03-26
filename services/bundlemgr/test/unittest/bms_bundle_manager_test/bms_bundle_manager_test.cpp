@@ -60,7 +60,6 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const int32_t USERID = 100;
 const int32_t FLAG = 0;
 const int32_t WRONG_UID = -1;
-const std::string INSTALL_THREAD = "TestInstall";
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
@@ -272,11 +271,7 @@ void BmsBundleManagerTest::CreateInstallerManager()
     if (manager_ != nullptr) {
         return;
     }
-    auto installRunner = EventRunner::Create(INSTALL_THREAD);
-    if (!installRunner) {
-        return;
-    }
-    manager_ = std::make_shared<BundleInstallerManager>(installRunner);
+    manager_ = std::make_shared<BundleInstallerManager>();
     EXPECT_NE(nullptr, manager_);
 }
 

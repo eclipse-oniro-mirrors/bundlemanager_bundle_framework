@@ -244,16 +244,18 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0200, Function | SmallTest
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
-    EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
-    EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO);
-    EXPECT_EQ(abilityInfo.label, LABEL);
-    EXPECT_EQ(abilityInfo.iconPath, ICON);
-    EXPECT_EQ(abilityInfo.description, DESCRIPTION);
-    EXPECT_EQ(abilityInfo.labelId, LABEL_ID);
-    EXPECT_EQ(abilityInfo.iconId, ICON_ID);
-    EXPECT_EQ(abilityInfo.descriptionId, DESCRIPTION_ID);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
+        EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
+        EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO);
+        EXPECT_EQ(abilityInfo.label, LABEL);
+        EXPECT_EQ(abilityInfo.iconPath, ICON);
+        EXPECT_EQ(abilityInfo.description, DESCRIPTION);
+        EXPECT_EQ(abilityInfo.labelId, LABEL_ID);
+        EXPECT_EQ(abilityInfo.iconId, ICON_ID);
+        EXPECT_EQ(abilityInfo.descriptionId, DESCRIPTION_ID);
+    }
 }
 
 /**
@@ -300,10 +302,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0400, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
-    EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
-    EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
+        EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
+        EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO);
+    }
 }
 
 /**
@@ -327,10 +331,12 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0500, Function | SmallTest
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
-    EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
-    EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO_MP4);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.bundleName, BUNDLE_NAME);
+        EXPECT_EQ(abilityInfo.moduleName, MODULE_NAME);
+        EXPECT_EQ(abilityInfo.name, ABILITY_VIDEO_MP4);
+    }
 }
 
 /**
@@ -399,8 +405,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0800, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_IMAGE, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_IMAGE);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_IMAGE);
+    }
 }
 
 /**
@@ -420,8 +428,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0900, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_BROWSER, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_BROWSER);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_BROWSER);
+    }
 }
 
 /**
@@ -441,8 +451,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1000, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_AUDIO, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_AUDIO);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_AUDIO);
+    }
 }
 
 /**
@@ -462,8 +474,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1100, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_PDF, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_PDF);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_PDF);
+    }
 }
 
 /**
@@ -483,8 +497,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1200, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_WORD, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_WORD);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_WORD);
+    }
 }
 
 /**
@@ -504,8 +520,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1300, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_EXCEL, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_EXCEL);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_EXCEL);
+    }
 }
 
 /**
@@ -525,8 +543,10 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_1400, Function | SmallTest
     result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_APP_PPT, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.abilityInfos.size(), 1);
-    auto abilityInfo = bundleInfo.abilityInfos[0];
-    EXPECT_EQ(abilityInfo.name, ABILITY_PPT);
+    if (bundleInfo.abilityInfos.size() == 1) {
+        auto abilityInfo = bundleInfo.abilityInfos[0];
+        EXPECT_EQ(abilityInfo.name, ABILITY_PPT);
+    }
 }
 
 /**

@@ -18,8 +18,7 @@ ohos_shared_library("defaultappmanager") {
   include_dirs = [
     "//third_party/node/src",
     "//third_party/libuv/include",
-    "//utils/system/safwk/native/include",
-    "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
+    "${kits_path}/js/common",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",

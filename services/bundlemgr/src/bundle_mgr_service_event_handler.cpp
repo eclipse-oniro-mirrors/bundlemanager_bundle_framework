@@ -838,7 +838,7 @@ void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
     }
 
     for (const auto &hspDir : hspDirs) {
-        ProcessSystemSharedBundleInstall(hspDir);
+        ProcessSystemSharedBundleInstall(hspDir, Constants::AppType::SYSTEM_APP);
     }
 
     for (const auto &installInfo : normalSystemApps) {
@@ -882,7 +882,7 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     }
 }
 
-void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath)
+void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, Constants::AppType appType)
 {
     APP_LOGD("Process system shared bundle by sharedBundlePath(%{public}s)", sharedBundlePath.c_str());
     InstallParam installParam;
@@ -893,7 +893,7 @@ void BMSEventHandler::ProcessSystemSharedBundleInstall(const std::string &shared
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = {sharedBundlePath};
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemSharedBundle(installParam)) {
+    if (!installer.InstallSystemSharedBundle(installParam, false, appType)) {
         APP_LOGW("install system shared bundle: %{public}s error", sharedBundlePath.c_str());
     }
 }
@@ -961,6 +961,7 @@ void BMSEventHandler::ProcessRebootBundleInstall()
 void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
 {
     std::list<std::string> bundleDirs;
+    std::list<std::string> sharedBundleDirs;
     for (const auto &installInfo : installList_) {
         APP_LOGD("Process reboot preBundle proFile install %{public}s", installInfo.ToString().c_str());
         if (uninstallList_.find(installInfo.bundleDir) != uninstallList_.end()) {
@@ -968,9 +969,15 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
             continue;
         }
 
-        bundleDirs.emplace_back(installInfo.bundleDir);
+        if (installInfo.bundleDir.find(PRE_INSTALL_HSP_PATH) != std::string::npos) {
+            APP_LOGD("found shared bundle path: %{private}s", installInfo.bundleDir.c_str());
+            sharedBundleDirs.emplace_back(installInfo.bundleDir);
+        } else {
+            bundleDirs.emplace_back(installInfo.bundleDir);
+        }
     }
 
+    InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
 }
 
@@ -1060,6 +1067,14 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 continue;
             }
 
+            // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
+            if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
+                APP_LOGD("OTA update module(%{public}s) by path(%{private}s), accessTokenIdEx is equal to 0",
+                    parserModuleNames[0].c_str(), item.first.c_str());
+                filePaths.emplace_back(item.first);
+                continue;
+            }
+
             // Generally, when the versionCode of Hap is greater than the installed versionCode,
             // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
             if (hasInstalledInfo.versionCode < hapVersionCode) {
@@ -1099,6 +1114,61 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
+        }
+    }
+}
+
+void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
+    const std::list<std::string> &scanPathList, Constants::AppType appType)
+{
+    APP_LOGD("InnerProcessRebootSharedBundleInstall");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::unordered_set<std::string> allBundleNames;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
+        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
+    }
+    for (const auto &scanPath : scanPathList) {
+        bool removable = IsPreInstallRemovable(scanPath);
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        if (!ParseHapFiles(scanPath, infos) || infos.empty()) {
+            APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPath.c_str());
+            continue;
+        }
+
+        auto bundleName = infos.begin()->second.GetBundleName();
+        auto versionCode = infos.begin()->second.GetVersionCode();
+        AddParseInfosToMap(bundleName, infos);
+        auto mapIter = loadExistData_.find(bundleName);
+        if (mapIter == loadExistData_.end()) {
+            APP_LOGD("OTA Install new shared bundle(%{public}s) by path(%{private}s).",
+                bundleName.c_str(), scanPath.c_str());
+            if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
+                APP_LOGE("OTA Install new shared bundle(%{public}s) error.", bundleName.c_str());
+            }
+            continue;
+        }
+
+        InnerBundleInfo oldBundleInfo;
+        bool hasInstalled = dataMgr->FetchInnerBundleInfo(bundleName, oldBundleInfo);
+        if (!hasInstalled) {
+            APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.", bundleName.c_str());
+            continue;
+        }
+
+        if (oldBundleInfo.GetVersionCode() >= versionCode) {
+            APP_LOGD("the installed version is up-to-date");
+            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
+                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
+            }
+            continue;
+        }
+
+        if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
+            APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
 }
@@ -1379,6 +1449,27 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
 }
 
+bool BMSEventHandler::OTAInstallSystemSharedBundle(
+    const std::vector<std::string> &filePaths,
+    Constants::AppType appType,
+    bool removable)
+{
+    if (filePaths.empty()) {
+        APP_LOGE("File path is empty");
+        return false;
+    }
+
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    installParam.needSendEvent = false;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.removable = removable;
+    installParam.needSavePreInstallInfo = true;
+    installParam.sharedBundleDirPaths = filePaths;
+    SystemBundleInstaller installer;
+    return installer.InstallSystemSharedBundle(installParam, true, appType);
+}
+
 bool BMSEventHandler::CheckAndParseHapFiles(
     const std::string &hapFilePath,
     bool isPreInstallApp,
@@ -1601,7 +1692,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
     // parse profile info
     Security::Verify::HapVerifyResult hapVerifyResult;
-    auto ret = BundleVerifyMgr::HapVerify(filePath, hapVerifyResult);
+    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult);
     if (ret != ERR_OK) {
         APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
             bundleName.c_str(), ret);

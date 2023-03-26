@@ -33,6 +33,7 @@ group("napi_packages") {
       "launchermgr:innerbundlemanager",
       "overlay:overlay",
       "package:package",
+      "zip:tools_zip",
     ]
   }
 }

@@ -46,7 +46,6 @@ const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
-const std::string RELEASE = "Release";
 const std::string APL_NORMAL = "normal";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
@@ -493,6 +492,22 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
 }
 
+void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
+    const InnerBundleInfo &innerBundleInfo) const
+{
+    if (innerBundleInfo.GetIsNewVersion()) {
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP) {
+            for (auto &item : bundlePackInfo.summary.modules) {
+                item.distro.installationFree = false;
+            }
+            return;
+        }
+        for (auto &item : bundlePackInfo.summary.modules) {
+            item.distro.installationFree = true;
+        }
+    }
+}
+
 ErrCode BundleInstallChecker::ParseBundleInfo(
     const std::string &bundleFilePath,
     InnerBundleInfo &info,
@@ -512,6 +527,7 @@ ErrCode BundleInstallChecker::ParseBundleInfo(
             return result;
         }
 
+        SetPackInstallationFree(packInfo, info);
         info.SetBundlePackInfo(packInfo);
         packInfo.SetValid(true);
     }
@@ -536,8 +552,14 @@ void BundleInstallChecker::SetEntryInstallationFree(
     if (installationFree) {
         APP_LOGI("install or update hm service");
     }
+    if (innerBundleInfo.GetIsNewVersion()) {
+        installationFree = innerBundleInfo.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE;
+    }
 
     innerBundleInfo.SetEntryInstallationFree(installationFree);
+    if (installationFree && !innerBundleInfo.GetIsNewVersion()) {
+        innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    }
     APP_LOGI("SetEntryInstallationFree end");
 }
 
@@ -622,9 +644,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     const std::string targetBundleName = (infos.begin()->second).GetTargetBundleName();
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
-    bool hasAtomicServiceConfig = (infos.begin()->second).GetHasAtomicServiceConfig();
-    bool split = (infos.begin()->second).GetBaseApplicationInfo().split;
-    std::string main = (infos.begin()->second).GetAtomicMainModuleName();
+    BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     CompatiblePolicy compatiblePolicy = (infos.begin()->second).GetCompatiblePolicy();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
 
@@ -681,15 +701,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             APP_LOGE("asanEnabled is not same");
             return ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME;
         }
-        if (asanEnabled && info.second.GetReleaseType().find(RELEASE) != std::string::npos) {
-            APP_LOGE("asanEnabled is not supported in Release");
-            return ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT;
-        }
-        if (hasAtomicServiceConfig != info.second.GetHasAtomicServiceConfig() ||
-                split != info.second.GetBaseApplicationInfo().split ||
-                main != info.second.GetAtomicMainModuleName()) {
-            APP_LOGE("atomicService config is not same.");
-            return ERR_APPEXECFWK_ATOMIC_SERVICE_NOT_SAME;
+        if (bundleType != info.second.GetApplicationBundleType()) {
+            return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
         }
         if (isHmService != info.second.GetEntryInstallationFree()) {
             APP_LOGE("application and hm service are not allowed installed simultaneously.");
@@ -1019,6 +1032,13 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
             iter->second.priority = 0;
         }
 #endif
+        if (appPrivilegeCapability.allowMultiProcess) {
+            APP_LOGD("bundleName: %{public}s support allowMultiProcess", iter->second.bundleName.c_str());
+            auto hapModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(iter->second.moduleName);
+            if (hapModuleInfo && !hapModuleInfo->process.empty()) {
+                iter->second.process = hapModuleInfo->process;
+            }
+        }
     }
     // process InnerModuleInfo
     auto &innerModuleInfos = innerBundleInfo.FetchInnerModuleInfos();

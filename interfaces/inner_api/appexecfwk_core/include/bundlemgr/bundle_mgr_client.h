@@ -34,6 +34,7 @@ public:
     BundleMgrClient();
     virtual ~BundleMgrClient();
 
+    ErrCode GetNameForUid(const int uid, std::string &name);
     bool GetBundleNameForUid(const int uid, std::string &bundleName);
     bool GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
         int32_t userId = Constants::UNSPECIFIED_USERID);

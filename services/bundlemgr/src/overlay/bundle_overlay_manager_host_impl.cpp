@@ -126,8 +126,8 @@ ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &ta
         overlayModuleInfos, userId);
 }
 
-ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::string &bundleName, const std::string &moduleName,
-    std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
+ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
+    const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
     if (bundleName.empty()) {
         APP_LOGE("invalid param");

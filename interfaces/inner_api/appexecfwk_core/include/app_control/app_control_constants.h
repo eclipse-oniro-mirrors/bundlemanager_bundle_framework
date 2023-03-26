@@ -22,6 +22,7 @@ namespace AppControlConstants {
 // app control list
 constexpr const char* APP_DISALLOWED_UNINSTALL = "AppDisallowedUninstall";
 constexpr const char* APP_ALLOWED_INSTALL = "AppAllowedInstall";
+constexpr const char* APP_DISALLOWED_INSTALL = "AppDisallowedInstall";
 constexpr const char* APP_DISALLOWED_RUN = "AppDisallowedRun";
 
 constexpr const char* EDM_CALLING = "edm";
