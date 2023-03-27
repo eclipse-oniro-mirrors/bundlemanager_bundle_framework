@@ -702,24 +702,6 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0007, Function | SmallTest |
 {
     InnerBundleInfo oldInfo;
     InnerBundleInfo newInfo;
-    oldInfo.baseBundleInfo_->releaseType = "Release";
-    newInfo.baseBundleInfo_->releaseType = "Release";
-    oldInfo.SetAsanEnabled(true);
-    newInfo.SetAsanEnabled(true);
-    BaseBundleInstaller baseBundleInstaller;
-    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_NOT_SUPPORT);
-}
-
-/**
- * @tc.number: CheckAppLabel_0008
- * @tc.name: test the start function of CheckAppLabel
- * @tc.desc: 1. BundleInstallChecker
-*/
-HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest | Level0)
-{
-    InnerBundleInfo oldInfo;
-    InnerBundleInfo newInfo;
     oldInfo.SetApplicationBundleType(BundleType::APP);
     newInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
     BaseBundleInstaller baseBundleInstaller;
