@@ -47,11 +47,6 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 {
     return false;
 }
-
-bool BundlePermissionMgr::IsNativeTokenType()
-{
-    return false;
-}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
 {
@@ -71,11 +66,21 @@ bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBu
     return true;
 }
 
-bool BundlePermissionMgr::IsNativeTokenType()
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 {
     return true;
 }
 #endif
+
+bool BundlePermissionMgr::IsNativeTokenType()
+{
+    return true;
+}
 
 bool BundlePermissionMgr::Init()
 {
@@ -159,11 +164,17 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessTokenID tokenId,
     return true;
 }
 
+#ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
+bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
+{
+    return false;
+}
+#else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
     return true;
 }
-
+#endif
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
 {
