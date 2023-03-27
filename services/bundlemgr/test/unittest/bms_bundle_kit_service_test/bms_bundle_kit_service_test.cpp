@@ -6311,7 +6311,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_001, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(resultMsg, "");
 }
 
@@ -6331,7 +6330,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_002, Function | SmallTe
     int32_t userId = 100;
     proxy->OnBundleAdded(bundleName, userId);
     EXPECT_EQ(bundleName, "com.example.bundlekit.test");
-    EXPECT_EQ(userId, 100);
 }
 
 /**
@@ -6369,7 +6367,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_004, Function | SmallTe
     int32_t userId = 100;
     proxy->OnBundleRemoved(bundleName, userId);
     EXPECT_EQ(bundleName, "com.example.bundlekit.test");
-    EXPECT_EQ(userId, 100);
 }
 
 /**
@@ -6406,8 +6403,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_006, Function | SmallTe
     int32_t installType = 0;
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
-    EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
 }
 
@@ -6450,7 +6445,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_008, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = "";
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, "");
 }
@@ -6472,7 +6466,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_009, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, "");
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
 }
@@ -7208,10 +7201,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of CheckAppInstallControl_0100");
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ErrCode ret = GetBundleDataMgr()->CheckAppInstallControl("", 0);
-    EXPECT_EQ(ret, 1);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
+    InnerBundleInfo info;
+    bool ret = info.CheckAppInstallControl("", 0);
+    EXPECT_TRUE(ret);
     APP_LOGI("CheckAppInstallControl_0100 finish");
 }
 

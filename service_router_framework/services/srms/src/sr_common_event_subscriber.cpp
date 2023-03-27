@@ -61,9 +61,8 @@ void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         eventHandler_->PostTask(task);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED ||
         action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED) {
-        int32_t userId = want.GetIntParam("userId", Constants::DEFAULT_USERID);
-        auto task = [weakThis, bundleName, userId]() {
-            APP_LOGI("bundle changed, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+        auto task = [weakThis, bundleName]() {
+            APP_LOGI("bundle changed, bundleName: %{public}s", bundleName.c_str());
             std::shared_ptr<SrCommonEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {
                 ServiceRouterDataMgr::GetInstance().LoadBundleInfo(bundleName);
@@ -71,9 +70,8 @@ void SrCommonEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &ev
         };
         eventHandler_->PostTask(task);
     } else if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
-        int32_t userId = want.GetIntParam("userId", Constants::DEFAULT_USERID);
-        auto task = [weakThis, bundleName, userId]() {
-            APP_LOGI("bundle remove, bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+        auto task = [weakThis, bundleName]() {
+            APP_LOGI("bundle remove, bundleName: %{public}s", bundleName.c_str());
             std::shared_ptr<SrCommonEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {
                 ServiceRouterDataMgr::GetInstance().DeleteBundleInfo(bundleName);

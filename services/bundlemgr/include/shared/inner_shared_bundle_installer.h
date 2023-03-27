@@ -87,6 +87,8 @@ private:
     ErrCode SavePreInstallInfo(const InstallParam &installParam);
     ErrCode SaveBundleInfoToStorage();
     void GetInstallEventInfo(EventInfo &eventInfo) const;
+    void AddAppProvisionInfo(const std::string &bundleName,
+        const Security::Verify::ProvisionInfo &provisionInfo) const;
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;

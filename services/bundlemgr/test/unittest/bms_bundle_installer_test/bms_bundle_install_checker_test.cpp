@@ -1082,23 +1082,4 @@ HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0003, Function |
     appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
     EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
 }
-
-/**
- * @tc.number: AddAppProvisionInfo_0001
- * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
- * @tc.desc: 1. BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallCheckerTest, AddAppProvisionInfo_0001, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller baseBundleInstaller;
-    Security::Verify::ProvisionInfo appProvisionInfo;
-    auto ret = baseBundleInstaller.AddAppProvisionInfo("", appProvisionInfo);
-    EXPECT_FALSE(ret);
-
-    ret = baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
-    EXPECT_TRUE(ret);
-
-    ret = baseBundleInstaller.DeleteAppProvisionInfo(BUNDLE_NAME);
-    EXPECT_TRUE(ret);
-}
 } // OHOS

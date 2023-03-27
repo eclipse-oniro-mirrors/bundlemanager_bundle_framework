@@ -18,8 +18,6 @@ module_output_path = "bundle_framework/bundlemgrsst"
 ohos_systemtest("BmsCompatibleSystemTest") {
   module_out_path = module_output_path
 
-  configs = [ "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config" ]
-
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -36,7 +34,6 @@ ohos_systemtest("BmsCompatibleSystemTest") {
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:libbms",
     "${services_path}/test/moduletest/utils:tool_common",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler",
     "//third_party/googletest:gtest_main",
   ]
   sources = [ "bms_compatible_system_test.cpp" ]

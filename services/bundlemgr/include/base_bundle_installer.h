@@ -481,8 +481,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
-    ErrCode InstallAppControl(
-        const std::vector<std::string> &installAppIds, int32_t userId);
+    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId);
 
 private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
@@ -567,9 +566,8 @@ private:
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
-    bool AddAppProvisionInfo(const std::string &bundleName,
+    void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
-    bool DeleteAppProvisionInfo(const std::string &bundleName) const;
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
 
