@@ -1759,22 +1759,24 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
             ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
             if (result != ERR_OK) {
                 APP_LOGE("IsExistDir failed, error is %{public}d", result);
-                return;
+                continue;
             }
             if (!isExist) {
-                APP_LOGD("baseDir: %{private}s is not exist", baseDataDir.c_str());
+                // Update only accessible directories when OTA,
+                // and other directories need to be set after the device is unlocked.
+                // Can see UserUnLockedEventSubscriber::UpdateAppDataDirSelinuxLabel
                 continue;
             }
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);
             if (result != ERR_OK) {
-                APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
-                return;
+                APP_LOGW("bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
+                    bundleName.c_str(), result);
             }
             std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + bundleName;
             result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, true);
             if (result != ERR_OK) {
-                APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
-                return;
+                APP_LOGW("bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
+                    bundleName.c_str(), result);
             }
         }
     }
