@@ -44,10 +44,7 @@ ohos_unittest("BmsBundleHspTest") {
 
   sources += [ "bms_bundle_hsp_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -157,10 +154,7 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
 
   sources += [ "bms_bundle_shared_library_install_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -272,10 +266,7 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
 
   sources += [ "bms_bundle_shared_library_uninstall_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]

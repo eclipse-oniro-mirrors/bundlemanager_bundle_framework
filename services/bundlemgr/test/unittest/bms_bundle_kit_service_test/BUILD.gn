@@ -44,7 +44,6 @@ ohos_unittest("BmsBundleKitServiceTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
@@ -158,7 +157,6 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {

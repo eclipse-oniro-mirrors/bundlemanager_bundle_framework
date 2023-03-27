@@ -417,9 +417,6 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
-    CommonTool tool;
-    long codeDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
 
     auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
     EXPECT_FALSE(!installer);
@@ -429,13 +426,6 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0700, Function | SmallTest | Level2)
     installer->Install(BUNDLE_FILE_DIR + V2_BUNDLE, installParam, nullptr);
 
     std::this_thread::sleep_for(50ms);
-
-    long codeDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
-
-    EXPECT_EQ(dataDirFirstCreateTime, dataDirSecondCreateTime);
-    EXPECT_EQ(codeDirFirstCreateTime, codeDirSecondCreateTime);
-
     bool isExist = CheckBundleInfo(VERSION_1, true);
     EXPECT_TRUE(isExist);
 

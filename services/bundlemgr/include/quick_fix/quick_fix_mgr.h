@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,31 +26,19 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class QuickFixMgr : public EventHandler {
+class QuickFixMgr {
 public:
-    explicit QuickFixMgr(const std::shared_ptr<EventRunner> &runner);
-    virtual ~QuickFixMgr() override;
+    QuickFixMgr();
+    ~QuickFixMgr();
 
-    virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
     ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
         const sptr<IQuickFixStatusCallback> &statusCallback);
     ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
         const sptr<IQuickFixStatusCallback> &statusCallback);
     ErrCode DeleteQuickFix(const std::string &bundleName,
         const sptr<IQuickFixStatusCallback> &statusCallback);
-
-    enum MessageId : uint32_t {
-        REMOVE_QUICK_FIXER = 1,
-    };
-
 private:
     std::shared_ptr<QuickFixer> CreateQuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback);
-    void RemoveQuickFixer(const int64_t fixerId);
-
-    std::mutex mutex_;
-    // map key will use timestamp.
-    std::unordered_map<int64_t, std::shared_ptr<QuickFixer>> quickFixer_;
-
     DISALLOW_COPY_AND_MOVE(QuickFixMgr);
 };
 }  // namespace AppExecFwk

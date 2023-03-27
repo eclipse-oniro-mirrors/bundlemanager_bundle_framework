@@ -1127,7 +1127,10 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
         APP_LOGE("DataMgr is nullptr");
         return;
     }
-
+    std::unordered_set<std::string> allBundleNames;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
+        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
+    }
     for (const auto &scanPath : scanPathList) {
         bool removable = IsPreInstallRemovable(scanPath);
         std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -1158,6 +1161,9 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
 
         if (oldBundleInfo.GetVersionCode() >= versionCode) {
             APP_LOGD("the installed version is up-to-date");
+            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
+                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
+            }
             continue;
         }
 
@@ -1686,7 +1692,7 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
     // parse profile info
     Security::Verify::HapVerifyResult hapVerifyResult;
-    auto ret = BundleVerifyMgr::HapVerify(filePath, hapVerifyResult);
+    auto ret = BundleVerifyMgr::ParseHapProfile(filePath, hapVerifyResult);
     if (ret != ERR_OK) {
         APP_LOGE("BundleVerifyMgr::HapVerify failed, bundleName: %{public}s, errCode: %{public}d",
             bundleName.c_str(), ret);

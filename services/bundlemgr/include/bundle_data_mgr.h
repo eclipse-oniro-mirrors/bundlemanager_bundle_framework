@@ -525,16 +525,6 @@ public:
      */
     bool GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos) const;
     /**
-     * @brief Update bundle usage record on module removed.
-     * @param keepUsage Indicates the flag record is remove on module removed.
-     * @param userId Indicates the user Id of the application.
-     * @param bundleName Indicates the bundle name of the application.
-     * @param moduleName Indicates the module name of the  application.
-     * @return Returns true if this function is successfully called; returns false otherwise.
-     */
-    bool UpdateUsageRecordOnModuleRemoved(
-        bool keepUsage, const int userId, const std::string &bundleName, const std::string &moduleName) const;
-    /**
      * @brief Obtains the PreInstallBundleInfo objects provided by bundleName.
      * @param bundleName Indicates the bundle name of the application.
      * @param preInstallBundleInfo Indicates information about the PreInstallBundleInfo.
@@ -916,7 +906,6 @@ private:
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
-    bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
     void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;

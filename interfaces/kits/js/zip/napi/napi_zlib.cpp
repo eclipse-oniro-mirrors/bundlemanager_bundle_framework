@@ -516,7 +516,7 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
 
     std::shared_ptr<ZlibCallbackInfo>* cbInfo =
         new std::shared_ptr<ZlibCallbackInfo>(asyncZipCallbackInfo->zlibCallbackInfo);
-    napi_wrap(env, thisArg, (void*)cbInfo, [](napi_env env, void* data, void* hint) {
+    napi_wrap(env, thisArg, reinterpret_cast<void*>(cbInfo), [](napi_env env, void* data, void* hint) {
         std::shared_ptr<ZlibCallbackInfo>* cbInfo = static_cast<std::shared_ptr<ZlibCallbackInfo>*>(data);
         if (cbInfo != nullptr && *cbInfo != nullptr) {
             (*cbInfo)->SetValid(false);

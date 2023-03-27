@@ -795,10 +795,12 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0600, Function | SmallTest 
     std::string moduleName = (moduleInfos.begin()->second).moduleName;
     overlayDataMgr.BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
     overlayDataMgr.BuildExternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    EXPECT_EQ(oldInfo.FetchInnerModuleInfos().empty(), true);
     
     oldInfo.SetOverlayState(OverlayType::OVERLAY_INTERNAL_BUNDLE);
     overlayDataMgr.BuildInternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
     overlayDataMgr.BuildExternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    EXPECT_EQ(oldInfo.FetchInnerModuleInfos().empty(), true);
 }
 
 /**
@@ -1815,6 +1817,76 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0800, Function | Smal
     ErrCode res = overlayManagerHostImpl.GetOverlayBundleInfoForTarget(TEST_BUNDLE_NAME,
         overlayBundleInfo, Constants::INVALID_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct OverlayManagerProxy instance.
+ *           2.calling SetOverlayEnabled interface by using OverlayManagerProxy instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_0900, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo("", overlayModuleInfos,
+        USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.GetTargetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfos,
+        Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabled interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct GetOverlayModuleInfoByBundleName instance.
+ *           2.calling SetOverlayEnabled interface by using GetOverlayModuleInfoByBundleName instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1000, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName("", TEST_MODULE_NAME,
+        overlayModuleInfos, USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, "",
+        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+
+    errCode = overlayManagerHostImpl.GetOverlayModuleInfoByBundleName(TEST_BUNDLE_NAME, TEST_MODULE_NAME,
+        overlayModuleInfos, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
+}
+
+/**
+ * @tc.number: OverlayIpcTest_2000
+ * @tc.name: test SetOverlayEnabledForSelf interface in OverlayManagerProxy.
+ * @tc.desc: 1.construct SetOverlayEnabledForSelf instance.
+ *           2.calling SetOverlayEnabled interface by using SetOverlayEnabledForSelf instance.
+ *           3.bundleName is empty and set failed
+ * @tc.require: issueI6F3H9
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, GetOverlayModuleInfo_1100, Function | SmallTest | Level0)
+{
+    OverlayManagerHostImpl overlayManagerHostImpl;
+
+    bool isEnabled = false;
+    auto errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf("",
+        isEnabled, USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
+
+    errCode = overlayManagerHostImpl.SetOverlayEnabledForSelf(TEST_MODULE_NAME,
+        isEnabled, Constants::UNSPECIFIED_USERID);
+    EXPECT_EQ(errCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 
 /**

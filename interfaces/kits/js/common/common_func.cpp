@@ -62,6 +62,8 @@ constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
 constexpr const char* REQUIRED_READ_PERMISSION = "requiredReadPermission";
 constexpr const char* REQUIRED_WRITE_PERMISSION = "requiredWritePermission";
+constexpr const char* DEBUG = "debug";
+
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
     { ERR_BUNDLE_MANAGER_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
@@ -990,6 +992,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nBundleType;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(appInfo.bundleType), &nBundleType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "bundleType", nBundleType));
+
+    napi_value nDebug;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.debug, &nDebug));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, DEBUG, nDebug));
 
     napi_value nDescription;
     NAPI_CALL_RETURN_VOID(

@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -22,6 +24,7 @@
 
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
+#include "base_bundle_installer.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
@@ -395,6 +398,41 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0010, Functio
     EXPECT_EQ(appProvisionInfo.validity.notBefore, newProvisionInfo.validity.notBefore);
     EXPECT_EQ(appProvisionInfo.validity.notAfter, newProvisionInfo.validity.notAfter);
 
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddAppProvisionInfo_0001
+ * @tc.name: test the start function of AddAppProvisionInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::ProvisionInfo appProvisionInfo;
+    std::string bundleName = "";
+    baseBundleInstaller.AddAppProvisionInfo(bundleName, appProvisionInfo);
+    AppProvisionInfo newProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName,
+        newProvisionInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddAppProvisionInfo_0002
+ * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0002, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::ProvisionInfo appProvisionInfo;
+    baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
+    AppProvisionInfo newProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+        newProvisionInfo);
+    EXPECT_TRUE(ret);
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
 }

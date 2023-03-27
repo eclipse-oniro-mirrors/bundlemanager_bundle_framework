@@ -48,11 +48,6 @@ ErrCode SharedBundleInstaller::ParseFiles()
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);
-        if (installer == nullptr) {
-            APP_LOGE("create InnerSharedBundleInstaller for %{public}s failed", path.c_str());
-            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-        }
-
         result = installer->ParseFiles(checkParam);
         CHECK_RESULT(result, "parse file failed %{public}d");
 

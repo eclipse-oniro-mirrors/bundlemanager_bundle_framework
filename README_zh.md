@@ -74,6 +74,8 @@ bm help
 | bm install -r -p <file-path> | 覆盖安装一个应用 |
 | bm install -r -p <file-path> -u <user-id> | 给指定用户覆盖安装一个应用 |
 | bm install -r -p <file-path> -u <user-id> -w <waitting-time> | 安装时指定bm工具等待时间，最小的等待时长为180s，最大的等待时长为600s, 默认缺省为5s |
+| bm install -s <hsp-dir-path> | 安装应用间共享库 |
+| bm install -p <file-path> -s <hsp-dir-path> | 同时安装使用方应用和其依赖的应用间共享库 |
 
 * 示例
 ```Bash
@@ -81,6 +83,12 @@ bm help
 bm install -p /data/app/ohosapp.hap
 # 覆盖安装一个hap
 bm install -p /data/app/ohosapp.hap -r
+# 安装一个应用间共享库
+bm install -s xxx.hsp
+# 同时安装多个应用间共享库
+bm install -s xxx.hsp yyy.hsp
+# 同时安装使用方应用和其依赖的应用间共享库
+bm install -p aaa.hap -s xxx.hsp yyy.hsp
 ```
 #### 卸载命令
 命令可以组合，下面列出部分命令。-u未指定情况下，默认为所有用户。
@@ -90,6 +98,8 @@ bm install -p /data/app/ohosapp.hap -r
 | bm uninstall -n <bundle-name> | 通过指定包名卸载应用 |
 | bm uninstall -n <bundle-name> -u <user-id>| 通过指定包名和用户卸载应用 |
 | bm uninstall -n <bundle-name> -m <moudle-name> | 通过指定包名卸载应用的一个模块 |
+| bm uninstall -s <hsp-dir-path> -n <bundle-name> | 卸载指定的shared bundle |
+| bm uninstall -s  <hsp-dir-path> -n <bundle-name> -v <version-code> | 卸载指定的shared bundle的指定版本 |
 
 * 示例
 ```Bash
@@ -97,6 +107,10 @@ bm install -p /data/app/ohosapp.hap -r
 bm uninstall -n com.ohos.app
 # 卸载应用的一个模块
 bm uninstall -n com.ohos.app -m com.ohos.app.MainAbility
+# 卸载一个shared bundle
+bm uninstall -s -n com.ohos.example
+# 卸载一个shared bundle的指定版本
+bm uninstall -s -n com.ohos.example -v 100001
 ```
 #### 查询命令
 命令可以组合，下面列出部分命令。-u未指定情况下，默认为所有用户。
@@ -108,6 +122,11 @@ bm uninstall -n com.ohos.app -m com.ohos.app.MainAbility
 | bm dump -n <bundle-name> -s | 查询指定包名下的快捷方式信息 |
 | bm dump -n <bundle-name> -d <device-id> | 跨设备查询包信息 |
 | bm dump -n <bundle-name> -u <user-id> | 查询指定用户下指定包名的详细信息 |
+| bm dump-shared -h | 显示dump-shared支持的命令信息 |
+| bm dump-shared -a | 查询系统中已安装所有共享库 |
+| bm dump-shared -n  <bundle-name> | 查询指定共享库包名的详细信息 |
+| bm dump-dependencies -h | 显示bm dump-dependencies支持的命令信息 |
+| bm dump-dependencies -n <bundle-name> -m <moudle-name> | 查询指定应用指定模块依赖的共享库信息 |
 
 * 示例
 ```Bash
@@ -115,6 +134,12 @@ bm uninstall -n com.ohos.app -m com.ohos.app.MainAbility
 bm dump -a
 # 显示该应用的详细信息
 bm dump -n com.ohos.app
+# 显示所有已安装共享库包名
+bm dump-shared -a
+# 显示该共享库的详细信息
+bm dump-shared -n com.ohos.lib
+# 显示指定应用指定模块依赖的共享库信息
+bm dump-dependencies -n com.ohos.app -m entry
 ```
 #### 清理命令
 -u未指定情况下，默认为当前活跃用户。
