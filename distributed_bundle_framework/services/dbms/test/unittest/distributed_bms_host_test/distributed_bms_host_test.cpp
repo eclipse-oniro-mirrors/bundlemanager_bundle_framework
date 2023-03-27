@@ -633,6 +633,70 @@ HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleInfo_0400, Function |
 }
 
 /**
+ * @tc.number: HandleGetDistributedBundleName_0100
+ * @tc.name: Test HandleGetDistributedBundleName
+ * @tc.desc: Verify the HandleGetDistributedBundleName return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleName_0100, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string networkId = "networkId";
+    uint32_t accessTokenId = 0;
+    data.WriteString(networkId);
+    data.WriteUint32(accessTokenId);
+    int32_t res = host.HandleGetDistributedBundleName(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleName_0200
+ * @tc.name: Test HandleGetDistributedBundleName
+ * @tc.desc: Verify the HandleGetDistributedBundleName return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleName_0200, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    std::string networkId = "networkId";
+    data.WriteString(networkId);
+    int32_t res = host.HandleGetDistributedBundleName(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleName_0300
+ * @tc.name: Test HandleGetDistributedBundleName
+ * @tc.desc: Verify the HandleGetDistributedBundleName return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleName_0300, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    uint32_t accessTokenId = 0;
+    data.WriteUint32(accessTokenId);
+    int32_t res = host.HandleGetDistributedBundleName(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
+ * @tc.number: HandleGetDistributedBundleName_0400
+ * @tc.name: Test HandleGetDistributedBundleName
+ * @tc.desc: Verify the HandleGetDistributedBundleName return NO_ERROR.
+ */
+HWTEST_F(DistributedBmsHostTest, HandleGetDistributedBundleName_0400, Function | MediumTest | Level1)
+{
+    Parcel data;
+    Parcel reply;
+    MockDistributedBmsHost host;
+    int32_t res = host.HandleGetDistributedBundleName(data, reply);
+    EXPECT_EQ(res, NO_ERROR);
+}
+
+/**
  * @tc.number: VerifyCallingPermission_0100
  * @tc.name: Test VerifyCallingPermission
  * @tc.desc: Verify the VerifyCallingPermission return true.

@@ -1443,4 +1443,22 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0074, Function | SmallTest | L
         EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_DEVICE_ID_NOT_EXIST);
     }
 }
+
+
+/**
+ * @tc.number: DbmsServicesKitTest
+ * @tc.name: test GetDistributedBundleName
+ * @tc.desc: 1. get distributed bundle name by networkId and accessTokenId
+ */
+HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0075, Function | SmallTest | Level0)
+{
+    std::string bundleName;
+    EXPECT_NE(distributedBmsProxy, nullptr);
+    if (distributedBmsProxy != nullptr) {
+        DistributedBundleInfo distributedBundleInfo;
+        int32_t ret = distributedBmsProxy->GetDistributedBundleName("", 0, bundleName);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    }
+}
+
 } // OHOS
