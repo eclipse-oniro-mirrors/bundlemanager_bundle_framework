@@ -182,7 +182,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &el : Constants::BUNDLE_EL) {
-        if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_EL2) &&
+        if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
             (el == Constants::BUNDLE_EL[0])) {
             continue;
         }

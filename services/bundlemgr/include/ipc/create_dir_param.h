@@ -22,9 +22,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 enum class CreateDirFlag {
-    CREATE_ALL = 0,
-    CREATE_EL1 = 1, // support create when device locked and unlocked
-    CREATE_EL2 = 2 // only support create when device unlocked
+    // Create all data directories regardless of whether the device is unlocked.
+    // Inaccessible directories will fail to be created and errors will be ignored.
+    CREATE_DIR_ALL = 0,
+    // Only create directories that are inaccessible without unlocking.
+    CREATE_DIR_UNLOCKED = 1
 };
 
 struct CreateDirParam : public Parcelable {
@@ -34,7 +36,7 @@ struct CreateDirParam : public Parcelable {
     int32_t gid;
     std::string apl;
     bool isPreInstallApp = false;
-    CreateDirFlag createDirFlag = CreateDirFlag::CREATE_ALL;
+    CreateDirFlag createDirFlag = CreateDirFlag::CREATE_DIR_ALL;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

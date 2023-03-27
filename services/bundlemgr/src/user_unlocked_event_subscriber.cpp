@@ -25,25 +25,25 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-UserUnLockedEventSubscriber::UserUnLockedEventSubscriber(
+UserUnlockedEventSubscriber::UserUnlockedEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo) : EventFwk::CommonEventSubscriber(subscribeInfo)
 {}
 
-UserUnLockedEventSubscriber::~UserUnLockedEventSubscriber()
+UserUnlockedEventSubscriber::~UserUnlockedEventSubscriber()
 {}
 
-void UserUnLockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
+void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     std::string action = data.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
-        APP_LOGI("UserUnLockedEventSubscriber userId %{public}d is unlocked", userId);
+        APP_LOGD("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
         std::thread updateDataDirThread(UpdateAppDataDirSelinuxLabel, userId);
         updateDataDirThread.detach();
     }
 }
 
-bool UserUnLockedEventSubscriber::JudgeBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
+bool UserUnlockedEventSubscriber::CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
 {
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
         Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleInfo.name;
@@ -61,7 +61,7 @@ bool UserUnLockedEventSubscriber::JudgeBundleDataDir(const BundleInfo &bundleInf
         createDirParam.gid = bundleInfo.gid;
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
-        createDirParam.createDirFlag = CreateDirFlag::CREATE_EL2;
+        createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGE("failed to CreateBundleDataDir");
             return false;
@@ -70,9 +70,9 @@ bool UserUnLockedEventSubscriber::JudgeBundleDataDir(const BundleInfo &bundleInf
     return true;
 }
 
-void UserUnLockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
+void UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
-    APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
+    APP_LOGD("UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("UpdateAppDataDirSelinuxLabel DataMgr is nullptr");
@@ -87,7 +87,7 @@ void UserUnLockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
         Constants::PATH_SEPARATOR + std::to_string(userId);
 
     for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.singleton || !JudgeBundleDataDir(bundleInfo, userId)) {
+        if (bundleInfo.singleton || !CreateBundleDataDir(bundleInfo, userId)) {
             continue;
         }
         std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;

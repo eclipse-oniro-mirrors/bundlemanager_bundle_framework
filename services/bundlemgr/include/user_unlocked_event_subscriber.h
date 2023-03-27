@@ -22,14 +22,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class UserUnLockedEventSubscriber final : public EventFwk::CommonEventSubscriber {
+class UserUnlockedEventSubscriber final : public EventFwk::CommonEventSubscriber {
 public:
-    explicit UserUnLockedEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
-    virtual ~UserUnLockedEventSubscriber();
+    explicit UserUnlockedEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
+    virtual ~UserUnlockedEventSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
 
 private:
-    static bool JudgeBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
+    static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
     static void UpdateAppDataDirSelinuxLabel(int32_t userId);
 };
 }  // namespace AppExecFwk

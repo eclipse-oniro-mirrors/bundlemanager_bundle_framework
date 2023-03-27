@@ -1711,7 +1711,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
-    auto subscriberPtr = std::make_shared<UserUnLockedEventSubscriber>(subscribeInfo);
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
         APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
@@ -1764,7 +1764,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
             if (!isExist) {
                 // Update only accessible directories when OTA,
                 // and other directories need to be set after the device is unlocked.
-                // Can see UserUnLockedEventSubscriber::UpdateAppDataDirSelinuxLabel
+                // Can see UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel
                 continue;
             }
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);
