@@ -30,6 +30,10 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_scanner.h"
 #include "bundle_util.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
+#include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
 #endif
@@ -42,6 +46,8 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_boot_scanner.h"
 #endif
+#include "want.h"
+#include "user_unlocked_event_subscriber.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -230,6 +236,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
+    ListeningUserUnlocked();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();
@@ -1693,6 +1700,24 @@ bool BMSEventHandler::FetchInnerBundleInfo(
     return dataMgr->FetchInnerBundleInfo(bundleName, innerBundleInfo);
 }
 
+void BMSEventHandler::ListeningUserUnlocked() const
+{
+    APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
+    AAFwk::Want commonDataWant;
+    commonDataWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    EventFwk::CommonEventData commonEventData(commonDataWant);
+
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
+        APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
+            EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
+    }
+}
+
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
 {
     APP_LOGD("AddStockAppProvisionInfoByOTA bundleName: %{public}s", bundleName.c_str());
@@ -1734,22 +1759,24 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
             ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
             if (result != ERR_OK) {
                 APP_LOGE("IsExistDir failed, error is %{public}d", result);
-                return;
+                continue;
             }
             if (!isExist) {
-                APP_LOGD("baseDir: %{private}s is not exist", baseDataDir.c_str());
+                // Update only accessible directories when OTA,
+                // and other directories need to be set after the device is unlocked.
+                // Can see UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel
                 continue;
             }
             result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);
             if (result != ERR_OK) {
-                APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
-                return;
+                APP_LOGW("bundleName: %{public}s, fail to SetDirApl baseDataDir dir, error is %{public}d",
+                    bundleName.c_str(), result);
             }
             std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + bundleName;
             result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, true);
             if (result != ERR_OK) {
-                APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
-                return;
+                APP_LOGW("bundleName: %{public}s, fail to SetDirApl databaseDir dir, error is %{public}d",
+                    bundleName.c_str(), result);
             }
         }
     }
