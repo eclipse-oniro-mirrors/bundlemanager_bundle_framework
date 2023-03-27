@@ -1452,6 +1452,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0074, Function | SmallTest | L
  */
 HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0075, Function | SmallTest | Level0)
 {
+    auto distributedBmsProxy = GetDistributedBmsProxy();
     std::string bundleName;
     EXPECT_NE(distributedBmsProxy, nullptr);
     if (distributedBmsProxy != nullptr) {
