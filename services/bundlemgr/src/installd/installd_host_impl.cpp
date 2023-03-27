@@ -183,7 +183,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     }
     for (const auto &el : Constants::BUNDLE_EL) {
         if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_EL2) &&
-            (el == Constants::Bundle_EL[0])) {
+            (el == Constants::BUNDLE_EL[0])) {
             continue;
         }
 

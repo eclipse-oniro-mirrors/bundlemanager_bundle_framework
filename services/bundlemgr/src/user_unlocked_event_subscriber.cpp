@@ -72,22 +72,22 @@ bool UserUnLockedEventSubscriber::JudgeBundleDataDir(const BundleInfo &bundleInf
 
 void UserUnLockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
-    APP_LOGI("wtt UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
+    APP_LOGI("UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
-        APP_LOGE("wtt UpdateAppDataDirSelinuxLabel DataMgr is nullptr");
+        APP_LOGE("UpdateAppDataDirSelinuxLabel DataMgr is nullptr");
         return;
     }
     std::vector<BundleInfo> bundleInfos;
     if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
-        APP_LOGE("wtt UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
+        APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
     std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
         Constants::PATH_SEPARATOR + std::to_string(userId);
 
     for (const auto &bundleInfo : bundleInfos) {
-        if (!JudgeBundleDataDir(bundleInfo, userId)) {
+        if (bundleInfo.singleton || !JudgeBundleDataDir(bundleInfo, userId)) {
             continue;
         }
         std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;

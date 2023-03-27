@@ -1702,7 +1702,7 @@ bool BMSEventHandler::FetchInnerBundleInfo(
 
 void BMSEventHandler::ListeningUserUnlocked() const
 {
-    APP_LOGI("wtt BMSEventHandler listen the unlock of someone user start.");
+    APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
     AAFwk::Want commonDataWant;
     commonDataWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     EventFwk::CommonEventData commonEventData(commonDataWant);
@@ -1716,7 +1716,6 @@ void BMSEventHandler::ListeningUserUnlocked() const
         APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
     }
-    APP_LOGI("wtt BMSEventHandler listen the unlock of someone user end.");
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
