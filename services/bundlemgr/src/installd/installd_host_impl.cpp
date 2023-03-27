@@ -226,7 +226,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for distributedfile");
-        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
     distributedfile = Constants::DISTRIBUTED_FILE_NON_ACCOUNT;
@@ -234,7 +233,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for non account distributedfile");
-        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
 
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid);
