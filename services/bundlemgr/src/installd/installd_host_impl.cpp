@@ -429,8 +429,14 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     if (!apl.empty()) {
         aplLevel = apl;
     }
+    HapFileInfo hapFileInfo;
+    hapFileInfo.pathNameOrig.push_back(dir);
+    hapFileInfo.apl = aplLevel;
+    hapFileInfo.packageName = bundleName;
+    hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
+    hapFileInfo.hapFlags = isPreInstallApp ? 1 : 0;
     HapContext hapContext;
-    int ret = hapContext.HapFileRestorecon(dir, aplLevel, bundleName, SELINUX_HAP_RESTORECON_RECURSE);
+    int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
         APP_LOGE("HapFileRestorecon path: %{private}s failed, ret:%{public}d", dir.c_str(), ret);
     }

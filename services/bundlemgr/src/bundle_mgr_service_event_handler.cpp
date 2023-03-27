@@ -1050,6 +1050,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         std::vector<std::string> filePaths;
+        bool updateSelinuxLabel = false;
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
             if (parserModuleNames.empty()) {
@@ -1086,6 +1087,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             // The versionCode of Hap is equal to the installed versionCode.
             // You can only install new modules by OTA
             if (hasInstalledInfo.versionCode == hapVersionCode) {
+                // update pre install app data dir selinux label
+                if (!updateSelinuxLabel) {
+                    UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel);
+                    updateSelinuxLabel = true;
+                }
                 if (hasModuleInstalled) {
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
@@ -1706,6 +1712,48 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(bundleName, appProvisionInfo)) {
         APP_LOGE("AddAppProvisionInfo failed, bundleName:%{public}s", bundleName.c_str());
     }
+}
+
+void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl)
+{
+    APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s start.", bundleName.c_str());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        for (const auto &el : Constants::BUNDLE_EL) {
+            std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR +
+                                            el +
+                                            Constants::PATH_SEPARATOR +
+                                            std::to_string(userId);
+            std::string baseDataDir = baseBundleDataDir + Constants::BASE + bundleName;
+            bool isExist = true;
+            ErrCode result = InstalldClient::GetInstance()->IsExistDir(baseDataDir, isExist);
+            if (result != ERR_OK) {
+                APP_LOGE("IsExistDir failed, error is %{public}d", result);
+                return;
+            }
+            if (!isExist) {
+                APP_LOGD("baseDir: %{private}s is not exist", baseDataDir.c_str());
+                continue;
+            }
+            result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);
+            if (result != ERR_OK) {
+                APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
+                return;
+            }
+            std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + bundleName;
+            result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, true);
+            if (result != ERR_OK) {
+                APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
+                return;
+            }
+        }
+    }
+    APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s end.", bundleName.c_str());
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

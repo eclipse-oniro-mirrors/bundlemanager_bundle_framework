@@ -1727,13 +1727,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ret;
     }
 
-    if (noUpdateInfo.GetAppPrivilegeLevel() != oldInfo.GetAppPrivilegeLevel()) {
-        ret = SetDirApl(oldInfo);
-        if (ret != ERR_OK) {
-            APP_LOGE("SetDirApl failed");
-            return ret;
-        }
+    ret = SetDirApl(oldInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDirApl failed");
+        return ret;
     }
+
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
 }

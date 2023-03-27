@@ -458,6 +458,7 @@ private:
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
