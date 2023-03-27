@@ -40,10 +40,7 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   sources += [ "bms_bundle_installer_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -90,6 +87,17 @@ ohos_unittest("BmsBundleInstallerTest") {
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
+  }
+
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
   }
 
   if (build_selinux) {
@@ -171,10 +179,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   sources += [ "bms_multiple_installer_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -312,10 +317,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   sources += [ "bms_bundle_installer_ipc_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -412,10 +414,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 
   sources += [ "bms_bundle_install_checker_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -501,7 +500,6 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "../../mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -519,10 +517,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 
   sources += [ "bms_bundle_install_device_type_test.cpp" ]
 
-  configs = [
-    "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
-  ]
+  configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
@@ -538,6 +533,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
@@ -607,7 +603,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   include_dirs = [
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/test/mock/include/parameter",
-    "//base/startup/init/interfaces/innerkits/include",
   ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
@@ -643,6 +638,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",

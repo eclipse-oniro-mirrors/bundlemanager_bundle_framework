@@ -281,9 +281,10 @@ private:
     /**
      * @brief Install system shared bundle.
      * @param sharedBundlePath Indicates the path of shared bundle.
+     * @param appType Indicates the bundle type.
      * @return
      */
-    void ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath);
+    void ProcessSystemSharedBundleInstall(const std::string &sharedBundlePath, Constants::AppType appType);
     /**
      * @brief start reboot scan.
      * @return
@@ -322,6 +323,13 @@ private:
      */
     void InnerProcessRebootBundleInstall(
         const std::list<std::string> &bundleList, Constants::AppType appType);
+    /**
+     * @brief Process reboot install shared bundles by bundleList.
+     * @param bundleList Indicates store bundle list.
+     * @param appType Indicates the bundle type.
+     * @return
+     */
+    void InnerProcessRebootSharedBundleInstall(const std::list<std::string> &bundleList, Constants::AppType appType);
     /**
      * @brief Reboot uninstall system and system vendor bundles.
      * @return
@@ -373,10 +381,21 @@ private:
      * @brief OTA Install system app and system vendor bundles.
      * @param filePaths Indicates the filePaths.
      * @param appType Indicates the bundle type.
-     * @param removable Indicates the bundle type.
+     * @param removable Indicates whether it can be removed.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
     bool OTAInstallSystemBundle(
+        const std::vector<std::string> &filePaths,
+        Constants::AppType appType,
+        bool removable);
+    /**
+     * @brief OTA Install system app and system vendor shared bundles.
+     * @param filePaths Indicates the filePaths.
+     * @param appType Indicates the bundle type.
+     * @param removable Indicates whether it can be removed.
+     * @return Returns true if this function called successfully; returns false otherwise.
+     */
+    bool OTAInstallSystemSharedBundle(
         const std::vector<std::string> &filePaths,
         Constants::AppType appType,
         bool removable);
@@ -439,6 +458,7 @@ private:
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();

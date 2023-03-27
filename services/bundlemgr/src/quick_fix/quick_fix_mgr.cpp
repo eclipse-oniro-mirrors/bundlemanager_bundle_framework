@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,10 +23,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string ADD_QUICK_FIXER_FAILED = "fail to add quick fixer";
-} // namespace
-QuickFixMgr::QuickFixMgr(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
+QuickFixMgr::QuickFixMgr()
 {
     APP_LOGI("create quick fixer async manager instance");
 }
@@ -34,16 +31,6 @@ QuickFixMgr::QuickFixMgr(const std::shared_ptr<EventRunner> &runner) : EventHand
 QuickFixMgr::~QuickFixMgr()
 {
     APP_LOGI("destory quick fixer async manager instance");
-}
-
-void QuickFixMgr::ProcessEvent(const InnerEvent::Pointer &event)
-{
-    APP_LOGD("process event : %{public}u", event->GetInnerEventId());
-    if (event->GetInnerEventId() == REMOVE_QUICK_FIXER) {
-        RemoveQuickFixer(event->GetParam());
-        return;
-    }
-    APP_LOGW("the eventId is not supported");
 }
 
 ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
@@ -105,31 +92,7 @@ ErrCode QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
 
 std::shared_ptr<QuickFixer> QuickFixMgr::CreateQuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback)
 {
-    int64_t quickFixerId = GetMicroTickCount();
-    auto fixer = std::make_shared<QuickFixer>(quickFixerId, shared_from_this(), statusCallback);
-    bool isSuccess = false;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        auto result = quickFixer_.try_emplace(quickFixerId, fixer);
-        isSuccess = result.second;
-    }
-
-    if (!isSuccess) {
-        APP_LOGE("fail to add bundle quickFixer");
-        fixer.reset();
-        return fixer;
-    }
-    APP_LOGD("add the specific %{public}" PRId64 " quickFixer", quickFixerId);
-    return fixer;
-}
-
-void QuickFixMgr::RemoveQuickFixer(const int64_t fixerId)
-{
-    APP_LOGD("start to remove quick fixer the specific %{public}" PRId64 " quickFixer", fixerId);
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (quickFixer_.erase(fixerId) > 0) {
-        APP_LOGD("erase the specific %{public}" PRId64 " quickFixer", fixerId);
-    }
+    return std::make_shared<QuickFixer>(statusCallback);
 }
 } // AppExecFwk
 } // OHOS

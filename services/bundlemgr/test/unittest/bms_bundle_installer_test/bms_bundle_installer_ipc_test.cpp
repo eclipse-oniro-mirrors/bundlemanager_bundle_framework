@@ -28,6 +28,7 @@ namespace {
 constexpr int32_t TEST_INSTALLER_ID = 1024;
 constexpr int32_t DEFAULT_INSTALLER_ID = 0;
 constexpr int32_t TEST_INSTALLER_UID = 100;
+constexpr int32_t INVAILD_ID = -1;
 }; // namespace
 class BmsBundleInstallerIPCTest : public testing::Test {
 public:
@@ -147,5 +148,164 @@ HWTEST_F(BmsBundleInstallerIPCTest, FileStatTest_0300, Function | SmallTest | Le
 
     auto ret = proxy->DestoryBundleStreamInstaller(DEFAULT_INSTALLER_ID);
     EXPECT_TRUE(ret);
+}
+
+
+/**
+ * @tc.number: InstallTest_0100
+ * @tc.name: test Install function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain bundleInstallerProxy
+ *           2. Calling function Install
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, InstallTest_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    auto ret = proxy->Install("", installParam, statusReceiver);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain CreateStream
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateStreamInstaller_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    InstallParam installParam;
+    installParam.userId = TEST_INSTALLER_UID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    sptr<IStatusReceiver> statusReceiver;
+    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver);
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: CreateStream_0200
+ * @tc.name: test CreateStream function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain CreateStream
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateStreamInstaller_0200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    auto ret = proxy->CreateStreamInstaller(installParam, statusReceiver);
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: StreamInstall_0100
+ * @tc.name: test CreateStream function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain CreateStream
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, StreamInstall_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = nullptr;
+    auto ret = proxy->StreamInstall(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream function of BundleInstallerProxy
+ * @tc.desc: 1. Obtain CreateStream
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, StreamInstall_0200, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver;
+    auto ret = proxy->StreamInstall(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: CreateStream_0100
+ * @tc.name: test CreateStream function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateStream_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto id = proxy->CreateStream("");
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateStream_0200
+ * @tc.name: test CreateStream function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateStream_0200, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto id = proxy->CreateStream("hapName");
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0100
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0100, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto id = proxy->CreateSharedBundleStream("", DEFAULT_INSTALLER_ID);
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0200
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0200, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto id = proxy->CreateSharedBundleStream("hspName", DEFAULT_INSTALLER_ID);
+    EXPECT_EQ(id, INVAILD_ID);
 }
 } // OHOS

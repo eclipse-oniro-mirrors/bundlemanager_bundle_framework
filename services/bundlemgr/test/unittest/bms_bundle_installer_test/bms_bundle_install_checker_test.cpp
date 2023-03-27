@@ -607,10 +607,106 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0001, Function | SmallTest |
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_OK);
-    oldInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
-    newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+    oldInfo.SetAppFeature("hos_normal_app");
+    newInfo.SetAppFeature("hos_system_app");
     ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0002
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->releaseType = "release_type";
+    newInfo.baseBundleInfo_->releaseType = "normal_type";
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0003
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppDistributionType("hos_normal_type");
+    newInfo.SetAppDistributionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_DISTRIBUTION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0004
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0004, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAppProvisionType("hos_normal_type");
+    newInfo.SetAppProvisionType("hos_system_type");
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APP_PROVISION_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0005
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0005, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetIsNewVersion(false);
+    newInfo.SetIsNewVersion(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0006
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0006, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetAsanEnabled(false);
+    newInfo.SetAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0007
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0007, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetApplicationBundleType(BundleType::APP);
+    newInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
 }
 
 /**
@@ -967,24 +1063,5 @@ HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0003, Function |
     provisionInfo.distributionType = Security::Verify::AppDistType::CROWDTESTING;
     appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
     EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
-}
-
-/**
- * @tc.number: AddAppProvisionInfo_0001
- * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
- * @tc.desc: 1. BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallCheckerTest, AddAppProvisionInfo_0001, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller baseBundleInstaller;
-    Security::Verify::ProvisionInfo appProvisionInfo;
-    auto ret = baseBundleInstaller.AddAppProvisionInfo("", appProvisionInfo);
-    EXPECT_FALSE(ret);
-
-    ret = baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
-    EXPECT_TRUE(ret);
-
-    ret = baseBundleInstaller.DeleteAppProvisionInfo(BUNDLE_NAME);
-    EXPECT_TRUE(ret);
 }
 } // OHOS

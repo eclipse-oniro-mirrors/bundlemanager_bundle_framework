@@ -1403,7 +1403,7 @@ bool CheckModuleNameIsValid(const std::string &moduleName)
     if (moduleName.empty()) {
         return false;
     }
-    if (moduleName.size() <= 0 || moduleName.size() > Constants::MAX_MODULE_NAME) {
+    if (moduleName.size() > Constants::MAX_MODULE_NAME) {
         return false;
     }
     if (moduleName.find(Constants::RELATIVE_PATH) != std::string::npos) {
@@ -2013,7 +2013,8 @@ bool ToInnerModuleInfo(
     return true;
 }
 
-void SetInstallationFree(InnerModuleInfo &innerModuleInfo, BundleType bundleType) {
+void SetInstallationFree(InnerModuleInfo &innerModuleInfo, BundleType bundleType)
+{
     if (bundleType == BundleType::ATOMIC_SERVICE) {
         innerModuleInfo.distro.installationFree = true;
         innerModuleInfo.installationFree = true;

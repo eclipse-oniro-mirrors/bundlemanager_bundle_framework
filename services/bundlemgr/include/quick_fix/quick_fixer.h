@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,8 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixer {
 public:
-    QuickFixer(const int64_t quickFixerId, const std::shared_ptr<EventHandler> &handler,
-        const sptr<IQuickFixStatusCallback> &statusCallback);
+    QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback);
     ~QuickFixer() = default;
 
     void DeployQuickFix(const std::vector<std::string> &bundleFilePaths);
@@ -34,10 +33,6 @@ public:
     void DeleteQuickFix(const std::string &bundleName);
 
 private:
-    void SendRemoveEvent() const;
-
-    const int64_t quickFixerId_ = 0;
-    const std::weak_ptr<EventHandler> handler_;
     const sptr<IQuickFixStatusCallback> statusCallback_;
 
     DISALLOW_COPY_AND_MOVE(QuickFixer);

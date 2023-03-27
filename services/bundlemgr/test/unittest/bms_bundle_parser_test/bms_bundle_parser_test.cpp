@@ -36,8 +36,27 @@ using namespace OHOS::AppExecFwk::ProfileReader;
 namespace OHOS {
 namespace {
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/parse_bundle/";
+const std::string BUNDLE_NAME1 = "com.ohos.test1";
+const std::string BUNDLE_PERMISSION_NAME1 = "ohos.permission.test1";
+const std::string BUNDLE_PERMISSION_NAME2 = "ohos.permission.test2";
 const std::string NEW_APP = "new";
 const std::string UNKOWN_PATH = "unknown_path";
+const std::string EMPTY_NAME = "";
+const std::string MODULE = "module";
+const std::string NAME = "name";
+const std::string TYPE = "type";
+const std::string NO_EXIST_NAME = "noExist";
+const std::string BUNDLETYPE = "bundleType";
+const std::string BUNDLE_TYPE_APP = "app";
+const std::string PROFILE_KEY_LABEL_ID = "labelId";
+const std::string PROFILE_KEY_LABEL = "label";
+const std::string BUNDLE_MODULE_PROFILE_KEY_DISTRO = "distro";
+const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE = "moduleType";
+const std::string MODULE_TYPE_SHARED = "shared";
+const std::string BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE = "deviceType";
+const std::string BUNDLE_APP_PROFILE_KEY_CODE = "code";
+const std::string BUNDLE_APP_PROFILE_KEY_VERSION = "version";
+const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "installationFree";
 const size_t ONE = 1;
 const size_t TWO = 2;
 const std::string OVER_MAX_PATH_SIZE(260, 'x');
@@ -353,20 +372,28 @@ const nlohmann::json CONFIG_JSON_3 = R"(
 
 const nlohmann::json MODULE_JSON = R"(
     {
-    "app": {
-        "apiReleaseType": "Beta3",
-        "bundleName": "com.example.backuptest",
-        "debug": true,
-        "icon": "$media:app_icon",
-        "iconId": 16777220,
-        "label": "$string:app_name",
-        "labelId": 16777216,
-        "minAPIVersion": 9,
-        "targetAPIVersion": 9,
-        "vendor": "example",
-        "versionCode": 1000000,
-        "versionName": "1.0.0",
-        "deviceConfigs": {
+        "app": {
+            "apiReleaseType": "Beta3",
+            "bundleName": "com.example.backuptest",
+            "debug": true,
+            "icon": "$media:app_icon",
+            "iconId": 16777220,
+            "label": "$string:app_name",
+            "labelId": 16777216,
+            "minAPIVersion": 9,
+            "targetAPIVersion": 9,
+            "vendor": "example",
+            "versionCode": 1000000,
+            "versionName": "1.0.0",
+            "bundleType": "atomicService",
+            "default": {
+                "accessible": false,
+                "keepAlive": false,
+                "minAPIVersion": 9,
+                "removable": false,
+                "singleton": false,
+                "userDataClearable": false
+            },
             "car": {
                 "accessible": false,
                 "keepAlive": false,
@@ -430,145 +457,149 @@ const nlohmann::json MODULE_JSON = R"(
                 "removable": false,
                 "singleton": false,
                 "userDataClearable": false
-            },
+            }
+        },
+        "deviceConfig": {
             "default": {
-                "accessible": false,
-                "keepAlive": false,
+                "keepAlive":true,
                 "minAPIVersion": 9,
                 "removable": false,
                 "singleton": false,
-                "userDataClearable": false
+                "userDataClearable": false,
+                "accessible": false
+            }
+        },
+        "module": {
+            "abilities": [
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home",
+                                "flag.home.intent.from.system"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.thirdparty.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                },
+                {
+                    "description": "$string:MainAbility_desc",
+                    "descriptionId": 16777217,
+                    "icon": "$media:icon",
+                    "iconId": 16777221,
+                    "label": "$string:MainAbility_label",
+                    "labelId": 16777218,
+                    "name": "MainAbility",
+                    "launchType": "unknowlaunchType",
+                    "orientation": "unknoworientation",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.thirdparty.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "./ets/MainAbility/MainAbility.ts",
+                    "visible": true
+                }
+            ],
+            "deliveryWithInstall": true,
+            "description": "$string:entry_desc",
+            "descriptionId": 16777219,
+            "deviceTypes": [
+                "unknowtype"
+            ],
+            "extensionAbilities": [
+                {
+                    "name": "extensionAbility_A",
+                    "skills": [
+                        {
+                            "actions": [
+                                "action.system.home"
+                            ],
+                            "entities": [
+                                "entity.system.home"
+                            ]
+                        }
+                    ],
+                    "srcEntrance": "",
+                    "type": "backup"
+                }
+            ],
+            "installationFree": true,
+            "mainElement": "MainAbility",
+            "name": "entry",
+            "pages": "$profile:main_pages",
+            "srcEntrance": "./ets/Application/AbilityStage.ts",
+            "type": "unknowtype",
+            "virtualMachine": "ark0.0.0.3",
+            "atomicService":{
+                "preloads":[]
             }
         }
-    },
-    "module": {
-        "abilities": [
-            {
-                "description": "$string:MainAbility_desc",
-                "descriptionId": 16777217,
-                "icon": "$media:icon",
-                "iconId": 16777221,
-                "label": "$string:MainAbility_label",
-                "labelId": 16777218,
-                "name": "MainAbility",
-                "launchType": "unknowlaunchType",
-                "orientation": "unknoworientation",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.system.home"
-                        ],
-                        "entities": [
-                            "entity.system.home",
-                            "flag.home.intent.from.system"
-                        ]
-                    }
-                ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
-            },
-            {
-                "description": "$string:MainAbility_desc",
-                "descriptionId": 16777217,
-                "icon": "$media:icon",
-                "iconId": 16777221,
-                "label": "$string:MainAbility_label",
-                "labelId": 16777218,
-                "name": "MainAbility",
-                "launchType": "unknowlaunchType",
-                "orientation": "unknoworientation",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.thirdparty.home"
-                        ],
-                        "entities": [
-                            "entity.thirdparty.home"
-                        ]
-                    }
-                ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
-            },
-            {
-                "description": "$string:MainAbility_desc",
-                "descriptionId": 16777217,
-                "icon": "$media:icon",
-                "iconId": 16777221,
-                "label": "$string:MainAbility_label",
-                "labelId": 16777218,
-                "name": "MainAbility",
-                "launchType": "unknowlaunchType",
-                "orientation": "unknoworientation",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.system.home"
-                        ],
-                        "entities": [
-                            "entity.thirdparty.home"
-                        ]
-                    }
-                ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
-            },
-            {
-                "description": "$string:MainAbility_desc",
-                "descriptionId": 16777217,
-                "icon": "$media:icon",
-                "iconId": 16777221,
-                "label": "$string:MainAbility_label",
-                "labelId": 16777218,
-                "name": "MainAbility",
-                "launchType": "unknowlaunchType",
-                "orientation": "unknoworientation",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.thirdparty.home"
-                        ],
-                        "entities": [
-                            "entity.system.home"
-                        ]
-                    }
-                ],
-                "srcEntrance": "./ets/MainAbility/MainAbility.ts",
-                "visible": true
-            }
-        ],
-        "deliveryWithInstall": true,
-        "description": "$string:entry_desc",
-        "descriptionId": 16777219,
-        "deviceTypes": [
-            "unknowtype"
-        ],
-        "extensionAbilities": [
-            {
-                "name": "extensionAbility_A",
-                "skills": [
-                    {
-                        "actions": [
-                            "action.system.home"
-                        ],
-                        "entities": [
-                            "entity.system.home"
-                        ]
-                    }
-                ],
-                "srcEntrance": "",
-                "type": "backup"
-            }
-        ],
-        "installationFree": false,
-        "mainElement": "MainAbility",
-        "name": "entry",
-        "pages": "$profile:main_pages",
-        "srcEntrance": "./ets/Application/AbilityStage.ts",
-        "type": "unknowtype",
-        "virtualMachine": "ark0.0.0.3"
     }
-}
 )"_json;
 
 const nlohmann::json MODULE_JSON_2 = R"(
@@ -674,6 +705,11 @@ const nlohmann::json MODULE_JSON_3 = R"(
             "type": "entry",
             "virtualMachine": "ark0.0.0.3"
         }
+    }
+)"_json;
+
+const nlohmann::json MODULE_JSON_4 = R"(
+    {
     }
 )"_json;
 }  // namespace
@@ -1736,7 +1772,7 @@ HWTEST_F(BmsBundleParserTest, TestExtractByName_0300, Function | SmallTest | Lev
     for (int i = 0; i < maxDeep; i++) {
         pathStream_ << "test/";
     }
-    pathStream_ << "app" << INSTALL_FILE_SUFFIX;
+    pathStream_ << BUNDLE_TYPE_APP << INSTALL_FILE_SUFFIX;
 
     std::string fileInBundle = "config.json";
     std::ostringstream fileBuffer;
@@ -1841,10 +1877,10 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0200, Function | Smal
     EXPECT_EQ(defaultPermissions.size(), ONE);
     if (defaultPermissions.size() == ONE) {
         auto defaultPermission = *defaultPermissions.begin();
-        EXPECT_EQ(defaultPermission.bundleName, "com.ohos.test1");
-        EXPECT_EQ(defaultPermission.grantPermission[0].name, "ohos.permission.test1");
+        EXPECT_EQ(defaultPermission.bundleName, BUNDLE_NAME1);
+        EXPECT_EQ(defaultPermission.grantPermission[0].name, BUNDLE_PERMISSION_NAME1);
         EXPECT_TRUE(defaultPermission.grantPermission[0].userCancellable);
-        EXPECT_EQ(defaultPermission.grantPermission[1].name, "ohos.permission.test2");
+        EXPECT_EQ(defaultPermission.grantPermission[1].name, BUNDLE_PERMISSION_NAME2);
         EXPECT_FALSE(defaultPermission.grantPermission[1].userCancellable);
     }
 }
@@ -1893,13 +1929,13 @@ HWTEST_F(BmsBundleParserTest, TestDefaultPermissionProfile_0300, Function | Smal
     EXPECT_EQ(defaultPermissions.size(), TWO);
     if (defaultPermissions.size() == TWO) {
         DefaultPermission firstDefaultPermission;
-        firstDefaultPermission.bundleName = "com.ohos.test1";
+        firstDefaultPermission.bundleName = BUNDLE_NAME1;
         auto firstDefaultPermissionIter = defaultPermissions.find(firstDefaultPermission);
         EXPECT_TRUE(firstDefaultPermissionIter != defaultPermissions.end());
         firstDefaultPermission = *firstDefaultPermissionIter;
-        EXPECT_EQ(firstDefaultPermission.grantPermission[0].name, "ohos.permission.test1");
+        EXPECT_EQ(firstDefaultPermission.grantPermission[0].name, BUNDLE_PERMISSION_NAME1);
         EXPECT_TRUE(firstDefaultPermission.grantPermission[0].userCancellable);
-        EXPECT_EQ(firstDefaultPermission.grantPermission[1].name, "ohos.permission.test2");
+        EXPECT_EQ(firstDefaultPermission.grantPermission[1].name, BUNDLE_PERMISSION_NAME2);
         EXPECT_FALSE(firstDefaultPermission.grantPermission[1].userCancellable);
         DefaultPermission secondDefaultPermission;
         secondDefaultPermission.bundleName = "com.ohos.test2";
@@ -1967,7 +2003,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_3400, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_2;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -1990,7 +2026,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_3500, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_2;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2010,10 +2046,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_3600, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["type"] = "shared";
+    profileJson[MODULE][TYPE] = PROFILE_KEY_LABEL_ID;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2034,10 +2070,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_3700, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["type"] = "shared";
+    profileJson[MODULE][TYPE] = PROFILE_KEY_LABEL_ID;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2059,7 +2095,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_3800, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_3;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2082,7 +2118,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_3900, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_3;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2102,10 +2138,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_4000, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_3;
-    profileJson["module"]["type"] = "shared";
+    profileJson[MODULE][TYPE] = PROFILE_KEY_LABEL_ID;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2126,10 +2162,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_4100, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_3;
-    profileJson["module"]["type"] = "shared";
+    profileJson[MODULE][TYPE] = PROFILE_KEY_LABEL_ID;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2149,10 +2185,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_4200, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["labelId"] = 0;
+    profileJson[BUNDLE_TYPE_APP][PROFILE_KEY_LABEL_ID] = 0;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2172,11 +2208,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_4300, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["labelId"] = 0;
-    profileJson["app"]["label"] = "";
+    profileJson[BUNDLE_TYPE_APP][PROFILE_KEY_LABEL_ID] = 0;
+    profileJson[BUNDLE_TYPE_APP][PROFILE_KEY_LABEL] = EMPTY_NAME;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2196,10 +2232,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_4400, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["label"] = "";
+    profileJson[BUNDLE_TYPE_APP][PROFILE_KEY_LABEL] = EMPTY_NAME;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2221,7 +2257,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_4500, Function | SmallTest | Level1)
     nlohmann::json profileJson = CONFIG_JSON_2;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2244,7 +2280,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_4600, Function | SmallTest | Level1)
     nlohmann::json profileJson = CONFIG_JSON_2;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2263,10 +2299,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_4700, Function | SmallTest | Level1)
     std::vector<FormInfo> formInfos;
     std::ostringstream profileFileBuffer;
     nlohmann::json profileJson = CONFIG_JSON_2;
-    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE] = MODULE_TYPE_SHARED;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2287,10 +2324,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_4800, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_2;
-    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE] = MODULE_TYPE_SHARED;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2312,7 +2350,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_4900, Function | SmallTest | Level1)
     nlohmann::json profileJson = CONFIG_JSON_3;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2335,7 +2373,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5000, Function | SmallTest | Level1)
     nlohmann::json profileJson = CONFIG_JSON_3;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2355,10 +2393,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_5100, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE] = MODULE_TYPE_SHARED;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2379,10 +2418,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_5200, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson["module"]["distro"]["moduleType"] = "shared";
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][
+        BUNDLE_MODULE_PROFILE_KEY_MODULE_TYPE] = MODULE_TYPE_SHARED;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2403,10 +2443,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_5300, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson["module"]["name"] = Constants::RELATIVE_PATH;
+    profileJson[MODULE][NAME] = Constants::RELATIVE_PATH;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2428,10 +2468,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_5400, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson["module"]["deviceType"].clear();
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DEVICE_TYPE].clear();
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
@@ -2453,13 +2493,13 @@ HWTEST_F(BmsBundleParserTest, TestParse_5500, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = CONFIG_JSON_3;
-    profileJson["app"]["version"]["code "] = -1;
+    profileJson[BUNDLE_TYPE_APP][BUNDLE_APP_PROFILE_KEY_VERSION][BUNDLE_APP_PROFILE_KEY_CODE] = -1;
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor("");
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
-    EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
 }
 
 /**
@@ -2476,10 +2516,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_5600, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["label"] = "";
+    profileJson[BUNDLE_TYPE_APP][PROFILE_KEY_LABEL] = EMPTY_NAME;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2499,10 +2539,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_5700, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["name"] = "";
+    profileJson[MODULE][NAME] = EMPTY_NAME;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
@@ -2522,10 +2562,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_5800, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["name"] = OVER_MAX_PATH_SIZE;
+    profileJson[MODULE][NAME] = OVER_MAX_PATH_SIZE;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
@@ -2544,11 +2584,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_5900, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["bundleType"] = "app";
+    profileJson[BUNDLE_TYPE_APP][BUNDLETYPE] = BUNDLE_TYPE_APP;
     
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2566,12 +2606,12 @@ HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
     InnerBundleInfo innerBundleInfo;
     std::ostringstream profileFileBuffer;
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["app"]["bundleType"] = "";
-    profileJson["module"]["installationFree"] = true;
+    profileJson[BUNDLE_TYPE_APP][BUNDLETYPE] = EMPTY_NAME;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
     
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2590,10 +2630,10 @@ HWTEST_F(BmsBundleParserTest, TestParse_6100, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
     
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["installationFree"] = true;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2612,11 +2652,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_6200, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
     
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["installationFree"] = true;
-    profileJson["module"]["type"] = "noexist";
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
+    profileJson[MODULE][TYPE] = NO_EXIST_NAME;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
@@ -2637,12 +2677,11 @@ HWTEST_F(BmsBundleParserTest, TestParse_6300, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_2;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
 }
-
 
 /**
  * @tc.name: TestParse_6400
@@ -2658,10 +2697,53 @@ HWTEST_F(BmsBundleParserTest, TestParse_6400, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     nlohmann::json profileJson = MODULE_JSON_2;
-    profileJson["module"]["name"] = "empty";
+    profileJson[MODULE][NAME] = NAME + Constants::MODULE_NAME_SEPARATOR;
     profileFileBuffer << profileJson.dump();
 
-    BundleExtractor bundleExtractor("");
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_6500
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_6500, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = MODULE_JSON_4;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = moduleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_NE(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_6600
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the module.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_6600, Function | SmallTest | Level1)
+{
+    ModuleProfile moduleProfile;
+    InnerBundleInfo innerBundleInfo;
+    std::ostringstream profileFileBuffer;
+    nlohmann::json profileJson = MODULE_JSON;
+
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();

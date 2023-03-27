@@ -43,6 +43,10 @@ const std::string TEST_PATH = "/test/test/";
 const std::string TEST_LIB_SO = "libs/arm64/test.so";
 const std::string TEST_LIB_AN = "an/arm64/test.an";
 const std::string TEST_LIB_AP = "ap/test.ap";
+const std::string TEST_FILE_PATH = "/system/etc";
+const std::string TEST_ERROR_PATH = "/system/abc";
+const std::string TEST_ZIP_PATH = "/system/etc/graphic/bootpic.zip";
+const std::string TEST_DIR_PATH = "/data/app/el1/bundle/public/com.example.test";
 const std::string TEST_QUICK_FIX_FILE_PATH_FIRST = "/data/app/el1/bundle/public/com.example.test/patch_1000001";
 const std::string TEST_QUICK_FIX_FILE_PATH_SECOND = "/data/app/el1/bundle/public/com.example.test/patch_1000002";
 const std::string HAP_FILE_PATH = "/data/app/el1/bundle/public/com.example.test/patch_1000001/entry.hqf";
@@ -854,5 +858,95 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5200, Function | Sma
     res = InstalldOperator::ProcessApplyDiffPatchPath(
         "data/test", "data/test", "data/test", oldSoFileNames, diffFileNames);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5300
+ * @tc.name: test function of ExtractDiffFiles
+ * @tc.desc: 1. calling ExtractDiffFiles
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5300, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::ExtractDiffFiles(TEST_ZIP_PATH, "", TEST_CPU_ABI);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5400
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5400, Function | SmallTest | Level0)
+{
+    CreateQuickFileDir(TEST_DIR_PATH);
+    
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
+    bool res = InstalldOperator::ProcessApplyDiffPatchPath(
+        TEST_DIR_PATH, TEST_DIR_PATH, TEST_DIR_PATH, oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
+
+    DeleteQuickFileDir(TEST_DIR_PATH);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5500
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5500, Function | SmallTest | Level0)
+{
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
+    bool res = InstalldOperator::ProcessApplyDiffPatchPath(
+        TEST_FILE_PATH, TEST_FILE_PATH, "", oldSoFileNames, diffFileNames);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ProcessApplyDiffPatchPath of InstalldOperator
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5600, Function | SmallTest | Level0)
+{
+    std::vector<std::string> oldSoFileNames;
+    std::vector<std::string> diffFileNames;
+    bool res = InstalldOperator::ProcessApplyDiffPatchPath(
+        TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, oldSoFileNames, diffFileNames);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5700
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ApplyDiffPatch of InstalldOperator
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5700, Function | SmallTest | Level0)
+{
+    bool ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH);
+    EXPECT_FALSE(ret);
+    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, "");
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5800
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling ObtainQuickFixFileDir of InstalldOperator
+ *           2. return false
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5800, Function | SmallTest | Level0)
+{
+    std::vector<std::string> vec;
+    std::string dir = TEST_ERROR_PATH;
+    auto ret = InstalldOperator::ObtainQuickFixFileDir(dir, vec);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

@@ -56,7 +56,8 @@ public:
     void TearDown();
     void StartInstalldService() const;
     void StartBundleService();
-    ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam) const;
+    ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths, 
+        const std::vector<std::string> &sharedBundlePaths) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     ErrCode UninstallShred(const UninstallParam &uninstallParam) const;
 private:
@@ -103,8 +104,8 @@ void BmsBundleSharedLibraryUninstallTest::StartBundleService()
     }
 }
 
-ErrCode BmsBundleSharedLibraryUninstallTest::InstallBundle(
-    const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam) const
+ErrCode BmsBundleSharedLibraryUninstallTest::InstallBundle(const std::vector<std::string> &bundleFilePaths,
+    const std::vector<std::string> &sharedBundlePaths) const
 {
     if (!bundleMgrService_) {
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -119,6 +120,11 @@ ErrCode BmsBundleSharedLibraryUninstallTest::InstallBundle(
         EXPECT_FALSE(true) << "the receiver is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
+
+    InstallParam installParam;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.userId = USERID;
+    installParam.sharedBundleDirPaths = sharedBundlePaths;
     bool result = installer->Install(bundleFilePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -180,16 +186,128 @@ HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_01
     bundleFilePaths.push_back(hostPath);
     std::vector<std::string> sharedBundleDirPaths;
     sharedBundleDirPaths.push_back(hspv1);
-    InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
-    installParam.userId = USERID;
-    installParam.sharedBundleDirPaths = sharedBundleDirPaths;
-    ErrCode installResult = InstallBundle(bundleFilePaths, installParam);
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundleDirPaths);
     EXPECT_EQ(installResult, ERR_OK);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
     UninstallParam uninstallParam;
     uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSharedLibraryUninstall_0200
+ * @tc.name: BmsBundleSharedLibraryUninstall
+ * @tc.desc: test uninstall shared library for multiple version
+ */
+HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+    sharedBundlePaths = {MODULE_FILE_PATH + LIBA_V10002};
+    installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    ErrCode unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSharedLibraryUninstall_0300
+ * @tc.name: BmsBundleSharedLibraryUninstall
+ * @tc.desc: test uninstall shared library for lower Version
+ */
+HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0300, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    sharedBundlePaths = {MODULE_FILE_PATH + LIBA_V10002};
+    installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    uninstallParam.versionCode = 10001;
+    ErrCode unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+
+    uninstallParam.versionCode = Constants::ALL_VERSIONCODE;
+    unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSharedLibraryUninstall_0400
+ * @tc.name: BmsBundleSharedLibraryUninstall
+ * @tc.desc: test uninstall highest version of shared library when hsp is relied
+ */
+HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0400, Function | SmallTest | Level0)
+{
+    std::string hostPath = MODULE_FILE_PATH + HOST_HAP;
+    std::string hspv1 = MODULE_FILE_PATH + LIBA_V10001;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(hostPath);
+    std::vector<std::string> sharedBundleDirPaths;
+    sharedBundleDirPaths.push_back(hspv1);
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundleDirPaths);
+
+    bundleFilePaths = {};
+    sharedBundleDirPaths = {MODULE_FILE_PATH + LIBA_V10002};
+    installResult = InstallBundle(bundleFilePaths, sharedBundleDirPaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    uninstallParam.versionCode = 10002;
+    ErrCode unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED);
+
+    unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    uninstallParam.versionCode = Constants::ALL_VERSIONCODE;
+    unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleSharedLibraryUninstall_0500
+ * @tc.name: BmsBundleSharedLibraryUninstall
+ * @tc.desc: test uninstall lower version of shared library when hsp is relied
+ */
+HWTEST_F(BmsBundleSharedLibraryUninstallTest, BmsBundleSharedLibraryUninstall_0500, Function | SmallTest | Level0)
+{
+    std::string hostPath = MODULE_FILE_PATH + HOST_HAP;
+    std::string hspv1 = MODULE_FILE_PATH + LIBA_V10001;
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(hostPath);
+    std::vector<std::string> sharedBundleDirPaths;
+    sharedBundleDirPaths.push_back(hspv1);
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundleDirPaths);
+
+    bundleFilePaths = {};
+    sharedBundleDirPaths = {MODULE_FILE_PATH + LIBA_V10002};
+    installResult = InstallBundle(bundleFilePaths, sharedBundleDirPaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    uninstallParam.versionCode = 10001;
+    ErrCode unInstallResult = UninstallShred(uninstallParam);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+
+    unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    uninstallParam.bundleName = SHARED_BUNDLE_NAME;
+    uninstallParam.versionCode = Constants::ALL_VERSIONCODE;
     unInstallResult = UninstallShred(uninstallParam);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }

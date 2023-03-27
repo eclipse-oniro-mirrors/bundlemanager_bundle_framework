@@ -43,6 +43,9 @@ bool ServiceRouterDataMgr::LoadAllBundleInfos()
     if (!ret) {
         APP_LOGE("SRDM bms->GetBundleInfos return false");
     }
+    if (!innerServiceInfos_.empty()) {
+        innerServiceInfos_.clear();
+    }
     for (const auto &bundleInfo : bundleInfos) {
         UpdateBundleInfo(bundleInfo);
     }
@@ -78,11 +81,11 @@ void ServiceRouterDataMgr::UpdateBundleInfo(const BundleInfo &bundleInfo)
     innerServiceInfo.UpdateAppInfo(bundleInfo.applicationInfo);
 
     std::vector<PurposeInfo> purposeInfos;
-    std::vector<ServiceInfo> serviceInfos;
-    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, purposeInfos, serviceInfos,
+    std::vector<BusinessAbilityInfo> businessAbilityInfos;
+    if (BundleInfoResolveUtil::ResolveBundleInfo(bundleInfo, purposeInfos, businessAbilityInfos,
         innerServiceInfo.GetAppInfo())) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-        innerServiceInfo.UpdateInnerServiceInfo(purposeInfos, serviceInfos);
+        innerServiceInfo.UpdateInnerServiceInfo(purposeInfos, businessAbilityInfos);
         innerServiceInfos_.try_emplace(bundleInfo.name, innerServiceInfo);
     }
 }
@@ -99,28 +102,18 @@ void ServiceRouterDataMgr::DeleteBundleInfo(const std::string &bundleName)
     innerServiceInfos_.erase(bundleName);
 }
 
-int32_t ServiceRouterDataMgr::QueryServiceInfos(const Want &want, const ExtensionServiceType &serviceType,
-    std::vector<ServiceInfo> &serviceInfos) const
+int32_t ServiceRouterDataMgr::QueryBusinessAbilityInfos(const BusinessAbilityFilter &filter,
+    std::vector<BusinessAbilityInfo> &businessAbilityInfos) const
 {
-    APP_LOGD("SRDM QueryServiceInfos");
-    ExtensionServiceType validType = GetExtensionServiceType(want, serviceType);
-    if (validType != ExtensionServiceType::SHARE) {
-        APP_LOGE("SRDM QueryServiceInfos, serviceType is empty");
+    APP_LOGD("SRDM QueryBusinessAbilityInfos");
+    BusinessType validType = GetBusinessType(filter);
+    if (validType != BusinessType::SHARE) {
+        APP_LOGE("SRDM QueryBusinessAbilityInfos, businessType is empty");
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
-    ElementName element = want.GetElement();
-    std::string bundleName = element.GetBundleName();
-    if (bundleName.empty()) {
-        for (const auto &item : innerServiceInfos_) {
-            item.second.FindServiceInfos(validType, serviceInfos);
-        }
-    } else {
-        auto infoItem = innerServiceInfos_.find(bundleName);
-        if (infoItem == innerServiceInfos_.end()) {
-            APP_LOGE("SRDM QueryServiceInfos, not found by bundleName.");
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-        infoItem->second.FindServiceInfos(validType, serviceInfos);
+
+    for (const auto &item : innerServiceInfos_) {
+        item.second.FindBusinessAbilityInfos(validType, businessAbilityInfos);
     }
     return ERR_OK;
 }
@@ -151,18 +144,22 @@ int32_t ServiceRouterDataMgr::QueryPurposeInfos(const Want &want, const std::str
     return ERR_OK;
 }
 
-ExtensionServiceType ServiceRouterDataMgr::GetExtensionServiceType(const Want &want,
-    const ExtensionServiceType &serviceType) const
+BusinessType ServiceRouterDataMgr::GetBusinessType(const BusinessAbilityFilter &filter) const
 {
-    if (serviceType == ExtensionServiceType::SHARE) {
-        return serviceType;
+    if (filter.businessType == BusinessType::SHARE) {
+        return filter.businessType;
     }
-    Uri uri = want.GetUri();
+
+    if (filter.uri.empty()) {
+        return BusinessType::UNSPECIFIED;
+    }
+
+    OHOS::Uri uri = OHOS::Uri(filter.uri);
     if (uri.GetScheme().empty() || uri.GetHost().empty() || uri.GetScheme() != SCHEME_SERVICE_ROUTER) {
-        APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s", want.GetUriString().c_str());
-        return ExtensionServiceType::UNSPECIFIED;
+        APP_LOGE("GetExtensionServiceType, invalid uri: %{public}s", filter.uri.c_str());
+        return BusinessType::UNSPECIFIED;
     }
-    return BundleInfoResolveUtil::findExtensionServiceType(uri.GetHost());
+    return BundleInfoResolveUtil::findBusinessType(uri.GetHost());
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -3706,10 +3706,8 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixBootScanner_0100, Function | SmallTest |
  */
 HWTEST_F(BmsBundleQuickFixTest, QuickFixer_0100, Function | SmallTest | Level0)
 {
-    int64_t quickFixerId = 0;
-    std::shared_ptr<EventHandler> handler;
     sptr<IQuickFixStatusCallback> statusCallback;
-    QuickFixer fixer(quickFixerId, handler, statusCallback);
+    QuickFixer fixer(statusCallback);
     const std::vector<std::string> bundleFilePaths;
     fixer.DeployQuickFix(bundleFilePaths);
     EXPECT_EQ(fixer.statusCallback_, nullptr);

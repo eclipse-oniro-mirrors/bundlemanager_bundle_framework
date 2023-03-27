@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,16 +18,13 @@
 #include <cinttypes>
 
 #include "app_log_wrapper.h"
-#include "quick_fix_mgr.h"
 #include "quick_fix_deleter.h"
 #include "quick_fix_deployer.h"
 #include "quick_fix_switcher.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixer::QuickFixer(const int64_t quickFixerId, const std::shared_ptr<EventHandler> &handler,
-    const sptr<IQuickFixStatusCallback> &statusCallback) : quickFixerId_(quickFixerId), handler_(handler),
-    statusCallback_(statusCallback)
+QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : statusCallback_(statusCallback)
 {
     APP_LOGI("enter QuickFixer");
 }
@@ -49,8 +46,6 @@ void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
     if (statusCallback_ != nullptr) {
         statusCallback_->OnPatchDeployed(deployRes);
     }
-
-    SendRemoveEvent();
 }
 
 void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
@@ -71,8 +66,6 @@ void QuickFixer::SwitchQuickFix(const std::string &bundleName, bool enable)
     if (statusCallback_ != nullptr) {
         statusCallback_->OnPatchSwitched(switchRes);
     }
-
-    SendRemoveEvent();
 }
 
 void QuickFixer::DeleteQuickFix(const std::string &bundleName)
@@ -93,18 +86,6 @@ void QuickFixer::DeleteQuickFix(const std::string &bundleName)
     if (statusCallback_ != nullptr) {
         statusCallback_->OnPatchDeleted(deleteRes);
     }
-
-    SendRemoveEvent();
-}
-
-void QuickFixer::SendRemoveEvent() const
-{
-    if (auto handler = handler_.lock()) {
-        APP_LOGD("SendRemoveEvent begin");
-        handler->SendEvent(InnerEvent::Get(QuickFixMgr::MessageId::REMOVE_QUICK_FIXER, quickFixerId_));
-        return;
-    }
-    APP_LOGE("fail to remove %{public}" PRId64 " quickFixer due to handler is expired", quickFixerId_);
 }
 } // AppExecFwk
 } // OHOS

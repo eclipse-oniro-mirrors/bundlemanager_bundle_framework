@@ -19,33 +19,66 @@
 #include <unistd.h>
 
 #include "app_log_wrapper.h"
+#include "napi/native_api.h"
+#include "napi/native_common.h"
+#include "service_info.h"
 #include "service_router_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-static napi_value ServiceRouterExport(napi_env env, napi_value exports)
+static napi_status SetEnumItem(napi_env env, napi_value object, const char* name, int32_t value)
 {
+    napi_status status;
+    napi_value itemValue;
+    napi_value itemName;
+
+    NAPI_CALL_BASE(env, status = napi_create_string_utf8(env, name, NAPI_AUTO_LENGTH, &itemName), status);
+    NAPI_CALL_BASE(env, status = napi_create_int32(env, value, &itemValue), status);
+    NAPI_CALL_BASE(env, status = napi_set_property(env, object, itemName, itemValue), status);
+    NAPI_CALL_BASE(env, status = napi_set_property(env, object, itemValue, itemName), status);
+    return napi_ok;
+}
+
+static napi_value InitBusinessTypeObject(napi_env env)
+{
+    napi_value object;
+    NAPI_CALL(env, napi_create_object(env, &object));
+
+    NAPI_CALL(env, SetEnumItem(env, object, "SHARE", static_cast<int32_t>(BusinessType::SHARE)));
+    NAPI_CALL(env, SetEnumItem(env, object, "UNSPECIFIED", static_cast<int32_t>(BusinessType::UNSPECIFIED)));
+    return object;
+}
+
+static napi_value BusinessAbilityRouterExport(napi_env env, napi_value exports)
+{
+    napi_value businessType = InitBusinessTypeObject(env);
+    if (businessType == nullptr) {
+        APP_LOGE("failed to create business type object");
+        return nullptr;
+    }
+
     napi_property_descriptor desc[] = {
-        DECLARE_NAPI_FUNCTION("queryServiceInfos", QueryServiceInfos),
+        DECLARE_NAPI_FUNCTION("queryBusinessAbilityInfo", QueryBusinessAbilityInfos),
+        DECLARE_NAPI_PROPERTY("BusinessType", businessType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
     return exports;
 }
 
-static napi_module service_router_module = {
+static napi_module business_ability_router_module = {
     .nm_version = 1,
     .nm_flags = 0,
     .nm_filename = nullptr,
-    .nm_register_func = ServiceRouterExport,
-    .nm_modname = "serviceRouter",
+    .nm_register_func = BusinessAbilityRouterExport,
+    .nm_modname = "businessAbilityRouter",
     .nm_priv = ((void *)0),
     .reserved = {0}
 };
 
-extern "C" __attribute__((constructor)) void ServiceRouterRegister(void)
+extern "C" __attribute__((constructor)) void BusinessAbilityRouterRegister(void)
 {
-    napi_module_register(&service_router_module);
+    napi_module_register(&business_ability_router_module);
 }
 }
 }

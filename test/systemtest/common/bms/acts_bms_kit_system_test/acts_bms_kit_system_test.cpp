@@ -7647,5 +7647,49 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllSharedBundleInfo_0100, Function | SmallTest
     ErrCode ret = bundleMgrProxy->GetAllSharedBundleInfo(sharedBundles);
     EXPECT_EQ(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: GetDependentBundleInfo_0100
+ * @tc.name: test GetDependentBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetDependentBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    BundleInfo info;
+    ErrCode ret = bundleMgrProxy->GetDependentBundleInfo(BASE_BUNDLE_NAME, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: GetUidByDebugBundleName_0100
+ * @tc.name: test GetUidByDebugBundleName proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    int uid = 0;
+    int ret = bundleMgrProxy->GetUidByDebugBundleName(BASE_BUNDLE_NAME, uid);
+    EXPECT_EQ(ret, INVALIED_ID);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0100
+ * @tc.name: test GetSharedBundleInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrProxy->GetSharedBundleInfo(
+        BASE_BUNDLE_NAME, BASE_MODULE_NAME, sharedBundles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -12,7 +12,9 @@
         "syscap": [
             "SystemCapability.BundleManager.DistributedBundleFramework"
         ],
-        "features": [],
+        "features": [
+            "distributed_bundle_framework_graphics"
+        ],
         "adapted_system_type": [
             "standard"
         ],

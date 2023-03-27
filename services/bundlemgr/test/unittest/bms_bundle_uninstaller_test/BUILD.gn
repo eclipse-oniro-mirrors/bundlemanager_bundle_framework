@@ -47,7 +47,6 @@ ohos_unittest("BmsBundleUninstallerTest") {
   configs = [
     ":private_config",
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {

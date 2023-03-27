@@ -24,12 +24,63 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
 {
     return false;
 }
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const AccessTokenID tokenId)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const std::vector<std::string> &requestPermName,
+    const AccessTokenID tokenId)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
 {
     return true;
 }
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const AccessTokenID tokenId)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
+    const std::vector<std::string> &requestPermName,
+    const AccessTokenID tokenId)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyCallingUid()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    return true;
+}
 #endif
+
+bool BundlePermissionMgr::IsNativeTokenType()
+{
+    return true;
+}
 
 bool BundlePermissionMgr::Init()
 {
@@ -89,19 +140,6 @@ int32_t BundlePermissionMgr::DeleteAccessTokenId(const AccessTokenID tokenId)
     return 0;
 }
 
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const AccessTokenID tokenId)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
-    const std::vector<std::string> &requestPermName,
-    const AccessTokenID tokenId)
-{
-    return true;
-}
-
 bool BundlePermissionMgr::GetRequestPermissionStates(BundleInfo &bundleInfo, uint32_t tokenId,
     const std::string deviceId)
 {
@@ -126,11 +164,17 @@ bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessTokenID tokenId,
     return true;
 }
 
+#ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
+bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
+{
+    return false;
+}
+#else
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginApiVersion)
 {
     return true;
 }
-
+#endif
 
 int32_t BundlePermissionMgr::GetHapApiVersion()
 {
@@ -236,11 +280,6 @@ bool BundlePermissionMgr::CheckPermissionInDefaultPermissions(const DefaultPermi
 bool BundlePermissionMgr::GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
     const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
     const std::string &bundleName)
-{
-    return true;
-}
-
-bool BundlePermissionMgr::IsNativeTokenType()
 {
     return true;
 }

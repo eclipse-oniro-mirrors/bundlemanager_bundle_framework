@@ -75,7 +75,7 @@ const struct option LONG_OPTIONS[] = {
 const std::string UNINSTALL_OPTIONS = "hn:m:u:v:s";
 const struct option UNINSTALL_LONG_OPTIONS[] = {
     {"help", no_argument, nullptr, 'h'},
-    {"bundle_name", required_argument, nullptr, 'n'},
+    {"bundle-name", required_argument, nullptr, 'n'},
     {"module-name", required_argument, nullptr, 'm'},
     {"user-id", required_argument, nullptr, 'u'},
     {"keep-data", no_argument, nullptr, 'k'},
@@ -1914,12 +1914,11 @@ std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &
         return res;
     }
 
-    std::vector<OverlayBundleInfo> overlayBundleInfos;
-    std::vector<OverlayModuleInfo> overlayModuleInfos;
     userId = BundleCommandCommon::GetCurrentUserId(userId);
     ErrCode ret = ERR_OK;
     nlohmann::json overlayInfoJson;
     if (moduleName.empty()) {
+        std::vector<OverlayBundleInfo> overlayBundleInfos;
         ret = overlayManagerProxy->GetOverlayBundleInfoForTarget(bundleName, overlayBundleInfos, userId);
         if (ret != ERR_OK || overlayBundleInfos.empty()) {
             APP_LOGE("dump-target-overlay failed due to errcode %{public}d", ret);
@@ -1927,6 +1926,7 @@ std::string BundleManagerShellCommand::DumpTargetOverlayInfo(const std::string &
         }
         overlayInfoJson = nlohmann::json {{OVERLAY_BUNDLE_INFOS, overlayBundleInfos}};
     } else {
+        std::vector<OverlayModuleInfo> overlayModuleInfos;
         ret = overlayManagerProxy->GetOverlayModuleInfoForTarget(bundleName, moduleName, overlayModuleInfos, userId);
         if (ret != ERR_OK || overlayModuleInfos.empty()) {
             APP_LOGE("dump-target-overlay failed due to errcode %{public}d", ret);
@@ -2050,13 +2050,12 @@ std::string BundleManagerShellCommand::DumpSharedDependencies(const std::string 
 {
     APP_LOGD("DumpSharedDependencies bundleName: %{public}s, moduleName: %{public}s",
         bundleName.c_str(), moduleName.c_str());
-    std::string dumpResults = "";
     std::vector<Dependency> dependencies;
     ErrCode ret = bundleMgrProxy_->GetSharedDependencies(bundleName, moduleName, dependencies);
     nlohmann::json dependenciesJson;
     if (ret != ERR_OK) {
         APP_LOGE("dump shared dependencies failed due to errcode %{public}d", ret);
-        return dumpResults;
+        return std::string();
     } else {
         dependenciesJson = nlohmann::json {{DEPENDENCIES, dependencies}};
     }
@@ -2168,13 +2167,12 @@ ErrCode BundleManagerShellCommand::ParseSharedCommand(int32_t option, std::strin
 std::string BundleManagerShellCommand::DumpShared(const std::string &bundleName) const
 {
     APP_LOGD("DumpShared bundleName: %{public}s", bundleName.c_str());
-    std::string dumpResults = "";
     SharedBundleInfo sharedBundleInfo;
     ErrCode ret = bundleMgrProxy_->GetSharedBundleInfoBySelf(bundleName, sharedBundleInfo);
     nlohmann::json sharedBundleInfoJson;
     if (ret != ERR_OK) {
         APP_LOGE("dump-shared failed due to errcode %{public}d", ret);
-        return dumpResults;
+        return std::string();
     } else {
         sharedBundleInfoJson = nlohmann::json {{SHARED_BUNDLE_INFO, sharedBundleInfo}};
     }

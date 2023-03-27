@@ -20,15 +20,20 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_status_callback.h"
+#include "common_func.h"
 #include "js_launcher_mgr.h"
+#include "js_launcher.h"
 #include "launcher_service.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
+#include "napi_arg.h"
+#include "napi_constants.h"
 
 using namespace OHOS::AppExecFwk;
 namespace {
 const std::string REGISTERCALLBACK = "BundleStatusChange";
 const std::string UNREGISTERCALLBACK = "BundleStatusChange";
+const std::string TYPE_MISMATCH = "type mismatch";
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 constexpr int32_t OPERATION_SUCESS = 0;
 constexpr int32_t OPERATION_FAILED = 1;
@@ -36,7 +41,6 @@ constexpr int32_t OPERATION_TYPE_MIAMATCH = 2;
 constexpr int32_t INDEX_ONE = 1;
 constexpr int32_t INDEX_TWO = 2;
 constexpr int32_t INDEX_THREE = 3;
-constexpr int32_t NAPI_RETURN_ONE = 1;
 }
 
 struct AsyncHandleBundleContext {
@@ -653,7 +657,7 @@ static napi_value JSLauncherServiceOff(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static bool InnerJSGetAllLauncherAbilityInfos(napi_env env, uint32_t userId,
+static bool InnerJSGetAllLauncherAbilityInfos(uint32_t userId,
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> &launcherAbilityInfos)
 {
     auto launcher = GetLauncherService();
@@ -670,89 +674,97 @@ static bool InnerJSGetAllLauncherAbilityInfos(napi_env env, uint32_t userId,
     return true;
 }
 
-static napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
+void JsGetAllLauncherAbilityInfoExec(napi_env env, void *data)
 {
-    size_t argc = INDEX_TWO;
-    napi_value argv[INDEX_TWO] = { 0 };
-    size_t requireArgc = INDEX_ONE;
-    napi_value thisArg = nullptr;
-    void *data = nullptr;
-
-    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
-    NAPI_ASSERT(env, argc >= requireArgc, "requires 1 parameter");
-    AsyncHandleBundleContext *asyncCallbackInfo = new AsyncHandleBundleContext();
-    asyncCallbackInfo->env = env;
-    for (size_t i = 0; i < argc; ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, argv[i], &valueType);
-        if ((i == 0) && (valueType == napi_number)) {
-            napi_get_value_int32(env, argv[i], &asyncCallbackInfo->userId);
-        } else if ((i == INDEX_ONE) && (valueType == napi_function))  {
-            napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callbackRef);
-            break;
-        } else {
-            asyncCallbackInfo->err = OPERATION_TYPE_MIAMATCH;
-            asyncCallbackInfo->message = "type mismatch";
-        }
+    JsGetAllLauncherAbilityCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<JsGetAllLauncherAbilityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
     }
-    napi_value promise = nullptr;
-    if (asyncCallbackInfo->callbackRef == nullptr) {
-        napi_create_promise(env, &asyncCallbackInfo->deferred, &promise);
+    if (asyncCallbackInfo->err == OPERATION_TYPE_MIAMATCH) {
+        return;
+    }
+    if (InnerJSGetAllLauncherAbilityInfos(asyncCallbackInfo->userId,
+        asyncCallbackInfo->launcherAbilityInfos)) {
+        asyncCallbackInfo->err = OPERATION_SUCESS;
     } else {
-        napi_get_undefined(env,  &promise);
+        asyncCallbackInfo->err = OPERATION_FAILED;
     }
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JSGetAllLauncherAbilityInfos", NAPI_AUTO_LENGTH, &resource);
+}
 
-    napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-            AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerJSGetAllLauncherAbilityInfos(asyncCallbackInfo->env,
-                                                                           asyncCallbackInfo->userId,
-                                                                           asyncCallbackInfo->launcherAbilityInfos);
+void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data)
+{
+    JsGetAllLauncherAbilityCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<JsGetAllLauncherAbilityCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        return;
+    }
+    std::unique_ptr<JsGetAllLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    APP_LOGE("asyncCallbackInfo->err is %{public}d", asyncCallbackInfo->err);
+    if (asyncCallbackInfo->err == OPERATION_SUCESS) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
+    } else {
+        napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
+        napi_get_undefined(env, &result[ARGS_POS_ONE]);
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == OPERATION_SUCESS) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    }
+}
+
+napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi begin to JSGetAllLauncherAbilityInfos");
+    NapiArg args(env, info);
+    JsGetAllLauncherAbilityCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) JsGetAllLauncherAbilityCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<JsGetAllLauncherAbilityCallbackInfo> callbackPtr{asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        asyncCallbackInfo->err = OPERATION_TYPE_MIAMATCH;
+        asyncCallbackInfo->message = TYPE_MISMATCH;
+    }
+
+    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], callbackPtr->userId)) {
+            asyncCallbackInfo->err = OPERATION_TYPE_MIAMATCH;
+            asyncCallbackInfo->message = TYPE_MISMATCH;
+        }
+        if (args.GetMaxArgc() == ARGS_SIZE_TWO) {
+            napi_valuetype valueType = napi_undefined;
+            napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                    NAPI_RETURN_ONE, &callbackPtr->callback));
             }
-        },
-        [](napi_env env, napi_status status, void* data) {
-          AsyncHandleBundleContext *asyncCallbackInfo = reinterpret_cast<AsyncHandleBundleContext*>(data);
-          napi_value result[INDEX_TWO] = { 0 };
-          // wrap result
-          if (asyncCallbackInfo->err) {
-              napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
-              napi_get_undefined(env, &result[INDEX_ONE]);
-          } else {
-              if (asyncCallbackInfo->ret) {
-                  napi_create_int32(env, OPERATION_SUCESS, &result[0]);
-                  napi_create_array(env, &result[INDEX_ONE]);
-                  ParseLauncherAbilityInfo(env, result[INDEX_ONE], asyncCallbackInfo->launcherAbilityInfos);
-              } else {
-                  napi_create_int32(env, OPERATION_FAILED, &result[0]);
-                  napi_get_undefined(env, &result[INDEX_ONE]);
-              }
-          }
-          // return callback or promise
-          if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[INDEX_ONE]);
-              } else {
-                  napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]);
-              }
-          } else {
-              napi_value callback = nullptr;
-              napi_value callResult = 0;
-              napi_value undefined = 0;
-              napi_get_reference_value(env, asyncCallbackInfo->callbackRef, &callback);
-              napi_call_function(env, undefined, callback, sizeof(result) / sizeof(result[0]), result, &callResult);
-              napi_delete_reference(env, asyncCallbackInfo->callbackRef);
-          }
-          napi_delete_async_work(env, asyncCallbackInfo->asyncWork);
-          delete asyncCallbackInfo;
-          asyncCallbackInfo = nullptr;
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
-
+        }
+    } else {
+        asyncCallbackInfo->err = OPERATION_TYPE_MIAMATCH;
+        asyncCallbackInfo->message = TYPE_MISMATCH;
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<JsGetAllLauncherAbilityCallbackInfo>(
+        env, asyncCallbackInfo, "GetLauncherAbilityInfo",
+        JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete);
+    callbackPtr.release();
+    APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
 }
 

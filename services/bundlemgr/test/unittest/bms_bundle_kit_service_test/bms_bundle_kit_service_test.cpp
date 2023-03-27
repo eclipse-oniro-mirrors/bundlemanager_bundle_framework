@@ -182,6 +182,7 @@ const std::string TYPE_IMG_JPEG = "img/jpeg";
 const std::string SCHEME_SEPARATOR = "://";
 const std::string PORT_SEPARATOR = ":";
 const std::string PATH_SEPARATOR = "/";
+const std::string PARAM_AND_VALUE = "?param=value";
 const std::string SCHEME_001 = "scheme001";
 const std::string SCHEME_002 = "scheme002";
 const std::string HOST_001 = "host001";
@@ -5671,6 +5672,43 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriPrefix_003, Function | SmallTest
 
 /**
  * @tc.number: skill match rules
+ * @tc.name: uri with param match test
+ * @tc.desc: want's uri has param, ignore param then match.
+ */
+HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriWithParam_001, Function | SmallTest | Level1)
+{
+    // param uri:  scheme001://host001?param=value
+    // config uri: scheme001://host001
+    struct Skill skill;
+    skill.actions.emplace_back(ACTION_001);
+    SkillUri skillUri;
+    skillUri.scheme = SCHEME_001;
+    skillUri.host = HOST_001;
+    skill.uris.emplace_back(skillUri);
+    std::string uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PARAM_AND_VALUE;
+    Want want;
+    want.SetUri(uri);
+    bool ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // param uri:  scheme001://host001:port001?param=value
+    // config uri: scheme001://host001:port001
+    skill.uris[0].port = PORT_001;
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001 + PARAM_AND_VALUE;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+    // param uri:  scheme001://host001:port001/path001?param=value
+    // config uri: scheme001://host001:port001/path001
+    skill.uris[0].path = PATH_001;
+    uri = SCHEME_001 + SCHEME_SEPARATOR + HOST_001 + PORT_SEPARATOR + PORT_001 +
+        PATH_SEPARATOR + PATH_001 + PARAM_AND_VALUE;
+    want.SetUri(uri);
+    ret = skill.Match(want);
+    EXPECT_EQ(true, ret);
+}
+
+/**
+ * @tc.number: skill match rules
  * @tc.name: action match test
  * @tc.desc: "action.system.home" is equal to "ohos.want.action.home"
  */
@@ -6272,7 +6310,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_001, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(resultMsg, "");
 }
 
@@ -6292,7 +6329,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_002, Function | SmallTe
     int32_t userId = 100;
     proxy->OnBundleAdded(bundleName, userId);
     EXPECT_EQ(bundleName, "com.example.bundlekit.test");
-    EXPECT_EQ(userId, 100);
 }
 
 /**
@@ -6330,7 +6366,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_004, Function | SmallTe
     int32_t userId = 100;
     proxy->OnBundleRemoved(bundleName, userId);
     EXPECT_EQ(bundleName, "com.example.bundlekit.test");
-    EXPECT_EQ(userId, 100);
 }
 
 /**
@@ -6367,8 +6402,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_006, Function | SmallTe
     int32_t installType = 0;
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
-    EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
 }
 
@@ -6411,7 +6444,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_008, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = "";
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, BUNDLE_NAME_TEST);
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, "");
 }
@@ -6433,7 +6465,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_009, Function | SmallTe
     uint8_t installType = static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
     std::string resultMsg = Constants::EMPTY_STRING;
     proxy->OnBundleStateChanged(installType, resultCode, resultMsg, "");
-    EXPECT_EQ(resultCode, 0);
     EXPECT_EQ(installType, 0);
     EXPECT_EQ(resultMsg, Constants::EMPTY_STRING);
 }
@@ -7169,10 +7200,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
 {
     APP_LOGI("begin of CheckAppInstallControl_0100");
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    ErrCode ret = GetBundleDataMgr()->CheckAppInstallControl("", 0);
-    EXPECT_EQ(ret, 1);
-    MockUninstallBundle(BUNDLE_NAME_TEST);
+    InnerBundleInfo info;
+    bool ret = info.CheckAppInstallControl("", 0);
+    EXPECT_TRUE(ret);
     APP_LOGI("CheckAppInstallControl_0100 finish");
 }
 

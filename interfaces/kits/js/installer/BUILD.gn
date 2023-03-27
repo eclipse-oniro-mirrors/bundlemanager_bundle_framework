@@ -18,7 +18,6 @@ ohos_shared_library("installer") {
   include_dirs = [
     "//third_party/libuv/include",
     "//third_party/node/src",
-    "//utils/system/safwk/native/include",
     "${kits_path}/js/bundlemgr",
     "${kits_path}/js/common",
   ]
