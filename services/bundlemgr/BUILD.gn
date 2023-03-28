@@ -27,16 +27,11 @@ config("bundlemgr_common_config") {
     "include/sandbox_app",
     "include/shared",
     "include/quick_fix/state/include",
-    "//base/powermgr/power_manager/interfaces/innerkits/native/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "//foundation/filemanagement/storage_service/services/storage_manager/include/ipc",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
-
-  if (bundle_framework_free_install) {
-    include_dirs += [ "//base/sensors/sensor/interfaces/native/include" ]
-  }
 
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
@@ -267,6 +262,7 @@ ohos_shared_library("libbms") {
       "battery_manager:batterysrv_client",
       "device_usage_statistics:usagestatsinner",
       "display_manager:displaymgr",
+      "power_manager:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
