@@ -19,6 +19,7 @@
 #include "distributed_bms_interface.h"
 #include "iremote_stub.h"
 #include "parcel_macro.h"
+#include "accesstoken_kit.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -42,8 +43,8 @@ private:
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &data);
     bool VerifySystemApp();
-    bool VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID tokenID);
-    bool VerifySystemAppForTokenShell(Security::AccessToken::AccessTokenID tokenID);
+    bool VerifySystemAppForTokenNative(AccessTokenID tokenID);
+    bool VerifySystemAppForTokenShell(AccessTokenID tokenID);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
