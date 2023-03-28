@@ -46,6 +46,8 @@ const std::string X86_AN_PATH = "/an/x86/x86.so";
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
+const std::int PRIORITY_ONE = 1;
+const std::int PRIORITY_TWO = 2;
 }  // namespace
 
 class BmsBundleInstallCheckerTest : public testing::Test {
@@ -1095,9 +1097,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, SetEntryInstallationFree_0001, Function | 
     PackageModule packageModule;
     packageModule.distro.moduleType = "entry";
     packageModule.distro.installationFree = true;
-    std::vector<PackageModule> modules;
-    modules.emplace_back(packageModule);
-    bundlePackInfo.summary.modules = modules;
+    bundlePackInfo.summary.modules.emplace_back(packageModule);
     bundlePackInfo.SetValid(true);
     installChecker.SetEntryInstallationFree(bundlePackInfo, innerBundleInfo);
     EXPECT_EQ(innerBundleInfo.GetApplicationBundleType(), BundleType::ATOMIC_SERVICE);
@@ -1175,8 +1175,8 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0004, Function | SmallTe
     std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo1;
     InnerBundleInfo innerBundleInfo2;
-    innerBundleInfo1.SetTargetPriority(1);
-    innerBundleInfo2.SetTargetPriority(2);
+    innerBundleInfo1.SetTargetPriority(PRIORITY_ONE);
+    innerBundleInfo2.SetTargetPriority(PRIORITY_TWO);
     infos.emplace(HAP, innerBundleInfo1);
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
