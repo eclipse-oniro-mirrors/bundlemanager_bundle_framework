@@ -1082,4 +1082,182 @@ HWTEST_F(BmsBundleInstallCheckerTest, ConvertToAppProvisionInfo_0003, Function |
     appProvisionInfo = bundleInstallChecker.ConvertToAppProvisionInfo(provisionInfo);
     EXPECT_EQ(appProvisionInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING);
 }
+
+/**
+ * @tc.number: GetPrivilegeCapability_0001
+ * @tc.name: test the start function of GetPrivilegeCapability
+ * @tc.desc: 1. GetPrivilegeCapability
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, GetPrivilegeCapability_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallCheckParam installcheckParam;
+    InnerBundleInfo newInfo;
+    installChecker.GetPrivilegeCapability(installcheckParam, newInfo);
+    EXPECT_EQ(newInfo.GetIsKeepAlive(), false);
+}
+
+/**
+ * @tc.number: SetEntryInstallationFree_0001
+ * @tc.name: test the start function of SetEntryInstallationFree
+ * @tc.desc: 1. SetEntryInstallationFree_0001
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, SetEntryInstallationFree_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    BundlePackInfo bundlePackInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsNewVersion(false);
+    PackageModule packageModule;
+    packageModule.distro.moduleType = "entry";
+    packageModule.distro.installationFree = true;
+    std::vector<PackageModule> modules;
+    modules.emplace_back(packageModule);
+    bundlePackInfo.summary.modules = modules;
+    bundlePackInfo.SetValid(true);
+    installChecker.SetEntryInstallationFree(bundlePackInfo, innerBundleInfo);
+    EXPECT_EQ(innerBundleInfo.GetApplicationBundleType(), BundleType::ATOMIC_SERVICE);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0001
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0001
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetAppType(Constants::AppType::SYSTEM_APP);
+    innerBundleInfo2.SetAppType(Constants::AppType::THIRD_PARTY_APP);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_APPTYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0002
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0002
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetIsNewVersion(true);
+    innerBundleInfo2.SetIsNewVersion(false);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0003
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0003
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetTargetBundleName(HAP);
+    innerBundleInfo2.SetTargetBundleName(HAP_ONE);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0004
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0004
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0004, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetTargetPriority(1);
+    innerBundleInfo2.SetTargetPriority(2);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0005
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0005
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0005, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetAsanEnabled(true);
+    innerBundleInfo2.SetAsanEnabled(false);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ASAN_ENABLED_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0006
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0006
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0006, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo2.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0007
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0007
+ * @tc.require: issueI6PKSW
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0007, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetEntryInstallationFree(true);
+    innerBundleInfo2.SetEntryInstallationFree(false);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_TYPE_ERROR);
+}
 } // OHOS
