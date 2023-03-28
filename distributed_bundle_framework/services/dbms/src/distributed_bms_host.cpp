@@ -272,7 +272,7 @@ bool DistributedBmsHost::VerifySystemApp()
     return true;
 }
 
-bool DistributedBmsHost::VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID tokenID)
+bool DistributedBmsHost::VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID callerToken)
 {
     APP_LOGD("verifying system app for native token");
     Security::AccessToken::ATokenTypeEnum tokenType =

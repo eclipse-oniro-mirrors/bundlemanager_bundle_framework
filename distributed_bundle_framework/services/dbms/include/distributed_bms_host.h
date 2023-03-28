@@ -43,8 +43,8 @@ private:
     template<typename T>
     bool WriteParcelableVector(std::vector<T> &parcelableVector, Parcel &data);
     bool VerifySystemApp();
-    bool VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID tokenID);
-    bool VerifySystemAppForTokenShell(Security::AccessToken::AccessTokenID tokenID);
+    bool VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID callerToken);
+    bool VerifySystemAppForTokenShell(Security::AccessToken::AccessTokenID callerToken);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
