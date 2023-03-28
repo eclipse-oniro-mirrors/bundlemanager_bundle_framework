@@ -458,6 +458,7 @@ private:
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
+    void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl);
 #ifdef USE_PRE_BUNDLE_PROFILE
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
@@ -465,7 +466,7 @@ private:
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
-
+    void ListeningUserUnlocked() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
