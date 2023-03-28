@@ -12,8 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
+// @ts-ignore
 import hilog from '@ohos.hilog';
+// @ts-ignore
 import testNapi from 'libentry.so'
 
 @Entry
