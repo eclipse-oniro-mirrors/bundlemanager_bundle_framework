@@ -182,11 +182,6 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     for (const auto &el : Constants::BUNDLE_EL) {
-        if ((createDirParam.createDirFlag == CreateDirFlag::CREATE_DIR_UNLOCKED) &&
-            (el == Constants::BUNDLE_EL[0])) {
-            continue;
-        }
-
         std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + Constants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
             APP_LOGW("CreateBundleDataDir base directory does not existed.");
@@ -442,7 +437,6 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
         APP_LOGE("HapFileRestorecon path: %{private}s failed, ret:%{public}d", dir.c_str(), ret);
-        return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
     return ret;
 #else
