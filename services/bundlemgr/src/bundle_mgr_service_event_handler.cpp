@@ -48,7 +48,7 @@ const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
 // system version && hotpatch information
-const std::string BASE_VERSION_PARAM_NAME = "const.comp.hl.product_base_version.real";
+const std::string BASE_VERSION_PARAM_NAME = "const.product.software.version";
 const std::string BASE_VERSION_PARAM_RO_NAME = "ro.comp.hl.product_base_version.real";
 // this metadata used to indicate those system application update by hotpatch upgrade.
 const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
