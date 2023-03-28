@@ -46,8 +46,9 @@ const std::string X86_AN_PATH = "/an/x86/x86.so";
 const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
-const std::int PRIORITY_ONE = 1;
-const std::int PRIORITY_TWO = 2;
+const std::string ENTRY = "entry";
+const int32_t PRIORITY_ONE = 1;
+const int32_t PRIORITY_TWO = 2;
 }  // namespace
 
 class BmsBundleInstallCheckerTest : public testing::Test {
@@ -1095,7 +1096,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, SetEntryInstallationFree_0001, Function | 
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetIsNewVersion(false);
     PackageModule packageModule;
-    packageModule.distro.moduleType = "entry";
+    packageModule.distro.moduleType = ENTRY;
     packageModule.distro.installationFree = true;
     bundlePackInfo.summary.modules.emplace_back(packageModule);
     bundlePackInfo.SetValid(true);
