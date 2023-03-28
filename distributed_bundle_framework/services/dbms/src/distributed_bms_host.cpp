@@ -272,7 +272,7 @@ bool DistributedBmsHost::VerifySystemApp()
 
 bool DistributedBmsHost::VerifySystemAppForTokenNative()
 {
-    APP_LOGI("verifying systemAppForTokenNative");
+    APP_LOGD("verifying system app for native token");
     Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
@@ -287,7 +287,7 @@ bool DistributedBmsHost::VerifySystemAppForTokenNative()
 
 bool DistributedBmsHost::VerifySystemAppForTokenShell()
 {
-    APP_LOGI("verifying systemAppForTokenShell");
+    APP_LOGD("verifying system app for shell token");
     Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
