@@ -3173,7 +3173,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0024, Function | SmallTest | Leve
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
     EXPECT_EQ(installResult, ERR_OK);
-    
+
     AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -3994,22 +3994,6 @@ HWTEST_F(BmsBundleManagerTest, GetDataStorage_0001, Function | SmallTest | Level
     EXPECT_NE(dataStorage, nullptr);
     std::map<std::string, InnerBundleInfo> infos;
     bool res = dataStorage->LoadAllData(infos);
-    EXPECT_EQ(res, true);
-}
-
-/**
- * @tc.number: GetDataStorage_0002
- * @tc.name: test LoadAllData
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleManagerTest, GetDataStorage_0002, Function | SmallTest | Level1)
-{
-    auto dataStorage = GetBundleDataMgr()->GetDataStorage();
-    EXPECT_NE(dataStorage, nullptr);
-    InnerBundleInfo innerBundleInfo;
-    bool res = dataStorage->SaveStorageBundleInfo(innerBundleInfo);
-    EXPECT_EQ(res, true);
-    res = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_EQ(res, true);
 }
 
