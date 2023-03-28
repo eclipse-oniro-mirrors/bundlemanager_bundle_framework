@@ -1400,7 +1400,7 @@ HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfoTest, Function | SmallTe
     ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, false);
     dataMgr->bundleInfos_.clear();
-    innerBundleInfo.baseApplicationInfo_->compatiblePolicy = CompatiblePolicy::BACK_COMPATIBLE;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
     ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, true);

@@ -114,7 +114,7 @@ struct InnerModuleInfo {
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     AtomicServiceModuleType atomicServiceModuleType;
     std::vector<std::string> preloads;
-    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
+    BundleType bundleType = BundleType::SHARED;
     uint32_t versionCode = 0;
     std::string versionName;
 };
@@ -1407,11 +1407,6 @@ public:
     std::vector<std::string> GetAllowedAcls() const
     {
         return allowedAcls_;
-    }
-
-    CompatiblePolicy GetCompatiblePolicy() const
-    {
-        return baseApplicationInfo_->compatiblePolicy;
     }
 
     /**

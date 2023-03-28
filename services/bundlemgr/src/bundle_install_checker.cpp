@@ -645,7 +645,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
-    CompatiblePolicy compatiblePolicy = (infos.begin()->second).GetCompatiblePolicy();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
 
     for (const auto &info : infos) {
@@ -654,7 +653,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
         }
         // check version
-        if (compatiblePolicy == CompatiblePolicy::NORMAL) {
+        if (bundleType != BundleType::SHARED) {
             if (versionCode != info.second.GetVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
@@ -987,7 +986,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
-    if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL && !appPrivilegeCapability.appShareLibrary) {
+    if (applicationInfo.bundleType == BundleType::SHARED && !appPrivilegeCapability.appShareLibrary) {
         APP_LOGE("not allow app share library");
         return ERR_APPEXECFWK_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED;
     }

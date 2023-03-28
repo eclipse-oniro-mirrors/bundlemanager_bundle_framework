@@ -80,7 +80,7 @@ public:
 
 private:
     ErrCode CheckAppLabelInfo();
-    ErrCode CheckCompatiblePolicyWithInstalledVersion();
+    ErrCode CheckBundleTypeWithInstalledVersion();
     ErrCode ExtractSharedBundles(const std::string &bundlePath, InnerBundleInfo &newInfo);
     ErrCode MkdirIfNotExist(const std::string &dir);
     void MergeBundleInfos();

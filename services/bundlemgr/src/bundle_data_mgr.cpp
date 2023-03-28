@@ -1555,13 +1555,11 @@ bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
         return false;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::BACK_COMPATIBLE) {
+    if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
         innerBundleInfo.GetMaxVerBaseSharedBundleInfo(dependency.moduleName, baseSharedBundleInfo);
-    } else if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::PRECISE_MATCH) {
-        innerBundleInfo.GetBaseSharedBundleInfo(dependency.moduleName, dependency.versionCode, baseSharedBundleInfo);
     } else {
-        APP_LOGE("GetBaseSharedBundleInfo failed, can not find compatiblePolicy %{public}d",
-            innerBundleInfo.GetCompatiblePolicy());
+        APP_LOGE("GetBaseSharedBundleInfo failed, can not find bundleType %{public}d",
+            innerBundleInfo.GetApplicationBundleType());
         return false;
     }
     APP_LOGD("GetBaseSharedBundleInfo(%{public}s) successfully)", dependency.bundleName.c_str());
@@ -1708,7 +1706,7 @@ bool BundleDataMgr::GetBundleInfos(
     bool find = false;
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -1767,7 +1765,7 @@ bool BundleDataMgr::GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bu
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (info.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
             continue;
         }
@@ -1800,7 +1798,7 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
 
     for (const auto &item : bundleInfos_) {
         const InnerBundleInfo &innerBundleInfo = item.second;
-        if (innerBundleInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", innerBundleInfo.GetBundleName().c_str());
             continue;
         }
@@ -1839,7 +1837,7 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
             APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        if (info.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (info.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGD("app %{public}s is cross-app shared bundle, ignore", info.GetBundleName().c_str());
             continue;
         }
@@ -4502,7 +4500,7 @@ ErrCode BundleDataMgr::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sha
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
 
     for (const auto& [key, innerBundleInfo] : bundleInfos_) {
-        if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+        if (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED) {
             continue;
         }
         SharedBundleInfo sharedBundleInfo;
@@ -4553,7 +4551,7 @@ ErrCode BundleDataMgr::GetSharedBundleInfoBySelf(const std::string &bundleName, 
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
-    if (innerBundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+    if (innerBundleInfo.GetApplicationBundleType() != BundleType::SHARED) {
         APP_LOGE("GetSharedBundleInfoBySelf failed, the bundle(%{public}s) is not shared library",
             bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
