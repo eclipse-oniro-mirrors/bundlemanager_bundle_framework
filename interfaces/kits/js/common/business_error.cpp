@@ -42,10 +42,6 @@ constexpr const char* ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED =
     "Failed to install the hap since the hap signature fails to be verified.";
 constexpr const char* ERR_MSG_INSTALL_HAP_FILEPATH_INVALID =
     "Failed to install the hap since the path of the hap is invalid or too large size.";
-constexpr const char* ERR_MSG_INSTALL_HAP_SIZE_TOO_LARGE =
-    "Failed to install the hap since the hap is too large.";
-constexpr const char* ERR_MSG_INSTALL_INCORRECT_SUFFIX =
-    "Failed to install the hap since the extension name of the hap is not .hap.";
 constexpr const char* ERR_MSG_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT =
     "Failed to install haps since the configuration information of multi haps is inconsistent.";
 constexpr const char* ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT =
@@ -104,8 +100,6 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_PARSE_FAILED, ERR_MSG_INSTALL_PARSE_FAILED },
     { ERROR_INSTALL_VERIFY_SIGNATURE_FAILED, ERR_MSG_INSTALL_VERIFY_SIGNATURE_FAILED },
     { ERROR_INSTALL_HAP_FILEPATH_INVALID, ERR_MSG_INSTALL_HAP_FILEPATH_INVALID },
-    { ERROR_INSTALL_HAP_SIZE_TOO_LARGE, ERR_MSG_INSTALL_HAP_SIZE_TOO_LARGE },
-    { ERROR_INSTALL_INCORRECT_SUFFIX, ERR_MSG_INSTALL_INCORRECT_SUFFIX },
     { ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT, ERR_MSG_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
     { ERROR_INSTALL_NO_DISK_SPACE_LEFT, ERR_MSG_INSTALL_NO_DISK_SPACE_LEFT },
     { ERROR_INSTALL_VERSION_DOWNGRADE, ERR_MSG_INSTALL_VERSION_DOWNGRADE },
