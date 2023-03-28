@@ -211,7 +211,7 @@ int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &netw
     int32_t ret = GetUdidByNetworkId(networkId, udid);
     if (ret != 0) {
         APP_LOGE("can not get udid by networkId error:%{public}d", ret);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        return ret;
     }
     if (udid.size() == 0) {
         APP_LOGE("get udid is Empty");

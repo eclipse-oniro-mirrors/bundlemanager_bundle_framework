@@ -239,11 +239,11 @@ int32_t DistributedBmsHost::HandleGetDistributedBundleName(Parcel &data, Parcel 
 bool DistributedBmsHost::VerifyCallingPermission(const std::string &permissionName)
 {
     APP_LOGD("VerifyCallingPermission permission %{public}s", permissionName.c_str());
-    if (VerifySystemAppForTokenNative()) {
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (VerifySystemAppForTokenNative(callerToken)) {
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
-    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     int32_t ret = OHOS::Security::AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if (ret == OHOS::Security::AccessToken::PermissionState::PERMISSION_DENIED) {
         APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
@@ -257,7 +257,8 @@ bool DistributedBmsHost::VerifySystemApp()
 {
     APP_LOGI("verifying systemApp");
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (VerifySystemAppForTokenNative() || VerifySystemAppForTokenShell()
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (VerifySystemAppForTokenNative(callerToken) || VerifySystemAppForTokenShell(callerToken)
         || callingUid == Constants::ROOT_UID) {
         APP_LOGI("caller tokenType is native or shell, verify success");
         return true;
@@ -270,10 +271,9 @@ bool DistributedBmsHost::VerifySystemApp()
     return true;
 }
 
-bool DistributedBmsHost::VerifySystemAppForTokenNative()
+bool DistributedBmsHost::VerifySystemAppForTokenNative(Security::AccessToken::AccessTokenID tokenID)
 {
     APP_LOGD("verifying system app for native token");
-    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
@@ -285,10 +285,9 @@ bool DistributedBmsHost::VerifySystemAppForTokenNative()
     return false;
 }
 
-bool DistributedBmsHost::VerifySystemAppForTokenShell()
+bool DistributedBmsHost::VerifySystemAppForTokenShell(Security::AccessToken::AccessTokenID callerToken)
 {
     APP_LOGD("verifying system app for shell token");
-    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     Security::AccessToken::ATokenTypeEnum tokenType =
         Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("token type is %{public}d", static_cast<int32_t>(tokenType));
