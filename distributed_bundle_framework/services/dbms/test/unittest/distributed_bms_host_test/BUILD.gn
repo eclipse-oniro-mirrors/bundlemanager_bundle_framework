@@ -20,7 +20,10 @@ ohos_unittest("DistributedBmsHostTest") {
   module_out_path = module_output_path
   include_dirs = [ "${dbms_services_path}/include" ]
 
-  sources = [ "${dbms_services_path}/src/distributed_bms_host.cpp" ]
+  sources = [
+    "${dbms_services_path}/src/dbms_device_manager.cpp",
+    "${dbms_services_path}/src/distributed_bms_host.cpp",
+  ]
 
   sources += [
     "distributed_bms_host_test.cpp",
@@ -64,12 +67,6 @@ ohos_unittest("DistributedBmsHostTest") {
   if (account_enable_dbms) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
-  }
-
-  if (device_manager_enable) {
-    sources += [ "${dbms_services_path}/src/dbms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
   }
 }
 
