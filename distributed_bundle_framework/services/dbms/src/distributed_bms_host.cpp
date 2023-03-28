@@ -221,7 +221,8 @@ int DistributedBmsHost::HandleGetDistributedBundleInfo(Parcel &data, Parcel &rep
 int32_t DistributedBmsHost::HandleGetDistributedBundleName(Parcel &data, Parcel &reply)
 {
     APP_LOGD("DistributedBmsHost handle get distributedBundleName");
-    if (!VerifySystemAppForTokenNative() && !VerifySystemAppForTokenShell()) {
+    Security::AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    if (!VerifySystemAppForTokenNative(callerToken) && !VerifySystemAppForTokenShell(callerToken)) {
         APP_LOGE("caller tokenType not native or shell, verify failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
