@@ -1887,6 +1887,17 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
     return ExtensionAbilityType::UNSPECIFIED;
 }
 
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
+{
+    for (auto index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
+        if (index == static_cast<int32_t>(type)) {
+            return Profile::EXTENSION_TYPE_SET[index];
+        }
+    }
+
+    return "Unspecified";
+}
+
 bool ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
@@ -1921,7 +1932,7 @@ bool ToExtensionInfo(
         extensionInfo.process.append(".");
         extensionInfo.process.append(extensionInfo.moduleName);
         extensionInfo.process.append(":");
-        extensionInfo.process.append(extensionInfo.name);
+        extensionInfo.process.append(ConvertToExtensionTypeName(extensionInfo.type));
     }
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
