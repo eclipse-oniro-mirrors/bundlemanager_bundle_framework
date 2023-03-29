@@ -18,6 +18,7 @@
 #include <cinttypes>
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
 
@@ -44,6 +45,7 @@ ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePa
     }
 
     auto task = [quickFixer, bundleFilePaths] {
+        BundleMemoryGuard memoryGuard;
         quickFixer->DeployQuickFix(bundleFilePaths);
     };
 
@@ -63,6 +65,7 @@ ErrCode QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
     }
 
     auto task = [quickFixer, bundleName, enable] {
+        BundleMemoryGuard memoryGuard;
         quickFixer->SwitchQuickFix(bundleName, enable);
     };
 
@@ -82,6 +85,7 @@ ErrCode QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
     }
 
     auto task = [quickFixer, bundleName] {
+        BundleMemoryGuard memoryGuard;
         quickFixer->DeleteQuickFix(bundleName);
     };
 
