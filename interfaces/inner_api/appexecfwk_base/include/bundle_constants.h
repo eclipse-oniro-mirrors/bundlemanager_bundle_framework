@@ -171,6 +171,7 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";
