@@ -1089,7 +1089,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (hasInstalledInfo.versionCode == hapVersionCode) {
                 // update pre install app data dir selinux label
                 if (!updateSelinuxLabel) {
-                    UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel);
+                    UpdateAppDataSelinuxLabel(bundleName, hasInstalledInfo.applicationInfo.appPrivilegeLevel,
+                        hasInstalledInfo.isPreInstallApp,
+                        hasInstalledInfo.applicationInfo.debug);
                     updateSelinuxLabel = true;
                 }
                 if (hasModuleInstalled) {
@@ -1714,7 +1716,8 @@ void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleNam
     }
 }
 
-void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl)
+void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
+    bool isPreInstall, bool debug)
 {
     APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s start.", bundleName.c_str());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -1740,13 +1743,13 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
                 APP_LOGD("baseDir: %{private}s is not exist", baseDataDir.c_str());
                 continue;
             }
-            result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, true);
+            result = InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleName, apl, isPreInstall, debug);
             if (result != ERR_OK) {
                 APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
                 return;
             }
             std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + bundleName;
-            result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, true);
+            result = InstalldClient::GetInstance()->SetDirApl(databaseDataDir, bundleName, apl, isPreInstall, debug);
             if (result != ERR_OK) {
                 APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
                 return;

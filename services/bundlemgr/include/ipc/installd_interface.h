@@ -108,10 +108,11 @@ public:
      * @param bundleName Indicates the bundle name.
      * @param apl Indicates the apl type.
      * @param isPreInstallApp Indicates the bundle install type.
+     * @param debug Indicates the bundle debug mode.
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        bool isPreInstallApp) = 0;
+        bool isPreInstallApp, bool debug) = 0;
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.

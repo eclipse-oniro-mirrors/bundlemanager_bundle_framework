@@ -202,7 +202,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             }
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl,
-            createDirParam.isPreInstallApp);
+            createDirParam.isPreInstallApp, createDirParam.debug);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -215,7 +215,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
         }
         ret = SetDirApl(databaseDir, createDirParam.bundleName, createDirParam.apl,
-            createDirParam.isPreInstallApp);
+            createDirParam.isPreInstallApp, createDirParam.debug);
         if (ret != ERR_OK) {
             APP_LOGE("CreateBundleDataDir SetDirApl failed");
             return ret;
@@ -412,7 +412,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp)
+    bool isPreInstallApp, bool debug)
 {
 #ifdef WITH_SELINUX
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
