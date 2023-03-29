@@ -39,8 +39,8 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry:dependencies_entry",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry:dependencies_entry",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
 
   deps += bundle_install_deps

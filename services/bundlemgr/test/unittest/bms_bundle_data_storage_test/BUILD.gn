@@ -18,7 +18,7 @@ config("private_config") {
   include_dirs = [
     "${inner_api_path}/appexecfwk_core/include/bundlemgr",
     "${inner_api_path}/appexecfwk_base/include",
-    "${appexecfwk_path}/libs/test/mockpermission/permission",
+    "${bundle_framework_path}/libs/test/mockpermission/permission",
     "${services_path}/bundlemgr/test/mock/include",
     "//third_party/json/include",
   ]

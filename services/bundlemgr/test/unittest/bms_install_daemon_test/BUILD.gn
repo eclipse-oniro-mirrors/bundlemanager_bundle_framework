@@ -41,9 +41,9 @@ ohos_unittest("BmsInstallDaemonTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/install_daemon/right:right",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/install_daemon/right:right",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
