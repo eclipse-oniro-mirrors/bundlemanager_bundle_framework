@@ -46,10 +46,7 @@ ohos_shared_library("libappexecfwk_common") {
     }
   }
 
-  public_configs = [
-    ":appexecfwk_common_config",
-    "//commonlibrary/c_utils/base:utils_config",
-  ]
+  public_configs = [ ":appexecfwk_common_config" ]
 
   all_dependent_configs = [ ":bundle_all_dependent_config" ]
 
