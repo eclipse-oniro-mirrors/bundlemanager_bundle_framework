@@ -1243,4 +1243,18 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0007, Function | SmallTe
     auto ret = installChecker.CheckAppLabelInfo(infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_TYPE_ERROR);
 }
+
+/**
+ * @tc.number: BaseBundleInstaller_0001
+ * @tc.name: test the GrantRequestPermissions function of BaseBundleInstaller
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0001, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InnerBundleInfo info;
+    uint32_t tokenId = 0;
+    ErrCode res = baseBundleInstaller.GrantRequestPermissions(info, tokenId);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS
