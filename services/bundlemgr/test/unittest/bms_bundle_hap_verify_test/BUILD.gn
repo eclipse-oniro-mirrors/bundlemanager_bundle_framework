@@ -48,8 +48,8 @@ ohos_unittest("BmsBundleHapVerifyTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
   ]
   deps += bundle_install_deps
 

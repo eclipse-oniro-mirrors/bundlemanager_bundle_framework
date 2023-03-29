@@ -54,18 +54,18 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission3:bmsGrantPermission3",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission3:bmsGrantPermission3",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 
@@ -182,14 +182,14 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 
@@ -307,14 +307,14 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 

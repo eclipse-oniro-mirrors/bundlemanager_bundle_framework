@@ -24,12 +24,12 @@ ohos_systemtest("BmsPermissionGrantSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle1:permissionGrantBundle1",
-    "${appexecfwk_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle2:permissionGrantBundle2",
-    "${appexecfwk_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle3:permissionGrantBundle3",
-    "${appexecfwk_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle4:permissionGrantBundle4",
-    "${appexecfwk_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle5:permissionGrantBundle5",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle1:permissionGrantBundle1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle2:permissionGrantBundle2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle3:permissionGrantBundle3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle4:permissionGrantBundle4",
+    "${bundle_framework_path}/test/sceneProject/systemtest/permissionBundle/permissionGrantBundle5:permissionGrantBundle5",
     "${common_path}:libappexecfwk_common",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",

@@ -53,19 +53,19 @@ ohos_unittest("BmsBundleUninstallerTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fifth_right:fifth_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/fourth_right:fourth_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest1:versionTest1",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/fifth_right:fifth_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/fourth_right:fourth_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest1:rightTest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/second_right:second_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/seventh_right:seventh_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/third_right:third_right",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest1:versionTest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
   ]
   deps += bundle_install_deps
 

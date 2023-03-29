@@ -51,8 +51,8 @@ ohos_unittest("BmsBundleKitServiceTest") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_kit/test:test",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_kit/test:test",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
   deps += bundle_install_deps
 
@@ -164,8 +164,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/sandboxTest:sandboxTest",
   ]
   deps += bundle_install_deps
 

@@ -24,7 +24,7 @@ ohos_hap("stbmsThirdBundle10") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  certificate_profile = "${appexecfwk_path}/test/sceneProject/signature/com.third.hiworld.example2.p7b"
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.third.hiworld.example2.p7b"
 }
 ohos_js_assets("hjs_demo_js_assets") {
   source_dir = "./src/main/js/default"
