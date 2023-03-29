@@ -595,7 +595,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_SetDirApl_0400, TestSize.L
     std::string bundleName = BUNDLE_NAME;
     std::string apl = APL;
     ErrCode result = installClient_->SetDirApl(dir, bundleName, apl, true, false);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::SetDirApl, dir, bundleName, apl, true));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::SetDirApl, dir, bundleName, apl, true, false));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_SetDirApl_0400 end";
 }
 
