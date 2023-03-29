@@ -428,20 +428,18 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
         APP_LOGE("Calling the function SetDirApl with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    std::string aplLevel = Profile::AVAILABLELEVEL_NORMAL;
-    if (!apl.empty()) {
-        aplLevel = apl;
-    }
     HapFileInfo hapFileInfo;
     hapFileInfo.pathNameOrig.push_back(dir);
-    hapFileInfo.apl = aplLevel;
+    hapFileInfo.apl = apl;
     hapFileInfo.packageName = bundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
     hapFileInfo.hapFlags = isPreInstallApp ? 1 : 0;
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {
-        APP_LOGE("HapFileRestorecon path: %{private}s failed, ret:%{public}d", dir.c_str(), ret);
+        APP_LOGE("HapFileRestorecon path: %{private}s failed, apl: %{public}s, errcode:%{public}d",
+            dir.c_str(), apl.c_str(), ret);
+        return ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED;
     }
     return ret;
 #else
