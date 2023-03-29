@@ -542,11 +542,11 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0100, Function | SmallTest | Level
         service->Start();
     }
     std::string TEST_STRING = "test.string";
-    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING, false);
+    ErrCode ret = InstalldClient::GetInstance()->SetDirApl("", BUNDLE_NAME, TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING, false);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, "", TEST_STRING, false, false);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", true);
+    ret = InstalldClient::GetInstance()->SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", true, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

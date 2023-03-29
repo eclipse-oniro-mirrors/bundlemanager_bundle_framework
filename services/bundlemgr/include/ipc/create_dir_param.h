@@ -28,6 +28,7 @@ struct CreateDirParam : public Parcelable {
     int32_t gid;
     std::string apl;
     bool isPreInstallApp = false;
+    bool debug = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
