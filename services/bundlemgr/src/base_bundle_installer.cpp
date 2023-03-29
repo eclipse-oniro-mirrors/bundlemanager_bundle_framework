@@ -1996,7 +1996,7 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
         }
         std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp()
+            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
             info.GetBaseApplicationInfo().debug);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
