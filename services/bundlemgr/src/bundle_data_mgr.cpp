@@ -2442,6 +2442,7 @@ bool BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
     infoItem->second.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     info = infoItem->second;
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     return true;
 }
 
