@@ -325,6 +325,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED},
         { IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY,
             ERROR_UNINSTALL_BUNDLE_IS_SHARED_BUNDLE},
+        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
     };
 }
 
