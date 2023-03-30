@@ -1458,7 +1458,7 @@ HWTEST_F(DbmsServicesKitTest, DbmsServicesKitTest_0075, Function | SmallTest | L
     if (distributedBmsProxy != nullptr) {
         DistributedBundleInfo distributedBundleInfo;
         int32_t ret = distributedBmsProxy->GetDistributedBundleName("", 0, bundleName);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+        EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
     }
 }
 
