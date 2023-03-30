@@ -50,6 +50,7 @@ protected:
         INSTALL_OVERLAY_CHECKED = 30,
         INSTALL_VERSION_AND_BUNDLENAME_CHECKED = 35,
         INSTALL_NATIVE_SO_CHECKED = 40,
+        INSTALL_PROXY_DATA_CHECKED = 45,
         INSTALL_REMOVE_SANDBOX_APP = 50,
         INSTALL_EXTRACTED = 60,
         INSTALL_INFO_SAVED = 80,
@@ -570,6 +571,7 @@ private:
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
+    ErrCode CheckProxyDatas(std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
