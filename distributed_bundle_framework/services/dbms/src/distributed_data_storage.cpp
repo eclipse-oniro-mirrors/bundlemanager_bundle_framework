@@ -199,7 +199,6 @@ bool DistributedDataStorage::GetStorageDistributeInfo(const std::string &network
 int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
     std::string &bundleName)
 {
-    APP_LOGI("get StorageDistributeInfos By networkId and accessTokenId");
     {
         std::lock_guard<std::mutex> lock(kvStorePtrMutex_);
         if (!CheckKvStore()) {
