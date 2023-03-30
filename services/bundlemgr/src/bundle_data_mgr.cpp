@@ -1199,18 +1199,17 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     info.InsertAbilitiesInfo(keyName, appDetailAbility);
 }
 
-bool BundleDataMgr::QueryLauncherAbilityInfos(
-    const Want& want, uint32_t userId, std::vector<AbilityInfo>& abilityInfos) const
+ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
+    const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     ElementName element = want.GetElement();
@@ -1225,17 +1224,17 @@ bool BundleDataMgr::QueryLauncherAbilityInfos(
             }
             GetMatchLauncherAbilityInfos(want, info, abilityInfos, requestUserId);
         }
-        return true;
+        return ERR_OK;
     } else {
         // query definite abilitys by bundle name
         auto item = bundleInfos_.find(bundleName);
         if (item == bundleInfos_.end()) {
             APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
-            return false;
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         GetMatchLauncherAbilityInfos(want, item->second, abilityInfos, requestUserId);
         FilterAbilityInfosByModuleName(element.GetModuleName(), abilityInfos);
-        return true;
+        return ERR_OK;
     }
 }
 

@@ -461,6 +461,12 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
+
+    virtual ErrCode QueryLauncherAbilityInfos(
+        const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     /**
      * @brief Query the AllAbilityInfos of list by the given userId.
      * @param userId Indicates the information of the user.
@@ -1268,6 +1274,7 @@ public:
         GET_SHARED_DEPENDENCIES,
         GET_DEPENDENT_BUNDLE_INFO,
         GET_UID_BY_DEBUG_BUNDLE_NAME,
+        QUERY_LAUNCHER_ABILITY_INFO,
     };
 };
 }  // namespace AppExecFwk
