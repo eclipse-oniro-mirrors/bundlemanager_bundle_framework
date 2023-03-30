@@ -149,6 +149,7 @@ static const std::string HELP_MSG = "usage: bundle_test_tool <command> <options>
                              "  setDebugMode        enable signature debug mode\n"
                              "  getBundleStats        get bundle stats\n"
                              "  getAppProvisionInfo   get appProvisionInfo\n"
+                             "  getDistributedBundleName   get distributedBundleName\n"
                              "  eventCB        register then unregister bundle event callback\n";
 
 const std::string HELP_MSG_GET_REMOVABLE =
@@ -391,6 +392,14 @@ const std::string HELP_MSG_GET_APP_PROVISION_INFO =
     "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
+const std::string HELP_MSG_GET_DISTRIBUTED_BUNDLE_NAME =
+    "usage: bundle_test_tool getDistributedBundleName <options>\n"
+    "eg:bundle_test_tool getDistributedBundleName -n <network-id> -a <access-token-id>\n"
+    "options list:\n"
+    "  -h, --help                                   list available commands\n"
+    "  -n, --network-id  <network-id>               specify networkId of the application\n"
+    "  -a, --access-token-id <access-token-id>      specify a accessTokenId of the application \n";
+
 const std::string HELP_MSG_BUNDLE_EVENT_CALLBACK =
     "usage: bundle_test_tool eventCB <options>\n"
     "options list:\n"
@@ -400,6 +409,12 @@ const std::string HELP_MSG_BUNDLE_EVENT_CALLBACK =
 
 const std::string HELP_MSG_NO_BUNDLE_NAME_OPTION =
     "error: you must specify a bundle name with '-n' or '--bundle-name' \n";
+
+const std::string HELP_MSG_NO_NETWORK_ID_OPTION =
+    "error: you must specify a network id with '-n' or '--network-id' \n";
+
+const std::string HELP_MSG_NO_ACCESS_TOKEN_ID_OPTION =
+    "error: you must specify a access token id with '-n' or '--access-token-id' \n";
 
 const std::string STRING_SET_REMOVABLE_OK = "set removable is ok \n";
 const std::string STRING_SET_REMOVABLE_NG = "error: failed to set removable \n";
@@ -441,6 +456,15 @@ const std::string STRING_GET_BUNDLE_STATS_NG = "get bundle stats failed\n";
 
 const std::string STRING_GET_APP_PROVISION_INFO_OK = "get appProvisionInfo successfully\n";
 const std::string STRING_GET_APP_PROVISION_INFO_NG = "get appProvisionInfo failed\n";
+
+const std::string HELP_MSG_NO_GET_DISTRIBUTED_BUNDLE_NAME_OPTION =
+    "error: you must specify a control type with '-n' or '--network-id' \n"
+    "and a accessTokenId with '-a' or '--access-token-id' \n";
+
+const std::string GET_DISTRIBUTED_BUNDLE_NAME_COMMAND_NAME = "getDistributedBundleName";
+
+const std::string STRING_GET_DISTRIBUTED_BUNDLE_NAME_OK = "get distributedBundleName successfully\n";
+const std::string STRING_GET_DISTRIBUTED_BUNDLE_NAME_NG = "get distributedBundleName failed\n";
 
 const std::string GET_BUNDLE_STATS_ARRAY[] = {
     "app data size: ",
@@ -525,6 +549,13 @@ const struct option LONG_OPTIONS_GET_BUNDLE_STATS[] = {
     {"user-id", required_argument, nullptr, 'u'},
     {nullptr, 0, nullptr, 0},
 };
+const std::string SHORT_OPTIONS_GET_DISTRIBUTED_BUNDLE_NAME = "hn:a:";
+const struct option LONG_OPTIONS_GET_DISTRIBUTED_BUNDLE_NAME[] = {
+    {"help", no_argument, nullptr, 'h'},
+    {"network-id", required_argument, nullptr, 'n'},
+    {"access-token-id", required_argument, nullptr, 'a'},
+    {nullptr, 0, nullptr, 0},
+};
 
 const std::string SHORT_OPTIONS_BUNDLE_EVENT_CALLBACK = "hou:";
 const struct option LONG_OPTIONS_BUNDLE_EVENT_CALLBACK[] = {
@@ -587,6 +618,7 @@ ErrCode BundleTestTool::CreateCommandMap()
         {"setDebugMode", std::bind(&BundleTestTool::RunAsSetDebugMode, this)},
         {"getBundleStats", std::bind(&BundleTestTool::RunAsGetBundleStats, this)},
         {"getAppProvisionInfo", std::bind(&BundleTestTool::RunAsGetAppProvisionInfo, this)},
+        {"getDistributedBundleName", std::bind(&BundleTestTool::RunAsGetDistributedBundleName, this)},
         {"eventCB", std::bind(&BundleTestTool::HandleBundleEventCallback, this)},
     };
 
@@ -617,6 +649,12 @@ ErrCode BundleTestTool::Init()
         (bundleInstallerProxy_->AsObject() == nullptr)) {
         result = OHOS::ERR_INVALID_VALUE;
     }
+
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
+    if (distributedBmsProxy_ == nullptr) {
+        distributedBmsProxy_ = BundleCommandCommon::GetDistributedBundleMgrService();
+    }
+#endif
 
     return result;
 }
@@ -2760,6 +2798,102 @@ ErrCode BundleTestTool::GetAppProvisionInfo(const std::string &bundleName,
     return ret;
 }
 
+ErrCode BundleTestTool::RunAsGetDistributedBundleName()
+{
+    ErrCode result = OHOS::ERR_OK;
+    std::string networkId;
+    int32_t counter = 0;
+    int32_t accessTokenId = 0;
+    while (true) {
+        counter++;
+        int32_t option = getopt_long(argc_, argv_, SHORT_OPTIONS_GET_DISTRIBUTED_BUNDLE_NAME.c_str(),
+            LONG_OPTIONS_GET_DISTRIBUTED_BUNDLE_NAME, nullptr);
+        APP_LOGD("option: %{public}d, optopt: %{public}d, optind: %{public}d", option, optopt, optind);
+        if (optind < 0 || optind > argc_) {
+            return OHOS::ERR_INVALID_VALUE;
+        }
+        if (option == -1) {
+            if ((counter == 1) && (strcmp(argv_[optind], cmd_.c_str()) == 0)) {
+                resultReceiver_.append(HELP_MSG_NO_GET_DISTRIBUTED_BUNDLE_NAME_OPTION);
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        result = CheckGetDistributedBundleNameCorrectOption(option, GET_DISTRIBUTED_BUNDLE_NAME_COMMAND_NAME,
+            networkId, accessTokenId);
+        if (result != OHOS::ERR_OK) {
+            resultReceiver_.append(HELP_MSG_GET_DISTRIBUTED_BUNDLE_NAME);
+            return OHOS::ERR_INVALID_VALUE;
+        }
+    }
+    if (accessTokenId == 0 || networkId.size() == 0) {
+        resultReceiver_.append(HELP_MSG_NO_GET_DISTRIBUTED_BUNDLE_NAME_OPTION);
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    std::string msg;
+    result = GetDistributedBundleName(networkId, accessTokenId, msg);
+    if (result == OHOS::ERR_OK) {
+        resultReceiver_ = STRING_GET_DISTRIBUTED_BUNDLE_NAME_OK + msg;
+    } else {
+        resultReceiver_ = STRING_GET_DISTRIBUTED_BUNDLE_NAME_NG + "\n";
+    }
+    return result;
+}
+
+ErrCode BundleTestTool::CheckGetDistributedBundleNameCorrectOption(int32_t option, const std::string &commandName,
+    std::string &networkId, int32_t &accessTokenId)
+{
+    ErrCode result = OHOS::ERR_OK;
+    switch (option) {
+        case 'h': {
+            result = OHOS::ERR_INVALID_VALUE;
+            break;
+        }
+        case 'n': {
+            networkId = optarg;
+            if (networkId.size() == 0) {
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        case 'a': {
+            if (!OHOS::StrToInt(optarg, accessTokenId) || accessTokenId < 0) {
+                return OHOS::ERR_INVALID_VALUE;
+            }
+            break;
+        }
+        default: {
+            result = OHOS::ERR_INVALID_VALUE;
+            break;
+        }
+    }
+    return result;
+}
+
+ErrCode BundleTestTool::GetDistributedBundleName(const std::string &networkId,
+    int32_t accessTokenId, std::string& msg)
+{
+    if (distributedBmsProxy_ == nullptr) {
+        APP_LOGE("distributedBmsProxy_ is nullptr");
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    std::string bundleName;
+    auto ret = distributedBmsProxy_->GetDistributedBundleName(networkId, accessTokenId, bundleName);
+    if (ret == OHOS::NO_ERROR) {
+        msg = "\n";
+        if (bundleName.size() == 0) {
+            msg += "no match found \n";
+        } else {
+            msg += bundleName + "\n";
+        }
+        msg += "\n";
+    } else {
+        APP_LOGE("distributedBmsProxy_ GetDistributedBundleName fail errcode %{public}d",ret);
+        return OHOS::ERR_INVALID_VALUE;
+    }
+    return OHOS::ERR_OK;
+}
+
 bool BundleTestTool::ParseEventCallbackOptions(bool &onlyUnregister, int32_t &uid)
 {
     int32_t opt;
@@ -2853,7 +2987,7 @@ ErrCode BundleTestTool::HandleBundleEventCallback()
         return OHOS::ERR_INVALID_VALUE;
     }
     seteuid(uid);
-    ErrCode ret;
+    ErrCode ret = OHOS::ERR_OK;
     sptr<BundleEventCallbackImpl> bundleEventCallback = new (std::nothrow) BundleEventCallbackImpl();
     if (onlyUnregister) {
         // only call UnRegisterBundleEventCallback
