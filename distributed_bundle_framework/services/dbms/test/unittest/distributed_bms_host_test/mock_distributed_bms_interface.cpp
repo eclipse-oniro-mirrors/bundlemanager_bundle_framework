@@ -73,5 +73,11 @@ bool MockDistributedBmsHost::GetDistributedBundleInfo(
     return true;
 }
 
+int32_t MockDistributedBmsHost::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
+    std::string &bundleName)
+{
+    return 0;
+}
+
 } // namespace AppExecFwk
 } // namespace OHOS

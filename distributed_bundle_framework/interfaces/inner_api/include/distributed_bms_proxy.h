@@ -106,6 +106,16 @@ public:
     
     bool GetDistributedBundleInfo(const std::string &networkId, const std::string &bundleName,
         DistributedBundleInfo &distributedBundleInfo) override;
+
+    /**
+     * @brief get distributedBundleName based on a given accessTokenId and networkId.
+     * @param networkId Indicates the networkId of remote device.
+     * @param accessTokenId AccessTokenId of the application
+     * @param bundleNames distributed bundle name.
+     * @return Returns ERR_OK on success, others on failure when get distributed bundle name.
+     */
+    int32_t GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
+        std::string &bundleName) override;
 private:
     int32_t SendRequest(IDistributedBms::Message code, MessageParcel &data, MessageParcel &reply);
     template<typename T>
