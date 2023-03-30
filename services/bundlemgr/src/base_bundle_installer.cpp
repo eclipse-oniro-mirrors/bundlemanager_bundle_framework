@@ -68,6 +68,7 @@ const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
+const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 
 #ifdef QUOTA_PARAM_SET_ENABLE
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
@@ -1312,6 +1313,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
             dataMgr_->EnableBundle(bundleName);
+            if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+                APP_LOGD("shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
+                return ERR_OK;
+            }
+
             versionCode_ = oldInfo.GetVersionCode();
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 APP_LOGE("App is exist in user(%{public}d).", userId_);
@@ -1380,8 +1386,14 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     }
 
     APP_LOGD("Get preInstall bundlePath success.");
-    std::vector<std::string> pathVec { preInstallBundleInfo.GetBundlePaths() };
+    std::vector<std::string> pathVec;
     auto innerInstallParam = installParam;
+    bool isSharedBundle = preInstallBundleInfo.GetBundlePaths().front().find(PRE_INSTALL_HSP_PATH) != std::string::npos;
+    if (isSharedBundle) {
+        innerInstallParam.sharedBundleDirPaths = preInstallBundleInfo.GetBundlePaths();
+    } else {
+        pathVec = preInstallBundleInfo.GetBundlePaths();
+    }
     innerInstallParam.isPreInstallApp = true;
     innerInstallParam.removable = preInstallBundleInfo.IsRemovable();
     innerInstallParam.copyHapToInstallPath = false;
@@ -1976,14 +1988,16 @@ ErrCode BaseBundleInstaller::SetDirApl(const InnerBundleInfo &info)
             continue;
         }
         result = InstalldClient::GetInstance()->SetDirApl(
-            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp());
+            baseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
+            info.GetBaseApplicationInfo().debug);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl baseDir dir, error is %{public}d", result);
             return result;
         }
         std::string databaseDataDir = baseBundleDataDir + Constants::DATABASE + info.GetBundleName();
         result = InstalldClient::GetInstance()->SetDirApl(
-            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp());
+            databaseDataDir, info.GetBundleName(), info.GetAppPrivilegeLevel(), info.IsPreInstallApp(),
+            info.GetBaseApplicationInfo().debug);
         if (result != ERR_OK) {
             APP_LOGE("fail to SetDirApl databaseDir dir, error is %{public}d", result);
             return result;

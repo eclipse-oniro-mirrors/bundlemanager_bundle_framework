@@ -1902,4 +1902,52 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckTargetBundle_0100, Function | SmallTe
     code = checker.CheckTargetBundle(TEST_BUNDLE_NAME, "", "", USERID);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
 }
+
+/**
+ * @tc.number: UpdateInnerBundleInfo_0100
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of RemoveOverlayModuleConnection.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, UpdateInnerBundleInfo_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info1;
+    BundleInfo bundleInfo1;
+    bundleInfo1.name = TEST_BUNDLE_NAME;
+    bundleInfo1.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo1;
+    applicationInfo1.name = TEST_BUNDLE_NAME;
+    applicationInfo1.bundleName = TEST_BUNDLE_NAME;
+    info1.SetBaseBundleInfo(bundleInfo1);
+    info1.SetBaseApplicationInfo(applicationInfo1);
+
+    InnerBundleInfo info2;
+    BundleInfo bundleInfo2;
+    bundleInfo2.name = TEST_BUNDLE_NAME;
+    bundleInfo2.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    ApplicationInfo applicationInfo2;
+    applicationInfo2.name = TEST_BUNDLE_NAME;
+    applicationInfo2.bundleName = TEST_BUNDLE_NAME;
+    info2.SetBaseBundleInfo(bundleInfo2);
+    info2.SetBaseApplicationInfo(applicationInfo2);
+    info2.SetIsNewVersion(true);
+    info2.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    dataMgr->AddUserId(USERID);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
+    dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info1);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_START);
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+    bool ret = dataMgr->UpdateInnerBundleInfo(TEST_BUNDLE_NAME, info2, info1);
+    EXPECT_TRUE(ret);
+
+    info2.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    ret = dataMgr->UpdateInnerBundleInfo(TEST_BUNDLE_NAME, info2, info1);
+    EXPECT_FALSE(ret);
+
+    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_START);
+}
 } // OHOS

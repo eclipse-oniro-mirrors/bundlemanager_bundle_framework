@@ -30,7 +30,6 @@ ohos_unittest("CommonPerfProfileTest") {
     "${common_path}:appexecfwk_common_config",
     "${common_path}/test:common_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//commonlibrary/c_utils/base:utils_config",
   ]
 
   deps = [ "//third_party/googletest:gtest_main" ]

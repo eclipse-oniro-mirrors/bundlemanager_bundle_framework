@@ -19,6 +19,7 @@
 
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
 #include "ipc_skeleton.h"
@@ -52,6 +53,7 @@ void BundleInstallerManager::CreateInstallTask(
         return;
     }
     auto task = [installer, bundleFilePath, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePath, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -68,6 +70,7 @@ void BundleInstallerManager::CreateRecoverTask(
         return;
     }
     auto task = [installer, bundleName, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Recover(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -84,6 +87,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         return;
     }
     auto task = [installer, bundleFilePaths, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePaths, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -101,6 +105,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
     }
 
     auto task = [installer, bundleName, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->InstallByBundleName(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -117,6 +122,7 @@ void BundleInstallerManager::CreateUninstallTask(
         return;
     }
     auto task = [installer, bundleName, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -133,6 +139,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         return;
     }
     auto task = [installer, bundleName, modulePackage, installParam] {
+        BundleMemoryGuard memoryGuard;
         int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, modulePackage, installParam);
         XCollieHelper::CancelTimer(timerId);
@@ -149,6 +156,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         return;
     }
     auto task = [installer, uninstallParam] {
+        BundleMemoryGuard memoryGuard;
         int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(uninstallParam);
         XCollieHelper::CancelTimer(timerId);

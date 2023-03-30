@@ -24,8 +24,8 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
-    "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",

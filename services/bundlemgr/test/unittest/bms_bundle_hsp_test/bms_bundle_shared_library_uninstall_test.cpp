@@ -56,7 +56,7 @@ public:
     void TearDown();
     void StartInstalldService() const;
     void StartBundleService();
-    ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths, 
+    ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths,
         const std::vector<std::string> &sharedBundlePaths) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     ErrCode UninstallShred(const UninstallParam &uninstallParam) const;

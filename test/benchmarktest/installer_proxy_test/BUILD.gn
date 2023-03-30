@@ -27,8 +27,8 @@ ohos_benchmarktest("BenchmarkTestInstallerProxy") {
   }
 
   deps = [
-    "${appexecfwk_path}/test/sceneProject/benchmark/benchmarktesthap:benchmarktesthap",
-    "${appexecfwk_path}/test/sceneProject/benchmark/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/benchmark/benchmarktesthap:benchmarktesthap",
+    "${bundle_framework_path}/test/sceneProject/benchmark/ohos_test:copy_ohos_test",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/benchmark:benchmark",
   ]

@@ -707,7 +707,7 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
     if (asyncCallbackInfo->err == OPERATION_SUCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
+        ParseLauncherAbilityInfo(env, result[ARGS_POS_ONE], asyncCallbackInfo->launcherAbilityInfos);
     } else {
         napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);

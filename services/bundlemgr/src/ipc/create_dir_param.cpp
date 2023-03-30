@@ -28,7 +28,7 @@ bool CreateDirParam::ReadFromParcel(Parcel &parcel)
     uid = parcel.ReadInt32();
     gid = parcel.ReadInt32();
     isPreInstallApp = parcel.ReadBool();
-    createDirFlag = static_cast<CreateDirFlag>(parcel.ReadInt32());
+    debug = parcel.ReadBool();
     return true;
 }
 
@@ -40,7 +40,7 @@ bool CreateDirParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, gid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isPreInstallApp);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(createDirFlag));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     return true;
 }
 
