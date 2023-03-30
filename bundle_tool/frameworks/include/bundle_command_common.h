@@ -31,7 +31,6 @@ class BundleCommandCommon {
 public:
     static sptr<IBundleMgr> GetBundleMgrProxy();
 
-
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     static sptr<IDistributedBms> GetDistributedBundleMgrService();
 #endif

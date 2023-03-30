@@ -2888,7 +2888,7 @@ ErrCode BundleTestTool::GetDistributedBundleName(const std::string &networkId,
         }
         msg += "\n";
     } else {
-        APP_LOGE("distributedBmsProxy_ GetDistributedBundleName fail errcode %{public}d",ret);
+        APP_LOGE("distributedBmsProxy_ GetDistributedBundleName fail errcode %{public}d.", ret);
         return OHOS::ERR_INVALID_VALUE;
     }
     return OHOS::ERR_OK;
