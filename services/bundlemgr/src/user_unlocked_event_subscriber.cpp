@@ -61,6 +61,7 @@ bool UserUnlockedEventSubscriber::CreateBundleDataDir(const BundleInfo &bundleIn
         createDirParam.gid = bundleInfo.gid;
         createDirParam.apl = bundleInfo.applicationInfo.appPrivilegeLevel;
         createDirParam.isPreInstallApp = bundleInfo.isPreInstallApp;
+        createDirParam.debug = bundleInfo.applicationInfo.debug;
         createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
         if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam) != ERR_OK) {
             APP_LOGE("failed to CreateBundleDataDir");
@@ -92,15 +93,17 @@ void UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
         }
         std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
-            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp) != ERR_OK) {
+            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
+            bundleInfo.applicationInfo.debug) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDir dir");
             continue;
         }
-        std::string baseDataDir = baseBundleDataDir + Constants::DATABASE + bundleInfo.name;
+        /*std::string baseDataDir = baseBundleDataDir + Constants::DATABASE + bundleInfo.name;
         if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
-            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp) != ERR_OK) {
+            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
+            bundleInfo.applicationInfo.debug) != ERR_OK) {
             APP_LOGW("failed to SetDirApl baseDataDir dir");
-        }
+        }*/
     }
 }
 }  // namespace AppExecFwk
