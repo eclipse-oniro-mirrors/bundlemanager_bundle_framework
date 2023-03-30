@@ -65,6 +65,8 @@ const std::string DEVICE_ID = "PHONE-001";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
+const int32_t FLAG_ONE = 1;
+const int32_t FLAG_TWO = 2;
 const int32_t INVALID_USER_ID = -1;
 const std::string EMPTY_STRING = "";
 const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
@@ -151,7 +153,8 @@ sptr<BundleMgrProxy> BmsBundleFreeInstallTest::GetBundleMgrProxy()
 }
 
 
-void BmsBundleFreeInstallTest::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, int32_t flag) {
+void BmsBundleFreeInstallTest::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, int32_t flag)
+{
     InnerModuleInfo moduleInfo;
     moduleInfo.moduleName = MODULE_NAME_TEST_ONE;
     moduleInfo.name = MODULE_NAME_TEST_ONE;
@@ -162,10 +165,10 @@ void BmsBundleFreeInstallTest::UpdateInnerBundleInfo(InnerBundleInfo &innerBundl
 
     std::vector<std::string> preloads;
     switch (flag) {
-        case 1:
+        case FLAG_ONE:
             preloads.emplace_back(MODULE_NAME_TEST_ONE);
             break;
-        case 2:
+        case FLAG_TWO:
             preloads.emplace_back(MODULE_NAME_TEST_ONE);
             preloads.emplace_back(MODULE_NAME_TEST_TWO);
         default:
