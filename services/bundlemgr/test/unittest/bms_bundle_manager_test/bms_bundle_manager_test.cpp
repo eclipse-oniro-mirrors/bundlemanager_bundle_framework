@@ -4418,7 +4418,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0200, Function | SmallTest |
     BundleInfo info;
 
     ClearDataMgr();
-    ErrCode ret = hostImpl->GetBundleInfoForSelf(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT, info);
+    ErrCode ret = hostImpl->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_WITH_ABILITIES, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     SetDataMgr();
 
