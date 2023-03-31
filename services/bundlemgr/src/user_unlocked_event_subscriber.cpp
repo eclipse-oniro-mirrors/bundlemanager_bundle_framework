@@ -37,7 +37,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     std::string action = data.GetWant().GetAction();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
-        APP_LOGD("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
+        APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
         std::thread updateDataDirThread(UpdateAppDataDirSelinuxLabel, userId);
         updateDataDirThread.detach();
     }
@@ -84,12 +84,25 @@ void UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
+    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+        Constants::PATH_SEPARATOR + std::to_string(userId);
+
     for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.singleton) {
+        if (bundleInfo.singleton || !CreateBundleDataDir(bundleInfo, userId)) {
             continue;
         }
-        if (!CreateBundleDataDir(bundleInfo, userId)) {
-            APP_LOGE("bundleName: %{public}s CreateBundleDataDir failed", bundleInfo.name.c_str());
+        std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;
+        if (InstalldClient::GetInstance()->SetDirApl(baseDir, bundleInfo.name,
+            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
+            bundleInfo.applicationInfo.debug) != ERR_OK) {
+            APP_LOGW("failed to SetDirApl baseDir dir");
+            continue;
+        }
+        std::string baseDataDir = baseBundleDataDir + Constants::DATABASE + bundleInfo.name;
+        if (InstalldClient::GetInstance()->SetDirApl(baseDataDir, bundleInfo.name,
+            bundleInfo.applicationInfo.appPrivilegeLevel, bundleInfo.isPreInstallApp,
+            bundleInfo.applicationInfo.debug) != ERR_OK) {
+            APP_LOGW("failed to SetDirApl baseDataDir dir");
         }
     }
 }

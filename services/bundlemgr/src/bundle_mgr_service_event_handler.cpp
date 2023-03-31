@@ -236,13 +236,13 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
-    ListeningUserUnlocked();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();
     if (needNotifyBundleScanStatus_) {
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
+    ListeningUserUnlocked();
 }
 
 void BMSEventHandler::ClearCache()
