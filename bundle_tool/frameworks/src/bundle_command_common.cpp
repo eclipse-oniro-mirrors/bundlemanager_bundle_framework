@@ -590,6 +590,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error, shared bundle is relied",
     },
     {
+        IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_URI_FAILED,
+        "error, bundle name in proxy data uri is different",
+    },
+    {
+        IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
+        "error, apl of required permission in proxy data is too low",
+    },
+    {
         IStatusReceiver::ERR_UNKNOWN,
         "error: unknown.",
     }

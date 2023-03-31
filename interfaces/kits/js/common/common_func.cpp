@@ -60,8 +60,6 @@ constexpr const char* ICON_ID = "iconId";
 constexpr const char* APPLICATION_INFO = "applicationInfo";
 constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
-constexpr const char* REQUIRED_READ_PERMISSION = "requiredReadPermission";
-constexpr const char* REQUIRED_WRITE_PERMISSION = "requiredWritePermission";
 constexpr const char* DEBUG = "debug";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
@@ -1177,32 +1175,6 @@ void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
 }
 
-void CommonFunc::ConvertProxyData(napi_env env, const ProxyData &proxyData, napi_value value)
-{
-    napi_value nUri;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, proxyData.uri.c_str(), NAPI_AUTO_LENGTH, &nUri));
-    NAPI_CALL_RETURN_VOID(
-        env, napi_set_named_property(env, value, URI, nUri));
-
-    napi_value nRequiredReadPermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, proxyData.requiredReadPermission.c_str(), NAPI_AUTO_LENGTH, &nRequiredReadPermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(
-        env, value, REQUIRED_READ_PERMISSION, nRequiredReadPermission));
-
-    napi_value nRequiredWritePermission;
-    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
-        env, proxyData.requiredWritePermission.c_str(), NAPI_AUTO_LENGTH, &nRequiredWritePermission));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(
-        env, value, REQUIRED_WRITE_PERMISSION, nRequiredWritePermission));
-
-    napi_value nMetadata;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nMetadata));
-    ConvertMetadata(env, proxyData.metadata, nMetadata);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, META_DATA, nMetadata));
-}
-
 void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value)
 {
     napi_value nAppId;
@@ -1329,16 +1301,6 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPreloads, index, nPreload));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "preloads", nPreloads));
-    napi_value nProxyDatas;
-    size = hapModuleInfo.proxyDatas.size();
-    NAPI_CALL_RETURN_VOID(env, napi_create_array_with_length(env, size, &nProxyDatas));
-    for (size_t index = 0; index < size; ++index) {
-        napi_value nProxyData;
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nProxyData));
-        ConvertProxyData(env, hapModuleInfo.proxyDatas[index], nProxyData);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nProxyDatas, index, nProxyData));
-    }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "proxyDatas", nProxyDatas));
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)

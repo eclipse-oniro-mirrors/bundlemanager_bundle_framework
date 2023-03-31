@@ -1124,7 +1124,7 @@ std::string GetBundleNameFromUri(const std::string &uri)
 ErrCode BundleInstallChecker::CheckProxyDatas(
     const std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
-    for (const auto &innerBundleInfo : innerBundleInfos) {
+    for (const auto &innerBundleInfo : infos) {
         auto bundleName = innerBundleInfo.first;
         auto moduleInfos = innerBundleInfo.second.GetInnerModuleInfos();
         if (moduleInfos.empty()) {
@@ -1135,7 +1135,7 @@ ErrCode BundleInstallChecker::CheckProxyDatas(
                 auto name = GetBundleNameFromUri(proxyData.uri);
                 if (bundleName != name) {
                     APP_LOGE("bundleName from uri different from origin bundleName");
-                    return -1;
+                    return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
                 }
             }
         }
