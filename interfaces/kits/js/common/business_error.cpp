@@ -85,6 +85,8 @@ constexpr const char* ERROR_MSG_SHARE_APP_LIBRARY_IS_NOT_EXIST =
     "The specified shared library is not exist";
 constexpr const char* ERR_MSG_UNINSTALL_SHARED_LIBRARY =
     "The specified bundle is shared library";
+constexpr const char* ERR_MSG_DISALLOW_INSTALL =
+    "Failed to install because enterprise device management disallow install";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_NOT_SYSTEM_APP, ERR_MSG_NOT_SYSTEM_APP },
@@ -127,6 +129,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED, ERROR_MSG_SHARE_APP_LIBRARY_IS_RELIED },
     { ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST, ERROR_MSG_SHARE_APP_LIBRARY_IS_NOT_EXIST },
     { ERROR_UNINSTALL_BUNDLE_IS_SHARED_BUNDLE, ERR_MSG_UNINSTALL_SHARED_LIBRARY },
+    { ERROR_DISALLOW_INSTALL, ERR_MSG_DISALLOW_INSTALL },
 };
 } // namespace
 
