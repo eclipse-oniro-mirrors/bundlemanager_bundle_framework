@@ -40,6 +40,7 @@ const std::string TEST_PATH_FIRST = "testPath1";
 const std::string TEST_PATH_SECOND = "testPath2";
 const std::string TEST_PACK_AGE = "modulePackage";
 const std::string NO_EXIST = "noExist";
+const std::string BUNDLE_NAME = "oho.test.bundleName";
 const int32_t INVALID_TARGET_PRIORITY_FIRST = 0;
 const int32_t INVALID_TARGET_PRIORITY_SECOND = 101;
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
@@ -1913,21 +1914,21 @@ HWTEST_F(BmsBundleOverlayCheckerTest, UpdateInnerBundleInfo_0100, Function | Sma
 {
     InnerBundleInfo info1;
     BundleInfo bundleInfo1;
-    bundleInfo1.name = TEST_BUNDLE_NAME;
-    bundleInfo1.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    bundleInfo1.name = BUNDLE_NAME;
+    bundleInfo1.applicationInfo.bundleName = BUNDLE_NAME;
     ApplicationInfo applicationInfo1;
-    applicationInfo1.name = TEST_BUNDLE_NAME;
-    applicationInfo1.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo1.name = BUNDLE_NAME;
+    applicationInfo1.bundleName = BUNDLE_NAME;
     info1.SetBaseBundleInfo(bundleInfo1);
     info1.SetBaseApplicationInfo(applicationInfo1);
 
     InnerBundleInfo info2;
     BundleInfo bundleInfo2;
-    bundleInfo2.name = TEST_BUNDLE_NAME;
-    bundleInfo2.applicationInfo.bundleName = TEST_BUNDLE_NAME;
+    bundleInfo2.name = BUNDLE_NAME;
+    bundleInfo2.applicationInfo.bundleName = BUNDLE_NAME;
     ApplicationInfo applicationInfo2;
-    applicationInfo2.name = TEST_BUNDLE_NAME;
-    applicationInfo2.bundleName = TEST_BUNDLE_NAME;
+    applicationInfo2.name = BUNDLE_NAME;
+    applicationInfo2.bundleName = BUNDLE_NAME;
     info2.SetBaseBundleInfo(bundleInfo2);
     info2.SetBaseApplicationInfo(applicationInfo2);
     info2.SetIsNewVersion(true);
@@ -1937,17 +1938,26 @@ HWTEST_F(BmsBundleOverlayCheckerTest, UpdateInnerBundleInfo_0100, Function | Sma
     EXPECT_NE(dataMgr, nullptr);
     dataMgr->AddUserId(USERID);
 
-    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::INSTALL_START);
-    dataMgr->AddInnerBundleInfo(TEST_BUNDLE_NAME, info1);
-    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_START);
-    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
-    bool ret = dataMgr->UpdateInnerBundleInfo(TEST_BUNDLE_NAME, info2, info1);
-    EXPECT_TRUE(ret);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME, info1);
+    bool ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_START);
+    bool ret4 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UPDATING_SUCCESS);
+    bool ret5 = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info2, info1);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    EXPECT_TRUE(ret3);
+    EXPECT_TRUE(ret4);
+    EXPECT_TRUE(ret5);
 
     info2.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
-    ret = dataMgr->UpdateInnerBundleInfo(TEST_BUNDLE_NAME, info2, info1);
-    EXPECT_FALSE(ret);
+    ret5 = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info2, info1);
+    EXPECT_FALSE(ret5);
 
-    dataMgr->UpdateBundleInstallState(TEST_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    info2.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    ret5 = dataMgr->UpdateInnerBundleInfo(BUNDLE_NAME, info2, info1);
+    EXPECT_TRUE(ret5);
+
+    ret5 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret5);
 }
 } // OHOS
