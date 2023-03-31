@@ -1208,7 +1208,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0001, Function | SmallTest | Lev
     AAFwk::Want want;
     std::vector<AbilityInfo> abilityInfos;
     GetBundleDataMgr()->bundleInfos_.clear();
-    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos);
+    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
@@ -2813,9 +2813,9 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Leve
     want.AddEntity("entity.system.home");
     want.SetElementName("", "", "", MODULE_NAME);
     std::vector<AbilityInfo> abilityInfos;
-    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos);
+    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, true);
-    testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, Constants::INVALID_USERID, abilityInfos);
+    testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, Constants::INVALID_USERID, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
@@ -3243,7 +3243,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0001, Function | SmallTest 
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<AbilityInfo> abilityInfos;
     bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(
-        want, USERID, abilityInfos);
+        want, USERID, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
 }
 

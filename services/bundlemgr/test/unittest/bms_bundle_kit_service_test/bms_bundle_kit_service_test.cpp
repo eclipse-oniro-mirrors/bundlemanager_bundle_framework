@@ -5097,7 +5097,7 @@ HWTEST_F(BmsBundleKitServiceTest, AllAbility_001, Function | SmallTest | Level1)
     std::vector<AbilityInfo> abilityInfos;
     Want want1;
     want1.SetElementName(BUNDLE_NAME_DEMO, ABILITY_NAME_DEMO);
-    bool testRet1 = GetBundleDataMgr()->QueryLauncherAbilityInfos(want1, DEFAULT_USER_ID_TEST, abilityInfos);
+    bool testRet1 = GetBundleDataMgr()->QueryLauncherAbilityInfos(want1, DEFAULT_USER_ID_TEST, abilityInfos) == ERR_OK;
     EXPECT_FALSE(testRet1);
 }
 

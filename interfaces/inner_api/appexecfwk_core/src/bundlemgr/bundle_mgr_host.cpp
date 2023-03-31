@@ -100,6 +100,7 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, &BundleMgrHost::HandleQueryAbilityInfosV9);
+    funcMap_.emplace(IBundleMgr::Message::QUERY_LAUNCHER_ABILITY_INFO, &BundleMgrHost::HandleQueryLauncherAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, &BundleMgrHost::HandleQueryAllAbilityInfos);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, &BundleMgrHost::HandleQueryAbilityInfoByUri);
     funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, &BundleMgrHost::HandleQueryAbilityInfosByUri);
@@ -814,6 +815,29 @@ ErrCode BundleMgrHost::HandleQueryAbilityInfosV9(MessageParcel &data, MessagePar
     int32_t userId = data.ReadInt32();
     std::vector<AbilityInfo> abilityInfos;
     ErrCode ret = QueryAbilityInfosV9(*want, flags, userId, abilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteVectorToParcelIntelligent(abilityInfos, reply)) {
+            APP_LOGE("WriteVectorToParcelIntelligent failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryLauncherAbilityInfos(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t userId = data.ReadInt32();
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = QueryLauncherAbilityInfos(*want, userId, abilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
