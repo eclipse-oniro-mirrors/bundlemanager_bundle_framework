@@ -478,7 +478,7 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
     // only allowed list empty.
     if (allowedAppIds.empty()) {
         if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
-            APP_LOGE("disallowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+            APP_LOGE("disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
         return ERR_OK;
@@ -487,7 +487,7 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
     // only disallowed list empty.
     if (disallowedAppIds.empty()) {
         if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
-            APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+            APP_LOGE("allowedAppIds:%{public}s is disallow install", installAppId.c_str());
             return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
         }
         return ERR_OK;
@@ -495,10 +495,10 @@ ErrCode BaseBundleInstaller::InstallNormalAppControl(
 
     // disallowed list and allowed list all not empty.
     if (std::find(allowedAppIds.begin(), allowedAppIds.end(), installAppId) == allowedAppIds.end()) {
-        APP_LOGE("allowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+        APP_LOGE("allowedAppIds:%{public}s is disallow install", installAppId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
     } else if (std::find(disallowedAppIds.begin(), disallowedAppIds.end(), installAppId) != disallowedAppIds.end()) {
-        APP_LOGE("disallowedAppIds:%{public}s is dis allow install", installAppId.c_str());
+        APP_LOGE("disallowedAppIds:%{public}s is disallow install", installAppId.c_str());
         return ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL;
     }
     return ERR_OK;
