@@ -1100,7 +1100,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5100, Function | SmallTest
     EXPECT_EQ(ret, true);
 }
 
-/**                                                                                                                                                                                                                                       
+/**
  * @tc.number: BmsBundleDefaultApp_5200
  * @tc.name: test QueryInfoAndSkillsByElement
  * @tc.desc: 1. test QueryInfoAndSkillsByElement false
