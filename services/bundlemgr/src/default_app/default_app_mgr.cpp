@@ -30,7 +30,6 @@ namespace {
     constexpr int32_t INDEX_ZERO = 0;
     constexpr int32_t INDEX_ONE = 1;
     const std::string SPLIT = "/";
-    const std::string ACTION_VIEW_DATA = "ohos.want.action.viewData";
     const std::string ENTITY_BROWSER = "entity.system.browsable";
     const std::string HTTP = "http";
     const std::string HTTPS = "https";
@@ -397,7 +396,7 @@ bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify browser skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -420,7 +419,7 @@ bool DefaultAppMgr::IsImageSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify image skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -439,7 +438,7 @@ bool DefaultAppMgr::IsAudioSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify audio skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -458,7 +457,7 @@ bool DefaultAppMgr::IsVideoSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify video skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -477,7 +476,7 @@ bool DefaultAppMgr::IsPdfSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify pdf skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -496,7 +495,7 @@ bool DefaultAppMgr::IsWordSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify word skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -515,7 +514,7 @@ bool DefaultAppMgr::IsExcelSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify excel skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -534,7 +533,7 @@ bool DefaultAppMgr::IsPptSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify ppt skills.");
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }
@@ -553,7 +552,7 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
 {
     APP_LOGW("begin to match file type, type : %{public}s.", type.c_str());
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), ACTION_VIEW_DATA);
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
         if (item == skill.actions.cend()) {
             continue;
         }

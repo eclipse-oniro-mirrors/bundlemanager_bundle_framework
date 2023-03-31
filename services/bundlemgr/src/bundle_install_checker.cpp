@@ -1113,7 +1113,7 @@ std::string GetBundleNameFromUri(const std::string &uri)
     std::smatch bundleNameMatch;
     if (std::regex_search(uri, bundleNameMatch, bundleNameRegex)) {
         std::string bundleName = bundleNameMatch[1];
-        APP_LOGD("get bundleName %{public}s from uri succeeded", bundleName.c_str());
+        APP_LOGD("get bundleName %{public}s from uri successfully", bundleName.c_str());
         return bundleName;
     } else {
         APP_LOGE("get bundleName from uri failed");
@@ -1121,25 +1121,22 @@ std::string GetBundleNameFromUri(const std::string &uri)
     }
 }
 
-ErrCode BundleInstallChecker::CheckProxyDatas(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundleInfo) const
 {
-    for (const auto &innerBundleInfo : infos) {
-        auto bundleName = innerBundleInfo.first;
-        auto moduleInfos = innerBundleInfo.second.GetInnerModuleInfos();
-        if (moduleInfos.empty()) {
-            continue;
-        }
-        for (const auto &moduleInfo : moduleInfos) {
-            for (const auto &proxyData : moduleInfo.second.proxyDatas) {
-                auto name = GetBundleNameFromUri(proxyData.uri);
-                if (bundleName != name) {
-                    APP_LOGE("bundleName from uri different from origin bundleName");
-                    return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
-                }
+    auto bundleName = innerBundleInfo.GetBundleName();
+    auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+    if (moduleInfos.empty()) {
+        return ERR_OK;
+    }
+    for (const auto &moduleInfo : moduleInfos) {
+        for (const auto &proxyData : moduleInfo.second.proxyDatas) {
+            auto name = GetBundleNameFromUri(proxyData.uri);
+            if (bundleName != name) {
+                APP_LOGE("bundleName from uri %{public}s different from origin bundleName %{public}s",
+                    name.c_str(), bundleName.c_str());
+                return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
             }
         }
-
     }
     return ERR_OK;
 }

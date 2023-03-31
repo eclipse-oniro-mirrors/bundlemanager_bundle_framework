@@ -571,7 +571,7 @@ private:
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
-    ErrCode CheckProxyDatas(std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

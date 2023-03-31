@@ -42,6 +42,7 @@ namespace {
 const std::string BUNDLE_PATH = "/data/test/resource/bms/default_app_bundle/defaultAppTest.hap";
 const std::string BUNDLE_NAME = "com.test.defaultApp";
 const std::string MODULE_NAME = "module01";
+const std::string ABILITY_NAME = "BROWSER";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const std::string DEFAULT_FILE_TYPE_VIDEO_MP4 = "video/mp4";
 const std::string DEFAULT_APP_IMAGE = "IMAGE";
@@ -1077,4 +1078,118 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5000, Function | SmallTest
         USER_ID, DEFAULT_APP_VIDEO, element, bundleInfo);
     EXPECT_EQ(ret, false);
 }
+
+#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+/**
+ * @tc.number: BmsBundleDefaultApp_5100
+ * @tc.name: test ImplicitQueryInfos
+ * @tc.desc: 1. test ImplicitQueryInfos false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5100, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetAction(Constants::ACTION_VIEW_DATA);
+    want.SetType(DEFAULT_FILE_TYPE_VIDEO_MP4);
+    int32_t flags = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    auto ret = dataMgr->ImplicitQueryInfos(want, flags, USER_ID, abilityInfos, extensionInfos);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5200
+ * @tc.name: test QueryInfoAndSkillsByElement
+ * @tc.desc: 1. test QueryInfoAndSkillsByElement false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5200, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Element element;
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    std::vector<Skill> skills;
+    auto ret = dataMgr->QueryInfoAndSkillsByElement(USER_ID, element, abilityInfo, extensionInfo, skills);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5300
+ * @tc.name: test QueryInfoAndSkillsByElement
+ * @tc.desc: 1. test QueryInfoAndSkillsByElement false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5300, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName= ABILITY_NAME;
+    element.extensionName= "";
+
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    std::vector<Skill> skills;
+    auto ret = dataMgr->QueryInfoAndSkillsByElement(USER_ID, element, abilityInfo, extensionInfo, skills);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5400
+ * @tc.name: test QueryInfoAndSkillsByElement
+ * @tc.desc: 1. test QueryInfoAndSkillsByElement false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5400, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = MODULE_NAME;
+    element.abilityName = ABILITY_NAME;
+    element.extensionName= "";
+
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    std::vector<Skill> skills;
+    auto ret = dataMgr->QueryInfoAndSkillsByElement(USER_ID, element, abilityInfo, extensionInfo, skills);
+    EXPECT_EQ(ret, true);
+
+    element.bundleName = BUNDLE_NAME + "1";
+    ret = dataMgr->QueryInfoAndSkillsByElement(USER_ID, element, abilityInfo, extensionInfo, skills);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5500
+ * @tc.name: test GetElement
+ * @tc.desc: 1. test GetElement false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5500, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ElementName elementName;
+    Element element;
+    auto ret = dataMgr->GetElement(USER_ID, elementName, element);
+    EXPECT_EQ(ret, false);
+
+    elementName.SetBundleName(BUNDLE_NAME);
+    elementName.SetModuleName(MODULE_NAME);
+    elementName.SetAbilityName(ABILITY_NAME);
+
+    ret = dataMgr->GetElement(USER_ID, elementName, element);
+    EXPECT_EQ(ret, true);
+}
+#endif
+
 } // OHOS

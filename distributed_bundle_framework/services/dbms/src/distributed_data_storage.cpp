@@ -196,6 +196,48 @@ bool DistributedDataStorage::GetStorageDistributeInfo(const std::string &network
     return false;
 }
 
+int32_t DistributedDataStorage::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
+    std::string &bundleName)
+{
+    {
+        std::lock_guard<std::mutex> lock(kvStorePtrMutex_);
+        if (!CheckKvStore()) {
+            APP_LOGE("kvStore is nullptr");
+            return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+        }
+    }
+    std::string udid;
+    int32_t ret = GetUdidByNetworkId(networkId, udid);
+    if (ret != 0) {
+        APP_LOGE("can not get udid by networkId error:%{public}d", ret);
+        return ret;
+    }
+    if (udid.size() == 0) {
+        APP_LOGE("get udid is Empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    Key allEntryKeyPrefix("");
+    std::vector<Entry> allEntries;
+    Status status = kvStorePtr_->GetEntries(allEntryKeyPrefix, allEntries);
+    if (status != Status::SUCCESS) {
+        APP_LOGE("dataManager_ GetEntries error: %{public}d", status);
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    for (auto entry : allEntries) {
+        std::string key = entry.key.ToString();
+        std::string value =  entry.value.ToString();
+        if (key.find(udid) == std::string::npos) {
+            continue;
+        }
+        DistributedBundleInfo distributedBundleInfo;
+        if (distributedBundleInfo.FromJsonString(value) && distributedBundleInfo.accessTokenId == accessTokenId) {
+            bundleName = distributedBundleInfo.bundleName;
+            return OHOS::NO_ERROR;
+        }
+    }
+    return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+}
+
 std::string DistributedDataStorage::DeviceAndNameToKey(
     const std::string &udid, const std::string &bundleName) const
 {
@@ -305,6 +347,7 @@ DistributedBundleInfo DistributedDataStorage::ConvertToDistributedBundleInfo(con
         distributedBundleInfo.moduleInfos.emplace_back(distributedModuleInfo);
     }
     distributedBundleInfo.enabled = bundleInfo.applicationInfo.enabled;
+    distributedBundleInfo.accessTokenId = bundleInfo.applicationInfo.accessTokenId;
     return distributedBundleInfo;
 }
 

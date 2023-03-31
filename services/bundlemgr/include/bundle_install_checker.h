@@ -126,7 +126,7 @@ public:
 
     AppProvisionInfo ConvertToAppProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo) const;
 
-    ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode CheckProxyDatas(const InnerBundleInfo &info) const;
 private:
 
     ErrCode ParseBundleInfo(

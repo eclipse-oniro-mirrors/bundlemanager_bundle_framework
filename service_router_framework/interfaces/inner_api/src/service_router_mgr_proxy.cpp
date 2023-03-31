@@ -79,6 +79,115 @@ int32_t ServiceRouterMgrProxy::QueryPurposeInfos(const Want &want, const std::st
     return res;
 }
 
+int32_t ServiceRouterMgrProxy::StartUIExtensionAbility(const Want &want, const sptr<SessionInfo> &sessionInfo,
+    int32_t userId, ExtensionAbilityType extensionType)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("want write failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (sessionInfo) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(sessionInfo)) {
+            APP_LOGE("flag and sessionInfo write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            APP_LOGE("flag write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("StartExtensionAbility, userId write failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(extensionType))) {
+        APP_LOGE("StartExtensionAbility, extensionType write failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!Remote()) {
+        APP_LOGE("StartExtensionAbility, Remote error.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    sptr<IRemoteObject> remote = Remote();
+    if (remote == nullptr) {
+        APP_LOGE("StartExtensionAbility, Remote() is NULL");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    int32_t error = remote->SendRequest(ServiceRouterMgrProxy::Message::START_UI_EXTENSION, data, reply, option);
+    if (error != NO_ERROR) {
+        APP_LOGE("StartExtensionAbility, Send request error: %{public}d", error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
+int32_t ServiceRouterMgrProxy::ConnectUIExtensionAbility(const Want &want, const sptr<IAbilityConnection> &connect,
+    const sptr<SessionInfo> &sessionInfo, int32_t userId)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    if (!data.WriteInterfaceToken(GetDescriptor()) || !data.WriteParcelable(&want)) {
+        APP_LOGE("write interfaceToken or want failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!connect) {
+        APP_LOGE("connect ability fail, connect is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (connect->AsObject()) {
+        if (!data.WriteBool(true) || !data.WriteRemoteObject(connect->AsObject())) {
+            APP_LOGE("flag and connect write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            APP_LOGE("flag write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    if (sessionInfo) {
+        if (!data.WriteBool(true) || !data.WriteParcelable(sessionInfo)) {
+            APP_LOGE("flag and sessionInfo write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!data.WriteBool(false)) {
+            APP_LOGE("flag write failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("%{public}s, userId write failed.", __func__);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!Remote()) {
+        APP_LOGE("connect ability fail, remote is nullptr");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t error = Remote()->SendRequest(ServiceRouterMgrProxy::Message::CONNECT_UI_EXTENSION, data, reply, option);
+    if (error != NO_ERROR) {
+        APP_LOGE("%{public}s, Send request error: %{public}d", __func__, error);
+        return error;
+    }
+    return reply.ReadInt32();
+}
+
 int32_t ServiceRouterMgrProxy::SendRequest(ServiceRouterMgrProxy::Message code, MessageParcel &data,
     MessageParcel &reply)
 {

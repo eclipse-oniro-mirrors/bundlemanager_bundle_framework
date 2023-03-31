@@ -2423,6 +2423,23 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0400, Function | SmallTest
 }
 
 /**
+ * @tc.number: GetBundleNameForUid_0100
+ * @tc.name: test can get the bundle names with bundle installed
+ * @tc.desc: 1.system run normally
+ *           2.get installed bundle names successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0500, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool testRet = hostImpl->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_WITH_ABILITIES, bundleInfo);
+    EXPECT_TRUE(testRet);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: CheckIsSystemAppByUid_0100
  * @tc.name: test can check the installed bundle whether system app or not by uid
  * @tc.desc: 1.system run normally
@@ -9705,6 +9722,25 @@ HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfo_0200, Function | SmallTest
     info.innerSharedModuleInfos_.try_emplace(MODULE_NAME_TEST, innerModuleInfo);
     ret = info.GetSharedBundleInfo(sharedBundleInfo);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0300
+ * @tc.name: Test GetSharedBundleInfo
+ * @tc.desc: Test GetSharedBundleInfo with InnerBundleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSharedBundleInfo_0300, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    std::vector<SharedBundleInfo> sharedBundles;
+    auto ret = GetBundleDataMgr()->GetSharedBundleInfo("", "", sharedBundles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+
+    ret = GetBundleDataMgr()->GetSharedBundleInfo(BUNDLE_NAME_TEST, MODULE_NAME_TEST, sharedBundles);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**

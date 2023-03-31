@@ -44,6 +44,7 @@ namespace {
 const std::string BUNDLE_NAME = "bundlName";
 const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
+const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
@@ -184,7 +185,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0500, Functi
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_0600, Function | SmallTest | Level0)
 {
     std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
-    ErrCode ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
+    bool ret = bundleMgrHostImpl_->GetBaseSharedBundleInfos(BUNDLE_NAME, baseSharedBundleInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -921,7 +922,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6100, Functi
     Want want;
     AbilityInfo info;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, FLAGS, USERID, info);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 /**
@@ -936,22 +937,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6200, Functi
     Want want;
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = bundleMgrHostImpl_->GetSandboxExtAbilityInfos(want, appIndex, FLAGS, USERID, infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
-}
-
-/**
- * @tc.number: BmsBundlePermissionFalseTest_6300
- * @tc.name: test GetSandboxHapModuleInfo of BundleMgrHostImpl
- * @tc.desc: 1. system running normally
- *           2. GetSandboxHapModuleInfo false by no permission
- */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6300, Function | SmallTest | Level0)
-{
-    int32_t appIndex = 1;
-    AbilityInfo abilityInfo;
-    HapModuleInfo info;
-    ErrCode ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**
@@ -1088,8 +1074,8 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7300, Functi
     int32_t appIndex = 1;
     ErrCode ret1 = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
     ErrCode ret2 = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
-    EXPECT_EQ(ret1, false);
-    EXPECT_EQ(ret2, false);
+    EXPECT_EQ(ret1, ERR_APPEXECFWK_PERMISSION_DENIED);
+    EXPECT_EQ(ret2, ERR_APPEXECFWK_PERMISSION_DENIED);
 }
 
 /**
@@ -1173,5 +1159,123 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_7900, Functi
     sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
     bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, ABILITY_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8000
+ * @tc.name: test GetDependentBundleInfo of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetDependentBundleInfo false
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8000, Function | SmallTest | Level0)
+{
+    BundleInfo sharedBundleInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetDependentBundleInfo(BUNDLE_NAME, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8100
+ * @tc.name: test CheckInstallParam of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. CheckInstallParam false
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.userId = Constants::UNSPECIFIED_USERID;
+    InstallParam ret = bundleInstallerHost_->CheckInstallParam(installParam);
+    EXPECT_EQ(ret.userId, BundleUtil::GetUserIdByCallingUid());
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8200
+ * @tc.name: test UninstallSandboxApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. UninstallSandboxApp false
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8200, Function | SmallTest | Level0)
+{
+    int32_t appIndex = -1;
+    ErrCode ret = bundleInstallerHost_->UninstallSandboxApp("", appIndex, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    ret = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    appIndex = 101;
+    ret = bundleInstallerHost_->UninstallSandboxApp(BUNDLE_NAME, appIndex, USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8300
+ * @tc.name: test CreateStream of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CreateStream false
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8300, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    int ret = impl.CreateStream(BUNDLE_NAME);
+    EXPECT_EQ(ret, Constants::PERMISSION_NOT_GRANTED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8400
+ * @tc.name: test CreateSharedBundleStream of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CreateSharedBundleStream false
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8400, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    int ret = impl.CreateSharedBundleStream(BUNDLE_NAME, UID);
+    EXPECT_EQ(ret, Constants::PERMISSION_NOT_GRANTED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8500
+ * @tc.name: test the GrantRequestPermissions function of BaseBundleInstaller
+ * @tc.desc: 1. system running normally
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8500, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    InnerBundleInfo info;
+    uint32_t tokenId = 0;
+    ErrCode res = baseBundleInstaller.GrantRequestPermissions(info, tokenId);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8600
+ * @tc.name: test the start function of BaseBundleInstaller
+ * @tc.desc: 1. UpdateDefineAndRequestPermissions
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8600, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = BUNDLE_NAME;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.accessTokenId = USERID;
+    userInfo.accessTokenIdEx = USERID;
+    oldInfo.AddInnerBundleUserInfo(userInfo);
+
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    newInfo.AddInnerBundleUserInfo(userInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
+    auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
 }
 } // OHOS

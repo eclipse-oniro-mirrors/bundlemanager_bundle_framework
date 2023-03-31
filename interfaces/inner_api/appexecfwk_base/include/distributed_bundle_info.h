@@ -34,6 +34,8 @@ struct DistributedBundleInfo : public Parcelable {
     std::string appId;
     std::vector<DistributedModuleInfo> moduleInfos;
     bool enabled = true;
+    // user related fields, assign when calling the get interface
+    uint32_t accessTokenId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

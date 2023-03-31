@@ -2280,7 +2280,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     std::string modulePath;
-    info.SetArkNativeFilePath("");
+    info.SetArkNativeFilePath(RESOURCE_ROOT_PATH);
     ErrCode ret = installer.ExtractArkNativeFile(info, modulePath);
     EXPECT_EQ(ret, ERR_OK);
 }

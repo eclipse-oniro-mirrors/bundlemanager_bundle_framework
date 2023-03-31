@@ -61,7 +61,7 @@ const std::string APP_INDEX = "appIndex";
 const std::string USERID = "userId";
 int32_t state = 0;
 int32_t versionCode = 0;
-int32_t FLAG = 0;
+const int32_t FLAG = 0;
 // This field is used to ensure OTA upgrade and cannot be added randomly.
 const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
 {

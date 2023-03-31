@@ -26,11 +26,11 @@ ohos_systemtest("BmsSearchSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
-    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle17:stbmsThirdBundle17",
-    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
-    "${appexecfwk_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle17:stbmsThirdBundle17",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
+    "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
     "${common_path}:libappexecfwk_common",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
