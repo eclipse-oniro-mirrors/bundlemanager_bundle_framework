@@ -227,4 +227,32 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0700, Functi
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+/**
+ * @tc.number: BmsBundleAccessTokenIdTest
+ * Function: ProcessPreload
+ * @tc.name: test ProcessPreload verify success
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0800, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
+    OHOS::AAFwk::Want want;
+    auto ret = bundleMgrHostImpl_->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BmsBundleAccessTokenIdTest
+ * Function: GetBundleInfoForSelf
+ * @tc.name: test ProcessPreload verify success
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0900, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    auto ret = bundleMgrHostImpl_->GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    EXPECT_TRUE(ret);
+}
 } // OHOS
