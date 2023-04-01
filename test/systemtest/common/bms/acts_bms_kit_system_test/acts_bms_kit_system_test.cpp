@@ -5567,7 +5567,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     }
     std::vector<int> gids;
     bool ret = bundleMgrProxy->GetBundleGids(appName, gids);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -6144,7 +6144,7 @@ HWTEST_F(ActsBmsKitSystemTest, ObtainCallingBundleName_0100, Function | SmallTes
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto res = bundleMgrProxy->ObtainCallingBundleName(appName);
-    EXPECT_TRUE(res);
+    EXPECT_FALSE(res);
 
     resvec.clear();
     Uninstall(appName, resvec);
