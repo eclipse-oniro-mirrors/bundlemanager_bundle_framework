@@ -45,8 +45,9 @@ inline void ClearAshmem(sptr<Ashmem> &optMem)
         optMem->CloseAshmem();
     }
 }
+}
 
-bool SendData(void *&buffer, size_t size, const void *data)
+bool BundleMgrProxy::SendData(void *&buffer, size_t size, const void *data)
 {
     if (data == nullptr) {
         APP_LOGE("data is nullptr");
@@ -71,7 +72,6 @@ bool SendData(void *&buffer, size_t size, const void *data)
     }
 
     return true;
-}
 }
 
 BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)

@@ -43,6 +43,7 @@ using namespace std::chrono_literals;
 
 namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
+const std::string EMPTY_BUNDLE_NAME = "";
 const std::string BASE_BUNDLE_NAME = "com.third.hiworld.example";
 const std::string BASE_MODULE_NAME = "testability1";
 const std::string BASE_ABILITY_NAME = "bmsThirdBundle_A1";
@@ -3436,6 +3437,31 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0800, Function | MediumTest | Le
     EXPECT_FALSE(queryResult);
 }
 
+
+/**
+ * @tc.number: GetHapModuleInfo_0900
+ * @tc.name: test GetHapModuleInfo interface
+ * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap with one ability
+ *           2.install the hap
+ *           3.call GetHapModuleInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0900, Function | MediumTest | Level1)
+{
+    std::cout << "START GetHapModuleInfo_0900" << std::endl;
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = EMPTY_BUNDLE_NAME;
+    abilityInfo.package = EMPTY_BUNDLE_NAME;
+    HapModuleInfo hapModuleInfo;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_FALSE(queryResult);
+    std::cout << "END GetHapModuleInfo_0900" << std::endl;
+}
+
 /**
  * @tc.number: GetLaunchWantForBundle_0100
  * @tc.name: test GetLaunchWantForBundle interface
@@ -5518,6 +5544,38 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGidsByUid_0100, Function | MediumTest | 
 }
 
 /**
+ * @tc.number: GetBundleGids_0100
+ * @tc.name: test GetBundleGids proxy
+ * @tc.desc: 1.get BundleGids
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START GetBundleGids_0100" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::vector<int> gids;
+    bool ret = bundleMgrProxy->GetBundleGids(appName, gids);
+    EXPECT_TRUE(ret);
+
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    std::cout << "END GetBundleGids_0100" << std::endl;
+}
+
+/**
  * @tc.number: CheckIsSystemAppByUid_0100
  * @tc.name: test CheckIsSystemAppByUid proxy
  * @tc.desc: 1.get check  system app by uid
@@ -6085,7 +6143,7 @@ HWTEST_F(ActsBmsKitSystemTest, ObtainCallingBundleName_0100, Function | SmallTes
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     auto res = bundleMgrProxy->ObtainCallingBundleName(appName);
-    EXPECT_FALSE(res);
+    EXPECT_TRUE(res);
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -7570,6 +7628,26 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0100, Function | MediumTest 
     EXPECT_TRUE(getInfoResult);
 }
 
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0200
+ * @tc.name: get bundle info for self
+ * @tc.desc: 1.system run normally
+ *           2.get bundle info for self success
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0200, Function | MediumTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+
+    BundleInfo bundleInfo;
+    int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT;
+    bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
+    EXPECT_TRUE(getInfoResult);
+}
 /**
  * @tc.number: VerifySystemApi_0100
  * @tc.name: test VerifySystemApi proxy
@@ -7706,6 +7784,20 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0100, Function | SmallTes
 }
 
 /**
+ * @tc.number: GetUidByDebugBundleName_0200
+ * @tc.name: test GetUidByDebugBundleName proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    int uid = 0;
+    int ret = bundleMgrProxy->GetUidByDebugBundleName(EMPTY_BUNDLE_NAME, uid);
+    EXPECT_EQ(ret, INVALIED_ID);
+}
+
+/**
  * @tc.number: GetSharedBundleInfo_0100
  * @tc.name: test GetSharedBundleInfo proxy
  * @tc.desc: 1.system run normally
@@ -7718,6 +7810,39 @@ HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | 
     ErrCode ret = bundleMgrProxy->GetSharedBundleInfo(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, sharedBundles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SendData_0100
+ * @tc.name: test SendData proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, SendData_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    size_t size = 1;
+    void *buffer = nullptr;
+    ErrCode ret = bundleMgrProxy->SendData(buffer, size, nullptr);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SendData_0200
+ * @tc.name: test SendData proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, SendData_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<SharedBundleInfo> sharedBundles;
+    size_t size = 0;
+    void *buffer = nullptr;
+    const void *data = &size;
+    ErrCode ret = bundleMgrProxy->SendData(buffer, size, data);
+    EXPECT_FALSE(ret);
 }
 
 }  // namespace AppExecFwk
