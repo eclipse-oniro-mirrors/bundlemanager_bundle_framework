@@ -548,6 +548,14 @@ ErrCode BundleMgrClientImpl::Connect()
             }
         };
         deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+        if (deathRecipient_ == nullptr) {
+            APP_LOGE("failed to create deathRecipient");
+            return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+        }
+        if (bundleMgr_->AsObject() == nullptr) {
+            APP_LOGE("failed to invert bundleMgr_ as object");
+            return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
+        }
         bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
     }
 
