@@ -239,8 +239,6 @@ constexpr const char* KEY_SEARCHBOX = "searchbox";
 
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_JS_TYPE_ETS = "ets";
 
-extern thread_local int32_t parseResult;
-
 // background modes
 // different bits in the binary represent different services
 // 0000001 represents data transmission services

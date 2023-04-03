@@ -15,8 +15,6 @@
 
 #include "pre_install_bundle_info.h"
 
-#include "common_profile.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -39,13 +37,14 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         BUNDLE_NAME,
         bundleName_,
         JsonType::STRING,
         true,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -53,7 +52,7 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         versionCode_,
         JsonType::NUMBER,
         true,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -61,7 +60,7 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         bundlePaths_,
         JsonType::ARRAY,
         true,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<Constants::AppType>(jsonObject,
         jsonObjectEnd,
@@ -69,7 +68,7 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         appType_,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -77,12 +76,9 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         removable_,
         JsonType::BOOLEAN,
         false,
-        ProfileReader::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
-    int32_t ret = ProfileReader::parseResult;
-    // need recover parse result to ERR_OK
-    ProfileReader::parseResult = ERR_OK;
-    return ret;
+    return parseResult;
 }
 
 std::string PreInstallBundleInfo::ToString() const
