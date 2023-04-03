@@ -63,6 +63,7 @@ const std::string DEVICE_ID = "deviceID";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
+const int32_t DEFAULT_USERID = 0;
 const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
@@ -280,6 +281,25 @@ void ActsBmsKitSystemTest::Install(
     resvec.push_back(statusReceiver->GetResultMsg());
 }
 
+void ActsBmsKitSystemTest::InstallByUserId(
+    const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec,
+    const int32_t userId)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer failed.");
+        resvec.push_back(ERROR_INSTALL_FAILED);
+        return;
+    }
+    InstallParam installParam;
+    installParam.installFlag = installFlag;
+    installParam.userId = userId;
+    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    resvec.push_back(statusReceiver->GetResultMsg());
+}
+
 void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<std::string> &resvec)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
@@ -295,6 +315,29 @@ void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<
     } else {
         InstallParam installParam;
         installParam.userId = USERID;
+        sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+        EXPECT_NE(statusReceiver, nullptr);
+        installerProxy->Uninstall(bundleName, installParam, statusReceiver);
+        resvec.push_back(statusReceiver->GetResultMsg());
+    }
+}
+
+void ActsBmsKitSystemTest::UninstallByUserId(const std::string &bundleName, std::vector<std::string> &resvec,
+    const int32_t userId)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer failed.");
+        resvec.push_back(ERROR_UNINSTALL_FAILED);
+        return;
+    }
+
+    if (bundleName.empty()) {
+        APP_LOGE("bundelname is null.");
+        resvec.push_back(ERROR_UNINSTALL_FAILED);
+    } else {
+        InstallParam installParam;
+        installParam.userId = userId;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -5555,7 +5598,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    InstallByUserId(bundleFilePath, InstallFlag::NORMAL, resvec, DEFAULT_USERID);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5567,10 +5610,10 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     }
     std::vector<int> gids;
     bool ret = bundleMgrProxy->GetBundleGids(appName, gids);
-    EXPECT_FALSE(ret);
+    EXPECT_TRUE(ret);
 
     resvec.clear();
-    Uninstall(appName, resvec);
+    UninstallByUserId(appName, resvec, DEFAULT_USERID);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundleGids_0100" << std::endl;
