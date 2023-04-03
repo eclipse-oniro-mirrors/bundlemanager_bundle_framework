@@ -1788,8 +1788,8 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
 
 std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
 {
-    for (auto index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (index == static_cast<int32_t>(type)) {
+    for (uint32_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
+        if (index == static_cast<uint32_t>(type)) {
             return Profile::EXTENSION_TYPE_SET[index];
         }
     }
