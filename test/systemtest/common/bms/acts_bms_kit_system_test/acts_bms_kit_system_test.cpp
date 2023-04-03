@@ -228,7 +228,12 @@ public:
     void TearDown();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
+    static void InstallByUserId(
+        const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec,
+        const int32_t userId);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
+    static void UninstallByUserId(const std::string &bundleName, std::vector<std::string> &resvec,
+        const int32_t userId);
     static void HapUninstall(
         const std::string &bundleName, const std::string &modulePackage, std::vector<std::string> &resvec);
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
