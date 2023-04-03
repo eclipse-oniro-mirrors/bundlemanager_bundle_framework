@@ -63,7 +63,6 @@ const std::string DEVICE_ID = "deviceID";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
-const int32_t DEFAULT_USERID = 0;
 const int32_t RESID = 16777218;
 const int32_t HUNDRED_USERID = 20010037;
 const int32_t INVALIED_ID = -1;
@@ -228,12 +227,7 @@ public:
     void TearDown();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
-    static void InstallByUserId(
-        const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec,
-        const int32_t userId);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
-    static void UninstallByUserId(const std::string &bundleName, std::vector<std::string> &resvec,
-        const int32_t userId);
     static void HapUninstall(
         const std::string &bundleName, const std::string &modulePackage, std::vector<std::string> &resvec);
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
@@ -271,13 +265,6 @@ void ActsBmsKitSystemTest::TearDown()
 void ActsBmsKitSystemTest::Install(
     const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec)
 {
-    InstallByUserId(bundleFilePath, installFlag, resvec, USERID);
-}
-
-void ActsBmsKitSystemTest::InstallByUserId(
-    const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec,
-    const int32_t userId)
-{
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
         APP_LOGE("get bundle installer failed.");
@@ -286,7 +273,7 @@ void ActsBmsKitSystemTest::InstallByUserId(
     }
     InstallParam installParam;
     installParam.installFlag = installFlag;
-    installParam.userId = userId;
+    installParam.userId = USERID;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -294,12 +281,6 @@ void ActsBmsKitSystemTest::InstallByUserId(
 }
 
 void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<std::string> &resvec)
-{
-    UninstallByUserId(bundleName, resvec, USERID);
-}
-
-void ActsBmsKitSystemTest::UninstallByUserId(const std::string &bundleName, std::vector<std::string> &resvec,
-    const int32_t userId)
 {
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     if (!installerProxy) {
@@ -313,7 +294,7 @@ void ActsBmsKitSystemTest::UninstallByUserId(const std::string &bundleName, std:
         resvec.push_back(ERROR_UNINSTALL_FAILED);
     } else {
         InstallParam installParam;
-        installParam.userId = userId;
+        installParam.userId = USERID;
         sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
         EXPECT_NE(statusReceiver, nullptr);
         installerProxy->Uninstall(bundleName, installParam, statusReceiver);
@@ -5574,7 +5555,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    InstallByUserId(bundleFilePath, InstallFlag::NORMAL, resvec, DEFAULT_USERID);
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5586,10 +5567,10 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     }
     std::vector<int> gids;
     bool ret = bundleMgrProxy->GetBundleGids(appName, gids);
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 
     resvec.clear();
-    UninstallByUserId(appName, resvec, DEFAULT_USERID);
+    Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
     std::cout << "END GetBundleGids_0100" << std::endl;
