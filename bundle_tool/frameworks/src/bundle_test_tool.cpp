@@ -2836,6 +2836,7 @@ ErrCode BundleTestTool::RunAsGetDistributedBundleName()
         resultReceiver_ = STRING_GET_DISTRIBUTED_BUNDLE_NAME_OK + msg;
     } else {
         resultReceiver_ = STRING_GET_DISTRIBUTED_BUNDLE_NAME_NG + "\n";
+        APP_LOGE("RunAsGetDistributedBundleName fail result %{public}d.", result);
     }
     return result;
 }
