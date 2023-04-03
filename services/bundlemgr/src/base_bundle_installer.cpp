@@ -803,6 +803,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_NATIVE_SO_CHECKED);               // ---- 40%
 
+    // check proxy data
+    result = CheckProxyDatas(newInfos);
+    CHECK_RESULT(result, "proxy data check failed %{public}d");
+    UpdateInstallerState(InstallerState::INSTALL_PROXY_DATA_CHECKED);              // ---- 45%
+
     // check hap is allow install by app control
     if (!installParam.isPreInstallApp) {
         auto installAppId = (newInfos.begin()->second).GetAppId();
@@ -2555,6 +2560,18 @@ ErrCode BaseBundleInstaller::CheckMultiNativeFile(
     std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     return bundleInstallChecker_->CheckMultiNativeFile(infos);
+}
+
+ErrCode BaseBundleInstaller::CheckProxyDatas(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    for (const auto &info : infos) {
+        ErrCode ret = bundleInstallChecker_->CheckProxyDatas(info.second);
+        if (ret != ERR_OK) {
+            return ret;
+        }
+    }
+    return ERR_OK;
 }
 
 bool BaseBundleInstaller::GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist)

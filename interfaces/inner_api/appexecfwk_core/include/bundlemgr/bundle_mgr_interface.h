@@ -1161,6 +1161,22 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+        std::vector<ProxyData> &proxyDatas)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetProxyDataInfos(const std::string &bundleName, std::vector<ProxyData> &proxyDatas)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
