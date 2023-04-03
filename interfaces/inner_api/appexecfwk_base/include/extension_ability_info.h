@@ -55,6 +55,7 @@ enum class ExtensionAbilityType {
     PREVIEW = 14,
     PRINT = 15,
     UI = 16,
+    PUSH = 17,
     UNSPECIFIED = 255
 };
 
