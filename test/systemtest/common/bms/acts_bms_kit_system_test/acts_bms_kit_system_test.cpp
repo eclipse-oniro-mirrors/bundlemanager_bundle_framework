@@ -271,19 +271,7 @@ void ActsBmsKitSystemTest::TearDown()
 void ActsBmsKitSystemTest::Install(
     const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec)
 {
-    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer failed.");
-        resvec.push_back(ERROR_INSTALL_FAILED);
-        return;
-    }
-    InstallParam installParam;
-    installParam.installFlag = installFlag;
-    installParam.userId = USERID;
-    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
-    EXPECT_NE(statusReceiver, nullptr);
-    installerProxy->Install(bundleFilePath, installParam, statusReceiver);
-    resvec.push_back(statusReceiver->GetResultMsg());
+    InstallByUserId(bundleFilePath, installFlag, resvec, USERID);
 }
 
 void ActsBmsKitSystemTest::InstallByUserId(
@@ -307,24 +295,7 @@ void ActsBmsKitSystemTest::InstallByUserId(
 
 void ActsBmsKitSystemTest::Uninstall(const std::string &bundleName, std::vector<std::string> &resvec)
 {
-    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
-    if (!installerProxy) {
-        APP_LOGE("get bundle installer failed.");
-        resvec.push_back(ERROR_UNINSTALL_FAILED);
-        return;
-    }
-
-    if (bundleName.empty()) {
-        APP_LOGE("bundelname is null.");
-        resvec.push_back(ERROR_UNINSTALL_FAILED);
-    } else {
-        InstallParam installParam;
-        installParam.userId = USERID;
-        sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
-        EXPECT_NE(statusReceiver, nullptr);
-        installerProxy->Uninstall(bundleName, installParam, statusReceiver);
-        resvec.push_back(statusReceiver->GetResultMsg());
-    }
+    UninstallByUserId(bundleName, resvec, USERID);
 }
 
 void ActsBmsKitSystemTest::UninstallByUserId(const std::string &bundleName, std::vector<std::string> &resvec,
