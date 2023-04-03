@@ -60,6 +60,7 @@ const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
 const std::string DEFAULT_APP_BUNDLE_NAME = "com.test.defaultApp";
 const std::string DEFAULT_APP_MODULE_NAME = "module01";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
+const std::string DEVICE_ID = "deviceID";
 const int COMPATIBLEVERSION = 3;
 const int TARGETVERSION = 3;
 const int32_t USERID = 100;
@@ -6985,6 +6986,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetDistributedBundleInfo_0100, Function | SmallTe
     EXPECT_FALSE(ret);
     ret = bundleMgrProxy->GetDistributedBundleInfo(networkId1, bundleName2, distributedBundleInfo);
     EXPECT_FALSE(ret);
+    ret = bundleMgrProxy->GetDistributedBundleInfo(networkId2, bundleName2, distributedBundleInfo);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -7597,11 +7600,29 @@ HWTEST_F(ActsBmsKitSystemTest, CleanBundleCacheFiles_0200, Function | SmallTest 
  * @tc.number: CheckAbilityEnableInstall_0100
  * @tc.name: test CheckAbilityEnableInstall proxy
  * @tc.desc: 1.system run normally
- *           2.get udid info failed by wrong hap
  */
 HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnableInstall_0100, Function | SmallTest | Level1)
 {
     Want want;
+    int32_t missionId = 0;
+    sptr<IRemoteObject> callback;
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    bool testRet = bundleMgrProxy->CheckAbilityEnableInstall(want, missionId, USERID, callback);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: CheckAbilityEnableInstall_0200
+ * @tc.name: test CheckAbilityEnableInstall proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnableInstall_0200, Function | SmallTest | Level1)
+{
+    Want want;
+    OHOS::AppExecFwk::ElementName elementName;
+    elementName.SetDeviceID(DEVICE_ID);
+    elementName.SetBundleName(BASE_BUNDLE_NAME);
+    want.SetElement(elementName);
     int32_t missionId = 0;
     sptr<IRemoteObject> callback;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -7675,7 +7696,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0100, Function | SmallTest | Lev
     std::string name1 = "testCheckNeedPreload1";
     moduleInfo1.preloads.push_back(name1);
     moduleInfo1.moduleName = "testCheckNeedPreload1";
-    
+
     ApplicationInfo applicationInfo;
     applicationInfo.moduleInfos.push_back(moduleInfo1);
 
@@ -7702,7 +7723,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0200, Function | SmallTest | Lev
     moduleInfo1.preloads.push_back(name1);
     moduleInfo1.preloads.push_back(name2);
     moduleInfo1.moduleName = "testCheckNeedPreload1";
-    
+
     ApplicationInfo applicationInfo;
     applicationInfo.moduleInfos.push_back(moduleInfo1);
 
