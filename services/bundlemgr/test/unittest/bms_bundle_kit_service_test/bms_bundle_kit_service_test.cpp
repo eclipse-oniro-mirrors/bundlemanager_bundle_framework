@@ -292,7 +292,7 @@ public:
         bool userDataClearable, bool isSystemApp) const;
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -338,7 +338,7 @@ void BmsBundleKitServiceTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleKitServiceTest::SetDataMgr()
+void BmsBundleKitServiceTest::ResetDataMgr()
 {
     EXPECT_NE(dataMgrInfo_, nullptr);
     bundleMgrService_->dataMgr_ = dataMgrInfo_;
@@ -3808,7 +3808,7 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1200, Function | SmallTest | Level1
     auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
     EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
 
-    SetDataMgr();
+    ResetDataMgr();
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -3901,7 +3901,7 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTes
     ClearDataMgr();
     bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_FALSE(result);
-    SetDataMgr();
+    ResetDataMgr();
 }
 
 /**
@@ -3978,7 +3978,7 @@ HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0200, Function | SmallTest |
     ClearDataMgr();
     bool result = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
     EXPECT_FALSE(result);
-    SetDataMgr();
+    ResetDataMgr();
 }
 
 /**
@@ -7268,6 +7268,34 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
+/**
+ * @tc.number: CreateNewUser_0200
+ * @tc.name: test OnCreateNewUser and RemoveUser
+ * @tc.desc: 1.create new user failed by DataMgr is nullptr
+ *           2.OnCreateNewUser and RemoveUser failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0200, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    int32_t userId = 101;
+    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
+    bundleUserMgrHostImpl_->RemoveUser(userId);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: CreateNewUser_0300
+ * @tc.name: test CheckInitialUser
+ * @tc.desc: 1.CheckInitialUser failed by DataMgr is nullptr
+ *           2.CheckInitialUser failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Level1)
+{
+    ClearDataMgr();
+    bundleUserMgrHostImpl_->CheckInitialUser();
+    ResetDataMgr();
+}
+
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AgingTest_0001
@@ -7318,6 +7346,85 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
     BundleAgingMgr bundleAgingMgr;
     bundleAgingMgr.InitAgingtTimer();
     EXPECT_FALSE(bundleAgingMgr.running_);
+}
+
+/**
+ * @tc.number: AginTest_0005
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of Process
+ * @tc.desc: Process is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0005, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingRequest request;
+    bool res = bundleAgingMgr.Process(request);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: AginTest_0006
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of Process
+ * @tc.desc: Process is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0006, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingRequest request;
+    AgingBundleInfo bundleInfo;
+    request.AddAgingBundle(bundleInfo);
+    bool res = bundleAgingMgr.Process(request);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: AginTest_0007
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of CleanCache
+ * @tc.desc: CleanCache is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0007, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingBundleInfo bundleInfo;
+    ClearDataMgr();
+    bool res = bundleAgingMgr.CleanCache(bundleInfo);
+    EXPECT_FALSE(res);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: AginTest_0008
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of GetCachePath
+ * @tc.desc: GetCachePath is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0008, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingBundleInfo bundleInfo;
+    std::vector<std::string> caches;
+    bool res = bundleAgingMgr.GetCachePath(bundleInfo, caches);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: AginTest_0009
+ * @tc.name: test RecentlyUnuseBundleAgingHandler of GetCachePath
+ * @tc.desc: GetCachePath is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, AginTest_0009, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingBundleInfo bundleInfo;
+    std::vector<std::string> caches;
+    bundleInfo.bundleName_ = BUNDLE_NAME_TEST;
+    bool res = bundleAgingMgr.GetCachePath(bundleInfo, caches);
+    EXPECT_FALSE(res);
+
+    res = bundleAgingMgr.UnInstallBundle(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(res);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 #endif
 
@@ -8036,7 +8143,7 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallT
     PreBundleConfigInfo preBundleConfigInfo;
     handler.UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
 #endif
-    SetDataMgr();
+    ResetDataMgr();
 }
 
 /**
