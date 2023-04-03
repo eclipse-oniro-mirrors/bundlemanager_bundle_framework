@@ -809,8 +809,6 @@ public:
     virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies) override;
 
-    bool SendData(void *&buffer, size_t size, const void *data);
-
 private:
     /**
      * @brief Send a command message from the proxy object.

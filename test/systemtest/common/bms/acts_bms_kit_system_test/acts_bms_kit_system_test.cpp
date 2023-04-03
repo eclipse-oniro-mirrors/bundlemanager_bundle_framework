@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <fcntl.h>
 #include <fstream>
@@ -7810,39 +7811,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | 
     ErrCode ret = bundleMgrProxy->GetSharedBundleInfo(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, sharedBundles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-}
-
-/**
- * @tc.number: SendData_0100
- * @tc.name: test SendData proxy
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(ActsBmsKitSystemTest, SendData_0100, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    std::vector<SharedBundleInfo> sharedBundles;
-    size_t size = 1;
-    void *buffer = nullptr;
-    ErrCode ret = bundleMgrProxy->SendData(buffer, size, nullptr);
-    EXPECT_FALSE(ret);
-}
-
-/**
- * @tc.number: SendData_0200
- * @tc.name: test SendData proxy
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(ActsBmsKitSystemTest, SendData_0200, Function | SmallTest | Level1)
-{
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-    std::vector<SharedBundleInfo> sharedBundles;
-    size_t size = 0;
-    void *buffer = nullptr;
-    const void *data = &size;
-    ErrCode ret = bundleMgrProxy->SendData(buffer, size, data);
-    EXPECT_FALSE(ret);
 }
 
 }  // namespace AppExecFwk
