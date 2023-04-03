@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2533,6 +2533,7 @@ ErrCode BundleProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
+    Profile::parseResult = ERR_OK;
     configJson = jsonObject.get<ProfileReader::ConfigJson>();
     if (Profile::parseResult != ERR_OK) {
         APP_LOGE("Profile::parseResult is %{public}d", Profile::parseResult);

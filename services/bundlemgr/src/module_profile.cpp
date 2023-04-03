@@ -2274,6 +2274,7 @@ ErrCode ModuleProfile::TransformTo(
         return ret;
     }
     APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
+    Profile::parseResult = ERR_OK;
     Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
     if (Profile::parseResult != ERR_OK) {
         APP_LOGE("parseResult is %{public}d", Profile::parseResult);
