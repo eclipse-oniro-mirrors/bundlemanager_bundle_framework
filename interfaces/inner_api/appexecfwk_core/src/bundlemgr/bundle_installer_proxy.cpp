@@ -473,6 +473,15 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
+    std::string realPath;
+    auto pathMax = path.length();
+    realPath.reserve(pathMax);
+    realPath.resize(pathMax - 1);
+    if (realpath(path.c_str(), &(realPath[0])) == nullptr) {
+        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
     int32_t inputFd = open(path.c_str(), O_RDONLY);
     if (inputFd < 0) {
         close(outputFd);

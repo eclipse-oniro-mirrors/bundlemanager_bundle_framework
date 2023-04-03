@@ -29,7 +29,7 @@ struct Validity {
 
 // configuration information about a profile
 struct AppProvisionInfo : public Parcelable {
-    uint32_t versionCode;
+    int32_t versionCode;
     std::string versionName;
     std::string uuid;
     std::string type;

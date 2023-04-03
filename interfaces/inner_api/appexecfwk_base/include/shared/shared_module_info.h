@@ -27,7 +27,7 @@ struct SharedModuleInfo : public Parcelable {
     uint32_t versionCode = 0;
     std::string versionName;
     std::string description;
-    int32_t descriptionId = 0;
+    uint32_t descriptionId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

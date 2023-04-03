@@ -30,7 +30,7 @@ const size_t APP_PROVISION_INFO_CAPACITY = 10240; // 10K
 
 bool AppProvisionInfo::ReadFromParcel(Parcel &parcel)
 {
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, versionCode);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, validity.notBefore);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, validity.notAfter);
     versionName = Str16ToStr8(parcel.ReadString16());
