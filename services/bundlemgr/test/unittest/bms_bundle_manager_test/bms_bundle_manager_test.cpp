@@ -1208,7 +1208,7 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0001, Function | SmallTest | Lev
     AAFwk::Want want;
     std::vector<AbilityInfo> abilityInfos;
     GetBundleDataMgr()->bundleInfos_.clear();
-    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos);
+    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
     EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
 }
@@ -2432,6 +2432,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    std::vector<BaseSharedBundleInfo> baseSharedBundleInfos;
     std::vector<std::string> dependentModuleNames;
     AAFwk::Want want;
     AbilityInfo abilityInfo;
@@ -2449,6 +2450,10 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     retBool = hostImpl->GetAllDependentModuleNames(
         "", "", dependentModuleNames);
     EXPECT_EQ(retBool, false);
+
+    ErrCode retCode = hostImpl->GetBaseSharedBundleInfos(
+        "", baseSharedBundleInfos);
+    EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
     SetDataMgr();
 }
@@ -2808,9 +2813,9 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0003, Function | SmallTest | Leve
     want.AddEntity("entity.system.home");
     want.SetElementName("", "", "", MODULE_NAME);
     std::vector<AbilityInfo> abilityInfos;
-    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos);
+    bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, 100, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, true);
-    testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, Constants::INVALID_USERID, abilityInfos);
+    testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(want, Constants::INVALID_USERID, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
@@ -3238,7 +3243,7 @@ HWTEST_F(BmsBundleManagerTest, GetMgrFalseByNoBundle_0001, Function | SmallTest 
     want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
     std::vector<AbilityInfo> abilityInfos;
     bool testRet = GetBundleDataMgr()->QueryLauncherAbilityInfos(
-        want, USERID, abilityInfos);
+        want, USERID, abilityInfos) == ERR_OK;
     EXPECT_EQ(testRet, false);
 }
 
@@ -4240,6 +4245,19 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | 
     bool ret = dataMgr->GetFreeInstallModules(freeInstallModules);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: GetBundleSpaceSize_0400
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0400, Function | MediumTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    int64_t size = 0;
+    int64_t ret = dataMgr->GetBundleSpaceSize(BUNDLE_PREVIEW_NAME, USERID);
+    EXPECT_EQ(ret, size);
+}
 #endif
 
 /**
@@ -4383,6 +4401,50 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0100, Function | SmallTest |
     BundleInfo info;
     ErrCode ret = hostImpl->GetBundleInfoForSelf(flags, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0200
+ * @tc.name: test GetBundleInfoForSelf
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo info;
+
+    ClearDataMgr();
+    ErrCode ret = hostImpl->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_WITH_ABILITIES, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    SetDataMgr();
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+
+/**
+ * @tc.number: VerifyDependency_0100
+ * @tc.name: test VerifyDependency
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, VerifyDependency_0100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    ClearDataMgr();
+    bool retBool = hostImpl->VerifyDependency("");
+    EXPECT_EQ(retBool, false);
+    SetDataMgr();
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
 /**

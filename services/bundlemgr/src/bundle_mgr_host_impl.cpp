@@ -584,6 +584,27 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
     return dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
 }
 
+ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
+    const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
+{
+    APP_LOGD("start QueryLauncherAbilityInfos, userId : %{public}d", userId);
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return false;
+    }
+    APP_LOGD("verify permission success, begin to QueryLauncherAbilityInfos");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+}
+
 bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
     APP_LOGD("start QueryAllAbilityInfos, userId : %{public}d", userId);
@@ -601,7 +622,7 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
+    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
 }
 
 bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)

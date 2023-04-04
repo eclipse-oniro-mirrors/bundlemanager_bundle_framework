@@ -18,12 +18,14 @@
 #include <memory>
 #include <string>
 
+#include "ability_manager_client.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "if_system_ability_manager.h"
+#include "in_process_call_wrapper.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "service_router_data_mgr.h"
@@ -167,5 +169,23 @@ int32_t ServiceRouterMgrService::QueryPurposeInfos(const Want &want, const std::
     DelayUnloadTask();
     return ServiceRouterDataMgr::GetInstance().QueryPurposeInfos(want, purposeName, purposeInfos);
 }
-}  // namespace AAFwk
+
+int32_t ServiceRouterMgrService::StartUIExtensionAbility(const Want &want, const sptr<SessionInfo> &sessionInfo,
+    int32_t userId, ExtensionAbilityType extensionType)
+{
+    APP_LOGD("StartUIExtensionAbility start:");
+    DelayUnloadTask();
+    return IN_PROCESS_CALL(AbilityManagerClient::GetInstance()->
+        StartUIExtensionAbility(want, sessionInfo, userId, extensionType));
+}
+
+int32_t ServiceRouterMgrService::ConnectUIExtensionAbility(const Want &want, const sptr<IAbilityConnection> &connect,
+    const sptr<SessionInfo> &sessionInfo, int32_t userId)
+{
+    APP_LOGD("ConnectUIExtensionAbility start:");
+    DelayUnloadTask();
+    return IN_PROCESS_CALL(AbilityManagerClient::GetInstance()->
+        ConnectUIExtensionAbility(want, connect, sessionInfo, userId));
+}
+}  // namespace AppExecFwk
 }  // namespace OHOS

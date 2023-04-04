@@ -139,6 +139,8 @@ void to_json(nlohmann::json &jsonObject, const SharedBundleInfo &sharedBundleInf
 void from_json(const nlohmann::json &jsonObject, SharedBundleInfo &sharedBundleInfo);
 void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInfo);
 void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleInfo);
+void to_json(nlohmann::json &jsonObject, const ProxyData &proxyData);
+void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

@@ -128,6 +128,7 @@ const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
+const std::string MODULE_PROXY_DATAS = "proxyDatas";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -551,6 +552,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
+        {MODULE_PROXY_DATAS, info.proxyDatas},
     };
 }
 
@@ -1056,6 +1058,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATAS,
+        info.proxyDatas,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }

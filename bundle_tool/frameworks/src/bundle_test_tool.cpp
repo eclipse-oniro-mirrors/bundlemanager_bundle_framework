@@ -237,7 +237,7 @@ const std::string HELP_MSG_ADD_INSTALL_RULE =
     "options list:\n"
     "  -h, --help                             list available commands\n"
     "  -a, --app-id <app-id>                  specify app id of the application\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -t, --control-rule-type                specify control type of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -246,7 +246,7 @@ const std::string HELP_MSG_GET_INSTALL_RULE =
     "eg:bundle_test_tool getAppInstallRule -t <control-rule-type> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -t, --control-rule-type                specify control type of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -255,7 +255,7 @@ const std::string HELP_MSG_DELETE_INSTALL_RULE =
     "eg:bundle_test_tool deleteAppInstallRule -a <app-id> -t <control-rule-type> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -a, --app-id <app-id>                  specify app id of the application\n"
     "  -t, --control-rule-type                specify control type of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
@@ -265,7 +265,7 @@ const std::string HELP_MSG_CLEAN_INSTALL_RULE =
     "eg:bundle_test_tool cleanAppInstallRule -t <control-rule-type> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -t, --control-rule-type                specify control type of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -274,7 +274,7 @@ const std::string HELP_MSG_ADD_APP_RUNNING_RULE =
     "eg:bundle_test_tool addAppRunningRule -c <control-rule> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -c, --control-rule                     specify control rule of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -283,7 +283,7 @@ const std::string HELP_MSG_DELETE_APP_RUNNING_RULE =
     "eg:bundle_test_tool deleteAppRunningRule -c <control-rule> -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -c, --control-rule                     specify control rule of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -292,7 +292,7 @@ const std::string HELP_MSG_CLEAN_APP_RUNNING_RULE =
     "eg:bundle_test_tool cleanAppRunningRule -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
 const std::string HELP_MSG_GET_APP_RUNNING_RULE =
@@ -300,7 +300,7 @@ const std::string HELP_MSG_GET_APP_RUNNING_RULE =
     "eg:bundle_test_tool getAppRunningControlRule -u <user-id> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
 const std::string HELP_MSG_GET_APP_RUNNING_RESULT_RULE =
@@ -308,7 +308,7 @@ const std::string HELP_MSG_GET_APP_RUNNING_RESULT_RULE =
     "eg:bundle_test_tool getAppRunningControlRuleResult -n <bundle-name> \n"
     "options list:\n"
     "  -h, --help                             list available commands\n"
-    "  -e, --euid <eu-id>                     default euid value is 537\n"
+    "  -e, --euid <eu-id>                     default euid value is 3057\n"
     "  -n, --bundle-name  <bundle-name>       specify bundle name of the application\n"
     "  -u, --user-id <user-id>                specify a user id\n";
 
@@ -1549,14 +1549,14 @@ ErrCode BundleTestTool::CheckAddInstallRuleCorrectOption(int option, const std::
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool addAppInstallRule -a test1,test2 -t 1 -u 101 -e 537
+// bundle_test_tool addAppInstallRule -a test1,test2 -t 1 -u 101 -e 3057
 ErrCode BundleTestTool::RunAsAddInstallRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
     std::string commandName = "addAppInstallRule";
     std::vector<std::string> appIds;
-    int euid = 537;
+    int euid = 3057;
     int userId = 100;
     int ruleType = 0;
     APP_LOGD("RunAsAddInstallRuleCommand is start");
@@ -1634,13 +1634,13 @@ ErrCode BundleTestTool::CheckGetInstallRuleCorrectOption(int option, const std::
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool getAppInstallRule -t 1 -u 101 -e 537
+// bundle_test_tool getAppInstallRule -t 1 -u 101 -e 3057
 ErrCode BundleTestTool::RunAsGetInstallRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
     std::string commandName = "getAppInstallRule";
-    int euid = 537;
+    int euid = 3057;
     int userId = 100;
     int ruleType = 0;
     APP_LOGD("RunAsGetInstallRuleCommand is start");
@@ -1728,12 +1728,12 @@ ErrCode BundleTestTool::CheckDeleteInstallRuleCorrectOption(int option, const st
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool deleteAppInstallRule -a test1 -t 1 -u 101 -e 537
+// bundle_test_tool deleteAppInstallRule -a test1 -t 1 -u 101 -e 3057
 ErrCode BundleTestTool::RunAsDeleteInstallRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "deleteAppInstallRule";
     std::vector<std::string> appIds;
     int ruleType = 0;
@@ -1813,12 +1813,12 @@ ErrCode BundleTestTool::CheckCleanInstallRuleCorrectOption(
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool cleanAppInstallRule -t 1 -u 101 -e 537
+// bundle_test_tool cleanAppInstallRule -t 1 -u 101 -e 3057
 ErrCode BundleTestTool::RunAsCleanInstallRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "cleanAppInstallRule";
     int userId = 100;
     int ruleType = 0;
@@ -1911,12 +1911,12 @@ ErrCode BundleTestTool::CheckAppRunningRuleCorrectOption(int option, const std::
 }
 
 // bundle_test_tool addAppRunningRule -c appId:id1,controlMessage:msg1;appId:id2,controlMessage:msg2
-// -u 101 -e 537
+// -u 101 -e 3057
 ErrCode BundleTestTool::RunAsAddAppRunningRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
     std::vector<AppRunningControlRule> controlRule;
@@ -1962,12 +1962,12 @@ ErrCode BundleTestTool::RunAsAddAppRunningRuleCommand()
     return result;
 }
 
-// bundle_test_tool deleteAppRunningRule -c appId:101,controlMessage:msg1 -u 101 -e 537
+// bundle_test_tool deleteAppRunningRule -c appId:101,controlMessage:msg1 -u 101 -e 3057
 ErrCode BundleTestTool::RunAsDeleteAppRunningRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
     std::vector<AppRunningControlRule> controlRule;
@@ -2041,12 +2041,12 @@ ErrCode BundleTestTool::CheckCleanAppRunningRuleCorrectOption(
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool cleanAppRunningRule -u 101 -e 537
+// bundle_test_tool cleanAppRunningRule -u 101 -e 3057
 ErrCode BundleTestTool::RunAsCleanAppRunningRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
     APP_LOGD("RunAsCleanAppRunningRuleCommand is start");
@@ -2115,12 +2115,12 @@ ErrCode BundleTestTool::CheckGetAppRunningRuleCorrectOption(int option, const st
     return OHOS::ERR_OK ;
 }
 
-// bundle_test_tool getAppRunningControlRule -u 101 -e 537
+// bundle_test_tool getAppRunningControlRule -u 101 -e 3057
 ErrCode BundleTestTool::RunAsGetAppRunningControlRuleCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
     APP_LOGD("RunAsGetAppRunningControlRuleCommand is start");
@@ -2199,12 +2199,12 @@ ErrCode BundleTestTool::CheckGetAppRunningRuleResultCorrectOption(int option, co
     return OHOS::ERR_OK;
 }
 
-// bundle_test_tool getAppRunningControlRuleResult -n com.ohos.example -e 537
+// bundle_test_tool getAppRunningControlRuleResult -n com.ohos.example -e 3057
 ErrCode BundleTestTool::RunAsGetAppRunningControlRuleResultCommand()
 {
     ErrCode result = OHOS::ERR_OK;
     int counter = 0;
-    int euid = 537;
+    int euid = 3057;
     std::string commandName = "addAppRunningRule";
     int userId = 100;
     std::string bundleName;

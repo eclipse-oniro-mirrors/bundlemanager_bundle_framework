@@ -15,6 +15,8 @@
 
 #include "bundle_install_checker.h"
 
+#include <regex>
+
 #include "bundle_data_mgr.h"
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
@@ -47,6 +49,7 @@ const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
+const std::string BUNDLE_NAME_REGEX = "datashareproxy://([^/\\?]+)";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -1102,6 +1105,40 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
     return appProvisionInfo;
+}
+
+std::string GetBundleNameFromUri(const std::string &uri)
+{
+    std::regex bundleNameRegex(BUNDLE_NAME_REGEX);
+    std::smatch bundleNameMatch;
+    if (std::regex_search(uri, bundleNameMatch, bundleNameRegex)) {
+        std::string bundleName = bundleNameMatch[1];
+        APP_LOGD("get bundleName %{public}s from uri successfully", bundleName.c_str());
+        return bundleName;
+    } else {
+        APP_LOGE("get bundleName from uri failed");
+        return Constants::EMPTY_STRING;
+    }
+}
+
+ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundleInfo) const
+{
+    auto bundleName = innerBundleInfo.GetBundleName();
+    auto moduleInfos = innerBundleInfo.GetInnerModuleInfos();
+    if (moduleInfos.empty()) {
+        return ERR_OK;
+    }
+    for (const auto &moduleInfo : moduleInfos) {
+        for (const auto &proxyData : moduleInfo.second.proxyDatas) {
+            auto name = GetBundleNameFromUri(proxyData.uri);
+            if (bundleName != name) {
+                APP_LOGE("bundleName from uri %{public}s different from origin bundleName %{public}s",
+                    name.c_str(), bundleName.c_str());
+                return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+            }
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

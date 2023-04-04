@@ -64,7 +64,7 @@ public:
     ErrCode CheckHapHashParams(
         std::unordered_map<std::string, InnerBundleInfo> &infos,
         std::map<std::string, std::string> hashParams);
-    
+
     /**
      * @brief To check the version code and bundleName in all haps.
      * @param infos .Indicates all innerBundleInfo for all haps need to be installed.
@@ -126,6 +126,7 @@ public:
 
     AppProvisionInfo ConvertToAppProvisionInfo(const Security::Verify::ProvisionInfo &provisionInfo) const;
 
+    ErrCode CheckProxyDatas(const InnerBundleInfo &info) const;
 private:
 
     ErrCode ParseBundleInfo(
@@ -140,7 +141,7 @@ private:
     void SetEntryInstallationFree(
         const BundlePackInfo &bundlePackInfo,
         InnerBundleInfo &innerBundleInfo);
-    
+
     void SetPackInstallationFree(BundlePackInfo &bundlePackInfo, const InnerBundleInfo &innerBundleInfo) const;
 
     void CollectProvisionInfo(
@@ -154,7 +155,7 @@ private:
     void ParseAppPrivilegeCapability(
         const Security::Verify::ProvisionInfo &provisionInfo,
         AppPrivilegeCapability &appPrivilegeCapability);
-    
+
     ErrCode CheckMainElement(const InnerBundleInfo &info);
 
     ErrCode CheckBundleName(const std::string &provisionInfoBundleName, const std::string &bundleName);

@@ -415,6 +415,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: installd clean dir failed.",
     },
     {
+        IStatusReceiver::ERR_INSTALLD_SET_SELINUX_LABEL_FAILED,
+        "error: installd set selinux label failed."
+    },
+    {
         IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR,
         "error: uninstall system app error.",
     },
@@ -609,6 +613,14 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
     {
         IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_RELIED,
         "error, shared bundle is relied",
+    },
+    {
+        IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_URI_FAILED,
+        "error, bundle name in proxy data uri is different",
+    },
+    {
+        IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
+        "error, apl of required permission in proxy data is too low",
     },
     {
         IStatusReceiver::ERR_UNKNOWN,
