@@ -62,7 +62,7 @@ ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, Messa
 ErrCode BundleStreamInstallerHost::HandleCreateSharedBundleStream(MessageParcel &data, MessageParcel &reply)
 {
     std::string hspName = data.ReadString();
-    int32_t sharedBundleIdx = data.ReadUint32();
+    uint32_t sharedBundleIdx = data.ReadUint32();
     int32_t fd = CreateSharedBundleStream(hspName, sharedBundleIdx);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
