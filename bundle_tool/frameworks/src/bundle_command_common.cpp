@@ -394,6 +394,10 @@ std::map<int32_t, std::string> BundleCommandCommon::bundleMessageMap_ = {
         "error: installd clean dir failed.",
     },
     {
+        IStatusReceiver::ERR_INSTALLD_SET_SELINUX_LABEL_FAILED,
+        "error: installd set selinux label failed."
+    },
+    {
         IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR,
         "error: uninstall system app error.",
     },
