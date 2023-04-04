@@ -594,7 +594,7 @@ ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify permission failed");
-        return false;
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     APP_LOGD("verify permission success, begin to QueryLauncherAbilityInfos");
     auto dataMgr = GetDataMgrFromService();
