@@ -157,7 +157,7 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
         quickFixMark.bundleName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -165,7 +165,7 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
         quickFixMark.status,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 } // AppExecFwk

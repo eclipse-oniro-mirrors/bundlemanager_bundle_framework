@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -238,8 +238,6 @@ constexpr const char* KEY_HOME_SCREEN = "homeScreen";
 constexpr const char* KEY_SEARCHBOX = "searchbox";
 
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_JS_TYPE_ETS = "ets";
-
-extern thread_local int32_t parseResult;
 
 // background modes
 // different bits in the binary represent different services
