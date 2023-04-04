@@ -2874,6 +2874,7 @@ ErrCode BundleTestTool::CheckGetDistributedBundleNameCorrectOption(int32_t optio
 ErrCode BundleTestTool::GetDistributedBundleName(const std::string &networkId,
     int32_t accessTokenId, std::string& msg)
 {
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     if (distributedBmsProxy_ == nullptr) {
         APP_LOGE("distributedBmsProxy_ is nullptr");
         return OHOS::ERR_INVALID_VALUE;
@@ -2893,6 +2894,8 @@ ErrCode BundleTestTool::GetDistributedBundleName(const std::string &networkId,
         return OHOS::ERR_INVALID_VALUE;
     }
     return OHOS::ERR_OK;
+#endif
+    return OHOS::ERR_INVALID_VALUE;
 }
 
 bool BundleTestTool::ParseEventCallbackOptions(bool &onlyUnregister, int32_t &uid)

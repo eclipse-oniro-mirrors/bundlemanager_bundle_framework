@@ -20,7 +20,9 @@
 #include "bundle_event_callback_host.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_installer_interface.h"
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_interface.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -82,7 +84,9 @@ private:
 
     sptr<IBundleMgr> bundleMgrProxy_;
     sptr<IBundleInstaller> bundleInstallerProxy_;
+#ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     sptr<IDistributedBms> distributedBmsProxy_;
+#endif    
 
     bool CheckRemovableErrorOption(int option, int counter, const std::string &commandName);
     bool CheckRemovableCorrectOption(int option, const std::string &commandName, int &isRemovable, std::string &name);

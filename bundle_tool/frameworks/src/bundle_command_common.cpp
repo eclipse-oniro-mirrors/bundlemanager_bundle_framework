@@ -60,6 +60,10 @@ sptr<IDistributedBms> BundleCommandCommon::GetDistributedBundleMgrService()
     }
     OHOS::sptr<OHOS::IRemoteObject> remoteObject =
         saMgr->CheckSystemAbility(OHOS::DISTRIBUTED_BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (remoteObject == nullptr) {
+        APP_LOGE("failed to get distributed bms proxy.");
+        return nullptr;
+    }
     return OHOS::iface_cast<IDistributedBms>(remoteObject);
 }
 #endif
