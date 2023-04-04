@@ -86,7 +86,7 @@ private:
     sptr<IBundleInstaller> bundleInstallerProxy_;
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
     sptr<IDistributedBms> distributedBmsProxy_;
-#endif    
+#endif
 
     bool CheckRemovableErrorOption(int option, int counter, const std::string &commandName);
     bool CheckRemovableCorrectOption(int option, const std::string &commandName, int &isRemovable, std::string &name);
