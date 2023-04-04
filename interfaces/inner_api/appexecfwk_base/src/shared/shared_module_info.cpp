@@ -85,7 +85,7 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         SHARED_MODULE_INFO_VERSION_CODE,
         sharedModuleInfo.versionCode,
@@ -109,7 +109,7 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int>(jsonObject,
+    GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
         SHARED_MODULE_INFO_DESCRIPTION_ID,
         sharedModuleInfo.descriptionId,
