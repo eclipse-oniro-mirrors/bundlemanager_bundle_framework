@@ -1705,10 +1705,6 @@ bool BMSEventHandler::FetchInnerBundleInfo(
 void BMSEventHandler::ListeningUserUnlocked() const
 {
     APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
-    AAFwk::Want commonDataWant;
-    commonDataWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
-    EventFwk::CommonEventData commonEventData(commonDataWant);
-
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
