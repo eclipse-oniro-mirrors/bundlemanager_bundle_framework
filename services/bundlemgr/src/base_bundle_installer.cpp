@@ -1681,10 +1681,12 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         }
     }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
-        ((result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo)) != ERR_OK)) {
-        APP_LOGE("remove overlay connection failed due to %{public}d", result);
-        return result;
+    if (newInfo.GetOverlayType() != NON_OVERLAY_TYPE) {
+        result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("remove overlay connection failed due to %{public}d", result);
+            return result;
+        }
     }
     // stage model to FA model
     if (!newInfo.GetIsNewVersion() && oldInfo.GetIsNewVersion()) {
