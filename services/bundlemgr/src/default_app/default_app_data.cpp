@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "common_profile.h"
 #include "default_app_mgr.h"
 #include "nlohmann/json.hpp"
 
@@ -49,19 +50,21 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 {
     APP_LOGD("DefaultAppData FromJson begin.");
     const auto& jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
+    Profile::parseResult = ERR_OK;
     GetValueIfFindKey<std::map<std::string, Element>>(jsonObject,
         jsonObjectEnd,
         INFOS,
         infos,
         JsonType::OBJECT,
         true,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("DefaultAppData FromJson failed, error code : %{public}d", parseResult);
+    if (Profile::parseResult != ERR_OK) {
+        APP_LOGE("DefaultAppData FromJson failed, error code : %{public}d", Profile::parseResult);
     }
-    return parseResult;
+    int32_t ret = Profile::parseResult;
+    Profile::parseResult = ERR_OK;
+    return ret;
 }
 
 bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
@@ -77,7 +80,9 @@ bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
             continue;
         }
         Element element;
+        Profile::parseResult = ERR_OK;
         from_json(object, element);
+        Profile::parseResult = ERR_OK;
         if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
             APP_LOGW("bad element format.");
             continue;
@@ -101,16 +106,15 @@ void to_json(nlohmann::json& jsonObject, const Element& element)
 
 void from_json(const nlohmann::json& jsonObject, Element& element)
 {
-    APP_LOGD("Element from_json begin.");
+    APP_LOGD("Element from_json begin");
     const auto& jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         BUNDLE_NAME,
         element.bundleName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -118,7 +122,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.moduleName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -126,7 +130,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.abilityName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -134,7 +138,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.extensionName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -142,10 +146,10 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.type,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("Element from_json error, error code : %{public}d", parseResult);
+    if (Profile::parseResult != ERR_OK) {
+        APP_LOGE("Element from_json error, error code : %{public}d", Profile::parseResult);
     }
 }
 }

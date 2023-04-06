@@ -1199,18 +1199,17 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     info.InsertAbilitiesInfo(keyName, appDetailAbility);
 }
 
-bool BundleDataMgr::QueryLauncherAbilityInfos(
-    const Want& want, uint32_t userId, std::vector<AbilityInfo>& abilityInfos) const
+ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
+    const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        return false;
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
-
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ is empty");
-        return false;
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
     ElementName element = want.GetElement();
@@ -1225,17 +1224,17 @@ bool BundleDataMgr::QueryLauncherAbilityInfos(
             }
             GetMatchLauncherAbilityInfos(want, info, abilityInfos, requestUserId);
         }
-        return true;
+        return ERR_OK;
     } else {
         // query definite abilitys by bundle name
         auto item = bundleInfos_.find(bundleName);
         if (item == bundleInfos_.end()) {
             APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
-            return false;
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
         GetMatchLauncherAbilityInfos(want, item->second, abilityInfos, requestUserId);
         FilterAbilityInfosByModuleName(element.GetModuleName(), abilityInfos);
-        return true;
+        return ERR_OK;
     }
 }
 
@@ -2442,6 +2441,7 @@ bool BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName, InnerBundl
     }
     infoItem->second.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
     info = infoItem->second;
+    info.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     return true;
 }
 
@@ -4090,23 +4090,27 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
-    // step1 : find default infos
+    // step1 : find default infos, current only support default file types
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
+    std::string action = want.GetAction();
+    std::string uri = want.GetUriString();
     std::string type = want.GetType();
-    APP_LOGD("type : %{public}s", type.c_str());
-    BundleInfo bundleInfo;
-    bool ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
-    if (ret) {
-        if (bundleInfo.abilityInfos.size() == 1) {
-            abilityInfos = bundleInfo.abilityInfos;
-            APP_LOGD("find default ability.");
-            return true;
-        } else if (bundleInfo.extensionInfos.size() == 1) {
-            extensionInfos = bundleInfo.extensionInfos;
-            APP_LOGD("find default extension.");
-            return true;
-        } else {
-            APP_LOGD("GetDefaultApplication failed.");
+    APP_LOGD("action : %{public}s, uri : %{public}s, type : %{public}s", action.c_str(), uri.c_str(), type.c_str());
+    if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
+        BundleInfo bundleInfo;
+        ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
+        if (ret == ERR_OK) {
+            if (bundleInfo.abilityInfos.size() == 1) {
+                abilityInfos = bundleInfo.abilityInfos;
+                APP_LOGD("find default ability.");
+                return true;
+            } else if (bundleInfo.extensionInfos.size() == 1) {
+                extensionInfos = bundleInfo.extensionInfos;
+                APP_LOGD("find default extension.");
+                return true;
+            } else {
+                APP_LOGD("GetDefaultApplication failed.");
+            }
         }
     }
 #endif

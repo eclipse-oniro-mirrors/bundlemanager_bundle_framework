@@ -318,10 +318,9 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
     Want want;
     InitWant(want, bundleName);
     std::vector<AbilityInfo> abilityInfos;
-    int32_t flag = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
-    ErrCode err = iBundleMgr->QueryAbilityInfosV9(want, flag, userId, abilityInfos);
+    ErrCode err = iBundleMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
     if (err != ERR_OK) {
-        APP_LOGE("QueryAbilityInfosV9 failed");
+        APP_LOGE("QueryLauncherAbilityInfos failed");
         return err;
     }
     BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
@@ -365,10 +364,9 @@ ErrCode LauncherService::GetAllLauncherAbility(const int32_t userId,
     Want want;
     InitWant(want, EMPTY_STRING);
     std::vector<AbilityInfo> abilityInfos;
-    int32_t flag = static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION);
-    ErrCode err = iBundleMgr->QueryAbilityInfosV9(want, flag, userId, abilityInfos);
+    ErrCode err = iBundleMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos);
     if (err != ERR_OK) {
-        APP_LOGE("QueryAbilityInfosV9 failed");
+        APP_LOGE("QueryLauncherAbilityInfos failed");
         return err;
     }
     for (const auto &ability : abilityInfos) {

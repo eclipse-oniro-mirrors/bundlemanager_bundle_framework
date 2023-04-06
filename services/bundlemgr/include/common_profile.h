@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -239,8 +239,6 @@ constexpr const char* KEY_SEARCHBOX = "searchbox";
 
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_JS_TYPE_ETS = "ets";
 
-extern thread_local int32_t parseResult;
-
 // background modes
 // different bits in the binary represent different services
 // 0000001 represents data transmission services
@@ -361,6 +359,7 @@ constexpr const char* MODULE_DEPENDENCIES = "dependencies";
 constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 constexpr const char* MODULE_ATOMIC_SERVICE = "atomicService";
+constexpr const char* MODULE_PROXY_DATAS = "proxyDatas";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";

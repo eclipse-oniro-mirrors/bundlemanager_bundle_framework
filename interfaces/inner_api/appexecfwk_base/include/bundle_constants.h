@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
 constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
 constexpr const char* MODULE_PROFILE_NAME = "module.json";
@@ -172,6 +173,7 @@ enum class AppType {
     THIRD_PARTY_APP,
 };
 
+constexpr const char* ACTION_VIEW_DATA = "ohos.want.action.viewData";
 constexpr const char* ACTION_HOME = "action.system.home";
 constexpr const char* WANT_ACTION_HOME = "ohos.want.action.home";
 constexpr const char* ENTITY_HOME = "entity.system.home";

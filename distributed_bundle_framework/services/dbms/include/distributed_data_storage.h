@@ -35,6 +35,8 @@ public:
     void DeleteStorageDistributeInfo(const std::string &bundleName, int32_t userId);
     bool GetStorageDistributeInfo(const std::string &networkId, const std::string &bundleName,
         DistributedBundleInfo &info);
+    int32_t GetDistributedBundleName(const std::string &networkId,  uint32_t accessTokenId,
+        std::string &bundleName);
     void UpdateDistributedData(int32_t userId);
 
 private:

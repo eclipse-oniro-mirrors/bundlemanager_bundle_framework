@@ -50,13 +50,13 @@ ohos_unittest("BmsBundleHspTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_A:hsp_A",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_B:hsp_B",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_C:hsp_C",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_C2:hsp_C2",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_D:hsp_D",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_hsp/hsp_entry:hsp_entry",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_A:hsp_A",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_B:hsp_B",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_C:hsp_C",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_C2:hsp_C2",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_D:hsp_D",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_entry:hsp_entry",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
   deps += bundle_install_deps
 
@@ -155,15 +155,15 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/host2_hap:host2_hap",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/host_hap:host_hap",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_normal_hap:libA_normal_hap",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_v10000:libA_v10000",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_v10001:libA_v10001",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_v10002:libA_v10002",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_without_provision:libA_without_provision",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libB_v10001:libB_v10001",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/host2_hap:host2_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/host_hap:host_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_normal_hap:libA_normal_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10000:libA_v10000",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10001:libA_v10001",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10002:libA_v10002",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_without_provision:libA_without_provision",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libB_v10001:libB_v10001",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
   deps += bundle_install_deps
 
@@ -262,10 +262,10 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/host_hap:host_hap",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_v10001:libA_v10001",
-    "${appexecfwk_path}/test/sceneProject/unittest/bundle_share_library/libA_v10002:libA_v10002",
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/host_hap:host_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10001:libA_v10001",
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10002:libA_v10002",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
   ]
   deps += bundle_install_deps
 

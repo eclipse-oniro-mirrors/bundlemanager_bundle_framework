@@ -86,7 +86,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "thumbnail",
     "preview",
     "print",
-    "ui"
+    "ui",
+    "push"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -260,6 +261,7 @@ struct Module {
     bool isLibIsolated = false;
     std::string targetModule;
     int32_t targetPriority = 0;
+    std::vector<ProxyData> proxyDatas;
 };
 
 struct ModuleJson {
@@ -1337,6 +1339,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATAS,
+        module.proxyDatas,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1887,6 +1897,17 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
     return ExtensionAbilityType::UNSPECIFIED;
 }
 
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
+{
+    for (auto index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
+        if (index == static_cast<int32_t>(type)) {
+            return Profile::EXTENSION_TYPE_SET[index];
+        }
+    }
+
+    return "Unspecified";
+}
+
 bool ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
@@ -1918,10 +1939,8 @@ bool ToExtensionInfo(
     if (extensionInfo.type != ExtensionAbilityType::SERVICE &&
         extensionInfo.type != ExtensionAbilityType::DATASHARE) {
         extensionInfo.process = extensionInfo.bundleName;
-        extensionInfo.process.append(".");
-        extensionInfo.process.append(extensionInfo.moduleName);
         extensionInfo.process.append(":");
-        extensionInfo.process.append(extensionInfo.name);
+        extensionInfo.process.append(ConvertToExtensionTypeName(extensionInfo.type));
     }
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
@@ -2009,6 +2028,7 @@ bool ToInnerModuleInfo(
     } else {
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
+    innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }
@@ -2255,6 +2275,7 @@ ErrCode ModuleProfile::TransformTo(
         return ret;
     }
     APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
+    Profile::parseResult = ERR_OK;
     Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
     if (Profile::parseResult != ERR_OK) {
         APP_LOGE("parseResult is %{public}d", Profile::parseResult);

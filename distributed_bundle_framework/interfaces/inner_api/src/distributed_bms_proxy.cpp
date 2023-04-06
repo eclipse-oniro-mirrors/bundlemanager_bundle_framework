@@ -208,6 +208,30 @@ bool DistributedBmsProxy::GetDistributedBundleInfo(const std::string &networkId,
     return false;
 }
 
+int32_t DistributedBmsProxy::GetDistributedBundleName(const std::string &networkId, uint32_t accessTokenId,
+    std::string &bundleName)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get distributed bundleInfo list due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(networkId)) {
+        APP_LOGE("distributed mms proxy get distributed bundleInfo list write networkId error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(accessTokenId)) {
+        APP_LOGE("distributed mms proxy get distributed bundleInfo list write accessTokenId error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    int32_t result = SendRequest(IDistributedBms::Message::GET_DISTRIBUTED_BUNDLE_NAME, data, reply);
+    if (result == OHOS::NO_ERROR) {
+        bundleName = reply.ReadString();
+    }
+    return result;
+}
+
 template<typename T>
 bool DistributedBmsProxy::WriteParcelableVector(const std::vector<T> &parcelableVector, Parcel &data)
 {

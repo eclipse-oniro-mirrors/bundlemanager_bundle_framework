@@ -332,6 +332,16 @@ public:
      */
     virtual ErrCode QueryAbilityInfosV9(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos) override;
+
+    /**
+     * @brief Query the launcher AbilityInfo of list by the given Want.
+     * @param want Indicates the information of the ability.
+     * @param userId Indicates the user ID.
+     * @param abilityInfos Indicates the obtained AbilityInfos object.
+     * @return Returns ERR_OK if the AbilityInfos is successfully obtained; returns errCode otherwise.
+     */
+    virtual ErrCode QueryLauncherAbilityInfos(
+        const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfo) override;
     /**
      * @brief Query the AbilityInfo of list for all service on launcher.
      * @param userId Indicates the information of the user.

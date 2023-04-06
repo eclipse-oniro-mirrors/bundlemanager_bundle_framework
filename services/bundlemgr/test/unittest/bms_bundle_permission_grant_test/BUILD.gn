@@ -54,18 +54,18 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission3:bmsGrantPermission3",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission3:bmsGrantPermission3",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 
@@ -171,21 +171,20 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 
@@ -234,11 +233,6 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
 
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
-  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -297,21 +291,20 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   configs = [
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
     "${inner_api_path}/appexecfwk_base:appexecfwk_base_sdk_config",
-    "//base/notification/eventhandler/frameworks/eventhandler:libeventhandler_config",
   ]
   cflags = []
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-    "${appexecfwk_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
   ]
 
   if (bundle_framework_graphics) {
     deps += [
-      "${appexecfwk_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
-      "${appexecfwk_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+      "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+      "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
     ]
   }
 
@@ -360,11 +353,6 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
 
-  if (device_manager_enable) {
-    sources += [ "${services_path}/bundlemgr/src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
-  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]

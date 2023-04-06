@@ -151,7 +151,7 @@ bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
     int64_t versionCode;
     ret = absSharedResultSet->GetLong(INDEX_VERSION_CODE, versionCode);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString versionCode failed, ret: %{public}d");
-    appProvisionInfo.versionCode = versionCode;
+    appProvisionInfo.versionCode = static_cast<uint32_t>(versionCode);
     ret = absSharedResultSet->GetString(INDEX_VERSION_NAME, appProvisionInfo.versionName);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString versionName failed, ret: %{public}d");
     ret = absSharedResultSet->GetString(INDEX_UUID, appProvisionInfo.uuid);

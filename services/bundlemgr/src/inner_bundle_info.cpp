@@ -128,6 +128,7 @@ const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
+const std::string MODULE_PROXY_DATAS = "proxyDatas";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -362,6 +363,10 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     if (skillUriType.empty()) {
         return false;
     }
+    // only match */*
+    if (type == Constants::TYPE_ONLY_MATCH_WILDCARD) {
+        return skillUriType == TYPE_WILDCARD;
+    }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {
         // param is */* or config is */*
         return true;
@@ -551,6 +556,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
+        {MODULE_PROXY_DATAS, info.proxyDatas},
     };
 }
 
@@ -637,7 +643,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.name,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -645,7 +651,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.modulePackage,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -653,7 +659,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.moduleName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -661,7 +667,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.modulePath,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -669,7 +675,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.moduleDataDir,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -677,7 +683,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.hapPath,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -685,7 +691,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.moduleResPath,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -693,7 +699,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.isEntry,
         JsonType::BOOLEAN,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<MetaData>(jsonObject,
         jsonObjectEnd,
@@ -701,7 +707,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.metaData,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<ModuleColorMode>(jsonObject,
         jsonObjectEnd,
@@ -709,7 +715,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.colorMode,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Distro>(jsonObject,
         jsonObjectEnd,
@@ -717,7 +723,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.distro,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -725,7 +731,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.description,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -733,7 +739,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.descriptionId,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -741,7 +747,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.icon,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -749,7 +755,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.iconId,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -757,7 +763,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.label,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -765,7 +771,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.labelId,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -773,7 +779,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.mainAbility,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -781,7 +787,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.entryAbilityKey,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -789,7 +795,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.srcPath,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -797,7 +803,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.hashValue,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -805,7 +811,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.installationFree,
         JsonType::BOOLEAN,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, bool>>(jsonObject,
         jsonObjectEnd,
@@ -813,7 +819,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.isRemovable,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -821,7 +827,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.upgradeFlag,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -829,7 +835,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.reqCapabilities,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -837,7 +843,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.abilityKeys,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -845,16 +851,15 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.skillKeys,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
-    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_PROCESS,
         info.process,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -862,7 +867,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.srcEntrance,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -870,7 +875,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.deviceTypes,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -878,7 +883,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.virtualMachine,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -886,7 +891,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.uiSyntax,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -894,7 +899,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.pages,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
@@ -902,7 +907,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.metadata,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<RequestPermission>>(jsonObject,
         jsonObjectEnd,
@@ -910,7 +915,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.requestPermissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<DefinePermission>>(jsonObject,
         jsonObjectEnd,
@@ -918,7 +923,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.definePermissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -926,7 +931,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.extensionKeys,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -934,7 +939,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.extensionSkillKeys,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -942,7 +947,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.isModuleJson,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -950,7 +955,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.isStageBasedModel,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
@@ -958,7 +963,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.dependencies,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -966,7 +971,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.compileMode,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -974,7 +979,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.isLibIsolated,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -982,7 +987,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.nativeLibraryPath,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -990,7 +995,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.cpuAbi,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -998,7 +1003,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.targetModuleName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1006,7 +1011,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.targetPriority,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<OverlayModuleInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1014,7 +1019,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.overlayModuleInfo,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<AtomicServiceModuleType>(jsonObject,
         jsonObjectEnd,
@@ -1022,7 +1027,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.atomicServiceModuleType,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -1030,7 +1035,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.preloads,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<CompatiblePolicy>(jsonObject,
         jsonObjectEnd,
@@ -1038,7 +1043,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.compatiblePolicy,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -1046,7 +1051,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.versionCode,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1054,10 +1059,18 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         info.versionName,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATAS,
+        info.proxyDatas,
+        JsonType::ARRAY,
+        false,
+        Profile::parseResult,
+        ArrayType::OBJECT);
+    if (Profile::parseResult != ERR_OK) {
+        APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", Profile::parseResult);
     }
 }
 
@@ -1071,7 +1084,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.scheme,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     // these are not required fields.
     GetValueIfFindKey<std::string>(jsonObject,
@@ -1080,7 +1093,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.host,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1088,7 +1101,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.port,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1096,7 +1109,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.path,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1104,7 +1117,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.pathStartWith,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1112,7 +1125,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.pathRegex,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1120,7 +1133,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.pathRegex,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1128,7 +1141,7 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         uri.type,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -1142,7 +1155,7 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         skill.actions,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -1150,7 +1163,7 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         skill.entities,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<SkillUri>>(jsonObject,
         jsonObjectEnd,
@@ -1158,7 +1171,7 @@ void from_json(const nlohmann::json &jsonObject, Skill &skill)
         skill.uris,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
 }
 
@@ -1171,7 +1184,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
         distro.deliveryWithInstall,
         JsonType::BOOLEAN,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1179,7 +1192,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
         distro.moduleName,
         JsonType::STRING,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1187,7 +1200,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
         distro.moduleType,
         JsonType::STRING,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     // mustFlag decide by distro.moduleType
     GetValueIfFindKey<bool>(jsonObject,
@@ -1196,7 +1209,7 @@ void from_json(const nlohmann::json &jsonObject, Distro &distro)
         distro.installationFree,
         JsonType::BOOLEAN,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -1209,7 +1222,7 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
         installMark.bundleName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1217,7 +1230,7 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
         installMark.packageName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1225,7 +1238,7 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
         installMark.status,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -1238,7 +1251,7 @@ void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandb
         sandboxPersistentInfo.accessTokenId,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1246,7 +1259,7 @@ void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandb
         sandboxPersistentInfo.appIndex,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1254,21 +1267,20 @@ void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandb
         sandboxPersistentInfo.userId,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermission)
 {
     const auto &jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         Profile::DEFINEPERMISSION_NAME,
         definePermission.name,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1276,7 +1288,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.grantMode,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1284,7 +1296,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.availableLevel,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1292,7 +1304,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.provisionEnable,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1300,7 +1312,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.distributedSceneEnable,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1308,7 +1320,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.label,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1316,7 +1328,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.labelId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1324,7 +1336,7 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.description,
         JsonType::STRING,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1332,10 +1344,10 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         definePermission.descriptionId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("read DefinePermission from database error, error code : %{public}d", parseResult);
+    if (Profile::parseResult != ERR_OK) {
+        APP_LOGE("read DefinePermission from database error, error code : %{public}d", Profile::parseResult);
     }
 }
 
@@ -1348,7 +1360,7 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         dependency.moduleName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1356,7 +1368,7 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         dependency.bundleName,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
@@ -1364,20 +1376,21 @@ void from_json(const nlohmann::json &jsonObject, Dependency &dependency)
         dependency.versionCode,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
 }
 
 int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
 {
     const auto &jsonObjectEnd = jsonObject.end();
+    Profile::parseResult = ERR_OK;
     GetValueIfFindKey<Constants::AppType>(jsonObject,
         jsonObjectEnd,
         APP_TYPE,
         appType_,
         JsonType::NUMBER,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
@@ -1385,7 +1398,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         uid_,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
@@ -1393,7 +1406,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         gid_,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -1401,7 +1414,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         allowedAcls_,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<BundleStatus>(jsonObject,
         jsonObjectEnd,
@@ -1409,7 +1422,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         bundleStatus_,
         JsonType::NUMBER,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleInfo>(jsonObject,
         jsonObjectEnd,
@@ -1417,7 +1430,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         *baseBundleInfo_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<ApplicationInfo>(jsonObject,
         jsonObjectEnd,
@@ -1425,7 +1438,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         *baseApplicationInfo_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, AbilityInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1433,7 +1446,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         baseAbilityInfos_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, InnerModuleInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1441,7 +1454,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         innerModuleInfos_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<InnerModuleInfo>>>(jsonObject,
         jsonObjectEnd,
@@ -1449,7 +1462,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         innerSharedModuleInfos_,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
         jsonObjectEnd,
@@ -1457,7 +1470,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         skillInfos_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
@@ -1465,7 +1478,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         userId_,
         JsonType::NUMBER,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1473,7 +1486,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         appFeature_,
         JsonType::STRING,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<FormInfo>>>(jsonObject,
         jsonObjectEnd,
@@ -1481,7 +1494,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         formInfos_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, ShortcutInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1489,7 +1502,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         shortcutInfos_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, CommonEventInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1497,7 +1510,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         commonEvents_,
         JsonType::OBJECT,
         true,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<InstallMark>(jsonObject,
         jsonObjectEnd,
@@ -1505,7 +1518,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         mark_,
         JsonType::OBJECT,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     int32_t isOldVersion = ERR_OK;
     GetValueIfFindKey<std::map<std::string, InnerBundleUserInfo>>(jsonObject,
@@ -1516,23 +1529,19 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         true,
         isOldVersion,
         ArrayType::NOT_ARRAY);
-    int32_t ret = ProfileReader::parseResult;
-    // need recover parse result to ERR_OK
-    ProfileReader::parseResult = ERR_OK;
-    if (ret == ERR_OK && isOldVersion == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
+    if (Profile::parseResult == ERR_OK && isOldVersion == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
         // To be compatible with the old database,
         // if the old data does not have bundleUserInfos,
         // the default user information needs to be constructed.
         BuildDefaultUserInfo();
     }
-    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         BUNDLE_IS_NEW_VERSION,
         isNewVersion_,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, ExtensionAbilityInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1540,7 +1549,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         baseExtensionInfos_,
         JsonType::OBJECT,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::map<std::string, std::vector<Skill>>>(jsonObject,
         jsonObjectEnd,
@@ -1548,7 +1557,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         extensionSkillInfos_,
         JsonType::OBJECT,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundlePackInfo>(jsonObject,
         jsonObjectEnd,
@@ -1556,7 +1565,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         *bundlePackInfo_,
         JsonType::OBJECT,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int>(jsonObject,
         jsonObjectEnd,
@@ -1564,7 +1573,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         appIndex_,
         JsonType::NUMBER,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1572,7 +1581,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         isSandboxApp_,
         JsonType::BOOLEAN,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<SandboxAppPersistentInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1580,7 +1589,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         sandboxPersistentInfo_,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1588,7 +1597,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         hqfInfos_,
         JsonType::ARRAY,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<OverlayBundleInfo>>(jsonObject,
         jsonObjectEnd,
@@ -1596,7 +1605,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         overlayBundleInfo_,
         JsonType::ARRAY,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1604,7 +1613,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         overlayType_,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1612,7 +1621,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         applyQuickFixFrequency_,
         JsonType::NUMBER,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1620,7 +1629,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         hasAtomicServiceConfig_,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1628,11 +1637,12 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         mainAtomicModuleName_,
         JsonType::STRING,
         false,
-        ProfileReader::parseResult,
+        Profile::parseResult,
         ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
-        return parseResult;
+    int32_t ret = Profile::parseResult;
+    Profile::parseResult = ERR_OK;
+    if (ret != ERR_OK) {
+        APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", ret);
     }
     return ret;
 }

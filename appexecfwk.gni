@@ -25,14 +25,14 @@ if (vendor_config_exist) {
   bundle_mgr_impl_include_dirs = []
 }
 
-appexecfwk_path = "//foundation/bundlemanager/bundle_framework"
-common_path = "${appexecfwk_path}/common"
-services_path = "${appexecfwk_path}/services"
-kits_path = "${appexecfwk_path}/interfaces/kits"
-inner_api_path = "${appexecfwk_path}/interfaces/inner_api"
-tools_path = "${appexecfwk_path}/tools"
-base_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_base"
-core_path = "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core"
+bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
+common_path = "${bundle_framework_path}/common"
+services_path = "${bundle_framework_path}/services"
+kits_path = "${bundle_framework_path}/interfaces/kits"
+inner_api_path = "${bundle_framework_path}/interfaces/inner_api"
+tools_path = "${bundle_framework_path}/tools"
+base_path = "${bundle_framework_path}/interfaces/inner_api/appexecfwk_base"
+core_path = "${bundle_framework_path}/interfaces/inner_api/appexecfwk_core"
 
 declare_args() {
   bundle_framework_graphics = true

@@ -5623,6 +5623,7 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_PARAM_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_FAILED):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_SET_SELINUX_LABEL_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CREATE_DIR_EXIST):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_CHOWN_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_REMOVE_DIR_FAILED):

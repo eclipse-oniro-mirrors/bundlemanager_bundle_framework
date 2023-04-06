@@ -80,7 +80,7 @@ const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
 const std::string LOG = "log";
-const int32_t EDM_UID = 537;
+const int32_t EDM_UID = 3057;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 const std::string EMPTY_STRING = "";
 const std::string APPID_INPUT = "com.third.hiworld.example1";
@@ -2280,7 +2280,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     std::string modulePath;
-    info.SetArkNativeFilePath("");
+    info.SetArkNativeFilePath(RESOURCE_ROOT_PATH);
     ErrCode ret = installer.ExtractArkNativeFile(info, modulePath);
     EXPECT_EQ(ret, ERR_OK);
 }

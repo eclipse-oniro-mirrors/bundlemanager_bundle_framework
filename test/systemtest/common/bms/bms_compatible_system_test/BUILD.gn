@@ -23,14 +23,14 @@ ohos_systemtest("BmsCompatibleSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle1:bmsThirdBundle1",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle2:bmsThirdBundle2",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle3:bmsThirdBundle3",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle4:bmsThirdBundle4",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle5:bmsThirdBundle5",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle6:bmsThirdBundle6",
-    "${appexecfwk_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundleDataAbility:bmsThirdBundleDataAbility",
-    "${appexecfwk_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle1:bmsThirdBundle1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle2:bmsThirdBundle2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle3:bmsThirdBundle3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle4:bmsThirdBundle4",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle5:bmsThirdBundle5",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundle6:bmsThirdBundle6",
+    "${bundle_framework_path}/test/sceneProject/systemtest/jsBundle/jsThirdBundle/bmsThirdBundleDataAbility:bmsThirdBundleDataAbility",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:libbms",
     "${services_path}/test/moduletest/utils:tool_common",

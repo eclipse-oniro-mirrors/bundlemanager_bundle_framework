@@ -82,7 +82,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
 }
 
 ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-    bool isPreInstallApp)
+    bool isPreInstallApp, bool debug)
 {
     return ERR_OK;
 }

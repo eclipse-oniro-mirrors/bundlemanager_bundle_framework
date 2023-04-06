@@ -148,10 +148,6 @@ void BundleSandboxExceptionHandler::KeepSandboxDirs(const std::string &bundleNam
 void BundleSandboxExceptionHandler::ListeningUserUnlocked()
 {
     APP_LOGD("listen the unlock of someone user");
-    Want commonDataWant;
-    commonDataWant.SetAction(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
-    CommonEventData commonEventData(commonDataWant);
-
     MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     CommonEventSubscribeInfo subscribeInfo(matchingSkills);

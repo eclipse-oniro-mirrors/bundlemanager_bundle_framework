@@ -419,6 +419,21 @@ bool DistributedBms::GetDistributedBundleInfo(const std::string &networkId, cons
     return ret;
 }
 
+int32_t DistributedBms::GetDistributedBundleName(const std::string &networkId,  uint32_t accessTokenId,
+    std::string &bundleName)
+{
+#ifdef HICOLLIE_ENABLE
+    int timerId = HiviewDFX::XCollie::GetInstance().SetTimer("GetDistributedBundleName", LOCAL_TIME_OUT_SECONDS,
+        nullptr, nullptr, HiviewDFX::XCOLLIE_FLAG_RECOVERY);
+#endif
+    int32_t ret = DistributedDataStorage::GetInstance()->GetDistributedBundleName(
+        networkId, accessTokenId, bundleName);
+#ifdef HICOLLIE_ENABLE
+    HiviewDFX::XCollie::GetInstance().CancelTimer(timerId);
+#endif
+    return ret;
+}
+
 std::unique_ptr<char[]> DistributedBms::EncodeBase64(std::unique_ptr<uint8_t[]> &data, int srcLen)
 {
     int len = (srcLen / DECODE_VALUE_THREE) * DECODE_VALUE_FOUR; // Split 3 bytes to 4 parts, each containing 6 bits.

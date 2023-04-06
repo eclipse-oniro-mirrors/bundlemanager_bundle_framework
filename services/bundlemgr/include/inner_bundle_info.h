@@ -117,6 +117,7 @@ struct InnerModuleInfo {
     CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
     uint32_t versionCode = 0;
     std::string versionName;
+    std::vector<ProxyData> proxyDatas;
 };
 
 struct SkillUri {
