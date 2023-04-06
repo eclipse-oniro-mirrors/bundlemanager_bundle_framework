@@ -127,9 +127,9 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_0100, Functi
 
 /**
  * @tc.number: BmsBundlePermissionTokenTest_0200
- * @tc.name: test InstallSandboxApp of BundleMgrHostImpl
+ * @tc.name: test GetBundlesForUid of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
- *           2. InstallSandboxApp false by no permission
+ *           2. GetBundlesForUid false by no permission
  */
 HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_0200, Function | SmallTest | Level0)
 {

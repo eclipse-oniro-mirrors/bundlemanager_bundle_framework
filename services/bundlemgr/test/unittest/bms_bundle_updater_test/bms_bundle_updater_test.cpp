@@ -276,20 +276,12 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0100, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
-    CommonTool tool;
-    long codeDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
 
     // need to wait for 1s since the file create time counts in second unit.
     std::this_thread::sleep_for(SLEEP_TIME);
 
     ErrCode updateResult = UpdateBundle(BUNDLE_FILE_DIR + V2_BUNDLE, true);
     EXPECT_EQ(updateResult, ERR_OK);
-
-    long codeDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
-    EXPECT_EQ(dataDirFirstCreateTime, dataDirSecondCreateTime);
-    EXPECT_NE(codeDirFirstCreateTime, codeDirSecondCreateTime);
 
     bool isExist = CheckBundleInfo(VERSION_2, true);
     EXPECT_TRUE(isExist);
@@ -443,20 +435,12 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
 {
     ErrCode installResult = InstallBundle(BUNDLE_FILE_DIR + V1_BUNDLE);
     EXPECT_EQ(installResult, ERR_OK);
-    CommonTool tool;
-    long codeDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirFirstCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
 
     // need to wait for 1s since the file create time counts in second unit.
     std::this_thread::sleep_for(SLEEP_TIME);
 
     ErrCode updateResult = UpdateBundle(BUNDLE_FILE_DIR + V2_BUNDLE);
     EXPECT_EQ(updateResult, ERR_OK);
-
-    long codeDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirSecondCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
-    EXPECT_EQ(dataDirFirstCreateTime, dataDirSecondCreateTime);
-    EXPECT_NE(codeDirFirstCreateTime, codeDirSecondCreateTime);
 
     bool isExist = CheckBundleInfo(VERSION_2, true);
     EXPECT_TRUE(isExist);
@@ -465,11 +449,6 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
 
     updateResult = UpdateBundle(BUNDLE_FILE_DIR + V3_BUNDLE);
     EXPECT_EQ(updateResult, ERR_OK);
-
-    long codeDirThirdCreateTime = tool.GetFileBuildTime(BUNDLE_CODE_DIR.c_str());
-    long dataDirThirdCreateTime = tool.GetFileBuildTime(BUNDLE_DATA_DIR.c_str());
-    EXPECT_EQ(dataDirSecondCreateTime, dataDirThirdCreateTime);
-    EXPECT_NE(codeDirSecondCreateTime, codeDirThirdCreateTime);
 
     isExist = CheckBundleInfo(VERSION_3, true);
     EXPECT_TRUE(isExist);

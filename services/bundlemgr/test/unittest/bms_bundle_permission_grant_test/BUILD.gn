@@ -261,10 +261,10 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
-    "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
 }
 
@@ -386,10 +386,10 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
-    "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
 }
 
@@ -511,10 +511,10 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
-    "${services_path}/bundlemgr/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/preinstall_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
 }
 

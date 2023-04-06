@@ -6332,24 +6332,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_001, Function | SmallTe
 }
 
 /**
- * @tc.number: SeriviceStatusCallback_002
- * @tc.name: OnBundleAdded
- * @tc.desc: 1.Test StatusCallbackProxy
- */
-HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_002, Function | SmallTest | Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    APP_LOGI("get proxy success.");
-    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
-    std::string bundleName = "com.example.bundlekit.test";
-    int32_t userId = 100;
-    proxy->OnBundleAdded(bundleName, userId);
-    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
-}
-
-/**
  * @tc.number: SeriviceStatusCallback_003
  * @tc.name: OnBundleUpdated
  * @tc.desc: 1.Test StatusCallbackProxy
@@ -6361,10 +6343,11 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_003, Function | SmallTe
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     APP_LOGI("get proxy success.");
     auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
-    std::string bundleName = "com.example.bundlekit.test";
+    std::string bundleName = BUNDLE_NAME_TEST;
     int32_t userId = 100;
+    proxy->OnBundleAdded(bundleName, userId);
     proxy->OnBundleUpdated(bundleName, userId);
-    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
+    EXPECT_EQ(bundleName, BUNDLE_NAME_TEST);
     EXPECT_EQ(userId, 100);
 }
 
@@ -6380,10 +6363,10 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_004, Function | SmallTe
     sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     APP_LOGI("get proxy success.");
     auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
-    std::string bundleName = "com.example.bundlekit.test";
+    std::string bundleName = BUNDLE_NAME_TEST;
     int32_t userId = 100;
     proxy->OnBundleRemoved(bundleName, userId);
-    EXPECT_EQ(bundleName, "com.example.bundlekit.test");
+    EXPECT_EQ(bundleName, BUNDLE_NAME_TEST);
 }
 
 /**
@@ -7426,6 +7409,19 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0009, Function | SmallTest | Level0)
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: AgingTest_0010
+ * @tc.name: test Aging QueryBundleStatsInfoByInterval
+ * @tc.desc: QueryBundleStatsInfoByInterval is true
+ */
+HWTEST_F(BmsBundleKitServiceTest, AgingTest_0010, Function | SmallTest | Level0)
+{
+    BundleAgingMgr bundleAgingMgr;
+    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
+    bool res = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
+    EXPECT_FALSE(res);
+}
 #endif
 
 /**
@@ -7686,6 +7682,7 @@ HWTEST_F(BmsBundleKitServiceTest, BundleStreamInstallerHostImplInit_0100, Functi
     sptr<IStatusReceiver> statusReceiver;
     bool res = impl.Init(installParam, statusReceiver);
     EXPECT_TRUE(res);
+    impl.UnInit();
 }
 
 /**
