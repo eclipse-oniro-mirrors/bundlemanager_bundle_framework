@@ -20,6 +20,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string SHARED_TYPE = "shared";
+} // namespace
+
 ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const InnerBundleInfo &innerBundleInfo) const
@@ -75,6 +79,12 @@ ErrCode BundleOverlayInstallChecker::CheckExternalBundle(const InnerBundleInfo &
         return result;
     }
 
+    result = CheckHapType(innerBundleInfo);
+    if (result != ERR_OK) {
+        APP_LOGE("check hap type failed");
+        return result;
+    }
+
     // 2. check priority
     // 2.1 check bundle priority range
     // 2.2 check module priority range
@@ -123,8 +133,10 @@ ErrCode BundleOverlayInstallChecker::CheckExternalBundle(const InnerBundleInfo &
 
 ErrCode BundleOverlayInstallChecker::CheckHapType(const InnerBundleInfo &info) const
 {
-    if (info.HasEntry()) {
-        APP_LOGE("overlay hap cannot be entry hap in internal overlay installation");
+    std::string currentPackageName = info.GetCurrentModulePackage();
+    APP_LOGD("current package is %{public}s", currentPackageName.c_str());
+    if (info.GetModuleTypeByPackage(currentPackageName) != SHARED_TYPE) {
+        APP_LOGE("overlay hap only support shared entry hap in internal overlay installation");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE;
     }
     return ERR_OK;

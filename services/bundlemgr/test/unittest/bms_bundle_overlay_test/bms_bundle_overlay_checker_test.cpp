@@ -41,6 +41,8 @@ const std::string TEST_PATH_SECOND = "testPath2";
 const std::string TEST_PACK_AGE = "modulePackage";
 const std::string NO_EXIST = "noExist";
 const std::string BUNDLE_NAME = "oho.test.bundleName";
+const std::string SHARED_HAP_TYPE = "shared";
+const std::string FEATURE_HAP_TYPE = "feature";
 const int32_t INVALID_TARGET_PRIORITY_FIRST = 0;
 const int32_t INVALID_TARGET_PRIORITY_SECOND = 101;
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
@@ -229,11 +231,14 @@ const std::shared_ptr<BundleOverlayInstallChecker> BmsBundleOverlayCheckerTest::
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0100, Function | SmallTest | Level0)
 {
     // construct innerBundleInfo
-    InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.isEntry = true;
+    Distro distro;
+    distro.moduleType = FEATURE_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerModuleInfo.name = TEST_MODULE_NAME;
+    InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
 
     auto overlayChecker = GetBundleOverlayChecker();
@@ -252,33 +257,21 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0100, Function | SmallT
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0200, Function | SmallTest | Level0)
 {
     // construct innerBundleInfo
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = TEST_MODULE_NAME;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetEntryInstallationFree(true);
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
 
     auto overlayChecker = GetBundleOverlayChecker();
     EXPECT_NE(overlayChecker, nullptr);
     auto res = overlayChecker->CheckInternalBundle(newInfos, innerBundleInfo);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_BUNDLE_TYPE);
-}
-
-/**
- * @tc.number: OverlayCheckerTest_0300
- * @tc.name: test CheckInternalBundle interface in BundleOverlayInstallChecker.
- * @tc.desc: 1.innerModuleInfos of innerBundleInfo is empty.
- *           2.check failed.
- * @tc.require: issueI6F3H9
- */
-HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0300, Function | SmallTest | Level0)
-{
-    // construct innerBundleInfo
-    InnerBundleInfo innerBundleInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-
-    auto overlayChecker = GetBundleOverlayChecker();
-    EXPECT_NE(overlayChecker, nullptr);
-    auto res = overlayChecker->CheckInternalBundle(newInfos, innerBundleInfo);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
 }
 
 /**
@@ -291,10 +284,13 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0300, Function | SmallT
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0400, Function | SmallTest | Level0)
 {
     // construct innerBundleInfo
-    InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.name = TEST_MODULE_NAME;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerModuleInfo.targetPriority = INVALID_TARGET_PRIORITY_FIRST;
+    InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
@@ -315,14 +311,16 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0400, Function | SmallT
 HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0500, Function | SmallTest | Level0)
 {
     // construct innerBundleInfo
-    InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.name = TEST_MODULE_NAME;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerModuleInfo.targetPriority = INVALID_TARGET_PRIORITY_SECOND;
+    InnerBundleInfo innerBundleInfo;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
-
     auto overlayChecker = GetBundleOverlayChecker();
     EXPECT_NE(overlayChecker, nullptr);
     auto res = overlayChecker->CheckInternalBundle(newInfos, innerBundleInfo);
@@ -344,6 +342,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0600, Function | SmallT
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TEST_MODULE_NAME;
     innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
@@ -369,6 +370,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0700, Function | SmallT
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TARGET_MODULE_NAME;
     innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     ApplicationInfo applicationInfo;
@@ -384,6 +388,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0700, Function | SmallT
     targetModuleInfo.name = TARGET_MODULE_NAME;
     targetModuleInfo.targetModuleName = OTHER_TARGET_MODULE_NAME;
     targetModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro targetDistro;
+    targetDistro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = targetDistro;
     ApplicationInfo targetApplicationInfo;
     targetApplicationInfo.bundleName = TEST_BUNDLE_NAME;
 
@@ -418,6 +425,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0800, Function | SmallT
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TARGET_MODULE_NAME;
     innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
 
@@ -454,6 +464,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_0900, Function | SmallT
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TARGET_MODULE_NAME;
     innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     BundleInfo bundleInfo;
     bundleInfo.versionCode = HIGHER_TEST_VERSION_CODE;
@@ -504,6 +517,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayCheckerTest_1000, Function | SmallT
     innerModuleInfo.name = TEST_MODULE_NAME;
     innerModuleInfo.targetModuleName = TARGET_MODULE_NAME;
     innerModuleInfo.targetPriority = DEFAULT_TARGET_PRIORITY_SECOND;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     BundleInfo bundleInfo;
     bundleInfo.versionCode = LOWER_TEST_VERSION_CODE;
@@ -625,14 +641,14 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckInternalBundle_0200, Function | Small
     BundleOverlayInstallChecker checker;
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     InnerBundleInfo innerBundleInfo;
-    auto code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
-
     InnerModuleInfo innerModuleInfo;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY - 1;
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
-    code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
+    auto code = checker.CheckInternalBundle(newInfos, innerBundleInfo);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
 }
 
@@ -648,6 +664,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckInternalBundle_0300, Function | Small
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
     innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     innerModuleInfo.targetModuleName = TEST_MODULE_NAME;
@@ -679,17 +698,17 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0100, Function | Small
     ApplicationInfo applicationInfo;
     applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY - 1;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
+    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
+    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
 
-    applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
+    applicationInfo.targetPriority = Constants::OVERLAY_MAXIMUM_PRIORITY + 1;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    code = checker.CheckExternalBundle(innerBundleInfo, userId);
-    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR);
-
-    InnerModuleInfo innerModuleInfo;
-    innerBundleInfo.SetCurrentModulePackage(TEST_MODULE_NAME);
-    innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY);
 }
@@ -713,6 +732,9 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0200, Function | Small
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;;
+    Distro distro;
+    distro.moduleType = SHARED_HAP_TYPE;
+    innerModuleInfo.distro = distro;
     innerBundleInfo.InsertInnerModuleInfo(TEST_MODULE_NAME, innerModuleInfo);
     auto code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_BUNDLE_NAME_SAME_WITH_TARGET_BUNDLE_NAME);
@@ -721,9 +743,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0200, Function | Small
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_NO_SYSTEM_APPLICATION_FOR_EXTERNAL_OVERLAY);
 
-    BundleInfo bundleInfo;
-    bundleInfo.isPreInstallApp = true;
-    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetIsPreInstallApp(true);
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_OK);
 }
