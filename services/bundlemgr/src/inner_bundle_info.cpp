@@ -363,6 +363,10 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     if (skillUriType.empty()) {
         return false;
     }
+    // only match */*
+    if (type == Constants::TYPE_ONLY_MATCH_WILDCARD) {
+        return skillUriType == TYPE_WILDCARD;
+    }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {
         // param is */* or config is */*
         return true;
