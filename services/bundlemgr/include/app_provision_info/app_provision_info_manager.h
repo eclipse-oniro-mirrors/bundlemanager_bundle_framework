@@ -31,6 +31,12 @@ public:
     bool DeleteAppProvisionInfo(const std::string &bundleName);
     bool GetAppProvisionInfo(const std::string &bundleName, AppProvisionInfo &appProvisionInfo);
     bool GetAllAppProvisionInfoBundleName(std::unordered_set<std::string> &bundleNames);
+
+    bool SetSpecifiedDistributionType(const std::string &bundleName, const std::string &specifiedDistributionType);
+    bool GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
+    bool SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo);
+    bool GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
+
 private:
     std::shared_ptr<AppProvisionInfoManagerRdb> AppProvisionInfoManagerDb_;
 };
