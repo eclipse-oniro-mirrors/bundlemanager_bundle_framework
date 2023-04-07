@@ -306,7 +306,12 @@ bool DistributedDataStorage::GetLocalUdid(std::string &udid)
 
 int32_t DistributedDataStorage::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
 {
-    return DelayedSingleton<DistributedBms>::GetInstance()->GetUdidByNetworkId(networkId, udid);
+    auto dbms = DelayedSingleton<DistributedBms>::GetInstance();
+    if (dbms == nullptr) {
+        APP_LOGE("dbms is null");
+        return -1;
+    }
+    return dbms->GetUdidByNetworkId(networkId, udid);
 }
 
 DistributedBundleInfo DistributedDataStorage::ConvertToDistributedBundleInfo(const BundleInfo &bundleInfo)

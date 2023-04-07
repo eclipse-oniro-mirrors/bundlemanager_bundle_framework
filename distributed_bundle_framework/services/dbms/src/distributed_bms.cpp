@@ -194,6 +194,7 @@ int32_t DistributedBms::GetUdidByNetworkId(const std::string &networkId, std::st
         APP_LOGE("deviceManager_ is nullptr");
         return Constants::INVALID_UDID;
     }
+    APP_LOGE("getting udid from dbms device manager");
     return dbmsDeviceManager_->GetUdidByNetworkId(networkId, udid);
 }
 
