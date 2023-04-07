@@ -1007,9 +1007,9 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6800, Functi
 
 /**
  * @tc.number: BmsBundlePermissionFalseTest_6900
- * @tc.name: test GetSandboxHapModuleInfo of BundleMgrHostImpl
+ * @tc.name: test GetMediaData of BundleMgrHostImpl
  * @tc.desc: 1. system running normally
- *           2. GetSandboxHapModuleInfo false by no permission
+ *           2. GetMediaData false by no permission
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_6900, Function | SmallTest | Level0)
 {
@@ -1277,5 +1277,20 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8600, Functi
     baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();
     auto ret = baseBundleInstaller.UpdateDefineAndRequestPermissions(oldInfo, newInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_8700
+ * @tc.name: test GetSandboxHapModuleInfo of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetSandboxHapModuleInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8700, Function | SmallTest | Level0)
+{
+    int32_t appIndex = 1;
+    AbilityInfo abilityInfo;
+    HapModuleInfo info;
+    auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS
