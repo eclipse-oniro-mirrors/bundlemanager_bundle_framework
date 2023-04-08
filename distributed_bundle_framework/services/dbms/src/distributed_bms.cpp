@@ -191,8 +191,8 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> DistributedBms::GetBundleMgr()
 int32_t DistributedBms::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
 {
     if (dbmsDeviceManager_ == nullptr) {
-        APP_LOGE("deviceManager_ is nullptr");
-        return Constants::INVALID_UDID;
+        APP_LOGI("deviceManager_ is nullptr");
+        InitDeviceManager();
     }
     APP_LOGE("getting udid from dbms device manager");
     return dbmsDeviceManager_->GetUdidByNetworkId(networkId, udid);
