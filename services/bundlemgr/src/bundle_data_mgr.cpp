@@ -4448,6 +4448,19 @@ bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, Inn
     return false;
 }
 
+bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+{
+    APP_LOGI("start to query overlay innerBundleInfo");
+    std::lock_guard<std::mutex> lock(overlayMutex_);
+    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+        info = bundleInfos_.at(bundleName);
+        return true;
+    }
+
+    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
+    return false;
+}
+
 void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
     std::lock_guard<std::mutex> lock(overlayMutex_);
