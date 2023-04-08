@@ -309,7 +309,7 @@ int32_t DistributedDataStorage::GetUdidByNetworkId(const std::string &networkId,
     auto dbms = DelayedSingleton<DistributedBms>::GetInstance();
     if (dbms == nullptr) {
         APP_LOGE("dbms is null");
-        return -2;
+        return Constants::INVALID_UDID;
     }
     return dbms->GetUdidByNetworkId(networkId, udid);
 }

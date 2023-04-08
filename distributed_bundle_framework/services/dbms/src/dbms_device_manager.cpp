@@ -62,9 +62,8 @@ int32_t DbmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std:
 {
     APP_LOGI("GetUdidByNetworkId");
     if (!InitDeviceManager()) {
-        return -4;
+        return -1;
     }
-    APP_LOGE("getting udid from dm");
     return DistributedHardware::DeviceManager::GetInstance().GetUdidByNetworkId(
         DISTRIBUTED_BUNDLE_NAME, netWorkId, udid);
 }
