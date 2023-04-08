@@ -39,7 +39,6 @@ namespace {
 
 AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()
 {
-    APP_LOGD("create AppJumpInterceptorManagerRdb.");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = Constants::BUNDLE_RDB_NAME;
     bmsRdbConfig.tableName = APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME;
@@ -52,17 +51,14 @@ AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
     InitEventRunnerAndHandler();
-    APP_LOGD("create AppJumpInterceptorManagerRdb end.");
 }
 
 AppJumpInterceptorManagerRdb::~AppJumpInterceptorManagerRdb()
 {
-    APP_LOGD("destroy AppJumpInterceptorManagerRdb.");
 }
 
 bool AppJumpInterceptorManagerRdb::InitEventRunnerAndHandler()
 {
-    APP_LOGD("start InitEventRunnerAndHandler.");
     std::lock_guard<std::mutex> lock(mutex_);
     runner_ = EventRunner::Create(NAME_APP_JUMP_INTERCEPTOR_MANAGER_RDB);
     if (runner_ == nullptr) {
@@ -74,13 +70,11 @@ bool AppJumpInterceptorManagerRdb::InitEventRunnerAndHandler()
         APP_LOGE("%{public}s fail, Failed to init due to create handler error", __func__);
         return false;
     }
-    APP_LOGD("end InitEventRunnerAndHandler.");
     return true;
 }
 
 bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
 {
-    APP_LOGD("start SubscribeCommonEvent.");
     if (eventSubscriber_ != nullptr) {
         APP_LOGI("subscribeCommonEvent already subscribed.");
         return true;

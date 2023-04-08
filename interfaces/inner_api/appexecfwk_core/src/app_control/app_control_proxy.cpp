@@ -240,7 +240,6 @@ ErrCode AppControlProxy::GetAppRunningControlRule(
 ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName, int32_t userId)
 {
-    APP_LOGD("begin to call ConfirmAppJumpControlRule.");
     if (callerBundleName.empty() || targetBundleName.empty()) {
         APP_LOGE("ConfirmAppJumpControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
@@ -268,7 +267,6 @@ ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBund
 
 ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
-    APP_LOGD("begin to call delete AppJumpControlRules.");
     if (controlRules.empty()) {
         APP_LOGE("DeleteAppJumpControlRule failed due to params error.");
         return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
@@ -293,7 +291,6 @@ ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlR
 
 ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
-    APP_LOGD("begin to call delete appJumpControlRuleType.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -313,7 +310,6 @@ ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpContr
 
 ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
 {
-    APP_LOGD("begin to call delete appJumpControlRuleType.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -333,7 +329,6 @@ ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerB
 
 ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
 {
-    APP_LOGD("begin to call delete appJumpControlRuleType.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");
@@ -355,7 +350,6 @@ ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetB
 ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName,int32_t userId, AppJumpControlRule &controlRule)
 {
-    APP_LOGD("begin to call GetAppJumpControlRule.");
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("WriteInterfaceToken failed.");

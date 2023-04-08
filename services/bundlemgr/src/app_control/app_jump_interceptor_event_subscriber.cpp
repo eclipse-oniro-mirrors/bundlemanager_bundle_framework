@@ -27,12 +27,10 @@ AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
     appJumpDb_ = appJumpDb;
-    APP_LOGD("AppJumpInterceptorEventSubscriber created");
 }
 
 AppJumpInterceptorEventSubscriber::~AppJumpInterceptorEventSubscriber()
 {
-    APP_LOGD("AppJumpInterceptorEventSubscriber destroyed");
 }
 
 void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
