@@ -112,7 +112,6 @@ bool BundleMgrService::Init()
     InitBundleDataMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
     CHECK_INIT_RESULT(InitBundleEventHandler(), "Init bundleEventHandler fail");
-    InitDeviceManager();
     InitHidumpHelper();
     InitFreeInstall();
     CHECK_INIT_RESULT(InitDefaultApp(), "Init defaultApp fail");

@@ -147,7 +147,6 @@ private:
     void InitBundleDataMgr();
     bool InitBundleUserMgr();
     bool InitBundleEventHandler();
-    void InitDeviceManager();
     void InitHidumpHelper();
     void InitFreeInstall();
     bool InitDefaultApp();
