@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "app_jump_control_rule.h"
 #include "app_running_control_rule_result.h"
 #include "app_running_control_rule.h"
 #include "iremote_broker.h"
@@ -60,6 +61,15 @@ public:
     virtual ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
 
+    virtual ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId) = 0;
+    virtual ErrCode AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) = 0;
+    virtual ErrCode DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) = 0;
+    virtual ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId) = 0;
+    virtual ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId) = 0;
+    virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId, AppJumpControlRule &controlRule) = 0;
+
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) = 0;
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) = 0;
     virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) = 0;
@@ -75,6 +85,12 @@ public:
         CLEAN_APP_RUNNING_CONTROL_RULE,
         GET_APP_RUNNING_CONTROL_RULE,
         GET_APP_RUNNING_CONTROL_RULE_RESULT,
+        CONFIRM_APP_JUMP_CONTROL_RULE,
+        ADD_APP_JUMP_CONTROL_RULE,
+        DELETE_APP_JUMP_CONTROL_RULE,
+        DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER,
+        DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET,
+        GET_APP_JUMP_CONTROL_RULE,
         SET_DISPOSED_STATUS,
         DELETE_DISPOSED_STATUS,
         GET_DISPOSED_STATUS,

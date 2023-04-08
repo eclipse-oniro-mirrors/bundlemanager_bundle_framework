@@ -14,6 +14,7 @@
  */
 
 #include "app_control_manager.h"
+#include "app_jump_interceptor_manager_rdb.h"
 
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
@@ -33,6 +34,8 @@ namespace {
 AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
+    appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    // appJumpInterceptorManagerDb_->SubscribeCommonEvent();
 }
 
 AppControlManager::~AppControlManager()
@@ -89,6 +92,39 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     const std::string &callingName, int32_t userId, std::vector<std::string> &appIds)
 {
     return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
+}
+ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBundleName,
+    const std::string &targetBundleName, int32_t userId)
+{
+    appJumpInterceptorManagerDb_->SubscribeCommonEvent();
+    return appJumpInterceptorManagerDb_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
+}
+
+ErrCode AppControlManager::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
+{
+    return appJumpInterceptorManagerDb_->AddAppJumpControlRule(controlRules, userId);
+}
+
+ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules,int32_t userId)
+{
+    return appJumpInterceptorManagerDb_->DeleteAppJumpControlRule(controlRules, userId);
+}
+
+ErrCode AppControlManager::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
+{
+    return appJumpInterceptorManagerDb_->DeleteRuleByCallerBundleName(callerBundleName, userId);
+}
+
+ErrCode AppControlManager::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
+{
+    return appJumpInterceptorManagerDb_->DeleteRuleByTargetBundleName(targetBundleName, userId);
+}
+
+ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundleName,
+    const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
+{
+    auto ret = appJumpInterceptorManagerDb_->GetAppJumpControlRule(callerBundleName, targetBundleName, userId, controlRule);
+    return ret;
 }
 
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)

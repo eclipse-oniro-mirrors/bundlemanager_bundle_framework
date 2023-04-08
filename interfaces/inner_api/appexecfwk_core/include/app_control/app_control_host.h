@@ -45,6 +45,13 @@ private:
     ErrCode HandleGetAppRunningControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleGetAppRunningControlRuleResult(MessageParcel& data, MessageParcel& reply);
 
+    ErrCode HandleConfirmAppJumpControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleAddAppJumpControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteAppJumpControlRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteRuleByCallerBundleName(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleDeleteRuleByTargetBundleName(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetAppJumpControlRule(MessageParcel& data, MessageParcel& reply);
+
     ErrCode HandleGetDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel& reply);

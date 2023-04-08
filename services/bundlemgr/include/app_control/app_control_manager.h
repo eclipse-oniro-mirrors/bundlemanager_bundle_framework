@@ -19,6 +19,7 @@
 #include <unordered_map>
 
 #include "app_control_manager_db_interface.h"
+#include "app_jump_interceptor_manager_db_interface.h"
 #include "singleton.h"
 #include "want.h"
 
@@ -52,6 +53,15 @@ public:
     ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule);
 
+    ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId);
+    ErrCode AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId);
+    ErrCode DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId);
+    ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId);
+    ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId);
+    ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId, AppJumpControlRule &controlRule);
+
     ErrCode SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId);
 
     ErrCode DeleteDisposedStatus(const std::string &appId, int32_t userId);
@@ -59,6 +69,7 @@ public:
     ErrCode GetDisposedStatus(const std::string &appId, Want& want, int32_t userId);
 private:
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
+    std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
 };
 } // AppExecFwk
 } // OHOS

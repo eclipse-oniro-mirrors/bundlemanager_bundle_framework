@@ -44,6 +44,16 @@ public:
     virtual ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult) override;
 
+    // for app jump control rule
+    virtual ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId) override;
+    virtual ErrCode AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) override;
+    virtual ErrCode DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) override;
+    virtual ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId) override;
+    virtual ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId) override;
+    virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
+        int32_t userId, AppJumpControlRule &controlRule) override;
+
     virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
     virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;
     virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;

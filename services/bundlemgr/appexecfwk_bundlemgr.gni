@@ -112,6 +112,8 @@ app_control = [
   "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
   "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+  "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+  "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
 ]
 
 overlay_installation = [
