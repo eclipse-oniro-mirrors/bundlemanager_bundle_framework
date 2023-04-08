@@ -30,7 +30,7 @@ namespace {
 
 DbmsDeviceManager::DbmsDeviceManager()
 {
-    APP_LOGD("DbmsDeviceManager instance is created");
+    APP_LOGI("DbmsDeviceManager instance is created");
 }
 
 bool DbmsDeviceManager::InitDeviceManager()
@@ -55,7 +55,7 @@ bool DbmsDeviceManager::InitDeviceManager()
 
 void DbmsDeviceManager::DeviceInitCallBack::OnRemoteDied()
 {
-    APP_LOGD("DeviceInitCallBack OnRemoteDied");
+    APP_LOGI("DeviceInitCallBack OnRemoteDied");
 }
 
 int32_t DbmsDeviceManager::GetUdidByNetworkId(const std::string &netWorkId, std::string &udid)

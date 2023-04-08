@@ -32,7 +32,6 @@ public:
 
 private:
     bool InitDeviceManager();
-    bool GetTrustedDeviceList(std::vector<DistributedHardware::DmDeviceInfo> &deviceList);
     std::shared_ptr<DistributedHardware::DmInitCallback> initCallback_;
     mutable std::mutex isInitMutex_;
     bool isInit_ = false;

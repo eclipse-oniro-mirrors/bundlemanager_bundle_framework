@@ -100,10 +100,6 @@ public:
     sptr<IAppControlMgr> GetAppControlProxy() const;
 #endif
 
-#ifdef DEVICE_MANAGER_ENABLE
-    const std::shared_ptr<BmsDeviceManager> GetDeviceManager() const;
-#endif
-
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> GetQuickFixManagerProxy() const;
 #endif
@@ -166,9 +162,6 @@ private:
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
-#ifdef DEVICE_MANAGER_ENABLE
-    std::shared_ptr<BmsDeviceManager> deviceManager_;
-#endif
     std::shared_ptr<HidumpHelper> hidumpHelper_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::shared_ptr<BundleAgingMgr> agingMgr_;
