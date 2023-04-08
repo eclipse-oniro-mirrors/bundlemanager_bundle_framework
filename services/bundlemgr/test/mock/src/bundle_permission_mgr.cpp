@@ -77,10 +77,17 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 }
 #endif
 
+#ifdef BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE
+bool BundlePermissionMgr::IsNativeTokenType()
+{
+    return false;
+}
+#else
 bool BundlePermissionMgr::IsNativeTokenType()
 {
     return true;
 }
+#endif
 
 bool BundlePermissionMgr::Init()
 {

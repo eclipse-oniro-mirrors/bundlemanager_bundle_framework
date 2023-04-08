@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <gtest/gtest.h>
 #include <vector>
@@ -25,6 +26,8 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 namespace {
+const std::string HSPNAME = "hspName";
+const std::string OVER_MAX_NAME_SIZE(260, 'x');
 constexpr int32_t TEST_INSTALLER_ID = 1024;
 constexpr int32_t DEFAULT_INSTALLER_ID = 0;
 constexpr int32_t TEST_INSTALLER_UID = 100;
@@ -305,7 +308,69 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0200, Function | Sm
     auto proxy = GetStreamInstallerProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto id = proxy->CreateSharedBundleStream("hspName", DEFAULT_INSTALLER_ID);
+    auto id = proxy->CreateSharedBundleStream(HSPNAME, DEFAULT_INSTALLER_ID);
     EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0300
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0300, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+
+    auto id = impl.CreateSharedBundleStream(OVER_MAX_NAME_SIZE, DEFAULT_INSTALLER_ID);
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0400
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0400, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+
+    auto id = impl.CreateSharedBundleStream(HSPNAME + ".", DEFAULT_INSTALLER_ID);
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0500
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0500, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+
+    impl.installParam_.sharedBundleDirPaths.push_back(OVER_MAX_NAME_SIZE);
+    auto id = impl.CreateSharedBundleStream(HSPNAME, DEFAULT_INSTALLER_ID);
+    EXPECT_EQ(id, INVAILD_ID);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_0600
+ * @tc.name: test CreateSharedBundleStream function of BundleStreamInstallerHostImpl
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSharedBundleStream
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0600, Function | SmallTest | Level0)
+{
+    BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
+
+    impl.isInstallSharedBundlesOnly_ = false;
+    auto res = impl.Install();
+    EXPECT_EQ(res, true);
 }
 } // OHOS
