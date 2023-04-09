@@ -35,8 +35,14 @@ namespace {
 AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
-    if (OHOS::system::GetBoolParameter(OHOS::AppExecFwk::PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE, false)) {
+    bool isAppJumpEnabled = OHOS::system::GetBoolParameter(
+        OHOS::AppExecFwk::PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE, false);
+    APP_LOGE("GetBoolParameter -> isAppJumpEnabled:%{public}s", (isAppJumpEnabled ? "true" : "false"));
+    if (isAppJumpEnabled) {
+        APP_LOGI("App jump intercetor enabled, start init to AppJumpInterceptorManagerRdb");
         appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    } else {
+        APP_LOGI("App jump intercetor disabled");
     }
 }
 
