@@ -237,6 +237,140 @@ ErrCode AppControlProxy::GetAppRunningControlRule(
         IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRuleResult);
 }
 
+ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBundleName,
+    const std::string &targetBundleName, int32_t userId)
+{
+    if (callerBundleName.empty() || targetBundleName.empty()) {
+        APP_LOGE("ConfirmAppJumpControlRule failed due to params error.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(callerBundleName)) {
+        APP_LOGE("fail to write callerBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(targetBundleName)) {
+        APP_LOGE("fail to write targetBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::CONFIRM_APP_JUMP_CONTROL_RULE, data, reply);
+}
+
+ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
+{
+    if (controlRules.empty()) {
+        APP_LOGE("DeleteAppJumpControlRule failed due to params error.");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!WriteParcelableVector(controlRules, data)) {
+        APP_LOGE("write AppJumpControlRule failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::ADD_APP_JUMP_CONTROL_RULE, data, reply);
+}
+
+ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!WriteParcelableVector(controlRules, data)) {
+        APP_LOGE("write AppJumpControlRule failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE, data, reply);
+}
+
+ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(callerBundleName)) {
+        APP_LOGE("fail to write callerBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER, data, reply);
+}
+
+ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(targetBundleName)) {
+        APP_LOGE("fail to write targetBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET, data, reply);
+}
+
+ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleName,
+    const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(callerBundleName)) {
+        APP_LOGE("fail to write callerBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(targetBundleName)) {
+        APP_LOGE("fail to write targetBundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfo<AppJumpControlRule>(
+        IAppControlMgr::Message::GET_APP_JUMP_CONTROL_RULE, data, controlRule);
+}
+
 ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
 {
     APP_LOGD("proxy begin to SetDisposedStatus.");

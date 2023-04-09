@@ -64,6 +64,18 @@ int AppControlHost::OnRemoteRequest(
             return HandleGetAppRunningControlRule(data, reply);
         case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT:
             return HandleGetAppRunningControlRuleResult(data, reply);
+        case IAppControlMgr::Message::CONFIRM_APP_JUMP_CONTROL_RULE:
+            return HandleConfirmAppJumpControlRule(data, reply);
+        case IAppControlMgr::Message::ADD_APP_JUMP_CONTROL_RULE:
+            return HandleAddAppJumpControlRule(data, reply);
+        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE:
+            return HandleDeleteAppJumpControlRule(data, reply);
+        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER:
+            return HandleDeleteRuleByCallerBundleName(data, reply);
+        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET:
+            return HandleDeleteRuleByTargetBundleName(data, reply);
+        case IAppControlMgr::Message::GET_APP_JUMP_CONTROL_RULE:
+            return HandleGetAppJumpControlRule(data, reply);
         case IAppControlMgr::Message::SET_DISPOSED_STATUS:
             return HandleSetDisposedStatus(data, reply);
         case IAppControlMgr::Message::GET_DISPOSED_STATUS:
@@ -209,6 +221,85 @@ ErrCode AppControlHost::HandleGetAppRunningControlRuleResult(MessageParcel& data
     }
     if ((ret == ERR_OK) && !reply.WriteParcelable(&ruleResult)) {
         APP_LOGE("write AppRunningControlRuleResult failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleConfirmAppJumpControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string callerBundleName = data.ReadString();
+    std::string targetBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t ret = ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleConfirmAppJumpControlRule failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleAddAppJumpControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    auto ret = ReadParcelableVector(data, controlRules);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleAddAppJumpControlRule read controlRuleParam failed");
+        return ret;
+    }
+    int32_t userId = data.ReadInt32();
+    return AddAppJumpControlRule(controlRules, userId);
+}
+
+ErrCode AppControlHost::HandleDeleteAppJumpControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    auto ret = ReadParcelableVector(data, controlRules);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleDeleteAppJumpControlRule read controlRuleParam failed");
+        return ret;
+    }
+    int32_t userId = data.ReadInt32();
+    return DeleteAppJumpControlRule(controlRules, userId);
+}
+
+ErrCode AppControlHost::HandleDeleteRuleByCallerBundleName(MessageParcel& data, MessageParcel& reply)
+{
+    std::string callerBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t ret = DeleteRuleByCallerBundleName(callerBundleName, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleDeleteRuleByCallerBundleName failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleDeleteRuleByTargetBundleName(MessageParcel& data, MessageParcel& reply)
+{
+    std::string targetBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    int32_t ret = DeleteRuleByTargetBundleName(targetBundleName, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleDeleteRuleByTargetBundleName failed");
+    }
+    return ret;
+}
+
+ErrCode AppControlHost::HandleGetAppJumpControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string callerBundleName = data.ReadString();
+    std::string targetBundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    AppJumpControlRule rule;
+    int32_t ret = GetAppJumpControlRule(callerBundleName, targetBundleName, userId, rule);
+    if (ret != ERR_OK) {
+        APP_LOGE("HandleGetAppJumpControlRule failed");
+    }
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteParcelable(&rule)) {
+        APP_LOGE("write AppJumpControlRule failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
