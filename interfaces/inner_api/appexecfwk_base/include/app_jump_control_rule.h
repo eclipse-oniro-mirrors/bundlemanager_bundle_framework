@@ -22,6 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+const std::string PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE= "is_app_jump_interceptor_enable";
 enum class AbilityJumpMode {
     DIRECT = 0,
     INTERCEPT,

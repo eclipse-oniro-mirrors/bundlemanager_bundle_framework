@@ -24,6 +24,7 @@
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -34,7 +35,9 @@ namespace {
 AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
-    appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    if (OHOS::system::GetBoolParameter(OHOS::AppExecFwk::PARAMETER_APP_JUMP_INTERCEPTOR_ENABLE, false)) {
+        appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    }
 }
 
 AppControlManager::~AppControlManager()
@@ -95,33 +98,57 @@ ErrCode AppControlManager::GetAppRunningControlRule(
 ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName, int32_t userId)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     appJumpInterceptorManagerDb_->SubscribeCommonEvent();
     return appJumpInterceptorManagerDb_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
 }
 
 ErrCode AppControlManager::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     return appJumpInterceptorManagerDb_->AddAppJumpControlRule(controlRules, userId);
 }
 
 ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     return appJumpInterceptorManagerDb_->DeleteAppJumpControlRule(controlRules, userId);
 }
 
 ErrCode AppControlManager::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     return appJumpInterceptorManagerDb_->DeleteRuleByCallerBundleName(callerBundleName, userId);
 }
 
 ErrCode AppControlManager::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     return appJumpInterceptorManagerDb_->DeleteRuleByTargetBundleName(targetBundleName, userId);
 }
 
 ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
 {
+    if (appJumpInterceptorManagerDb_ == nullptr) {
+        APP_LOGE("DataMgr rdb is not init");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     auto ret = appJumpInterceptorManagerDb_->GetAppJumpControlRule(callerBundleName, targetBundleName,
         userId, controlRule);
     return ret;
