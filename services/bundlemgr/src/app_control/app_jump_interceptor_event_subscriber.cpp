@@ -20,6 +20,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+const std::string WANT_PARAM_USER_ID = "userId";
 AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
     const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
     const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb)
@@ -37,7 +38,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
     std::string bundleName = want.GetElement().GetBundleName();
-    int32_t userId = want.GetIntParam("userId", -1);
+    int32_t userId = want.GetIntParam(WANT_PARAM_USER_ID, -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
     if (action.empty() || eventHandler_ == nullptr || userId < 0 || db == nullptr) {
         APP_LOGE("%{public}s failed, empty action: %{public}s, or invalid event handler, userId:%d",

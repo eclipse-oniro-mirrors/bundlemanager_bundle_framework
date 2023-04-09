@@ -14,11 +14,10 @@
  */
 
 #include "app_jump_interceptor_manager_rdb.h"
-
-#include "common_event_manager.h"
 #include "app_log_wrapper.h"
-#include "scope_guard.h"
 #include "bundle_util.h"
+#include "common_event_manager.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace AppExecFwk {
