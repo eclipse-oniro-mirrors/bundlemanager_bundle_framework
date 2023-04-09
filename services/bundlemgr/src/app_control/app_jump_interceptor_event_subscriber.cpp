@@ -14,15 +14,14 @@
  */
 
 #include "app_jump_interceptor_event_subscriber.h"
-
-#include "app_log_wrapper.h"
 #include "app_jump_interceptor_manager_rdb.h"
+#include "app_log_wrapper.h"
 #include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
-    const EventFwk::CommonEventSubscribeInfo &subscribeInfo, 
+    const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
     const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb)
     : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
@@ -40,7 +39,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     std::string bundleName = want.GetElement().GetBundleName();
     int32_t userId = want.GetIntParam("userId", -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
-    if (action.empty() || eventHandler_ == nullptr || userId < 0) {
+    if (action.empty() || eventHandler_ == nullptr || userId < 0 || db == nullptr) {
         APP_LOGE("%{public}s failed, empty action: %{public}s, or invalid event handler, userId:%d",
             __func__, action.c_str(), userId);
         return;

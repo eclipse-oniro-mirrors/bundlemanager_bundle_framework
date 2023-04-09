@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -103,7 +103,7 @@ ErrCode AppJumpInterceptorManagerRdb::ConfirmAppJumpControlRule(const std::strin
     rule.targetPkg = targetBundleName;
     controlRules.emplace_back(rule);
     DeleteAppJumpControlRule(controlRules, userId);
-    return AddAppJumpControlRule(controlRules, userId);;
+    return AddAppJumpControlRule(controlRules, userId);
 }
 
 ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules,
@@ -136,6 +136,7 @@ ErrCode AppJumpInterceptorManagerRdb::AddAppJumpControlRule(const std::vector<Ap
 ErrCode AppJumpInterceptorManagerRdb::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules,
     int32_t userId)
 {
+    bool result = true;
     for (auto &rule : controlRules) {
         NativeRdb::AbsRdbPredicates absRdbPredicates(APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME);
         absRdbPredicates.EqualTo(CALLER_PKG, rule.callerPkg);
@@ -145,10 +146,10 @@ ErrCode AppJumpInterceptorManagerRdb::DeleteAppJumpControlRule(const std::vector
         if (!ret) {
             APP_LOGE("DeleteAppJumpControlRule caller:%{public}s, target:%{public}s, userId:%{public}d failed.",
                 rule.callerPkg.c_str(), rule.targetPkg.c_str(), userId);
-            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+            result = false;
         }
     }
-    return ERR_OK;
+    return result ? ERR_OK : ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
 }
 
 ErrCode AppJumpInterceptorManagerRdb::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)

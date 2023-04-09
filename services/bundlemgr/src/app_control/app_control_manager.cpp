@@ -35,7 +35,6 @@ AppControlManager::AppControlManager()
 {
     appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
     appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
-    // appJumpInterceptorManagerDb_->SubscribeCommonEvent();
 }
 
 AppControlManager::~AppControlManager()
@@ -105,7 +104,7 @@ ErrCode AppControlManager::AddAppJumpControlRule(const std::vector<AppJumpContro
     return appJumpInterceptorManagerDb_->AddAppJumpControlRule(controlRules, userId);
 }
 
-ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules,int32_t userId)
+ErrCode AppControlManager::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
 {
     return appJumpInterceptorManagerDb_->DeleteAppJumpControlRule(controlRules, userId);
 }
@@ -123,7 +122,8 @@ ErrCode AppControlManager::DeleteRuleByTargetBundleName(const std::string &targe
 ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
 {
-    auto ret = appJumpInterceptorManagerDb_->GetAppJumpControlRule(callerBundleName, targetBundleName, userId, controlRule);
+    auto ret = appJumpInterceptorManagerDb_->GetAppJumpControlRule(callerBundleName, targetBundleName,
+        userId, controlRule);
     return ret;
 }
 

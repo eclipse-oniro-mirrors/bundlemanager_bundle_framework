@@ -348,7 +348,7 @@ ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetB
 }
 
 ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleName,
-    const std::string &targetBundleName,int32_t userId, AppJumpControlRule &controlRule)
+    const std::string &targetBundleName, int32_t userId, AppJumpControlRule &controlRule)
 {
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
