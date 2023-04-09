@@ -103,6 +103,9 @@ bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleNa
 
 bool AppProvisionInfoManagerRdb::DeleteAppProvisionInfo(const std::string &bundleName)
 {
+    if (bundleName.empty()) {
+        return false;
+    }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     return rdbDataManager_->DeleteData(absRdbPredicates);
@@ -111,6 +114,9 @@ bool AppProvisionInfoManagerRdb::DeleteAppProvisionInfo(const std::string &bundl
 bool AppProvisionInfoManagerRdb::GetAppProvisionInfo(const std::string &bundleName,
     AppProvisionInfo &appProvisionInfo)
 {
+    if (bundleName.empty()) {
+        return false;
+    }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
@@ -207,17 +213,19 @@ bool AppProvisionInfoManagerRdb::GetSpecifiedDistributionType(
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
+        APP_LOGW("bundleName: %{public}s, GetSpecifiedDistributionType QueryData failed.", bundleName.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("AppProvisionInfoManagerRdb GetSpecifiedDistributionType failed.");
+        APP_LOGW("bundleName: %{public}s, AppProvisionInfoManagerRdb GetSpecifiedDistributionType failed.",
+            bundleName.c_str());
         return false;
     }
     ret = absSharedResultSet->GetString(INDEX_SPECIFIED_DISTRIBUTED_TYPE, specifiedDistributionType);
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("AppProvisionInfoManagerRdb GetSpecifiedDistributionType failed.");
+        APP_LOGE("bundleName: %{public}s GetSpecifiedDistributionType GetString failed.", bundleName.c_str());
         return false;
     }
     return true;
@@ -250,17 +258,18 @@ bool AppProvisionInfoManagerRdb::GetAdditionalInfo(
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
+        APP_LOGW("bundleName: %{public}s, GetAdditionalInfo QueryData failed.", bundleName.c_str());
         return false;
     }
     ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("AppProvisionInfoManagerRdb GetAdditionalInfo failed.");
+        APP_LOGW("bundleName: %{public}s, AppProvisionInfoManagerRdb GetAdditionalInfo failed.", bundleName.c_str());
         return false;
     }
     ret = absSharedResultSet->GetString(INDEX_ADDITIONAL_INFO, additionalInfo);
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("AppProvisionInfoManagerRdb GetAdditionalInfo failed.");
+        APP_LOGE("bundleName: %{public}s, AppProvisionInfoManagerRdb GetAdditionalInfo failed.", bundleName.c_str());
         return false;
     }
     return true;
