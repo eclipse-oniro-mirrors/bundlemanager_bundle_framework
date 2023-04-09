@@ -4663,5 +4663,27 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
     }
     return item->second.IsPreInstallApp();
 }
+
+ErrCode BundleDataMgr::GetSpecifiedDistributionType(
+    const std::string &bundleName, std::string &specifiedDistributionType)
+{
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(bundleName,
+        specifiedDistributionType)) {
+        APP_LOGE("bundleName:%{public}s GetSpecifiedDistributionType failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAdditionalInfo(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+        additionalInfo)) {
+        APP_LOGE("bundleName:%{public}s GetAdditionalInfo failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

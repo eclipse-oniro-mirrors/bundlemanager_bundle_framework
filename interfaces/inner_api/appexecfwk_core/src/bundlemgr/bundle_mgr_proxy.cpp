@@ -3342,6 +3342,60 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
 }
 
+ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleName,
+    std::string &specifiedDistributionType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSpecifiedDistributionType due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSpecifiedDistributionType due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        specifiedDistributionType = reply.ReadString();
+    }
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_ADDITIONAL_INFO, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        additionalInfo = reply.ReadString();
+    }
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

@@ -807,6 +807,12 @@ public:
     virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies) override;
 
+    virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName,
+        std::string &specifiedDistributionType) override;
+
+    virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
+        std::string &additionalInfo) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
