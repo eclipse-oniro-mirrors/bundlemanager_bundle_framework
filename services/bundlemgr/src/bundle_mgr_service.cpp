@@ -112,7 +112,6 @@ bool BundleMgrService::Init()
     InitBundleDataMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
     CHECK_INIT_RESULT(InitBundleEventHandler(), "Init bundleEventHandler fail");
-    InitDeviceManager();
     InitHidumpHelper();
     InitFreeInstall();
     CHECK_INIT_RESULT(InitDefaultApp(), "Init defaultApp fail");
@@ -199,16 +198,6 @@ bool BundleMgrService::InitBundleEventHandler()
 
     handler_->SendEvent(BMSEventHandler::BMS_START);
     return true;
-}
-
-void BundleMgrService::InitDeviceManager()
-{
-#ifdef DEVICE_MANAGER_ENABLE
-    if (deviceManager_ == nullptr) {
-        APP_LOGI("Create device manager");
-        deviceManager_ = std::make_shared<BmsDeviceManager>();
-    }
-#endif
 }
 
 void BundleMgrService::InitHidumpHelper()
@@ -329,13 +318,6 @@ const std::shared_ptr<BundleConnectAbilityMgr> BundleMgrService::GetConnectAbili
 const std::shared_ptr<BundleDistributedManager> BundleMgrService::GetBundleDistributedManager() const
 {
     return bundleDistributedManager_;
-}
-#endif
-
-#ifdef DEVICE_MANAGER_ENABLE
-const std::shared_ptr<BmsDeviceManager> BundleMgrService::GetDeviceManager() const
-{
-    return deviceManager_;
 }
 #endif
 

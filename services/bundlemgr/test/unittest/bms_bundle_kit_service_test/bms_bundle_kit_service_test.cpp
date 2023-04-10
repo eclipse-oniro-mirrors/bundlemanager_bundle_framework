@@ -24,7 +24,6 @@
 #include "ability_manager_client.h"
 #include "ability_info.h"
 #include "app_provision_info.h"
-#include "bms_device_manager.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -7772,35 +7771,6 @@ HWTEST_F(BmsBundleKitServiceTest, Install_0100, Function | SmallTest | Level0)
     EXPECT_FALSE(res);
 }
 
-/**
- * @tc.number: GetAllDeviceList_0100
- * @tc.name: test GetAllDeviceList
- * @tc.desc: GetAllDeviceList is success
- */
-HWTEST_F(BmsBundleKitServiceTest, GetAllDeviceList_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    std::string deviceId = "100";
-    std::vector<std::string> deviceIds;
-    deviceIds.push_back(deviceId);
-    bool res = deviceManager.GetAllDeviceList(deviceIds);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: GetUdidByNetworkId_0100
- * @tc.name: test GetUdidByNetworkId
- * @tc.desc: GetUdidByNetworkId is false
- */
-HWTEST_F(BmsBundleKitServiceTest, GetUdidByNetworkId_0100, Function | SmallTest | Level0)
-{
-    BmsDeviceManager deviceManager;
-    std::string netWorkId = "100";
-    std::string uid = "100";
-    bool res = deviceManager.GetUdidByNetworkId(netWorkId, uid);
-    EXPECT_FALSE(res);
-}
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleDistributedManager_0001
@@ -8010,15 +7980,11 @@ HWTEST_F(BmsBundleKitServiceTest, Hidump_0006, Function | SmallTest | Level0)
     HidumpParam hidumpParam;
     hidumpParam.hidumpFlag = HidumpFlag::GET_DEVICEID;
     std::string result = "";
-    auto res1 = dumpHelper.ProcessDump(hidumpParam, result);
-    EXPECT_EQ(res1, ERR_APPEXECFWK_HIDUMP_SERVICE_ERROR);
-
     std::string arg = "-device";
     std::vector<std::string> args;
     args.push_back(arg);
-    result.clear();
-    auto res2 = bundleMgrService_->Hidump(args, result);
-    EXPECT_TRUE(res2);
+    auto res = bundleMgrService_->Hidump(args, result);
+    EXPECT_TRUE(res);
 }
 
 /**
@@ -8909,7 +8875,7 @@ HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest
     extensionAbilityInfo.bundleName = "bundleName";
     extensionAbilityInfo.moduleName = "moduleName";
     extensionAbilityInfo.name = "name";
-    
+
     ExtensionFormInfo extensionFormInfo;
     extensionFormInfo.description = "description";
     extensionFormInfo.formConfigAbility = "formConfigAbility";
@@ -8976,10 +8942,8 @@ HWTEST_F(BmsBundleKitServiceTest, SelfClean_0100, Function | SmallTest | Level0)
 
     int32_t systemAbilityId = 0;
     const std::string deviceId = "";
-    bundleMgrService->deviceManager_ = nullptr;
     bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
 
-    bundleMgrService->deviceManager_ = std::make_shared<BmsDeviceManager>();
     bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
 }
 

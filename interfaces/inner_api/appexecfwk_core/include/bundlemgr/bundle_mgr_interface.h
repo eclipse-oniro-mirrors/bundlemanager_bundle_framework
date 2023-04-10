@@ -1101,11 +1101,6 @@ public:
         return Constants::EMPTY_STRING;
     }
 
-    virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid)
-    {
-        return 0;
-    }
-
     virtual ErrCode SetDebugMode(bool isDebug)
     {
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;

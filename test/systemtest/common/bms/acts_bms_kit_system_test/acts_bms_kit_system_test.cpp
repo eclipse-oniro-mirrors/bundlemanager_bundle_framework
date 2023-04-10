@@ -6314,35 +6314,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetPermissionDef_0200, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: GetUdidByNetworkId_0100
- * @tc.name: test GetUdidByNetworkId proxy
- * @tc.desc: 1.system run normally
- *           2.get udid info failed by empty networkid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetUdidByNetworkId_0100, Function | SmallTest | Level1)
-{
-    std::cout << "START GetUdidByNetworkId_0100" << std::endl;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    CommonTool commonTool;
-    std::string installResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(installResult, "Success") << "install fail!";
-
-    std::string udid;
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    bundleMgrProxy->GetUdidByNetworkId("", udid);
-    EXPECT_EQ(udid, "");
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END GetUdidByNetworkId_0100" << std::endl;
-}
-
-/**
  * @tc.number: SetDebugMode_0100
  * @tc.name: test SetDebugMode proxy
  * @tc.desc: 1.system run normally

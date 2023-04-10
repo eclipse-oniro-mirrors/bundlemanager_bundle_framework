@@ -4040,20 +4040,6 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 }
 #endif
 
-bool BundleDataMgr::QueryAllDeviceIds(std::vector<std::string> &deviceIds)
-{
-#ifdef DEVICE_MANAGER_ENABLE
-    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
-    if (deviceManager == nullptr) {
-        APP_LOGE("deviceManager is nullptr");
-        return false;
-    }
-    return deviceManager->GetAllDeviceList(deviceIds);
-#else
-    return true;
-#endif
-}
-
 const std::vector<PreInstallBundleInfo>& BundleDataMgr::GetAllPreInstallBundleInfos()
 {
     std::lock_guard<std::mutex> lock(preInstallInfoMutex_);

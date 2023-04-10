@@ -667,8 +667,6 @@ public:
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
-    bool QueryAllDeviceIds(std::vector<std::string> &deviceIds);
-
     void GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int32_t userId,
         const std::string &excludeModule = "") const;
 

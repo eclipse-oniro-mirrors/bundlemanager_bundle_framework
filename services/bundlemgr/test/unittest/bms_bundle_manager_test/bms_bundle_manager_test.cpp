@@ -2667,18 +2667,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2800, Function | MediumTest | L
     EXPECT_EQ(ret, false);
 }
 
-/**
- * @tc.number: BundleMgrHostImpl_2900
- * @tc.name: test BundleMgrHostImpl
- * @tc.desc: 1.test GetUdidByNetworkId
- */
-HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_2900, Function | MediumTest | Level1)
-{
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    std::string udid;
-    int32_t ret = hostImpl->GetUdidByNetworkId("", udid);
-    EXPECT_NE(ret, 0);
-}
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
@@ -3145,7 +3133,7 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0024, Function | SmallTest | Leve
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
     EXPECT_EQ(installResult, ERR_OK);
-    
+
     AAFwk::Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -3887,18 +3875,6 @@ HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0019, Function | SmallTest | Lev
     GetBundleDataMgr()->ImplicitQueryAllExtensionInfosV9(
         want, 0, USERID, extensionInfos, appIndex);
     EXPECT_EQ(extensionInfos.size(), 0);
-}
-
-/**
- * @tc.number: GetBundleDataMgr_0020
- * @tc.name: test QueryAllDeviceIds
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleManagerTest, GetBundleDataMgr_0020, Function | SmallTest | Level1)
-{
-    std::vector<std::string> deviceIds;
-    bool res = GetBundleDataMgr()->QueryAllDeviceIds(deviceIds);
-    EXPECT_EQ(res, true);
 }
 
 /**
