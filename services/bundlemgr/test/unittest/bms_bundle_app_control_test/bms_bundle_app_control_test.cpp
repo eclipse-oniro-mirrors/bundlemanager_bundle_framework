@@ -1025,7 +1025,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2100, Function | Sma
  * @tc.desc: 1.SetDisposedStatus test
  *           2.GetDisposedStatus test
  *           3.DeleteDisposedStatus test
- */ 
+ */
 HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2200, Function | SmallTest | Level1)
 {
     AppControlManagerHostImpl impl;
