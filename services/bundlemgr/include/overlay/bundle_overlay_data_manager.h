@@ -51,6 +51,8 @@ public:
 
     bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
+    bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
     void EnableOverlayBundle(const std::string &bundleName);
 
     ErrCode SaveInternalOverlayModuleState(const OverlayModuleInfo &overlayModuleInfo,
