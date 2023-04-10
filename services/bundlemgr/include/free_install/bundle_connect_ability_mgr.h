@@ -84,7 +84,7 @@ public:
      * @brief send preload request to service center.
      * @param preloadItems the modules need to be preloaded.
      */
-    void ProcessPreload(const Want &want);
+    bool ProcessPreload(const Want &want);
 
     /**
      * @brief Disconnect service center

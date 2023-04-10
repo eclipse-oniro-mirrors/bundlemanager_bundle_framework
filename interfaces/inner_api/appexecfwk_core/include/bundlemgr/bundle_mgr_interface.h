@@ -1146,9 +1146,9 @@ public:
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_INTERNAL_ERROR;
     }
 
-    virtual void ProcessPreload(const Want &want)
+    virtual bool ProcessPreload(const Want &want)
     {
-        return;
+        return false;
     }
 
     virtual ErrCode GetProvisionMetadata(const std::string &bundleName, int32_t userId,
