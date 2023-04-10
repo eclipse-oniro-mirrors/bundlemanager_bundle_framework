@@ -353,7 +353,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, BmsGetAppProvisionInfoTest_0009, Functio
 {
     AppProvisionInfo newProvisionInfo;
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo("");
-    EXPECT_TRUE(ret);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -435,5 +435,123 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0002, Function | Sma
     EXPECT_TRUE(ret);
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: SetSpecifiedDistributionType_0001
+ * @tc.name: test the start function of SetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetSpecifiedDistributionType_0001, Function | SmallTest | Level0)
+{
+    std::string specifiedDistributionType = "distributionType";
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType("",
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetSpecifiedDistributionType_0002
+ * @tc.name: test the start function of SetSpecifiedDistributionType and GetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetSpecifiedDistributionType_0002, Function | SmallTest | Level0)
+{
+    AppProvisionInfo appProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME,
+        appProvisionInfo);
+    EXPECT_TRUE(ret);
+    std::string specifiedDistributionType = "distributionType";
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_TRUE(ret);
+    std::string newSpecifiedDistributionType;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        newSpecifiedDistributionType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(specifiedDistributionType, newSpecifiedDistributionType);
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0001
+ * @tc.name: test the start function of GetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetSpecifiedDistributionType_0001, Function | SmallTest | Level0)
+{
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType("",
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0002
+ * @tc.name: test the start function of GetSpecifiedDistributionType
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetSpecifiedDistributionType_0002, Function | SmallTest | Level0)
+{
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0001
+ * @tc.name: test the start function of SetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetAdditionalInfo_0001, Function | SmallTest | Level0)
+{
+    std::string additionalInfo = "additional";
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo("",
+        additionalInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0002
+ * @tc.name: test the start function of SetAdditionalInfo and GetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SetAdditionalInfo_0002, Function | SmallTest | Level0)
+{
+    AppProvisionInfo appProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME,
+        appProvisionInfo);
+    EXPECT_TRUE(ret);
+    std::string additionalInfo = "additional";
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(BUNDLE_NAME,
+        additionalInfo);
+    EXPECT_TRUE(ret);
+    std::string newAdditionalInfo;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
+        newAdditionalInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(additionalInfo, newAdditionalInfo);
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0001
+ * @tc.name: test the start function of GetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0001, Function | SmallTest | Level0)
+{
+    std::string additionalInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo("",
+        additionalInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GGetAdditionalInfo_0002
+ * @tc.name: test the start function of GetAdditionalInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0002, Function | SmallTest | Level0)
+{
+    std::string additionalInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
+        additionalInfo);
+    EXPECT_FALSE(ret);
 }
 } // OHOS

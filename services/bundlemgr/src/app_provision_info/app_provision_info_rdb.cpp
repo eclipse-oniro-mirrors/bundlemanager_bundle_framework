@@ -36,6 +36,8 @@ const std::string APL = "APL";
 const std::string ISSUER = "ISSUER";
 const std::string VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
 const std::string VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
+const std::string SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
+const std::string ADDITIONAL_INFO = "ADDITIONAL_INFO";
 const int32_t INDEX_BUNDLE_NAME = 0;
 const int32_t INDEX_VERSION_CODE = 1;
 const int32_t INDEX_VERSION_NAME = 2;
@@ -48,6 +50,8 @@ const int32_t INDEX_APL = 8;
 const int32_t INDEX_ISSUER = 9;
 const int32_t INDEX_VALIDITY_NOT_BEFORE = 10;
 const int32_t INDEX_VALIDITY_NOT_AFTER = 11;
+const int32_t INDEX_SPECIFIED_DISTRIBUTED_TYPE = 12;
+const int32_t INDEX_ADDITIONAL_INFO = 13;
 }
 
 AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
@@ -62,7 +66,8 @@ AppProvisionInfoManagerRdb::AppProvisionInfoManagerRdb()
         + "(BUNDLE_NAME TEXT PRIMARY KEY NOT NULL, "
         + "VERSION_CODE INTEGER, VERSION_NAME TEXT, UUID TEXT, "
         + "TYPE TEXT, APP_DISTRIBUTION_TYPE TEXT, DEVELOPER_ID TEXT, CERTIFICATE TEXT, "
-        + "APL TEXT, ISSUER TEXT, VALIDITY_NOT_BEFORE INTEGER, VALIDITY_NOT_AFTER INTEGER);");
+        + "APL TEXT, ISSUER TEXT, VALIDITY_NOT_BEFORE INTEGER, VALIDITY_NOT_AFTER INTEGER, "
+        + "SPECIFIED_DISTRIBUTED_TYPE TEXT, ADDITIONAL_INFO TEXT);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
 }
@@ -98,6 +103,9 @@ bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleNa
 
 bool AppProvisionInfoManagerRdb::DeleteAppProvisionInfo(const std::string &bundleName)
 {
+    if (bundleName.empty()) {
+        return false;
+    }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     return rdbDataManager_->DeleteData(absRdbPredicates);
@@ -106,6 +114,9 @@ bool AppProvisionInfoManagerRdb::DeleteAppProvisionInfo(const std::string &bundl
 bool AppProvisionInfoManagerRdb::GetAppProvisionInfo(const std::string &bundleName,
     AppProvisionInfo &appProvisionInfo)
 {
+    if (bundleName.empty()) {
+        return false;
+    }
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
@@ -172,6 +183,95 @@ bool AppProvisionInfoManagerRdb::ConvertToAppProvision(
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString notBefore failed, ret: %{public}d");
     ret = absSharedResultSet->GetLong(INDEX_VALIDITY_NOT_AFTER, appProvisionInfo.validity.notAfter);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString notAfter failed, ret: %{public}d");
+    return true;
+}
+
+bool AppProvisionInfoManagerRdb::SetSpecifiedDistributionType(
+    const std::string &bundleName, const std::string &specifiedDistributionType)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(SPECIFIED_DISTRIBUTED_TYPE, specifiedDistributionType);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    if (!rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates)) {
+        APP_LOGE("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool AppProvisionInfoManagerRdb::GetSpecifiedDistributionType(
+    const std::string &bundleName, std::string &specifiedDistributionType)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGW("bundleName: %{public}s, GetSpecifiedDistributionType QueryData failed.", bundleName.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGW("bundleName: %{public}s, AppProvisionInfoManagerRdb GetSpecifiedDistributionType failed.",
+            bundleName.c_str());
+        return false;
+    }
+    ret = absSharedResultSet->GetString(INDEX_SPECIFIED_DISTRIBUTED_TYPE, specifiedDistributionType);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("bundleName: %{public}s GetSpecifiedDistributionType GetString failed.", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool AppProvisionInfoManagerRdb::SetAdditionalInfo(
+    const std::string &bundleName, const std::string &additionalInfo)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(ADDITIONAL_INFO, additionalInfo);
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    if (!rdbDataManager_->UpdateData(valuesBucket, absRdbPredicates)) {
+        APP_LOGE("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
+bool AppProvisionInfoManagerRdb::GetAdditionalInfo(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    if (bundleName.empty()) {
+        return false;
+    }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_PROVISION_INFO_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(BUNDLE_NAME, bundleName);
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGW("bundleName: %{public}s, GetAdditionalInfo QueryData failed.", bundleName.c_str());
+        return false;
+    }
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
+    auto ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGW("bundleName: %{public}s, AppProvisionInfoManagerRdb GetAdditionalInfo failed.", bundleName.c_str());
+        return false;
+    }
+    ret = absSharedResultSet->GetString(INDEX_ADDITIONAL_INFO, additionalInfo);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("bundleName: %{public}s, AppProvisionInfoManagerRdb GetAdditionalInfo failed.", bundleName.c_str());
+        return false;
+    }
     return true;
 }
 } // namespace AppExecFwk
