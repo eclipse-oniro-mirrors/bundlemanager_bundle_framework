@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -21,6 +21,7 @@
 #include <string>
 
 #include "appexecfwk_errors.h"
+#include "bundle_connect_ability_mgr.h"
 #include "bundle_info.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_mgr_service.h"
@@ -44,14 +45,23 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.freeInstall";
 const std::string BUNDLE_NAME_DEMO = "com.example.demo.freeInstall";
+const std::string BUNDLE_NAME_EMPTY = "";
 const std::string MODULE_NAME_TEST = "entry";
+const std::string MODULE_NAME_TEST_ONE = "HAP1";
+const std::string MODULE_NAME_TEST_TWO = "HAP2";
+const std::string MODULE_NAME_EMPTY = "";
 const std::string MODULE_NAME_NOT_EXIST = "notExist";
 const std::string ABILITY_NAME_TEST = "MainAbility";
+const std::string ABILITY_NAME_EMPTY = "";
+const std::string DEVICE_ID = "PHONE-001";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
+const int32_t FLAG_ONE = 1;
+const int32_t FLAG_TWO = 2;
 const int32_t INVALID_USER_ID = -1;
 const std::string EMPTY_STRING = "";
+const std::u16string SEEVICE_CENTER_CALLBACK_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstallCallback";
 }  // namespace
 
 class BmsBundleFreeInstallTest : public testing::Test {
@@ -62,11 +72,13 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    void AddInnerBundleInfo(const std::string bundleName);
+    void AddInnerBundleInfo(const std::string bundleName, int32_t flag);
+    void UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, int32_t flag);
     void UninstallBundleInfo(const std::string bundleName);
     BundlePackInfo CreateBundlePackInfo(const std::string &bundleName);
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<BundleConnectAbilityMgr> GetBundleConnectAbilityMgr() const;
+    static sptr<BundleMgrProxy> GetBundleMgrProxy();
     void StartBundleService();
     void ClearDataMgr();
     void SetDataMgr();
@@ -113,7 +125,53 @@ void BmsBundleFreeInstallTest::SetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
-void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName)
+sptr<BundleMgrProxy> BmsBundleFreeInstallTest::GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        APP_LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle manager proxy success.");
+    return iface_cast<BundleMgrProxy>(remoteObject);
+}
+
+
+void BmsBundleFreeInstallTest::UpdateInnerBundleInfo(InnerBundleInfo &innerBundleInfo, int32_t flag)
+{
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME_TEST_ONE;
+    moduleInfo.name = MODULE_NAME_TEST_ONE;
+    moduleInfo.modulePackage = MODULE_NAME_TEST_ONE;
+    std::map<std::string, InnerModuleInfo> innerModuleInfoMap;
+    innerModuleInfoMap[MODULE_NAME_TEST_ONE] = moduleInfo;
+    innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
+
+    std::vector<std::string> preloads;
+    switch (flag) {
+        case FLAG_ONE:
+            preloads.emplace_back(MODULE_NAME_TEST_ONE);
+            break;
+        case FLAG_TWO:
+            preloads.emplace_back(MODULE_NAME_TEST_ONE);
+            preloads.emplace_back(MODULE_NAME_TEST_TWO);
+            break;
+        default:
+            break;
+    }
+    auto ret = innerBundleInfo.SetInnerModuleAtomicPreload(MODULE_NAME_TEST, preloads);
+    EXPECT_TRUE(ret);
+}
+
+void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName, int32_t flag)
 {
     BundleInfo bundleInfo;
     bundleInfo.name = bundleName;
@@ -141,6 +199,10 @@ void BmsBundleFreeInstallTest::AddInnerBundleInfo(const std::string bundleName)
     innerBundleInfo.SetBundlePackInfo(CreateBundlePackInfo(bundleName));
     innerBundleInfo.AddInnerModuleInfo(innerModuleInfoMap);
 
+    if (flag) {
+        innerBundleInfo.SetApplicationBundleType(BundleType::ATOMIC_SERVICE);
+        UpdateInnerBundleInfo(innerBundleInfo, flag);
+    }
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
 
@@ -197,7 +259,9 @@ const std::shared_ptr<BundleDataMgr> BmsBundleFreeInstallTest::GetBundleDataMgr(
 
 const std::shared_ptr<BundleConnectAbilityMgr> BmsBundleFreeInstallTest::GetBundleConnectAbilityMgr() const
 {
-    return bundleMgrService_->GetConnectAbility();
+    auto bundleConnectAbility = bundleMgrService_->GetConnectAbility();
+    EXPECT_NE(bundleConnectAbility, nullptr);
+    return bundleConnectAbility;
 }
 
 /**
@@ -227,7 +291,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0001, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -249,7 +313,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0002, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -271,7 +335,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0003, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -293,7 +357,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0004, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0005, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -333,7 +397,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0006, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0007, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -353,7 +417,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0007, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0008, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -373,7 +437,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0008, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0009, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -411,7 +475,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0010, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0011, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -431,7 +495,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0011, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0012, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -451,7 +515,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0012, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0013, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -473,7 +537,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0013, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0014, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -495,7 +559,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0014, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0015, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -528,7 +592,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0015, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0016, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -557,7 +621,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0016, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0017, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -588,7 +652,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0017, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleDataMgr();
     if (bundleMgr != nullptr) {
@@ -619,11 +683,11 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_TRUE(res);
 }
 
@@ -635,11 +699,11 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0021, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr.UpgradeInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    bool res = connectAbilityMgr->UpgradeInstall(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_TRUE(res);
 }
 
@@ -651,12 +715,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0021, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0022, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr.SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
+    bool res = connectAbilityMgr->SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
     EXPECT_FALSE(res);
 }
 
@@ -668,19 +732,22 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0022, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0023, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
     freeInstallParams.serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
-    bool res = connectAbilityMgr.SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
+    bool res = connectAbilityMgr->SendRequestToServiceCenter(flag, targetAbilityInfo, want, USERID, freeInstallParams);
     EXPECT_FALSE(res);
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     freeInstallParams.callback = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
-    connectAbilityMgr.DeathRecipientSendCallback();
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->DeathRecipientSendCallback();
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
 }
 
 /**
@@ -691,13 +758,16 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0023, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0024, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string installResult = "{\"version\":\"1.0.0\", \"result\":{\"transactId\":\"1\","
         "\"resultMsg\":\"free install success\", \"retCode\":0}}";
-    connectAbilityMgr.OnServiceCenterCall(installResult);
+    connectAbilityMgr->OnServiceCenterCall(installResult);
     EXPECT_NE(installResult, "");
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
 }
 
 /**
@@ -708,14 +778,18 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0024, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0025, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.handler_ = nullptr;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->handler_ = nullptr;
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string installResult = "{\"version\":\"1.0.0\", \"result\":{\"transactId\":\"1\","
         "\"resultMsg\":\"free install success\", \"retCode\":0}}";
-    connectAbilityMgr.OnServiceCenterCall(installResult);
+    connectAbilityMgr->OnServiceCenterCall(installResult);
     EXPECT_NE(installResult, "");
+    connectAbilityMgr->Init();
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
 }
 
 /**
@@ -726,12 +800,15 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0025, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0026, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string installResult = "{\"version\":\"1.0.0\", \"result\":{\"transactId\":\"1\","
         "\"resultMsg\":\"free install success\", \"retCode\":1}}";
-    connectAbilityMgr.OnServiceCenterCall(installResult);
+    connectAbilityMgr->OnServiceCenterCall(installResult);
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
     EXPECT_NE(installResult, "");
 }
 
@@ -743,14 +820,17 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0026, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0027, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
     freeInstallParams.serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string installResult = "{\"version\":\"1.0.0\", \"result\":{\"transactId\":\"1\","
         "\"resultMsg\":\"free install success\", \"retCode\":-1}}";
-    connectAbilityMgr.OnServiceCenterCall(installResult);
+    connectAbilityMgr->OnServiceCenterCall(installResult);
     EXPECT_NE(installResult, "");
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
 }
 
 
@@ -762,13 +842,13 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0027, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0028, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     Want want;
     int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
     AbilityInfo abilityInfo;
     sptr<IRemoteObject> callBack;
     InnerBundleInfo innerBundleInfo;
-    bool res = connectAbilityMgr.IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
+    bool res = connectAbilityMgr->IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
     EXPECT_FALSE(res);
 }
 
@@ -780,18 +860,21 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0028, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0029, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     freeInstallParams.callback = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     int32_t resultCode = 0;
     Want want;
     int32_t userId = USERID;
     std::string transactId = "1";
-    connectAbilityMgr.SendCallBack(resultCode, want, userId, transactId);
+    connectAbilityMgr->SendCallBack(resultCode, want, userId, transactId);
     EXPECT_EQ(transactId, "1");
+    if (connectAbilityMgr->freeInstallParamsMap_.find(transactId) != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase(transactId);
+    }
 }
 
 /**
@@ -802,19 +885,190 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0029, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0030, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     freeInstallParams.callback = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
     freeInstallParams.serviceCenterFunction = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     int32_t resultCode = 1;
     Want want;
     int32_t userId = USERID;
     std::string transactId = "1";
-    connectAbilityMgr.SendCallBack(resultCode, want, userId, transactId);
+    connectAbilityMgr->SendCallBack(resultCode, want, userId, transactId);
     EXPECT_EQ(transactId, "1");
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0031
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreloadCheck
+ * @tc.desc: test ProcessPreloadCheck failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0031, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    TargetAbilityInfo targetAbilityInfo;
+    connectAbilityMgr->handler_ = nullptr;
+    bool installResult = connectAbilityMgr->ProcessPreloadCheck(targetAbilityInfo);
+    EXPECT_EQ(installResult, false);
+    connectAbilityMgr->Init();
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0032
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreloadCheck
+ * @tc.desc: test ProcessPreloadCheck failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0032, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    TargetAbilityInfo targetAbilityInfo;
+    bool installResult = connectAbilityMgr->ProcessPreloadCheck(targetAbilityInfo);
+    EXPECT_EQ(installResult, true);
+}
+
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0033
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0033, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr->CheckDependencies("", innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0034
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0034, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0035
+ * Function: GetPreloadList
+ * @tc.name: test GetPreloadList
+ * @tc.desc: test GetPreloadList failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0035, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    ClearDataMgr();
+    sptr<TargetAbilityInfo> targetAbilityInfo;
+    bool res = connectAbilityMgr->GetPreloadList(BUNDLE_NAME, MODULE_NAME_TEST, USERID, targetAbilityInfo);
+    EXPECT_FALSE(res);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0036
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload failed by moduleName
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0036, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 2);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_TEST, MODULE_NAME_TEST_TWO);
+    want.SetParam("uid", -800000);
+    auto ret = connectAbilityMgr->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0038
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload failed by not update InnerBundleInfo and wrong bundlName
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0038, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 1);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    want.SetElementName(DEVICE_ID, BUNDLE_NAME_DEMO, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    want.SetParam("uid", -800000);
+    auto ret = connectAbilityMgr->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0040
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload failed by not update InnerBundleInfo
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0040, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 1);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    want.SetParam("uid", -800000);
+    auto ret = connectAbilityMgr->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0042
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload failed by empty moduleName
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0042, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 2);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    ElementName name;
+    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_TEST, MODULE_NAME_EMPTY);
+    want.SetParam("uid", -800000);
+    auto ret = connectAbilityMgr->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleFreeInstallTest_0043
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test ProcessPreload
+ * @tc.desc: test ProcessPreload failed by not update InnerBundleInfo
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0043, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    want.SetElementName(DEVICE_ID, BUNDLE_NAME, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    want.SetParam("uid", -800000);
+    auto ret = connectAbilityMgr->ProcessPreload(want);
+    EXPECT_FALSE(ret);
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -826,7 +1080,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0030, Function | Sma
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -855,7 +1109,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0001, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -883,7 +1137,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0003, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -916,7 +1170,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0004, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0005, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -945,7 +1199,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0005, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -971,7 +1225,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0006, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
     auto bundleMgr = GetBundleConnectAbilityMgr();
     if (bundleMgr != nullptr) {
@@ -1002,8 +1256,8 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
-    BundleConnectAbilityMgr connectAbilityMgr;
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
 
     Want want;
     ElementName name;
@@ -1012,10 +1266,10 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | Smal
     want.SetElement(name);
     TargetAbilityInfo targetAbilityInfo;
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.handler_ = nullptr;
-    bool res = connectAbilityMgr.SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    connectAbilityMgr->handler_ = nullptr;
+    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_FALSE(res);
-    
+    connectAbilityMgr->Init();
     UninstallBundleInfo(BUNDLE_NAME);
 }
 
@@ -1027,9 +1281,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0011, Function | SmallTest | Level0)
 {
-    AddInnerBundleInfo(BUNDLE_NAME);
+    AddInnerBundleInfo(BUNDLE_NAME, 0);
 
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     InnerBundleInfo innerBundleInfo;
     Want want;
     ElementName name;
@@ -1039,7 +1293,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0011, Function | Smal
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     sptr<IRemoteObject> callBack = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    bool res = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
+    bool res = connectAbilityMgr->CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
     EXPECT_FALSE(res);
 
     UninstallBundleInfo(BUNDLE_NAME);
@@ -1053,13 +1307,14 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0011, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0012, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
-    connectAbilityMgr.handler_ = nullptr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    connectAbilityMgr->handler_ = nullptr;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr.UpgradeCheck(targetAbilityInfo, want, freeInstallParams, USERID);
+    bool res = connectAbilityMgr->UpgradeCheck(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_FALSE(res);
+    connectAbilityMgr->Init();
 }
 
 /**
@@ -1070,14 +1325,15 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0012, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0013, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
-    connectAbilityMgr.handler_ = nullptr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    connectAbilityMgr->handler_ = nullptr;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.DisconnectDelay();
-    bool res = connectAbilityMgr.UpgradeInstall(targetAbilityInfo, want, freeInstallParams, USERID);
+    connectAbilityMgr->DisconnectDelay();
+    bool res = connectAbilityMgr->UpgradeInstall(targetAbilityInfo, want, freeInstallParams, USERID);
     EXPECT_FALSE(res);
+    connectAbilityMgr->Init();
 }
 
 /**
@@ -1088,11 +1344,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0013, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0014, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
-    connectAbilityMgr.handler_ = nullptr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    connectAbilityMgr->handler_ = nullptr;
     std::string transactId;
-    connectAbilityMgr.OutTimeMonitor(transactId);
+    connectAbilityMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "");
+    connectAbilityMgr->Init();
 }
 
 /**
@@ -1103,12 +1360,15 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0014, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0015, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string transactId = "1";
-    connectAbilityMgr.OutTimeMonitor(transactId);
+    connectAbilityMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "1");
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
 }
 
 /**
@@ -1119,13 +1379,17 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0015, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0016, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
-    connectAbilityMgr.handler_ = nullptr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    connectAbilityMgr->handler_ = nullptr;
     FreeInstallParams freeInstallParams;
-    connectAbilityMgr.freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
+    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
     std::string transactId = "1";
-    connectAbilityMgr.OutTimeMonitor(transactId);
+    connectAbilityMgr->OutTimeMonitor(transactId);
     EXPECT_EQ(transactId, "1");
+    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
+        connectAbilityMgr->freeInstallParamsMap_.erase("1");
+    }
+    connectAbilityMgr->Init();
 }
 
 /**
@@ -1136,7 +1400,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0016, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0017, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     InnerBundleInfo innerBundleInfo;
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = ".entry";
@@ -1147,7 +1411,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0017, Function | Smal
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     sptr<IRemoteObject> callBack = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    bool res = connectAbilityMgr.CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
+    bool res = connectAbilityMgr->CheckIsModuleNeedUpdate(innerBundleInfo, want, USERID, callBack);
     EXPECT_TRUE(res);
 }
 
@@ -1158,7 +1422,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0017, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0018, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     std::vector<std::string> callingBundleNames;
     Want want;
     ElementName name;
@@ -1167,7 +1431,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0018, Function | Smal
     want.SetElement(name);
     InnerBundleInfo innerBundleInfo;
     sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
-    connectAbilityMgr.GetTargetAbilityInfo(want, 0, innerBundleInfo, targetAbilityInfo);
+    connectAbilityMgr->GetTargetAbilityInfo(want, 0, innerBundleInfo, targetAbilityInfo);
     EXPECT_EQ(targetAbilityInfo->targetInfo.bundleName, BUNDLE_NAME);
 }
 
@@ -1179,11 +1443,11 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0018, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | SmallTest | Level0)
 {
-    ClearDataMgr();
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     std::vector<std::string> bundleNames;
     std::vector<std::string> callingAppIds;
-    connectAbilityMgr.GetCallingInfo(USERID, USERID, bundleNames, callingAppIds);
+    ClearDataMgr();
+    connectAbilityMgr->GetCallingInfo(USERID, USERID, bundleNames, callingAppIds);
     EXPECT_EQ(bundleNames.size(), 0);
     SetDataMgr();
 }
@@ -1196,7 +1460,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | Smal
  */
 HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | SmallTest | Level0)
 {
-    BundleConnectAbilityMgr connectAbilityMgr;
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     Want want;
     ElementName name;
     name.SetAbilityName(ABILITY_NAME_TEST);
@@ -1207,8 +1471,58 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
     sptr<IRemoteObject> callBack;
     InnerBundleInfo innerBundleInfo;
     ClearDataMgr();
-    connectAbilityMgr.UpgradeAtomicService(want, USERID);
-    bool res = connectAbilityMgr.IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
+    connectAbilityMgr->UpgradeAtomicService(want, USERID);
+    bool res = connectAbilityMgr->IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
+    EXPECT_FALSE(res);
+    SetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0022
+ * @tc.name: CheckIsModuleNeedUpdate
+ * @tc.desc: Check Is Module Need Update
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    std::string key = "key";
+    AbilityInfo abilityInfo;
+    abilityInfo.name = ABILITY_NAME_TEST;
+    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    want.SetElement(name);
+    int32_t userId = 1;
+    sptr<IRemoteObject> callBack = nullptr;
+    bool ret = connectAbilityMgr->CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0023
+ * Function: IsObtainAbilityInfo
+ * @tc.name: test IsObtainAbilityInfo
+ * @tc.desc: test IsObtainAbilityInfo failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    name.SetBundleName(BUNDLE_NAME);
+    name.SetModuleName(MODULE_NAME_TEST);
+    want.SetElement(name);
+    int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack;
+    InnerBundleInfo innerBundleInfo;
+    ClearDataMgr();
+    connectAbilityMgr->UpgradeAtomicService(want, USERID);
+    bool res = connectAbilityMgr->IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
     EXPECT_FALSE(res);
     SetDataMgr();
 }
@@ -1274,31 +1588,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityConnectDone_0003, Function | SmallTe
     int32_t resultCode = 0;
     connection.OnAbilityConnectDone(element, remoteObject, resultCode);
     EXPECT_FALSE(resultCode);
-}
-
-/**
- * @tc.number: OnRemoteRequest_0001
- * Function: OnRemoteRequest
- * @tc.name: test OnRemoteRequest
- * @tc.desc: test OnRemoteRequest success
- */
-HWTEST_F(BmsBundleFreeInstallTest, OnRemoteRequest_0001, Function | SmallTest | Level0)
-{
-    const std::weak_ptr<BundleConnectAbilityMgr> server;
-    ServiceCenterDeathRecipient recipient(server);
-    wptr<IRemoteObject> wptrDeath;
-    recipient.OnRemoteDied(wptrDeath);
-
-    ServiceCenterStatusCallback callbackStub(server);
-    uint32_t code = 0;
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    callbackStub.OnRemoteRequest(code, data, reply, option);
-
-    std::string installResult = "";
-    callbackStub.OnInstallFinished(installResult);
-    EXPECT_FALSE(code);
 }
 
 /**
