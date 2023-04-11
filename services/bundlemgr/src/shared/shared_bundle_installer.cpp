@@ -141,7 +141,7 @@ bool SharedBundleInstaller::FindDependencyInInstalledBundles(const Dependency &d
 
     InnerBundleInfo bundleInfo;
     bool isBundleExist = dataMgr->FetchInnerBundleInfo(dependency.bundleName, bundleInfo);
-    if (!isBundleExist || bundleInfo.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+    if (!isBundleExist || bundleInfo.GetApplicationBundleType() != BundleType::SHARED) {
         APP_LOGE("the shared bundle (%{public}s) is not installed", dependency.bundleName.c_str());
         return false;
     }

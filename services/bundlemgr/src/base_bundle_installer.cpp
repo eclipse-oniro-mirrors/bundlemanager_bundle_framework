@@ -302,7 +302,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
-    if (info.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
         APP_LOGE("uninstall bundle is not shared library");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
@@ -606,7 +606,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     ErrCode result = ERR_OK;
     if (isAppExist_) {
-        if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("old bundle info is shared package");
             return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
         }
@@ -1042,7 +1042,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+    if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         APP_LOGE("uninstall bundle is shared library.");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
@@ -1165,7 +1165,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+    if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         APP_LOGE("uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
@@ -1318,7 +1318,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
             dataMgr_->EnableBundle(bundleName);
-            if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 APP_LOGD("shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
                 return ERR_OK;
             }
@@ -2542,7 +2542,7 @@ ErrCode BaseBundleInstaller::CheckHapHashParams(
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     for (const auto &info : infos) {
-        if (info.second.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (info.second.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("installing cross-app shared library");
             return ERR_APPEXECFWK_INSTALL_FILE_IS_SHARED_LIBRARY;
         }

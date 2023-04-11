@@ -50,12 +50,12 @@ enum class GetApplicationFlag {
 enum class BundleType {
     APP = 0,
     ATOMIC_SERVICE = 1,
+    SHARED = 2,
 };
 
 enum class CompatiblePolicy {
     NORMAL = 0,
-    BACK_COMPATIBLE = 1,
-    PRECISE_MATCH = 2,
+    BACKWARD_COMPATIBILITY = 1,
 };
 
 struct Metadata : public Parcelable {
@@ -239,8 +239,6 @@ struct ApplicationInfo : public Parcelable {
 
     bool split = true;
     BundleType bundleType = BundleType::APP;
-
-    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

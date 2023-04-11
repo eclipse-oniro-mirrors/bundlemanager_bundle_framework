@@ -125,7 +125,7 @@ const std::string MODULE_PRELOADS = "preloads";
 const std::string HAS_ATOMIC_SERVICE_CONFIG = "hasAtomicServiceConfig";
 const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
-const std::string MODULE_COMPATIBLE_POLICY = "compatiblePolicy";
+const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
@@ -553,7 +553,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo},
         {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
         {MODULE_PRELOADS, info.preloads},
-        {MODULE_COMPATIBLE_POLICY, info.compatiblePolicy},
+        {MODULE_BUNDLE_TYPE, info.bundleType},
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
@@ -1037,10 +1037,10 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         Profile::parseResult,
         ArrayType::STRING);
-    GetValueIfFindKey<CompatiblePolicy>(jsonObject,
+    GetValueIfFindKey<BundleType>(jsonObject,
         jsonObjectEnd,
-        MODULE_COMPATIBLE_POLICY,
-        info.compatiblePolicy,
+        MODULE_BUNDLE_TYPE,
+        info.bundleType,
         JsonType::NUMBER,
         false,
         Profile::parseResult,
@@ -2072,9 +2072,8 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
         return false;
     }
     InnerModuleInfo innerModuleInfo = sharedModuleInfoVector.front();
-    if (innerModuleInfo.compatiblePolicy != CompatiblePolicy::BACK_COMPATIBLE &&
-        innerModuleInfo.compatiblePolicy != CompatiblePolicy::PRECISE_MATCH) {
-        APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, compatiblePolicy is invalid!");
+    if (innerModuleInfo.bundleType != BundleType::SHARED) {
+        APP_LOGE("GetMaxVerBaseSharedBundleInfo failed, bundleType is invalid!");
         return false;
     }
     baseSharedBundleInfo.bundleName = baseBundleInfo_->name;
@@ -2098,9 +2097,8 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
         return false;
     }
     for (const auto &item : sharedModuleInfoVector) {
-        if (item.compatiblePolicy != CompatiblePolicy::BACK_COMPATIBLE &&
-            item.compatiblePolicy != CompatiblePolicy::PRECISE_MATCH) {
-            APP_LOGE("GetBaseSharedBundleInfo failed, compatiblePolicy is invalid!");
+        if (item.bundleType != BundleType::SHARED) {
+            APP_LOGE("GetBaseSharedBundleInfo failed, bundleType is invalid!");
             return false;
         }
         if (item.versionCode == versionCode) {
@@ -2170,7 +2168,7 @@ void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &native
 bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const
 {
     sharedBundleInfo.name = GetBundleName();
-    sharedBundleInfo.compatiblePolicy = GetBaseApplicationInfo().compatiblePolicy;
+    sharedBundleInfo.compatiblePolicy = CompatiblePolicy::BACKWARD_COMPATIBILITY;
     std::vector<SharedModuleInfo> sharedModuleInfos;
     for (const auto &infoVector : innerSharedModuleInfos_) {
         for (const auto &info : infoVector.second) {

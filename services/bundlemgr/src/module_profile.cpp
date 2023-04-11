@@ -126,10 +126,10 @@ const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"split", SupportWindowMode::SPLIT},
     {"floating", SupportWindowMode::FLOATING}
 };
-const std::unordered_map<std::string, CompatiblePolicy> COMPATIBLE_POLICY_MAP = {
-    {"normal", CompatiblePolicy::NORMAL},
-    {"backwardCompatibility", CompatiblePolicy::BACK_COMPATIBLE},
-    {"preciseMatch", CompatiblePolicy::PRECISE_MATCH}
+const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
+    {"app", BundleType::APP},
+    {"atomicService", BundleType::ATOMIC_SERVICE},
+    {"shared", BundleType::SHARED}
 };
 
 struct DeviceConfig {
@@ -147,10 +147,6 @@ struct Metadata {
     std::string name;
     std::string value;
     std::string resource;
-};
-
-struct AppShared {
-    std::string compatiblePolicy;
 };
 
 struct Ability {
@@ -235,7 +231,6 @@ struct App {
     int32_t targetPriority = 0;
     bool asanEnabled = false;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
-    Profile::AppShared shared;
 };
 
 struct Module {
@@ -1119,32 +1114,6 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    if (jsonObject.find(Profile::APP_SHARED) != jsonObjectEnd) {
-        AppShared shared;
-        GetValueIfFindKey<AppShared>(jsonObject,
-            jsonObjectEnd,
-            APP_SHARED,
-            shared,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        app.shared = shared;
-    }
-}
-
-void from_json(const nlohmann::json &jsonObject, AppShared &shared)
-{
-    APP_LOGD("read shared tag from app.json");
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_COMPATIBLE_POLICY,
-        shared.compatiblePolicy,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1580,6 +1549,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
     if (appJson.contains(Profile::BUNDLE_TYPE)) {
         if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
             bundleType = BundleType::ATOMIC_SERVICE;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SHARED) {
+            bundleType = BundleType::SHARED;
         }
     }
 
@@ -1742,11 +1713,11 @@ bool ToApplicationInfo(
     applicationInfo.targetBundleName = app.targetBundle;
     applicationInfo.targetPriority = app.targetPriority;
 
-    auto iterCompatiblePolicy = std::find_if(std::begin(Profile::COMPATIBLE_POLICY_MAP),
-        std::end(Profile::COMPATIBLE_POLICY_MAP),
-        [&app](const auto &item) { return item.first == app.shared.compatiblePolicy; });
-    if (iterCompatiblePolicy != Profile::COMPATIBLE_POLICY_MAP.end()) {
-        applicationInfo.compatiblePolicy = iterCompatiblePolicy->second;
+    auto iterBundleType = std::find_if(std::begin(Profile::BUNDLE_TYPE_MAP),
+        std::end(Profile::BUNDLE_TYPE_MAP),
+        [&app](const auto &item) { return item.first == app.bundleType; });
+    if (iterBundleType != Profile::BUNDLE_TYPE_MAP.end()) {
+        applicationInfo.bundleType = iterBundleType->second;
     }
     return true;
 }
@@ -2185,8 +2156,8 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
 
     // Here also need verify module type is shared.
-    if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
-        innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
+    if (applicationInfo.bundleType == BundleType::SHARED) {
+        innerModuleInfo.bundleType = applicationInfo.bundleType;
         innerModuleInfo.versionCode = applicationInfo.versionCode;
         innerModuleInfo.versionName = applicationInfo.versionName;
         innerBundleInfo.InsertInnerSharedModuleInfo(moduleJson.module.name, innerModuleInfo);

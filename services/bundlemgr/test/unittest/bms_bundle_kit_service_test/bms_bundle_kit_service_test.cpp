@@ -9654,14 +9654,14 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfo_0100, Function | SmallTes
     ret = info.GetMaxVerBaseSharedBundleInfo("entry", packageInfo);
     EXPECT_EQ(ret, false);
     InnerModuleInfo moduleInfo;
-    moduleInfo.compatiblePolicy = CompatiblePolicy::NORMAL;
+    moduleInfo.bundleType = BundleType::APP;
     moduleInfos.emplace_back(moduleInfo);
     info.innerSharedModuleInfos_["entry"] = moduleInfos;
     ret = info.GetMaxVerBaseSharedBundleInfo("entry", packageInfo);
     EXPECT_EQ(ret, false);
 
     moduleInfos.clear();
-    moduleInfo.compatiblePolicy = CompatiblePolicy::PRECISE_MATCH;
+    moduleInfo.bundleType = BundleType::SHARED;
     moduleInfos.emplace_back(moduleInfo);
     info.innerSharedModuleInfos_["entry"] = moduleInfos;
     ret = info.GetMaxVerBaseSharedBundleInfo("entry", packageInfo);
@@ -9685,14 +9685,14 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfo_0200, Function | SmallTes
     EXPECT_EQ(ret, false);
 
     InnerModuleInfo moduleInfo;
-    moduleInfo.compatiblePolicy = CompatiblePolicy::NORMAL;
+    moduleInfo.bundleType = BundleType::APP;
     moduleInfos.emplace_back(moduleInfo);
     info.innerSharedModuleInfos_["entry"] = moduleInfos;
     ret = info.GetBaseSharedBundleInfo("entry", BUNDLE_VERSION_CODE, packageInfo);
     EXPECT_EQ(ret, false);
 
     moduleInfos.clear();
-    moduleInfo.compatiblePolicy = CompatiblePolicy::PRECISE_MATCH;
+    moduleInfo.bundleType = BundleType::SHARED;
     moduleInfos.emplace_back(moduleInfo);
     info.innerSharedModuleInfos_["entry"] = moduleInfos;
     ret = info.GetBaseSharedBundleInfo("entry", BUNDLE_VERSION_CODE, packageInfo);

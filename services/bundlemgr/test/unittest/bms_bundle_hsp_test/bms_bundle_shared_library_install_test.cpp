@@ -225,7 +225,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallCompati
 
     sharedBundlePaths = {MODULE_FILE_PATH + LIBA_NORMAL_HAP};
     installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);

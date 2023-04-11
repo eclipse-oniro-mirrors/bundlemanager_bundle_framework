@@ -112,7 +112,6 @@ const std::string APPLICATION_ASAN_ENABLED = "asanEnabled";
 const std::string APPLICATION_ASAN_LOG_PATH = "asanLogPath";
 const std::string APPLICATION_SPLIT = "split";
 const std::string APPLICATION_APP_TYPE = "bundleType";
-const std::string APPLICATION_COMPATIBLE_POLICY = "compatiblePolicy";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -397,7 +396,6 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     asanLogPath = Str16ToStr8(parcel.ReadString16());
     split = parcel.ReadBool();
     bundleType = static_cast<BundleType>(parcel.ReadInt32());
-    compatiblePolicy = static_cast<CompatiblePolicy>(parcel.ReadInt32());
     return true;
 }
 
@@ -540,7 +538,6 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(asanLogPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, split);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compatiblePolicy));
     return true;
 }
 
@@ -723,7 +720,6 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_ASAN_LOG_PATH, applicationInfo.asanLogPath},
         {APPLICATION_SPLIT, applicationInfo.split},
         {APPLICATION_APP_TYPE, applicationInfo.bundleType},
-        {APPLICATION_COMPATIBLE_POLICY, applicationInfo.compatiblePolicy}
     };
 }
 
@@ -1343,14 +1339,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         jsonObjectEnd,
         APPLICATION_APP_TYPE,
         applicationInfo.bundleType,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<CompatiblePolicy>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_COMPATIBLE_POLICY,
-        applicationInfo.compatiblePolicy,
         JsonType::NUMBER,
         false,
         parseResult,

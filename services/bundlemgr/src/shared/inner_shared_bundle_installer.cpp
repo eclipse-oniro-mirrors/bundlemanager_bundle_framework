@@ -182,24 +182,15 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
 
     isBundleExist_ = dataMgr->FetchInnerBundleInfo(bundleName_, oldBundleInfo_);
     if (isBundleExist_) {
-        ErrCode ret = CheckCompatiblePolicyWithInstalledVersion();
-        CHECK_RESULT(ret, "check compatible policy with installed version failed %{public}d");
+        ErrCode ret = CheckBundleTypeWithInstalledVersion();
+        CHECK_RESULT(ret, "check bundle type with installed version failed %{public}d");
 
         // check old InnerBundleInfo together
         parsedBundles_.emplace(bundleName_, oldBundleInfo_);
     } else {
-        if (parsedBundles_.begin()->second.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+        if (parsedBundles_.begin()->second.GetApplicationBundleType() != BundleType::SHARED) {
             APP_LOGE("installing bundle is not hsp");
             return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-        }
-    }
-
-    // check compatible policy between all parsed bundles
-    CompatiblePolicy firstPolicy = parsedBundles_.begin()->second.GetCompatiblePolicy();
-    for (const auto &item : parsedBundles_) {
-        if (item.second.GetCompatiblePolicy() != firstPolicy) {
-            APP_LOGE("compatiblePolicy not same");
-            return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
         }
     }
 
@@ -210,16 +201,11 @@ ErrCode InnerSharedBundleInstaller::CheckAppLabelInfo()
     return result;
 }
 
-ErrCode InnerSharedBundleInstaller::CheckCompatiblePolicyWithInstalledVersion()
+ErrCode InnerSharedBundleInstaller::CheckBundleTypeWithInstalledVersion()
 {
-    if (oldBundleInfo_.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+    if (oldBundleInfo_.GetApplicationBundleType() != BundleType::SHARED) {
         APP_LOGE("old bundle is not shared");
         return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
-    }
-
-    if (oldBundleInfo_.GetCompatiblePolicy() != CompatiblePolicy::BACK_COMPATIBLE) {
-        APP_LOGD("not back compatible shared bundle, do not check compatible policy");
-        return ERR_OK;
     }
 
     for (const auto &item : parsedBundles_) {
