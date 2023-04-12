@@ -1380,7 +1380,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)
         || preInstallBundleInfo.GetBundlePaths().empty()) {
         APP_LOGE("Get PreInstallBundleInfo faile, bundleName: %{public}s.", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
+        return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
     }
 
     if (recoverMode) {
