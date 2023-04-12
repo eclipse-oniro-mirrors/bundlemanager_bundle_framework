@@ -835,11 +835,10 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-    ScopeGuard enableGuard([&] { dataMgr_->EnableOverlayBundle(bundleName); });
     // 1. whether the specified bundle is installed under the specified userid
     InnerBundleUserInfo userInfo;
     if (!innerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
