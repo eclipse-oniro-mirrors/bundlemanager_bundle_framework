@@ -1107,7 +1107,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
         IBundleMgr::Message::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
-}    
+}
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
