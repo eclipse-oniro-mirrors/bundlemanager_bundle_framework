@@ -57,9 +57,14 @@ const std::string HASH_PARAMS = "hashParams";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string VERSION_CODE = "versionCode";
 const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
+const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
+const std::string ADDITIONAL_INFO = "additionalInfo";
 
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
+
+constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
+constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
 
@@ -581,13 +586,63 @@ static bool ParseSharedBundleDirPaths(napi_env env, napi_value args, std::vector
     return true;
 }
 
+static bool ParseSpecifiedDistributionType(napi_env env, napi_value args, std::string &specifiedDistributionType)
+{
+    APP_LOGD("start to parse specifiedDistributionType");
+    PropertyInfo propertyInfo = {
+        .propertyName = SPECIFIED_DISTRIBUTION_TYPE,
+        .isNecessary = false,
+        .propertyType = napi_string
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse specifiedDistributionType failed");
+        return res;
+    }
+    if (property != nullptr) {
+        if (!CommonFunc::ParseString(env, property, specifiedDistributionType)) {
+            APP_LOGE("ParseString failed!");
+            return false;
+        }
+    }
+    APP_LOGD("param specifiedDistributionType is %{public}s", specifiedDistributionType.c_str());
+    return true;
+}
+
+static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &additionalInfo)
+{
+    APP_LOGD("start to parse the additionalInfo");
+    PropertyInfo propertyInfo = {
+        .propertyName = ADDITIONAL_INFO,
+        .isNecessary = false,
+        .propertyType = napi_string
+    };
+    napi_value property = nullptr;
+    bool res = CommonFunc::ParsePropertyFromObject(env, args, propertyInfo, property);
+    if (!res) {
+        APP_LOGE("parse additionalInfo failed");
+        return res;
+    }
+    if (property != nullptr) {
+        if (!CommonFunc::ParseString(env, property, additionalInfo)) {
+            APP_LOGE("ParseString failed!");
+            return false;
+        }
+    }
+    APP_LOGD("param additionalInfo is %{public}s", additionalInfo.c_str());
+    return true;
+}
+
 static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
     if (!ParseUserId(env, args, installParam.userId) || !ParseInstallFlag(env, args, installParam.installFlag) ||
         !ParseIsKeepData(env, args, installParam.isKeepData) ||
         !ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline) ||
         !ParseHashParams(env, args, installParam.hashParams) ||
-        !ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
+        !ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths) ||
+        !ParseSpecifiedDistributionType(env, args, installParam.specifiedDistributionType) ||
+        !ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
         APP_LOGE("ParseInstallParam failed");
         return false;
     }
@@ -762,7 +817,18 @@ napi_value Install(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-
+    if (callbackPtr->installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
+        APP_LOGE("Parse specifiedDistributionType size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of specifiedDistributionType is greater than 128");
+        return nullptr;
+    }
+    if (callbackPtr->installParam.additionalInfo.size() > ADDITIONAL_INFO_MAX_SIZE) {
+        APP_LOGE("Parse additionalInfo size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of additionalInfo is greater than 3000");
+        return nullptr;
+    }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
         OperationCompleted);
     callbackPtr.release();
