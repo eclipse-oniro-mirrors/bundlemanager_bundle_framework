@@ -197,6 +197,14 @@ void BmsBundleDefaultAppTest::StartBundleService()
 
 sptr<IDefaultApp> BmsBundleDefaultAppTest::GetDefaultAppProxy()
 {
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    bool res = dataMgr->HasUserId(USER_ID);
+    if (!res) {
+        dataMgr->AddUserId(USER_ID);
+    }
+    
     if (!bundleMgrService_) {
         return nullptr;
     }
