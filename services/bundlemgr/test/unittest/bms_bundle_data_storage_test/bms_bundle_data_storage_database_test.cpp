@@ -1094,8 +1094,7 @@ protected:
                 "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0,
-                "overlayState": 0,
-                "compatiblePolicy": 0
+                "overlayState": 0
             },
             "baseBundleInfo": {
                 "abilityInfos": [
