@@ -56,6 +56,7 @@ enum class ExtensionAbilityType {
     PRINT = 15,
     UI = 16,
     PUSH = 17,
+    DRIVER = 18,
     UNSPECIFIED = 255
 };
 

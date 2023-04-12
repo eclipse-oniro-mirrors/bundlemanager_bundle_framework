@@ -2149,15 +2149,20 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::UI), &nUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI", nUI));
 
-    napi_value nUnspecified;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
-
     napi_value nPush;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::PUSH), &nPush));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PUSH", nPush));
+
+    napi_value nDriver;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::DRIVER), &nDriver));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DRIVER", nDriver));
+
+    napi_value nUnspecified;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
