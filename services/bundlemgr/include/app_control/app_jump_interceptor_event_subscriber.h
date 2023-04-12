@@ -17,30 +17,22 @@
 #define FOUNDATION_BUNDLEMANAGER_SERVICE_ROUTER_FRAMEWORK_SERVICES_INCLUDE_APP_JUMP_INTERCEPTOR_EVENT_SUBSCRIBER_H
 
 #include "app_jump_interceptor_manager_db_interface.h"
+#include "bundle_event_callback_host.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
 #include "event_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class AppJumpInterceptorEventSubscriber : public EventFwk::CommonEventSubscriber,
-    public std::enable_shared_from_this<AppJumpInterceptorEventSubscriber> {
+class AppJumpInterceptorEventSubscriber : public BundleEventCallbackHost {
 public:
-    AppJumpInterceptorEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+    AppJumpInterceptorEventSubscriber(const std::shared_ptr<EventHandler> &eventHandler,
         const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb);
 
     ~AppJumpInterceptorEventSubscriber();
 
-    void OnReceiveEvent(const EventFwk::CommonEventData &data);
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
 
-    /**
-     * @brief SetEventHandler.
-     * @param handler event handler
-     */
-    inline void SetEventHandler(const std::shared_ptr<EventHandler> &handler)
-    {
-        eventHandler_ = handler;
-    }
 private:
     std::shared_ptr<EventHandler> eventHandler_ = nullptr;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpDb_ = nullptr;

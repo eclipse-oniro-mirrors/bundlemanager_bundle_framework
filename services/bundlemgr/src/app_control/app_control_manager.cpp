@@ -41,6 +41,7 @@ AppControlManager::AppControlManager()
     if (isAppJumpEnabled) {
         APP_LOGI("App jump intercetor enabled, start init to AppJumpInterceptorManagerRdb");
         appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+        appJumpInterceptorManagerDb_->SubscribeCommonEvent();
     } else {
         APP_LOGI("App jump intercetor disabled");
     }
@@ -101,6 +102,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
 {
     return appControlManagerDb_->GetAppRunningControlRule(callingName, userId, appIds);
 }
+
 ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBundleName,
     const std::string &targetBundleName, int32_t userId)
 {
@@ -108,7 +110,6 @@ ErrCode AppControlManager::ConfirmAppJumpControlRule(const std::string &callerBu
         APP_LOGE("DataMgr rdb is not init");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    appJumpInterceptorManagerDb_->SubscribeCommonEvent();
     return appJumpInterceptorManagerDb_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
 }
 

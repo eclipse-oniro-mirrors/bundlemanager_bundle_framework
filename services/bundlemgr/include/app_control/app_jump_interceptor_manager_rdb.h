@@ -18,6 +18,7 @@
 
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_db_interface.h"
+#include "bundle_event_callback_interface.h"
 
 #include "event_runner.h"
 #include "event_handler.h"
@@ -46,7 +47,7 @@ private:
     std::shared_ptr<EventRunner> runner_ = nullptr;
     std::shared_ptr<EventHandler> handler_ = nullptr;
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-    std::shared_ptr<AppJumpInterceptorEventSubscriber> eventSubscriber_;
+    sptr<AppJumpInterceptorEventSubscriber> eventSubscriber_;
     bool InitEventRunnerAndHandler();
 };
 } // namespace AppExecFwk
