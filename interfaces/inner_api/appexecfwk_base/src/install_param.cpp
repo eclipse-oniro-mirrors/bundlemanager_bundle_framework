@@ -52,6 +52,8 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string sharedBundleDirPath = Str16ToStr8(parcel.ReadString16());
         sharedBundleDirPaths.emplace_back(sharedBundleDirPath);
     }
+    specifiedDistributionType = Str16ToStr8(parcel.ReadString16());
+    additionalInfo = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -85,6 +87,8 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(sharedBundleDirPath));
     }
 
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));
     return true;
 }
 
