@@ -3786,5 +3786,36 @@ void InnerBundleInfo::DeleteHspModuleByVersion(int32_t versionCode)
         }
     }
 }
+
+ErrCode InnerBundleInfo::GetProxyDataInfos(
+    const std::string &moduleName, std::vector<ProxyData> &proxyDatas) const
+{
+    if (moduleName == Constants::EMPTY_STRING) {
+        GetAllProxyDataInfos(proxyDatas);
+        return ERR_OK;
+    }
+    auto moduleIt = std::find_if(innerModuleInfos_.begin(), innerModuleInfos_.end(), [&moduleName](const auto &info) {
+        return info.second.moduleName == moduleName;
+    });
+    if (moduleIt != innerModuleInfos_.end()) {
+        proxyDatas.insert(
+            proxyDatas.end(), moduleIt->second.proxyDatas.begin(), moduleIt->second.proxyDatas.end());
+    } else {
+        APP_LOGE("moduleName %{public}s not found", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    if (proxyDatas.empty()) {
+        APP_LOGW("proxyDatas is empty");
+    }
+    return ERR_OK;
+}
+
+void InnerBundleInfo::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const
+{
+    for (const auto &innerModuleInfo : innerModuleInfos_) {
+        proxyDatas.insert(
+            proxyDatas.end(), innerModuleInfo.second.proxyDatas.begin(), innerModuleInfo.second.proxyDatas.end());
+    }
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

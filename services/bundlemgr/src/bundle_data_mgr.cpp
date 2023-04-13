@@ -4663,5 +4663,30 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
     }
     return item->second.IsPreInstallApp();
 }
+
+ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    std::vector<ProxyData> &proxyDatas) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("GetProxyDataInfos failed, can not find bundle %{public}s",
+            bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    return item->second.GetProxyDataInfos(moduleName, proxyDatas);
+}
+
+ErrCode BundleDataMgr::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    for (const auto &info : bundleInfos_) {
+        info.second.GetAllProxyDataInfos(proxyDatas);
+    }
+    if (proxyDatas.empty()) {
+        APP_LOGW("proxyDatas is empty");
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -215,6 +215,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
     funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
+    funcMap_.emplace(IBundleMgr::Message::GET_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetProxyDataInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetAllProxyDataInfos);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2542,6 +2544,40 @@ ErrCode BundleMgrHost::HandleGetSharedDependencies(MessageParcel &data, MessageP
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(dependencies, reply)) {
         APP_LOGE("write dependencies failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetProxyDataInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = GetProxyDataInfos(bundleName, moduleName, proxyDatas);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetProxyDataInfos write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(proxyDatas, reply)) {
+        APP_LOGE("write proxyDatas failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = GetAllProxyDataInfos(proxyDatas);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetProxyDataInfos write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(proxyDatas, reply)) {
+        APP_LOGE("write proxyDatas failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

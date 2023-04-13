@@ -806,6 +806,11 @@ public:
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
 
+    ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+        std::vector<ProxyData> &proxyDatas) const;
+
+    ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
+
 private:
     /**
      * @brief Init transferStates.

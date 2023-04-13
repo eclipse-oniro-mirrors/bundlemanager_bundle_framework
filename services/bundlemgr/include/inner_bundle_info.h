@@ -2004,6 +2004,8 @@ public:
     std::vector<uint32_t> GetAllHspVersion() const;
     void DeleteHspModuleByVersion(int32_t versionCode);
     bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;
+    ErrCode GetProxyDataInfos(const std::string &moduleName, std::vector<ProxyData> &proxyDatas) const;
+    void GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
 
 private:
     bool IsExistLauncherAbility() const;

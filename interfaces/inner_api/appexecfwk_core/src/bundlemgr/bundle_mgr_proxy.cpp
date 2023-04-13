@@ -3342,6 +3342,44 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
     return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
 }
 
+ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    std::vector<ProxyData> &proxyDatas)
+{
+    APP_LOGD("begin to GetProxyDataInfos");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetProxyDataInfos due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_PROXY_DATA_INFOS, data, proxyDatas);
+}
+
+ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+{
+    APP_LOGD("begin to GetAllProxyDatas");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllProxyDatas due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, data, proxyDatas);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {
