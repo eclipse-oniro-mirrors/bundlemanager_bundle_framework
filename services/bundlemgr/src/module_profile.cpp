@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <algorithm>
+#include <mutex>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -30,7 +31,8 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace Profile {
-thread_local int32_t parseResult = ERR_OK;
+int32_t parseResult = ERR_OK;
+std::mutex g_mutex;
 
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
@@ -1536,14 +1538,12 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
 {
     if (!jsonObject.contains(Profile::MODULE) || !jsonObject.contains(Profile::APP)) {
         APP_LOGE("ParserAtomicConfig failed due to bad module.json");
-        Profile::parseResult = ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
         return false;
     }
     nlohmann::json appJson = jsonObject.at(Profile::APP);
     nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
     if (!moduleJson.is_object() || !appJson.is_object()) {
         APP_LOGE("module.json file lacks of invalid module or app properties");
-        Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         return false;
     }
     BundleType bundleType = BundleType::APP;
@@ -2238,23 +2238,26 @@ ErrCode ModuleProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-
-    OverlayMsg overlayMsg = ObtainOverlayType(jsonObject);
-    if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
-        int32_t ret = Profile::parseResult;
+    {
+        std::lock_guard<std::mutex> lock(Profile::g_mutex);
         Profile::parseResult = ERR_OK;
-        APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
-        return ret;
-    }
-    APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
-    Profile::parseResult = ERR_OK;
-    Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
-    if (Profile::parseResult != ERR_OK) {
-        APP_LOGE("parseResult is %{public}d", Profile::parseResult);
-        int32_t ret = Profile::parseResult;
-        // need recover parse result to ERR_OK
+        OverlayMsg overlayMsg = ObtainOverlayType(jsonObject);
+        if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
+            int32_t ret = Profile::parseResult;
+            Profile::parseResult = ERR_OK;
+            APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
+            return ret;
+        }
+        APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
         Profile::parseResult = ERR_OK;
-        return ret;
+        Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
+        if (Profile::parseResult != ERR_OK) {
+            APP_LOGE("parseResult is %{public}d", Profile::parseResult);
+            int32_t ret = Profile::parseResult;
+            // need recover parse result to ERR_OK
+            Profile::parseResult = ERR_OK;
+            return ret;
+        }
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, overlayMsg, innerBundleInfo)) {

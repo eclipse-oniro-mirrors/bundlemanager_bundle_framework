@@ -15,6 +15,7 @@
 
 #include "quick_fix/patch_profile.h"
 
+#include <mutex>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -41,7 +42,8 @@ constexpr const char* BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
 constexpr const char* BUNDLE_PATCH_TYPE_PATCH = "patch";
 constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 
-thread_local int32_t parseResult = 0;
+int32_t parseResult = ERR_OK;
+std::mutex g_mutex;
 struct App {
     std::string bundleName;
     uint32_t versionCode = 0;
@@ -315,12 +317,16 @@ ErrCode PatchProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-    PatchProfileReader::PatchJson patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
-    if (PatchProfileReader::parseResult != ERR_OK) {
-        APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
-        int32_t ret = PatchProfileReader::parseResult;
+    {
+        std::lock_guard<std::mutex> lock(PatchProfileReader::g_mutex);
         PatchProfileReader::parseResult = ERR_OK;
-        return ret;
+        PatchProfileReader::PatchJson patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
+        if (PatchProfileReader::parseResult != ERR_OK) {
+            APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
+            int32_t ret = PatchProfileReader::parseResult;
+            PatchProfileReader::parseResult = ERR_OK;
+            return ret;
+        }
     }
     if (!PatchProfileReader::ToPatchInfo(patchJson, appQuickFix)) {
         APP_LOGE("bundle or module name is invalid");

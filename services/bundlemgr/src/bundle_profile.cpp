@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <fstream>
+#include <mutex>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -30,7 +31,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace ProfileReader {
-thread_local int32_t g_parseResult = ERR_OK;
+int32_t g_parseResult = ERR_OK;
+std::mutex g_mutex;
 
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
@@ -2535,14 +2537,17 @@ ErrCode BundleProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-    ProfileReader::g_parseResult = ERR_OK;
-    configJson = jsonObject.get<ProfileReader::ConfigJson>();
-    if (ProfileReader::g_parseResult != ERR_OK) {
-        APP_LOGE("g_parseResult is %{public}d", ProfileReader::g_parseResult);
-        int32_t ret = ProfileReader::g_parseResult;
-        // need recover parse result to ERR_OK
+    {
+        std::lock_guard<std::mutex> lock(ProfileReader::g_mutex);
         ProfileReader::g_parseResult = ERR_OK;
-        return ret;
+        configJson = jsonObject.get<ProfileReader::ConfigJson>();
+        if (ProfileReader::g_parseResult != ERR_OK) {
+            APP_LOGE("g_parseResult is %{public}d", ProfileReader::g_parseResult);
+            int32_t ret = ProfileReader::g_parseResult;
+            // need recover parse result to ERR_OK
+            ProfileReader::g_parseResult = ERR_OK;
+            return ret;
+        }
     }
     if (!ToInnerBundleInfo(
         configJson, bundleExtractor, innerBundleInfo)) {

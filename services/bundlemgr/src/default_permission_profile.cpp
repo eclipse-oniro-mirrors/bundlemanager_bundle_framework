@@ -15,18 +15,21 @@
 
 #include "default_permission_profile.h"
 
+#include <mutex>
+
 #include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+int32_t parseResult = ERR_OK;
+std::mutex g_mutex;
 static const std::string PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
 static const std::string PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
 static const std::string PERMISSIONS_PROFILE_KEY_NAME = "name";
 static const std::string PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
 static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signature";
 }
-thread_local int32_t parseResult;
 
 void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
 {
@@ -53,6 +56,8 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
     std::set<DefaultPermission> &defaultPermissions) const
 {
     if (jsonObject.is_array() && !jsonObject.is_discarded()) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        parseResult = ERR_OK;
         for (const auto &object : jsonObject) {
             if (!object.is_object()) {
                 APP_LOGE("object is not json object");
