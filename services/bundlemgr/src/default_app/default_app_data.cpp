@@ -15,6 +15,8 @@
 
 #include "default_app_data.h"
 
+#include <thread>
+
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "common_profile.h"
@@ -24,6 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+    thread_local int32_t g_defaultAppJson = ERR_OK;
     const std::string INFOS = "infos";
     const std::string BUNDLE_NAME = "bundleName";
     const std::string MODULE_NAME = "moduleName";
@@ -50,20 +53,20 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 {
     APP_LOGD("DefaultAppData FromJson begin.");
     const auto& jsonObjectEnd = jsonObject.end();
-    Profile::parseResult = ERR_OK;
+    g_defaultAppJson = ERR_OK;
     GetValueIfFindKey<std::map<std::string, Element>>(jsonObject,
         jsonObjectEnd,
         INFOS,
         infos,
         JsonType::OBJECT,
         true,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
-    if (Profile::parseResult != ERR_OK) {
-        APP_LOGE("DefaultAppData FromJson failed, error code : %{public}d", Profile::parseResult);
+    if (g_defaultAppJson != ERR_OK) {
+        APP_LOGE("DefaultAppData FromJson failed, error code : %{public}d", g_defaultAppJson);
     }
-    int32_t ret = Profile::parseResult;
-    Profile::parseResult = ERR_OK;
+    int32_t ret = g_defaultAppJson;
+    g_defaultAppJson = ERR_OK;
     return ret;
 }
 
@@ -80,9 +83,9 @@ bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
             continue;
         }
         Element element;
-        Profile::parseResult = ERR_OK;
+        g_defaultAppJson = ERR_OK;
         from_json(object, element);
-        Profile::parseResult = ERR_OK;
+        g_defaultAppJson = ERR_OK;
         if (element.type.empty() || !DefaultAppMgr::VerifyElementFormat(element)) {
             APP_LOGW("bad element format.");
             continue;
@@ -114,7 +117,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.bundleName,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -122,7 +125,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.moduleName,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -130,7 +133,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.abilityName,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -138,7 +141,7 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.extensionName,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -146,10 +149,10 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
         element.type,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        g_defaultAppJson,
         ArrayType::NOT_ARRAY);
-    if (Profile::parseResult != ERR_OK) {
-        APP_LOGE("Element from_json error, error code : %{public}d", Profile::parseResult);
+    if (g_defaultAppJson != ERR_OK) {
+        APP_LOGE("Element from_json error, error code : %{public}d", g_defaultAppJson);
     }
 }
 }

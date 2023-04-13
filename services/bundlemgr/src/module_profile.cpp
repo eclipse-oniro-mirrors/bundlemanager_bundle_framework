@@ -30,7 +30,7 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace Profile {
-thread_local int32_t parseResult;
+thread_local int32_t parseResult = ERR_OK;
 
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",

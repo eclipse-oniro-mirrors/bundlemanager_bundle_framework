@@ -452,7 +452,6 @@ constexpr const char* APP_ATOMIC_SERVICE_MAIN = "main";
 constexpr const char* MODULE_ATOMIC_SERVICE_PRELOADS = "preloads";
 // module atomicService preloads
 constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
-extern thread_local int32_t parseResult;
 
 // bundleType
 constexpr const char* BUNDLE_TYPE_APP = "app";
