@@ -805,6 +805,8 @@ public:
     bool IsPreInstallApp(const std::string &bundleName);
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
+    ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
+    ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
 
 private:
     /**

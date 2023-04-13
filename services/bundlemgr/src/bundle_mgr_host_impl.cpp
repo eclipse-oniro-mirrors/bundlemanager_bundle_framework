@@ -2619,5 +2619,47 @@ bool BundleMgrHostImpl::IsPreInstallApp(const std::string &bundleName)
     }
     return dataMgr->IsPreInstallApp(bundleName);
 }
+
+ErrCode BundleMgrHostImpl::GetSpecifiedDistributionType(const std::string &bundleName,
+    std::string &specifiedDistributionType)
+{
+    APP_LOGD("GetSpecifiedDistributionType bundleName: %{public}s", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyPrivilegedPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
+}
+
+ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyPrivilegedPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAdditionalInfo(bundleName, additionalInfo);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

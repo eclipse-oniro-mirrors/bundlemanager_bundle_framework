@@ -24,6 +24,7 @@
 #include "ability_manager_client.h"
 #include "ability_info.h"
 #include "app_provision_info.h"
+#include "app_provision_info_manager.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -9936,5 +9937,209 @@ HWTEST_F(BmsBundleKitServiceTest, SetAllowedAcls_0003, Function | SmallTest | Le
     InnerBundleInfo info;
     info.SetAllowedAcls(acls);
     EXPECT_FALSE(info.GetAllowedAcls().empty());
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0001
+ * @tc.name: test can get the bundleName's SpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ *           2.get SpecifiedDistributionType failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string specifiedDistributionType;
+    auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0002
+ * @tc.name: test can get the bundleName's SpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ *           2.get SpecifiedDistributionType failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string specifiedDistributionType;
+    auto ret = bundleMgrProxy->GetSpecifiedDistributionType("", specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0003
+ * @tc.name: test can get the bundleName's SpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ *           2.get SpecifiedDistributionType failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0003, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string specifiedDistributionType;
+    auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0004
+ * @tc.name: test can get the bundleName's SpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ *           2.get SpecifiedDistributionType falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    }
+    std::string specifiedDistributionType;
+    auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0005
+ * @tc.name: test can get the bundleName's SpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ *           2.get SpecifiedDistributionType falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0005, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AppProvisionInfo appProvisionInfo;
+    bool ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME_TEST,
+        appProvisionInfo);
+    EXPECT_TRUE(ans);
+
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    }
+    std::string specifiedDistributionType;
+    auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0001
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string additionalInfo;
+    auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0002
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string additionalInfo;
+    auto ret = bundleMgrProxy->GetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0003
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0003, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    }
+    std::string additionalInfo;
+    auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0004
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    }
+    std::string additionalInfo;
+    auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0005
+ * @tc.name: test can get the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo succeed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0005, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    AppProvisionInfo appProvisionInfo;
+    bool ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME_TEST,
+        appProvisionInfo);
+    EXPECT_TRUE(ans);
+
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is nullptr.");
+        EXPECT_EQ(dataMgr, nullptr);
+    }
+    std::string additionalInfo;
+    auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    EXPECT_EQ(ret, ERR_OK);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);
+    EXPECT_TRUE(ans);
 }
 }
