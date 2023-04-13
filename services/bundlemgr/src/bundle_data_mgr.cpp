@@ -4683,7 +4683,7 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(bundleName,
         specifiedDistributionType)) {
         APP_LOGE("bundleName:%{public}s GetSpecifiedDistributionType failed.", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
@@ -4707,7 +4707,7 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
         additionalInfo)) {
         APP_LOGE("bundleName:%{public}s GetAdditionalInfo failed.", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
 }
