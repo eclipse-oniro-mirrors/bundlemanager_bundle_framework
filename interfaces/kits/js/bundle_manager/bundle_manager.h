@@ -186,6 +186,7 @@ struct BundleInfoCallbackInfo : public BaseCallbackInfo {
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
     bool isSavedInCache = false;
+    int32_t uid = 0;
     BundleInfo bundleInfo;
 };
 

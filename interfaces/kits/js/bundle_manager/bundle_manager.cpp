@@ -74,7 +74,6 @@ const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
-static std::unordered_map<int32_t, std::string> bundleNameMap;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
 namespace {
@@ -2630,7 +2629,6 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
                 asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
             CheckToCache(
                 env, asyncCallbackInfo->bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, result[ARGS_POS_ONE]);
-            bundleNameMap[asyncCallbackInfo->bundleInfo.uid] = asyncCallbackInfo->bundleName;
         }
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
@@ -2678,26 +2676,23 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        auto uid = IPCSkeleton::GetCallingUid();
-        auto bundleNameItem = bundleNameMap.find(uid);
-        if (bundleNameItem == bundleNameMap.end()) {
-            APP_LOGD("uid not in cache");
-        } else {
-            asyncCallbackInfo->bundleName = bundleNameItem->second;
-            asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
-            auto item = cache.find(Query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
-                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-            if (item != cache.end()) {
-                asyncCallbackInfo->isSavedInCache = true;
-                APP_LOGD("GetBundleInfo param from cache");
-                return;
-            }
-        }
-        asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
-            asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        return;
     }
+    auto uid = IPCSkeleton::GetCallingUid();
+    asyncCallbackInfo->uid = uid;
+    asyncCallbackInfo->bundleName = std::to_string(uid);
+    asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
+    auto item = cache.find(Query(
+        asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+        asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+    if (item != cache.end()) {
+        asyncCallbackInfo->isSavedInCache = true;
+        APP_LOGD("GetBundleInfo param from cache");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
+        asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
 }
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
@@ -2715,7 +2710,8 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    asyncCallbackInfo->uid = IPCSkeleton::GetCallingUid();
+    asyncCallbackInfo->userId = asyncCallbackInfo->uid / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() < ARGS_SIZE_TWO) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
