@@ -15,6 +15,8 @@
 
 #include "default_app_data.h"
 
+#include <thread>
+
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "common_profile.h"
@@ -24,7 +26,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    int32_t g_defaultAppJson = ERR_OK;
+    thread_local int32_t g_defaultAppJson = ERR_OK;
     const std::string INFOS = "infos";
     const std::string BUNDLE_NAME = "bundleName";
     const std::string MODULE_NAME = "moduleName";
