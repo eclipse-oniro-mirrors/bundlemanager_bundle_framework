@@ -1293,4 +1293,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8700, Functi
     auto ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8800
+ * @tc.name: test QueryLauncherAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8800, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

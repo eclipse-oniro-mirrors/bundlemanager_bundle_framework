@@ -1087,7 +1087,6 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5000, Function | SmallTest
     EXPECT_EQ(ret, false);
 }
 
-#ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 /**
  * @tc.number: BmsBundleDefaultApp_5100
  * @tc.name: test ImplicitQueryInfos
@@ -1198,6 +1197,33 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5500, Function | SmallTest
     ret = dataMgr->GetElement(USER_ID, elementName, element);
     EXPECT_EQ(ret, true);
 }
-#endif
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5600
+ * @tc.name: test ImplicitQueryInfos
+ * @tc.desc: 1. test ImplicitQueryInfos true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest | Level1)
+{
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    AAFwk::Want want;
+    AAFwk::Want want1;
+    want1.ClearWant(&want);
+    want.SetAction(Constants::ACTION_VIEW_DATA);
+    want.SetType(DEFAULT_APP_VIDEO);
+
+    auto defaultAppProxy = GetDefaultAppProxy();
+    EXPECT_NE(defaultAppProxy, nullptr);
+    ErrCode result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_APP_VIDEO, ABILITY_VIDEO);
+    EXPECT_EQ(result, ERR_OK);
+
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool testRet = dataMgr->ImplicitQueryInfos(
+        want, 1, USER_ID, abilityInfos, extensionInfos);
+    EXPECT_EQ(testRet, true);
+}
 
 } // OHOS
