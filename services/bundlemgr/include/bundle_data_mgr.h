@@ -808,6 +808,11 @@ public:
     ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
     ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
 
+    ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+        std::vector<ProxyData> &proxyDatas) const;
+
+    ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
+
 private:
     /**
      * @brief Init transferStates.

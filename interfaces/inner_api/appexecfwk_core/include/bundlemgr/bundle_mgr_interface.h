@@ -1167,11 +1167,6 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetProxyDataInfos(const std::string &bundleName, std::vector<ProxyData> &proxyDatas)
-    {
-        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-    }
-
     virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
@@ -1298,6 +1293,8 @@ public:
         QUERY_LAUNCHER_ABILITY_INFO,
         GET_SPECIFIED_DISTRIBUTED_TYPE,
         GET_ADDITIONAL_INFO,
+        GET_PROXY_DATA_INFOS,
+        GET_ALL_PROXY_DATA_INFOS,
     };
 };
 }  // namespace AppExecFwk

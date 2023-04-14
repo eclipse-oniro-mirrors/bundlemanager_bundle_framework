@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -49,7 +50,7 @@ const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
-const std::string BUNDLE_NAME_REGEX = "datashareproxy://([^/\\?]+)";
+const std::string BUNDLE_NAME_REGEX = "datashareproxy: //([^/\\?]+)";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -1120,6 +1121,21 @@ std::string GetBundleNameFromUri(const std::string &uri)
     }
 }
 
+bool CheckPermissionLevel(const std::string &permissionName)
+{
+    PermissionDef permissionDef;
+    ErrCode ret = BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
+    if (ret != ERR_OK) {
+        APP_LOGE("getPermissionDef failed");
+        return false;
+    }
+    if (permissionDef.availableLevel < Security::AccessToken::ATokenAplEnum::APL_SYSTEM_BASIC) {
+        APP_LOGE("permission %{public}s level too low", permissionName.c_str());
+        return false;
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundleInfo) const
 {
     auto bundleName = innerBundleInfo.GetBundleName();
@@ -1134,6 +1150,13 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
                 APP_LOGE("bundleName from uri %{public}s different from origin bundleName %{public}s",
                     name.c_str(), bundleName.c_str());
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+            }
+            if (innerBundleInfo.IsSystemApp()) {
+                continue;
+            }
+            if (!CheckPermissionLevel(proxyData.requiredReadPermission)
+                    || !CheckPermissionLevel(proxyData.requiredWritePermission)) {
+                return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED;
             }
         }
     }
