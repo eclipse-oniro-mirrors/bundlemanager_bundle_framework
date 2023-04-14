@@ -134,7 +134,7 @@ bool QuickFixManagerHostImpl::GetQuickFixMgr()
     return true;
 }
 
-bool QuickFixManagerHostImpl::IsFileNameValid(std::string& fileName) const
+bool QuickFixManagerHostImpl::IsFileNameValid(const std::string &fileName) const
 {
     if (fileName.find("..") != std::string::npos
         || fileName.find("/") != std::string::npos
