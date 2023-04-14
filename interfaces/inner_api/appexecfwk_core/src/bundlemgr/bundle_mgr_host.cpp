@@ -217,6 +217,9 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
     funcMap_.emplace(IBundleMgr::Message::GET_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetProxyDataInfos);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetAllProxyDataInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE,
+        &BundleMgrHost::HandleGetSpecifiedDistributionType);
+    funcMap_.emplace(IBundleMgr::Message::GET_ADDITIONAL_INFO, &BundleMgrHost::HandleGetAdditionalInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2578,6 +2581,40 @@ ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessagePa
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(proxyDatas, reply)) {
         APP_LOGE("write proxyDatas failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string specifiedDistributedType;
+    ErrCode ret = GetSpecifiedDistributionType(bundleName, specifiedDistributedType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetSpecifiedDistributionType write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && reply.WriteString(specifiedDistributedType)) {
+        APP_LOGE("write specifiedDistributedType failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string additionalInfo;
+    ErrCode ret = GetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAdditionalInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && reply.WriteString(additionalInfo)) {
+        APP_LOGE("write additionalInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

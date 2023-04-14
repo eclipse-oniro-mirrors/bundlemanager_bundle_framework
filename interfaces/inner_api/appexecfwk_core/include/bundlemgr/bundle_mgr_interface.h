@@ -1167,6 +1167,16 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1281,6 +1291,8 @@ public:
         GET_DEPENDENT_BUNDLE_INFO,
         GET_UID_BY_DEBUG_BUNDLE_NAME,
         QUERY_LAUNCHER_ABILITY_INFO,
+        GET_SPECIFIED_DISTRIBUTED_TYPE,
+        GET_ADDITIONAL_INFO,
         GET_PROXY_DATA_INFOS,
         GET_ALL_PROXY_DATA_INFOS,
     };

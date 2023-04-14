@@ -643,6 +643,10 @@ private:
 
     ErrCode HandleGetAllProxyDataInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

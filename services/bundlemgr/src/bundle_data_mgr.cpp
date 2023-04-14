@@ -4688,5 +4688,53 @@ ErrCode BundleDataMgr::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) 
     }
     return ERR_OK;
 }
+
+ErrCode BundleDataMgr::GetSpecifiedDistributionType(
+    const std::string &bundleName, std::string &specifiedDistributionType)
+{
+    APP_LOGD("GetSpecifiedDistributionType bundleName: %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(bundleName,
+        specifiedDistributionType)) {
+        APP_LOGE("bundleName:%{public}s GetSpecifiedDistributionType failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetAdditionalInfo(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+    if (responseUserId == Constants::INVALID_USERID) {
+        APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
+        additionalInfo)) {
+        APP_LOGE("bundleName:%{public}s GetAdditionalInfo failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
