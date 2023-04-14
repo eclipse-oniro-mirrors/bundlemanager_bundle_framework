@@ -99,7 +99,8 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
   sources += [ "bms_event_handler_unlocked_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
-  sources += [ "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp" ]
+  sources +=
+      [ "${services_path}/bundlemgr/test/mock/src/mock_install_client.cpp" ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
