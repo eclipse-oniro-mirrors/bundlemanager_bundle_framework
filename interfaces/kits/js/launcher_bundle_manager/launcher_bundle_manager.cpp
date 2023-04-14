@@ -34,6 +34,8 @@ namespace {
     constexpr const char* GET_SHORTCUT_INFO = "GetShortcutInfo";
     constexpr const char* BUNDLE_NAME = "bundleName";
     constexpr const char* USER_ID = "userId";
+    const uint32_t EXPLICIT_QUERY_ABILITY_LENGTH = 1;
+    static std::unordered_map<Query, napi_ref, QueryHash> cache;
 }
 static OHOS::sptr<OHOS::AppExecFwk::LauncherService> GetLauncherService()
 {
@@ -50,11 +52,39 @@ static ErrCode InnerGetLauncherAbilityInfo(const std::string &bundleName, int32_
     return launcherService->GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos);
 }
 
+static void AbilityInfoToCache(
+    napi_env env, const Query &query, const GetLauncherAbilityCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+
+    std::string bundleName = info->bundleName;
+
+    if (info->launcherAbilityInfos.size() != EXPLICIT_QUERY_ABILITY_LENGTH) {
+        return;
+    }
+    if (info->launcherAbilityInfos[0].userId != info->userId) {
+        return;
+    }
+
+    napi_ref cacheAbilityInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
+    cache[query] = cacheAbilityInfo;
+}
+
 void GetLauncherAbilityInfoExec(napi_env env, void *data)
 {
     GetLauncherAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetLauncherAbilityCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    auto item = cache.find(Query(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, env));
+    if (item != cache.end()) {
+        asyncCallbackInfo->isSavedInCache = true;
+        APP_LOGD("has cache, no need to query from host.");
         return;
     }
     asyncCallbackInfo->err = InnerGetLauncherAbilityInfo(asyncCallbackInfo->bundleName,
@@ -72,9 +102,21 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
     std::unique_ptr<GetLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = {0};
     if (asyncCallbackInfo->err == SUCCESS) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
+        if (asyncCallbackInfo->isSavedInCache) {
+            auto item = cache.find(Query(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, env));
+            if (item == cache.end()) {
+                APP_LOGE("cannot find result in cache in %{public}s", __func__);
+                return;
+            }
+            NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertLauncherAbilityInfos(env, asyncCallbackInfo->launcherAbilityInfos, result[ARGS_POS_ONE]);
+            Query query(asyncCallbackInfo->bundleName, asyncCallbackInfo->userId, env);
+            AbilityInfoToCache(env, query, asyncCallbackInfo, result[ARGS_POS_ONE]);
+        }
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCHER_ABILITY_INFO,
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
