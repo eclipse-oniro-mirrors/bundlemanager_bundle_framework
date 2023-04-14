@@ -2531,12 +2531,12 @@ ErrCode BundleProfile::TransformTo(
     InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGI("transform profile stream to bundle info");
-    ProfileReader::ConfigJson configJson;
     nlohmann::json jsonObject = nlohmann::json::parse(source.str(), nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
+    ProfileReader::ConfigJson configJson;
     {
         std::lock_guard<std::mutex> lock(ProfileReader::g_mutex);
         ProfileReader::g_parseResult = ERR_OK;

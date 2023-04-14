@@ -317,10 +317,11 @@ ErrCode PatchProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
+    PatchProfileReader::PatchJson patchJson;
     {
         std::lock_guard<std::mutex> lock(PatchProfileReader::g_mutex);
         PatchProfileReader::parseResult = ERR_OK;
-        PatchProfileReader::PatchJson patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
+        patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
         if (PatchProfileReader::parseResult != ERR_OK) {
             APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
             int32_t ret = PatchProfileReader::parseResult;

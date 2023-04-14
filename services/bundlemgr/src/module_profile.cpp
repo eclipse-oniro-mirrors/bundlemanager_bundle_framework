@@ -2238,10 +2238,12 @@ ErrCode ModuleProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
+    OverlayMsg overlayMsg;
+    Profile::ModuleJson moduleJson;
     {
         std::lock_guard<std::mutex> lock(Profile::g_mutex);
         Profile::parseResult = ERR_OK;
-        OverlayMsg overlayMsg = ObtainOverlayType(jsonObject);
+        overlayMsg = ObtainOverlayType(jsonObject);
         if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
             int32_t ret = Profile::parseResult;
             Profile::parseResult = ERR_OK;
@@ -2250,7 +2252,7 @@ ErrCode ModuleProfile::TransformTo(
         }
         APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
         Profile::parseResult = ERR_OK;
-        Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
+        moduleJson = jsonObject.get<Profile::ModuleJson>();
         if (Profile::parseResult != ERR_OK) {
             APP_LOGE("parseResult is %{public}d", Profile::parseResult);
             int32_t ret = Profile::parseResult;
