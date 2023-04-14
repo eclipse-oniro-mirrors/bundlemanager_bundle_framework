@@ -336,6 +336,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
             ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION},
         { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
+        { IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
     };
 }
 
