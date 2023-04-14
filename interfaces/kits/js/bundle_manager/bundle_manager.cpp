@@ -3313,7 +3313,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<AppProvisionInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -3329,6 +3329,15 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
