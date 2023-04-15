@@ -38,6 +38,7 @@ const std::string VALIDITY_NOT_BEFORE = "VALIDITY_NOT_BEFORE";
 const std::string VALIDITY_NOT_AFTER = "VALIDITY_NOT_AFTER";
 const std::string SPECIFIED_DISTRIBUTED_TYPE = "SPECIFIED_DISTRIBUTED_TYPE";
 const std::string ADDITIONAL_INFO = "ADDITIONAL_INFO";
+const std::string DEFAULT_VALUE = "";
 const int32_t INDEX_BUNDLE_NAME = 0;
 const int32_t INDEX_VERSION_CODE = 1;
 const int32_t INDEX_VERSION_NAME = 2;
@@ -97,6 +98,8 @@ bool AppProvisionInfoManagerRdb::AddAppProvisionInfo(const std::string &bundleNa
     valuesBucket.PutString(ISSUER, appProvisionInfo.issuer);
     valuesBucket.PutLong(VALIDITY_NOT_BEFORE, appProvisionInfo.validity.notBefore);
     valuesBucket.PutLong(VALIDITY_NOT_AFTER, appProvisionInfo.validity.notAfter);
+    valuesBucket.PutString(SPECIFIED_DISTRIBUTED_TYPE, DEFAULT_VALUE);
+    valuesBucket.PutString(ADDITIONAL_INFO, DEFAULT_VALUE);
 
     return rdbDataManager_->InsertData(valuesBucket);
 }

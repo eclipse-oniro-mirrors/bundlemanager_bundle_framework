@@ -4479,9 +4479,11 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
     if (infoItem == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    if (responseUserId == Constants::INVALID_USERID) {
-        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
+        int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
         APP_LOGE("bundleName:%{public}s GetAppProvisionInfo failed.", bundleName.c_str());
@@ -4699,11 +4701,13 @@ ErrCode BundleDataMgr::GetSpecifiedDistributionType(
         APP_LOGE("bundleName: %{public}s does not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    if (responseUserId == Constants::INVALID_USERID) {
-        APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
+        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(bundleName,
         specifiedDistributionType)) {
@@ -4723,11 +4727,13 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
         APP_LOGE("bundleName: %{public}s does not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
-    if (responseUserId == Constants::INVALID_USERID) {
-        APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
+        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGE("bundleName: %{public}s does not exist in current userId", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(bundleName,
         additionalInfo)) {
