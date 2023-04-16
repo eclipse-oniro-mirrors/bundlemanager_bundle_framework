@@ -2615,6 +2615,22 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0098, Function | SmallTest
     fileName = "";
     res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    fileName = "../test.hqf";
+    res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    fileName = "/test.hqf";
+    res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    fileName = "\\test.hqf";
+    res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+
+    fileName = "%test.hqf";
+    res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
 /**
