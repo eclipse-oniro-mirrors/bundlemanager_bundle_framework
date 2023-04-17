@@ -813,6 +813,7 @@ public:
 
     ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
 
+    std::string GetBundleNameByAppId(const std::string &appId) const;
 private:
     /**
      * @brief Init transferStates.
