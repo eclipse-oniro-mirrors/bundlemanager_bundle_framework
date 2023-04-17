@@ -851,4 +851,18 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5600
     bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, ABILITY_NAME, installParam, receiver);
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_5700
+ * @tc.name: test QueryLauncherAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5700, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 } // OHOS
