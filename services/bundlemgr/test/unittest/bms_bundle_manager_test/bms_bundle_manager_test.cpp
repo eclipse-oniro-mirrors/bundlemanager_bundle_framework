@@ -234,7 +234,7 @@ const std::shared_ptr<BundleDataMgr> BmsBundleManagerTest::GetBundleDataMgr() co
 {
     if (bundleMgrService_->GetDataMgr() != nullptr) {
         return bundleMgrService_->GetDataMgr();
-    } else｛
+    } else {
         EXPECT_NE(bundleMgrService_->GetDataMgr(), nullptr);
         return nullptr;
     }
