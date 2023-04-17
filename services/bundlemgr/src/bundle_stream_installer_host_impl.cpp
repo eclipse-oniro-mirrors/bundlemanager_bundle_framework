@@ -87,6 +87,11 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
         APP_LOGE("file is not hap or hsp");
         return -1;
     }
+    // to prevent the hap copied to relevant path
+    if (hapName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateStream failed due to invalid hapName");
+        return -1;
+    }
     std::string bundlePath = tempDir_ + hapName;
     int32_t fd = -1;
     if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
@@ -115,6 +120,12 @@ int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &h
     if (!BundleUtil::CheckFileType(hspName, Constants::INSTALL_FILE_SUFFIX) &&
         !BundleUtil::CheckFileType(hspName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
+        return -1;
+    }
+
+    // to prevent the hsp copied to relevant path
+    if (hspName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateSharedBundleStream failed due to invalid hapName");
         return -1;
     }
 
