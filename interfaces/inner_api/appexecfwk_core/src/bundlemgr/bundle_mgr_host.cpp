@@ -2596,7 +2596,7 @@ ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, M
         APP_LOGE("HandleGetSpecifiedDistributionType write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ret == ERR_OK) && reply.WriteString(specifiedDistributedType)) {
+    if ((ret == ERR_OK) && !reply.WriteString(specifiedDistributedType)) {
         APP_LOGE("write specifiedDistributedType failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -2613,7 +2613,7 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
         APP_LOGE("HandleGetAdditionalInfo write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if ((ret == ERR_OK) && reply.WriteString(additionalInfo)) {
+    if ((ret == ERR_OK) && !reply.WriteString(additionalInfo)) {
         APP_LOGE("write additionalInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
