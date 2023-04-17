@@ -150,6 +150,9 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -233,6 +236,16 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
 
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
+
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -270,6 +283,9 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+    "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -351,6 +367,16 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
   }
 
   if (global_resmgr_enable) {

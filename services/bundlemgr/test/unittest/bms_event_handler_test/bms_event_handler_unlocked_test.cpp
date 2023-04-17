@@ -41,8 +41,6 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    void ClearDataMgr();
-    void ResetDataMgr();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
 
 private:
@@ -63,18 +61,6 @@ void BmsEventHandlerUnLockedTest::SetUp()
 
 void BmsEventHandlerUnLockedTest::TearDown()
 {}
-
-void BmsEventHandlerUnLockedTest::ClearDataMgr()
-{
-    bundleMgrService_->dataMgr_ = nullptr;
-}
-
-void BmsEventHandlerUnLockedTest::ResetDataMgr()
-{
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
-    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
-}
 
 bool BmsEventHandlerUnLockedTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
 {
@@ -107,8 +93,6 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0100, Function
 HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0200, Function | SmallTest | Level0)
 {
     BundleInfo bundleInfo;
-    ClearDataMgr();
-    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool res = CreateBundleDataDir(bundleInfo, Constants::ALL_USERID);
     EXPECT_EQ(res, true);
 }

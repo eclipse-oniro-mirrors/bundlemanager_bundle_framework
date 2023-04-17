@@ -232,12 +232,8 @@ void BmsBundleManagerTest::CheckFileNonExist() const
 
 const std::shared_ptr<BundleDataMgr> BmsBundleManagerTest::GetBundleDataMgr() const
 {
-    if (bundleMgrService_->GetDataMgr() != nullptr) {
-        return bundleMgrService_->GetDataMgr();
-    } else {
-        EXPECT_NE(bundleMgrService_->GetDataMgr(), nullptr);
-        return nullptr;
-    }
+    EXPECT_NE(bundleMgrService_->GetDataMgr(), nullptr);
+    return bundleMgrService_->GetDataMgr();
 }
 
 const std::shared_ptr<BundleInstallerManager> BmsBundleManagerTest::GetBundleInstallerManager() const
