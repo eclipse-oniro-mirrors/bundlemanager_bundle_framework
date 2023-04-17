@@ -531,6 +531,25 @@ HWTEST_F(BmsInstallDaemonTest, BundleDataDir_0900, Function | SmallTest | Level0
 }
 
 /**
+ * @tc.number: BundleDataDir_1000
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CreateBundleDataDir of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonTest, BundleDataDir_1000, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CreateDirParam createDirParam;
+    createDirParam.createDirFlag = CreateDirFlag::CREATE_DIR_UNLOCKED;
+    createDirParam.bundleName = BUNDLE_NAME13;
+    createDirParam.userId = USERID;
+    createDirParam.uid = UID;
+    createDirParam.gid = GID;
+    createDirParam.apl = APL;
+    createDirParam.isPreInstallApp = false;
+    auto ret = hostImpl.CreateBundleDataDir(createDirParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+/**
  * @tc.number: InstalldClient_0100
  * @tc.name: Test SetDirApl, Param is empty
  * @tc.desc: 1.Test the SetDirApl of InstalldClient

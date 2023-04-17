@@ -15,7 +15,7 @@
 
 #include "default_app_data.h"
 
-#include <thread>
+#include <mutex>
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -26,7 +26,8 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-    thread_local int32_t g_defaultAppJson = ERR_OK;
+    int32_t g_defaultAppJson = ERR_OK;
+    std::mutex g_mutex;
     const std::string INFOS = "infos";
     const std::string BUNDLE_NAME = "bundleName";
     const std::string MODULE_NAME = "moduleName";
@@ -53,6 +54,7 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
 {
     APP_LOGD("DefaultAppData FromJson begin.");
     const auto& jsonObjectEnd = jsonObject.end();
+    std::lock_guard<std::mutex> lock(g_mutex);
     g_defaultAppJson = ERR_OK;
     GetValueIfFindKey<std::map<std::string, Element>>(jsonObject,
         jsonObjectEnd,
@@ -77,6 +79,7 @@ bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         APP_LOGW("json format error.");
         return false;
     }
+    std::lock_guard<std::mutex> lock(g_mutex);
     for (const auto& object : jsonObject) {
         if (!object.is_object()) {
             APP_LOGW("not json object.");

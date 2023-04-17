@@ -21,6 +21,12 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
+#include "common_event_data.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
+#include "common_event_subscriber.h"
+#include "want.h"
+#include "user_unlocked_event_subscriber.h"
 #undef private
 
 using namespace testing::ext;
@@ -42,6 +48,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+    bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
 };
 
 void BmsEventHandlerTest::SetUpTestCase()
@@ -55,6 +62,17 @@ void BmsEventHandlerTest::SetUp()
 
 void BmsEventHandlerTest::TearDown()
 {}
+
+bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
+{
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    subscriberPtr->UpdateAppDataDirSelinuxLabel(userId);
+    return subscriberPtr->CreateBundleDataDir(bundleInfo, userId);
+}
 
 /**
  * @tc.number: BeforeBmsStart_0100
@@ -365,4 +383,16 @@ HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0200, Function
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     EXPECT_FALSE(handler->OTAInstallSystemSharedBundle(filePath, appType, true));
+}
+
+/**
+ * @tc.number: UserUnlockedEventSubscriber_0100
+ * @tc.name: UserUnlockedEventSubscriber
+ * @tc.desc: test CreateBundleDataDir with a empty bundleName
+ */
+HWTEST_F(BmsEventHandlerTest, UserUnlockedEventSubscriber_0100, Function | SmallTest | Level0)
+{
+    BundleInfo bundleInfo;
+    bool res = CreateBundleDataDir(bundleInfo, Constants::ALL_USERID);
+    EXPECT_EQ(res, false);
 }

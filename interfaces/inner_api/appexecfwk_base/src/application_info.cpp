@@ -341,6 +341,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < metaDataSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         int32_t customizeDataSize = parcel.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &metaData[key]);
         for (int n = 0; n < customizeDataSize; ++n) {
             std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
             if (!customizeData) {
@@ -357,6 +358,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < metadataSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         int32_t metaSize = parcel.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(parcel, metaSize, &metadata[key]);
         for (int n = 0; n < metaSize; ++n) {
             std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
             if (!meta) {

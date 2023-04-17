@@ -2616,9 +2616,25 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        CommonFunc::ConvertBundleInfo(env,
-            asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
+        if (asyncCallbackInfo->isSavedInCache) {
+            auto item = cache.find(Query(
+                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            if (item == cache.end()) {
+                APP_LOGE("cannot find result in cache in %{public}s", __func__);
+                return;
+            }
+            NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
+            CommonFunc::ConvertBundleInfo(env,
+                asyncCallbackInfo->bundleInfo, result[ARGS_POS_ONE], asyncCallbackInfo->flags);
+            Query query(
+                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+                asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
+            CheckToCache(
+                env, asyncCallbackInfo->bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, result[ARGS_POS_ONE]);
+        }
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
@@ -2646,6 +2662,13 @@ void GetBundleInfoExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
+        auto item = cache.find(Query(
+            asyncCallbackInfo->bundleName, GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+        if (item != cache.end()) {
+            asyncCallbackInfo->isSavedInCache = true;
+            APP_LOGD("GetBundleInfo param from cache");
+            return;
+        }
         asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
             asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
     }
@@ -2658,10 +2681,23 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         return;
     }
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
-            asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        return;
     }
+    auto uid = IPCSkeleton::GetCallingUid();
+    asyncCallbackInfo->uid = uid;
+    asyncCallbackInfo->bundleName = std::to_string(uid);
+    asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
+    auto item = cache.find(Query(
+        asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+        asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+    if (item != cache.end()) {
+        asyncCallbackInfo->isSavedInCache = true;
+        APP_LOGD("GetBundleInfo param from cache");
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
+        asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
 }
 
 napi_value GetBundleInfo(napi_env env, napi_callback_info info)
@@ -2679,7 +2715,8 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    asyncCallbackInfo->uid = IPCSkeleton::GetCallingUid();
+    asyncCallbackInfo->userId = asyncCallbackInfo->uid / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() < ARGS_SIZE_TWO) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -3276,7 +3313,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::unique_ptr<AppProvisionInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
@@ -3292,6 +3329,15 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;

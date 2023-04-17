@@ -292,7 +292,7 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
 
 ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
 {
-    APP_LOGE("host begin to GetDisposedStatus");
+    APP_LOGD("host begin to GetDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;

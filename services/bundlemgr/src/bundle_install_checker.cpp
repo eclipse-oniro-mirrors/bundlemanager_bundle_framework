@@ -50,7 +50,9 @@ const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
-const std::string BUNDLE_NAME_REGEX = "datashareproxy: //([^/\\?]+)";
+const std::string SLASH = "/";
+const std::string DOUBLE_SLASH = "//";
+const int32_t SLAH_OFFSET = 2;
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -1109,16 +1111,20 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
 
 std::string GetBundleNameFromUri(const std::string &uri)
 {
-    std::regex bundleNameRegex(BUNDLE_NAME_REGEX);
-    std::smatch bundleNameMatch;
-    if (std::regex_search(uri, bundleNameMatch, bundleNameRegex)) {
-        std::string bundleName = bundleNameMatch[1];
-        APP_LOGD("get bundleName %{public}s from uri successfully", bundleName.c_str());
-        return bundleName;
-    } else {
-        APP_LOGE("get bundleName from uri failed");
+    std::size_t firstSlashPos = uri.find(DOUBLE_SLASH);
+    if (firstSlashPos == std::string::npos) {
+        APP_LOGE("dataproxy uri is invalid");
         return Constants::EMPTY_STRING;
     }
+
+    std::size_t secondSlashPos = uri.find(SLASH, firstSlashPos + SLAH_OFFSET);
+    if (secondSlashPos == std::string::npos) {
+        APP_LOGE("dataproxy uri is invalid");
+        return Constants::EMPTY_STRING;
+    }
+
+    std::string bundleName = uri.substr(firstSlashPos + SLAH_OFFSET, secondSlashPos - firstSlashPos - SLAH_OFFSET);
+    return bundleName;
 }
 
 bool CheckPermissionLevel(const std::string &permissionName)
