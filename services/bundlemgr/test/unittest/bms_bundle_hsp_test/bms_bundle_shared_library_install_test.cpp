@@ -65,8 +65,11 @@ public:
     void StartBundleService();
     ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths,
         const std::vector<std::string> &sharedBundlePaths) const;
+    ErrCode InstallBundle(const std::vector<std::string> &bundleFilePaths,
+        const InstallParam &installParam) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     ErrCode UninstallSharedBundle(const std::string &bundleName) const;
+    const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 private:
     std::shared_ptr<InstalldService> installdService_;
     std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -111,6 +114,11 @@ void BmsBundleSharedLibraryInstallTest::StartBundleService()
     }
 }
 
+const std::shared_ptr<BundleDataMgr> BmsBundleSharedLibraryInstallTest::GetBundleDataMgr() const
+{
+    return bundleMgrService_->GetDataMgr();
+}
+
 ErrCode BmsBundleSharedLibraryInstallTest::InstallBundle(const std::vector<std::string> &bundleFilePaths,
     const std::vector<std::string> &sharedBundlePaths) const
 {
@@ -132,6 +140,28 @@ ErrCode BmsBundleSharedLibraryInstallTest::InstallBundle(const std::vector<std::
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
     installParam.sharedBundleDirPaths = sharedBundlePaths;
+    bool result = installer->Install(bundleFilePaths, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleSharedLibraryInstallTest::InstallBundle(const std::vector<std::string> &bundleFilePaths,
+    const InstallParam &installParam) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
     bool result = installer->Install(bundleFilePaths, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -510,6 +540,43 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallDepende
     std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10000};
     ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
     EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0010
+ * @tc.name: BmsBundleSharedLibraryInstall
+ * @tc.desc: test install, install hsp
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSpecifiedDistributionType_0010, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    installParam.sharedBundleDirPaths = sharedBundlePaths;
+    ErrCode installResult = InstallBundle(bundleFilePaths, installParam);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        EXPECT_NE(dataMgr, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = dataMgr->GetSpecifiedDistributionType(SHARED_BUNDLE_NAME_A, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+        std::string additionalInfo;
+        ret = dataMgr->GetAdditionalInfo(SHARED_BUNDLE_NAME_A, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    }
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 }
 }
