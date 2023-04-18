@@ -47,7 +47,7 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
-const std::string BUNDLE_NAME = "com.third.hiworld.example.h1";
+const std::string BUNDLE_NAME = "com.third.hiworld.example1";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string CONTROL_MESSAGE = "this is control message";
