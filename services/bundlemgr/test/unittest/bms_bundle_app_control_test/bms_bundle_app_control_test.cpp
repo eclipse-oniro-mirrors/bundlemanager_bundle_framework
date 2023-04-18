@@ -46,7 +46,8 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
-const std::string BUNDLE_NAME = "com.third.hiworld.example.h1";
+const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
+const std::string BUNDLE_NAME = "com.third.hiworld.example1";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string CONTROL_MESSAGE = "this is control message";
@@ -202,6 +203,7 @@ void BmsBundleAppControlTest::StartBundleService()
         bundleMgrService_->OnStart();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 const std::shared_ptr<BundleDataMgr> BmsBundleAppControlTest::GetBundleDataMgr() const
@@ -1038,5 +1040,25 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2200, Function | Sma
 
     res = impl.DeleteDisposedStatus(APPID);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleNameByAppId_0100
+ * @tc.name: test GetBundleNameByAppId
+ * @tc.require: issueI5MZ8C
+ * @tc.desc: with valid appId, return related bundleName; with invalid appId, return empty
+ */
+HWTEST_F(BmsBundleAppControlTest, GetBundleNameByAppId_0100, Function | SmallTest | Level1)
+{
+    InstallBundle(INSTALL_PATH);
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    // success test case
+    std::string bundleName = dataMgr->GetBundleNameByAppId(APPID);
+    EXPECT_EQ(bundleName, BUNDLE_NAME);
+    // failed test case
+    bundleName = dataMgr->GetBundleNameByAppId("invalidAppId");
+    EXPECT_EQ(bundleName, "");
+    UnInstallBundle(BUNDLE_NAME);
 }
 } // OHOS

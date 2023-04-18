@@ -14,10 +14,12 @@
  */
 
 #include "app_control_manager.h"
-#include "app_jump_interceptor_manager_rdb.h"
 
+#include "ability_manager_helper.h"
+#include "account_helper.h"
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
+#include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
@@ -82,7 +84,11 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     APP_LOGD("AddAppRunningControlRule");
-    return appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
+    ErrCode ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
+    if (ret == ERR_OK) {
+        KillRunningApp(controlRules, userId);
+    }
+    return ret;
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
@@ -194,6 +200,30 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         return ret;
     }
     return appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRuleResult);
+}
+
+void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    std::for_each(rules.cbegin(), rules.cend(), [&dataMgr, userId](const auto &rule) {
+        std::string bundleName = dataMgr->GetBundleNameByAppId(rule.appId);
+        if (bundleName.empty()) {
+            APP_LOGW("GetBundleNameByAppId failed");
+            return;
+        }
+        BundleInfo bundleInfo;
+        ErrCode ret = dataMgr->GetBundleInfoV9(
+            bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
+        if (ret != ERR_OK) {
+            APP_LOGW("GetBundleInfoV9 failed");
+            return;
+        }
+        AbilityManagerHelper::UninstallApplicationProcesses(bundleName, bundleInfo.uid);
+    });
 }
 }
 }
