@@ -65,12 +65,25 @@ struct AsyncGetBundleInstallerCallbackInfo {
     napi_deferred deferred = nullptr;
     napi_ref callback = nullptr;
 };
+struct AsyncGetSpecifiedDistributionTypeCallbackInfo : public BaseCallbackInfo {
+    explicit SpecifiedDistributionTypeCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    std::string specifiedDistributionTypeInfo;
+};
+
+struct AsyncGetAdditionalInfoCallbackInfo : public BaseCallbackInfo {
+    explicit AdditionalInfoCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+    std::string bundleName;
+    std::string additionalInfo;
+};
 
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
 napi_value Recover(napi_env env, napi_callback_info info);
 napi_value Uninstall(napi_env env, napi_callback_info info);
 napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
+napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
+napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 } // AppExecFwk
 } // OHOS
 #endif // FOUNDATION_BUNDLEMGR_SERVICES_KITS_INCLUDE_INSTALLER_H
