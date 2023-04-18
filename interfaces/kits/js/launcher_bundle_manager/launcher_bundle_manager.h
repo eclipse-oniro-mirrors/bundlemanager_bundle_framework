@@ -34,7 +34,6 @@ struct GetLauncherAbilityCallbackInfo : public BaseCallbackInfo {
     explicit GetLauncherAbilityCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     int32_t userId = 0;
-    bool isSavedInCache = false;
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
 };
 
@@ -48,26 +47,6 @@ struct GetShortcutInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetShortcutInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
     std::string bundleName;
     std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
-};
-
-struct Query {
-    std::string bundleName_;
-    int32_t userId_ = Constants::UNSPECIFIED_USERID;
-    napi_env env_;
-    Query(const std::string &bundleName, int32_t userId, napi_env env)
-        : bundleName_(bundleName), userId_(userId), env_(env) {}
-
-    bool operator==(const Query &query) const
-    {
-        return bundleName_ == query.bundleName_ && userId_ == query.userId_ && env_ == query.env_;
-    }
-};
-
-struct QueryHash  {
-    size_t operator()(const Query &query) const
-    {
-        return std::hash<std::string>()(query.bundleName_) ^ std::hash<int32_t>()(query.userId_);
-    }
 };
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info);
