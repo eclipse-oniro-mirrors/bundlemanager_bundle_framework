@@ -652,6 +652,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
+    bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
 
     for (const auto &info : infos) {
         // check bundleName
@@ -712,6 +713,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (isHmService != info.second.GetEntryInstallationFree()) {
             APP_LOGE("application and hm service are not allowed installed simultaneously.");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
+        }
+        if (debug != info.second.GetBaseApplicationInfo().debug) {
+            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
         }
     }
     // check api sdk version

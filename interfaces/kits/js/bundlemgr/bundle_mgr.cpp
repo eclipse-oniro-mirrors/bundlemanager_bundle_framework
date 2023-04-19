@@ -5579,6 +5579,7 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_CHECK_HAP_HASH_PARAM):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST):
+        case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME):
             installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
             installResult->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
             break;
