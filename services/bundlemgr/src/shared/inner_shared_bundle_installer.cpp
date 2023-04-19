@@ -100,6 +100,9 @@ ErrCode InnerSharedBundleInstaller::Install(const InstallParam &installParam)
     result = SaveBundleInfoToStorage();
     CHECK_RESULT(result, "save bundle info to storage failed %{public}d");
 
+    // save specifiedDistributionType and additionalInfo
+    SaveInstallParamInfo(bundleName_, installParam);
+
     APP_LOGD("install shared bundle successfully: %{public}s", bundleName_.c_str());
     return result;
 }
@@ -393,6 +396,23 @@ void InnerSharedBundleInstaller::AddAppProvisionInfo(const std::string &bundleNa
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
         APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+    }
+}
+
+void InnerSharedBundleInstaller::SaveInstallParamInfo(
+    const std::string &bundleName, const InstallParam &installParam) const
+{
+    if (!installParam.specifiedDistributionType.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
+            bundleName, installParam.specifiedDistributionType)) {
+            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+        }
+    }
+    if (!installParam.additionalInfo.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
+            bundleName, installParam.additionalInfo)) {
+            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+        }
     }
 }
 }  // namespace AppExecFwk

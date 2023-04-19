@@ -884,7 +884,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(newInfos, sysEventInfo_);
-    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
+    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     sync();
     return result;
 }
@@ -3379,12 +3379,25 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
 }
 
 void BaseBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
-    const Security::Verify::ProvisionInfo &provisionInfo) const
+    const Security::Verify::ProvisionInfo &provisionInfo,
+    const InstallParam &installParam) const
 {
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
         APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+    }
+    if (!installParam.specifiedDistributionType.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
+            bundleName, installParam.specifiedDistributionType)) {
+            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+        }
+    }
+    if (!installParam.additionalInfo.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
+            bundleName, installParam.additionalInfo)) {
+            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+        }
     }
 }
 }  // namespace AppExecFwk

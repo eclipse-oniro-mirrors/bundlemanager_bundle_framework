@@ -30,6 +30,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
+#include "inner_shared_bundle_installer.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
@@ -412,7 +413,8 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0001, Function | Sma
     BaseBundleInstaller baseBundleInstaller;
     Security::Verify::ProvisionInfo appProvisionInfo;
     std::string bundleName = "";
-    baseBundleInstaller.AddAppProvisionInfo(bundleName, appProvisionInfo);
+    InstallParam installParam;
+    baseBundleInstaller.AddAppProvisionInfo(bundleName, appProvisionInfo, installParam);
     AppProvisionInfo newProvisionInfo;
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName,
         newProvisionInfo);
@@ -421,18 +423,74 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0001, Function | Sma
 
 /**
  * @tc.number: AddAppProvisionInfo_0002
- * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
+ * @tc.name: test the start function of AddAppProvisionInfo
  * @tc.desc: 1. BaseBundleInstaller
 */
 HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0002, Function | SmallTest | Level0)
 {
     BaseBundleInstaller baseBundleInstaller;
     Security::Verify::ProvisionInfo appProvisionInfo;
-    baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo);
+    std::string bundleName = "";
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    baseBundleInstaller.AddAppProvisionInfo(bundleName, appProvisionInfo, installParam);
+    AppProvisionInfo newProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName,
+        newProvisionInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: AddAppProvisionInfo_0003
+ * @tc.name: test the start function of AddAppProvisionInfo and DeleteAppProvisionInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0003, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::ProvisionInfo appProvisionInfo;
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo, installParam);
     AppProvisionInfo newProvisionInfo;
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
         newProvisionInfo);
     EXPECT_TRUE(ret);
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddAppProvisionInfo_0004
+ * @tc.name: test the start function of AddAppProvisionInfo
+ * @tc.desc: 1. BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, AddAppProvisionInfo_0004, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller baseBundleInstaller;
+    Security::Verify::ProvisionInfo appProvisionInfo;
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    baseBundleInstaller.AddAppProvisionInfo(BUNDLE_NAME, appProvisionInfo, installParam);
+    AppProvisionInfo newProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+        newProvisionInfo);
+    EXPECT_TRUE(ret);
+
+    std::string specifiedDistributionType;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+    std::string additionalInfo;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
+        additionalInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
 }
@@ -544,7 +602,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0001, Function | Small
 }
 
 /**
- * @tc.number: GGetAdditionalInfo_0002
+ * @tc.number: GetAdditionalInfo_0002
  * @tc.name: test the start function of GetAdditionalInfo
 */
 HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0002, Function | SmallTest | Level0)
@@ -553,5 +611,69 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, GetAdditionalInfo_0002, Function | Small
     bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
         additionalInfo);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0001
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0001, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    installer.SaveInstallParamInfo(BUNDLE_NAME, installParam);
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0002
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0002, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    installer.SaveInstallParamInfo(BUNDLE_NAME, installParam);
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0003
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0003, Function | SmallTest | Level0)
+{
+    AppProvisionInfo appProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(BUNDLE_NAME,
+        appProvisionInfo);
+    EXPECT_TRUE(ret);
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    installer.SaveInstallParamInfo(BUNDLE_NAME, installParam);
+
+    std::string specifiedDistributionType;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType(BUNDLE_NAME,
+        specifiedDistributionType);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+    std::string additionalInfo;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAdditionalInfo(BUNDLE_NAME,
+        additionalInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ret);
 }
 } // OHOS
