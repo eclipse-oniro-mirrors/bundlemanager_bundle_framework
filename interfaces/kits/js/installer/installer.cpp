@@ -1054,7 +1054,8 @@ napi_value GetSpecifiedDistributionTypeSync(napi_env env, napi_callback_info inf
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, NEED_PERMISSIONS);
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -1097,7 +1098,8 @@ napi_value GetAdditionalInfoSync(napi_env env, napi_callback_info info)
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, NEED_PERMISSIONS);
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
