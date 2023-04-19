@@ -39,8 +39,8 @@ const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
-const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
-const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
+const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionTypeSync";
+const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfoSync";
 const std::string EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
@@ -1033,214 +1033,89 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
     return jsthis;
 }
 
-ErrCode InnerGetSpecifiedDistributionType(
-    const std::string &bundleName, const std::string &specifiedDistributionType)
+napi_value GetSpecifiedDistributionTypeSync(napi_env env, napi_callback_info info)
 {
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-void GetSpecifiedDistributionTypeExec(napi_env env, void *data)
-{
-    AsyncGetSpecifiedDistributionTypeCallbackInfo *asyncCallbackInfo =
-        reinterpret_cast<AsyncGetSpecifiedDistributionTypeCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetSpecifiedDistributionType(
-            asyncCallbackInfo->bundleName, asyncCallbackInfo->specifiedDistributionType);
-    }
-}
-
-void GetSpecifiedDistributionTypeComplete(napi_env env, napi_status status, void *data)
-{
-    AsyncGetSpecifiedDistributionTypeCallbackInfo *asyncCallbackInfo =
-        reinterpret_cast<AsyncGetSpecifiedDistributionTypeCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    std::unique_ptr<AsyncGetSpecifiedDistributionTypeCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env,
-            asyncCallbackInfo->specifiedDistributionTypeInfo.c_str(),
-            NAPI_AUTO_LENGTH, &result[ARGS_POS_ONE]));
-    } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-    }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
-}
-
-napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("GetSpecifiedDistributionType napi called");
+    APP_LOGD("GetSpecifiedDistributionTypeSync napi called");
     NapiArg args(env, info);
-    AsyncGetSpecifiedDistributionTypeCallbackInfo *asyncCallbackInfo =
-        new (std::nothrow) AsyncGetSpecifiedDistributionTypeCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
-        return nullptr;
-    }
-    std::unique_ptr<AsyncGetSpecifiedDistributionTypeCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("bundleName invalid!");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
-            }
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
-            return nullptr;
-        }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
     }
 
-    auto promise = CommonFunc::AsyncCallNativeMethod<AsyncGetSpecifiedDistributionTypeCallbackInfo>(
-        env, asyncCallbackInfo, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
-        GetSpecifiedDistributionTypeExec, GetSpecifiedDistributionTypeComplete);
-    callbackPtr.release();
-    APP_LOGD("call GetSpecifiedDistributionType done.");
-    return promise;
-}
-
-ErrCode InnerGetAdditionalInfo(
-    const std::string &bundleName, const std::string &additionalInfo)
-{
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("iBundleMgr is null");
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    ErrCode ret = iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo);
-    return CommonFunc::ConvertErrCode(ret);
-}
-
-void GetAdditionalInfoExec(napi_env env, void *data)
-{
-    AsyncGetAdditionalInfoCallbackInfo *asyncCallbackInfo =
-        reinterpret_cast<AsyncGetAdditionalInfoCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        asyncCallbackInfo->err = InnerGetAdditionalInfo(
-            asyncCallbackInfo->bundleName, asyncCallbackInfo->additionalInfo);
-    }
-}
-
-void GetAdditionalInfoComplete(napi_env env, napi_status status, void *data)
-{
-    AsyncGetAdditionalInfoCallbackInfo *asyncCallbackInfo =
-        reinterpret_cast<AsyncGetAdditionalInfoCallbackInfo *>(data);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
-        return;
-    }
-    std::unique_ptr<AsyncGetAdditionalInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    if (asyncCallbackInfo->err == NO_ERROR) {
-        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
-        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env,
-            asyncCallbackInfo->additionalInfo.c_str(),
-            NAPI_AUTO_LENGTH, &result[ARGS_POS_ONE]));
-    } else {
-        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-    }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
-}
-
-napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("GetAdditionalInfo napi called");
-    NapiArg args(env, info);
-    AsyncGetAdditionalInfoCallbackInfo *asyncCallbackInfo =
-        new (std::nothrow) AsyncGetAdditionalInfoCallbackInfo(env);
-    if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null.");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, NEED_PERMISSIONS);
+        napi_throw(env, businessError);
         return nullptr;
     }
-    std::unique_ptr<AsyncGetAdditionalInfoCallbackInfo> callbackPtr {asyncCallbackInfo};
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+
+    std::string specifiedDistributionType;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nSpecifiedDistributionType;
+    napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
+    APP_LOGD("call GetSpecifiedDistributionTypeSync done.");
+    return nSpecifiedDistributionType;
+}
+
+napi_value GetAdditionalInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetAdditionalInfoSync napi called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
-        napi_valuetype valueType = napi_undefined;
-        napi_typeof(env, args[i], &valueType);
-        if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName)) {
-                APP_LOGE("bundleName invalid!");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-                return nullptr;
-            }
-        } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_function) {
-                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-                break;
-            }
-        } else {
-            APP_LOGE("param check error");
-            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
-            return nullptr;
-        }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
     }
 
-    auto promise = CommonFunc::AsyncCallNativeMethod<AsyncGetAdditionalInfoCallbackInfo>(
-        env, asyncCallbackInfo, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO,
-        GetAdditionalInfoExec, GetAdditionalInfoComplete);
-    callbackPtr.release();
-    APP_LOGD("call GetAdditionalInfo done.");
-    return promise;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE, NEED_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    std::string additionalInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nAdditionalInfo;
+    napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
+    APP_LOGD("call GetAdditionalInfoSync done.");
+    return nAdditionalInfo;
 }
 } // AppExecFwk
 } // OHOS
