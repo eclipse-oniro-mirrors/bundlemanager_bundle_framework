@@ -1774,6 +1774,10 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(preload);
     }
+    for (const auto &item : it->second.proxyDatas) {
+        ProxyData proxyData(item);
+        hapInfo.proxyDatas.emplace_back(proxyData);
+    }
     return hapInfo;
 }
 
