@@ -67,6 +67,7 @@ constexpr int32_t SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE = 128;
 constexpr int32_t ADDITIONAL_INFO_MAX_SIZE = 3000;
 } // namespace
 napi_ref thread_local g_classBundleInstaller;
+bool isSystemApp = false;
 
 AsyncInstallCallbackInfo::~AsyncInstallCallbackInfo()
 {
@@ -107,7 +108,7 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
         APP_LOGE("can not get iBundleMgr");
         return;
     }
-    if (!iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+    if (!isSystemApp && !iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
         APP_LOGE("non-system app calling system api");
         result[0] = BusinessError::CreateCommonError(
             env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER, INSTALL_PERMISSION);
@@ -122,6 +123,7 @@ void GetBundleInstallerCompleted(napi_env env, napi_status status, void *data)
         }
         return;
     }
+    isSystemApp = true;
     NAPI_CALL_RETURN_VOID(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result[SECOND_PARAM]));
 
     if (callbackPtr->deferred) {
