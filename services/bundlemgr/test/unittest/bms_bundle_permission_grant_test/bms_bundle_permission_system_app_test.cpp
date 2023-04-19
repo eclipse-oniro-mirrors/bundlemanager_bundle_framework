@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "app_control_manager_host_impl.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -864,5 +865,26 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5700
     std::vector<AbilityInfo> abilityInfos;
     ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_5800
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ *           3.DeleteDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    Want want;
+    ErrCode res = impl.SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    res = impl.GetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    res = impl.DeleteDisposedStatus(APPID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS

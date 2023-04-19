@@ -23,6 +23,7 @@
 #include "app_control_constants.h"
 #include "app_control_manager_rdb.h"
 #include "app_control_manager_host_impl.h"
+#include "app_jump_interceptor_manager_rdb.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -48,6 +49,8 @@ namespace OHOS {
 namespace {
 const std::string INSTALL_PATH = "/data/test/resource/bms/app_control/bmsThirdBundle1.hap";
 const std::string BUNDLE_NAME = "com.third.hiworld.example1";
+const std::string CALLER_BUNDLE_NAME = "callerBundleName";
+const std::string TARGET_BUNDLE_NAME = "targetBundleName";
 const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
     "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const std::string CONTROL_MESSAGE = "this is control message";
@@ -1060,5 +1063,205 @@ HWTEST_F(BmsBundleAppControlTest, GetBundleNameByAppId_0100, Function | SmallTes
     bundleName = dataMgr->GetBundleNameByAppId("invalidAppId");
     EXPECT_EQ(bundleName, "");
     UnInstallBundle(BUNDLE_NAME);
+}
+/**
+ * @tc.number: AppControlManagerHostImpl_2300
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2300, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    ErrCode res = impl.ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2400
+ * @tc.name: test AddAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2400, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    std::vector<AppJumpControlRule> controlRules;
+    ErrCode res = impl.AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2500
+ * @tc.name: test DeleteAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2500, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    std::vector<AppJumpControlRule> controlRules;
+    ErrCode res = impl.DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2600
+ * @tc.name: test DeleteRuleByCallerBundleName by AppControlManagerHostImpl
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2600, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    ErrCode res = impl.DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2700
+ * @tc.name: test GetAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.GetAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2700, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    AppJumpControlRule controlRule;
+    ErrCode res = impl.GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2800
+ * @tc.name: test ConfirmAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2800, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    auto appControlManager = impl.appControlManager_;
+    ErrCode res = appControlManager->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    res = appControlManager->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_2900
+ * @tc.name: test AddAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2900, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    std::vector<AppJumpControlRule> controlRules;
+    auto appControlManager = impl.appControlManager_;
+    ErrCode res = appControlManager->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    
+    appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    res = appControlManager->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3000
+ * @tc.name: test DeleteAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.DeleteAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3000, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    std::vector<AppJumpControlRule> controlRules;
+    auto appControlManager = impl.appControlManager_;
+    ErrCode res = appControlManager->DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+        
+    appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    res = appControlManager->DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3100
+ * @tc.name: test DeleteRuleByCallerBundleName by AppControlManager
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3100, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    auto appControlManager = impl.appControlManager_;
+    ErrCode res = appControlManager->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+        
+    appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    res = appControlManager->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3200
+ * @tc.name: test GetAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.GetAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3200, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    AppJumpControlRule controlRule;
+    auto appControlManager = impl.appControlManager_;
+    ErrCode res = appControlManager->GetAppJumpControlRule(
+        CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+        
+    appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
+    res = appControlManager->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_JUMP_INTERCPTOR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3300
+ * @tc.name: test ConfirmAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3300, Function | SmallTest | Level1)
+{
+    auto appJumpRdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ErrCode res = appJumpRdb->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3400
+ * @tc.name: test DeleteRuleByCallerBundleName by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3400, Function | SmallTest | Level1)
+{
+    auto appJumpRdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ErrCode res = appJumpRdb->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3500
+ * @tc.name: test DeleteRuleByTargetBundleName by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.DeleteRuleByTargetBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3500, Function | SmallTest | Level1)
+{
+    auto appJumpRdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ErrCode res = appJumpRdb->DeleteRuleByTargetBundleName(TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3600
+ * @tc.name: test GetAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.GetAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3600, Function | SmallTest | Level1)
+{
+    AppJumpControlRule controlRule;
+    auto appJumpRdb = std::make_shared<AppJumpInterceptorManagerRdb>();
+    ErrCode res = appJumpRdb->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_JUMP_INTERCPTOR);
 }
 } // OHOS

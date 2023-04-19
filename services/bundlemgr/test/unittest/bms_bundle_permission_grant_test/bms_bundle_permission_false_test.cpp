@@ -1307,4 +1307,25 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8800, Functio
     ErrCode testRet = bundleMgrHostImpl_->QueryLauncherAbilityInfos(want, USERID, abilityInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8900
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ *           3.DeleteDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8900, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    Want want;
+    ErrCode res = impl.SetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    res = impl.GetDisposedStatus(APPID, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    res = impl.DeleteDisposedStatus(APPID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
