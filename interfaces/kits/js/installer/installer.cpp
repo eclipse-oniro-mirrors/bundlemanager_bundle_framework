@@ -39,6 +39,8 @@ const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
+const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionTypeSync";
+const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfoSync";
 const std::string EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
@@ -1031,6 +1033,93 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
     napi_value jsthis = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
     return jsthis;
+}
+
+napi_value GetSpecifiedDistributionTypeSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetSpecifiedDistributionTypeSync napi called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    std::string specifiedDistributionType;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nSpecifiedDistributionType;
+    napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
+    APP_LOGD("call GetSpecifiedDistributionTypeSync done.");
+    return nSpecifiedDistributionType;
+}
+
+napi_value GetAdditionalInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetAdditionalInfoSync napi called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    std::string additionalInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nAdditionalInfo;
+    napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
+    APP_LOGD("call GetAdditionalInfoSync done.");
+    return nAdditionalInfo;
 }
 } // AppExecFwk
 } // OHOS
