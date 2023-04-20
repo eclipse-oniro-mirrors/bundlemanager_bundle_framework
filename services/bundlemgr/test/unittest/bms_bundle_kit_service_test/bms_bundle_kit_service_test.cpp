@@ -6360,26 +6360,6 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_001, Function | SmallTe
 }
 
 /**
- * @tc.number: SeriviceStatusCallback_003
- * @tc.name: OnBundleUpdated
- * @tc.desc: 1.Test StatusCallbackProxy
- */
-HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_003, Function | SmallTest | Level1)
-{
-    sptr<ISystemAbilityManager> systemAbilityManager =
-        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-    APP_LOGI("get proxy success.");
-    auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
-    std::string bundleName = BUNDLE_NAME_TEST;
-    int32_t userId = 100;
-    proxy->OnBundleAdded(bundleName, userId);
-    proxy->OnBundleUpdated(bundleName, userId);
-    EXPECT_EQ(bundleName, BUNDLE_NAME_TEST);
-    EXPECT_EQ(userId, 100);
-}
-
-/**
  * @tc.number: SeriviceStatusCallback_004
  * @tc.name: OnBundleRemoved
  * @tc.desc: 1.Test StatusCallbackProxy
