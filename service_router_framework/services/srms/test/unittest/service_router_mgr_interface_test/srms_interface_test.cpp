@@ -23,7 +23,6 @@
 #include "appexecfwk_errors.h"
 #include "service_info.h"
 #include "service_router_mgr_helper.h"
-#include "want.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -34,6 +33,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong";
 const std::string MIME_TYPE = "html";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string PURPOSE_NAME = "pay";
+const int32_t USERID = 100;
 }  // namespace
 
 class ServiceRouterMgrInterfaceTest : public testing::Test {
@@ -232,5 +232,46 @@ HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0009, Func
     EXPECT_TRUE(ret);
     auto result = PurposeInfo::Unmarshalling(parcel);
     EXPECT_EQ(result->bundleName, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: ServiceRouterMgrInterfaceTest_0010
+ * @tc.name: test StartUIExtensionAbility
+ * @tc.require: issueI6HQLK
+ * @tc.desc: 1. system running normally
+ *           2. test StartUIExtensionAbility
+ */
+HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0010, Function | SmallTest | Level0)
+{
+    auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
+    EXPECT_NE(serviceRouterMgr, nullptr);
+    if (serviceRouterMgr != nullptr) {
+        Want want;
+        sptr<SessionInfo> sessionInfo;
+        auto ret = serviceRouterMgr->StartUIExtensionAbility(
+            want, sessionInfo, USERID, ExtensionAbilityType::UNSPECIFIED);
+        EXPECT_NE(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ServiceRouterMgrInterfaceTest_0011
+ * @tc.name: test ConnectUIExtensionAbility
+ * @tc.require: issueI6HQLK
+ * @tc.desc: 1. system running normally
+ *           2. test ConnectUIExtensionAbility
+ */
+HWTEST_F(ServiceRouterMgrInterfaceTest, ServiceRouterMgrInterfaceTest_0011, Function | SmallTest | Level0)
+{
+    auto serviceRouterMgr = ServiceRouterMgrHelper::GetInstance().GetServiceRouterMgr();
+    EXPECT_NE(serviceRouterMgr, nullptr);
+    if (serviceRouterMgr != nullptr) {
+        Want want;
+        sptr<IAbilityConnection> connect;
+        sptr<SessionInfo> sessionInfo;
+        auto ret = serviceRouterMgr->ConnectUIExtensionAbility(
+            want, connect, sessionInfo, USERID);
+        EXPECT_NE(ret, ERR_OK);
+    }
 }
 } // OHOS

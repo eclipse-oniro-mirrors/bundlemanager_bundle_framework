@@ -33,15 +33,16 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
-const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
-const std::string CALL_MOCK_BUNDLE_DIR_FAILED = "callMockBundleDirFailed";
-const std::string RETURN_MOCK_BUNDLE_DIR_SUCCESS = "mockSuccess";
-const std::string RETURN_MOCK_BUNDLE_DIR_FAILED = "mockFailed";
-const std::string BUNDLE_NAME = "bundleName";
-const std::string BUNDLE_NAME_ONE = "bundleName01";
-const std::string TEST_BUNDLE_NAME = "bundleName02";
-const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
-
+namespace {
+    const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
+    const std::string CALL_MOCK_BUNDLE_DIR_FAILED = "callMockBundleDirFailed";
+    const std::string RETURN_MOCK_BUNDLE_DIR_SUCCESS = "mockSuccess";
+    const std::string RETURN_MOCK_BUNDLE_DIR_FAILED = "mockFailed";
+    const std::string BUNDLE_NAME = "bundleName";
+    const std::string BUNDLE_NAME_ONE = "bundleName01";
+    const std::string TEST_BUNDLE_NAME = "bundleName02";
+    const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
+}
 class BmsEventHandlerTest : public testing::Test {
 public:
     static void SetUpTestCase();
