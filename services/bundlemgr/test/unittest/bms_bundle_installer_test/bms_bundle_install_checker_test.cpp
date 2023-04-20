@@ -1257,4 +1257,45 @@ HWTEST_F(BmsBundleInstallCheckerTest, BaseBundleInstaller_0001, Function | Small
     ErrCode res = baseBundleInstaller.GrantRequestPermissions(info, tokenId);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: CheckAppLabel_0008
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0008
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0008
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0008, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    innerBundleInfo1.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    innerBundleInfo2.SetBaseApplicationInfo(applicationInfo);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
 } // OHOS

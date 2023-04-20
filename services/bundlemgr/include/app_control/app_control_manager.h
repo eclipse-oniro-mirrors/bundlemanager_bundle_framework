@@ -68,6 +68,8 @@ public:
 
     ErrCode GetDisposedStatus(const std::string &appId, Want& want, int32_t userId);
 private:
+    void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
+
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
 };

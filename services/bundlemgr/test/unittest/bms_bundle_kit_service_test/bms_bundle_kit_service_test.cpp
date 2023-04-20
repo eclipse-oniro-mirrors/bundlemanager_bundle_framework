@@ -9931,10 +9931,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0001, Function | 
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string specifiedDistributionType;
-    auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -9949,10 +9950,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0002, Function | 
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = bundleMgrProxy->GetSpecifiedDistributionType("", specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string specifiedDistributionType;
-    auto ret = bundleMgrProxy->GetSpecifiedDistributionType("", specifiedDistributionType);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -9968,10 +9970,12 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0003, Function | 
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string specifiedDistributionType;
-    auto ret = bundleMgrProxy->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -9987,10 +9991,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0004, Function | 
     if (!dataMgr) {
         APP_LOGE("dataMgr is nullptr.");
         EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string specifiedDistributionType;
-    auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -10011,10 +10016,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0005, Function | 
     if (!dataMgr) {
         APP_LOGE("dataMgr is nullptr.");
         EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
     }
-    std::string specifiedDistributionType;
-    auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME_TEST, specifiedDistributionType);
-    EXPECT_EQ(ret, ERR_OK);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);
@@ -10033,10 +10039,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0001, Function | SmallTest |
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string additionalInfo;
-    auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -10051,10 +10058,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0002, Function | SmallTest |
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = bundleMgrProxy->GetAdditionalInfo("", additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string additionalInfo;
-    auto ret = bundleMgrProxy->GetAdditionalInfo("", additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -10070,10 +10078,12 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0003, Function | SmallTest |
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string additionalInfo;
-    auto ret = bundleMgrProxy->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
@@ -10089,10 +10099,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0004, Function | SmallTest |
     if (!dataMgr) {
         APP_LOGE("dataMgr is nullptr.");
         EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     }
-    std::string additionalInfo;
-    auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
 }
 
 /**
@@ -10113,10 +10124,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0005, Function | SmallTest |
     if (!dataMgr) {
         APP_LOGE("dataMgr is nullptr.");
         EXPECT_EQ(dataMgr, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
     }
-    std::string additionalInfo;
-    auto ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
-    EXPECT_EQ(ret, ERR_OK);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);

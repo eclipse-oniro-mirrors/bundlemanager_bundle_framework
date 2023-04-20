@@ -23,7 +23,6 @@
 #include "appexecfwk_errors.h"
 #include "service_info.h"
 #include "service_router_mgr_helper.h"
-#include "want.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -34,7 +33,7 @@ const std::string WRONG_BUNDLE_NAME = "wrong";
 const std::string MIME_TYPE = "html";
 const std::string BUNDLE_NAME = "bundleName";
 const std::string PURPOSE_NAME = "pay";
-int32_t USERID = 100;
+const int32_t USERID = 100;
 }  // namespace
 
 class ServiceRouterMgrInterfaceTest : public testing::Test {

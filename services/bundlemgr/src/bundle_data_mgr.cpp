@@ -4689,6 +4689,19 @@ ErrCode BundleDataMgr::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) 
     return ERR_OK;
 }
 
+std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto it = std::find_if(bundleInfos_.cbegin(), bundleInfos_.cend(), [&appId](const auto &pair) {
+        return appId == pair.second.GetAppId();
+    });
+    if (it == bundleInfos_.cend()) {
+        APP_LOGW("invalid appId, can't find bundleName");
+        return Constants::EMPTY_STRING;
+    }
+    return it->second.GetBundleName();
+}
+
 ErrCode BundleDataMgr::GetSpecifiedDistributionType(
     const std::string &bundleName, std::string &specifiedDistributionType)
 {

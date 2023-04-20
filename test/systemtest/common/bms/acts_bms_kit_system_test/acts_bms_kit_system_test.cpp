@@ -227,6 +227,8 @@ public:
     void TearDown();
     static void Install(
         const std::string &bundleFilePath, const InstallFlag installFlag, std::vector<std::string> &resvec);
+    static void Install(
+        const std::string &bundleFilePath, const InstallParam &installParam, std::vector<std::string> &resvec);
     static void Uninstall(const std::string &bundleName, std::vector<std::string> &resvec);
     static void HapUninstall(
         const std::string &bundleName, const std::string &modulePackage, std::vector<std::string> &resvec);
@@ -274,6 +276,21 @@ void ActsBmsKitSystemTest::Install(
     InstallParam installParam;
     installParam.installFlag = installFlag;
     installParam.userId = USERID;
+    sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    installerProxy->Install(bundleFilePath, installParam, statusReceiver);
+    resvec.push_back(statusReceiver->GetResultMsg());
+}
+
+void ActsBmsKitSystemTest::Install(
+    const std::string &bundleFilePath, const InstallParam &installParam, std::vector<std::string> &resvec)
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer failed.");
+        resvec.push_back(ERROR_INSTALL_FAILED);
+        return;
+    }
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
     installerProxy->Install(bundleFilePath, installParam, statusReceiver);
@@ -7805,6 +7822,119 @@ HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | 
 }
 
 /**
+ * @tc.number: GetAppProvisionInfo_0001
+ * @tc.name: test GetAppProvisionInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAppProvisionInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        AppProvisionInfo appProvisionInfo;
+        ErrCode ret = bundleMgrProxy->GetAppProvisionInfo(BASE_BUNDLE_NAME, USERID, appProvisionInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0002
+ * @tc.name: test GetAppProvisionInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAppProvisionInfo_0002, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        AppProvisionInfo appProvisionInfo;
+        ErrCode ret = bundleMgrProxy->GetAppProvisionInfo(appName, INVALIED_ID, appProvisionInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+        EXPECT_TRUE(appProvisionInfo.apl.empty());
+        ret = bundleMgrProxy->GetAppProvisionInfo(appName, USERID, appProvisionInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0001
+ * @tc.name: test GetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSpecifiedDistributionType_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        ErrCode ret = bundleMgrProxy->GetSpecifiedDistributionType(BASE_BUNDLE_NAME, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0002
+ * @tc.name: test GetSpecifiedDistributionType proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetSpecifiedDistributionType_0002, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0001
+ * @tc.name: test GetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        EXPECT_NE(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        ErrCode ret = bundleMgrProxy->GetAdditionalInfo(BASE_BUNDLE_NAME, additionalInfo);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    }
+}
+
+/**
  * @tc.number: GetAllProxyDataInfos_0100
  * @tc.name: test GetAllProxyDataInfos proxy
  * @tc.desc: 1.system run normally
@@ -7831,6 +7961,127 @@ HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0100, Function | SmallTest | Le
     ErrCode ret = bundleMgrProxy->GetProxyDataInfos(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, proxyDatas);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0002
+ * @tc.name: test GetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0002, Function | SmallTest | Level1)
+{
+    std::cout << "START GetAdditionalInfo_0002" << std::endl;
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        auto ret = bundleMgrProxy->GetAdditionalInfo(appName, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+
+    std::cout << "END GetAdditionalInfo_0002" << std::endl;
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0003
+ * @tc.name: test GetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ *           2.SetAdditionalInfo and SetSpecifiedDistributionType
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    Install(bundleFilePath, installParam, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        ErrCode ret = bundleMgrProxy->GetAdditionalInfo(appName, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        std::string specifiedDistributionType;
+        ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0004
+ * @tc.name: test  GetAdditionalInfo proxy
+ * @tc.desc: 1.system run normally
+ *           2.2.SetAdditionalInfo and SetSpecifiedDistributionType
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0004, Function | SmallTest | Level1)
+{
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
+    std::string appName = BASE_BUNDLE_NAME + "1";
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    Install(bundleFilePath, installParam, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    // update hap
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    installParam.additionalInfo = "modify additionalInfo";
+    resvec.clear();
+    Install(bundleFilePath, installParam, resvec);
+    installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    if (!bundleMgrProxy) {
+        APP_LOGE("bundle mgr proxy is nullptr.");
+        EXPECT_EQ(bundleMgrProxy, nullptr);
+    } else {
+        std::string additionalInfo;
+        ErrCode ret = bundleMgrProxy->GetAdditionalInfo(appName, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+        std::string specifiedDistributionType;
+        ret = bundleMgrProxy->GetSpecifiedDistributionType(appName, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+    }
+    resvec.clear();
+    Uninstall(appName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
