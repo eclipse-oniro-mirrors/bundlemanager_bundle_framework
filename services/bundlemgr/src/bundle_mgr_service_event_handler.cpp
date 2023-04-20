@@ -1532,6 +1532,11 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         return false;
     }
 
+    // set hapPath
+    std::for_each(infos.begin(), infos.end(), [](auto &item) {
+        item.second.SetModuleHapPath(item.first);
+    });
+
     return true;
 }
 
