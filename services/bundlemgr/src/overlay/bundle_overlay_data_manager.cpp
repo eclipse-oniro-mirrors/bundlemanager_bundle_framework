@@ -18,6 +18,7 @@
 #include "bundle_common_event_mgr.h"
 #include "bundle_mgr_service.h"
 #include "ipc_skeleton.h"
+#include "scope_guard.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -50,11 +51,10 @@ bool OverlayDataMgr::IsExistedNonOverlayHap(const std::string &bundleName)
         return false;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("no bundle with bundleName %{public}s installed", bundleName.c_str());
         return false;
     }
-    dataMgr_->EnableOverlayBundle(bundleName);
     const auto &innerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
         APP_LOGE("innerModuleInfo in innerBundleInfo is empty");
@@ -472,11 +472,24 @@ bool OverlayDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, In
     return true;
 }
 
+bool OverlayDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
+{
+    if (GetBundleDataMgr() != ERR_OK) {
+        return false;
+    }
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, info)) {
+        APP_LOGE("target bundle %{public}s is not installed", bundleName.c_str());
+        return false;
+    }
+    return true;
+}
+
 void OverlayDataMgr::EnableOverlayBundle(const std::string &bundleName)
 {
     if (GetBundleDataMgr() != ERR_OK) {
         return;
     }
+
     dataMgr_->EnableOverlayBundle(bundleName);
 }
 
@@ -574,11 +587,10 @@ ErrCode OverlayDataMgr::GetAllOverlayModuleInfo(const std::string &bundleName,
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(bundleName, info)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, info)) {
         APP_LOGE("overlay bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-    dataMgr_->EnableOverlayBundle(bundleName);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", bundleName.c_str(), userId);
@@ -622,11 +634,10 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfo(const std::string &bundleName, cons
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo info;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(bundleName, info)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, info)) {
         APP_LOGE("overlay bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-    dataMgr_->EnableOverlayBundle(bundleName);
     InnerBundleUserInfo userInfo;
     if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", bundleName.c_str(), userId);
@@ -675,11 +686,10 @@ ErrCode OverlayDataMgr::GetOverlayBundleInfoForTarget(const std::string &targetB
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo targetInnerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(targetBundleName, targetInnerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(targetBundleName, targetInnerBundleInfo)) {
         APP_LOGE("target bundle is not existed %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED;
     }
-    dataMgr_->EnableOverlayBundle(targetBundleName);
     InnerBundleUserInfo userInfo;
     if (!targetInnerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {
         APP_LOGE("the bundle %{public}s is not installed at user %{public}d", targetBundleName.c_str(), userId);
@@ -701,11 +711,10 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfoForTarget(const std::string &targetB
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo targetInnerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(targetBundleName, targetInnerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(targetBundleName, targetInnerBundleInfo)) {
         APP_LOGE("target bundle is not existed %{public}s", targetBundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED;
     }
-    dataMgr_->EnableOverlayBundle(targetBundleName);
 
     if (targetInnerBundleInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
         APP_LOGE("the bundle %{public}s is external overlay bundle", targetBundleName.c_str());
@@ -806,11 +815,10 @@ ErrCode OverlayDataMgr::ObtainOverlayModuleState(OverlayModuleInfo &overlayModul
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(overlayModuleInfo.bundleName, innerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(overlayModuleInfo.bundleName, innerBundleInfo)) {
         APP_LOGE("target bundle is not existed %{public}s", overlayModuleInfo.bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-    dataMgr_->EnableOverlayBundle(overlayModuleInfo.bundleName);
 
     if (!innerBundleInfo.GetOverlayModuleState(overlayModuleInfo.moduleName, userId, overlayModuleInfo.state)) {
         APP_LOGE("GetOverlayModuleState of bundleName %{public}s failed", overlayModuleInfo.bundleName.c_str());
@@ -827,11 +835,10 @@ ErrCode OverlayDataMgr::SetOverlayEnabled(const std::string &bundleName, const s
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
     InnerBundleInfo innerBundleInfo;
-    if (!dataMgr_->GetOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
+    if (!dataMgr_->QueryOverlayInnerBundleInfo(bundleName, innerBundleInfo)) {
         APP_LOGE("bundle is not existed %{public}s", bundleName.c_str());
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE;
     }
-    dataMgr_->EnableOverlayBundle(bundleName);
     // 1. whether the specified bundle is installed under the specified userid
     InnerBundleUserInfo userInfo;
     if (!innerBundleInfo.GetInnerBundleUserInfo(userId, userInfo)) {

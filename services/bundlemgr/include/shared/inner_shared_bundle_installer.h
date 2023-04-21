@@ -80,7 +80,7 @@ public:
 
 private:
     ErrCode CheckAppLabelInfo();
-    ErrCode CheckCompatiblePolicyWithInstalledVersion();
+    ErrCode CheckBundleTypeWithInstalledVersion();
     ErrCode ExtractSharedBundles(const std::string &bundlePath, InnerBundleInfo &newInfo);
     ErrCode MkdirIfNotExist(const std::string &dir);
     void MergeBundleInfos();
@@ -89,6 +89,7 @@ private:
     void GetInstallEventInfo(EventInfo &eventInfo) const;
     void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
+    void SaveInstallParamInfo(const std::string &bundleName, const InstallParam &installParam) const;
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;

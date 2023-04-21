@@ -1107,7 +1107,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
         IBundleMgr::Message::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
-}    
+}
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
 {
@@ -2864,27 +2864,6 @@ std::string BundleMgrProxy::GetIconById(
     return reply.ReadString();
 }
 
-int32_t BundleMgrProxy::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
-{
-    APP_LOGD("begin to GetUdidByNetworkId.");
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetUdidByNetworkId due to write InterfaceToken fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    if (!data.WriteString(networkId)) {
-        APP_LOGE("fail to GetUdidByNetworkId due to write bundleName fail");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, data, reply)) {
-        return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
-    }
-    udid = reply.ReadString();
-    return NO_ERROR;
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
 {
@@ -3361,6 +3340,98 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
+}
+
+ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    std::vector<ProxyData> &proxyDatas)
+{
+    APP_LOGD("begin to GetProxyDataInfos");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetProxyDataInfos due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_PROXY_DATA_INFOS, data, proxyDatas);
+}
+
+ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+{
+    APP_LOGD("begin to GetAllProxyDatas");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAllProxyDatas due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, data, proxyDatas);
+}
+
+ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleName,
+    std::string &specifiedDistributionType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetSpecifiedDistributionType due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetSpecifiedDistributionType due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        specifiedDistributionType = reply.ReadString();
+    }
+    return ret;
+}
+
+ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::GET_ADDITIONAL_INFO, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    if (ret == ERR_OK) {
+        additionalInfo = reply.ReadString();
+    }
+    return ret;
 }
 
 template<typename T>

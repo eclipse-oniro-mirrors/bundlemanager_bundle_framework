@@ -71,7 +71,6 @@ group("unittest") {
       "unittest/bms_bundle_uninstaller_test:unittest",
       "unittest/bms_bundle_updater_test:unittest",
       "unittest/bms_data_mgr_test:unittest",
-      "unittest/bms_device_manager_test:unittest",
       "unittest/bms_event_handler_test:unittest",
       "unittest/bms_install_daemon_test:unittest",
       "unittest/bms_installd_client_test:unittest",

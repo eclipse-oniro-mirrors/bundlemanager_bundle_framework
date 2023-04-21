@@ -15,18 +15,21 @@
 
 #include "default_permission_profile.h"
 
+#include <mutex>
+
 #include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+int32_t g_permJson = ERR_OK;
+std::mutex g_mutex;
 static const std::string PERMISSIONS_PROFILE_KEY_BUNDLENAME = "bundleName";
 static const std::string PERMISSIONS_PROFILE_KEY_PERMISSIONS = "permissions";
 static const std::string PERMISSIONS_PROFILE_KEY_NAME = "name";
 static const std::string PERMISSIONS_PROFILE_KEY_USER_CANCELLABLE = "userCancellable";
 static const std::string PERMISSIONS_PROFILE_KEY_APP_SIGNATURE = "app_signature";
 }
-thread_local int32_t parseResult;
 
 void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
 {
@@ -37,7 +40,7 @@ void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
         permissionInfo.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_permJson,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -45,7 +48,7 @@ void from_json(const nlohmann::json &jsonObject, PermissionInfo &permissionInfo)
         permissionInfo.userCancellable,
         JsonType::BOOLEAN,
         true,
-        parseResult,
+        g_permJson,
         ArrayType::NOT_ARRAY);
 }
 
@@ -53,9 +56,10 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
     std::set<DefaultPermission> &defaultPermissions) const
 {
     if (jsonObject.is_array() && !jsonObject.is_discarded()) {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        g_permJson = ERR_OK;
         for (const auto &object : jsonObject) {
             if (!object.is_object()) {
-                APP_LOGE("object is not json object");
                 return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
             }
             DefaultPermission defaultPermission;
@@ -66,7 +70,7 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 defaultPermission.bundleName,
                 JsonType::STRING,
                 true,
-                parseResult,
+                g_permJson,
                 ArrayType::NOT_ARRAY);
             GetValueIfFindKey<std::vector<std::string>>(object,
                 objectEnd,
@@ -74,7 +78,7 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 defaultPermission.appSignature,
                 JsonType::ARRAY,
                 false,
-                parseResult,
+                g_permJson,
                 ArrayType::STRING);
             GetValueIfFindKey<std::vector<PermissionInfo>>(object,
                 objectEnd,
@@ -82,20 +86,19 @@ ErrCode DefaultPermissionProfile::TransformTo(const nlohmann::json &jsonObject,
                 defaultPermission.grantPermission,
                 JsonType::ARRAY,
                 false,
-                parseResult,
+                g_permJson,
                 ArrayType::OBJECT);
-            if (parseResult != ERR_OK) {
-                APP_LOGE("parseResult is %{public}d", parseResult);
-                int32_t ret = parseResult;
+            if (g_permJson != ERR_OK) {
+                APP_LOGE("g_permJson is %{public}d", g_permJson);
+                int32_t ret = g_permJson;
                 // need recover parse result to ERR_OK
-                parseResult = ERR_OK;
+                g_permJson = ERR_OK;
                 return ret;
             }
 
             auto iter = defaultPermissions.find(defaultPermission);
             if (iter != defaultPermissions.end()) {
-                APP_LOGD("Replace old defaultPermission(%{public}s)",
-                    defaultPermission.bundleName.c_str());
+                APP_LOGD("Replace old defaultPermission(%{public}s)", defaultPermission.bundleName.c_str());
                 defaultPermissions.erase(iter);
             }
 

@@ -38,6 +38,7 @@ OverlayManagerHostImpl::~OverlayManagerHostImpl()
 ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
+    APP_LOGD("start to get all overlay moduleInfo of bundle %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -61,6 +62,8 @@ ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundl
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
+    APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
+        moduleName.c_str());
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -85,6 +88,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &bundleNa
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
+    APP_LOGD("start to get overlay moduleInfo of module %{public}s", moduleName.c_str());
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -99,7 +103,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleNa
         APP_LOGE("GetCallingBundleName failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
+    APP_LOGD("get overlay moduleInfo of bundle %{public}s", callingBundleName.c_str());
     return BundleOverlayManager::GetInstance()->GetOverlayModuleInfo(callingBundleName, moduleName, overlayModuleInfo,
         userId);
 }
@@ -107,6 +111,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfo(const std::string &moduleNa
 ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
+    APP_LOGD("start to get target overlay moduleInfo of target module %{public}s", targetModuleName.c_str());
     if (targetModuleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -121,7 +126,7 @@ ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &ta
         APP_LOGE("GetCallingBundleName failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
+    APP_LOGD("get target overlay moduleInfo of bundle %{public}s", callingBundleName.c_str());
     return BundleOverlayManager::GetInstance()->GetOverlayModuleInfoForTarget(callingBundleName, targetModuleName,
         overlayModuleInfos, userId);
 }
@@ -129,6 +134,8 @@ ErrCode OverlayManagerHostImpl::GetTargetOverlayModuleInfo(const std::string &ta
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
     const std::string &moduleName, std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
+    APP_LOGD("start to get overlay moduleInfo of bundle %{public}s and module %{public}s", bundleName.c_str(),
+        moduleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -164,6 +171,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoByBundleName(const std::stri
 ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
     std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
+    APP_LOGD("start to get target overlay bundleInfo of bundle %{public}s", targetBundleName.c_str());
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -188,6 +196,8 @@ ErrCode OverlayManagerHostImpl::GetOverlayBundleInfoForTarget(const std::string 
 ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
     const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
+    APP_LOGD("start to get target overlay moduleInfo of target bundle %{public}s and target module %{public}s",
+        targetBundleName.c_str(), targetModuleName.c_str());
     if (targetBundleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
@@ -212,6 +222,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
     int32_t userId)
 {
+    APP_LOGD("start to SetOverlayEnabledForSelf");
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
@@ -225,13 +236,14 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &modu
         APP_LOGE("GetCallingBundleName failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-
+    APP_LOGD("set overlay enable %{public}d for bundle %{public}s", isEnabled, callingBundleName.c_str());
     return BundleOverlayManager::GetInstance()->SetOverlayEnabled(callingBundleName, moduleName, isEnabled, userId);
 }
 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
     bool isEnabled, int32_t userId)
 {
+    APP_LOGD("start to SetOverlayEnabled");
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;

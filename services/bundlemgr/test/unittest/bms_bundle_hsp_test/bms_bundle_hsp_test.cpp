@@ -63,6 +63,7 @@ public:
     void SetUp();
     void TearDown();
     ErrCode InstallBundle(const std::string &bundlePath) const;
+    ErrCode InstallBundle(const std::string &bundlePath, const InstallParam &installParam) const;
     ErrCode UpdateBundle(const std::string &bundlePath) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
@@ -113,6 +114,26 @@ ErrCode BmsBundleHspTest::InstallBundle(const std::string &bundlePath) const
     InstallParam installParam;
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
+    bool result = installer->Install(bundlePath, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleHspTest::InstallBundle(const std::string &bundlePath, const InstallParam &installParam) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
     bool result = installer->Install(bundlePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
@@ -286,5 +307,39 @@ HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0700, Function | SmallTest | Level0)
 {
     ErrCode installResult = InstallBundle(MODULE_D_FILE_PATH + HSP_NAME_D);
     EXPECT_NE(installResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleHspTest_0800
+ * @tc.name: BmsBundleHspTest
+ * @tc.desc: test install, GetSpecifiedDistributionType and GetAdditionalInfo
+ */
+HWTEST_F(BmsBundleHspTest, BmsBundleHspTest_0800, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installParam.additionalInfo = "additionalInfo";
+    ErrCode installResult = InstallBundle(MODULE_FILE_PATH + HSP_NAME_C, installParam);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    if (!dataMgr) {
+        EXPECT_NE(dataMgr, nullptr);
+    } else {
+        std::string specifiedDistributionType;
+        auto ret = dataMgr->GetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.specifiedDistributionType, specifiedDistributionType);
+
+        std::string additionalInfo;
+        ret = dataMgr->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_EQ(installParam.additionalInfo, additionalInfo);
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS

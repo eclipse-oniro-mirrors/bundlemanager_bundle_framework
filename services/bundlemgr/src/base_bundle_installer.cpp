@@ -302,7 +302,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
         APP_LOGE("uninstall system app");
         return ERR_APPEXECFWK_UNINSTALL_SYSTEM_APP_ERROR;
     }
-    if (info.GetCompatiblePolicy() == CompatiblePolicy::NORMAL) {
+    if (info.GetApplicationBundleType() != BundleType::SHARED) {
         APP_LOGE("uninstall bundle is not shared library");
         return ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST;
     }
@@ -606,7 +606,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     ErrCode result = ERR_OK;
     if (isAppExist_) {
-        if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("old bundle info is shared package");
             return ERR_APPEXECFWK_INSTALL_COMPATIBLE_POLICY_NOT_SAME;
         }
@@ -884,7 +884,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 #endif
     OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(newInfos, sysEventInfo_);
-    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
+    AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     sync();
     return result;
 }
@@ -1042,7 +1042,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+    if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         APP_LOGE("uninstall bundle is shared library.");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
@@ -1165,7 +1165,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
-    if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+    if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
         APP_LOGE("uninstall bundle is shared library");
         return ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY;
     }
@@ -1318,7 +1318,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
         bool isAppExist = dataMgr_->GetInnerBundleInfo(bundleName, oldInfo);
         if (isAppExist) {
             dataMgr_->EnableBundle(bundleName);
-            if (oldInfo.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+            if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
                 APP_LOGD("shared bundle (%{public}s) is irrelevant to user", bundleName.c_str());
                 return ERR_OK;
             }
@@ -1380,7 +1380,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
     if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)
         || preInstallBundleInfo.GetBundlePaths().empty()) {
         APP_LOGE("Get PreInstallBundleInfo faile, bundleName: %{public}s.", bundleName.c_str());
-        return ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE;
+        return ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME;
     }
 
     if (recoverMode) {
@@ -2542,7 +2542,7 @@ ErrCode BaseBundleInstaller::CheckHapHashParams(
 ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     for (const auto &info : infos) {
-        if (info.second.GetCompatiblePolicy() != CompatiblePolicy::NORMAL) {
+        if (info.second.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("installing cross-app shared library");
             return ERR_APPEXECFWK_INSTALL_FILE_IS_SHARED_LIBRARY;
         }
@@ -2945,6 +2945,9 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     }
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
+    }
+    if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
@@ -3376,12 +3379,25 @@ ErrCode BaseBundleInstaller::CleanAsanDirectory(InnerBundleInfo &info) const
 }
 
 void BaseBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
-    const Security::Verify::ProvisionInfo &provisionInfo) const
+    const Security::Verify::ProvisionInfo &provisionInfo,
+    const InstallParam &installParam) const
 {
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
         APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+    }
+    if (!installParam.specifiedDistributionType.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
+            bundleName, installParam.specifiedDistributionType)) {
+            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+        }
+    }
+    if (!installParam.additionalInfo.empty()) {
+        if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
+            bundleName, installParam.additionalInfo)) {
+            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+        }
     }
 }
 }  // namespace AppExecFwk

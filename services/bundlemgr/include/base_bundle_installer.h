@@ -568,7 +568,7 @@ private:
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
     void AddAppProvisionInfo(const std::string &bundleName,
-        const Security::Verify::ProvisionInfo &provisionInfo) const;
+        const Security::Verify::ProvisionInfo &provisionInfo, const InstallParam &installParam) const;
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
     ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);

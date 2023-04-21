@@ -52,5 +52,29 @@ bool AppProvisionInfoManager::GetAllAppProvisionInfoBundleName(std::unordered_se
     APP_LOGD("AppProvisionInfoManager::GetAllAppProvisionInfoBundleName");
     return AppProvisionInfoManagerDb_->GetAllAppProvisionInfoBundleName(bundleNames);
 }
+
+bool AppProvisionInfoManager::SetSpecifiedDistributionType(
+    const std::string &bundleName, const std::string &specifiedDistributionType)
+{
+    return AppProvisionInfoManagerDb_->SetSpecifiedDistributionType(bundleName, specifiedDistributionType);
+}
+
+bool AppProvisionInfoManager::GetSpecifiedDistributionType(
+    const std::string &bundleName, std::string &specifiedDistributionType)
+{
+    return AppProvisionInfoManagerDb_->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
+}
+
+bool AppProvisionInfoManager::SetAdditionalInfo(
+    const std::string &bundleName, const std::string &additionalInfo)
+{
+    return AppProvisionInfoManagerDb_->SetAdditionalInfo(bundleName, additionalInfo);
+}
+
+bool AppProvisionInfoManager::GetAdditionalInfo(
+    const std::string &bundleName, std::string &additionalInfo)
+{
+    return AppProvisionInfoManagerDb_->GetAdditionalInfo(bundleName, additionalInfo);
+}
 } // AppExecFwk
 } // OHOS

@@ -114,7 +114,7 @@ struct InnerModuleInfo {
     std::vector<OverlayModuleInfo> overlayModuleInfo;
     AtomicServiceModuleType atomicServiceModuleType;
     std::vector<std::string> preloads;
-    CompatiblePolicy compatiblePolicy = CompatiblePolicy::NORMAL;
+    BundleType bundleType = BundleType::SHARED;
     uint32_t versionCode = 0;
     std::string versionName;
     std::vector<ProxyData> proxyDatas;
@@ -1410,11 +1410,6 @@ public:
         return allowedAcls_;
     }
 
-    CompatiblePolicy GetCompatiblePolicy() const
-    {
-        return baseApplicationInfo_->compatiblePolicy;
-    }
-
     /**
      * @brief ability is enabled.
      * @param abilityInfo Indicates the abilityInfo.
@@ -2009,6 +2004,8 @@ public:
     std::vector<uint32_t> GetAllHspVersion() const;
     void DeleteHspModuleByVersion(int32_t versionCode);
     bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;
+    ErrCode GetProxyDataInfos(const std::string &moduleName, std::vector<ProxyData> &proxyDatas) const;
+    void GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
 
 private:
     bool IsExistLauncherAbility() const;

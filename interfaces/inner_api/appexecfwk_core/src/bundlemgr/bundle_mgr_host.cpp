@@ -195,7 +195,6 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_DATA, &BundleMgrHost::HandleGetMediaData);
     funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
-    funcMap_.emplace(IBundleMgr::Message::GET_UDID_BY_NETWORK_ID, &BundleMgrHost::HandleGetUdidByNetworkId);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
     funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
 #endif
@@ -216,6 +215,11 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
     funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
     funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
+    funcMap_.emplace(IBundleMgr::Message::GET_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetProxyDataInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetAllProxyDataInfos);
+    funcMap_.emplace(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE,
+        &BundleMgrHost::HandleGetSpecifiedDistributionType);
+    funcMap_.emplace(IBundleMgr::Message::GET_ADDITIONAL_INFO, &BundleMgrHost::HandleGetAdditionalInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2050,24 +2054,6 @@ ErrCode BundleMgrHost::HandleGetIconById(MessageParcel &data, MessageParcel &rep
     return ERR_OK;
 }
 
-ErrCode BundleMgrHost::HandleGetUdidByNetworkId(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string networkId = data.ReadString();
-    if (networkId.empty()) {
-        return ERR_INVALID_VALUE;
-    }
-    std::string udid;
-    int32_t ret = GetUdidByNetworkId(networkId, udid);
-    if (ret == ERR_OK) {
-        if (!reply.WriteString(udid)) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
-    }
-    return ret;
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 ErrCode BundleMgrHost::HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply)
 {
@@ -2561,6 +2547,74 @@ ErrCode BundleMgrHost::HandleGetSharedDependencies(MessageParcel &data, MessageP
     }
     if ((ret == ERR_OK) && !WriteParcelableVector(dependencies, reply)) {
         APP_LOGE("write dependencies failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetProxyDataInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = GetProxyDataInfos(bundleName, moduleName, proxyDatas);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetProxyDataInfos write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(proxyDatas, reply)) {
+        APP_LOGE("write proxyDatas failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = GetAllProxyDataInfos(proxyDatas);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetProxyDataInfos write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(proxyDatas, reply)) {
+        APP_LOGE("write proxyDatas failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string specifiedDistributedType;
+    ErrCode ret = GetSpecifiedDistributionType(bundleName, specifiedDistributedType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetSpecifiedDistributionType write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteString(specifiedDistributedType)) {
+        APP_LOGE("write specifiedDistributedType failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string additionalInfo;
+    ErrCode ret = GetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetAdditionalInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !reply.WriteString(additionalInfo)) {
+        APP_LOGE("write additionalInfo failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

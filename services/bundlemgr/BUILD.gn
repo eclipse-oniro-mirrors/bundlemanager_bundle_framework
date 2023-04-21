@@ -28,7 +28,6 @@ config("bundlemgr_common_config") {
     "include/shared",
     "include/quick_fix/state/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
-    "//foundation/filemanagement/storage_service/services/storage_manager/include/ipc",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
@@ -280,12 +279,6 @@ ohos_shared_library("libbms") {
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
-  }
-
-  if (device_manager_enable) {
-    sources += [ "src/bms_device_manager.cpp" ]
-    external_deps += [ "device_manager:devicemanagersdk" ]
-    defines += [ "DEVICE_MANAGER_ENABLE" ]
   }
 
   if (global_resmgr_enable) {

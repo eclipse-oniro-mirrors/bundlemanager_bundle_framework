@@ -2249,6 +2249,21 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_009, TestSize.Level1)
 }
 
 /**
+ * @tc.number: BundleMgrClientImpl_0010
+ * @tc.name: GetBundleNameForUid
+ * @tc.desc: 1.Test the interface of GetBundleNameForUid
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0010, TestSize.Level1)
+{
+    BundleMgrClient client;
+    std::string bundleName;
+    auto impl = client.impl_;
+    EXPECT_NE(impl, nullptr);
+    ErrCode ret = impl->GetBundleNameForUid(DEFAULT_USERID, bundleName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BundleMgrClientImplIsNull_0400
  * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
  * @tc.desc: 1. test is failed

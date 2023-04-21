@@ -61,6 +61,10 @@ struct InstallParam : public Parcelable {
     bool isAgingUninstall = false;
     // shared bundle directory paths
     std::vector<std::string> sharedBundleDirPaths;
+    // Indicates the distribution type
+    std::string specifiedDistributionType = "";
+    // Indicates the additional Info
+    std::string additionalInfo = "";
 
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);

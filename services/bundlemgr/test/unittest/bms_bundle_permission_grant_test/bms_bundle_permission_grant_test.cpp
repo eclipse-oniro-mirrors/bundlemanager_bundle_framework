@@ -252,7 +252,8 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0900, Functi
 {
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     BundleInfo bundleInfo;
-    auto ret = bundleMgrHostImpl_->GetBundleInfoForSelf(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
+    auto ret = bundleMgrHostImpl_->GetBundleInfoForSelf(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfo);
     EXPECT_TRUE(ret);
 }
 } // OHOS

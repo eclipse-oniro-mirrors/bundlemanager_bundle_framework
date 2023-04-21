@@ -144,23 +144,6 @@ bool LauncherService::GetAbilityList(
         return false;
     }
 
-    BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-    BundleInfo bundleInfo;
-    if (!iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
-        APP_LOGE("Get bundle info failed");
-        return false;
-    }
-
-    if (bundleInfo.applicationInfo.hideDesktopIcon) {
-        APP_LOGD("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
-        return true;
-    }
-
-    if (bundleInfo.entryInstallationFree) {
-        APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleName.c_str());
-        return true;
-    }
-
     for (auto &ability : abilityInfos) {
         if (ability.bundleName != bundleName || !ability.enabled) {
             continue;
@@ -177,7 +160,7 @@ bool LauncherService::GetAbilityList(
         abilityElementName.SetDeviceID(ability.deviceId);
         info.elementName = abilityElementName;
         info.userId = userId;
-        info.installTime = bundleInfo.installTime;
+        info.installTime = ability.installTime;
         launcherAbilityInfos.emplace_back(info);
     }
 
@@ -216,17 +199,7 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
         }
 
         LauncherAbilityInfo info;
-        BundleInfo bundleInfo;
-        BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-        if (!iBundleMgr->GetBundleInfo(ability.bundleName, flags, bundleInfo, userId)) {
-            APP_LOGE("Get bundle info failed for %{public}s",  ability.bundleName.c_str());
-            continue;
-        }
-        if (bundleInfo.entryInstallationFree) {
-            APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleInfo.name.c_str());
-            continue;
-        }
-        info.installTime = bundleInfo.installTime;
+        info.installTime = ability.installTime;
         info.applicationInfo = ability.applicationInfo;
         info.labelId = ability.labelId;
         info.iconId = ability.iconId;
@@ -290,7 +263,7 @@ void LauncherService::InitWant(Want &want, const std::string &bundleName)
 }
 
 void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability, LauncherAbilityInfo &launcherAbility,
-    const BundleInfo &bundleInfo, const int32_t userId)
+    const int32_t userId)
 {
     launcherAbility.applicationInfo = ability.applicationInfo;
     launcherAbility.labelId = ability.labelId;
@@ -302,13 +275,17 @@ void LauncherService::ConvertAbilityToLauncherAbility(const AbilityInfo &ability
     elementName.SetDeviceID(ability.deviceId);
     launcherAbility.elementName = elementName;
     launcherAbility.userId = userId;
-    launcherAbility.installTime = bundleInfo.installTime;
+    launcherAbility.installTime = ability.installTime;
 }
 
 ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundleName, const int32_t userId,
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
     APP_LOGD("GetLauncherAbilityByBundleName called");
+    if (bundleName.empty()) {
+        APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -323,29 +300,12 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
         APP_LOGE("QueryLauncherAbilityInfos failed");
         return err;
     }
-    BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-    BundleInfo bundleInfo;
-    if (!iBundleMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
-        APP_LOGE("Get bundle info failed");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-    }
-
-    if (bundleInfo.applicationInfo.hideDesktopIcon) {
-        APP_LOGD("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
-        return ERR_OK;
-    }
-
-    if (bundleInfo.entryInstallationFree) {
-        APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleName.c_str());
-        return ERR_OK;
-    }
-
     for (const auto &ability : abilityInfos) {
         if (ability.bundleName != bundleName || !ability.enabled) {
             continue;
         }
         LauncherAbilityInfo info;
-        ConvertAbilityToLauncherAbility(ability, info, bundleInfo, userId);
+        ConvertAbilityToLauncherAbility(ability, info, userId);
         launcherAbilityInfos.push_back(info);
     }
     return ERR_OK;
@@ -373,18 +333,8 @@ ErrCode LauncherService::GetAllLauncherAbility(const int32_t userId,
         if (!ability.enabled || ability.applicationInfo.hideDesktopIcon) {
             continue;
         }
-        BundleInfo bundleInfo;
-        BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-        if (!iBundleMgr->GetBundleInfo(ability.bundleName, flags, bundleInfo, userId)) {
-            APP_LOGW("Get bundle info failed for %{public}s",  ability.bundleName.c_str());
-            continue;
-        }
-        if (bundleInfo.entryInstallationFree) {
-            APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleInfo.name.c_str());
-            continue;
-        }
         LauncherAbilityInfo info;
-        ConvertAbilityToLauncherAbility(ability, info, bundleInfo, userId);
+        ConvertAbilityToLauncherAbility(ability, info, userId);
         launcherAbilityInfos.push_back(info);
     }
     return ERR_OK;

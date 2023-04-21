@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_service_event_handler.h"
 #include "bundle_parser.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -49,7 +50,9 @@ const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
-const std::string BUNDLE_NAME_REGEX = "datashareproxy://([^/\\?]+)";
+const std::string SLASH = "/";
+const std::string DOUBLE_SLASH = "//";
+const int32_t SLAH_OFFSET = 2;
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -648,8 +651,8 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     int32_t targetPriority = (infos.begin()->second).GetTargetPriority();
     bool asanEnabled = (infos.begin()->second).GetAsanEnabled();
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
-    CompatiblePolicy compatiblePolicy = (infos.begin()->second).GetCompatiblePolicy();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
+    bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
 
     for (const auto &info : infos) {
         // check bundleName
@@ -657,7 +660,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_BUNDLENAME_NOT_SAME;
         }
         // check version
-        if (compatiblePolicy == CompatiblePolicy::NORMAL) {
+        if (bundleType != BundleType::SHARED) {
             if (versionCode != info.second.GetVersionCode()) {
                 return ERR_APPEXECFWK_INSTALL_VERSIONCODE_NOT_SAME;
             }
@@ -710,6 +713,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         if (isHmService != info.second.GetEntryInstallationFree()) {
             APP_LOGE("application and hm service are not allowed installed simultaneously.");
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
+        }
+        if (debug != info.second.GetBaseApplicationInfo().debug) {
+            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
         }
     }
     // check api sdk version
@@ -990,7 +996,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
-    if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL && !appPrivilegeCapability.appShareLibrary) {
+    if (applicationInfo.bundleType == BundleType::SHARED && !appPrivilegeCapability.appShareLibrary) {
         APP_LOGE("not allow app share library");
         return ERR_APPEXECFWK_INSTALL_SHARE_APP_LIBRARY_NOT_ALLOWED;
     }
@@ -1109,16 +1115,35 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
 
 std::string GetBundleNameFromUri(const std::string &uri)
 {
-    std::regex bundleNameRegex(BUNDLE_NAME_REGEX);
-    std::smatch bundleNameMatch;
-    if (std::regex_search(uri, bundleNameMatch, bundleNameRegex)) {
-        std::string bundleName = bundleNameMatch[1];
-        APP_LOGD("get bundleName %{public}s from uri successfully", bundleName.c_str());
-        return bundleName;
-    } else {
-        APP_LOGE("get bundleName from uri failed");
+    std::size_t firstSlashPos = uri.find(DOUBLE_SLASH);
+    if (firstSlashPos == std::string::npos) {
+        APP_LOGE("dataproxy uri is invalid");
         return Constants::EMPTY_STRING;
     }
+
+    std::size_t secondSlashPos = uri.find(SLASH, firstSlashPos + SLAH_OFFSET);
+    if (secondSlashPos == std::string::npos) {
+        APP_LOGE("dataproxy uri is invalid");
+        return Constants::EMPTY_STRING;
+    }
+
+    std::string bundleName = uri.substr(firstSlashPos + SLAH_OFFSET, secondSlashPos - firstSlashPos - SLAH_OFFSET);
+    return bundleName;
+}
+
+bool CheckPermissionLevel(const std::string &permissionName)
+{
+    PermissionDef permissionDef;
+    ErrCode ret = BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
+    if (ret != ERR_OK) {
+        APP_LOGE("getPermissionDef failed");
+        return false;
+    }
+    if (permissionDef.availableLevel < Security::AccessToken::ATokenAplEnum::APL_SYSTEM_BASIC) {
+        APP_LOGE("permission %{public}s level too low", permissionName.c_str());
+        return false;
+    }
+    return true;
 }
 
 ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundleInfo) const
@@ -1135,6 +1160,13 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
                 APP_LOGE("bundleName from uri %{public}s different from origin bundleName %{public}s",
                     name.c_str(), bundleName.c_str());
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+            }
+            if (innerBundleInfo.IsSystemApp()) {
+                continue;
+            }
+            if (!CheckPermissionLevel(proxyData.requiredReadPermission)
+                    || !CheckPermissionLevel(proxyData.requiredWritePermission)) {
+                return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED;
             }
         }
     }

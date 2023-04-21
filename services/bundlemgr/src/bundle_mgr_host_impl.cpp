@@ -2293,25 +2293,6 @@ std::string BundleMgrHostImpl::GetIconById(
     return dataMgr->GetIconById(bundleName, moduleName, resId, density, userId);
 }
 
-int32_t BundleMgrHostImpl::GetUdidByNetworkId(const std::string &networkId, std::string &udid)
-{
-#ifdef DEVICE_MANAGER_ENABLE
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
-        APP_LOGE("verify permission failed");
-        return -1;
-    }
-    auto deviceManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetDeviceManager();
-    if (deviceManager == nullptr) {
-        APP_LOGE("deviceManager is nullptr");
-        return -1;
-    }
-    return deviceManager->GetUdidByNetworkId(networkId, udid);
-#else
-    APP_LOGW("deviceManager is unable");
-    return -1;
-#endif
-}
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 sptr<IDefaultApp> BundleMgrHostImpl::GetDefaultAppProxy()
 {
@@ -2637,6 +2618,77 @@ bool BundleMgrHostImpl::IsPreInstallApp(const std::string &bundleName)
         return false;
     }
     return dataMgr->IsPreInstallApp(bundleName);
+}
+
+ErrCode BundleMgrHostImpl::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    std::vector<ProxyData> &proxyDatas)
+{
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetProxyDataInfos(bundleName, moduleName, proxyDatas);
+}
+
+ErrCode BundleMgrHostImpl::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+{
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAllProxyDataInfos(proxyDatas);
+}
+
+ErrCode BundleMgrHostImpl::GetSpecifiedDistributionType(const std::string &bundleName,
+    std::string &specifiedDistributionType)
+{
+    APP_LOGD("GetSpecifiedDistributionType bundleName: %{public}s", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyPrivilegedPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType);
+}
+
+ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
+    std::string &additionalInfo)
+{
+    APP_LOGD("GetAdditionalInfo bundleName: %{public}s", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyPrivilegedPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->GetAdditionalInfo(bundleName, additionalInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

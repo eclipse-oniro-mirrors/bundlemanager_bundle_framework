@@ -16,6 +16,7 @@
 #include "module_profile.h"
 
 #include <algorithm>
+#include <mutex>
 #include <sstream>
 
 #include "app_log_wrapper.h"
@@ -30,7 +31,8 @@ namespace OHOS {
 namespace AppExecFwk {
 
 namespace Profile {
-thread_local int32_t parseResult;
+int32_t parseResult = ERR_OK;
+std::mutex g_mutex;
 
 const std::set<std::string> MODULE_TYPE_SET = {
     "entry",
@@ -87,7 +89,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "preview",
     "print",
     "ui",
-    "push"
+    "push",
+    "driver"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -126,10 +129,10 @@ const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
     {"split", SupportWindowMode::SPLIT},
     {"floating", SupportWindowMode::FLOATING}
 };
-const std::unordered_map<std::string, CompatiblePolicy> COMPATIBLE_POLICY_MAP = {
-    {"normal", CompatiblePolicy::NORMAL},
-    {"backwardCompatibility", CompatiblePolicy::BACK_COMPATIBLE},
-    {"preciseMatch", CompatiblePolicy::PRECISE_MATCH}
+const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
+    {"app", BundleType::APP},
+    {"atomicService", BundleType::ATOMIC_SERVICE},
+    {"shared", BundleType::SHARED}
 };
 
 struct DeviceConfig {
@@ -147,10 +150,6 @@ struct Metadata {
     std::string name;
     std::string value;
     std::string resource;
-};
-
-struct AppShared {
-    std::string compatiblePolicy;
 };
 
 struct Ability {
@@ -235,7 +234,6 @@ struct App {
     int32_t targetPriority = 0;
     bool asanEnabled = false;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
-    Profile::AppShared shared;
 };
 
 struct Module {
@@ -1119,32 +1117,6 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    if (jsonObject.find(Profile::APP_SHARED) != jsonObjectEnd) {
-        AppShared shared;
-        GetValueIfFindKey<AppShared>(jsonObject,
-            jsonObjectEnd,
-            APP_SHARED,
-            shared,
-            JsonType::OBJECT,
-            false,
-            parseResult,
-            ArrayType::NOT_ARRAY);
-        app.shared = shared;
-    }
-}
-
-void from_json(const nlohmann::json &jsonObject, AppShared &shared)
-{
-    APP_LOGD("read shared tag from app.json");
-    const auto &jsonObjectEnd = jsonObject.end();
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        APP_COMPATIBLE_POLICY,
-        shared.compatiblePolicy,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1566,20 +1538,20 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
 {
     if (!jsonObject.contains(Profile::MODULE) || !jsonObject.contains(Profile::APP)) {
         APP_LOGE("ParserAtomicConfig failed due to bad module.json");
-        Profile::parseResult = ERR_APPEXECFWK_INSTALL_FAILED_PROFILE_PARSE_FAIL;
         return false;
     }
     nlohmann::json appJson = jsonObject.at(Profile::APP);
     nlohmann::json moduleJson = jsonObject.at(Profile::MODULE);
     if (!moduleJson.is_object() || !appJson.is_object()) {
         APP_LOGE("module.json file lacks of invalid module or app properties");
-        Profile::parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         return false;
     }
     BundleType bundleType = BundleType::APP;
     if (appJson.contains(Profile::BUNDLE_TYPE)) {
         if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_ATOMIC_SERVICE) {
             bundleType = BundleType::ATOMIC_SERVICE;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SHARED) {
+            bundleType = BundleType::SHARED;
         }
     }
 
@@ -1742,11 +1714,11 @@ bool ToApplicationInfo(
     applicationInfo.targetBundleName = app.targetBundle;
     applicationInfo.targetPriority = app.targetPriority;
 
-    auto iterCompatiblePolicy = std::find_if(std::begin(Profile::COMPATIBLE_POLICY_MAP),
-        std::end(Profile::COMPATIBLE_POLICY_MAP),
-        [&app](const auto &item) { return item.first == app.shared.compatiblePolicy; });
-    if (iterCompatiblePolicy != Profile::COMPATIBLE_POLICY_MAP.end()) {
-        applicationInfo.compatiblePolicy = iterCompatiblePolicy->second;
+    auto iterBundleType = std::find_if(std::begin(Profile::BUNDLE_TYPE_MAP),
+        std::end(Profile::BUNDLE_TYPE_MAP),
+        [&app](const auto &item) { return item.first == app.bundleType; });
+    if (iterBundleType != Profile::BUNDLE_TYPE_MAP.end()) {
+        applicationInfo.bundleType = iterBundleType->second;
     }
     return true;
 }
@@ -1899,8 +1871,8 @@ ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
 
 std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
 {
-    for (auto index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (index == static_cast<int32_t>(type)) {
+    for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
+        if (index == static_cast<size_t>(type)) {
             return Profile::EXTENSION_TYPE_SET[index];
         }
     }
@@ -2185,8 +2157,8 @@ bool ToInnerBundleInfo(
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
 
     // Here also need verify module type is shared.
-    if (applicationInfo.compatiblePolicy != CompatiblePolicy::NORMAL) {
-        innerModuleInfo.compatiblePolicy = applicationInfo.compatiblePolicy;
+    if (applicationInfo.bundleType == BundleType::SHARED) {
+        innerModuleInfo.bundleType = applicationInfo.bundleType;
         innerModuleInfo.versionCode = applicationInfo.versionCode;
         innerModuleInfo.versionName = applicationInfo.versionName;
         innerBundleInfo.InsertInnerSharedModuleInfo(moduleJson.module.name, innerModuleInfo);
@@ -2266,23 +2238,28 @@ ErrCode ModuleProfile::TransformTo(
         APP_LOGE("bad profile");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-
-    OverlayMsg overlayMsg = ObtainOverlayType(jsonObject);
-    if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
-        int32_t ret = Profile::parseResult;
+    OverlayMsg overlayMsg;
+    Profile::ModuleJson moduleJson;
+    {
+        std::lock_guard<std::mutex> lock(Profile::g_mutex);
         Profile::parseResult = ERR_OK;
-        APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
-        return ret;
-    }
-    APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
-    Profile::parseResult = ERR_OK;
-    Profile::ModuleJson moduleJson = jsonObject.get<Profile::ModuleJson>();
-    if (Profile::parseResult != ERR_OK) {
-        APP_LOGE("parseResult is %{public}d", Profile::parseResult);
-        int32_t ret = Profile::parseResult;
-        // need recover parse result to ERR_OK
+        overlayMsg = ObtainOverlayType(jsonObject);
+        if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::parseResult != ERR_OK)) {
+            int32_t ret = Profile::parseResult;
+            Profile::parseResult = ERR_OK;
+            APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
+            return ret;
+        }
+        APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
         Profile::parseResult = ERR_OK;
-        return ret;
+        moduleJson = jsonObject.get<Profile::ModuleJson>();
+        if (Profile::parseResult != ERR_OK) {
+            APP_LOGE("parseResult is %{public}d", Profile::parseResult);
+            int32_t ret = Profile::parseResult;
+            // need recover parse result to ERR_OK
+            Profile::parseResult = ERR_OK;
+            return ret;
+        }
     }
     if (!ToInnerBundleInfo(
         moduleJson, bundleExtractor, overlayMsg, innerBundleInfo)) {

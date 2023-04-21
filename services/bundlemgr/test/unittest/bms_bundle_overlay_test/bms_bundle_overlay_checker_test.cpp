@@ -43,6 +43,7 @@ const std::string NO_EXIST = "noExist";
 const std::string BUNDLE_NAME = "oho.test.bundleName";
 const std::string SHARED_HAP_TYPE = "shared";
 const std::string FEATURE_HAP_TYPE = "feature";
+const std::string SHARED_TYPE = "shared";
 const int32_t INVALID_TARGET_PRIORITY_FIRST = 0;
 const int32_t INVALID_TARGET_PRIORITY_SECOND = 101;
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
@@ -731,7 +732,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0200, Function | Small
     applicationInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;;
+    innerModuleInfo.targetPriority = Constants::OVERLAY_MINIMUM_PRIORITY + 1;
     Distro distro;
     distro.moduleType = SHARED_HAP_TYPE;
     innerModuleInfo.distro = distro;
@@ -746,6 +747,10 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CheckExternalBundle_0200, Function | Small
     innerBundleInfo.SetIsPreInstallApp(true);
     code = checker.CheckExternalBundle(innerBundleInfo, userId);
     EXPECT_EQ(code, ERR_OK);
+
+    innerBundleInfo.SetCurrentModulePackage(SHARED_TYPE);
+    code = checker.CheckExternalBundle(innerBundleInfo, userId);
+    EXPECT_EQ(code, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
 }
 
 /**

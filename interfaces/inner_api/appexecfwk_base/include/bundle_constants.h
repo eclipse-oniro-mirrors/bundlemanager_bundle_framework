@@ -97,6 +97,7 @@ constexpr int32_t INVALID_API_VERSION = -1;
 constexpr int32_t API_VERSION_EIGHT = 8;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
+constexpr int32_t INVALID_UDID = -1;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";

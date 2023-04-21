@@ -151,13 +151,14 @@ void to_json(nlohmann::json &jsonObject, const QuickFixMark &quickFixMark)
 void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
 {
     const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         Constants::BUNDLE_NAME,
         quickFixMark.bundleName,
         JsonType::STRING,
         false,
-        Profile::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -165,8 +166,11 @@ void from_json(const nlohmann::json &jsonObject, QuickFixMark &quickFixMark)
         quickFixMark.status,
         JsonType::NUMBER,
         false,
-        Profile::parseResult,
+        parseResult,
         ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("QuickFixMark from_json error, error code : %{public}d", parseResult);
+    }
 }
 } // AppExecFwk
 } // OHOS

@@ -183,7 +183,8 @@ public:
      * @return Returns true if the AbilityInfo is successfully obtained; returns false otherwise.
      */
     void GetMatchLauncherAbilityInfos(const Want& want, const InnerBundleInfo& info,
-        std::vector<AbilityInfo>& abilityInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        std::vector<AbilityInfo>& abilityInfos, int64_t installTime,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Query the AbilityInfo by ability.uri in config.json.
      * @param abilityUri Indicates the uri of the ability.
@@ -667,8 +668,6 @@ public:
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
-    bool QueryAllDeviceIds(std::vector<std::string> &deviceIds);
-
     void GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int32_t userId,
         const std::string &excludeModule = "") const;
 
@@ -771,6 +770,8 @@ public:
 
     bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
+    bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
+
     const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
@@ -805,7 +806,15 @@ public:
     bool IsPreInstallApp(const std::string &bundleName);
 
     ErrCode GetSharedBundleInfo(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo);
+    ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
+    ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
 
+    ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+        std::vector<ProxyData> &proxyDatas) const;
+
+    ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
+
+    std::string GetBundleNameByAppId(const std::string &appId) const;
 private:
     /**
      * @brief Init transferStates.
@@ -909,6 +918,10 @@ private:
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
     void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
+    void GetAllLauncherAbility(const Want &want, std::vector<AbilityInfo> &abilityInfos,
+        const int32_t userId, const int32_t requestUserId) const;
+    ErrCode GetLauncherAbilityByBundleName(const Want &want, std::vector<AbilityInfo> &abilityInfos,
+        const int32_t userId, const int32_t requestUserId) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

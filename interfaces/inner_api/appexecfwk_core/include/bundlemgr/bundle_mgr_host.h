@@ -607,8 +607,6 @@ private:
 
     ErrCode HandleGetIconById(MessageParcel &data, MessageParcel &reply);
 
-    ErrCode HandleGetUdidByNetworkId(MessageParcel &data, MessageParcel &reply);
-
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     ErrCode HandleGetDefaultAppProxy(MessageParcel &data, MessageParcel &reply);
 #endif
@@ -640,6 +638,14 @@ private:
     ErrCode HandleGetSharedBundleInfoBySelf(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSharedDependencies(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetProxyDataInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAllProxyDataInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetSpecifiedDistributionType(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**

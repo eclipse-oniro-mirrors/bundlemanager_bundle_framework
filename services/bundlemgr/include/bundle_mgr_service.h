@@ -25,9 +25,6 @@
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
 #endif
-#ifdef DEVICE_MANAGER_ENABLE
-#include "bms_device_manager.h"
-#endif
 #include "bms_param.h"
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
@@ -103,10 +100,6 @@ public:
     sptr<IAppControlMgr> GetAppControlProxy() const;
 #endif
 
-#ifdef DEVICE_MANAGER_ENABLE
-    const std::shared_ptr<BmsDeviceManager> GetDeviceManager() const;
-#endif
-
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> GetQuickFixManagerProxy() const;
 #endif
@@ -154,7 +147,6 @@ private:
     void InitBundleDataMgr();
     bool InitBundleUserMgr();
     bool InitBundleEventHandler();
-    void InitDeviceManager();
     void InitHidumpHelper();
     void InitFreeInstall();
     bool InitDefaultApp();
@@ -169,9 +161,6 @@ private:
     std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
-#ifdef DEVICE_MANAGER_ENABLE
-    std::shared_ptr<BmsDeviceManager> deviceManager_;
-#endif
     std::shared_ptr<HidumpHelper> hidumpHelper_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::shared_ptr<BundleAgingMgr> agingMgr_;

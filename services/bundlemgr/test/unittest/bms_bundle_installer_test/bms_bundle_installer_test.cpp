@@ -1400,7 +1400,7 @@ HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfoTest, Function | SmallTe
     ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, false);
     dataMgr->bundleInfos_.clear();
-    innerBundleInfo.baseApplicationInfo_->compatiblePolicy = CompatiblePolicy::BACK_COMPATIBLE;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::SHARED;
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
     ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, true);
@@ -3366,7 +3366,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest 
     int32_t uid = 100;
     bool recoverMode = true;
     auto ret = installer.InnerProcessInstallByPreInstallInfo(BUNDLE_MODULEJSON_TEST, installParam, uid, recoverMode);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INVALID_BUNDLE_FILE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
     UnInstallBundle(BUNDLE_MODULEJSON_NAME);
     ClearBundleInfo();
 }

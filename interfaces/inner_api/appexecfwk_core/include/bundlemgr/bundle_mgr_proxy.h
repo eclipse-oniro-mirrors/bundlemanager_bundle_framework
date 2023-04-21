@@ -769,8 +769,6 @@ public:
     virtual std::string GetIconById(const std::string &bundleName, const std::string &moduleName,
         uint32_t resId, uint32_t density, int32_t userId) override;
 
-    virtual int32_t GetUdidByNetworkId(const std::string &networkId, std::string &udid) override;
-
     virtual ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo) override;
 
@@ -808,6 +806,17 @@ public:
 
     virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies) override;
+
+    virtual ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) override;
+
+    virtual ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+        std::vector<ProxyData> &proxyDatas) override;
+
+    virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName,
+        std::string &specifiedDistributionType) override;
+
+    virtual ErrCode GetAdditionalInfo(const std::string &bundleName,
+        std::string &additionalInfo) override;
 
 private:
     /**
