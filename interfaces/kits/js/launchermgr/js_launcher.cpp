@@ -703,7 +703,6 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
     }
     std::unique_ptr<JsGetAllLauncherAbilityCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[ARGS_SIZE_TWO] = {0};
-    APP_LOGE("asyncCallbackInfo->err is %{public}d", asyncCallbackInfo->err);
     if (asyncCallbackInfo->err == OPERATION_SUCESS) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));

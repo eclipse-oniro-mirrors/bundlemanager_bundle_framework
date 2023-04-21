@@ -104,7 +104,7 @@ public:
 private:
     void InitWant(Want &want, const std::string &bundleName);
     void ConvertAbilityToLauncherAbility(const AbilityInfo &ability, LauncherAbilityInfo &launcherAbility,
-        const BundleInfo &bundleInfo, const int32_t userId);
+        const int32_t userId);
 
 private:
     void init();

@@ -249,6 +249,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     minWindowHeight = parcel.ReadUint32();
     uid = parcel.ReadInt32();
     recoverable = parcel.ReadBool();
+    installTime = parcel.ReadInt64();
     return true;
 }
 
@@ -379,6 +380,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, minWindowHeight);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, recoverable);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, installTime);
     return true;
 }
 
