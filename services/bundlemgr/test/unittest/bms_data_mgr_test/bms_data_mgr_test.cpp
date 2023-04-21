@@ -1393,12 +1393,13 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0001, Function | SmallTest
     want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
     want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
     std::vector<AbilityInfo> abilityInfos;
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    int64_t installTime = 0;
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
 
     applicationInfo.needAppDetail = true;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
 }
 
@@ -1430,23 +1431,24 @@ HWTEST_F(BmsDataMgrTest, GetMatchLauncherAbilityInfos_0002, Function | SmallTest
     want.SetAction(OHOS::AAFwk::Want::ACTION_HOME);
     want.AddEntity(OHOS::AAFwk::Want::ENTITY_HOME);
     std::vector<AbilityInfo> abilityInfos;
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    int64_t installTime = 0;
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_TRUE(abilityInfos.empty());
 
     applicationInfo.needAppDetail = true;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_TRUE(abilityInfos.empty());
 
     AbilityInfo abilityInfo;
     abilityInfo.name = Constants::APP_DETAIL_ABILITY;
     innerBundleInfo.InsertAbilitiesInfo(BUNDLE_NAME, abilityInfo);
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
 
     abilityInfos.clear();
     innerBundleInfo.SetIsNewVersion(true);
-    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, Constants::ANY_USERID);
+    dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, installTime, Constants::ANY_USERID);
     EXPECT_FALSE(abilityInfos.empty());
 }
 

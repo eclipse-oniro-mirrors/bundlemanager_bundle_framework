@@ -183,7 +183,8 @@ public:
      * @return Returns true if the AbilityInfo is successfully obtained; returns false otherwise.
      */
     void GetMatchLauncherAbilityInfos(const Want& want, const InnerBundleInfo& info,
-        std::vector<AbilityInfo>& abilityInfos, int32_t userId = Constants::UNSPECIFIED_USERID) const;
+        std::vector<AbilityInfo>& abilityInfos, int64_t installTime,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     /**
      * @brief Query the AbilityInfo by ability.uri in config.json.
      * @param abilityUri Indicates the uri of the ability.
@@ -917,6 +918,10 @@ private:
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;
     void AddAppDetailAbilityInfo(InnerBundleInfo &info) const;
+    void GetAllLauncherAbility(const Want &want, std::vector<AbilityInfo> &abilityInfos,
+        const int32_t userId, const int32_t requestUserId) const;
+    ErrCode GetLauncherAbilityByBundleName(const Want &want, std::vector<AbilityInfo> &abilityInfos,
+        const int32_t userId, const int32_t requestUserId) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

@@ -265,6 +265,7 @@ struct AbilityInfo : public Parcelable {
     AbilitySubType subType = AbilitySubType::UNSPECIFIED;
     std::string libPath;
     std::string deviceId;
+    int64_t installTime;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
