@@ -282,6 +282,10 @@ ErrCode LauncherService::GetLauncherAbilityByBundleName(const std::string &bundl
     std::vector<LauncherAbilityInfo> &launcherAbilityInfos)
 {
     APP_LOGD("GetLauncherAbilityByBundleName called");
+    if (bundleName.empty()) {
+        APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
