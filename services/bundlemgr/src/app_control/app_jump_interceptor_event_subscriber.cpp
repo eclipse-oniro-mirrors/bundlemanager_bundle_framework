@@ -16,6 +16,7 @@
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "want.h"
 namespace OHOS {
 namespace AppExecFwk {
@@ -52,6 +53,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
         APP_LOGI("bundle remove, bundleName: %{public}s", bundleName.c_str());
         auto task = [bundleName, db, userId]() {
+            BundleMemoryGuard memoryGuard;
             if (db == nullptr) {
                 APP_LOGE("Get invalid db");
                 return;
