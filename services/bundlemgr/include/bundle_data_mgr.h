@@ -922,6 +922,7 @@ private:
         const int32_t userId, const int32_t requestUserId) const;
     ErrCode GetLauncherAbilityByBundleName(const Want &want, std::vector<AbilityInfo> &abilityInfos,
         const int32_t userId, const int32_t requestUserId) const;
+    void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

@@ -1113,6 +1113,29 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     }
 }
 
+void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const
+{
+    if (abilityInfo.labelId == 0) {
+        if (isStage) {
+            abilityInfo.labelId = abilityInfo.applicationInfo.labelId;
+            abilityInfo.label = abilityInfo.applicationInfo;
+        } else {
+            abilityInfo.applicationInfo.label = abilityInfo.bundleName;
+        }
+    }
+
+    if (abilityInfo.iconId == 0) {
+        if (isStage) {
+            abilityInfo.iconId = abilityInfo.applicationInfo.iconId;
+        } else {
+            auto iter = bundleInfos_.find(GLOBAL_RESOURCE_BUNDLE_NAME);
+            if (iter != bundleInfos_.end()) {
+                abilityInfo.iconId = iter->second.GetBaseApplicationInfo().iconId;
+            }
+        }
+    }
+}
+
 void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     const InnerBundleInfo& info, std::vector<AbilityInfo>& abilityInfos,
     int64_t installTime, int32_t userId) const
@@ -1123,6 +1146,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
     }
     int32_t responseUserId = info.GetResponseUserId(requestUserId);
     bool isExist = false;
+    bool isStage = info.GetIsNewVersion();
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto& abilityInfoPair : info.GetInnerAbilityInfos()) {
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
@@ -1136,6 +1160,8 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
                 info.GetApplicationInfo(ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT,
                     responseUserId, abilityinfo.applicationInfo);
                 abilityinfo.installTime = installTime;
+                // fix labelId or iconId is equal 0
+                ModifyLauncherAbilityInfo(isStage, abilityinfo);
                 abilityInfos.emplace_back(abilityinfo);
                 break;
             }
