@@ -718,20 +718,21 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
         APP_LOGD("caller tokenType is native, verify success");
         return true;
     }
-    auto apiVersion = GetHapApiVersion();
-    if (apiVersion == Constants::INVALID_API_VERSION) {
-        APP_LOGE("get api version failed, system app verification failed");
-        return false;
-    }
-    if (apiVersion >= beginSystemApiVersion) {
-        uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
-        if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
-            APP_LOGE("non-system app calling system api");
+    if (beginSystemApiVersion != Constants::ALL_VERSIONCODE) {
+        auto apiVersion = GetHapApiVersion();
+        if (apiVersion == Constants::INVALID_API_VERSION) {
+            APP_LOGE("get api version failed, system app verification failed");
             return false;
         }
-    } else {
-        APP_LOGI("hapApiVersion equal to or less than the version this api begins to be system api");
-        return true;
+        if (apiVersion < beginSystemApiVersion) {
+            APP_LOGI("previous app calling, verify success");
+            return true;
+        }
+    }
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        APP_LOGE("non-system app calling system api");
+        return false;
     }
     return true;
 }
