@@ -18,7 +18,6 @@
 
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_db_interface.h"
-#include "bundle_event_callback_interface.h"
 
 #include "event_runner.h"
 #include "event_handler.h"

@@ -24,7 +24,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class AppJumpInterceptorEventSubscriber : public BundleEventCallbackHost {
+class AppJumpInterceptorEventSubscriber : public BundleEventCallbackHost,
+    public std::enable_shared_from_this<AppJumpInterceptorEventSubscriber> {
 public:
     AppJumpInterceptorEventSubscriber(const std::shared_ptr<EventHandler> &eventHandler,
         const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb);
