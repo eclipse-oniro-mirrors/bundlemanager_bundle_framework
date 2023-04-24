@@ -1489,3 +1489,175 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
         EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
     }
 }
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0001
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "";
+        abilityInfo.labelId = 0;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_EQ(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0002
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is not equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "#string:aaa";
+        abilityInfo.labelId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_NE(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_NE(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0003
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.bundleName = "test";
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "";
+        abilityInfo.labelId = 0;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.applicationInfo.label, abilityInfo.bundleName);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.bundleName);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0004
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is not equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "#string:aaa";
+        abilityInfo.labelId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_NE(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_NE(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0005
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0005, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 0;
+        abilityInfo.applicationInfo.iconId = 1111;
+
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.applicationInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0006
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is not equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0006, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0007
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0007, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 0;
+        InnerBundleInfo innerBundleInfo;
+
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = "ohos.global.systemres";
+        applicationInfo.iconId = 222;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+        dataMgr->bundleInfos_["ohos.global.systemres"] = innerBundleInfo;
+
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, applicationInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0008
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is not equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+    }
+}
