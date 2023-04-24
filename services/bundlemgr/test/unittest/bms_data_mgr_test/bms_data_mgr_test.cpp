@@ -1639,7 +1639,7 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0007, Function | SmallTest | 
 
         dataMgr->bundleInfos_["ohos.global.systemres"] = innerBundleInfo;
 
-        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
         EXPECT_EQ(abilityInfo.iconId, applicationInfo.iconId);
     }
 }
@@ -1657,7 +1657,7 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | 
     if (dataMgr) {
         AbilityInfo abilityInfo;
         abilityInfo.iconId = 2222;
-        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
         EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
     }
 }
