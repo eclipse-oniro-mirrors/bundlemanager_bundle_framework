@@ -27,19 +27,12 @@ namespace OHOS {
     bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     {
         LauncherService launcherService;
-        sptr<IBundleStatusCallback> callback;
-        launcherService.RegisterCallback(callback);
-        launcherService.UnRegisterCallback();
         std::string bundleName (reinterpret_cast<const char*>(data), size);
-        LauncherAbilityInfo launcherAbilityInfo;
-        launcherAbilityInfo.userId = reinterpret_cast<uintptr_t>(data);
+
         std::vector<LauncherAbilityInfo> launcherAbilityInfos;
-        launcherAbilityInfos.push_back(launcherAbilityInfo);
         launcherService.GetAbilityList(bundleName, reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
-        ShortcutInfo shortcutInfo;
-        shortcutInfo.bundleName = bundleName;
+
         std::vector<ShortcutInfo> shortcutInfos;
-        shortcutInfos.push_back(shortcutInfo);
         launcherService.GetShortcutInfos(bundleName, shortcutInfos);
         launcherService.GetAllLauncherAbilityInfos(reinterpret_cast<uintptr_t>(data), launcherAbilityInfos);
         launcherService.GetLauncherAbilityByBundleName(bundleName,
