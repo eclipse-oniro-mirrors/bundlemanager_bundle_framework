@@ -15,6 +15,7 @@
 
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_wrapper.h"
+#include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "common_event_manager.h"
 #include "scope_guard.h"
@@ -78,13 +79,10 @@ bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
         APP_LOGI("subscribeCommonEvent already subscribed.");
         return true;
     }
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
-    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-
-    eventSubscriber_ = std::make_shared<AppJumpInterceptorEventSubscriber>(subscribeInfo, shared_from_this());
-    eventSubscriber_->SetEventHandler(handler_);
-    if (!EventFwk::CommonEventManager::SubscribeCommonEvent(eventSubscriber_)) {
+    eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(handler_, shared_from_this());
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    
+    if (!dataMgr->RegisterBundleEventCallback(eventSubscriber_)) {
         APP_LOGE("subscribeCommonEvent subscribed failure.");
         return false;
     };
@@ -192,7 +190,7 @@ ErrCode AppJumpInterceptorManagerRdb::GetAppJumpControlRule(const std::string &c
         APP_LOGE("QueryData failed");
         return ERR_BUNDLE_MANAGER_APP_JUMP_INTERCEPTOR_INTERNAL_ERROR;
     }
-    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    ScopeGuard stateGuard([absSharedResultSet] { absSharedResultSet->Close(); });
     int32_t count;
     int ret = absSharedResultSet->GetRowCount(count);
     if (ret != NativeRdb::E_OK) {
