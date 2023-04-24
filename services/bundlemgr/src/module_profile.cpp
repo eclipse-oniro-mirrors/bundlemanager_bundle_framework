@@ -277,7 +277,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         metadata.name,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -285,7 +285,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         metadata.value,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -293,7 +293,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         metadata.resource,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -307,7 +307,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
@@ -317,7 +317,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
             ability.srcEntrance,
             JsonType::STRING,
             true,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     } else {
         GetValueIfFindKey<std::string>(jsonObject,
@@ -326,7 +326,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
             ability.srcEntrance,
             JsonType::STRING,
             true,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     GetValueIfFindKey<std::string>(jsonObject,
@@ -335,7 +335,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.launchType,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -343,7 +343,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.description,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -351,7 +351,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.descriptionId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -359,7 +359,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.icon,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -367,7 +367,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.iconId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -375,7 +375,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.label,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -383,7 +383,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.labelId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -391,7 +391,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.priority,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -399,7 +399,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.permissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
@@ -407,7 +407,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.metadata,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
@@ -416,7 +416,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.visible,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -424,7 +424,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.visible,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -432,7 +432,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.continuable,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
@@ -440,7 +440,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.skills,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -448,7 +448,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.backgroundModes,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -456,7 +456,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.startWindowIcon,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -464,7 +464,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.startWindowIconId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -472,7 +472,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.startWindowBackground,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -480,7 +480,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.startWindowBackgroundId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -488,7 +488,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.removeMissionAfterTerminate,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -496,7 +496,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.orientation,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -504,7 +504,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.windowModes,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<double>(jsonObject,
         jsonObjectEnd,
@@ -512,7 +512,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.maxWindowRatio,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<double>(jsonObject,
         jsonObjectEnd,
@@ -520,7 +520,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.minWindowRatio,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -528,7 +528,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.maxWindowWidth,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -536,7 +536,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.minWindowWidth,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -544,7 +544,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.maxWindowHeight,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -552,7 +552,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.minWindowHeight,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -560,7 +560,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.excludeFromMissions,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -568,7 +568,7 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ability.recoverable,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -582,7 +582,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
@@ -592,7 +592,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
             extension.srcEntrance,
             JsonType::STRING,
             true,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     } else {
         GetValueIfFindKey<std::string>(jsonObject,
@@ -601,7 +601,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
             extension.srcEntrance,
             JsonType::STRING,
             true,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     GetValueIfFindKey<std::string>(jsonObject,
@@ -610,7 +610,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.icon,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -618,7 +618,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.iconId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -626,7 +626,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.label,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -634,7 +634,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.labelId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -642,7 +642,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.description,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -650,7 +650,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.descriptionId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -658,7 +658,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.priority,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -666,7 +666,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.type,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -674,7 +674,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.readPermission,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -682,7 +682,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.writePermission,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -690,7 +690,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.uri,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -698,7 +698,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.permissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     // both exported and visible can be configured, but exported has higher priority
     GetValueIfFindKey<bool>(jsonObject,
@@ -707,7 +707,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.visible,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -715,7 +715,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.visible,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Skill>>(jsonObject,
         jsonObjectEnd,
@@ -723,7 +723,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.skills,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
@@ -731,7 +731,7 @@ void from_json(const nlohmann::json &jsonObject, Extension &extension)
         extension.metadata,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
 }
 
@@ -746,7 +746,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.minAPIVersion.second,
             JsonType::NUMBER,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     if (jsonObject.find(DEVICE_CONFIG_KEEP_ALIVE) != jsonObjectEnd) {
@@ -757,7 +757,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.keepAlive.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     if (jsonObject.find(DEVICE_CONFIG_REMOVABLE) != jsonObjectEnd) {
@@ -768,7 +768,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.removable.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     if (jsonObject.find(DEVICE_CONFIG_SINGLETON) != jsonObjectEnd) {
@@ -779,7 +779,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.singleton.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     if (jsonObject.find(DEVICE_CONFIG_USER_DATA_CLEARABLE) != jsonObjectEnd) {
@@ -790,7 +790,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.userDataClearable.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     if (jsonObject.find(DEVICE_CONFIG_ACCESSIBLE) != jsonObjectEnd) {
@@ -801,7 +801,7 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
             deviceConfig.accessible.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
 }
@@ -816,7 +816,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.bundleName,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -824,7 +824,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.icon,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -832,7 +832,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.label,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -840,7 +840,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.versionCode,
         JsonType::NUMBER,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -848,7 +848,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.versionName,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -856,7 +856,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.minAPIVersion,
         JsonType::NUMBER,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -864,7 +864,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.targetAPIVersion,
         JsonType::NUMBER,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -872,7 +872,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.debug,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -880,7 +880,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.iconId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -888,7 +888,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.labelId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -896,7 +896,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.description,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -904,7 +904,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.descriptionId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -912,7 +912,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.vendor,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -920,7 +920,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.minCompatibleVersionCode,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -928,7 +928,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.apiReleaseType,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -936,7 +936,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.keepAlive,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -944,7 +944,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.targetBundleList,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     if (jsonObject.find(APP_REMOVABLE) != jsonObject.end()) {
         app.removable.first = true;
@@ -954,7 +954,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             app.removable.second,
             JsonType::BOOLEAN,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     GetValueIfFindKey<bool>(jsonObject,
@@ -963,7 +963,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.singleton,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -971,7 +971,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.userDataClearable,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -979,7 +979,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.accessible,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -987,7 +987,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.asanEnabled,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -995,7 +995,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.bundleType,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     if (jsonObject.find(APP_PHONE) != jsonObjectEnd) {
         DeviceConfig deviceConfig;
@@ -1005,7 +1005,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_PHONE] = deviceConfig;
     }
@@ -1017,7 +1017,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_TABLET] = deviceConfig;
     }
@@ -1029,7 +1029,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_TV] = deviceConfig;
     }
@@ -1041,7 +1041,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_WEARABLE] = deviceConfig;
     }
@@ -1053,7 +1053,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_LITE_WEARABLE] = deviceConfig;
     }
@@ -1065,7 +1065,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_CAR] = deviceConfig;
     }
@@ -1077,7 +1077,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_SMART_VISION] = deviceConfig;
     }
@@ -1089,7 +1089,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             deviceConfig,
             JsonType::OBJECT,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_ROUTER] = deviceConfig;
     }
@@ -1099,7 +1099,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.multiProjects,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1107,7 +1107,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.targetBundle,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1115,7 +1115,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.targetPriority,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -1129,7 +1129,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1137,7 +1137,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.type,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -1145,7 +1145,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.deviceTypes,
         JsonType::ARRAY,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1153,7 +1153,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.deliveryWithInstall,
         JsonType::BOOLEAN,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1161,7 +1161,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.pages,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     // both srcEntry and srcEntrance can be configured, but srcEntry has higher priority
     if (jsonObject.find(SRC_ENTRY) != jsonObject.end()) {
@@ -1171,7 +1171,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             module.srcEntrance,
             JsonType::STRING,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     } else {
         GetValueIfFindKey<std::string>(jsonObject,
@@ -1180,7 +1180,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             module.srcEntrance,
             JsonType::STRING,
             false,
-            parseResult,
+            g_parseResult,
             ArrayType::NOT_ARRAY);
     }
     GetValueIfFindKey<std::string>(jsonObject,
@@ -1189,7 +1189,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.description,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1197,7 +1197,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.descriptionId,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1205,7 +1205,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.process,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1213,7 +1213,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.mainElement,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1221,7 +1221,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.installationFree,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1229,7 +1229,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.virtualMachine,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
@@ -1237,7 +1237,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.metadata,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<Ability>>(jsonObject,
         jsonObjectEnd,
@@ -1245,7 +1245,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.abilities,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<Extension>>(jsonObject,
         jsonObjectEnd,
@@ -1253,7 +1253,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.extensionAbilities,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<RequestPermission>>(jsonObject,
         jsonObjectEnd,
@@ -1261,7 +1261,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.requestPermissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<DefinePermission>>(jsonObject,
         jsonObjectEnd,
@@ -1269,7 +1269,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.definePermissions,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<Dependency>>(jsonObject,
         jsonObjectEnd,
@@ -1277,7 +1277,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.dependencies,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1285,7 +1285,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.compileMode,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -1293,7 +1293,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.isLibIsolated,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -1301,7 +1301,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.targetModule,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -1309,7 +1309,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.targetPriority,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
         jsonObjectEnd,
@@ -1317,7 +1317,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.proxyDatas,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
 }
 
@@ -1330,7 +1330,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
         moduleJson.app,
         JsonType::OBJECT,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Module>(jsonObject,
         jsonObjectEnd,
@@ -1338,7 +1338,7 @@ void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
         moduleJson.module,
         JsonType::OBJECT,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 } // namespace Profile
@@ -2247,14 +2247,14 @@ ErrCode ModuleProfile::TransformTo(
         if ((overlayMsg.type == NON_OVERLAY_TYPE) && (Profile::g_parseResult != ERR_OK)) {
             int32_t ret = Profile::g_parseResult;
             Profile::g_parseResult = ERR_OK;
-            APP_LOGE("ObtainOverlayType parseResult is %{public}d", ret);
+            APP_LOGE("ObtainOverlayType g_parseResult is %{public}d", ret);
             return ret;
         }
         APP_LOGD("overlay type of the hap is %{public}d", overlayMsg.type);
         Profile::g_parseResult = ERR_OK;
         moduleJson = jsonObject.get<Profile::ModuleJson>();
         if (Profile::g_parseResult != ERR_OK) {
-            APP_LOGE("parseResult is %{public}d", Profile::g_parseResult);
+            APP_LOGE("g_parseResult is %{public}d", Profile::g_parseResult);
             int32_t ret = Profile::g_parseResult;
             // need recover parse result to ERR_OK
             Profile::g_parseResult = ERR_OK;
