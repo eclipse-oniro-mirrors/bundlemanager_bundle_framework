@@ -46,16 +46,19 @@ bool CommonEventInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t typeSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, typeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, typeSize, &data);
     for (int32_t i = 0; i < typeSize; i++) {
         data.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     int32_t dataSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, dataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, dataSize, &type);
     for (int32_t i = 0; i < dataSize; i++) {
         type.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     int32_t eventsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, eventsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, eventsSize, &events);
     for (int32_t i = 0; i < eventsSize; i++) {
         events.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }

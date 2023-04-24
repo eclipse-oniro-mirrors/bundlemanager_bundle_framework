@@ -67,6 +67,7 @@ bool TargetExtSetting::ReadFromParcel(Parcel &parcel)
 {
     int32_t extValueSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extValueSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extValueSize, &extValues);
     for (int32_t i = 0; i < extValueSize; ++i) {
         std::string key = Str16ToStr8(parcel.ReadString16());
         std::string value = Str16ToStr8(parcel.ReadString16());
@@ -222,16 +223,19 @@ bool TargetInfo::ReadFromParcel(Parcel &parcel)
     callingAppType = parcel.ReadInt32();
     int32_t callingBundleNamesSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingBundleNamesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, callingBundleNamesSize, &callingBundleNames);
     for (int32_t i = 0; i < callingBundleNamesSize; i++) {
         callingBundleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     int32_t callingAppIdsSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingAppIdsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, callingAppIdsSize, &callingAppIds);
     for (int32_t i = 0; i < callingAppIdsSize; i++) {
         callingAppIds.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
     int32_t preloadModuleNamesSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadModuleNamesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, preloadModuleNamesSize, &preloadModuleNames);
     for (int32_t i = 0; i < preloadModuleNamesSize; i++) {
         preloadModuleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }

@@ -183,12 +183,14 @@ bool SummaryAbilityInfo::ReadFromParcel(Parcel &parcel)
     label = Str16ToStr8(parcel.ReadString16());
     int32_t deviceTypeSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, deviceTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, deviceTypeSize, &deviceType);
     for (auto i = 0; i < deviceTypeSize; i++) {
         deviceType.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t rpcIdSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, rpcIdSize);
+    CONTAINER_SECURITY_VERIFY(parcel, rpcIdSize, &rpcId);
     for (auto i = 0; i < rpcIdSize; i++) {
         rpcId.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
