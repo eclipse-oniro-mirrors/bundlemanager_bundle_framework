@@ -1224,9 +1224,9 @@ void BundleDataMgr::GetAllLauncherAbility(const Want &want, std::vector<AbilityI
         int64_t installTime = 0;
         std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
         std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
-        for (const auto &item : info.GetInnerBundleUserInfos()) {
-            if (item.first == userIdKey || item.first == userZeroKey) {
-                installTime = item.second.installTime;
+        for (const auto &newItem : info.GetInnerBundleUserInfos()) {
+            if (newItem.first == userIdKey || newItem.first == userZeroKey) {
+                installTime = newItem.second.installTime;
                 break;
             }
         }
@@ -1261,9 +1261,9 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
-    for (const auto &item : info.GetInnerBundleUserInfos()) {
-        if (item.first == userIdKey || item.first == userZeroKey) {
-            installTime = item.second.installTime;
+    for (const auto &newItem : info.GetInnerBundleUserInfos()) {
+        if (newItem.first == userIdKey || newItem.first == userZeroKey) {
+            installTime = newItem.second.installTime;
             break;
         }
     }
