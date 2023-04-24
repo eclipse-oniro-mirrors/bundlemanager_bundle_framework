@@ -32,6 +32,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
+const int32_t ASHMEM_LEN = 16;
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -449,7 +450,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!reply.WriteParcelable(&info)) {
+        if (!WriteParcelableIntoAshmem(info, __func__, reply)) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -2619,5 +2620,83 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
     }
     return ERR_OK;
 }
+
+template<typename T>
+bool BundleMgrHost::WriteParcelableIntoAshmem(
+    T &parcelable, const char *ashmemName, MessageParcel &reply)
+{
+    APP_LOGE("Write parcelable into ashmem");
+    if (ashmemName == nullptr) {
+        APP_LOGE("AshmemName is null");
+        return false;
+    }
+
+    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&reply);
+    if (messageParcel == nullptr) {
+        APP_LOGE("Type conversion failed");
+        return false;
+    }
+    APP_LOGE("GetJsonStrFromInfo");
+
+    int32_t totalSize = 0;
+    auto infoStr = GetJsonStrFromInfo<T>(parcelable);
+    totalSize += ASHMEM_LEN;
+    totalSize += strlen(infoStr.c_str());
+    if (totalSize <= 0) {
+        APP_LOGE("The size of the ashmem is invalid or the content is empty");
+        return false;
+    }
+
+    // The ashmem name must be unique.
+    sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
+        (ashmemName + std::to_string(AllocatAshmemNum())).c_str(), totalSize);
+    if (ashmem == nullptr) {
+        APP_LOGE("Create shared memory fail");
+        return false;
+    }
+    APP_LOGE("MapReadAndWriteAshmem");
+
+    // Set the read/write mode of the ashme.
+    bool ret = ashmem->MapReadAndWriteAshmem();
+    if (!ret) {
+        APP_LOGE("Map shared memory fail");
+        return false;
+    }
+
+    // Write the size and content of each item to the ashmem.
+    // The size of item use ASHMEM_LEN.
+    APP_LOGE("WriteToAshmem1");
+    int32_t offset = 0;
+    int itemLen = static_cast<int>(strlen(infoStr.c_str()));
+    std::string strLen = std::to_string(itemLen);
+    strLen = std::string(std::max(0, static_cast<int32_t>(ASHMEM_LEN - strLen.size())), '0') + strLen;
+    ret = ashmem->WriteToAshmem(std::to_string(itemLen).c_str(), ASHMEM_LEN, offset);
+    if (!ret) {
+        APP_LOGE("Write itemLen to shared memory fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+    APP_LOGE("WriteToAshmem2");
+
+    offset += ASHMEM_LEN;
+    ret = ashmem->WriteToAshmem(infoStr.c_str(), itemLen, offset);
+    if (!ret) {
+        APP_LOGE("Write info to shared memory fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+    APP_LOGE("WriteToAshmem3");
+
+    ret = messageParcel->WriteAshmem(ashmem);
+    ClearAshmem(ashmem);
+    if (!ret) {
+        APP_LOGE("Write ashmem to MessageParcel fail");
+        return false;
+    }
+
+    APP_LOGE("Write parcelable vector into ashmem success");
+    return true;
+}
+
 }  // namespace AppExecFwk
 }  // namespace OHOS

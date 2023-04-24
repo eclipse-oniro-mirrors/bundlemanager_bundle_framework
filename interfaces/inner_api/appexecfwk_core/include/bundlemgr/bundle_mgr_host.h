@@ -666,6 +666,10 @@ private:
     int32_t AllocatAshmemNum();
     void init();
 
+    template<typename T>
+    bool WriteParcelableIntoAshmem(
+    T &parcelable, const char *ashmemName, MessageParcel &reply);
+
     using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, BundleMgrHostFunc> funcMap_;
 
