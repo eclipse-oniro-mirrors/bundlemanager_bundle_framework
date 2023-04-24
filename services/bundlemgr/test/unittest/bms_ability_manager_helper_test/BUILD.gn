@@ -64,6 +64,12 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }
   defines = []
+
+  if (window_enable) {
+    external_deps += [ "window_manager:libwsutils" ]
+    defines += [ "WINDOW_ENABLE" ]
+  }
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

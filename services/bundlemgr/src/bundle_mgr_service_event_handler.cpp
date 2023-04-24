@@ -41,7 +41,9 @@
 #include "installd_client.h"
 #include "parameter.h"
 #include "perf_profile.h"
+#ifdef WINDOW_ENABLE
 #include "scene_board_judgement.h"
+#endif
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -1794,6 +1796,7 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
 
 void BMSEventHandler::HandleSceneBoard() const
 {
+#ifdef WINDOW_ENABLE
     APP_LOGD("begin to HandleSceneBoard");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -1809,6 +1812,7 @@ void BMSEventHandler::HandleSceneBoard() const
         dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });
     APP_LOGD("HandleSceneBoard finish");
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
