@@ -229,6 +229,7 @@ ohos_shared_library("libbms") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
     "syscap_codec:syscap_interface_shared",
+    "window_manager:libwsutils",
   ]
 
   if (distributed_bundle_framework) {

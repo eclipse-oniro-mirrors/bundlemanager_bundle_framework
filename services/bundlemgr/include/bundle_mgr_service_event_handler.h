@@ -468,6 +468,7 @@ private:
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;
+    void HandleSceneBoard() const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.
