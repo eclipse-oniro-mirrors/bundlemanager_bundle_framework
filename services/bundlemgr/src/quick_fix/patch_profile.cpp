@@ -73,7 +73,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.bundleName,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -81,7 +81,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.versionCode,
         JsonType::NUMBER,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -89,7 +89,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.versionName,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<uint32_t>(jsonObject,
         jsonObjectEnd,
@@ -97,7 +97,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.patchVersionCode,
         JsonType::NUMBER,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -105,7 +105,7 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         app.patchVersionName,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -118,7 +118,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -126,7 +126,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.type,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -134,7 +134,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.deviceTypes,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -142,7 +142,7 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         module.originalModuleHash,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -155,7 +155,7 @@ void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
         patchJson.app,
         JsonType::OBJECT,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Module>(jsonObject,
         jsonObjectEnd,
@@ -163,7 +163,7 @@ void from_json(const nlohmann::json &jsonObject, PatchJson &patchJson)
         patchJson.module,
         JsonType::OBJECT,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -323,7 +323,7 @@ ErrCode PatchProfile::TransformTo(
         PatchProfileReader::g_parseResult = ERR_OK;
         patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
         if (PatchProfileReader::g_parseResult != ERR_OK) {
-            APP_LOGE("parseResult is %{public}d", PatchProfileReader::g_parseResult);
+            APP_LOGE("g_parseResult is %{public}d", PatchProfileReader::g_parseResult);
             int32_t ret = PatchProfileReader::g_parseResult;
             PatchProfileReader::g_parseResult = ERR_OK;
             return ret;
