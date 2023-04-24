@@ -42,7 +42,7 @@ constexpr const char* BUNDLE_PATCH_PROFILE_KEY_MODULE = "module";
 constexpr const char* BUNDLE_PATCH_TYPE_PATCH = "patch";
 constexpr const char* BUNDLE_PATCH_TYPE_HOT_RELOAD = "hotreload";
 
-int32_t parseResult = ERR_OK;
+int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
 struct App {
     std::string bundleName;
@@ -320,12 +320,12 @@ ErrCode PatchProfile::TransformTo(
     PatchProfileReader::PatchJson patchJson;
     {
         std::lock_guard<std::mutex> lock(PatchProfileReader::g_mutex);
-        PatchProfileReader::parseResult = ERR_OK;
+        PatchProfileReader::g_parseResult = ERR_OK;
         patchJson = jsonObject.get<PatchProfileReader::PatchJson>();
-        if (PatchProfileReader::parseResult != ERR_OK) {
-            APP_LOGE("parseResult is %{public}d", PatchProfileReader::parseResult);
-            int32_t ret = PatchProfileReader::parseResult;
-            PatchProfileReader::parseResult = ERR_OK;
+        if (PatchProfileReader::g_parseResult != ERR_OK) {
+            APP_LOGE("parseResult is %{public}d", PatchProfileReader::g_parseResult);
+            int32_t ret = PatchProfileReader::g_parseResult;
+            PatchProfileReader::g_parseResult = ERR_OK;
             return ret;
         }
     }
