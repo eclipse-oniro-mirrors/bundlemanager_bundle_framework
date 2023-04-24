@@ -1118,9 +1118,10 @@ void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &ability
     if (abilityInfo.labelId == 0) {
         if (isStage) {
             abilityInfo.labelId = abilityInfo.applicationInfo.labelId;
-            abilityInfo.label = abilityInfo.applicationInfo;
+            abilityInfo.label = abilityInfo.applicationInfo.label;
         } else {
             abilityInfo.applicationInfo.label = abilityInfo.bundleName;
+            abilityInfo.label = abilityInfo.bundleName;
         }
     }
 
