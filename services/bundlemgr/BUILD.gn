@@ -231,6 +231,11 @@ ohos_shared_library("libbms") {
     "syscap_codec:syscap_interface_shared",
   ]
 
+  if (window_enable) {
+    external_deps += [ "window_manager:libwsutils" ]
+    defines += [ "WINDOW_ENABLE" ]
+  }
+
   if (distributed_bundle_framework) {
     external_deps += [ "distributed_bundle_framework:dbms_fwk" ]
     defines += [ "DISTRIBUTED_BUNDLE_FRAMEWORK" ]

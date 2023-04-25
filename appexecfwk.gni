@@ -53,6 +53,7 @@ declare_args() {
   hicollie_enable = true
   hisysevent_enable = true
   use_pre_bundle_profile = true
+  window_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -101,6 +102,11 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.hiviewdfx_hisysevent_native)) {
     hisysevent_enable = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.window_window_manager)) {
+    window_enable = false
   }
 }
 

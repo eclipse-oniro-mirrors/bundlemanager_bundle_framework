@@ -41,6 +41,9 @@
 #include "installd_client.h"
 #include "parameter.h"
 #include "perf_profile.h"
+#ifdef WINDOW_ENABLE
+#include "scene_board_judgement.h"
+#endif
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -52,6 +55,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
+const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
@@ -236,6 +242,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
+    HandleSceneBoard();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();
@@ -1785,6 +1792,27 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
         }
     }
     APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s end.", bundleName.c_str());
+}
+
+void BMSEventHandler::HandleSceneBoard() const
+{
+#ifdef WINDOW_ENABLE
+    APP_LOGD("begin to HandleSceneBoard");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
+    APP_LOGD("sceneBoardEnable : %{public}d", sceneBoardEnable);
+    dataMgr->SetApplicationEnabled(SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, Constants::DEFAULT_USERID);
+    dataMgr->SetApplicationEnabled(SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
+        dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+    });
+    APP_LOGD("HandleSceneBoard finish");
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
