@@ -4478,4 +4478,124 @@ HWTEST_F(BmsBundleManagerTest, GetUidByDebugBundleName_0100, Function | SmallTes
     int ret = hostImpl->GetUidByDebugBundleName(BUNDLE_NAME, USERID);
     EXPECT_EQ(ret, Constants::INVALID_UID);
 }
+
+/**
+ * @tc.number: GetProxyDataInfos_0100
+ * @tc.name: test GetProxyDataInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetProxyDataInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = hostImpl->GetProxyDataInfos(BUNDLE_NAME, MODULE_NAME, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0200
+ * @tc.name: test GetProxyDataInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetProxyDataInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ProxyData> proxyDatas;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->GetProxyDataInfos(BUNDLE_NAME, MODULE_NAME, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAllProxyDataInfos_0100
+ * @tc.name: test GetAllProxyDataInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllProxyDataInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = hostImpl->GetAllProxyDataInfos(proxyDatas);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllProxyDataInfos_0200
+ * @tc.name: test GetAllProxyDataInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllProxyDataInfos_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::vector<ProxyData> proxyDatas;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->GetAllProxyDataInfos(proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0100
+ * @tc.name: test GetSpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetSpecifiedDistributionType_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string specifiedDistributionType;
+    ErrCode ret = hostImpl->GetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0200
+ * @tc.name: test GetSpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetSpecifiedDistributionType_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string specifiedDistributionType;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->GetSpecifiedDistributionType(BUNDLE_NAME, specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0100
+ * @tc.name: test GetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAdditionalInfo_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string additionalInfo;
+    ErrCode ret = hostImpl->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0200
+ * @tc.name: test GetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetAdditionalInfo_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string additionalInfo;
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    ErrCode ret = hostImpl->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // OHOS

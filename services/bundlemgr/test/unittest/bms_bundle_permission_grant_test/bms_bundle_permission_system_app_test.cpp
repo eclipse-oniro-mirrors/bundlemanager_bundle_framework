@@ -887,4 +887,28 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800
     res = impl.DeleteDisposedStatus(APPID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_5900
+ * @tc.name: test GetSpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5900, Function | SmallTest | Level1)
+{
+    std::string specifiedDistributionType;
+    ErrCode ret = bundleMgrHostImpl_->GetSpecifiedDistributionType("", specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6000
+ * @tc.name: test GetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6000, Function | SmallTest | Level1)
+{
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 } // OHOS
