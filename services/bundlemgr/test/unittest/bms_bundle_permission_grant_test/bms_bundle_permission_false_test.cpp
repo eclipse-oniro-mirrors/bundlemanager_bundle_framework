@@ -1328,4 +1328,28 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8900, Functio
     res = impl.DeleteDisposedStatus(APPID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9000
+ * @tc.name: test GetSpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9000, Function | SmallTest | Level1)
+{
+    std::string specifiedDistributionType;
+    ErrCode ret = bundleMgrHostImpl_->GetSpecifiedDistributionType("", specifiedDistributionType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9100
+ * @tc.name: test GetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9100, Function | SmallTest | Level1)
+{
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS
