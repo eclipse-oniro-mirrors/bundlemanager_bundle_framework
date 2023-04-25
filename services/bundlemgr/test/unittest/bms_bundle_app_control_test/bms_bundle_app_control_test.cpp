@@ -1154,6 +1154,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2900, Function | Sma
     AppControlManagerHostImpl impl;
     std::vector<AppJumpControlRule> controlRules;
     auto appControlManager = impl.appControlManager_;
+    appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->AddAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
     
@@ -1172,6 +1173,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3000, Function | Sma
     AppControlManagerHostImpl impl;
     std::vector<AppJumpControlRule> controlRules;
     auto appControlManager = impl.appControlManager_;
+    appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->DeleteAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
         
@@ -1189,6 +1191,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3100, Function | Sma
 {
     AppControlManagerHostImpl impl;
     auto appControlManager = impl.appControlManager_;
+    appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
         
@@ -1207,6 +1210,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3200, Function | Sma
     AppControlManagerHostImpl impl;
     AppJumpControlRule controlRule;
     auto appControlManager = impl.appControlManager_;
+    appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->GetAppJumpControlRule(
         CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
