@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DISTRIBUTED_MANAGER_BUNDLE_DISTRIBUTED_MANAGER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_DISTRIBUTED_MANAGER_BUNDLE_DISTRIBUTED_MANAGER_H
 
+#include <shared_mutex>
+
 #include "event_handler.h"
 #include "event_runner.h"
 #include "iremote_broker.h"
@@ -49,6 +51,7 @@ private:
         transactId_++;
         return transactId_.load();
     }
+    std::shared_mutex mutex_;
 
     mutable std::atomic<int> transactId_ = 0;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
