@@ -1271,16 +1271,12 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
         APP_LOGE("no bundleName %{public}s found", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-    BundleInfo bundleInfo;
     const InnerBundleInfo &info = item->second;
-    int32_t responseUserId = info.GetResponseUserId(requestUserId);
-    info.GetBundleInfo(flags, bundleInfo, responseUserId);
-    if (bundleInfo.applicationInfo.hideDesktopIcon) {
+    if (info.GetBaseApplicationInfo().hideDesktopIcon) {
         APP_LOGD("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
         return ERR_OK;
     }
-    if (bundleInfo.entryInstallationFree) {
+    if (info.GetBaseBundleInfo().entryInstallationFree) {
         APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleName.c_str());
         return ERR_OK;
     }
