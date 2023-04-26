@@ -18,6 +18,7 @@
 #include <sstream>
 #include <string>
 
+#include "app_provision_info_manager.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -577,6 +578,34 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSpecifiedDistributionType_0010, F
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0001
+ * @tc.name: BmsBundleSharedLibraryInstall
+ * @tc.desc: test install, install hsp
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAppProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    AppProvisionInfo appProvisionInfo;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+        appProvisionInfo);
+    EXPECT_TRUE(ret);
+    EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+
+    AppProvisionInfo newAppProvisionInfo;
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+        newAppProvisionInfo);
+    EXPECT_FALSE(ret);
+    EXPECT_TRUE(newAppProvisionInfo.apl.empty());
 }
 }
 }
