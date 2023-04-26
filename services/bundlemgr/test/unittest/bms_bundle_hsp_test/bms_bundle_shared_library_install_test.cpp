@@ -593,7 +593,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAppProvisionInfo_0001, Function |
     EXPECT_EQ(installResult, ERR_OK);
 
     AppProvisionInfo appProvisionInfo;
-    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(SHARED_BUNDLE_NAME_A,
         appProvisionInfo);
     EXPECT_TRUE(ret);
     EXPECT_FALSE(appProvisionInfo.apl.empty());
@@ -602,7 +602,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAppProvisionInfo_0001, Function |
     EXPECT_EQ(unInstallResult, ERR_OK);
 
     AppProvisionInfo newAppProvisionInfo;
-    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+    ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(SHARED_BUNDLE_NAME_A,
         newAppProvisionInfo);
     EXPECT_FALSE(ret);
     EXPECT_TRUE(newAppProvisionInfo.apl.empty());
