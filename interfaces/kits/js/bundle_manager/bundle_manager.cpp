@@ -750,7 +750,7 @@ static void CheckAbilityInfoCache(
 
     napi_ref cacheAbilityInfo = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
-    std::lock_guard<std::shared_mutex> lock(g_cacheMutex);
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
     cache[query] = cacheAbilityInfo;
 }
 
@@ -761,17 +761,16 @@ void QueryAbilityInfosExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-
-    g_cacheMutex.lock_shared();
-    auto item = cache.find(Query(asyncCallbackInfo->want.ToString(),
-        QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-    if (item != cache.end()) {
-        g_cacheMutex.unlock_shared();
-        asyncCallbackInfo->isSavedInCache = true;
-        APP_LOGD("has cache, no need to query from host.");
-        return;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(asyncCallbackInfo->want.ToString(),
+            QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+        if (item != cache.end()) {
+            asyncCallbackInfo->isSavedInCache = true;
+            APP_LOGD("has cache, no need to query from host.");
+            return;
+        }
     }
-    g_cacheMutex.unlock_shared();
     asyncCallbackInfo->err = InnerQueryAbilityInfos(asyncCallbackInfo->want, asyncCallbackInfo->flags,
         asyncCallbackInfo->userId, asyncCallbackInfo->abilityInfos);
 }
@@ -788,7 +787,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         if (asyncCallbackInfo->isSavedInCache) {
-            g_cacheMutex.lock_shared();
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
             auto item = cache.find(Query(asyncCallbackInfo->want.ToString(),
                 QUERY_ABILITY_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item == cache.end()) {
@@ -796,7 +795,6 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
                 return;
             }
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
-            g_cacheMutex.unlock_shared();
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
             CommonFunc::ConvertAbilityInfos(env, asyncCallbackInfo->abilityInfos, result[1]);
@@ -2310,9 +2308,8 @@ static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Qu
     APP_LOGD("put applicationInfo to cache");
     napi_ref cacheApplicationInfo = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
-    g_cacheMutex.lock();
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
     cache[query] = cacheApplicationInfo;
-    g_cacheMutex.unlock();
 }
 
 napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
@@ -2364,16 +2361,16 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nApplicationInfo = nullptr;
-    g_cacheMutex.lock_shared();
-    auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId, env));
-    if (item != cache.end()) {
-        APP_LOGD("getApplicationInfo param from cache");
-        NAPI_CALL(env,
-            napi_get_reference_value(env, item->second, &nApplicationInfo));
-        g_cacheMutex.unlock_shared();
-        return nApplicationInfo;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(bundleName, GET_APPLICATION_INFO, flags, userId, env));
+        if (item != cache.end()) {
+            APP_LOGD("getApplicationInfo param from cache");
+            NAPI_CALL(env,
+                napi_get_reference_value(env, item->second, &nApplicationInfo));
+            return nApplicationInfo;
+        }
     }
-    g_cacheMutex.unlock_shared();
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("can not get iBundleMgr");
@@ -2445,16 +2442,16 @@ napi_value GetBundleInfoSync(napi_env env, napi_callback_info info)
         userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     }
     napi_value nBundleInfo = nullptr;
-    g_cacheMutex.lock_shared();
-    auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
-    if (item != cache.end()) {
-        APP_LOGD("GetBundleInfo param from cache");
-        NAPI_CALL(env,
-            napi_get_reference_value(env, item->second, &nBundleInfo));
-        g_cacheMutex.unlock_shared();
-        return nBundleInfo;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
+        if (item != cache.end()) {
+            APP_LOGD("GetBundleInfo param from cache");
+            NAPI_CALL(env,
+                napi_get_reference_value(env, item->second, &nBundleInfo));
+            return nBundleInfo;
+        }
     }
-    g_cacheMutex.unlock_shared();
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
         APP_LOGE("BundleMgr is null");
@@ -2632,17 +2629,15 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         if (asyncCallbackInfo->isSavedInCache) {
-            g_cacheMutex.lock_shared();
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
             auto item = cache.find(Query(
                 asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
                 asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item == cache.end()) {
                 APP_LOGE("cannot find result in cache in %{public}s", __func__);
-                g_cacheMutex.unlock_shared();
                 return;
             }
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
-            g_cacheMutex.unlock_shared();
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
             CommonFunc::ConvertBundleInfo(env,
@@ -2680,16 +2675,16 @@ void GetBundleInfoExec(napi_env env, void *data)
         return;
     }
     if (asyncCallbackInfo->err == NO_ERROR) {
-        g_cacheMutex.lock_shared();
-        auto item = cache.find(Query(
-            asyncCallbackInfo->bundleName, GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-        if (item != cache.end()) {
-            asyncCallbackInfo->isSavedInCache = true;
-            APP_LOGD("GetBundleInfo param from cache");
-            g_cacheMutex.unlock_shared();
-            return;
+        {
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+            auto item = cache.find(Query(
+                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            if (item != cache.end()) {
+                asyncCallbackInfo->isSavedInCache = true;
+                APP_LOGD("GetBundleInfo param from cache");
+                return;
+            }
         }
-        g_cacheMutex.unlock_shared();
         asyncCallbackInfo->err = InnerGetBundleInfo(asyncCallbackInfo->bundleName,
             asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfo);
     }
@@ -2709,17 +2704,17 @@ void GetBundleInfoForSelfExec(napi_env env, void *data)
     asyncCallbackInfo->uid = uid;
     asyncCallbackInfo->bundleName = std::to_string(uid);
     asyncCallbackInfo->userId = uid / Constants::BASE_USER_RANGE;
-    g_cacheMutex.lock_shared();
-    auto item = cache.find(Query(
-        asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
-        asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
-    if (item != cache.end()) {
-        g_cacheMutex.unlock_shared();
-        asyncCallbackInfo->isSavedInCache = true;
-        APP_LOGD("GetBundleInfo param from cache");
-        return;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(
+            asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
+            asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+        if (item != cache.end()) {
+            asyncCallbackInfo->isSavedInCache = true;
+            APP_LOGD("GetBundleInfo param from cache");
+            return;
+        }
     }
-    g_cacheMutex.unlock_shared();
     asyncCallbackInfo->err = InnerGetBundleInfoForSelf(
         asyncCallbackInfo->flags, asyncCallbackInfo->bundleInfo);
 }
