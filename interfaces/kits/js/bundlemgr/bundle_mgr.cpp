@@ -4531,12 +4531,16 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
         }
         BundleInfo bundleInfo;
         std::string name(bundleName);
+        StartTrace(HITRACE_TAG_APP, "getBundleInfoExec");
         auto ret = InnerGetBundleInfo(name, bundleFlags, options, bundleInfo);
+        FinishTrace(HITRACE_TAG_APP);
         if (!ret) {
             task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
+        StartTrace(HITRACE_TAG_APP, "getBundleInfoComplete");
         task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfo(engine, bundleInfo));
+        FinishTrace(HITRACE_TAG_APP);
     };
 
     NativeValue *result = nullptr;
