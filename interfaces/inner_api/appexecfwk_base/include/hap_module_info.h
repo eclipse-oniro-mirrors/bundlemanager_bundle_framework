@@ -130,6 +130,7 @@ struct HapModuleInfo : public Parcelable {
     std::string moduleSourceDir;
     AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
     std::vector<PreloadItem> preloads;
+    std::string buildHash;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

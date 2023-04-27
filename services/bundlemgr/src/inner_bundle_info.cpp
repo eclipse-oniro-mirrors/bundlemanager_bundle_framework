@@ -129,6 +129,7 @@ const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
+const std::string MODULE_BUILD_HASH = "buildHash";
 const int32_t SINGLE_HSP_VERSION = 1;
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
@@ -557,6 +558,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
+        {MODULE_BUILD_HASH, info.buildHash}
     };
 }
 
@@ -1070,6 +1072,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_BUILD_HASH,
+        info.buildHash,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1692,7 +1702,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     if (it == innerModuleInfos_.end()) {
         APP_LOGE("can not find module %{public}s", modulePackage.c_str());
         return std::nullopt;
-    }
+    }                                                                                                                                                                                                                                                                                                                   
     HapModuleInfo hapInfo;
     hapInfo.name = it->second.name;
     hapInfo.package = it->second.modulePackage;
@@ -1778,6 +1788,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
     }
+    hapInfo.buildHash = it->second.buildHash;
     return hapInfo;
 }
 

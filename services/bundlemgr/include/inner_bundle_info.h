@@ -118,6 +118,7 @@ struct InnerModuleInfo {
     uint32_t versionCode = 0;
     std::string versionName;
     std::vector<ProxyData> proxyDatas;
+    std::string buildHash;
 };
 
 struct SkillUri {
@@ -1941,6 +1942,16 @@ public:
             }
         }
         return hspModuleNames;
+    }
+
+    bool GetModuleBuildHash(const std::string &moduleName, std::string &buildHash) const
+    {
+        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+            APP_LOGE("innerBundleInfo does not contain the module.");
+            return false;
+        }
+        buildHash = innerModuleInfos_.at(moduleName).buildHash;
+        return true;
     }
 
     void SetAppDistributionType(const std::string &appDistributionType);

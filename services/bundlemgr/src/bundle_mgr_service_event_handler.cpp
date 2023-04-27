@@ -1093,7 +1093,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (hasInstalledInfo.versionCode < hapVersionCode) {
                 APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                    filePaths.emplace_back(item.first);
+                filePaths.emplace_back(item.first);
             }
 
             // The versionCode of Hap is equal to the installed versionCode.
@@ -1109,6 +1109,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (hasModuleInstalled) {
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                        filePaths.emplace_back(item.first);
+                    }
                     continue;
                 }
 
@@ -1132,6 +1135,27 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #endif
         }
     }
+}
+
+bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const
+{
+    auto moduleName = newInfo.GetModuleNameVec().at(0);
+    std::string existModuleHash;
+    for (auto hapInfo : oldBundleInfo.hapModuleInfos) {
+        if (hapInfo.package == moduleName) {
+            existModuleHash = hapInfo.buildHash;
+        }
+    }
+    std::string curModuleHash;
+    if (!newInfo.GetModuleBuildHash(moduleName, curModuleHash)) {
+        APP_LOGD("module(%{public}s) is not existed.", moduleName.c_str());
+        return false;
+    }
+    if (existModuleHash != curModuleHash) {
+        APP_LOGD("module(%{public}s) buildHash changed, so update corresponding hap or hsp.", moduleName.c_str());
+        return true;
+    }
+    return false;
 }
 
 void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
@@ -1171,15 +1195,42 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             continue;
         }
 
-        if (oldBundleInfo.GetVersionCode() >= versionCode) {
+        if (oldBundleInfo.GetVersionCode() > versionCode) {
             APP_LOGD("the installed version is up-to-date");
             continue;
+        }
+        if (oldBundleInfo.GetVersionCode() == versionCode) {
+            if (!UpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
+                APP_LOGD("the installed version is up-to-date");
+                continue;
+            }
         }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
+}
+
+bool BMSEventHandler::UpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
+    auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
+    for (const auto &item : newSharedModuleMap) {
+        auto newModuleName = item.first;
+        auto search = newSharedModuleMap.find(newModuleName);
+        if (search == newSharedModuleMap.end()) {
+            APP_LOGD("module(%{public}s) is not existed.", newModuleName.c_str());
+            return false;
+        }
+        // todo
+        auto oldBuildHash = oldSharedModuleMap[newModuleName][0].buildHash;
+        auto newBuildHash = item.second[0].buildHash;
+        if (oldBuildHash != newBuildHash) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
