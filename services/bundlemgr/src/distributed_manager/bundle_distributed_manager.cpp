@@ -161,10 +161,13 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     queryRpcIdParams->callback = callback;
     queryRpcIdParams->want = want;
     queryRpcIdParams->versionCode = applicationInfo.versionCode;
-    auto ret = queryAbilityParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *queryRpcIdParams);
-    if (!ret.second) {
-        APP_LOGE("BundleDistributedManager::QueryAbilityInfo map emplace error");
-        return false;
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        auto ret = queryAbilityParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, *queryRpcIdParams);
+        if (!ret.second) {
+            APP_LOGE("BundleDistributedManager::QueryAbilityInfo map emplace error");
+            return false;
+        }
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
         this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
@@ -243,34 +246,55 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         APP_LOGE("Parse info from json fail");
         return;
     }
-    auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
-    if (queryAbilityParams == queryAbilityParamsMap_.end()) {
-        APP_LOGE("Can not find node in %{public}s function", __func__);
-        return;
+    Want want;
+    {
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        auto queryAbilityParams = queryAbilityParamsMap_.find(rpcIdResult.transactId);
+        if (queryAbilityParams == queryAbilityParamsMap_.end()) {
+            APP_LOGE("Can not find node in %{public}s function", __func__);
+            return;
+        }
+        want = queryAbilityParams->second.want;
     }
+
     if (handler_ != nullptr) {
         handler_->RemoveTask(rpcIdResult.transactId);
     }
-    int32_t ret = ComparePcIdString(queryAbilityParams->second.want, rpcIdResult);
+    if (rpcIdResult.retCode != 0) {
+        APP_LOGE("query RpcId fail%{public}d", rpcIdResult.retCode);
+        SendCallbackRequest(rpcIdResult.retCode, rpcIdResult.transactId);
+        return;
+    }
+    int32_t ret = ComparePcIdString(want, rpcIdResult);
     if (ret != 0) {
         APP_LOGE("Compare pcId fail%{public}d", ret);
-        SendCallbackRequest(ret, rpcIdResult.transactId);
-    } else {
-        SendCallbackRequest(rpcIdResult.retCode, rpcIdResult.transactId);
     }
+    SendCallbackRequest(ret, rpcIdResult.transactId);
 }
 
 void BundleDistributedManager::SendCallbackRequest(int32_t resultCode, const std::string &transactId)
 {
     APP_LOGI("sendCallbackRequest resultCode:%{public}d, transactId:%{public}s", resultCode, transactId.c_str());
-    auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
-    if (queryAbilityParams == queryAbilityParamsMap_.end()) {
-        APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
-        return;
+    QueryRpcIdParams queryRpcIdParams;
+    {
+        std::shared_lock<std::shared_mutex> lock(mutex_);
+        auto queryAbilityParams = queryAbilityParamsMap_.find(transactId);
+        if (queryAbilityParams == queryAbilityParamsMap_.end()) {
+            APP_LOGE("Can not find transactId:%{public}s in queryAbilityParamsMap", transactId.c_str());
+            return;
+        }
+        queryRpcIdParams = queryAbilityParams->second;
     }
-    SendCallback(resultCode, queryAbilityParams->second);
-    queryAbilityParamsMap_.erase(transactId);
-    if (queryAbilityParamsMap_.size() == 0) {
+    SendCallback(resultCode, queryRpcIdParams);
+
+    uint32_t mapSize;
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        queryAbilityParamsMap_.erase(transactId);
+        mapSize = queryAbilityParamsMap_.size();
+    }
+
+    if (mapSize == 0) {
         auto connectAbility = DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
         if (connectAbility == nullptr) {
             APP_LOGW("fail to connect ServiceCenter");
