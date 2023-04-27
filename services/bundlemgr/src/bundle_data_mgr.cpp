@@ -3959,8 +3959,8 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     std::string type = want.GetType();
     APP_LOGD("type : %{public}s", type.c_str());
     BundleInfo bundleInfo;
-    bool ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
-    if (ret) {
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
+    if (ret == ERR_OK) {
         if (bundleInfo.abilityInfos.size() == 1) {
             abilityInfos = bundleInfo.abilityInfos;
             APP_LOGD("find default ability.");
