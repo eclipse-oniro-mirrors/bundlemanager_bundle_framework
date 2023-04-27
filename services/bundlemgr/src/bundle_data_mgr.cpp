@@ -1238,12 +1238,12 @@ void BundleDataMgr::GetAllLauncherAbility(const Want &want, std::vector<AbilityI
             APP_LOGI("app %{public}s is disabled", info.GetBundleName().c_str());
             continue;
         }
-        BundleFlag flags = BundleFlag::GET_BUNDLE_DEFAULT;
-        BundleInfo bundleInfo;
-        int32_t responseUserId = info.GetResponseUserId(requestUserId);
-        info.GetBundleInfo(flags, bundleInfo, responseUserId);
-        if (bundleInfo.entryInstallationFree) {
-            APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", bundleInfo.name.c_str());
+        if (info.GetBaseApplicationInfo().hideDesktopIcon) {
+            APP_LOGD("Bundle(%{public}s) hide desktop icon", info.GetBundleName().c_str());
+            continue;
+        }
+        if (info.GetBaseBundleInfo().entryInstallationFree) {
+            APP_LOGD("Bundle(%{public}s) is atomic service, hide desktop icon", info.GetBundleName().c_str());
             continue;
         }
 
@@ -1272,6 +1272,10 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     const InnerBundleInfo &info = item->second;
+    if (info.IsDisabled()) {
+        APP_LOGE("app %{public}s is disabled", info.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
     if (info.GetBaseApplicationInfo().hideDesktopIcon) {
         APP_LOGD("Bundle(%{public}s) hide desktop icon", bundleName.c_str());
         return ERR_OK;
