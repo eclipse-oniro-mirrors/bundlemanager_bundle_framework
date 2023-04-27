@@ -16,6 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_SERVICE_EVENT_HANDLER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_SERVICE_EVENT_HANDLER_H
 
+#include <unordered_set>
+
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
 #include "event_handler.h"
@@ -469,6 +471,9 @@ private:
 #endif
     void ListeningUserUnlocked() const;
     void HandleSceneBoard() const;
+    void InnerProcessStockBundleProvisionInfo();
+    void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
+    void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

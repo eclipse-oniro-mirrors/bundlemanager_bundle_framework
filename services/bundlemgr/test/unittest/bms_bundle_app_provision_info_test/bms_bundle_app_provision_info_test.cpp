@@ -27,6 +27,7 @@
 #include "base_bundle_installer.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
@@ -46,6 +47,8 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const std::string HSP_BUNDLE_NAME = "com.example.liba";
+const std::string HSP_FILE_PATH1 = "/data/test/resource/bms/sharelibrary/libA_v10000.hsp";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -59,7 +62,9 @@ public:
     void SetUp();
     void TearDown();
     ErrCode InstallBundle(const std::string &bundlePath) const;
+    ErrCode InstallBundle(const std::vector<std::string> &bundlePath, const InstallParam &installParam) const;
     ErrCode UnInstallBundle(const std::string &bundleName) const;
+    ErrCode UninstallSharedBundle(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
@@ -113,6 +118,27 @@ ErrCode BmsBundleAppProvisionInfoTest::InstallBundle(const std::string &bundlePa
     return receiver->GetResultCode();
 }
 
+ErrCode BmsBundleAppProvisionInfoTest::InstallBundle(const std::vector<std::string> &bundlePath,
+    const InstallParam &installParam) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    bool result = installer->Install(bundlePath, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
 ErrCode BmsBundleAppProvisionInfoTest::UnInstallBundle(const std::string &bundleName) const
 {
     if (!bundleMgrService_) {
@@ -132,6 +158,29 @@ ErrCode BmsBundleAppProvisionInfoTest::UnInstallBundle(const std::string &bundle
     installParam.installFlag = InstallFlag::NORMAL;
     installParam.userId = USERID;
     bool result = installer->Uninstall(bundleName, installParam, receiver);
+    EXPECT_TRUE(result);
+    return receiver->GetResultCode();
+}
+
+ErrCode BmsBundleAppProvisionInfoTest::UninstallSharedBundle(const std::string &bundleName) const
+{
+    if (!bundleMgrService_) {
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    auto installer = bundleMgrService_->GetBundleInstaller();
+    if (!installer) {
+        EXPECT_FALSE(true) << "the installer is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    sptr<MockStatusReceiver> receiver = new (std::nothrow) MockStatusReceiver();
+    if (!receiver) {
+        EXPECT_FALSE(true) << "the receiver is nullptr";
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = bundleName;
+    bool result = installer->Uninstall(uninstallParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
 }
@@ -675,5 +724,316 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0003, Function | Sm
 
     ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: InnerProcessStockBundleProvisionInfo_0001
+ * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
+ * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerProcessStockBundleProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        handler->InnerProcessStockBundleProvisionInfo();
+        AppProvisionInfo appProvisionInfo;
+        bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessBundleProvisionInfo_0001
+ * @tc.name: test the start function of ProcessBundleProvisionInfo
+ * @tc.desc: call ProcessBundleProvisionInfo, no bundleInfos
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessBundleProvisionInfo(allBundleNames);
+
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessBundleProvisionInfo_0002
+ * @tc.name: test the start function of ProcessBundleProvisionInfo
+ * @tc.desc: 1. install hap, delete appProvisionInfo
+ *           2. call ProcessBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+
+        std::unordered_set<std::string> allBundleNames;
+        ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessBundleProvisionInfo_0003
+ * @tc.name: test the start function of ProcessBundleProvisionInfo
+ * @tc.desc: 1. install hap
+ *           2. call ProcessBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessBundleProvisionInfo_0004
+ * @tc.name: test the start function of ProcessBundleProvisionInfo
+ * @tc.desc: 1. install hap
+ *           2. call ProcessBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0004, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+
+        AppProvisionInfo newAppProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            newAppProvisionInfo);
+        EXPECT_FALSE(ret);
+        EXPECT_TRUE(newAppProvisionInfo.apl.empty());
+    }
+}
+
+/**
+ * @tc.number: ProcessSharedBundleProvisionInfo_0001
+ * @tc.name: test the start function of ProcessSharedBundleProvisionInfo
+ * @tc.desc: call ProcessSharedBundleProvisionInfo, no bundleInfos
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessSharedBundleProvisionInfo(allBundleNames);
+
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_FALSE(ret);
+    }
+}
+
+/**
+ * @tc.number: ProcessSharedBundleProvisionInfo_0002
+ * @tc.name: test the start function of ProcessSharedBundleProvisionInfo
+ * @tc.desc: 1. install hap, delete appProvisionInfo
+ *           2. call ProcessSharedBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::vector<std::string> bundlePath;
+        InstallParam installParam;
+        installParam.userId = USERID;
+        installParam.installFlag = InstallFlag::NORMAL;
+        installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
+        ErrCode installResult = InstallBundle(bundlePath, installParam);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(HSP_BUNDLE_NAME);
+        EXPECT_TRUE(ret);
+
+        std::unordered_set<std::string> allBundleNames;
+        ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessSharedBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(HSP_BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessSharedBundleProvisionInfo_0003
+ * @tc.name: test the start function of ProcessSharedBundleProvisionInfo
+ * @tc.desc: 1. install hap
+ *           2. call ProcessSharedBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::vector<std::string> bundlePath;
+        InstallParam installParam;
+        installParam.userId = USERID;
+        installParam.installFlag = InstallFlag::NORMAL;
+        installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
+        ErrCode installResult = InstallBundle(bundlePath, installParam);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessSharedBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(HSP_BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessSharedBundleProvisionInfo_0004
+ * @tc.name: test the start function of ProcessSharedBundleProvisionInfo
+ * @tc.desc: 1. install hap
+ *           2. call ProcessSharedBundleProvisionInfo
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::vector<std::string> bundlePath;
+        InstallParam installParam;
+        installParam.userId = USERID;
+        installParam.installFlag = InstallFlag::NORMAL;
+        installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
+        ErrCode installResult = InstallBundle(bundlePath, installParam);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::unordered_set<std::string> allBundleNames;
+        bool ret =
+            DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(allBundleNames.empty());
+
+        handler->ProcessSharedBundleProvisionInfo(allBundleNames);
+        AppProvisionInfo appProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(HSP_BUNDLE_NAME,
+            appProvisionInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_FALSE(appProvisionInfo.apl.empty());
+
+        ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+
+        AppProvisionInfo newAppProvisionInfo;
+        ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(HSP_BUNDLE_NAME,
+            newAppProvisionInfo);
+        EXPECT_FALSE(ret);
+        EXPECT_TRUE(newAppProvisionInfo.apl.empty());
+    }
 }
 } // OHOS

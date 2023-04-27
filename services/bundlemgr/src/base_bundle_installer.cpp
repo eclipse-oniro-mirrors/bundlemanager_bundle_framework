@@ -344,6 +344,9 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         APP_LOGE("update uninstall success failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+        APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
+    }
     InstallParam installParam;
     versionCode_ = Constants::ALL_VERSIONCODE;
     userId_ = Constants::ALL_USERID;
