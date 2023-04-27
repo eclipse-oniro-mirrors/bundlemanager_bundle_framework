@@ -49,6 +49,7 @@ bool DistributedBundleInfo::ReadFromParcel(Parcel &parcel)
 
     uint32_t moduleInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, moduleInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleInfosSize, &moduleInfos);
     for (uint32_t i = 0; i < moduleInfosSize; i++) {
         std::unique_ptr<DistributedModuleInfo> distributedModuleInfo(parcel.ReadParcelable<DistributedModuleInfo>());
         if (!distributedModuleInfo) {

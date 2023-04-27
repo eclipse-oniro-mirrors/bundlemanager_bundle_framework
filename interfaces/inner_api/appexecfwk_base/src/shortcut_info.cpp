@@ -67,6 +67,7 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
     isEnables = parcel.ReadBool();
     int32_t intentsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, intentsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, intentsSize, &intents);
     for (auto i = 0; i < intentsSize; i++) {
         ShortcutIntent shortcutIntent;
         shortcutIntent.targetBundle = Str16ToStr8(parcel.ReadString16()); // target bundle name

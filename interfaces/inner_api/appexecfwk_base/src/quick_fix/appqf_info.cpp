@@ -88,6 +88,7 @@ bool AppqfInfo::ReadFromParcel(Parcel &parcel)
     type = static_cast<QuickFixType>(parcel.ReadInt32());
     int32_t hqfSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hqfSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hqfSize, &hqfInfos);
     for (auto i = 0; i < hqfSize; i++) {
         std::unique_ptr<HqfInfo> hqfInfoPtr(parcel.ReadParcelable<HqfInfo>());
         if (!hqfInfoPtr) {

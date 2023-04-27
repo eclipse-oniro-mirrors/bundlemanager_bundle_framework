@@ -81,6 +81,7 @@ bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
 {
     int32_t size;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, size);
+    CONTAINER_SECURITY_VERIFY(parcel, size, &abilities);
     for (int32_t i = 0; i < size; i++) {
         abilities.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
@@ -202,6 +203,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t abilityInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilityInfosSize, &abilityInfos);
     for (auto i = 0; i < abilityInfosSize; i++) {
         std::unique_ptr<AbilityInfo> abilityInfo(parcel.ReadParcelable<AbilityInfo>());
         if (!abilityInfo) {
@@ -213,6 +215,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t extensionInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, extensionInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, extensionInfosSize, &extensionInfos);
     for (auto i = 0; i < extensionInfosSize; i++) {
         std::unique_ptr<ExtensionAbilityInfo> extensionAbilityInfo(parcel.ReadParcelable<ExtensionAbilityInfo>());
         if (!extensionAbilityInfo) {
@@ -224,6 +227,7 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t hapModuleInfosSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hapModuleInfosSize, &hapModuleInfos);
     for (auto i = 0; i < hapModuleInfosSize; i++) {
         std::unique_ptr<HapModuleInfo> hapModuleInfo(parcel.ReadParcelable<HapModuleInfo>());
         if (!hapModuleInfo) {
@@ -235,54 +239,63 @@ bool BundleInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t hapModuleNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, hapModuleNamesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, hapModuleNamesSize, &hapModuleNames);
     for (auto i = 0; i < hapModuleNamesSize; i++) {
         hapModuleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t moduleNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleNamesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleNamesSize, &moduleNames);
     for (auto i = 0; i < moduleNamesSize; i++) {
         moduleNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t modulePublicDirsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, modulePublicDirsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, modulePublicDirsSize, &modulePublicDirs);
     for (auto i = 0; i < modulePublicDirsSize; i++) {
         modulePublicDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t moduleDirsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleDirsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleDirsSize, &moduleDirs);
     for (auto i = 0; i < moduleDirsSize; i++) {
         moduleDirs.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t moduleResPathsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, moduleResPathsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, moduleResPathsSize, &moduleResPaths);
     for (auto i = 0; i < moduleResPathsSize; i++) {
         moduleResPaths.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t reqPermissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, reqPermissionsSize, &reqPermissions);
     for (auto i = 0; i < reqPermissionsSize; i++) {
         reqPermissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t defPermissionsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, defPermissionsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, defPermissionsSize, &defPermissions);
     for (auto i = 0; i < defPermissionsSize; i++) {
         defPermissions.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t reqPermissionStatesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionStatesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, reqPermissionStatesSize, &reqPermissionStates);
     for (auto i = 0; i < reqPermissionStatesSize; i++) {
         reqPermissionStates.emplace_back(parcel.ReadInt32());
     }
 
     int32_t reqPermissionDetailsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reqPermissionDetailsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, reqPermissionDetailsSize, &reqPermissionDetails);
     for (auto i = 0; i < reqPermissionDetailsSize; i++) {
         std::unique_ptr<RequestPermission> requestPermission(parcel.ReadParcelable<RequestPermission>());
         if (!requestPermission) {

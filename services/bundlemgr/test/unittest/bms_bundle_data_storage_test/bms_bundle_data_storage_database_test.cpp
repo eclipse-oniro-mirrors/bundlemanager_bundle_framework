@@ -1389,6 +1389,26 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0500, Function | Smal
 }
 
 /**
+ * @tc.number: Test_0500
+ * @tc.name: Test Unmarshalling
+ * @tc.desc: 1.Test the Unmarshalling of Parcel
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, Parcel_0100, Function | SmallTest | Level1)
+{
+    uint32_t b = 0;
+    int32_t maxInt = (b - 1) / 2;
+    OHOS::Parcel parcel;
+    bool ret = parcel.WriteInt32(maxInt - 10);
+    EXPECT_EQ(ret, true);
+    for (int i = 0; i < 10; i++) {
+        ret = parcel.WriteString(NORMAL_BUNDLE_NAME);
+        EXPECT_EQ(ret, true);
+    }
+
+    RequestPermissionUsedScene *requestPermissionUsedScene = RequestPermissionUsedScene::Unmarshalling(parcel);
+    EXPECT_EQ(requestPermissionUsedScene, nullptr);
+}
+/**
  * @tc.number: InnerBundleInfo_0600
  * @tc.name: Test FindAbilityInfos
  * @tc.desc: 1.Test the FindAbilityInfos of InnerBundleInfo

@@ -102,6 +102,7 @@ bool FormInfo::ReadCustomizeData(Parcel &parcel)
 {
     int32_t customizeDataSize = 0;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, customizeDataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &customizeDatas);
     for (auto i = 0; i < customizeDataSize; ++i) {
         FormCustomizeData customizeData;
         std::string customizeName = Str16ToStr8(parcel.ReadString16());
@@ -150,19 +151,21 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 
     int32_t supportDimensionSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportDimensionSize);
-
+    CONTAINER_SECURITY_VERIFY(parcel, supportDimensionSize, &supportDimensions);
     for (int32_t i = 0; i < supportDimensionSize; i++) {
         supportDimensions.emplace_back(parcel.ReadInt32());
     }
 
     int32_t landscapeLayoutsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, landscapeLayoutsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, landscapeLayoutsSize, &landscapeLayouts);
     for (auto i = 0; i < landscapeLayoutsSize; i++) {
         landscapeLayouts.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
 
     int32_t portraitLayoutsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, portraitLayoutsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, portraitLayoutsSize, &portraitLayouts);
     for (auto i = 0; i < portraitLayoutsSize; i++) {
         portraitLayouts.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
