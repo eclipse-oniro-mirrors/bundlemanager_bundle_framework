@@ -313,7 +313,7 @@ ScanResultCode BMSEventHandler::ScanAndAnalyzeUserDatas(
         return scanResultCode;
     }
 
-    std::string baseDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1];
+    std::string baseDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[0];
     std::vector<std::string> userIds;
     if (!ScanDir(baseDataDir, ScanMode::SUB_FILE_DIR, ResultMode::RELATIVE_PATH, userIds)) {
         APP_LOGD("Check the base user directory(%{public}s) failed", baseDataDir.c_str());
@@ -1353,6 +1353,11 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         APP_LOGE("Check APP label failed %{public}d", ret);
         return false;
     }
+
+    // set hapPath
+    std::for_each(infos.begin(), infos.end(), [](auto &item) {
+        item.second.SetModuleHapPath(item.first);
+    });
 
     return true;
 }

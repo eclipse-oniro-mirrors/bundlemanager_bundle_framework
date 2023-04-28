@@ -41,6 +41,7 @@ public:
 
 private:
     bool GetQuickFixMgr();
+    bool IsFileNameValid(const std::string &fileName) const;
 
     std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;
     std::atomic<uint32_t> id_ = 0;

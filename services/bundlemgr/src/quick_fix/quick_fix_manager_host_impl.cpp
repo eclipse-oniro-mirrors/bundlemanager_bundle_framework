@@ -92,6 +92,10 @@ ErrCode QuickFixManagerHostImpl::CreateFd(const std::string &fileName, int32_t &
         APP_LOGE("not quick fix file.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
     }
+    if (!IsFileNameValid(fileName)) {
+        APP_LOGE("invalid fileName");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
     std::string tmpDir = BundleUtil::CreateInstallTempDir(++id_, DirType::QUICK_FIX_DIR);
     if (tmpDir.empty()) {
         APP_LOGE("create tmp dir failed.");
@@ -115,6 +119,17 @@ bool QuickFixManagerHostImpl::GetQuickFixMgr()
             return false;
         }
         quickFixMgr_ = std::make_shared<QuickFixMgr>(quickFixerRunner);
+    }
+    return true;
+}
+
+bool QuickFixManagerHostImpl::IsFileNameValid(const std::string &fileName) const
+{
+    if (fileName.find("..") != std::string::npos
+        || fileName.find("/") != std::string::npos
+        || fileName.find("\\") != std::string::npos
+        || fileName.find("%") != std::string::npos) {
+        return false;
     }
     return true;
 }
