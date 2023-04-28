@@ -20,6 +20,7 @@
 
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "json_constants.h"
@@ -36,6 +37,8 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
+const std::string EMPTY_STRING = "";
+const std::string MODULE_NAEM = "entry";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
