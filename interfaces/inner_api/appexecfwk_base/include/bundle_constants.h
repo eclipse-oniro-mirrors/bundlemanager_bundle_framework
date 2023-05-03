@@ -308,6 +308,9 @@ constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission
 
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
+
+constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
+constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

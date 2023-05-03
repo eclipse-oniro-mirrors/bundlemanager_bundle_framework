@@ -3972,24 +3972,26 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         APP_LOGE("uri empty");
         return false;
     }
+
+
+    std::string convertUri = uri;
     // example of valid param uri : fileShare:///com.example.FileShare/person/10
     // example of convertUri : fileShare://com.example.FileShare
     size_t schemePos = uri.find(Constants::PARAM_URI_SEPARATOR);
-    if (schemePos == uri.npos) {
-        APP_LOGE("uri not include :///, invalid");
-        return false;
+    if (schemePos != uri.npos) {
+        // 1. cut string
+        size_t cutPos = uri.find(Constants::SEPARATOR, schemePos + Constants::PARAM_URI_SEPARATOR_LEN);
+        if (cutPos != uri.npos) {
+            convertUri = uri.substr(0, cutPos);
+        }
+        // 2. replace :/// with ://
+        convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN, Constants::URI_SEPARATOR);
+    } else {
+        if (convertUri.compare(0, Constants::DATA_PROXY_URI_PREFIX_LEN, Constants::DATA_PROXY_URI_PREFIX) != 0) {
+            APP_LOGE("invalid uri : %{private}s", uri.c_str());
+            return false;
+        }
     }
-    size_t cutPos = uri.find(Constants::SEPARATOR, schemePos + Constants::PARAM_URI_SEPARATOR_LEN);
-    // 1. cut string
-    std::string convertUri = uri;
-    if (cutPos != uri.npos) {
-        convertUri = uri.substr(0, cutPos);
-    }
-    // 2. replace :/// with ://
-    convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN,
-        Constants::URI_SEPARATOR);
-    APP_LOGD("convertUri : %{private}s", convertUri.c_str());
-
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ data is empty");
