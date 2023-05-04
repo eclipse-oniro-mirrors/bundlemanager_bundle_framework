@@ -91,6 +91,8 @@ struct ExtensionAbilityInfo : public Parcelable {
     bool enabled = true;
     std::string process;
     CompileMode compileMode = CompileMode::JS_BUNDLE;
+    // for NAPI, save self query cache
+    int32_t uid = -1;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

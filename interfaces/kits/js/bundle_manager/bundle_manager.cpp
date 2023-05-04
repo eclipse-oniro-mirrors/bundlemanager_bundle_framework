@@ -904,12 +904,47 @@ static ErrCode InnerQueryExtensionInfos(ExtensionCallbackInfo *info)
     return CommonFunc::ConvertErrCode(ret);
 }
 
+static void HandleExtensionCache(
+    napi_env env, const Query &query, const ExtensionCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+
+    ElementName element = info->want.GetElement();
+    if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
+        return;
+    }
+
+    uint32_t explicitQueryResultLen = 1;
+    if (info->extensionInfos.size() != explicitQueryResultLen ||
+        info->extensionInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+        return;
+    }
+
+    napi_ref cacheExtensionInfo = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheExtensionInfo));
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    cache[query] = cacheExtensionInfo;
+}
+
 void QueryExtensionInfosExec(napi_env env, void *data)
 {
     ExtensionCallbackInfo *asyncCallbackInfo = reinterpret_cast<ExtensionCallbackInfo *>(data);
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
         return;
+    }
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo.extensionAbilityType);
+        auto item = cache.find(
+            Query(key, QUERY_EXTENSION_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+        if (item != cache.end()) {
+            asyncCallbackInfo->isSavedInCache = true;
+            APP_LOGD("extension has cache, no need to query from host.");
+            return;
+        }
     }
     asyncCallbackInfo->err = InnerQueryExtensionInfos(asyncCallbackInfo);
 }
@@ -926,7 +961,23 @@ void QueryExtensionInfosComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        CommonFunc::ConvertExtensionInfos(env, asyncCallbackInfo->extensionInfos, result[1]);
+        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo.extensionAbilityType);
+        Query query(key, QUERY_EXTENSION_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
+        if (asyncCallbackInfo->isSavedInCache) {
+            // get from cache
+            std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+            auto item = cache.find(query);
+            if (item != cache.end()) {
+                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[1]));
+            } else {
+                APP_LOGE("extension not in cache");
+                asyncCallbackInfo->isSavedInCache = false;
+            }
+        } else {
+            CommonFunc::ConvertExtensionInfos(env, asyncCallbackInfo->extensionInfos, result[1]);
+            // optionally save to cache
+            HandleExtensionCache(env, query, asyncCallbackInfo, result[1]);
+        }
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_EXTENSION_INFOS, BUNDLE_PERMISSIONS);
