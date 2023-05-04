@@ -3972,8 +3972,6 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         APP_LOGE("uri empty");
         return false;
     }
-
-
     std::string convertUri = uri;
     // example of valid param uri : fileShare:///com.example.FileShare/person/10
     // example of convertUri : fileShare://com.example.FileShare
