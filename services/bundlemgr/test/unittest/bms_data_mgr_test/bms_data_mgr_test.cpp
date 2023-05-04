@@ -32,6 +32,7 @@ using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
 using OHOS::AAFwk::Want;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string APP_NAME = "com.example.l3jsdemo";
@@ -1713,3 +1714,4 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
     auto res = innerBundleInfo.GetProxyDataInfos(BUNDLE_NAME, proxyDatas);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
 }
+} // OHOS
