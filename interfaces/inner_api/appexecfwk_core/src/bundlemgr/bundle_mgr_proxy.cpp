@@ -3343,7 +3343,7 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
 }
 
 ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-    std::vector<ProxyData> &proxyDatas)
+    std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     APP_LOGD("begin to GetProxyDataInfos");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -3365,16 +3365,24 @@ ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const s
         APP_LOGE("fail to GetProxyDataInfos due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_PROXY_DATA_INFOS, data, proxyDatas);
 }
 
-ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     APP_LOGD("begin to GetAllProxyDatas");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetAllProxyDatas due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetProxyDataInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, data, proxyDatas);
