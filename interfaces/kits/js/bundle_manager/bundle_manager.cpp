@@ -937,7 +937,7 @@ void QueryExtensionInfosExec(napi_env env, void *data)
     }
     {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo.extensionAbilityType);
+        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo->extensionAbilityType);
         auto item = cache.find(
             Query(key, QUERY_EXTENSION_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
         if (item != cache.end()) {
@@ -961,7 +961,7 @@ void QueryExtensionInfosComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo.extensionAbilityType);
+        std::string key = asyncCallbackInfo->want.ToString() + std::to_string(asyncCallbackInfo->extensionAbilityType);
         Query query(key, QUERY_EXTENSION_INFOS, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env);
         if (asyncCallbackInfo->isSavedInCache) {
             // get from cache
