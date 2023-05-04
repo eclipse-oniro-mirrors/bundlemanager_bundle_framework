@@ -809,10 +809,10 @@ public:
     ErrCode GetSpecifiedDistributionType(const std::string &bundleName, std::string &specifiedDistributionType);
     ErrCode GetAdditionalInfo(const std::string &bundleName, std::string &additionalInfo);
 
-    ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
+    ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName, int32_t userId,
         std::vector<ProxyData> &proxyDatas) const;
 
-    ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
+    ErrCode GetAllProxyDataInfos(int32_t userId, std::vector<ProxyData> &proxyDatas) const;
 
     std::string GetBundleNameByAppId(const std::string &appId) const;
 private:

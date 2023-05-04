@@ -4753,26 +4753,32 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
 }
 
 ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-    std::vector<ProxyData> &proxyDatas) const
+    int userId, std::vector<ProxyData> &proxyDatas) const
 {
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    auto item = bundleInfos_.find(bundleName);
-    if (item == bundleInfos_.end()) {
-        APP_LOGE("GetProxyDataInfos failed, can not find bundle %{public}s",
-            bundleName.c_str());
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    InnerBundleInfo info;
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(
+        bundleName, static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), info, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetProxyData failed for GetInnerBundleInfo failed");
+        return ret;
     }
-    return item->second.GetProxyDataInfos(moduleName, proxyDatas);
+    return info.GetProxyDataInfos(moduleName, proxyDatas);
 }
 
-ErrCode BundleDataMgr::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const
+ErrCode BundleDataMgr::GetAllProxyDataInfos(int userId, std::vector<ProxyData> &proxyDatas) const
 {
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    for (const auto &info : bundleInfos_) {
-        info.second.GetAllProxyDataInfos(proxyDatas);
+    std::vector<BundleInfo> bundleInfos;
+    auto ret = GetBundleInfosV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), bundleInfos, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAllProxyDataInfos failed for GetBundleInfos failed");
+        return ret;
     }
-    if (proxyDatas.empty()) {
-        APP_LOGW("proxyDatas is empty");
+    for (const auto &bundleInfo : bundleInfos) {
+        for (const auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+            proxyDatas.insert(
+                proxyDatas.end(), hapModuleInfo.proxyDatas.begin(), hapModuleInfo.proxyDatas.end());
+        }
     }
     return ERR_OK;
 }

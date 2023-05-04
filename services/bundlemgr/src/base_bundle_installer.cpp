@@ -564,6 +564,28 @@ void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, I
     }
 }
 
+bool BaseBundleInstaller::CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    InnerBundleInfo &oldInfo)
+{
+    std::vector<ProxyData> proxyDatas;
+    oldInfo.GetAllProxyDataInfos(proxyDatas);
+    for (const auto &innerBundleInfo : newInfos) {
+        innerBundleInfo.second.GetAllProxyDataInfos(proxyDatas);
+        APP_LOGI("new bundle name %{public}s", innerBundleInfo.second.GetBundleName().c_str());
+    }
+    APP_LOGI("old bundle name %{public}s", oldInfo.GetBundleName().c_str());
+    APP_LOGI("all proxyData size %{public}d", static_cast<int32_t>(proxyDatas.size()));
+    std::set<std::string> uriSet;
+    for (const auto &proxyData : proxyDatas) {
+        APP_LOGI("proxy uri is %{public}s", proxyData.uri.c_str());
+        if (!uriSet.insert(proxyData.uri).second) {
+            APP_LOGE("uri %{public}s in proxyData is duplicated", proxyData.uri.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
@@ -677,6 +699,10 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
+    if (!CheckDuplicateProxyData(newInfos, bundleInfo)) {
+        APP_LOGE("duplicated uri in proxyDatas");
+        return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+    }
     InnerBundleUserInfo innerBundleUserInfo;
     if (!bundleInfo.GetInnerBundleUserInfo(userId_, innerBundleUserInfo)) {
         APP_LOGE("oldInfo do not have user");
