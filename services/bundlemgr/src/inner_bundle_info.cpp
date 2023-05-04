@@ -129,7 +129,13 @@ const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
+const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const int32_t SINGLE_HSP_VERSION = 1;
+const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
+    {"isolationOnly", IsolationMode::ISOLATION_ONLY},
+    {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
+    {"isolationFirst", IsolationMode::ISOLATION_FIRST},
+};
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -557,6 +563,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
+        {MODULE_ISOLATION_MODE, info.isolationMode},
     };
 }
 
@@ -1070,6 +1077,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_ISOLATION_MODE,
+        info.isolationMode,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1778,6 +1793,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
     }
+    hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     return hapInfo;
 }
 
@@ -3819,6 +3835,16 @@ void InnerBundleInfo::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) c
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         proxyDatas.insert(
             proxyDatas.end(), innerModuleInfo.second.proxyDatas.begin(), innerModuleInfo.second.proxyDatas.end());
+    }
+}
+
+IsolationMode InnerBundleInfo::GetIsolationMode(const std::string &isolationMode) const
+{
+    auto isolationModeRes = ISOLATION_MODE_MAP.find(isolationMode);
+    if (isolationModeRes != ISOLATION_MODE_MAP.end()) {
+        return isolationModeRes->second;
+    } else {
+        return IsolationMode::NONISOLATION_FIRST;
     }
 }
 }  // namespace AppExecFwk

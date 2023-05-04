@@ -118,6 +118,7 @@ struct InnerModuleInfo {
     uint32_t versionCode = 0;
     std::string versionName;
     std::vector<ProxyData> proxyDatas;
+    std::string isolationMode;
 };
 
 struct SkillUri {
@@ -2020,6 +2021,7 @@ private:
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
+    IsolationMode GetIsolationMode(const std::string &isolationMode) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
