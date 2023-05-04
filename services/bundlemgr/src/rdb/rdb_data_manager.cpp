@@ -41,6 +41,7 @@ void RdbDataManager::ClearCache()
 std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 {
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
+    rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     return NativeRdb::RdbHelper::GetRdbStore(
