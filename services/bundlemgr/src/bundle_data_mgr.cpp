@@ -3619,6 +3619,11 @@ ErrCode BundleDataMgr::ExplicitQueryExtensionInfoV9(const Want &want, int32_t fl
         innerBundleInfo.GetApplicationInfoV9(static_cast<int32_t>(
             GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), responseUserId, extensionInfo.applicationInfo);
     }
+    // set uid for NAPI cache use
+    InnerBundleUserInfo innerBundleUserInfo;
+    if (innerBundleInfo.GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
+        extensionInfo.uid = innerBundleUserInfo.uid;
+    }
     return ERR_OK;
 }
 
