@@ -3352,6 +3352,9 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             }
+            if (valueType == napi_undefined) {
+                continue;
+            }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
                 return nullptr;
