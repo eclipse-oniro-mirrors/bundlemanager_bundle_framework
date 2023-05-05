@@ -3403,12 +3403,8 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             }
-            if (valueType == napi_undefined) {
-                continue;
-            }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
-                return nullptr;
+                APP_LOGW("parse userId failed, set this parameter to the caller userId.");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
