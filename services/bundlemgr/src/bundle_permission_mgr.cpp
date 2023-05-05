@@ -702,11 +702,14 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
     return systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion;
 }
 
-
 // if the api has been system api since it is published, then beginSystemApiVersion can be omitted
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
 {
     APP_LOGD("verifying systemApp");
+    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
+    if (Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
+        return true;
+    }
     AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
     AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
     APP_LOGD("tokenType is %{private}d", tokenType);
@@ -729,12 +732,8 @@ bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
             return true;
         }
     }
-    uint64_t accessTokenIdEx = IPCSkeleton::GetCallingFullTokenID();
-    if (!Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIdEx)) {
-        APP_LOGE("non-system app calling system api");
-        return false;
-    }
-    return true;
+    APP_LOGE("system app verification failed");
+    return false;
 }
 
 bool BundlePermissionMgr::IsNativeTokenType()

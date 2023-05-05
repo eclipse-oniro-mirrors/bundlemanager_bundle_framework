@@ -44,6 +44,13 @@ enum class AtomicServiceModuleType {
     MAIN = 1,
 };
 
+enum class IsolationMode {
+    NONISOLATION_FIRST = 0,
+    ISOLATION_FIRST = 1,
+    ISOLATION_ONLY = 2,
+    NONISOLATION_ONLY = 3,
+};
+
 struct PreloadItem : public Parcelable {
     std::string moduleName;
 
@@ -131,6 +138,7 @@ struct HapModuleInfo : public Parcelable {
     AtomicServiceModuleType atomicServiceModuleType = AtomicServiceModuleType::NORMAL;
     std::vector<PreloadItem> preloads;
     std::string buildHash;
+    IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

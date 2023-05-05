@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -1200,7 +1200,7 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             continue;
         }
         if (oldBundleInfo.GetVersionCode() == versionCode) {
-            if (!UpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
+            if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
                 APP_LOGD("the installed version is up-to-date");
                 continue;
             }
@@ -1212,7 +1212,8 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     }
 }
 
-bool BMSEventHandler::UpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
 {
     auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
     auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
@@ -1223,10 +1224,15 @@ bool BMSEventHandler::UpdateSharedAppByHash(const InnerBundleInfo &oldInfo, cons
             APP_LOGD("module(%{public}s) is not existed.", newModuleName.c_str());
             return false;
         }
-        // todo
-        auto oldBuildHash = oldSharedModuleMap[newModuleName][0].buildHash;
-        auto newBuildHash = item.second[0].buildHash;
-        if (oldBuildHash != newBuildHash) {
+        auto oldModuleInfos = oldSharedModuleMap[newModuleName];
+        auto newModuleInfos = item.second;
+        if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
+            auto oldBuildHash = oldModuleInfos[0].buildHash;
+            auto newBuildHash = newModuleInfos[0].buildHash;
+            if (oldBuildHash != newBuildHash) {
+                return true;
+            }
+        } else {
             return true;
         }
     }

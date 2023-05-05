@@ -626,6 +626,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
     EXPECT_EQ(hapModuleInfo.installationFree, false);
     EXPECT_EQ(hapModuleInfo.srcEntrance, "./MyAbilityStage.ts");
+    EXPECT_EQ(hapModuleInfo.isolationMode, IsolationMode::NONISOLATION_FIRST);
 
     auto abilityInfos = hapModuleInfo.abilityInfos.front();
     EXPECT_EQ(abilityInfos.name, "MainAbility");

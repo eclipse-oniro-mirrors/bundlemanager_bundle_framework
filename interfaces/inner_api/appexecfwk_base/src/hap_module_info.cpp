@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -77,6 +77,7 @@ const std::string PROXY_DATA_REQUIRED_READ_PERMISSION = "requiredReadPermission"
 const std::string PROXY_DATA_REQUIRED_WRITE_PERMISSION = "requiredWritePermission";
 const std::string PROXY_DATA_METADATA = "metadata";
 const std::string HAP_MODULE_INFO_BUILD_HASH = "buildHash";
+const std::string HAP_MODULE_INFO_ISOLATION_MODE = "isolationMode";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -434,6 +435,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         proxyDatas.emplace_back(*proxyData);
     }
     buildHash = Str16ToStr8(parcel.ReadString16());
+    isolationMode = static_cast<IsolationMode>(parcel.ReadInt32());
     return true;
 }
 
@@ -541,6 +543,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &item);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildHash));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(isolationMode));
     return true;
 }
 
@@ -594,7 +597,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE, hapModuleInfo.atomicServiceModuleType},
         {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads},
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
-        {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash}
+        {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
+        {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode}
     };
 }
 
@@ -983,6 +987,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         HAP_MODULE_INFO_BUILD_HASH,
         hapModuleInfo.buildHash,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<IsolationMode>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_ISOLATION_MODE,
+        hapModuleInfo.isolationMode,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

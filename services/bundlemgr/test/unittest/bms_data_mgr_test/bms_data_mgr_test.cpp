@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "json_constants.h"
@@ -31,11 +32,14 @@ using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
 using OHOS::AAFwk::Want;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
+const std::string EMPTY_STRING = "";
+const std::string MODULE_NAEM = "entry";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -1661,3 +1665,53 @@ HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | 
         EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
     }
 }
+
+/**
+ * @tc.number: GetProxyDataInfos_0001
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is true
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
+    std::vector<ProxyData> proxyDatas;
+
+    auto res = innerBundleInfo.GetProxyDataInfos(EMPTY_STRING, proxyDatas);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0002
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::vector<ProxyData> proxyDatas;
+    auto res = innerBundleInfo.GetProxyDataInfos(EMPTY_STRING, proxyDatas);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0003
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
+    std::vector<ProxyData> proxyDatas;
+
+    auto res = innerBundleInfo.GetProxyDataInfos(BUNDLE_NAME, proxyDatas);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+} // OHOS
