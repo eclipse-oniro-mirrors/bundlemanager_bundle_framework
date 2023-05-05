@@ -48,6 +48,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.journalMode,
         bmsRdbConfig_.syncMode);
 
+    rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
     return NativeRdb::RdbHelper::GetRdbStore(
