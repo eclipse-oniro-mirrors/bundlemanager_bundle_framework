@@ -87,6 +87,10 @@ constexpr const char* ERR_MSG_UNINSTALL_SHARED_LIBRARY =
     "The specified bundle is shared library";
 constexpr const char* ERR_MSG_DISALLOW_INSTALL =
     "Failed to install because enterprise device management disallow install";
+constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
+    "The uri in data proxy is wrong";
+constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
+    "The required permission in proxy data is too low";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_NOT_SYSTEM_APP, ERR_MSG_NOT_SYSTEM_APP },
@@ -130,6 +134,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST, ERROR_MSG_SHARE_APP_LIBRARY_IS_NOT_EXIST },
     { ERROR_UNINSTALL_BUNDLE_IS_SHARED_BUNDLE, ERR_MSG_UNINSTALL_SHARED_LIBRARY },
     { ERROR_DISALLOW_INSTALL, ERR_MSG_DISALLOW_INSTALL },
+    { ERROR_INSTALL_WRONG_DATA_PROXY_URI, ERR_MSG_WRONG_PROXY_DATA_URI },
+    { ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION, ERR_MSG_WRONG_PROXY_DATA_PERMISSION},
 };
 } // namespace
 
