@@ -1047,6 +1047,12 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         if (!hasBundleInstalled) {
             APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.",
                 bundleName.c_str());
+            if (!removable) {
+                std::vector<std::string> filePaths { scanPathIter };
+                if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+                    APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                }
+            }
             continue;
         }
 
