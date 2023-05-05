@@ -206,6 +206,7 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const std::string BUNDLE_NAME = "bundleName";
+const std::string LAUNCHER_BUNDLE_NAME = "launcherBundleName";
 const std::string MODULE_NAME = "moduleName";
 const std::string ABILITY_NAME = "abilityName";
 const std::string SHORTCUT_ID_KEY = "shortcutId";
@@ -215,6 +216,7 @@ const std::string LABEL_KEY = "label";
 const std::string LABEL_ID_KEY = "labelId";
 const std::string SHORTCUT_WANTS_KEY = "wants";
 const std::string SHORTCUTS_KEY = "shortcuts";
+const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
 }  // namespace
 
@@ -7703,7 +7705,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0100, Function | SmallTest | Leve
     uint32_t installerId = 1;
     int32_t installedUid = 0;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
-    std::string hapName = "test.hap";
+    std::string hapName = HAP_NAME;
     auto res = impl.CreateStream(hapName);
     EXPECT_GE(res, 0);
 }
@@ -7733,9 +7735,24 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0300, Function | SmallTest | Leve
     uint32_t installerId = 1;
     int32_t installedUid = 100;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
-    std::string hapName = "test.hap";
+    std::string hapName = HAP_NAME;
     auto res = impl.CreateStream(hapName);
     EXPECT_EQ(res, -1);
+}
+
+/**
+ * @tc.number: CreateStream_0400
+ * @tc.name: test CreateStream
+ * @tc.desc: CreateStream is false
+ */
+HWTEST_F(BmsBundleKitServiceTest, CreateStream_0400, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 0;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = HAP_NAME + Constants::ILLEGAL_PATH_FIELD;
+    auto res = impl.CreateStream(hapName);
+    EXPECT_GE(res, -1);
 }
 
 /**
@@ -10133,5 +10150,204 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0005, Function | SmallTest |
     MockUninstallBundle(BUNDLE_NAME_TEST);
     ans = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(BUNDLE_NAME_TEST);
     EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: GetAllLauncherAbility_0001
+ * @tc.name: test get all launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetAllLauncherAbility falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllLauncherAbility_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->GetAllLauncherAbility(want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_NE(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetAllLauncherAbility_0002
+ * @tc.name: test get all launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetAllLauncherAbility falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetAllLauncherAbility_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetEntryInstallationFree(true);
+
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+    innerBundleUserInfos[MODULE_NAME] = userInfo;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(BUNDLE_NAME, innerBundleInfo));
+    dataMgr->GetAllLauncherAbility(want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_NE(abilityInfos.size(), 0);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0001
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName falied
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0002
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0003
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0003, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
+    innerBundleInfo.SetHideDesktopIcon(true);
+
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0004
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0004, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
+    innerBundleInfo.SetHideDesktopIcon(false);
+    innerBundleInfo.SetEntryInstallationFree(true);
+
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0005
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName return ERR_OK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0005, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
+    innerBundleInfo.SetHideDesktopIcon(false);
+    innerBundleInfo.SetEntryInstallationFree(false);
+
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo userInfo;
+    innerBundleUserInfos[MODULE_NAME] = userInfo;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+
+    std::vector<AbilityInfo> abilityInfos;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_OK);
+
+    res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(res, ERR_OK);
 }
 }
