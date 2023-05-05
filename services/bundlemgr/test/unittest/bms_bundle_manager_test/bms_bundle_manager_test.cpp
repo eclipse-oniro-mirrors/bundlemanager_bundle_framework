@@ -1709,6 +1709,19 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0003, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: SkillFalse_0004
+ * @tc.name: test MatchType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0004, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    skill.actions.emplace_back("action001");
+    bool ret = skill.MatchType(Constants::TYPE_ONLY_MATCH_WILDCARD, "*/*");
+    EXPECT_EQ(ret, true);
+}
+
+/**
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally

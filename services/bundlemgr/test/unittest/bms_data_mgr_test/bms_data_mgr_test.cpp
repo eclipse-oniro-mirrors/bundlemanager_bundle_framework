@@ -55,6 +55,7 @@ const bool VISIBLE = true;
 const int32_t USERID = 100;
 const std::string ACTION = "action.system.home";
 const std::string ENTITY = "entity.system.home";
+const std::string ISOLATION_ONLY = "isolationOnly";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -1713,5 +1714,29 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
 
     auto res = innerBundleInfo.GetProxyDataInfos(BUNDLE_NAME, proxyDatas);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetIsolationMode_0001
+ * @tc.name: GetIsolationMode
+ * @tc.desc: GetIsolationMode
+ */
+HWTEST_F(BmsDataMgrTest, GetIsolationMode_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    IsolationMode res = innerBundleInfo.GetIsolationMode("");
+    EXPECT_EQ(res, IsolationMode::NONISOLATION_FIRST);
+}
+
+/**
+ * @tc.number: GetIsolationMode_0002
+ * @tc.name: GetIsolationMode
+ * @tc.desc: GetIsolationMode
+ */
+HWTEST_F(BmsDataMgrTest, GetIsolationMode_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    IsolationMode res = innerBundleInfo.GetIsolationMode(ISOLATION_ONLY);
+    EXPECT_EQ(res, IsolationMode::ISOLATION_ONLY);
 }
 } // OHOS
