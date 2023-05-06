@@ -567,6 +567,36 @@ void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, I
     }
 }
 
+bool BaseBundleInstaller::CheckDuplicateProxyData(const InnerBundleInfo &newInfo,
+    const InnerBundleInfo &oldInfo)
+{
+    std::vector<ProxyData> proxyDatas;
+    oldInfo.GetAllProxyDataInfos(proxyDatas);
+    newInfo.GetAllProxyDataInfos(proxyDatas);
+    return CheckDuplicateProxyData(proxyDatas);
+}
+
+bool BaseBundleInstaller::CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    std::vector<ProxyData> proxyDatas;
+    for (const auto &innerBundleInfo : newInfos) {
+        innerBundleInfo.second.GetAllProxyDataInfos(proxyDatas);
+    }
+    return CheckDuplicateProxyData(proxyDatas);
+}
+
+bool BaseBundleInstaller::CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas)
+{
+    std::set<std::string> uriSet;
+    for (const auto &proxyData : proxyDatas) {
+        if (!uriSet.insert(proxyData.uri).second) {
+            APP_LOGE("uri %{public}s in proxyData is duplicated", proxyData.uri.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     InnerBundleInfo &oldInfo, const InstallParam &installParam, int32_t &uid)
 {
@@ -1573,6 +1603,10 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
         }
+        if (!CheckDuplicateProxyData(newInfo, oldInfo)) {
+            APP_LOGE("CheckDuplicateProxyData with old info failed");
+            return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+        }
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
@@ -1665,6 +1699,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         if ((result = CheckAppLabel(oldInfo, newInfo)) != ERR_OK) {
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
+        }
+        if (!CheckDuplicateProxyData(newInfo, oldInfo)) {
+            APP_LOGE("CheckDuplicateProxyData with old info failed");
+            return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
         }
 
         if (!isReplace) {
@@ -2575,6 +2613,10 @@ ErrCode BaseBundleInstaller::CheckMultiNativeFile(
 ErrCode BaseBundleInstaller::CheckProxyDatas(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    if (!CheckDuplicateProxyData(infos)) {
+        APP_LOGE("duplicated uri in proxyDatas");
+        return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+    }
     for (const auto &info : infos) {
         ErrCode ret = bundleInstallChecker_->CheckProxyDatas(info.second);
         if (ret != ERR_OK) {
