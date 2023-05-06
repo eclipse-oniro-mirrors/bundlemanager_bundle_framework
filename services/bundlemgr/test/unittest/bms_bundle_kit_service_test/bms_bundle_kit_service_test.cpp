@@ -9543,7 +9543,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0005, Function | SmallTest
     }
     AppProvisionInfo appProvisionInfo;
     auto ret = bundleMgrProxy->GetAppProvisionInfo(BUNDLE_NAME_TEST, INVALID_UID, appProvisionInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 

@@ -4566,6 +4566,11 @@ const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerb
 ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
+    if (!HasUserId(userId)) {
+        APP_LOGE("GetAppProvisionInfo user is not existed.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -4573,7 +4578,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {
