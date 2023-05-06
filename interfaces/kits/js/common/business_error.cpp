@@ -90,7 +90,7 @@ constexpr const char* ERR_MSG_DISALLOW_INSTALL =
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
     "The uri in data proxy is wrong";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
-    "The required permission in proxy data is too low";
+    "The apl of required permission in non-system data proxy should be system_basic or system_core";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_NOT_SYSTEM_APP, ERR_MSG_NOT_SYSTEM_APP },
