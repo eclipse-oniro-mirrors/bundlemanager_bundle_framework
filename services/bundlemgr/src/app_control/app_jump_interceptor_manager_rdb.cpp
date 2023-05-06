@@ -80,8 +80,7 @@ bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
         return true;
     }
     eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(handler_, shared_from_this());
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();    
     if (!dataMgr->RegisterBundleEventCallback(eventSubscriber_)) {
         APP_LOGE("subscribeCommonEvent subscribed failure.");
         return false;
