@@ -673,7 +673,7 @@ public:
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
-    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
 
     /**

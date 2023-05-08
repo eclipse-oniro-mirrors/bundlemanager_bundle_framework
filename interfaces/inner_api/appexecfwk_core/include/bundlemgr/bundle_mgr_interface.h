@@ -970,7 +970,7 @@ public:
         return false;
     }
 
-    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
         return false;

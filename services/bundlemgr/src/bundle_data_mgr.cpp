@@ -4214,12 +4214,12 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     return abilityRet || extensionRet;
 }
 
-bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     // step1 : find default infos, current only support default file types
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    if (!isShowDefaultPicker) {
+    if (!isReturnDefaultSetting) {
         std::string action = want.GetAction();
         std::string uri = want.GetUriString();
         std::string type = want.GetType();

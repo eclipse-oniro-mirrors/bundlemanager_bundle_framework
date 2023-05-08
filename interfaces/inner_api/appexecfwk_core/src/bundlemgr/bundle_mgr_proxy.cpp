@@ -2604,7 +2604,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     return true;
 }
 
-bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     APP_LOGD("begin to ImplicitQueryInfos");
@@ -2626,8 +2626,8 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         APP_LOGE("WriteInt32 userId failed.");
         return false;
     }
-    if(!data.WriteBool(isShowDefaultPicker)) {
-        APP_LOGE("WriteBool isShowDefaultPicker failed.");
+    if(!data.WriteBool(isReturnDefaultSetting)) {
+        APP_LOGE("WriteBool isReturnDefaultSetting failed.");
         return false;
     }
 
