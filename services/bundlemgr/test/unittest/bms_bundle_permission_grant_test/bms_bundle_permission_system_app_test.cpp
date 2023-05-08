@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -910,5 +910,161 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6000
     std::string additionalInfo;
     ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfo("", additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6100
+ * @tc.name: test Install of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Install false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6100, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Install(HAP_FILE_PATH, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6200
+ * @tc.name: test Install of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Install false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6200, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(HAP_FILE_PATH);
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6300
+ * @tc.name: test Recover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Recover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6300, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Recover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6400
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6400, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6500
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6500, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, "", installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6600
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6600, Function | SmallTest | Level0)
+{
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(uninstallParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6700
+ * @tc.name: test InstallByBundleName of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallByBundleName false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6700, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->InstallByBundleName(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6800
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. CreateStreamInstaller false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6800, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, statusReceiver);
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_6900
+ * @tc.name: test InstallSandboxApp of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallSandboxApp false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6900, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    int32_t dplType = 0;
+    int32_t appIndex = 1;
+    ErrCode ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    dplType = 1;
+    ret = bundleInstallerHost_->InstallSandboxApp("", dplType, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    dplType = 3;
+    ret = bundleInstallerHost_->InstallSandboxApp(BUNDLE_NAME, dplType, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    ret = bundleInstallerHost_->InstallSandboxApp("", dplType, USERID, appIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
 } // OHOS
