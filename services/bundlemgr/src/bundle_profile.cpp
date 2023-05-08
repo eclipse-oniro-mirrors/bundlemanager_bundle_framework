@@ -329,6 +329,7 @@ struct Module {
     std::string mainAbility;
     std::string srcPath;
     bool isLibIsolated = false;
+    std::string buildHash;
 };
 
 // config.json
@@ -1801,6 +1802,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_MODULE_PROFILE_BUILD_HASH,
+        module.buildHash,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ConfigJson &configJson)
@@ -2267,6 +2276,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.isModuleJson = false;
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
     innerModuleInfo.deviceTypes = configJson.module.deviceType;
+    innerModuleInfo.buildHash = configJson.module.buildHash;
     return true;
 }
 

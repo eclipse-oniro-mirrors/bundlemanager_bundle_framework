@@ -260,6 +260,7 @@ struct Module {
     std::string targetModule;
     int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
+    std::string buildHash;
     std::string isolationMode;
 };
 
@@ -1322,6 +1323,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
+        MODULE_BUILD_HASH,
+        module.buildHash,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
         MODULE_ISOLATION_MODE,
         module.isolationMode,
         JsonType::STRING,
@@ -2010,6 +2019,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;

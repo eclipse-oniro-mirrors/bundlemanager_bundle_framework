@@ -129,6 +129,7 @@ const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
+const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
@@ -563,7 +564,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
-        {MODULE_ISOLATION_MODE, info.isolationMode},
+        {MODULE_BUILD_HASH, info.buildHash},
+        {MODULE_ISOLATION_MODE, info.isolationMode}
     };
 }
 
@@ -1077,6 +1079,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_BUILD_HASH,
+        info.buildHash,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_ISOLATION_MODE,
@@ -1793,6 +1803,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
     }
+    hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     return hapInfo;
 }
