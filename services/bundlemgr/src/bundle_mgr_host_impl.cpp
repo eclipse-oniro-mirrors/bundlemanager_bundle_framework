@@ -727,7 +727,7 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
 ErrCode BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, std::string &label)
 {
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
