@@ -585,6 +585,8 @@ private:
 
     ErrCode HandleImplicitQueryInfos(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleImplicitQueryInfosWithIsShowDefaultPicker(MessageParcel &data, MessageParcel &reply);
+
     ErrCode HandleGetAllDependentModuleNames(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetSandboxBundleInfo(MessageParcel &data, MessageParcel &reply);

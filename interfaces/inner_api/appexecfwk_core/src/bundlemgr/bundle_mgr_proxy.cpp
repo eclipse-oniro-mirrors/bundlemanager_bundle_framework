@@ -2604,6 +2604,62 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     return true;
 }
 
+bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    APP_LOGD("begin to ImplicitQueryInfos");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("WriteParcelable want failed.");
+        return false;
+    }
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("WriteInt32 flags failed.");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("WriteInt32 userId failed.");
+        return false;
+    }
+    if(!data.WriteBool(isShowDefaultPicker)) {
+        APP_LOGE("WriteBool isShowDefaultPicker failed.");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::IMPLICIT_QUERY_INFOS_WITH_IS_SHOW_DEFAULT_PICKER, data, reply)) {
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false.");
+        return false;
+    }
+    int32_t abilityInfoSize = reply.ReadInt32();
+    for (int32_t i = 0; i < abilityInfoSize; i++) {
+        std::unique_ptr<AbilityInfo> abilityInfoPtr(reply.ReadParcelable<AbilityInfo>());
+        if (abilityInfoPtr == nullptr) {
+            APP_LOGE("Read Parcelable abilityInfos failed.");
+            return false;
+        }
+        abilityInfos.emplace_back(*abilityInfoPtr);
+    }
+    int32_t extensionInfoSize = reply.ReadInt32();
+    for (int32_t i = 0; i < extensionInfoSize; i++) {
+        std::unique_ptr<ExtensionAbilityInfo> extensionInfoPtr(reply.ReadParcelable<ExtensionAbilityInfo>());
+        if (extensionInfoPtr == nullptr) {
+            APP_LOGE("Read Parcelable extensionInfos failed.");
+            return false;
+        }
+        extensionInfos.emplace_back(*extensionInfoPtr);
+    }
+    return true;
+}
+
 ErrCode BundleMgrProxy::GetSandboxBundleInfo(const std::string &bundleName, int32_t appIndex, int32_t userId,
     BundleInfo &info)
 {

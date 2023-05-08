@@ -970,6 +970,12 @@ public:
         return false;
     }
 
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isShowDefaultPicker,
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    {
+        return false;
+    }
+
     /**
      * @brief Obtains the AbilityInfo based on a given bundle name.
      * @param bundleName Indicates the bundle name to be queried.

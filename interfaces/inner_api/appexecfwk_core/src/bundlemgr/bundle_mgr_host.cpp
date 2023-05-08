@@ -177,6 +177,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleImplicitQueryInfoByPriority);
     funcMap_.emplace(IBundleMgr::Message::IMPLICIT_QUERY_INFOS,
         &BundleMgrHost::HandleImplicitQueryInfos);
+    funcMap_.emplace(IBundleMgr::Message::IMPLICIT_QUERY_INFOS_WITH_IS_SHOW_DEFAULT_PICKER,
+        &BundleMgrHost::HandleImplicitQueryInfosWithIsShowDefaultPicker);
     funcMap_.emplace(IBundleMgr::Message::GET_ALL_DEPENDENT_MODULE_NAMES,
         &BundleMgrHost::HandleGetAllDependentModuleNames);
     funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, &BundleMgrHost::HandleGetSandboxBundleInfo);
@@ -1920,6 +1922,37 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     bool ret = ImplicitQueryInfos(*want, flags, userId, abilityInfos, extensionInfos);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("WriteBool ret failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!WriteParcelableVector(abilityInfos, reply)) {
+            APP_LOGE("WriteParcelableVector abilityInfos failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+        if (!WriteParcelableVector(extensionInfos, reply)) {
+            APP_LOGE("WriteParcelableVector extensionInfo failed.");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleImplicitQueryInfosWithIsShowDefaultPicker(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    bool isShowDefaultPicker = data.ReadBool();
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    bool ret = ImplicitQueryInfos(*want, flags, userId, isShowDefaultPicker, abilityInfos, extensionInfos);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
