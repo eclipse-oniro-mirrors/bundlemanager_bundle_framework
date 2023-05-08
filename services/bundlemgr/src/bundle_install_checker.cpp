@@ -26,6 +26,7 @@
 #include "parameter.h"
 #include "parameters.h"
 #include "privilege_extension_ability_type.h"
+#include "scope_guard.h"
 #include "systemcapability.h"
 
 namespace OHOS {
@@ -335,7 +336,8 @@ ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, In
             if (!isModuleExist) {
                 APP_LOGW("The depend module:%{public}s is not exist in installing package.",
                     dependency.moduleName.c_str());
-                isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName);
+                isModuleExist = FindModuleInInstalledPackage(dependency.moduleName, bundleName,
+                    info.second.GetVersionCode());
                 if (!isModuleExist) {
                     APP_LOGE("The depend module:%{public}s is not exist.", dependency.moduleName.c_str());
                     return ERR_APPEXECFWK_INSTALL_DEPENDENT_MODULE_NOT_EXIST;
@@ -395,16 +397,18 @@ bool BundleInstallChecker::FindModuleInInstallingPackage(
 
 bool BundleInstallChecker::FindModuleInInstalledPackage(
     const std::string &moduleName,
-    const std::string &bundleName)
+    const std::string &bundleName,
+    uint32_t versionCode)
 {
-    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s.",
-        moduleName.c_str(), bundleName.c_str());
+    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s, the versionCode is %{public}d.",
+        moduleName.c_str(), bundleName.c_str(), versionCode);
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
     }
 
+    ScopeGuard enableGuard([&dataMgr, &bundleName] { dataMgr->EnableBundle(bundleName); });
     InnerBundleInfo bundleInfo;
     bool isBundleExist = dataMgr->GetInnerBundleInfo(bundleName, bundleInfo);
     if (!isBundleExist) {
@@ -415,7 +419,10 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
         APP_LOGE("the module: %{public}s is not install", moduleName.c_str());
         return false;
     }
-
+    if (bundleInfo.GetVersionCode() != versionCode) {
+        APP_LOGE("the versionCode %{public}d of dependency is not consistent with the installed module", bundleInfo.GetVersionCode());
+        return false;
+    }
     return true;
 }
 
