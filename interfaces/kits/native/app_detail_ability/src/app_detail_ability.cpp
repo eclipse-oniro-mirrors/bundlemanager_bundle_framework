@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,6 +18,7 @@
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
 #include "element_name.h"
+#include "session_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -26,7 +27,7 @@ constexpr const char* SETTINGS_ACTION = "action.settings.app.info";
 constexpr const char* SETTINGS_PARAM_BUNDLE_NAME = "settingsParamBundleName";
 }
 
-void AppDetailAbility::OnStart(const Want &want)
+void AppDetailAbility::OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessionInfo)
 {
     std::string bundleName = want.GetBundle();
     APP_LOGD("AppDetailAbility::OnStart, bundleName: %{public}s", bundleName.c_str());

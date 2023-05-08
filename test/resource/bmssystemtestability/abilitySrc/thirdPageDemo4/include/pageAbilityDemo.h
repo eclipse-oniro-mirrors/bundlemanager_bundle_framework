@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class PageAbilityDemo : public Ability {
 protected:
-    virtual void OnStart(const Want &want) override;
+    virtual void OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessionInfo = nullptr) override;
     virtual void OnStop() override;
     virtual void OnActive() override;
     virtual void OnInactive() override;
