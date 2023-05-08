@@ -2200,8 +2200,8 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
     }
 
     std::string arkProfilePath;
-    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId)).
-        append(Constants::PATH_SEPARATOR).append(bundleName);
+    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
@@ -2210,8 +2210,8 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
 ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int32_t userId) const
 {
     std::string arkProfilePath;
-    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId)).
-        append(Constants::PATH_SEPARATOR).append(bundleName);
+    arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
