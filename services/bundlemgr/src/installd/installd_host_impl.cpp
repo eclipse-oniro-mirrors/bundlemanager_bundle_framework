@@ -31,6 +31,9 @@
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
 #include "hap_restorecon.h"
+#ifndef SELINUX_HAP_DEBUGGABLE
+#define SELINUX_HAP_DEBUGGABLE 2
+#endif
 #endif // WITH_SELINUX
 #include "installd/installd_operator.h"
 #include "installd/installd_permission_mgr.h"
@@ -433,7 +436,8 @@ ErrCode InstalldHostImpl::SetDirApl(const std::string &dir, const std::string &b
     hapFileInfo.apl = apl;
     hapFileInfo.packageName = bundleName;
     hapFileInfo.flags = SELINUX_HAP_RESTORECON_RECURSE;
-    hapFileInfo.hapFlags = isPreInstallApp ? 1 : 0;
+    hapFileInfo.hapFlags = isPreInstallApp ? SELINUX_HAP_RESTORECON_PREINSTALLED_APP : 0;
+    hapFileInfo.hapFlags |= debug ? SELINUX_HAP_DEBUGGABLE : 0;
     HapContext hapContext;
     int ret = hapContext.HapFileRestorecon(hapFileInfo);
     if (ret != 0) {

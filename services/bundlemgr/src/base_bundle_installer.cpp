@@ -2154,6 +2154,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
+    createDirParam.debug = info.GetBaseApplicationInfo().debug;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
