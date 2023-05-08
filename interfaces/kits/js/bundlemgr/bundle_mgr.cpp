@@ -3777,7 +3777,7 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
             ConvertFromJsValue(engine, info.argv[PARAM2], userId);
             return nullptr;
         } else {
-            errCode = PARAM_TYPE_ERROR;
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             return nullptr;
         }
     }
@@ -3786,7 +3786,7 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
         if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
             ConvertFromJsValue(engine, info.argv[PARAM2], userId);
         } else {
-            errCode = PARAM_TYPE_ERROR;
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
         }
         return info.argv[PARAM3];
     }
