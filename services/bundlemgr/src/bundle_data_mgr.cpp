@@ -4176,12 +4176,12 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
     return true;
 }
 
-bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
+bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     // step1 : find default infos, current only support default file types
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    if (isReturnDefaultSetting) {
+    if (withDefault) {
         std::string action = want.GetAction();
         std::string uri = want.GetUriString();
         std::string type = want.GetType();

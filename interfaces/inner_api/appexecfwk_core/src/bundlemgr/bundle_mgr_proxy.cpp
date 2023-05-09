@@ -2552,7 +2552,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
     return true;
 }
 
-bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
+bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     APP_LOGD("begin to ImplicitQueryInfos");
@@ -2574,8 +2574,8 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         APP_LOGE("WriteInt32 userId failed.");
         return false;
     }
-    if(!data.WriteBool(isReturnDefaultSetting)) {
-        APP_LOGE("WriteBool isReturnDefaultSetting failed.");
+    if(!data.WriteBool(withDefault)) {
+        APP_LOGE("WriteBool withDefault failed.");
         return false;
     }
 
