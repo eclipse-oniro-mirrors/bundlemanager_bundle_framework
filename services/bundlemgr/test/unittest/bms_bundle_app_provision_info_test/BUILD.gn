@@ -50,6 +50,7 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10000:libA_v10000",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
   ]

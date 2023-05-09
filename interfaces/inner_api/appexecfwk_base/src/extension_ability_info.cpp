@@ -48,6 +48,7 @@ const std::string RESOURCE_PATH = "resourcePath";
 const std::string ENABLED = "enabled";
 const std::string PROCESS = "process";
 const std::string COMPILE_MODE = "compileMode";
+const std::string UID = "uid";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }; // namespace
 
@@ -100,6 +101,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     enabled = parcel.ReadBool();
     process = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
+    uid = parcel.ReadInt32();
     return true;
 }
 
@@ -147,6 +149,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, enabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     return true;
 }
 
@@ -176,7 +179,8 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {Constants::HAP_PATH, extensionInfo.hapPath},
         {ENABLED, extensionInfo.enabled},
         {PROCESS, extensionInfo.process},
-        {COMPILE_MODE, extensionInfo.compileMode}
+        {COMPILE_MODE, extensionInfo.compileMode},
+        {UID, extensionInfo.uid}
     };
 }
 
@@ -365,6 +369,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         jsonObjectEnd,
         COMPILE_MODE,
         extensionInfo.compileMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        UID,
+        extensionInfo.uid,
         JsonType::NUMBER,
         false,
         parseResult,

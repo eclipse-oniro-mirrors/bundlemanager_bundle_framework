@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -41,6 +41,9 @@
 #include "installd_client.h"
 #include "parameter.h"
 #include "perf_profile.h"
+#ifdef WINDOW_ENABLE
+#include "scene_board_judgement.h"
+#endif
 #include "status_receiver_host.h"
 #include "system_bundle_installer.h"
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
@@ -52,6 +55,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
+const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
@@ -72,6 +78,7 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.product.incremental.version",
     "const.comp.hl.product_base_version.real"
 };
+const std::string HSP_VERSION_PREFIX = "v";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -236,6 +243,7 @@ void BMSEventHandler::AfterBmsStart()
     DelayedSingleton<BundleMgrService>::GetInstance()->CheckAllUser();
     BundlePermissionMgr::UnInit();
     SetAllInstallFlag();
+    HandleSceneBoard();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterService();
     EventReport::SendScanSysEvent(BMSEventType::BOOT_SCAN_END);
     ClearCache();
@@ -986,6 +994,7 @@ void BMSEventHandler::ProcessReBootPreBundleProFileInstall()
 
     InnerProcessRebootSharedBundleInstall(sharedBundleDirs, Constants::AppType::SYSTEM_APP);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
+    InnerProcessStockBundleProvisionInfo();
 }
 
 void BMSEventHandler::ProcessRebootBundleInstallFromScan()
@@ -994,6 +1003,7 @@ void BMSEventHandler::ProcessRebootBundleInstallFromScan()
     std::list<std::string> bundleDirs;
     GetBundleDirFromScan(bundleDirs);
     InnerProcessRebootBundleInstall(bundleDirs, Constants::AppType::SYSTEM_APP);
+    InnerProcessStockBundleProvisionInfo();
 }
 
 void BMSEventHandler::InnerProcessRebootBundleInstall(
@@ -1003,11 +1013,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return;
-    }
-
-    std::unordered_set<std::string> allBundleNames;
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
-        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
     }
 
     for (auto &scanPathIter : scanPathList) {
@@ -1088,7 +1093,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (hasInstalledInfo.versionCode < hapVersionCode) {
                 APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                    filePaths.emplace_back(item.first);
+                filePaths.emplace_back(item.first);
             }
 
             // The versionCode of Hap is equal to the installed versionCode.
@@ -1104,6 +1109,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (hasModuleInstalled) {
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                        filePaths.emplace_back(item.first);
+                    }
                     continue;
                 }
 
@@ -1117,10 +1125,6 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
-            // not exist in appProvisionInfo table, then parse profile info and save it
-            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
-                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
-            }
             continue;
         }
 
@@ -1133,6 +1137,27 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
     }
 }
 
+bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const
+{
+    auto moduleName = newInfo.GetModuleNameVec().at(0);
+    std::string existModuleHash;
+    for (auto hapInfo : oldBundleInfo.hapModuleInfos) {
+        if (hapInfo.package == moduleName) {
+            existModuleHash = hapInfo.buildHash;
+        }
+    }
+    std::string curModuleHash;
+    if (!newInfo.GetModuleBuildHash(moduleName, curModuleHash)) {
+        APP_LOGD("module(%{public}s) is not existed.", moduleName.c_str());
+        return false;
+    }
+    if (existModuleHash != curModuleHash) {
+        APP_LOGD("module(%{public}s) buildHash changed, so update corresponding hap or hsp.", moduleName.c_str());
+        return true;
+    }
+    return false;
+}
+
 void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     const std::list<std::string> &scanPathList, Constants::AppType appType)
 {
@@ -1141,10 +1166,6 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return;
-    }
-    std::unordered_set<std::string> allBundleNames;
-    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
-        APP_LOGW("GetAllAppProvisionInfoBundleName failed");
     }
     for (const auto &scanPath : scanPathList) {
         bool removable = IsPreInstallRemovable(scanPath);
@@ -1174,18 +1195,48 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             continue;
         }
 
-        if (oldBundleInfo.GetVersionCode() >= versionCode) {
+        if (oldBundleInfo.GetVersionCode() > versionCode) {
             APP_LOGD("the installed version is up-to-date");
-            if (allBundleNames.find(bundleName) == allBundleNames.end()) {
-                AddStockAppProvisionInfoByOTA(bundleName, infos.begin()->first);
-            }
             continue;
+        }
+        if (oldBundleInfo.GetVersionCode() == versionCode) {
+            if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
+                APP_LOGD("the installed version is up-to-date");
+                continue;
+            }
         }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
+}
+
+bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
+    auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
+    for (const auto &item : newSharedModuleMap) {
+        auto newModuleName = item.first;
+        auto search = newSharedModuleMap.find(newModuleName);
+        if (search == newSharedModuleMap.end()) {
+            APP_LOGD("module(%{public}s) is not existed.", newModuleName.c_str());
+            return false;
+        }
+        auto oldModuleInfos = oldSharedModuleMap[newModuleName];
+        auto newModuleInfos = item.second;
+        if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
+            auto oldBuildHash = oldModuleInfos[0].buildHash;
+            auto newBuildHash = newModuleInfos[0].buildHash;
+            if (oldBuildHash != newBuildHash) {
+                return true;
+            }
+        } else {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
@@ -1785,6 +1836,90 @@ void BMSEventHandler::UpdateAppDataSelinuxLabel(const std::string &bundleName, c
         }
     }
     APP_LOGD("UpdateAppDataSelinuxLabel bundleName: %{public}s end.", bundleName.c_str());
+}
+
+void BMSEventHandler::HandleSceneBoard() const
+{
+#ifdef WINDOW_ENABLE
+    APP_LOGD("begin to HandleSceneBoard");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
+    APP_LOGD("sceneBoardEnable : %{public}d", sceneBoardEnable);
+    dataMgr->SetApplicationEnabled(SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, Constants::DEFAULT_USERID);
+    dataMgr->SetApplicationEnabled(SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
+        dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+    });
+    APP_LOGD("HandleSceneBoard finish");
+#endif
+}
+
+void BMSEventHandler::InnerProcessStockBundleProvisionInfo()
+{
+    APP_LOGD("InnerProcessStockBundleProvisionInfo start.");
+    std::unordered_set<std::string> allBundleNames;
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAllAppProvisionInfoBundleName(allBundleNames)) {
+        APP_LOGE("GetAllAppProvisionInfoBundleName failed");
+        return;
+    }
+    // process normal bundle
+    ProcessBundleProvisionInfo(allBundleNames);
+    // process shared bundle
+    ProcessSharedBundleProvisionInfo(allBundleNames);
+    APP_LOGD("InnerProcessStockBundleProvisionInfo end.");
+}
+
+void BMSEventHandler::ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    if (dataMgr->GetBundleInfosV9(static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE),
+        bundleInfos, Constants::ALL_USERID) != ERR_OK) {
+        APP_LOGE("GetBundleInfos failed");
+        return;
+    }
+    for (const auto &bundleInfo : bundleInfos) {
+        // not exist in appProvisionInfo table, then parse profile info and save it
+        if ((allBundleNames.find(bundleInfo.name) == allBundleNames.end()) &&
+            !bundleInfo.hapModuleInfos.empty()) {
+            AddStockAppProvisionInfoByOTA(bundleInfo.name, bundleInfo.hapModuleInfos[0].hapPath);
+        }
+    }
+}
+
+void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<SharedBundleInfo> shareBundleInfos;
+    if (dataMgr->GetAllSharedBundleInfo(shareBundleInfos) != ERR_OK) {
+        APP_LOGE("GetAllSharedBundleInfo failed");
+        return;
+    }
+    for (const auto &sharedBundleInfo : shareBundleInfos) {
+        // not exist in appProvisionInfo table, then parse profile info and save it
+        if ((allBundleNames.find(sharedBundleInfo.name) == allBundleNames.end()) &&
+            !sharedBundleInfo.sharedModuleInfos.empty()) {
+            std::string hspPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + sharedBundleInfo.name +
+                Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
+                std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + Constants::PATH_SEPARATOR +
+                sharedBundleInfo.sharedModuleInfos[0].name + Constants::PATH_SEPARATOR +
+                sharedBundleInfo.sharedModuleInfos[0].name + Constants::INSTALL_SHARED_FILE_SUFFIX;
+            AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

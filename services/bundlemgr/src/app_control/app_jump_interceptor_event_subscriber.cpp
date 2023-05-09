@@ -16,16 +16,15 @@
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "want.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 const std::string WANT_PARAM_USER_ID = "userId";
-AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
-    const EventFwk::CommonEventSubscribeInfo &subscribeInfo,
+AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(const std::shared_ptr<EventHandler> &eventHandler,
     const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb)
-    : EventFwk::CommonEventSubscriber(subscribeInfo)
 {
+    eventHandler_ = eventHandler;
     appJumpDb_ = appJumpDb;
 }
 
@@ -33,7 +32,7 @@ AppJumpInterceptorEventSubscriber::~AppJumpInterceptorEventSubscriber()
 {
 }
 
-void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &eventData)
+void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData eventData)
 {
     const AAFwk::Want& want = eventData.GetWant();
     std::string action = want.GetAction();
@@ -53,8 +52,13 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     APP_LOGI("%{public}s, action:%{public}s.", __func__, action.c_str());
     std::weak_ptr<AppJumpInterceptorEventSubscriber> weakThis = shared_from_this();
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED) {
+        APP_LOGI("bundle remove, bundleName: %{public}s", bundleName.c_str());
         auto task = [weakThis, bundleName, db, userId]() {
-            APP_LOGI("bundle remove, bundleName: %{public}s", bundleName.c_str());
+            BundleMemoryGuard memoryGuard;
+            if (db == nullptr) {
+                APP_LOGE("Get invalid db");
+                return;
+            }
             std::shared_ptr<AppJumpInterceptorEventSubscriber> sharedThis = weakThis.lock();
             if (sharedThis) {
                 APP_LOGI("start delete rule bundleName: %{public}s, userId:%d", bundleName.c_str(), userId);

@@ -46,7 +46,7 @@ private:
     std::shared_ptr<EventRunner> runner_ = nullptr;
     std::shared_ptr<EventHandler> handler_ = nullptr;
     std::shared_ptr<RdbDataManager> rdbDataManager_;
-    std::shared_ptr<AppJumpInterceptorEventSubscriber> eventSubscriber_;
+    sptr<AppJumpInterceptorEventSubscriber> eventSubscriber_;
     bool InitEventRunnerAndHandler();
 };
 } // namespace AppExecFwk

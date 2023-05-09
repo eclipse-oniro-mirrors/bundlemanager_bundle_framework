@@ -1107,6 +1107,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     createDirParam.gid = innerBundleUserInfo.uid;
     createDirParam.apl = GetAppPrivilegeLevel(bundleName, userId);
     createDirParam.isPreInstallApp = IsPreInstallApp(bundleName);
+    createDirParam.debug = applicationInfo.debug;
     if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam)) {
         APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
@@ -2469,7 +2470,7 @@ ErrCode BundleMgrHostImpl::GetAppProvisionInfo(const std::string &bundleName, in
 {
     APP_LOGD("begin to GetAppProvisionInfo bundleName: %{public}s, userId: %{public}d", bundleName.c_str(),
         userId);
-    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
+    if (!VerifySystemApi()) {
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
@@ -2620,7 +2621,7 @@ bool BundleMgrHostImpl::IsPreInstallApp(const std::string &bundleName)
 }
 
 ErrCode BundleMgrHostImpl::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-    std::vector<ProxyData> &proxyDatas)
+    std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     if (!BundlePermissionMgr::IsNativeTokenType()) {
         APP_LOGE("verify token type failed");
@@ -2631,10 +2632,10 @@ ErrCode BundleMgrHostImpl::GetProxyDataInfos(const std::string &bundleName, cons
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetProxyDataInfos(bundleName, moduleName, proxyDatas);
+    return dataMgr->GetProxyDataInfos(bundleName, moduleName, userId, proxyDatas);
 }
 
-ErrCode BundleMgrHostImpl::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+ErrCode BundleMgrHostImpl::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas, int32_t userId)
 {
     if (!BundlePermissionMgr::IsNativeTokenType()) {
         APP_LOGE("verify token type failed");
@@ -2645,7 +2646,7 @@ ErrCode BundleMgrHostImpl::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDat
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetAllProxyDataInfos(proxyDatas);
+    return dataMgr->GetAllProxyDataInfos(userId, proxyDatas);
 }
 
 ErrCode BundleMgrHostImpl::GetSpecifiedDistributionType(const std::string &bundleName,

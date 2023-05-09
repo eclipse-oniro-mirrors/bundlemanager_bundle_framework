@@ -702,7 +702,6 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
     return systemApiVersion < appApiVersion ? systemApiVersion :appApiVersion;
 }
 
-
 // if the api has been system api since it is published, then beginSystemApiVersion can be omitted
 bool BundlePermissionMgr::VerifySystemApp(int32_t beginSystemApiVersion)
 {

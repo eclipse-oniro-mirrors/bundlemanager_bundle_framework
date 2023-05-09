@@ -2558,8 +2558,9 @@ ErrCode BundleMgrHost::HandleGetProxyDataInfos(MessageParcel &data, MessageParce
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     std::vector<ProxyData> proxyDatas;
-    ErrCode ret = GetProxyDataInfos(bundleName, moduleName, proxyDatas);
+    ErrCode ret = GetProxyDataInfos(bundleName, moduleName, proxyDatas, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("HandleGetProxyDataInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2575,7 +2576,8 @@ ErrCode BundleMgrHost::HandleGetAllProxyDataInfos(MessageParcel &data, MessagePa
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::vector<ProxyData> proxyDatas;
-    ErrCode ret = GetAllProxyDataInfos(proxyDatas);
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = GetAllProxyDataInfos(proxyDatas, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("HandleGetProxyDataInfos write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

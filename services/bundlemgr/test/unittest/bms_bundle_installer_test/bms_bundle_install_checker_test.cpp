@@ -47,6 +47,7 @@ const std::string BUNDLE_NAME = "com.example.test";
 const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
 const std::string ENTRY = "entry";
+const std::string PROXY_DATAS = "2";
 const int32_t PRIORITY_ONE = 1;
 const int32_t PRIORITY_TWO = 2;
 }  // namespace
@@ -1297,5 +1298,126 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0008, Function | SmallTe
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0001
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = PROXY_DATAS;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ENTRY;
+    ProxyData data;
+    data.uri = "//";
+    innerModuleInfo.proxyDatas.push_back(data);
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0001
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "";
+    innerModuleInfos.try_emplace("", innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0001
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = PROXY_DATAS;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ENTRY;
+    ProxyData data;
+    data.uri = "//2/";
+    innerModuleInfo.proxyDatas.push_back(data);
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED);
+}
+
+/**
+ * @tc.number: CheckDuplicateProxyData_0001
+ * @tc.name: test the start function of CheckDuplicateProxyData
+ * @tc.desc: 1. test CheckDuplicateProxyData
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDuplicateProxyData_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = ENTRY;
+    ProxyData data;
+    data.uri = "//2/";
+    innerModuleInfo.proxyDatas.push_back(data);
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    newInfo.innerModuleInfos_ = innerModuleInfos;
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    BaseBundleInstaller baseBundleInstaller;
+    bool ret = baseBundleInstaller.CheckDuplicateProxyData(newInfo, oldInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CheckDuplicateProxyData_0002
+ * @tc.name: test the start function of CheckDuplicateProxyData
+ * @tc.desc: 1. test CheckDuplicateProxyData
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDuplicateProxyData_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo newInfo;
+    InnerBundleInfo oldInfo;
+
+    BaseBundleInstaller baseBundleInstaller;
+    bool ret = baseBundleInstaller.CheckDuplicateProxyData(newInfo, oldInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CheckDuplicateProxyData_0002
+ * @tc.name: test the start function of CheckDuplicateProxyData
+ * @tc.desc: 1. test CheckDuplicateProxyData
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckDuplicateProxyData_0003, Function | SmallTest | Level0)
+{
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+
+    BaseBundleInstaller baseBundleInstaller;
+    bool ret = baseBundleInstaller.CheckDuplicateProxyData(newInfos);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS

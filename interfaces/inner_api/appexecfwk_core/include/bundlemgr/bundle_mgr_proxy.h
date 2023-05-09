@@ -807,10 +807,11 @@ public:
     virtual ErrCode GetSharedDependencies(const std::string &bundleName, const std::string &moduleName,
         std::vector<Dependency> &dependencies) override;
 
-    virtual ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) override;
+    virtual ErrCode GetAllProxyDataInfos(
+        std::vector<ProxyData> &proxyDatas, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-        std::vector<ProxyData> &proxyDatas) override;
+        std::vector<ProxyData> &proxyDatas, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
     virtual ErrCode GetSpecifiedDistributionType(const std::string &bundleName,
         std::string &specifiedDistributionType) override;

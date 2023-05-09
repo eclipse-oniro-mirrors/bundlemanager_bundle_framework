@@ -1676,7 +1676,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, ApplicationInfoJsonSerializer_0200, F
             infoJson[iter.key()] = valueIter.value();
         }
     }
-    EXPECT_EQ(infoJson[NAME], TEST_NAME); 
+    EXPECT_EQ(infoJson[NAME], TEST_NAME);
 }
 
 /**

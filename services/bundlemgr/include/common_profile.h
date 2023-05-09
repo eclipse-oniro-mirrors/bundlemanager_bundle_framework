@@ -120,6 +120,7 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_REQ_PERMISSIONS_WHEN_ALWAYS = "a
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_CUSTOMIZE_DATA = "customizeData";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MAIN_ABILITY = "mainAbility";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_SRC_PATH = "srcPath";
+constexpr const char* BUNDLE_MODULE_PROFILE_BUILD_HASH = "buildHash";
 // sub BUNDLE_MODULE_PROFILE_KEY_DISTRO
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_DELIVERY_WITH_INSTALL = "deliveryWithInstall";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MODULE_NAME = "moduleName";
@@ -360,6 +361,8 @@ constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 constexpr const char* MODULE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* MODULE_PROXY_DATAS = "proxyDatas";
+constexpr const char* MODULE_BUILD_HASH = "buildHash";
+constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 // module type
 constexpr const char* MODULE_TYPE_ENTRY = "entry";
 constexpr const char* MODULE_TYPE_FEATURE = "feature";

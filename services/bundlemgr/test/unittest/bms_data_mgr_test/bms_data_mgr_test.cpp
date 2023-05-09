@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
 #include "json_constants.h"
@@ -31,11 +32,14 @@ using namespace OHOS::AppExecFwk;
 using OHOS::Parcel;
 using OHOS::AAFwk::Want;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
+const std::string EMPTY_STRING = "";
+const std::string MODULE_NAEM = "entry";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -51,6 +55,7 @@ const bool VISIBLE = true;
 const int32_t USERID = 100;
 const std::string ACTION = "action.system.home";
 const std::string ENTITY = "entity.system.home";
+const std::string ISOLATION_ONLY = "isolationOnly";
 }  // namespace
 
 class BmsDataMgrTest : public testing::Test {
@@ -1489,3 +1494,249 @@ HWTEST_F(BmsDataMgrTest, AddAppDetailAbilityInfo_0001, Function | SmallTest | Le
         EXPECT_EQ(ability->name, Constants::APP_DETAIL_ABILITY);
     }
 }
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0001
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "";
+        abilityInfo.labelId = 0;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_EQ(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0002
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is not equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "#string:aaa";
+        abilityInfo.labelId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_NE(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_NE(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0003
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.bundleName = "test";
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "";
+        abilityInfo.labelId = 0;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.applicationInfo.label, abilityInfo.bundleName);
+        EXPECT_EQ(abilityInfo.label, abilityInfo.bundleName);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0004
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, labelId is not equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.applicationInfo.label = "$string:label";
+        abilityInfo.applicationInfo.labelId = 1111;
+        abilityInfo.label = "#string:aaa";
+        abilityInfo.labelId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_NE(abilityInfo.label, abilityInfo.applicationInfo.label);
+        EXPECT_NE(abilityInfo.labelId, abilityInfo.applicationInfo.labelId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0005
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0005, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 0;
+        abilityInfo.applicationInfo.iconId = 1111;
+
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.applicationInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0006
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is not equal 0
+ *           2. stage mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0006, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(true, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0007
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0007, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 0;
+        InnerBundleInfo innerBundleInfo;
+
+        ApplicationInfo applicationInfo;
+        applicationInfo.bundleName = "ohos.global.systemres";
+        applicationInfo.iconId = 222;
+        innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+        dataMgr->bundleInfos_["ohos.global.systemres"] = innerBundleInfo;
+
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, applicationInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: ModifyLauncherAbilityInfo_0008
+ * @tc.name: ModifyLauncherAbilityInfo
+ * @tc.desc: 1. ModifyLauncherAbilityInfo, iconId is not equal 0
+ *           2. FA mode
+ */
+HWTEST_F(BmsDataMgrTest, ModifyLauncherAbilityInfo_0008, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr) {
+        AbilityInfo abilityInfo;
+        abilityInfo.iconId = 2222;
+        dataMgr->ModifyLauncherAbilityInfo(false, abilityInfo);
+        EXPECT_EQ(abilityInfo.iconId, abilityInfo.iconId);
+    }
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0001
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is true
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
+    std::vector<ProxyData> proxyDatas;
+
+    auto res = innerBundleInfo.GetProxyDataInfos(EMPTY_STRING, proxyDatas);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0002
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is ERR_OK
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::vector<ProxyData> proxyDatas;
+    auto res = innerBundleInfo.GetProxyDataInfos(EMPTY_STRING, proxyDatas);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0003
+ * @tc.name: GetProxyDataInfos
+ * @tc.desc: GetProxyDataInfos, return is ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST
+ */
+HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
+    std::vector<ProxyData> proxyDatas;
+
+    auto res = innerBundleInfo.GetProxyDataInfos(BUNDLE_NAME, proxyDatas);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetIsolationMode_0001
+ * @tc.name: GetIsolationMode
+ * @tc.desc: GetIsolationMode
+ */
+HWTEST_F(BmsDataMgrTest, GetIsolationMode_0001, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    IsolationMode res = innerBundleInfo.GetIsolationMode("");
+    EXPECT_EQ(res, IsolationMode::NONISOLATION_FIRST);
+}
+
+/**
+ * @tc.number: GetIsolationMode_0002
+ * @tc.name: GetIsolationMode
+ * @tc.desc: GetIsolationMode
+ */
+HWTEST_F(BmsDataMgrTest, GetIsolationMode_0002, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    IsolationMode res = innerBundleInfo.GetIsolationMode(ISOLATION_ONLY);
+    EXPECT_EQ(res, IsolationMode::ISOLATION_ONLY);
+}
+} // OHOS

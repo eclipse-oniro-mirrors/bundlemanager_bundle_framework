@@ -1156,13 +1156,14 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    virtual ErrCode GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas)
+    virtual ErrCode GetAllProxyDataInfos(
+        std::vector<ProxyData> &proxyDatas, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
     virtual ErrCode GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-        std::vector<ProxyData> &proxyDatas)
+        std::vector<ProxyData> &proxyDatas, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

@@ -52,7 +52,13 @@ const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
 const std::string SLASH = "/";
 const std::string DOUBLE_SLASH = "//";
+const std::string SUPPORT_ISOLATION_MODE = "supportIsolationMode";
+const std::string VALUE_TRUE = "true";
+const std::string VALUE_FALSE = "false";
+const std::string NONISOLATION_ONLY = "nonisolationOnly";
+const std::string ISOLATION_ONLY = "isolationOnly";
 const int32_t SLAH_OFFSET = 2;
+const int32_t THRESHOLD_VAL_LEN = 20;
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -1167,6 +1173,40 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
             if (!CheckPermissionLevel(proxyData.requiredReadPermission)
                     || !CheckPermissionLevel(proxyData.requiredWritePermission)) {
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string isolationMode)
+{
+    if (((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) &&
+        (isolationMode == NONISOLATION_ONLY)) ||
+        ((std::strcmp(szIsolationModeThresholdMb, VALUE_FALSE.c_str()) == 0) &&
+        (isolationMode == ISOLATION_ONLY))) {
+        APP_LOGE("Parser isolation mode failed.");
+        return false;
+    }
+    return true;
+}
+
+ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    for (const auto &info : infos) {
+        auto moduleInfos = info.second.GetInnerModuleInfos();
+        for (const auto &moduleInfo : moduleInfos) {
+            std::string isolationMode = moduleInfo.second.isolationMode;
+            char szIsolationModeThresholdMb[THRESHOLD_VAL_LEN] = {0};
+            int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
+                szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
+            if (ret <= 0) {
+                APP_LOGE("GetParameter failed");
+                continue;
+            }
+            if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
+                APP_LOGE("Parser isolation mode failed.");
+                return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }
     }

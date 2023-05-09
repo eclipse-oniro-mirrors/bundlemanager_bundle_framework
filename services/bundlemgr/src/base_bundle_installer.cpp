@@ -76,7 +76,7 @@ const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
 const int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
-const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 1024;
+const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
 
@@ -344,6 +344,9 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         APP_LOGE("update uninstall success failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
+    if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
+        APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
+    }
     InstallParam installParam;
     versionCode_ = Constants::ALL_VERSIONCODE;
     userId_ = Constants::ALL_USERID;
@@ -562,6 +565,36 @@ void BaseBundleInstaller::CheckEnableRemovable(std::unordered_map<std::string, I
             }
         }
     }
+}
+
+bool BaseBundleInstaller::CheckDuplicateProxyData(const InnerBundleInfo &newInfo,
+    const InnerBundleInfo &oldInfo)
+{
+    std::vector<ProxyData> proxyDatas;
+    oldInfo.GetAllProxyDataInfos(proxyDatas);
+    newInfo.GetAllProxyDataInfos(proxyDatas);
+    return CheckDuplicateProxyData(proxyDatas);
+}
+
+bool BaseBundleInstaller::CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+    std::vector<ProxyData> proxyDatas;
+    for (const auto &innerBundleInfo : newInfos) {
+        innerBundleInfo.second.GetAllProxyDataInfos(proxyDatas);
+    }
+    return CheckDuplicateProxyData(proxyDatas);
+}
+
+bool BaseBundleInstaller::CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas)
+{
+    std::set<std::string> uriSet;
+    for (const auto &proxyData : proxyDatas) {
+        if (!uriSet.insert(proxyData.uri).second) {
+            APP_LOGE("uri %{public}s in proxyData is duplicated", proxyData.uri.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
@@ -1570,6 +1603,10 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
         }
+        if (!CheckDuplicateProxyData(newInfo, oldInfo)) {
+            APP_LOGE("CheckDuplicateProxyData with old info failed");
+            return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+        }
     }
 
     oldInfo.SetInstallMark(bundleName_, modulePackage_, InstallExceptionStatus::UPDATING_NEW_START);
@@ -1662,6 +1699,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         if ((result = CheckAppLabel(oldInfo, newInfo)) != ERR_OK) {
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
+        }
+        if (!CheckDuplicateProxyData(newInfo, oldInfo)) {
+            APP_LOGE("CheckDuplicateProxyData with old info failed");
+            return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
         }
 
         if (!isReplace) {
@@ -2113,6 +2154,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     createDirParam.gid = newInnerBundleUserInfo.uid;
     createDirParam.apl = info.GetAppPrivilegeLevel();
     createDirParam.isPreInstallApp = info.IsPreInstallApp();
+    createDirParam.debug = info.GetBaseApplicationInfo().debug;
 
     auto result = InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam);
     if (result != ERR_OK) {
@@ -2160,7 +2202,7 @@ ErrCode BaseBundleInstaller::CreateArkProfile(
 
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-                  .append(Constants::PATH_SEPARATOR).append(bundleName);
+        .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("CreateArkProfile %{public}s", arkProfilePath.c_str());
     int32_t mode = (uid == gid) ? S_IRWXU : (S_IRWXU | S_IRGRP | S_IXGRP);
     return InstalldClient::GetInstance()->Mkdir(arkProfilePath, mode, uid, gid);
@@ -2170,7 +2212,7 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 {
     std::string arkProfilePath;
     arkProfilePath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
-                  .append(Constants::PATH_SEPARATOR).append(bundleName);
+        .append(Constants::PATH_SEPARATOR).append(bundleName);
     APP_LOGI("DeleteArkProfile %{public}s", arkProfilePath.c_str());
     return InstalldClient::GetInstance()->RemoveDir(arkProfilePath);
 }
@@ -2515,6 +2557,11 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     ret = bundleInstallChecker_->CheckDeviceType(infos);
     if (ret != ERR_OK) {
         APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckIsolationMode(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
     }
     return ret;
 }
@@ -2567,6 +2614,10 @@ ErrCode BaseBundleInstaller::CheckMultiNativeFile(
 ErrCode BaseBundleInstaller::CheckProxyDatas(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    if (!CheckDuplicateProxyData(infos)) {
+        APP_LOGE("duplicated uri in proxyDatas");
+        return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
+    }
     for (const auto &info : infos) {
         ErrCode ret = bundleInstallChecker_->CheckProxyDatas(info.second);
         if (ret != ERR_OK) {

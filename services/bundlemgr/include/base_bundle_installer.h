@@ -572,7 +572,9 @@ private:
     ErrCode UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName);
     ErrCode UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info);
     ErrCode CheckProxyDatas(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
-
+    bool CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
+    bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;

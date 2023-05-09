@@ -118,6 +118,8 @@ struct InnerModuleInfo {
     uint32_t versionCode = 0;
     std::string versionName;
     std::vector<ProxyData> proxyDatas;
+    std::string buildHash;
+    std::string isolationMode;
 };
 
 struct SkillUri {
@@ -1943,6 +1945,16 @@ public:
         return hspModuleNames;
     }
 
+    bool GetModuleBuildHash(const std::string &moduleName, std::string &buildHash) const
+    {
+        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+            APP_LOGE("innerBundleInfo does not contain the module.");
+            return false;
+        }
+        buildHash = innerModuleInfos_.at(moduleName).buildHash;
+        return true;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
@@ -2020,6 +2032,7 @@ private:
     void ProcessBundleWithHapModuleInfoFlag(int32_t flags, BundleInfo &bundleInfo, int32_t userId) const;
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
+    IsolationMode GetIsolationMode(const std::string &isolationMode) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
