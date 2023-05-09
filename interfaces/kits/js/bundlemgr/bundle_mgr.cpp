@@ -5308,9 +5308,6 @@ NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo
         APP_LOGE("conversion failed!");
         installResult->resCode= PARAM_TYPE_ERROR;
     }
-    if (installParam.installFlag == InstallFlag::NORMAL) {
-        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    }
     AsyncTask::CompleteCallback complete = [obj = this, bundleFilePaths, installParam, resInstall = installResult]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {
             if (resInstall->resCode != 0) {
