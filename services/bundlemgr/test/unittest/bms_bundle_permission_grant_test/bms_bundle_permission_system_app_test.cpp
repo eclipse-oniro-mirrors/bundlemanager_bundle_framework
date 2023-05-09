@@ -626,7 +626,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_4000
     Want want;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, abilityInfos, extensionInfos);
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, false, abilityInfos, extensionInfos);
     EXPECT_EQ(ret, true);
 }
 

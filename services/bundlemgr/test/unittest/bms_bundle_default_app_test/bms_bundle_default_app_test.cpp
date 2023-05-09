@@ -1102,7 +1102,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5100, Function | SmallTest
     int32_t flags = 0;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    auto ret = dataMgr->ImplicitQueryInfos(want, flags, USER_ID, abilityInfos, extensionInfos);
+    auto ret = dataMgr->ImplicitQueryInfos(want, flags, USER_ID, false, abilityInfos, extensionInfos);
     EXPECT_EQ(ret, true);
 }
 
@@ -1221,7 +1221,7 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     bool testRet = dataMgr->ImplicitQueryInfos(
-        want, 1, USER_ID, abilityInfos, extensionInfos);
+        want, 1, USER_ID, false, abilityInfos, extensionInfos);
     EXPECT_EQ(testRet, true);
 }
 

@@ -964,12 +964,6 @@ public:
         return false;
     }
 
-    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
-    {
-        return false;
-    }
-
     virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool isReturnDefaultSetting,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
@@ -1256,7 +1250,6 @@ public:
         GET_HAP_MODULE_INFO_WITH_USERID,
         IMPLICIT_QUERY_INFO_BY_PRIORITY,
         IMPLICIT_QUERY_INFOS,
-        IMPLICIT_QUERY_INFOS_WITH_IS_SHOW_DEFAULT_PICKER,
         GET_ALL_DEPENDENT_MODULE_NAMES,
         GET_SANDBOX_APP_BUNDLE_INFO,
         QUERY_CALLING_BUNDLE_NAME,
