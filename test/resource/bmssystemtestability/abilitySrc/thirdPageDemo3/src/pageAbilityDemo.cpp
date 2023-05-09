@@ -20,10 +20,10 @@ namespace OHOS {
 namespace AppExecFwk {
 const std::string BUNDLE_DATA_ROOT_PATH = "/data/app/el2/100/base/";
 const int32_t FOLDER_LAYERS = 7;
-void PageAbilityDemo::OnStart(const Want &want)
+void PageAbilityDemo::OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessionInfo)
 {
     APP_LOGI("PageAbilityDemo::onStart");
-    Ability::OnStart(want);
+    Ability::OnStart(want, sessionInfo);
     const std::string appName = "com.third.hiworld.example1";
     std::string path = BUNDLE_DATA_ROOT_PATH + appName + "/cache/";
     APP_LOGI("PageAbilityDemo::CreateDir");
