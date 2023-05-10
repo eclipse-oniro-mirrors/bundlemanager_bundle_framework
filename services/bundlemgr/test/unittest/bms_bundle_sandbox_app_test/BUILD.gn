@@ -110,9 +110,9 @@ ohos_unittest("BmsSandboxAppTest") {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]

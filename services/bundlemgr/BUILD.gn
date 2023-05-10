@@ -230,9 +230,9 @@ ohos_shared_library("libbms") {
     "syscap_codec:syscap_interface_shared",
   ]
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   if (window_enable) {

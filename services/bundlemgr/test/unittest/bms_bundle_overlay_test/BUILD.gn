@@ -77,9 +77,9 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     cflags += [ "-DWITH_SELINUX" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
@@ -131,9 +131,9 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
     cflags += [ "-DWITH_SELINUX" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -222,9 +222,9 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -311,9 +311,9 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
@@ -400,9 +400,9 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
@@ -489,9 +489,9 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]

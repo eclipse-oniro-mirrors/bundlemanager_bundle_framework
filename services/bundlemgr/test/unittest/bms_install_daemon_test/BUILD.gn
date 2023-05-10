@@ -66,9 +66,9 @@ ohos_unittest("BmsInstallDaemonTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -114,9 +114,9 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -165,9 +165,9 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -212,9 +212,9 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 

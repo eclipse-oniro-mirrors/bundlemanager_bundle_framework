@@ -146,9 +146,9 @@ ohos_unittest("BmsBundleInstallerTest") {
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   external_deps += [ "kv_store:distributeddata_inner" ]
@@ -284,9 +284,9 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   external_deps += [ "kv_store:distributeddata_inner" ]
@@ -396,9 +396,9 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -497,9 +497,9 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -604,9 +604,9 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -715,9 +715,9 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "${services_path}/bundlemgr:rdb_config" ]

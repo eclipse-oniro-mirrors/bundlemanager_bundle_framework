@@ -124,9 +124,9 @@ ohos_unittest("BmsBundleAppControlTest") {
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
-  if (storage_manager_enable) {
+  if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
-    defines += [ "STORAGE_MANAGER_ENABLE" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
