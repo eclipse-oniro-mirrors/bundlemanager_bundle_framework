@@ -2477,7 +2477,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1800, Function | MediumTest | L
     EXPECT_EQ(retBool, false);
 
     retBool = hostImpl->ImplicitQueryInfos(
-        want, flags, USERID, abilityInfos, extensionInfos);
+        want, flags, USERID, false, abilityInfos, extensionInfos);
     EXPECT_EQ(retBool, false);
 
     retBool = hostImpl->GetAllDependentModuleNames(

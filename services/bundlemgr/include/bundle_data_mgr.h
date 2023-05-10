@@ -678,7 +678,7 @@ public:
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
 
-    bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+    bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos);
 
     /**

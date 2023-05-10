@@ -964,7 +964,7 @@ public:
         return false;
     }
 
-    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+    virtual bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
     {
         return false;

@@ -1917,9 +1917,10 @@ ErrCode BundleMgrHost::HandleImplicitQueryInfos(MessageParcel &data, MessageParc
     }
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
+    bool withDefault = data.ReadBool();
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = ImplicitQueryInfos(*want, flags, userId, abilityInfos, extensionInfos);
+    bool ret = ImplicitQueryInfos(*want, flags, userId, withDefault, abilityInfos, extensionInfos);
     if (!reply.WriteBool(ret)) {
         APP_LOGE("WriteBool ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
