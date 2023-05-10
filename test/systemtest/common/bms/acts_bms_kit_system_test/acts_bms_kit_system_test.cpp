@@ -6009,7 +6009,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool testRet = bundleMgrProxy->ImplicitQueryInfos(
-        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, false, abilityInfos, extensionInfos);
+        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos);
     EXPECT_EQ(false, testRet);
 
     resvec.clear();
@@ -7057,7 +7057,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | L
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, false, abilityInfos, extensionInfos);
+    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos);
     EXPECT_TRUE(ret);
     ret = !abilityInfos.empty() || !extensionInfos.empty();
     EXPECT_TRUE(ret);
