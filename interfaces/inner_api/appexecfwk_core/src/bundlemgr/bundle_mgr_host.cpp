@@ -389,7 +389,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!reply.WriteParcelable(&info)) {
+        if (WriteBigParcelable(info, __func__, reply) != ERR_OK) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -450,7 +450,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfoWithIntFlags(MessageParcel &data, Mess
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret) {
-        if (!WriteParcelableIntoAshmem(info, __func__, reply)) {
+        if (WriteBigParcelable(info, __func__, reply) != ERR_OK) {
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
@@ -2638,7 +2638,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
         APP_LOGE("Type conversion failed");
         return false;
     }
-    APP_LOGE("GetJsonStrFromInfo");
 
     int32_t totalSize = 0;
     auto infoStr = GetJsonStrFromInfo<T>(parcelable);
@@ -2653,10 +2652,9 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
     sptr<Ashmem> ashmem = Ashmem::CreateAshmem(
         (ashmemName + std::to_string(AllocatAshmemNum())).c_str(), totalSize);
     if (ashmem == nullptr) {
-        APP_LOGE("Create shared memory fail");
+        APP_LOGE("Create shared memory failed");
         return false;
     }
-    APP_LOGE("MapReadAndWriteAshmem");
 
     // Set the read/write mode of the ashme.
     bool ret = ashmem->MapReadAndWriteAshmem();
@@ -2667,7 +2665,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
 
     // Write the size and content of each item to the ashmem.
     // The size of item use ASHMEM_LEN.
-    APP_LOGE("WriteToAshmem1");
     int32_t offset = 0;
     int itemLen = static_cast<int>(strlen(infoStr.c_str()));
     std::string strLen = std::to_string(itemLen);
@@ -2678,7 +2675,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("WriteToAshmem2");
 
     offset += ASHMEM_LEN;
     ret = ashmem->WriteToAshmem(infoStr.c_str(), itemLen, offset);
@@ -2687,7 +2683,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("WriteToAshmem3");
 
     ret = messageParcel->WriteAshmem(ashmem);
     ClearAshmem(ashmem);
@@ -2700,5 +2695,29 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
     return true;
 }
 
+template<typename T>
+ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName, MessageParcel &reply)
+{
+    auto size = sizeof(reply);
+    APP_LOGD("reply size is %{public}lu", static_cast<unsigned long>(size));
+    bool useAshMem = size > Constants::ASHMEM_THRESHOLD;
+    if (!reply.WriteBool(useAshMem)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (useAshMem) {
+        APP_LOGI("reply size %{public}lu, writing into ashmem", static_cast<unsigned long>(size));
+        if (!WriteParcelableIntoAshmem(parcelable, ashmemName, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    } else {
+        if (!reply.WriteParcelable(&parcelable)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

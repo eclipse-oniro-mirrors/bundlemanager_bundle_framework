@@ -294,7 +294,7 @@ bool BundleMgrProxy::GetBundleInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO, data, bundleInfo)) {
+    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -328,21 +328,10 @@ bool BundleMgrProxy::GetBundleInfo(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-    MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, reply)) {
-        APP_LOGE("fail to send");
+    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
+        APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
-    }
-    if (!GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo)) {
-        APP_LOGE("failed to GetBundleInfo from ashmem server");
-        return false;
-    }
-    APP_LOGI("get parcelable info success");
-
     return true;
 }
 
@@ -3665,6 +3654,34 @@ bool ParseStr(const char *buf, const int itemLen, int index, std::string &result
     return true;
 }
 
+template<typename T>
+bool BundleMgrProxy::GetBigParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        return false;
+    }
+
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+
+    if (reply.ReadBool()) {
+        APP_LOGI("big reply, reading data from ashmem");
+        return GetParcelableFromAshmem<T>(reply, parcelableInfo);
+    }
+
+    std::unique_ptr<T> info(reply.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+    parcelableInfo = *info;
+    APP_LOGD("get parcelable info success");
+    return true;
+}
+
 template <typename T>
 bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo)
 {
@@ -3674,7 +3691,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
         APP_LOGE("Ashmem is nullptr");
         return false;
     }
-    APP_LOGE("MapReadOnlyAshmem");
 
     bool ret = ashmem->MapReadOnlyAshmem();
     if (!ret) {
@@ -3682,7 +3698,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("ReadFromAshmem");
 
     int32_t offset = 0;
     const char* dataStr = static_cast<const char*>(
@@ -3692,7 +3707,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("ParseStr1");
 
     std::string lenStr;
     if (!ParseStr(dataStr, ASHMEM_LEN, offset, lenStr)) {
@@ -3700,7 +3714,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("ParseStr2");
 
     int strLen = atoi(lenStr.c_str());
     offset += ASHMEM_LEN;
@@ -3710,7 +3723,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
         ClearAshmem(ashmem);
         return false;
     }
-    APP_LOGE("ParseInfoFromJsonStr");
 
     if (!ParseInfoFromJsonStr(infoStr.c_str(), parcelableInfo)) {
         APP_LOGE("Parse info from json fail");

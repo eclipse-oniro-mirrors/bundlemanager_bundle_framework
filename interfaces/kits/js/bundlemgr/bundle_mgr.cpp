@@ -25,7 +25,6 @@
 #include "bundle_mgr_proxy.h"
 #include "cleancache_callback.h"
 #include "common_func.h"
-#include "hitrace_meter.h"
 #include "if_system_ability_manager.h"
 #include "installer_callback.h"
 #include "ipc_skeleton.h"
@@ -3202,7 +3201,6 @@ static bool InnerGetArchiveInfo(const std::string &hapFilePath, const int32_t fl
 
 NativeValue* JsBundleMgr::CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("CreateModuleInfos is called.");
     NativeValue *arrayValue = engine.CreateArray(moduleInfos.size());
     NativeArray *array = ConvertNativeValueTo<NativeArray>(arrayValue);
@@ -3232,7 +3230,6 @@ NativeValue* JsBundleMgr::CreateCustomizeMetaDatas(
 NativeValue* JsBundleMgr::CreateInnerMetaDatas(
     NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("CreateInnerMetaDatas is called.");
     NativeValue *objValue = engine.CreateObject();
     NativeObject *object = ConvertNativeValueTo<NativeObject>(objValue);
@@ -3302,7 +3299,6 @@ NativeValue* JsBundleMgr::CreateInnerMetaData(NativeEngine &engine, const Metada
 
 NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("CreateModuleInfo is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
@@ -3324,7 +3320,6 @@ NativeValue* JsBundleMgr::CreateModuleInfo(NativeEngine &engine, const ModuleInf
 
 NativeValue* JsBundleMgr::CreateResource(NativeEngine &engine, const Resource &resource)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("CreateResource is called.");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
@@ -3531,7 +3526,6 @@ NativeValue* JsBundleMgr::CreateUsedScene(NativeEngine &engine, const RequestPer
 
 NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("called");
     auto objContext = engine.CreateObject();
     if (objContext == nullptr) {
@@ -3655,7 +3649,6 @@ NativeValue* JsBundleMgr::CreateWant(NativeEngine &engine, const OHOS::AAFwk::Wa
 
 NativeValue* JsBundleMgr::CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos)
 {
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     NativeValue* arrayValue = engine.CreateArray(appInfos.size());
     NativeArray* array = ConvertNativeValueTo<NativeArray>(arrayValue);
     uint32_t index = 0;
@@ -4531,16 +4524,12 @@ NativeValue* JsBundleMgr::OnGetBundleInfo(NativeEngine &engine, NativeCallbackIn
         }
         BundleInfo bundleInfo;
         std::string name(bundleName);
-        StartTrace(HITRACE_TAG_APP, "getBundleInfoExec");
         auto ret = InnerGetBundleInfo(name, bundleFlags, options, bundleInfo);
-        FinishTrace(HITRACE_TAG_APP);
         if (!ret) {
             task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
             return;
         }
-        StartTrace(HITRACE_TAG_APP, "getBundleInfoComplete");
         task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfo(engine, bundleInfo));
-        FinishTrace(HITRACE_TAG_APP);
     };
 
     NativeValue *result = nullptr;
