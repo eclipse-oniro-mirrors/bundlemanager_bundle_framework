@@ -40,18 +40,6 @@ const std::set<std::string> MODULE_TYPE_SET = {
     "shared"
 };
 
-const std::set<std::string> DEVICE_TYPE_SET = {
-    "default",
-    "phone",
-    "tablet",
-    "tv",
-    "wearable",
-    "liteWearable",
-    "car",
-    "smartVision",
-    "router"
-};
-
 const std::set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
@@ -1848,9 +1836,7 @@ bool ToAbilityInfo(
     abilityInfo.isStageBasedModel = true;
     abilityInfo.type = AbilityType::PAGE;
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
-        if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
-            abilityInfo.deviceTypes.emplace_back(deviceType);
-        }
+        abilityInfo.deviceTypes.emplace_back(deviceType);
     }
     abilityInfo.startWindowIcon = ability.startWindowIcon;
     abilityInfo.startWindowIconId = ability.startWindowIconId;
@@ -1995,9 +1981,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.process = moduleJson.module.process;
 
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
-        if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
-            innerModuleInfo.deviceTypes.emplace_back(deviceType);
-        }
+        innerModuleInfo.deviceTypes.emplace_back(deviceType);
     }
 
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {
