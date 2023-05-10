@@ -405,16 +405,12 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } else {
-                APP_LOGE("param check error");
-                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
-                return nullptr;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -523,16 +519,12 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } else {
-                APP_LOGE("param check error");
-                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
-                return nullptr;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_THREE) {
             if (valueType == napi_function) {
@@ -635,16 +627,12 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
                 return nullptr;
             }
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } else {
-                APP_LOGE("param check error");
-                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
-                return nullptr;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
