@@ -1819,11 +1819,8 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else {
-                APP_LOGE("GetLaunchWantForBundle param check error");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
-                return nullptr;
-            }
+                break;
+            } 
         } else {
             APP_LOGE("GetLaunchWantForBundle arg err!");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -2038,12 +2035,10 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
                 APP_LOGW("Parse metadataName failed, The default value is undefined!");
             }
         } else if (i == ARGS_POS_THREE) {
-            if (valueType != napi_function) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
-                return nullptr;
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
             }
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            break;
         } else {
             APP_LOGE("GetProfile arg err!");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
