@@ -47,7 +47,6 @@ constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* CALLBACK = "callback";
 constexpr const char* STRING_TYPE = "napi_string";
-constexpr const char* FUNCTION_TYPE = "napi_function";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
