@@ -57,7 +57,6 @@ ohos_unittest("BmsBundleQuickFixQueryTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -108,7 +107,10 @@ ohos_unittest("BmsBundleQuickFixQueryTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources -=

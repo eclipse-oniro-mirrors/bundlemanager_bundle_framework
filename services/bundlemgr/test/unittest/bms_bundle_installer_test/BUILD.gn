@@ -80,7 +80,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -145,6 +144,11 @@ ohos_unittest("BmsBundleInstallerTest") {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix
     defines += [ "BUNDLE_FRAMEWORK_QUICK_FIX" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   external_deps += [ "kv_store:distributeddata_inner" ]
@@ -230,7 +234,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -279,6 +282,11 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   external_deps += [ "kv_store:distributeddata_inner" ]
@@ -338,7 +346,6 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -387,6 +394,11 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -435,7 +447,6 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -484,6 +495,11 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -538,7 +554,6 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -587,6 +602,11 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -643,7 +663,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
@@ -694,6 +713,11 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "${services_path}/bundlemgr:rdb_config" ]

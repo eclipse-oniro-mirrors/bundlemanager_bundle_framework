@@ -59,7 +59,6 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "access_token:libtokenid_sdk",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (ability_runtime_enable) {
@@ -69,6 +68,11 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 }
 

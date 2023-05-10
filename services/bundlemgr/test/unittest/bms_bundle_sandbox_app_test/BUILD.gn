@@ -65,7 +65,6 @@ ohos_unittest("BmsSandboxAppTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
@@ -111,7 +110,10 @@ ohos_unittest("BmsSandboxAppTest") {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]

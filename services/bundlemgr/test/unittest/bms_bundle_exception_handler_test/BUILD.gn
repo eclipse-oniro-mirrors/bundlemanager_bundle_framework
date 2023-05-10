@@ -51,11 +51,17 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
     "eventhandler:libeventhandler",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
-    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }
+
+  defines = []
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
+
   configs += [ "${services_path}/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [

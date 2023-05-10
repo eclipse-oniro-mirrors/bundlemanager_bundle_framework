@@ -52,6 +52,7 @@ declare_args() {
   global_i18n_enable = true
   hicollie_enable = true
   hisysevent_enable = true
+  storage_manager_enable = true
   use_pre_bundle_profile = true
   window_enable = true
 

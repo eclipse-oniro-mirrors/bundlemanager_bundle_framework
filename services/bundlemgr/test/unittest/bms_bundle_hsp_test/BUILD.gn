@@ -71,7 +71,6 @@ ohos_unittest("BmsBundleHspTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -109,6 +108,11 @@ ohos_unittest("BmsBundleHspTest") {
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -178,7 +182,6 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -216,6 +219,11 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
@@ -280,7 +288,6 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -318,6 +325,11 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]

@@ -82,7 +82,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -127,7 +126,10 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
@@ -204,7 +206,6 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
   if (configpolicy_enable) {
@@ -260,7 +261,10 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
@@ -337,7 +341,6 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
   if (configpolicy_enable) {
@@ -393,7 +396,10 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
@@ -467,7 +473,6 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
   if (configpolicy_enable) {
@@ -513,7 +518,10 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
-
+  if (storage_manager_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_MANAGER_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
