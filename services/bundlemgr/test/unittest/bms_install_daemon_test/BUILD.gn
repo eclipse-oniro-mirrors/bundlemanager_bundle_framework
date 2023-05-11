@@ -56,7 +56,6 @@ ohos_unittest("BmsInstallDaemonTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (build_selinux) {
@@ -66,6 +65,10 @@ ohos_unittest("BmsInstallDaemonTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -101,7 +104,6 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (build_selinux) {
@@ -111,6 +113,10 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -149,7 +155,6 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
@@ -159,6 +164,10 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 
@@ -193,7 +202,6 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
@@ -203,6 +211,10 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 

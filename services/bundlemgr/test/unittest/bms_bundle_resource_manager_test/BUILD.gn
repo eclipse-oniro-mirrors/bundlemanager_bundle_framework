@@ -67,7 +67,6 @@ ohos_unittest("BmsBundleResourceManagerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -117,7 +116,10 @@ ohos_unittest("BmsBundleResourceManagerTest") {
     sources += default_app
     defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
   }
-
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [

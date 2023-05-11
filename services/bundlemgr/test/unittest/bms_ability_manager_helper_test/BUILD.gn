@@ -58,12 +58,16 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }
   defines = []
+
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
 
   if (window_enable) {
     external_deps += [ "window_manager:libwsutils" ]

@@ -57,7 +57,9 @@
 #include "bundle_overlay_install_checker.h"
 #endif
 
+#ifdef STORAGE_SERVICE_ENABLE
 #include "storage_manager_proxy.h"
+#endif
 #include "iservice_registry.h"
 
 namespace OHOS {
@@ -70,12 +72,14 @@ const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 
+#ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
 const std::string SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD =
     "persist.sys.bms.aging.policy.atomicservice.datasize.threshold";
 const int32_t THRESHOLD_VAL_LEN = 20;
 #endif // QUOTA_PARAM_SET_ENABLE
 const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
+#endif // STORAGE_SERVICE_ENABLE
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
@@ -2089,6 +2093,7 @@ ErrCode BaseBundleInstaller::CreateBundleCodeDir(InnerBundleInfo &info) const
 static void SendToStorageQuota(const std::string &bundleName, const int uid,
     const std::string &bundleDataDirPath, const int limitSizeMb)
 {
+#ifdef STORAGE_SERVICE_ENABLE
     auto systemAbilityManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (!systemAbilityManager) {
         APP_LOGW("SendToStorageQuota, systemAbilityManager error");
@@ -2111,11 +2116,13 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
     if (err != ERR_OK) {
         APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d", err);
     }
+#endif // STORAGE_SERVICE_ENABLE
 }
 
 static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, const std::string &bundleDataDirPath)
 {
     int32_t atomicserviceDatasizeThreshold = ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET;
+#ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
     char szAtomicDatasizeThresholdMb[THRESHOLD_VAL_LEN] = {0};
     int32_t ret = GetParameter(SYSTEM_PARAM_ATOMICSERVICE_DATASIZE_THRESHOLD.c_str(), "",
@@ -2131,6 +2138,7 @@ static void PrepareBundleDirQuota(const std::string &bundleName, const int uid, 
         return;
     }
 #endif // QUOTA_PARAM_SET_ENABLE
+#endif // STORAGE_SERVICE_ENABLE
     SendToStorageQuota(bundleName, uid, bundleDataDirPath, atomicserviceDatasizeThreshold);
 }
 

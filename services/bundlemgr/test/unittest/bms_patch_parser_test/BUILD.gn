@@ -56,8 +56,12 @@ ohos_unittest("BmsPatchParserTest") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "storage_service:storage_manager_sa_proxy",
   ]
+  defines = []
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
 }
 
 group("unittest") {
