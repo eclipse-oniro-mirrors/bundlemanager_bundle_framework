@@ -2831,9 +2831,9 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0600, Function | SmallTest | Lev
 HWTEST_F(BmsBundleInstallerTest, InstallChecker_0700, Function | SmallTest | Level0)
 {
     BundleInstallChecker installChecker;
-    auto ret = installChecker.FindModuleInInstalledPackage("", "");
+    auto ret = installChecker.FindModuleInInstalledPackage("", "", 0);
     EXPECT_EQ(ret, false);
-    ret = installChecker.FindModuleInInstalledPackage("moduleName", "moduleName");
+    ret = installChecker.FindModuleInInstalledPackage("moduleName", "moduleName", 0);
     EXPECT_EQ(ret, false);
 }
 
