@@ -470,13 +470,13 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
                 break;
             }
             if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
-                APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
-                return nullptr;
+                APP_LOGW("Parse moduleName error, the interface will query the OverlayModuleInfo of all modules in the specified application!");
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
-            break;
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+                break;
+            }
         } else {
             APP_LOGE("GetOverlayModuleInfoByBundleName arg err!");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
@@ -524,13 +524,13 @@ napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_i
                 break;
             }
             if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
-                APP_LOGE("moduleName %{public}s invalid!", overlayCallbackInfo->moduleName.c_str());
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
-                return nullptr;
+                APP_LOGW("Parse moduleName error, the interface will query the OverlayModuleInfo of all modules in the specified application!");
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
-            break;
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &overlayCallbackInfo->callback));
+                break;
+            }
         } else {
             APP_LOGE("GetTargetOverlayModuleInfosByBundleName arg err!");
             BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
