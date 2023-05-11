@@ -706,9 +706,6 @@ void InstallExecuter(napi_env env, void *data)
     }
     iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
 
-    if (asyncCallbackInfo->installParam.installFlag == InstallFlag::NORMAL) {
-        asyncCallbackInfo->installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-    }
     ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, asyncCallbackInfo->installParam, callback);
     if (res == ERR_OK) {
         installResult.resultCode = callback->GetResultCode();
