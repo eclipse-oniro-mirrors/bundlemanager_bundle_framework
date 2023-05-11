@@ -822,7 +822,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 break;
             }
             if (valueType == napi_object) {
-                ParseInstallParam(env, args[i], callbackPtr->installParam)；
+                ParseInstallParam(env, args[i], callbackPtr->installParam);
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -996,7 +996,7 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
                 break;
             }
             if (valueType == napi_object) {
-                ParseInstallParam(env, args[i], callbackPtr->installParam)；
+                ParseInstallParam(env, args[i], callbackPtr->installParam);
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
