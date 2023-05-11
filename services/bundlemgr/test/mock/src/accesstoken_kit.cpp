@@ -38,23 +38,53 @@ int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp,
     return 0;
 }
 
+#ifdef BUNDLE_PERMISSION_START_FULL_FALSE
+int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
+{
+    return -1;
+}
+#else
 int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
 {
     return 0;
 }
+#endif
 
-int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)
+
+#ifdef BUNDLE_PERMISSION_DEF_LIST
+int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
+    bool isSystemGrant)
 {
     return -1;
 }
 
 int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
 {
+    return 1;
+}
+
+int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
+{
+    return -1;
+}
+
+int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)
+{
     return 0;
 }
 
+ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
+{
+    return TOKEN_SHELL;
+}
+#else
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
+{
+    return 0;
+}
+
+int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
 {
     return 0;
 }
@@ -64,15 +94,25 @@ int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& 
     return 0;
 }
 
-int AccessTokenKit::VerifyAccessToken(
-    AccessTokenID callerTokenID, AccessTokenID firstTokenID, const std::string& permissionName)
+int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)
 {
-    return 0;
+    return -1;
 }
 
 ATokenTypeEnum AccessTokenKit::GetTokenTypeFlag(AccessTokenID tokenID)
 {
+#ifdef BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE
+    return TOKEN_INVALID;
+#else
     return TOKEN_NATIVE;
+#endif
+}
+#endif
+
+int AccessTokenKit::VerifyAccessToken(
+    AccessTokenID callerTokenID, AccessTokenID firstTokenID, const std::string& permissionName)
+{
+    return 0;
 }
 
 int AccessTokenKit::DeleteToken(AccessTokenID tokenID)
