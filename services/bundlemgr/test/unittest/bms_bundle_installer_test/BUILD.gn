@@ -125,6 +125,9 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (bundle_framework_check_device_type) {
+    defines += [ "BUNDLE_FRAMEWORK_CHECK_DEVICE_TYPE" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -481,7 +484,9 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-
+  if (bundle_framework_check_device_type) {
+    defines += [ "BUNDLE_FRAMEWORK_CHECK_DEVICE_TYPE" ]
+  }
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
