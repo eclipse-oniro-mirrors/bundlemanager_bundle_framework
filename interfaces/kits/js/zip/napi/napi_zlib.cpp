@@ -328,8 +328,6 @@ napi_value UnwrapStringParam(std::string &str, napi_env env, napi_value argv)
 
 bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 {
-    APP_LOGD("%{public}s called.", __func__);
-
     if (!IsTypeForNapiValue(env, arg, napi_object)) {
         return false;
     }
@@ -339,7 +337,6 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 
     NAPI_CALL_BASE(env, napi_get_property_names(env, arg, &jsProNameList), false);
     NAPI_CALL_BASE(env, napi_get_array_length(env, jsProNameList, &jsProCount), false);
-    APP_LOGI("%{public}s called. Property size=%{public}d.", __func__, jsProCount);
 
     napi_value jsProName = nullptr;
     napi_value jsProValue = nullptr;
@@ -353,28 +350,32 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
 
         int ret = 0;
         if (strProName == std::string("flush")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            options.flush = static_cast<FLUSH_TYPE>(ret);
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                options.flush = static_cast<FLUSH_TYPE>(ret);
+            }
         } else if (strProName == std::string("finishFlush")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            options.finishFlush = static_cast<FLUSH_TYPE>(ret);
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                options.finishFlush = static_cast<FLUSH_TYPE>(ret);
+            }
         } else if (strProName == std::string("chunkSize")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            options.chunkSize = ret;
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                options.chunkSize = ret;
+            }
         } else if (strProName == std::string("level")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            COMPRESS_LEVE_CHECK(ret, false)
-            options.level = static_cast<COMPRESS_LEVEL>(ret);
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                COMPRESS_LEVE_CHECK(ret, false)
+                options.level = static_cast<COMPRESS_LEVEL>(ret);
+            }
         } else if (strProName == std::string("memLevel")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            COMPRESS_MEM_CHECK(ret, false)
-            options.memLevel = static_cast<MEMORY_LEVEL>(ret);
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                COMPRESS_MEM_CHECK(ret, false)
+                options.memLevel = static_cast<MEMORY_LEVEL>(ret);
+            }
         } else if (strProName == std::string("strategy")) {
-            NAPI_CALL_BASE_BOOL(UnwrapIntValue(env, jsProValue, ret), false);
-            COMPRESS_STRATEGY_CHECK(ret, false)
-            options.strategy = static_cast<COMPRESS_STRATEGY>(ret);
-        } else {
-            continue;
+            if (UnwrapIntValue(env, jsProValue, ret)) {
+                COMPRESS_STRATEGY_CHECK(ret, false)
+                options.strategy = static_cast<COMPRESS_STRATEGY>(ret);
+            }
         }
     }
     return true;
@@ -505,8 +506,6 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
             napi_create_reference(env, args[PARAM3], 1, &callbackRef);
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
-        } else {
-            return nullptr;
         }
     } else {
         napi_deferred deferred;
@@ -567,8 +566,6 @@ napi_value NAPI_UnzipFile(napi_env env, napi_callback_info info)
             napi_create_reference(env, args[PARAM3], 1, &callbackRef);
             asyncZipCallbackInfo->zlibCallbackInfo =
                 std::make_shared<ZlibCallbackInfo>(env, callbackRef, nullptr, true);
-        } else {
-            return nullptr;
         }
     } else {
         napi_deferred deferred;
@@ -589,15 +586,15 @@ bool InitParam(CallZipUnzipParam &param, napi_env env, NapiArg &args, bool isZip
     for (size_t i = 0; i < PARAM3; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
-        if ((i == ARGS_POS_ZERO) && (valueType == napi_string)) {
+        if (i == ARGS_POS_ZERO) {
             if (UnwrapStringParam(param.src, env, args[i]) == nullptr) {
                 return false;
             }
-        } else if ((i == ARGS_POS_ONE) && (valueType == napi_string)) {
+        } else if (i == ARGS_POS_ONE) {
             if (UnwrapStringParam(param.dest, env, args[i]) == nullptr) {
                 return false;
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_object)) {
+        } else if (i == ARGS_POS_TWO) {
             if (isZipFile && !UnwrapOptionsParams(param.options, env, args[i])) {
                 return false;
             }
