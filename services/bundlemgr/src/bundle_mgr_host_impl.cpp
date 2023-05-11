@@ -757,6 +757,10 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGD("non-system app calling system api");
         return true;
     }
+    if (hapFilePath.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("invalid hapFilePath");
+        return false;
+    }
     if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
