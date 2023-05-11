@@ -25,7 +25,8 @@
             "bundle_framework_default_app",
             "bundle_framework_launcher",
             "bundle_framework_sandbox_app",
-            "bundle_framework_quick_fix"
+            "bundle_framework_quick_fix",
+            "bundle_framework_check_device_type"
         ],
         "hisysevent_config": [
             "//foundation/bundlemanager/bundle_framework/hisysevent.yaml"

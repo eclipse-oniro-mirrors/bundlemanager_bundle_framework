@@ -345,6 +345,10 @@ ohos_shared_library("libbms") {
     sources += app_control
   }
 
+  if (bundle_framework_check_device_type) {
+    defines += [ "BUNDLE_FRAMEWORK_CHECK_DEVICE_TYPE" ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }
