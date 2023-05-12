@@ -38,57 +38,20 @@ sptr<IRemoteObject> BundleMgrProxyNative::GetBmsProxy()
     return samgrProxy->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
 }
 
-bool BundleMgrProxyNative::GetBundleNameForUid(const int uid, std::string &bundleName)
+bool BundleMgrProxyNative::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
 {
-    APP_LOGI("begin to GetBundleNameForUid of %{private}d", uid);
+    APP_LOGI("begin to get bundle info for self");
     MessageParcel data;
     if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
-        APP_LOGE("fail to GetBundleNameForUid due to write InterfaceToken fail");
+        APP_LOGE("fail to GetBundleInfoForSelf due to write InterfaceToken fail");
         return false;
     }
-    if (!data.WriteInt32(uid)) {
-        APP_LOGE("fail to GetBundleNameForUid due to write uid fail");
+    if (!data.WriteInt32(flags)) {
+        APP_LOGE("fail to GetBundleInfoForSelf due to write flag fail");
         return false;
     }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(GET_BUNDLE_NAME_FOR_UID, data, reply)) {
-        APP_LOGE("fail to GetBundleNameForUid from server");
-        return false;
-    }
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
-    }
-    bundleName = reply.ReadString();
-    return true;
-}
-
-bool BundleMgrProxyNative::GetApplicationInfo(
-    const std::string &appName, ApplicationFlag flag, int32_t userId, ApplicationInfo &appInfo)
-{
-    APP_LOGI("begin to GetApplicationInfo : %{private}s", appName.c_str());
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(BMS_PROXY_INTERFACE_TOKEN)) {
-        APP_LOGE("fail to GetBundleNameForUid due to write InterfaceToken fail");
-        return false;
-    }
-
-    if (!data.WriteString(appName)) {
-        APP_LOGE("fail to GetApplicationInfo due to write appName fail");
-        return false;
-    }
-    if (!data.WriteInt32(static_cast<int>(flag))) {
-        APP_LOGE("fail to GetApplicationInfo due to write flag fail");
-        return false;
-    }
-    if (!data.WriteInt32(userId)) {
-        APP_LOGE("fail to GetApplicationInfo due to write userId fail");
-        return false;
-    }
-
-    if (!GetParcelableInfo<ApplicationInfo>(GET_APPLICATION_INFO, data, appInfo)) {
-        APP_LOGE("fail to GetApplicationInfo from server");
+    if (!GetParcelableInfo<BundleInfo>(GET_BUNDLE_INFO_FOR_SELF_NATIVE, data, bundleInfo)) {
+        APP_LOGE("fail to GetBundleInfoForSelf from server");
         return false;
     }
     return true;
@@ -119,11 +82,11 @@ bool BundleMgrProxyNative::GetParcelableInfo(uint32_t code, MessageParcel &data,
         return false;
     }
 
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
+    int32_t res = reply.ReadInt32();
+    if (res != NO_ERROR) {
+        APP_LOGE("reply result failed");
+            return false;
     }
-
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
     if (info == nullptr) {
         APP_LOGE("readParcelableInfo failed");
