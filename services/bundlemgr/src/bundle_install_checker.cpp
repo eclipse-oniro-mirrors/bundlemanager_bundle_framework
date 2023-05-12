@@ -1014,7 +1014,6 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
 
 ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, InnerBundleInfo> &infos) const
 {
-#ifdef BUNDLE_FRAMEWORK_CHECK_DEVICE_TYPE
     std::string deviceType = GetDeviceType();
     APP_LOGD("deviceType is %{public}s", deviceType.c_str());
     for (const auto &info : infos) {
@@ -1041,7 +1040,6 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
             return ERR_APPEXECFWK_INSTALL_DEVICE_TYPE_NOT_SUPPORTED;
         }
     }
-#endif
     return ERR_OK;
 }
 }  // namespace AppExecFwk
