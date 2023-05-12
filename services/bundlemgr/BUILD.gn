@@ -336,10 +336,6 @@ ohos_shared_library("libbms") {
     sources += app_control
   }
 
-  if (bundle_framework_check_device_type) {
-    defines += [ "BUNDLE_FRAMEWORK_CHECK_DEVICE_TYPE" ]
-  }
-
   if (build_variant == "root") {
     defines += [ "QUOTA_PARAM_SET_ENABLE" ]
   }
