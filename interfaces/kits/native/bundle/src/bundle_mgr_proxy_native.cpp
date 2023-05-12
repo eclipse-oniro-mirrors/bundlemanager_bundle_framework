@@ -82,11 +82,11 @@ bool BundleMgrProxyNative::GetParcelableInfo(uint32_t code, MessageParcel &data,
         return false;
     }
 
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
+    int32_t res = reply.ReadInt32();
+    if (res != NO_ERROR) {
+        APP_LOGE("reply result failed");
+            return false;
     }
-
     std::unique_ptr<T> info(reply.ReadParcelable<T>());
     if (info == nullptr) {
         APP_LOGE("readParcelableInfo failed");
