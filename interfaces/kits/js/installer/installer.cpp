@@ -640,19 +640,32 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
-static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
+static void ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
-    if (!ParseUserId(env, args, installParam.userId) || !ParseInstallFlag(env, args, installParam.installFlag) ||
-        !ParseIsKeepData(env, args, installParam.isKeepData) ||
-        !ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline) ||
-        !ParseHashParams(env, args, installParam.hashParams) ||
-        !ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths) ||
-        !ParseSpecifiedDistributionType(env, args, installParam.specifiedDistributionType) ||
-        !ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
-        APP_LOGE("ParseInstallParam failed");
-        return false;
+    if (!ParseUserId(env, args, installParam.userId)) {
+        APP_LOGW("Parse userId failed,using default value.");
     }
-    return true;
+    if (!ParseInstallFlag(env, args, installParam.installFlag)) {
+        APP_LOGW("Parse installFlag failed,using default value.");
+    }
+    if (!ParseIsKeepData(env, args, installParam.isKeepData)) {
+        APP_LOGW("Parse isKeepData failed,using default value.");
+    }
+    if (!ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
+        APP_LOGW("Parse crowdtestDeadline failed,using default value.");
+    }
+    if (!ParseHashParams(env, args, installParam.hashParams)) {
+        APP_LOGW("Parse hashParams failed,using default value.");
+    }
+    if (!ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
+        APP_LOGW("Parse sharedBundleDirPaths failed,using default value.");
+    }
+    if (!ParseSpecifiedDistributionType(env, args, installParam.specifiedDistributionType)) {
+        APP_LOGW("Parse specifiedDistributionType failed,using default value.");
+    }
+    if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
+        APP_LOGW("Parse additionalInfo failed,using default value.");
+    }
 }
 
 static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &uninstallParam)
@@ -805,15 +818,14 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
                 break;
             }
-
-            if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("userId %{public}d invalid!", callbackPtr->installParam.userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-                return nullptr;
+            if (valueType == napi_object) {
+                ParseInstallParam(env, args[i], callbackPtr->installParam);
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
-            break;
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
@@ -980,15 +992,14 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
                 break;
             }
-
-            if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("userId %{public}d invalid!", callbackPtr->installParam.userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-                return nullptr;
+            if (valueType == napi_object) {
+                ParseInstallParam(env, args[i], callbackPtr->installParam);
             }
-        } else if ((i == ARGS_POS_TWO) && (valueType == napi_function)) {
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
-            break;
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
         } else {
             APP_LOGE("param check error");
             BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
