@@ -44,7 +44,6 @@ declare_args() {
   bundle_framework_app_control = true
   distributed_bundle_framework = true
   bundle_framework_overlay_install = true
-  bundle_framework_check_device_type = true
 
   ability_runtime_enable = true
   account_enable = true
@@ -134,5 +133,3 @@ print("support_jsapi = " + "$support_jsapi")
 print("hisysevent_enable = " + "$hisysevent_enable")
 print(
     "bundle_framework_overlay_install = " + "$bundle_framework_overlay_install")
-print("bundle_framework_check_device_type = " +
-      "$bundle_framework_check_device_type")
