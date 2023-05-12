@@ -58,10 +58,10 @@ bool SandboxManagerRdb::QuerySandboxInnerBundleInfo(const std::string &bundleNam
     return true;
 }
 
-bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const InnerBundleInfo &innerBundleInfos)
+bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfos)
 {
     APP_LOGI("begin to SaveSandboxInnerBundleInfo");
-    bool ret = SaveDataToDb(innerBundleInfos);
+    bool ret = SaveDataToDb(bundleName, innerBundleInfos);
     if (!ret) {
         APP_LOGE("SaveDataToDb failed.");
         return false;
@@ -133,14 +133,14 @@ bool SandboxManagerRdb::GetDataFromDb(const std::string &bundleName, InnerBundle
     return true;
 }
 
-bool SandboxManagerRdb::SaveDataToDb(const InnerBundleInfo &innerBundleInfo)
+bool SandboxManagerRdb::SaveDataToDb(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo)
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;
     }
 
-    return rdbDataManager_->InsertData(innerBundleInfo.GetBundleName(), innerBundleInfo.ToString());
+    return rdbDataManager_->InsertData(bundleName, innerBundleInfo.ToString());
 }
 
 bool SandboxManagerRdb::DeleteDataFromDb(const std::string &bundleName)

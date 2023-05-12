@@ -50,6 +50,8 @@ public:
     bool RestoreSandboxPersistentInnerBundleInfo();
 
 private:
+    bool RestoreSandboxAppIndex(const std::string &bundleName, int32_t appIndex);
+
     mutable std::shared_mutex sandboxAppMutex_;
     mutable std::shared_mutex sandboxDbMutex_;
     mutable std::mutex sandboxAppIndexMapMutex_;

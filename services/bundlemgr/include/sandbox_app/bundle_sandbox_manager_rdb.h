@@ -30,13 +30,13 @@ public:
 
     bool QueryAllSandboxInnerBundleInfo(std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos) override;
     bool QuerySandboxInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfos) override;
-    bool SaveSandboxInnerBundleInfo(const InnerBundleInfo &innerBundleInfos) override;
+    bool SaveSandboxInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfos) override;
     bool DeleteSandboxInnerBundleInfo(const std::string &bundleName) override;
 
 private:
     bool GetAllDataFromDb(std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos);
     bool GetDataFromDb(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
-    bool SaveDataToDb(const InnerBundleInfo &innerBundleInfo);
+    bool SaveDataToDb(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
     bool DeleteDataFromDb(const std::string &bundleName);
 
     std::shared_ptr<RdbDataManager> rdbDataManager_;

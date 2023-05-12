@@ -275,7 +275,7 @@ bool BundleSandboxDataMgr::SaveSandboxPersistentInfo(const std::string &bundleNa
         APP_LOGE("error sandboxManagerDb_ is nullptr.");
         return false;
     }
-    return sandboxManagerDb_->SaveSandboxInnerBundleInfo(innerBundleInfo);
+    return sandboxManagerDb_->SaveSandboxInnerBundleInfo(bundleName, innerBundleInfo);
 }
 
 bool BundleSandboxDataMgr::RemoveSandboxPersistentInfo(const std::string &bundleName)
@@ -298,7 +298,49 @@ bool BundleSandboxDataMgr::RestoreSandboxPersistentInnerBundleInfo()
         return false;
     }
     std::unique_lock<std::shared_mutex> lockAppMutex(sandboxAppMutex_);
-    return sandboxManagerDb_->QueryAllSandboxInnerBundleInfo(sandboxAppInfos_);
+    if (!sandboxManagerDb_->QueryAllSandboxInnerBundleInfo(sandboxAppInfos_)) {
+        APP_LOGE("QueryAllSandboxInnerBundleInfo failed");
+        return false;
+    }
+    for (const auto &sandboxInfo : sandboxAppInfos_) {
+        auto fileUnderlinePos = sandboxInfo.first.find(Constants::FILE_UNDERLINE);
+        if (fileUnderlinePos == std::string::npos) {
+            APP_LOGW("invalid bundleName_appIndex");
+            continue;
+        }
+        std::string bundleName = sandboxInfo.first.substr(0, fileUnderlinePos);
+        std::string appIndexStr = sandboxInfo.first.substr(fileUnderlinePos + 1);
+        int32_t appIndex = 0;
+        if (!OHOS::StrToInt(appIndexStr, appIndex)) {
+            APP_LOGW("invalid appIndex %{public}s", appIndexStr.c_str());
+            continue;
+        }
+        if (!RestoreSandboxAppIndex(bundleName, appIndex)) {
+            APP_LOGW("RestoreSandboxAppIndex appIndex failed");
+        }
+    }
+    return true;
+}
+
+bool BundleSandboxDataMgr::RestoreSandboxAppIndex(const std::string &bundleName, int32_t appIndex)
+{
+    APP_LOGD("RestoreSandboxAppIndex begin");
+    if (bundleName.empty()) {
+        APP_LOGE("RestoreSandboxAppIndex bundleName is empty");
+        return false;
+    }
+    std::unique_lock<std::mutex> lock(sandboxAppIndexMapMutex_);
+    auto firstIterator = sandboxAppIndexMap_.find(bundleName);
+    if (firstIterator == sandboxAppIndexMap_.end()) {
+        std::set<int32_t> innerSet { appIndex };
+        sandboxAppIndexMap_.emplace(bundleName, innerSet);
+        APP_LOGD("RestoreSandboxAppIndex successfully");
+        return true;
+    }
+
+    firstIterator->second.insert(appIndex);
+    APP_LOGD("RestoreSandboxAppIndex finish");
+    return true;
 }
 } // AppExecFwk
 } // OHOS

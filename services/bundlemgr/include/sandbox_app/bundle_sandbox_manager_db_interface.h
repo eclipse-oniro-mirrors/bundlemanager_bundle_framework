@@ -32,7 +32,7 @@ public:
 
     virtual bool QuerySandboxInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo) = 0;
 
-    virtual bool SaveSandboxInnerBundleInfo(const InnerBundleInfo &innerBundleInfo) = 0;
+    virtual bool SaveSandboxInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo) = 0;
 
     virtual bool DeleteSandboxInnerBundleInfo(const std::string &bundleName) = 0;
 };
