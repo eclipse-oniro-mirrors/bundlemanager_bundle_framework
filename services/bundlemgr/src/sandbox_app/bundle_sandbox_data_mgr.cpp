@@ -25,6 +25,14 @@ namespace AppExecFwk {
 BundleSandboxDataMgr::BundleSandboxDataMgr()
 {
     APP_LOGI("BundleSandboxDataMgr instance is created");
+    sandboxManagerDb_ = std::make_shared<SandboxManagerRdb>();
+    if (sandboxManagerDb_ == nullptr) {
+        APP_LOGE("create sandboxManagerDb_ failed.");
+        return;
+    }
+    if (!RestoreSandboxPersistentInnerBundleInfo()) {
+        APP_LOGW("RestoreSandboxPersistentInnerBundleInfo failed.");
+    }
 }
 
 BundleSandboxDataMgr::~BundleSandboxDataMgr()
@@ -256,6 +264,41 @@ ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerB
         }
     }
     return ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP;
+}
+
+bool BundleSandboxDataMgr::SaveSandboxPersistentInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfo)
+{
+    APP_LOGD("SaveSandboxPersistentInfo for bundleName %{public}s", bundleName.c_str());
+    std::unique_lock<std::shared_mutex> lock(sandboxDbMutex_);
+    if (sandboxManagerDb_ == nullptr) {
+        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        return false;
+    }
+    return sandboxManagerDb_->SaveSandboxInnerBundleInfo(innerBundleInfo);
+}
+
+bool BundleSandboxDataMgr::RemoveSandboxPersistentInfo(const std::string &bundleName)
+{
+    APP_LOGD("RemoveSandboxPersistentInfo for bundleName %{public}s", bundleName.c_str());
+    std::unique_lock<std::shared_mutex> lock(sandboxDbMutex_);
+    if (sandboxManagerDb_ == nullptr) {
+        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        return false;
+    }
+    return sandboxManagerDb_->DeleteSandboxInnerBundleInfo(bundleName);
+}
+
+bool BundleSandboxDataMgr::RestoreSandboxPersistentInnerBundleInfo()
+{
+    APP_LOGD("start to RestoreSandboxPersistentInnerBundleInfo");
+    std::unique_lock<std::shared_mutex> lockDbMutex(sandboxDbMutex_);
+    if (sandboxManagerDb_ == nullptr) {
+        APP_LOGE("error sandboxManagerDb_ is nullptr.");
+        return false;
+    }
+    std::unique_lock<std::shared_mutex> lockAppMutex(sandboxAppMutex_);
+    return sandboxManagerDb_->QueryAllSandboxInnerBundleInfo(sandboxAppInfos_);
 }
 } // AppExecFwk
 } // OHOS

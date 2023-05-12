@@ -59,10 +59,6 @@ private:
     bool GetInnerBundleInfo(InnerBundleInfo &info, bool &isAppExist);
     ErrCode GetDataMgr();
     ErrCode GetSandboxDataMgr();
-    void StoreSandboxPersitentInfo(const std::string &bundleName, uint32_t accessTokenId, int32_t appIndex,
-        int32_t userId);
-    void DeleteSandboxPersitentInfo(const std::string &bundleName, uint32_t accessTokenId, int32_t appIndex,
-        int32_t userId);
 
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;

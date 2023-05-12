@@ -24,6 +24,7 @@
 #include <string>
 
 #include "inner_bundle_info.h"
+#include "bundle_sandbox_manager_rdb.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -44,13 +45,18 @@ public:
     ErrCode GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
         HapModuleInfo &hapModuleInfo) const;
     ErrCode GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const;
+    bool SaveSandboxPersistentInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
+    bool RemoveSandboxPersistentInfo(const std::string &bundleName);
+    bool RestoreSandboxPersistentInnerBundleInfo();
 
 private:
     mutable std::shared_mutex sandboxAppMutex_;
+    mutable std::shared_mutex sandboxDbMutex_;
     mutable std::mutex sandboxAppIndexMapMutex_;
     // key: bundleName_appindex
     std::unordered_map<std::string, InnerBundleInfo> sandboxAppInfos_;
     std::unordered_map<std::string, std::set<int32_t>> sandboxAppIndexMap_;
+    std::shared_ptr<SandboxManagerRdb> sandboxManagerDb_ = nullptr;
 };
 } // AppExecFwk
 } // OHOS

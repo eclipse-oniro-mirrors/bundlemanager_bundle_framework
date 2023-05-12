@@ -17,7 +17,6 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_exception_handler.h"
-#include "bundle_sandbox_app_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -83,7 +82,6 @@ void BundleDataStorageRdb::TransformStrToInfo(
         bool isBundleValid = true;
         auto handler = std::make_shared<BundleExceptionHandler>(shared_from_this());
         handler->HandleInvalidBundle(innerBundleInfo, isBundleValid);
-        DelayedSingleton<BundleSandboxAppHelper>::GetInstance()->RemoveSandboxApp(shared_from_this(), innerBundleInfo);
         if (!isBundleValid) {
             continue;
         }

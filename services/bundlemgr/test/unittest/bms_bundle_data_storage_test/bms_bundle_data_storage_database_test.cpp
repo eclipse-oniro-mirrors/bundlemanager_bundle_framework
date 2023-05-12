@@ -1818,24 +1818,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0200, Function | Smal
 }
 
 /**
- * @tc.number: InnerBundleInfo_0300
- * @tc.name: Test from_json
- * @tc.desc: 1.Test the from_json of InnerBundleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_0300, Function | SmallTest | Level1)
-{
-    nlohmann::json jsonObject;
-    jsonObject[Constants::ACCESS_TOKEN_ID] = 1;
-    jsonObject[APP_INDEX] = 1;
-    jsonObject[USERID] = 101;
-    SandboxAppPersistentInfo info;
-    from_json(jsonObject, info);
-    EXPECT_EQ(info.accessTokenId, 1);
-    EXPECT_EQ(info.appIndex, 1);
-    EXPECT_EQ(info.userId, 101);
-}
-
-/**
  * @tc.number: InnerBundleInfo_0400
  * @tc.name: Test BuildDefaultUserInfo
  * @tc.desc: 1.Use FromJson to call BuildDefaultUserInfo of InnerBundleInfoCpp
