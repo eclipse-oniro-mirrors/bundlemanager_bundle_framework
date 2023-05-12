@@ -32,6 +32,9 @@ ohos_shared_library("bundle_ndk") {
   public_configs = [ ":bundle_ndk_config" ]
   include_dirs = [
     "${common_path}/log/include",
+    "${inner_api_path}/appexecfwk_base/include",
+    "${inner_api_path}/appexecfwk_base/include/quick_fix",
+    "${inner_api_path}/appexecfwk_base/include/overlay",
     "//third_party/json/include",
   ]
   defines = [
@@ -39,6 +42,18 @@ ohos_shared_library("bundle_ndk") {
     "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
+    "${inner_api_path}/appexecfwk_base/src/ability_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/hap_module_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/overlay/overlay_bundle_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/overlay/overlay_module_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/compatible_application_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/extension_ability_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/module_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/app_quick_fix.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/appqf_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/quick_fix/hqf_info.cpp",
     "src/bundle_mgr_proxy_native.cpp",
     "src/native_interface_bundle.cpp",
   ]
@@ -46,7 +61,6 @@ ohos_shared_library("bundle_ndk") {
   deps = [ "${common_path}:libappexecfwk_common" ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
