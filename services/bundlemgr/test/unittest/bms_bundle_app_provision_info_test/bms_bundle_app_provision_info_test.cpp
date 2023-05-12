@@ -727,6 +727,76 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0003, Function | Sm
 }
 
 /**
+ * @tc.number: SaveInstallParamInfo_0004
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0004, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    ErrCode ret = installer.Install(installParam);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0005
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0005, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    ErrCode res = installer.MkdirIfNotExist("test/test");
+    installer.RollBack();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0006
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0006, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    ErrCode res = installer.CheckAppLabelInfo();
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0007
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0007, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "specifiedDistributionType";
+    installer.SaveInstallParamInfo("", installParam);
+
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType("",
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SaveInstallParamInfo_0008
+ * @tc.name: test the start function of SaveInstallParamInfo
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0008, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InstallParam installParam;
+    installParam.specifiedDistributionType = "";
+    installParam.additionalInfo = "additionalInfo";
+    installer.SaveInstallParamInfo("", installParam);
+
+    std::string specifiedDistributionType;
+    bool ret = DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetSpecifiedDistributionType("",
+        specifiedDistributionType);
+    EXPECT_FALSE(ret);
+}
+
+/**
  * @tc.number: InnerProcessStockBundleProvisionInfo_0001
  * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
  * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos
