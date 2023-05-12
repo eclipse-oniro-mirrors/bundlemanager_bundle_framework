@@ -32,15 +32,15 @@ ohos_shared_library("bundle_ndk") {
   public_configs = [ ":bundle_ndk_config" ]
   include_dirs = [
     "${common_path}/log/include",
-    "//third_party/json/include"
+    "//third_party/json/include",
   ]
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",
-    "LOG_DOMAIN = 0xD001120"
+    "LOG_DOMAIN = 0xD001120",
   ]
   sources = [
     "src/bundle_mgr_proxy_native.cpp",
-    "src/native_interface_bundle.cpp"
+    "src/native_interface_bundle.cpp",
   ]
 
   deps = [ "${common_path}:libappexecfwk_common" ]
@@ -50,7 +50,7 @@ ohos_shared_library("bundle_ndk") {
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "samgr:samgr_proxy"
+    "samgr:samgr_proxy",
   ]
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
