@@ -865,6 +865,13 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
 
+    template <typename T>
+    bool GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo);
+
+    template<typename T>
+    bool GetBigParcelableInfo(
+        IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo);
+
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };

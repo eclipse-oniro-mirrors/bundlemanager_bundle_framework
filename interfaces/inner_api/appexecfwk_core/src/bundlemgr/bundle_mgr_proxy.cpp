@@ -38,6 +38,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const int32_t ASHMEM_LEN = 16;
 inline void ClearAshmem(sptr<Ashmem> &optMem)
 {
     if (optMem != nullptr) {
@@ -293,7 +294,7 @@ bool BundleMgrProxy::GetBundleInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO, data, bundleInfo)) {
+    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -327,8 +328,7 @@ bool BundleMgrProxy::GetBundleInfo(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-
-    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
+    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -3636,6 +3636,106 @@ bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &da
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
+    return true;
+}
+
+bool ParseStr(const char *buf, const int itemLen, int index, std::string &result)
+{
+    APP_LOGD("ParseStr itemLen:%{public}d index:%{public}d.", itemLen, index);
+    if (buf == nullptr || itemLen <= 0 || index < 0) {
+        APP_LOGE("param invalid.");
+        return false;
+    }
+
+    char item[itemLen + 1];
+    if (strncpy_s(item, sizeof(item), buf + index, itemLen) != 0) {
+        APP_LOGE("ParseStr failed due to strncpy_s error.");
+        return false;
+    }
+
+    std::string str(item, 0, itemLen);
+    result = str;
+    return true;
+}
+
+template<typename T>
+bool BundleMgrProxy::GetBigParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        return false;
+    }
+
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+
+    if (reply.ReadBool()) {
+        APP_LOGI("big reply, reading data from ashmem");
+        return GetParcelableFromAshmem<T>(reply, parcelableInfo);
+    }
+
+    std::unique_ptr<T> info(reply.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+    parcelableInfo = *info;
+    APP_LOGD("get parcelable info success");
+    return true;
+}
+
+template <typename T>
+bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo)
+{
+    APP_LOGE("Get parcelable from ashmem");
+    sptr<Ashmem> ashmem = reply.ReadAshmem();
+    if (ashmem == nullptr) {
+        APP_LOGE("Ashmem is nullptr");
+        return false;
+    }
+
+    bool ret = ashmem->MapReadOnlyAshmem();
+    if (!ret) {
+        APP_LOGE("Map read only ashmem fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+
+    int32_t offset = 0;
+    const char* dataStr = static_cast<const char*>(
+        ashmem->ReadFromAshmem(ashmem->GetAshmemSize(), offset));
+    if (dataStr == nullptr) {
+        APP_LOGE("Data is nullptr when read from ashmem");
+        ClearAshmem(ashmem);
+        return false;
+    }
+
+    std::string lenStr;
+    if (!ParseStr(dataStr, ASHMEM_LEN, offset, lenStr)) {
+        APP_LOGE("Parse lenStr fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+
+    int strLen = atoi(lenStr.c_str());
+    offset += ASHMEM_LEN;
+    std::string infoStr;
+    if (!ParseStr(dataStr, strLen, offset, infoStr)) {
+        APP_LOGE("Parse infoStr fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+
+    if (!ParseInfoFromJsonStr(infoStr.c_str(), parcelableInfo)) {
+        APP_LOGE("Parse info from json fail");
+        ClearAshmem(ashmem);
+        return false;
+    }
+
+    ClearAshmem(ashmem);
+    APP_LOGD("Get parcelable vector from ashmem success");
     return true;
 }
 }  // namespace AppExecFwk
