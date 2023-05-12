@@ -47,6 +47,7 @@ ohos_shared_library("bundle_ndk") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
