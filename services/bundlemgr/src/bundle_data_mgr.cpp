@@ -275,9 +275,9 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-            oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
+        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
@@ -451,9 +451,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
-            oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
+        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(oldInfo);
