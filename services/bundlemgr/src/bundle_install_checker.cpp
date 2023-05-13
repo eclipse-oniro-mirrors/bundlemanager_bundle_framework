@@ -400,8 +400,8 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
     const std::string &bundleName,
     uint32_t versionCode)
 {
-    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s, the versionCode is %{public}d.",
-        moduleName.c_str(), bundleName.c_str(), versionCode);
+    APP_LOGD("FindModuleInInstalledPackage the moduleName is %{public}s, the bundleName is %{public}s",
+        moduleName.c_str(), bundleName.c_str());
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
@@ -420,7 +420,8 @@ bool BundleInstallChecker::FindModuleInInstalledPackage(
         return false;
     }
     if (bundleInfo.GetVersionCode() != versionCode) {
-        APP_LOGE("the versionCode %{public}d of dependency is not consistent with the installed module", bundleInfo.GetVersionCode());
+        APP_LOGE("the versionCode %{public}d of dependency is not consistent with the installed module",
+            bundleInfo.GetVersionCode());
         return false;
     }
     return true;
