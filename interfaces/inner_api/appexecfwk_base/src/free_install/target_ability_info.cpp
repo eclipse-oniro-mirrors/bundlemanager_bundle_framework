@@ -37,6 +37,9 @@ const std::string JSON_KEY_CALLINGAPPTYPE = "callingAppType";
 const std::string JSON_KEY_CALLINGBUNDLENAMES = "callingBundleNames";
 const std::string JSON_KEY_CALLINGAPPIDS = "callingAppIds";
 const std::string JSON_KEY_PRELOAD_MODULE_NAMES = "preloadModuleNames";
+const std::string JSON_KEY_ACTION = "action";
+const std::string JSON_KEY_URI = "uri";
+const std::string JSON_KEY_TYPE = "type";
 }  // namespace
 
 void to_json(nlohmann::json &jsonObject, const TargetExtSetting &targetExtSetting)
@@ -104,6 +107,9 @@ void to_json(nlohmann::json &jsonObject, const TargetInfo &targetInfo)
         {Constants::BUNDLE_NAME, targetInfo.bundleName},
         {Constants::MODULE_NAME, targetInfo.moduleName},
         {Constants::ABILITY_NAME, targetInfo.abilityName},
+        {JSON_KEY_ACTION, targetInfo.action},
+        {JSON_KEY_URI, targetInfo.uri},
+        {JSON_KEY_TYPE, targetInfo.type},
         {JSON_KEY_FLAGS, targetInfo.flags},
         {JSON_KEY_REASONFLAG, targetInfo.reasonFlag},
         {JSON_KEY_CALLINGUID, targetInfo.callingUid},
@@ -150,6 +156,30 @@ void from_json(const nlohmann::json &jsonObject, TargetInfo &targetInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+       jsonObjectEnd,
+       JSON_KEY_ACTION,
+       targetInfo.action,
+       JsonType::STRING,
+       false,
+       parseResult,
+       ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+       jsonObjectEnd,
+       JSON_KEY_URI,
+       targetInfo.uri,
+       JsonType::STRING,
+       false,
+       parseResult,
+       ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+       jsonObjectEnd,
+       JSON_KEY_TYPE,
+       targetInfo.type,
+       JsonType::STRING,
+       false,
+       parseResult,
+       ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::uint32_t>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_FLAGS,
@@ -217,6 +247,9 @@ bool TargetInfo::ReadFromParcel(Parcel &parcel)
     bundleName = Str16ToStr8(parcel.ReadString16());
     moduleName = Str16ToStr8(parcel.ReadString16());
     abilityName = Str16ToStr8(parcel.ReadString16());
+    action = Str16ToStr8(parcel.ReadString16());
+    uri = Str16ToStr8(parcel.ReadString16());
+    type = Str16ToStr8(parcel.ReadString16());
     flags = parcel.ReadInt32();
     reasonFlag = parcel.ReadInt32();
     callingUid = parcel.ReadInt32();
@@ -248,6 +281,9 @@ bool TargetInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(abilityName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(action));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(type));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, flags);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reasonFlag);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, callingUid);
