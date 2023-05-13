@@ -36,7 +36,8 @@ SandboxManagerRdb::~SandboxManagerRdb()
     APP_LOGI("destroy SandboxManagerRdb.");
 }
 
-bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
+bool SandboxManagerRdb::QueryAllSandboxInnerBundleInfo(
+    std::unordered_map<std::string, InnerBundleInfo> &innerBundleInfos)
 {
     APP_LOGI("begin to QueryAllSandboxInnerBundleInfo");
     bool ret = GetAllDataFromDb(innerBundleInfos);
@@ -58,7 +59,8 @@ bool SandboxManagerRdb::QuerySandboxInnerBundleInfo(const std::string &bundleNam
     return true;
 }
 
-bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfos)
+bool SandboxManagerRdb::SaveSandboxInnerBundleInfo(const std::string &bundleName,
+    const InnerBundleInfo &innerBundleInfos)
 {
     APP_LOGI("begin to SaveSandboxInnerBundleInfo");
     bool ret = SaveDataToDb(bundleName, innerBundleInfos);

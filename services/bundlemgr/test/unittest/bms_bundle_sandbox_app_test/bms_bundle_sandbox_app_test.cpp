@@ -18,7 +18,6 @@
 
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
-//#include "bundle_sandbox_exception_handler.h"
 #include "bundle_sandbox_installer.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
