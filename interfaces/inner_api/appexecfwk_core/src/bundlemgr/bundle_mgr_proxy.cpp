@@ -2574,7 +2574,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
         APP_LOGE("WriteInt32 userId failed.");
         return false;
     }
-    if(!data.WriteBool(withDefault)) {
+    if (!data.WriteBool(withDefault)) {
         APP_LOGE("WriteBool withDefault failed.");
         return false;
     }
