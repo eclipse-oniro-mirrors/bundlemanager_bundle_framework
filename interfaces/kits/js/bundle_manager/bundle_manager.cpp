@@ -2698,8 +2698,8 @@ void GetBundleInfoExec(napi_env env, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         {
             std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-            auto item = cache.find(Query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            auto item = cache.find(Query(asyncCallbackInfo->bundleName,
+                GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item != cache.end()) {
                 asyncCallbackInfo->isSavedInCache = true;
                 APP_LOGD("GetBundleInfo param from cache");
