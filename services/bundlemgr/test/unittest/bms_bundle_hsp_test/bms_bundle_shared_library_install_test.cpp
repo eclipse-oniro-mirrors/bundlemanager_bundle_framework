@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#define private public
 
 #include <fstream>
 #include <gtest/gtest.h>
@@ -51,6 +52,7 @@ const std::string BUNDLE_NAME_1 = "com.example.host";
 const std::string BUNDLE_NAME_2 = "com.example.host2";
 const std::string SHARED_BUNDLE_NAME_A = "com.example.liba";
 const std::string SHARED_BUNDLE_NAME_B = "com.example.libb";
+const std::string MOUDLE_PACK_AGE = "modulePackage";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 
@@ -606,6 +608,59 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAppProvisionInfo_0001, Function |
         newAppProvisionInfo);
     EXPECT_FALSE(ret);
     EXPECT_TRUE(newAppProvisionInfo.apl.empty());
+}
+
+/**
+ * @tc.number: ProcessBundleUninstall_0100
+ * @tc.name: BmsBundleSharedLibraryInstall
+ * @tc.desc: test install, the hsp has AllowAppShareLibrary priviledge
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, ProcessBundleUninstall_0100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+
+    auto res = installer.ProcessBundleUninstall(SHARED_BUNDLE_NAME_A, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY);
+
+    res = installer.ProcessBundleUninstall(SHARED_BUNDLE_NAME_A, MOUDLE_PACK_AGE, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_IS_SHARED_LIBRARY);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBundleUninstall_0100
+ * @tc.name: BmsBundleSharedLibraryInstall
+ * @tc.desc: test install, the hsp has AllowAppShareLibrary priviledge
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, ProcessBundleUninstall_0200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+    bool recoverMode = false;
+    auto res = installer.InnerProcessInstallByPreInstallInfo(SHARED_BUNDLE_NAME_A, installParam, uid, recoverMode);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 }
 }
