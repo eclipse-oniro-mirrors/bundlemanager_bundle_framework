@@ -20,6 +20,7 @@
 
 #include "accesstoken_kit.h"
 #include "access_token.h"
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
@@ -36,6 +37,9 @@
 #include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
+#endif
+#if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
+#include "dlp_permission_kit.h"
 #endif
 #include "event_report.h"
 #include "installd_client.h"
@@ -251,6 +255,7 @@ void BMSEventHandler::AfterBmsStart()
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     ListeningUserUnlocked();
+    RemoveUnreservedSandbox();
 }
 
 void BMSEventHandler::ClearCache()
@@ -1756,6 +1761,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
     APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
@@ -1763,6 +1769,35 @@ void BMSEventHandler::ListeningUserUnlocked() const
         APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
     }
+}
+
+void BMSEventHandler::RemoveUnreservedSandbox() const
+{
+#if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
+    APP_LOGD("Start to RemoveUnreservedSandbox");
+    const int32_t WAIT_TIMES = 40;
+    const int32_t EACH_TIME = 1000; // 1000ms
+    auto execFunc = [](int32_t waitTimes, int32_t eachTime) {
+        int32_t currentUserId = Constants::INVALID_USERID;
+        while(waitTimes--) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
+            APP_LOGD("wait for account started");
+            if (currentUserId == Constants::INVALID_USERID) {
+                currentUserId = AccountHelper::GetCurrentActiveUserId();
+                APP_LOGD("current active userId is %{public}d", currentUserId);
+                if (currentUserId == Constants::INVALID_USERID) {
+                    continue;
+                }
+            }
+            APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
+            Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
+            break;
+        }
+    };
+    std::thread removeThread(execFunc, WAIT_TIMES, EACH_TIME);
+    removeThread.detach();
+#endif
+    APP_LOGD("RemoveUnreservedSandbox finish");
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)

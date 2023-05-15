@@ -73,6 +73,11 @@ ohos_unittest("BmsSandboxAppTest") {
     defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
   }
 
+  if (dlp_permission_enable) {
+    external_deps += [ "dlp_permission_service:libdlp_permission_sdk" ]
+    defines += [ "DLP_PERMISSION_ENABLE" ]
+  }
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
