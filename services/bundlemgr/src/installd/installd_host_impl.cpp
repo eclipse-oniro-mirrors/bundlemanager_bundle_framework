@@ -248,6 +248,34 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
     return ERR_OK;
 }
 
+static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int userid)
+{
+    std::string bundleBackupDir = Constants::BUNDLE_BACKUP_HOME_PATH + bundleName;
+    bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
+        APP_LOGE("remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
+}
+
+static ErrCode RemoveDistributedDir(const std::string &bundleName, const int userid)
+{
+    std::string distributedFile = Constants::DISTRIBUTED_FILE + bundleName;
+    distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(distributedFile)) {
+        APP_LOGE("remove dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    std::string fileNonAccount = Constants::DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
+    fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(fileNonAccount)) {
+        APP_LOGE("remove dir %{public}s failed, errno is %{public}d", fileNonAccount.c_str(), errno);
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
+}
+
 static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
 {
     std::string shareFileDir = Constants::SHARE_FILE_PATH + bundleName;
@@ -284,6 +312,14 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
     }
     if (RemoveShareDir(bundleName, userid) != ERR_OK) {
         APP_LOGE("failed to remove share dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveBackupExtHomeDir(bundleName, userid) != ERR_OK) {
+        APP_LOGE("failed to remove backup ext home dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveDistributedDir(bundleName, userid) != ERR_OK) {
+        APP_LOGE("failed to remove distributed file dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     return ERR_OK;
