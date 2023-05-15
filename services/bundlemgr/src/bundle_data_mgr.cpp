@@ -2926,36 +2926,6 @@ int32_t BundleDataMgr::GetModuleUpgradeFlag(const std::string &bundleName, const
     return newInfo.GetModuleUpgradeFlag(moduleName);
 }
 
-void BundleDataMgr::StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info)
-{
-    if (bundleName.empty()) {
-        APP_LOGW("StoreSandboxPersistentInfo bundleName is empty");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.find(bundleName) == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return;
-    }
-    bundleInfos_[bundleName].AddSandboxPersistentInfo(info);
-    SaveInnerBundleInfo(bundleInfos_[bundleName]);
-}
-
-void BundleDataMgr::DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info)
-{
-    if (bundleName.empty()) {
-        APP_LOGW("DeleteSandboxPersistentInfo bundleName is empty");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.find(bundleName) == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return;
-    }
-    bundleInfos_[bundleName].RemoveSandboxPersistentInfo(info);
-    SaveInnerBundleInfo(bundleInfos_[bundleName]);
-}
-
 void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 {
     auto userInfos = info.GetInnerBundleUserInfos();

@@ -47,9 +47,6 @@ public:
         HapModuleInfo &hapModuleInfo) const;
     ErrCode GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const;
 
-    // BundleSandboxExceptionHandler interface
-    void RemoveSandboxApp(const std::shared_ptr<IBundleDataStorage> &dataStorage, InnerBundleInfo &info);
-
     // BundleSandboxInstaller interface
     ErrCode InstallSandboxApp(const std::string &bundleName, const int32_t &dlpType, const int32_t &userId,
         int32_t &appIndex);

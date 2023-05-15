@@ -114,7 +114,7 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
     auto newTokenIdEx =
         BundlePermissionMgr::CreateAccessTokenIdEx(info, info.GetBundleName(), userId_, dlpType, hapPolicy);
 
-    // 6. create data dir and generate uid and gid
+    // 5. create data dir and generate uid and gid
     info.CleanInnerBundleUserInfos();
     userInfo.bundleName = bundleName_ + Constants::FILE_UNDERLINE + std::to_string(newAppIndex);
     userInfo.gids.clear();
@@ -131,15 +131,20 @@ ErrCode BundleSandboxInstaller::InstallSandboxApp(const std::string &bundleName,
         return result;
     }
 
-    // 7. store new bundleInfo to sandbox data manager
+    // 6. store new bundleInfo to sandbox data manager
     sandboxDataMgr_->SaveSandboxAppInfo(info, newAppIndex);
+
+    // 7. SaveSandboxPersistentInfo
+    bool saveBundleInfoRes = sandboxDataMgr_->SaveSandboxPersistentInfo(bundleName_ + Constants::FILE_UNDERLINE +
+        std::to_string(newAppIndex), info);
+    if (!saveBundleInfoRes) {
+        APP_LOGE("InstallSandboxApp SaveSandboxPersistentInfo failed");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_DATABASE_OPERATION_FAILED;
+    }
     sandboxAppGuard.Dismiss();
     dataMgr_->EnableBundle(bundleName_);
 
-    // 8. SaveSandboxPersistentInfo
-    StoreSandboxPersitentInfo(bundleName, newTokenIdEx.tokenIdExStruct.tokenID, newAppIndex, userId_);
-
-    // 9. publish common event
+    // 8. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     result = commonEventMgr->NotifySandboxAppStatus(info, userInfo.uid, userId_, SandboxInstallType::INSTALL);
     if (result != ERR_OK) {
@@ -227,7 +232,11 @@ ErrCode BundleSandboxInstaller::UninstallSandboxApp(
     sandboxDataMgr_->DeleteSandboxAppInfo(bundleName, appIndex);
 
     // 8. remove sandbox persistent info
-    DeleteSandboxPersitentInfo(bundleName, accessTokenId, appIndex, userId);
+    bool saveBundleInfoRes = sandboxDataMgr_->RemoveSandboxPersistentInfo(innerBundleName);
+    if (!saveBundleInfoRes) {
+        APP_LOGE("UninstallSandboxApp RemoveSandboxPersistentInfo failed");
+        return ERR_APPEXECFWK_SANDBOX_INSTALL_DATABASE_OPERATION_FAILED;
+    }
 
     // 9. publish common event
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
@@ -375,28 +384,6 @@ ErrCode BundleSandboxInstaller::GetDataMgr()
         }
     }
     return ERR_OK;
-}
-
-void BundleSandboxInstaller::StoreSandboxPersitentInfo(const std::string &bundleName, uint32_t accessTokenId,
-    int32_t appIndex, int32_t userId)
-{
-    SandboxAppPersistentInfo sandboxPersistentInfo = {
-        .accessTokenId = accessTokenId,
-        .appIndex = appIndex,
-        .userId = userId
-    };
-    dataMgr_->StoreSandboxPersistentInfo(bundleName, sandboxPersistentInfo);
-}
-
-void BundleSandboxInstaller::DeleteSandboxPersitentInfo(const std::string &bundleName, uint32_t accessTokenId,
-    int32_t appIndex, int32_t userId)
-{
-    SandboxAppPersistentInfo sandboxPersistentInfo = {
-        .accessTokenId = accessTokenId,
-        .appIndex = appIndex,
-        .userId = userId
-    };
-    dataMgr_->DeleteSandboxPersistentInfo(bundleName, sandboxPersistentInfo);
 }
 } // AppExecFwk
 } // OHOS

@@ -19,7 +19,6 @@
 
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
 #include "bundle_sandbox_installer.h"
-#include "bundle_sandbox_exception_handler.h"
 #endif
 
 namespace OHOS {
@@ -159,18 +158,6 @@ ErrCode BundleSandboxAppHelper::GetInnerBundleInfoByUid(const int32_t &uid, Inne
 #else
     APP_LOGD("sandbox app not supported");
     return ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED;
-#endif
-}
-
-void BundleSandboxAppHelper::RemoveSandboxApp(
-    const std::shared_ptr<IBundleDataStorage> &dataStorage, InnerBundleInfo &info)
-{
-#ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
-    APP_LOGD("enter RemoveSandboxApp");
-    auto sandboxHandler = std::make_shared<BundleSandboxExceptionHandler>(dataStorage);
-    sandboxHandler->RemoveSandboxApp(info);
-#else
-    APP_LOGD("sandbox app not supported");
 #endif
 }
 

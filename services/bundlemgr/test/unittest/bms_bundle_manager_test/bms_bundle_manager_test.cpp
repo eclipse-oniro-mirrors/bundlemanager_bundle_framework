@@ -2863,21 +2863,6 @@ HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0004, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: TestMgrByUserId_0005
- * @tc.name: test StoreSandboxPersistentInfo
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, TestMgrByUserId_0005, Function | SmallTest | Level1)
-{
-    SandboxAppPersistentInfo info;
-
-    GetBundleDataMgr()->StoreSandboxPersistentInfo("", info);
-    EXPECT_EQ(info.appIndex, 0);
-    GetBundleDataMgr()->DeleteSandboxPersistentInfo("", info);
-    EXPECT_EQ(info.appIndex, 0);
-}
-
-/**
  * @tc.number: TestMgrByUserId_0007
  * @tc.name: test GetPreInstallBundleInfo
  * @tc.desc: 1.system run normally
