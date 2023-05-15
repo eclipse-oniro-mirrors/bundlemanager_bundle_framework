@@ -1219,19 +1219,12 @@ bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
     auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
     for (const auto &item : newSharedModuleMap) {
         auto newModuleName = item.first;
-        auto search = newSharedModuleMap.find(newModuleName);
-        if (search == newSharedModuleMap.end()) {
-            APP_LOGD("module(%{public}s) is not existed.", newModuleName.c_str());
-            return false;
-        }
         auto oldModuleInfos = oldSharedModuleMap[newModuleName];
         auto newModuleInfos = item.second;
         if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
             auto oldBuildHash = oldModuleInfos[0].buildHash;
             auto newBuildHash = newModuleInfos[0].buildHash;
-            if (oldBuildHash != newBuildHash) {
-                return true;
-            }
+            return oldBuildHash != newBuildHash;
         } else {
             return true;
         }
