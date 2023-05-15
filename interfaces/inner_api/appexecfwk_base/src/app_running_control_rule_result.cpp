@@ -26,6 +26,7 @@ bool AppRunningControlRuleResult::ReadFromParcel(Parcel &parcel)
     controlMessage = Str16ToStr8(parcel.ReadString16());
     std::shared_ptr<AAFwk::Want> want(parcel.ReadParcelable<AAFwk::Want>());
     controlWant = want;
+    isEdm = parcel.ReadBool();
     return true;
 }
 
@@ -33,6 +34,7 @@ bool AppRunningControlRuleResult::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(controlMessage));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, controlWant.get());
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEdm);
     return true;
 }
 

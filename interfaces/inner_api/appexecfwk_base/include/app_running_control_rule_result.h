@@ -26,6 +26,7 @@ namespace AppExecFwk {
 struct AppRunningControlRuleResult : public Parcelable {
     std::string controlMessage;
     std::shared_ptr<AAFwk::Want> controlWant = nullptr;
+    bool isEdm = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
