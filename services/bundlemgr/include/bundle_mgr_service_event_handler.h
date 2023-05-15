@@ -470,6 +470,7 @@ private:
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;
+    void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
     void InnerProcessStockBundleProvisionInfo();
     void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
