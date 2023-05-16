@@ -16,6 +16,9 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BMS_RDB_CONFIG_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BMS_RDB_CONFIG_H
 
+#include <string>
+#include <vector>
+
 #include "bundle_constants.h"
 
 namespace OHOS {
@@ -25,6 +28,7 @@ struct BmsRdbConfig {
     std::string dbName;
     std::string tableName;
     std::string createTableSql;
+    std::vector<std::string> insertColumnSql;
     int32_t version { Constants::BUNDLE_RDB_VERSION };
 };
 }  // namespace AppExecFwk
