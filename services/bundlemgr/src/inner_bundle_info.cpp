@@ -3711,6 +3711,12 @@ bool InnerBundleInfo::FetchNativeSoAttrs(
     }
 
     auto &moduleInfo = moduleIter->second;
+    if (!moduleInfo.compressNativeLibs) {
+        cpuAbi = moduleInfo.cpuAbi;
+        nativeLibraryPath = moduleInfo.nativeLibraryPath;
+        return !nativeLibraryPath.empty();
+    }
+
     if (moduleInfo.isLibIsolated) {
         cpuAbi = moduleInfo.cpuAbi;
         nativeLibraryPath = moduleInfo.nativeLibraryPath;

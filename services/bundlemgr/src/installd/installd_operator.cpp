@@ -912,5 +912,27 @@ bool InstalldOperator::CopyFiles(const std::string &sourceDir, const std::string
     closedir(directory);
     return true;
 }
+
+bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames)
+{
+    BundleExtractor extractor(filePath);
+    if (!extractor.Init()) {
+        return false;
+    }
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames)) {
+        return false;
+    }
+    std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+    for (const auto &entryName : entryNames) {
+        if ((entryName.find(prefix) == 0) &&
+            (entryName.find(Constants::SO_SUFFIX) != std::string::npos)) {
+            fileNames.push_back(entryName.substr(prefix.length(), entryName.length()));
+        }
+    }
+    APP_LOGD("InstalldOperator::GetNativeLibraryFileNames end");
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
