@@ -1704,10 +1704,6 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
         }
-        if (!CheckDuplicateProxyData(newInfo, oldInfo)) {
-            APP_LOGE("CheckDuplicateProxyData with old info failed");
-            return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED;
-        }
 
         if (!isReplace) {
             if (hasInstalledInUser_) {
