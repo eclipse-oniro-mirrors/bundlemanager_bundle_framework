@@ -120,6 +120,8 @@ struct InnerModuleInfo {
     std::vector<ProxyData> proxyDatas;
     std::string buildHash;
     std::string isolationMode;
+    bool compressNativeLibs = true;
+    std::vector<std::string> nativeLibraryFileNames;
 };
 
 struct SkillUri {

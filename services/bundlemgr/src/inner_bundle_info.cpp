@@ -131,6 +131,8 @@ const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
 const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
+const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -564,7 +566,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
         {MODULE_BUILD_HASH, info.buildHash},
-        {MODULE_ISOLATION_MODE, info.isolationMode}
+        {MODULE_ISOLATION_MODE, info.isolationMode},
+        {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
+        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames}
     };
 }
 
@@ -1084,6 +1088,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        info.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<str::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_NATIVE_LIBRARY_FILE_NAMES,
+        info.nativeLibraryFileNames,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1753,6 +1773,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     }
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
+    hapInfo.compressNativeLibs = it->second.compressNativeLibs;
+    hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     return hapInfo;
 }
 
