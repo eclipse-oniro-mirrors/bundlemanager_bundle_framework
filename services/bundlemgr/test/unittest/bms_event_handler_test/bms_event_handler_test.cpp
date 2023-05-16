@@ -501,8 +501,24 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0200, Function | Sma
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
     EXPECT_FALSE(res);
+}
 
-    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME_TWO, newInnerModuleInfo);
-    auto result = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
-    EXPECT_TRUE(result);
+/**
+ * @tc.number: IsNeedToUpdateSharedAppByHash_0300
+ * @tc.name: IsNeedToUpdateSharedAppByHash
+ * @tc.desc: test IsNeedToUpdateSharedAppByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInnerBundleInfo;
+
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
+    EXPECT_TRUE(res);
 }
