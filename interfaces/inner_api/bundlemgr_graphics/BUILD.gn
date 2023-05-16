@@ -52,5 +52,6 @@ ohos_shared_library("bundlemgr_graphics") {
   ]
 
   subsystem_name = "bundlemanager"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"
 }
