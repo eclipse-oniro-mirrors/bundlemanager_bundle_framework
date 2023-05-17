@@ -1779,7 +1779,7 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
     const int32_t EACH_TIME = 1000; // 1000ms
     auto execFunc = [](int32_t waitTimes, int32_t eachTime) {
         int32_t currentUserId = Constants::INVALID_USERID;
-        while(waitTimes--) {
+        while (waitTimes--) {
             std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
             APP_LOGD("wait for account started");
             if (currentUserId == Constants::INVALID_USERID) {
