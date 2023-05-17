@@ -139,6 +139,7 @@ const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
     {"isolationFirst", IsolationMode::ISOLATION_FIRST},
 };
+const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -1096,7 +1097,7 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<str::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_NATIVE_LIBRARY_FILE_NAMES,
         info.nativeLibraryFileNames,
@@ -3833,6 +3834,45 @@ IsolationMode InnerBundleInfo::GetIsolationMode(const std::string &isolationMode
     } else {
         return IsolationMode::NONISOLATION_FIRST;
     }
+}
+
+void InnerBundleInfo::SetModuleHapPath(const std::string &hapPath)
+{
+    if (innerModuleInfos_.count(currentPackage_) == 1) {
+        innerModuleInfos_.at(currentPackage_).hapPath = hapPath;
+        for (auto &abilityInfo : baseAbilityInfos_) {
+            abilityInfo.second.hapPath = hapPath;
+        }
+        for (auto &extensionInfo : baseExtensionInfos_) {
+            extensionInfo.second.hapPath = hapPath;
+        }
+        if (!innerModuleInfos_.at(currentPackage_).compressNativeLibs &&
+            !innerModuleInfos_.at(currentPackage_).nativeLibraryPath.empty()) {
+            innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
+                hapPath + NATIVE_LIBRARY_PATH_SYMBOL + innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
+        }
+    }
+}
+
+bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
+{
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return true; // compressNativeLibs default true
+    }
+
+    return moduleInfo->compressNativeLibs;
+}
+
+void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
+    const std::vector<std::string> &fileNames)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module: %{public}s.", moduleName.c_str());
+        return;
+    }
+    innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

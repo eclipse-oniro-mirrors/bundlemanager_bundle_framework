@@ -2009,14 +2009,10 @@ void UpdateNativeSoAttrs(
     APP_LOGD("cpuAbi %{public}s, soRelativePath : %{public}s, isLibIsolated : %{public}d",
         cpuAbi.c_str(), soRelativePath.c_str(), isLibIsolated);
     innerBundleInfo.SetCpuAbi(cpuAbi);
-    auto hapModuleInfo = innerBundleInfo.GetInnerModuleInfoByModuleName(innerBundleInfo.GetCurModuleName());
-    if (hapModuleInfo == std::nullopt) {
-        APP_LOGE("moduleName: %{public}s is not exist", innerBundleInfo.GetCurModuleName().c_str());
-        return;
-    }
-    if (!hapModuleInfo->compressNativeLibs) {
+    if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
         APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
         innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
     }

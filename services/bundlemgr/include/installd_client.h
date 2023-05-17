@@ -148,6 +148,9 @@ public:
 
     ErrCode ExtractFiles(const ExtractParam &extractParam);
 
+    ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+        std::vector<std::string> &fileNames);
+
 private:
     /**
      * @brief Get the installd proxy object.

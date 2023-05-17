@@ -1010,7 +1010,7 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<str::string>>(jsonObject,
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
         hapModuleInfo.nativeLibraryFileNames,

@@ -155,5 +155,11 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
