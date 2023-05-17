@@ -127,7 +127,8 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -322,7 +323,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
