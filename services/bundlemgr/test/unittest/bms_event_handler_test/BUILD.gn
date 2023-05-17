@@ -48,7 +48,6 @@ ohos_unittest("BmsEventHandlerTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
@@ -77,6 +76,10 @@ ohos_unittest("BmsEventHandlerTest") {
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
@@ -120,7 +123,6 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
@@ -149,6 +151,10 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
   if (hicollie_enable) {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]

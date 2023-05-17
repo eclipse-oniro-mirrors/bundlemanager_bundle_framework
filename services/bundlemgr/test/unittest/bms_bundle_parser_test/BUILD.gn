@@ -57,7 +57,6 @@ ohos_unittest("BmsBundleParserTest") {
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (ability_runtime_enable) {
@@ -67,6 +66,10 @@ ohos_unittest("BmsBundleParserTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 }
 

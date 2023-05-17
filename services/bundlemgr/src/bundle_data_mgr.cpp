@@ -275,9 +275,9 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
-            oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
+        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.UpdateArkNativeAttrs(newInfo.GetBaseApplicationInfo());
         oldInfo.SetAsanLogPath(newInfo.GetAsanLogPath());
@@ -451,9 +451,9 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
-            oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
-            oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         }
+        oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
+        oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(oldInfo);
@@ -2926,36 +2926,6 @@ int32_t BundleDataMgr::GetModuleUpgradeFlag(const std::string &bundleName, const
     return newInfo.GetModuleUpgradeFlag(moduleName);
 }
 
-void BundleDataMgr::StoreSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info)
-{
-    if (bundleName.empty()) {
-        APP_LOGW("StoreSandboxPersistentInfo bundleName is empty");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.find(bundleName) == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return;
-    }
-    bundleInfos_[bundleName].AddSandboxPersistentInfo(info);
-    SaveInnerBundleInfo(bundleInfos_[bundleName]);
-}
-
-void BundleDataMgr::DeleteSandboxPersistentInfo(const std::string &bundleName, const SandboxAppPersistentInfo &info)
-{
-    if (bundleName.empty()) {
-        APP_LOGW("DeleteSandboxPersistentInfo bundleName is empty");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.find(bundleName) == bundleInfos_.end()) {
-        APP_LOGW("can not find bundle %{public}s", bundleName.c_str());
-        return;
-    }
-    bundleInfos_[bundleName].RemoveSandboxPersistentInfo(info);
-    SaveInnerBundleInfo(bundleInfos_[bundleName]);
-}
-
 void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
 {
     auto userInfos = info.GetInnerBundleUserInfos();
@@ -3977,24 +3947,24 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         APP_LOGE("uri empty");
         return false;
     }
+    std::string convertUri = uri;
     // example of valid param uri : fileShare:///com.example.FileShare/person/10
     // example of convertUri : fileShare://com.example.FileShare
     size_t schemePos = uri.find(Constants::PARAM_URI_SEPARATOR);
-    if (schemePos == uri.npos) {
-        APP_LOGE("uri not include :///, invalid");
-        return false;
+    if (schemePos != uri.npos) {
+        // 1. cut string
+        size_t cutPos = uri.find(Constants::SEPARATOR, schemePos + Constants::PARAM_URI_SEPARATOR_LEN);
+        if (cutPos != uri.npos) {
+            convertUri = uri.substr(0, cutPos);
+        }
+        // 2. replace :/// with ://
+        convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN, Constants::URI_SEPARATOR);
+    } else {
+        if (convertUri.compare(0, Constants::DATA_PROXY_URI_PREFIX_LEN, Constants::DATA_PROXY_URI_PREFIX) != 0) {
+            APP_LOGE("invalid uri : %{private}s", uri.c_str());
+            return false;
+        }
     }
-    size_t cutPos = uri.find(Constants::SEPARATOR, schemePos + Constants::PARAM_URI_SEPARATOR_LEN);
-    // 1. cut string
-    std::string convertUri = uri;
-    if (cutPos != uri.npos) {
-        convertUri = uri.substr(0, cutPos);
-    }
-    // 2. replace :/// with ://
-    convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN,
-        Constants::URI_SEPARATOR);
-    APP_LOGD("convertUri : %{private}s", convertUri.c_str());
-
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {
         APP_LOGE("bundleInfos_ data is empty");
@@ -4176,28 +4146,28 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
     return true;
 }
 
-bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     // step1 : find default infos, current only support default file types
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    std::string action = want.GetAction();
-    std::string uri = want.GetUriString();
-    std::string type = want.GetType();
-    APP_LOGD("action : %{public}s, uri : %{public}s, type : %{public}s", action.c_str(), uri.c_str(), type.c_str());
-    if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
-        BundleInfo bundleInfo;
-        ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
-        if (ret == ERR_OK) {
-            if (bundleInfo.abilityInfos.size() == 1) {
+    if (withDefault) {
+        std::string action = want.GetAction();
+        std::string uri = want.GetUriString();
+        std::string type = want.GetType();
+        APP_LOGD("action : %{public}s, uri : %{public}s, type : %{public}s", action.c_str(), uri.c_str(), type.c_str());
+        if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
+            BundleInfo bundleInfo;
+            ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
+            if (ret == ERR_OK && bundleInfo.abilityInfos.size() == 1) {
                 abilityInfos = bundleInfo.abilityInfos;
                 APP_LOGD("find default ability.");
                 return true;
-            } else if (bundleInfo.extensionInfos.size() == 1) {
+            } else if (ret == ERR_OK && bundleInfo.extensionInfos.size() == 1) {
                 extensionInfos = bundleInfo.extensionInfos;
                 APP_LOGD("find default extension.");
                 return true;
-            } else {
+            } else if (ret == ERR_OK) {
                 APP_LOGD("GetDefaultApplication failed.");
             }
         }
@@ -4566,6 +4536,11 @@ const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerb
 ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
     AppProvisionInfo &appProvisionInfo)
 {
+    if (!HasUserId(userId)) {
+        APP_LOGE("GetAppProvisionInfo user is not existed.");
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -4573,7 +4548,7 @@ ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_
     if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
         int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
         if (responseUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
         }
     }
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->GetAppProvisionInfo(bundleName, appProvisionInfo)) {

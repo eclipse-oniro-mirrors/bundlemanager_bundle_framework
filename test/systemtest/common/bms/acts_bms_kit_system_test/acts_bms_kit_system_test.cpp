@@ -6009,7 +6009,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     bool testRet = bundleMgrProxy->ImplicitQueryInfos(
-        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, abilityInfos, extensionInfos);
+        want, BundleFlag::GET_BUNDLE_DEFAULT, USERID, true, abilityInfos, extensionInfos);
     EXPECT_EQ(false, testRet);
 
     resvec.clear();
@@ -7057,7 +7057,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | L
     int32_t userId = 100;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, abilityInfos, extensionInfos);
+    bool ret = bundleMgrProxy->ImplicitQueryInfos(want, flags, userId, true, abilityInfos, extensionInfos);
     EXPECT_TRUE(ret);
     ret = !abilityInfos.empty() || !extensionInfos.empty();
     EXPECT_TRUE(ret);
@@ -7961,6 +7961,21 @@ HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0100, Function | SmallTest | Le
     ErrCode ret = bundleMgrProxy->GetProxyDataInfos(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, proxyDatas);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetProxyDataInfos_0200
+ * @tc.name: test GetProxyDataInfos proxy
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::vector<ProxyData> proxyDatas;
+    ErrCode ret = bundleMgrProxy->GetProxyDataInfos(
+        "", BASE_MODULE_NAME, proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
 /**

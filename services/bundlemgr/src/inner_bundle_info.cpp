@@ -129,6 +129,7 @@ const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
 const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
+const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
@@ -444,7 +445,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
-    this->sandboxPersistentInfo_ = info.sandboxPersistentInfo_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
     if (this->baseApplicationInfo_ == nullptr) {
         APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
@@ -563,7 +563,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_CODE, info.versionCode},
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
-        {MODULE_ISOLATION_MODE, info.isolationMode},
+        {MODULE_BUILD_HASH, info.buildHash},
+        {MODULE_ISOLATION_MODE, info.isolationMode}
     };
 }
 
@@ -598,15 +599,6 @@ void to_json(nlohmann::json &jsonObject, const InstallMark &installMark)
     };
 }
 
-void to_json(nlohmann::json &jsonObject, const SandboxAppPersistentInfo &sandboxPersistentInfo)
-{
-    jsonObject = nlohmann::json {
-        {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID, sandboxPersistentInfo.accessTokenId},
-        {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_APP_INDEX, sandboxPersistentInfo.appIndex},
-        {ProfileReader::BUNDLE_SANDBOX_PERSISTENT_USER_ID, sandboxPersistentInfo.userId}
-    };
-}
-
 void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
 {
     jsonObject[APP_TYPE] = appType_;
@@ -631,7 +623,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_PACK_INFO] = *bundlePackInfo_;
     jsonObject[APP_INDEX] = appIndex_;
     jsonObject[BUNDLE_IS_SANDBOX_APP] = isSandboxApp_;
-    jsonObject[BUNDLE_SANDBOX_PERSISTENT_INFO] = sandboxPersistentInfo_;
     jsonObject[BUNDLE_HQF_INFOS] = hqfInfos_;
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
@@ -1079,6 +1070,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
+        MODULE_BUILD_HASH,
+        info.buildHash,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
         MODULE_ISOLATION_MODE,
         info.isolationMode,
         JsonType::STRING,
@@ -1271,39 +1270,6 @@ void from_json(const nlohmann::json &jsonObject, InstallMark &installMark)
         ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("InstallMark from_json error, error code : %{public}d", parseResult);
-    }
-}
-
-void from_json(const nlohmann::json &jsonObject, SandboxAppPersistentInfo &sandboxPersistentInfo)
-{
-    const auto &jsonObjectEnd = jsonObject.end();
-    int32_t parseResult = ERR_OK;
-    GetValueIfFindKey<uint32_t>(jsonObject,
-        jsonObjectEnd,
-        ProfileReader::BUNDLE_SANDBOX_PERSISTENT_ACCESS_TOKEN_ID,
-        sandboxPersistentInfo.accessTokenId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ProfileReader::BUNDLE_SANDBOX_PERSISTENT_APP_INDEX,
-        sandboxPersistentInfo.appIndex,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
-        jsonObjectEnd,
-        ProfileReader::BUNDLE_SANDBOX_PERSISTENT_USER_ID,
-        sandboxPersistentInfo.userId,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    if (parseResult != ERR_OK) {
-        APP_LOGE("SandboxAppPersistentInfo from_json error, error code : %{public}d", parseResult);
     }
 }
 
@@ -1624,14 +1590,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::vector<SandboxAppPersistentInfo>>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_SANDBOX_PERSISTENT_INFO,
-        sandboxPersistentInfo_,
-        JsonType::ARRAY,
-        false,
-        parseResult,
-        ArrayType::OBJECT);
     GetValueIfFindKey<std::vector<HqfInfo>>(jsonObject,
         jsonObjectEnd,
         BUNDLE_HQF_INFOS,
@@ -1793,6 +1751,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
         ProxyData proxyData(item);
         hapInfo.proxyDatas.emplace_back(proxyData);
     }
+    hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     return hapInfo;
 }

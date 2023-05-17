@@ -127,7 +127,8 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -322,7 +323,8 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -757,6 +759,10 @@ bool BundleMgrHostImpl::GetBundleArchiveInfo(
         APP_LOGD("non-system app calling system api");
         return true;
     }
+    if (hapFilePath.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("invalid hapFilePath");
+        return false;
+    }
     if (hapFilePath.find(Constants::SANDBOX_DATA_PATH) == std::string::npos) {
         std::string realPath;
         auto ret = BundleUtil::CheckFilePath(hapFilePath, realPath);
@@ -1107,6 +1113,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
     createDirParam.gid = innerBundleUserInfo.uid;
     createDirParam.apl = GetAppPrivilegeLevel(bundleName, userId);
     createDirParam.isPreInstallApp = IsPreInstallApp(bundleName);
+    createDirParam.debug = applicationInfo.debug;
     if (InstalldClient::GetInstance()->CreateBundleDataDir(createDirParam)) {
         APP_LOGE("%{public}s, CreateBundleDataDir failed", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
@@ -2141,7 +2148,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfoByPriority(const Want &want, int32_t fl
     return dataMgr->ImplicitQueryInfoByPriority(want, flags, userId, abilityInfo, extensionInfo);
 }
 
-bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,
+bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId,  bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     APP_LOGD("begin to ImplicitQueryInfos, flags : %{public}d, userId : %{public}d", flags, userId);
@@ -2158,7 +2165,7 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->ImplicitQueryInfos(want, flags, userId, abilityInfos, extensionInfos);
+    return dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
 }
 
 int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)

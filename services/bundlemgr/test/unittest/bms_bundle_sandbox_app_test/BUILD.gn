@@ -65,13 +65,17 @@ ohos_unittest("BmsSandboxAppTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
 
   defines = []
 
   if (bundle_framework_sandbox_app) {
     defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+  }
+
+  if (dlp_permission_enable) {
+    external_deps += [ "dlp_permission_service:libdlp_permission_sdk" ]
+    defines += [ "DLP_PERMISSION_ENABLE" ]
   }
 
   if (configpolicy_enable) {
@@ -111,7 +115,10 @@ ohos_unittest("BmsSandboxAppTest") {
     external_deps += [ "hicollie_native:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
-
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]

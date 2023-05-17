@@ -53,7 +53,6 @@ ohos_unittest("BmsServiceBundleScanTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
   ]
   defines = []
   if (configpolicy_enable) {
@@ -93,6 +92,10 @@ ohos_unittest("BmsServiceBundleScanTest") {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
     external_deps += [ "hisysevent_native:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
+  }
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
 
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]

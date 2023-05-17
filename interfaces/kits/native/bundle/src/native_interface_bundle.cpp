@@ -19,31 +19,27 @@
 #include <string>
 
 #include "application_info.h"
+#include "bundle_info.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_proxy_native.h"
 #include "ipc_skeleton.h"
 #include "securec.h"
 namespace {
     const size_t CHAR_MAX_LENGTH = 10240;
-    const int32_t DEFAULT_USERID = -2;
 }
 
 OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
 {
     OH_NativeBundle_ApplicationInfo nativeApplicationInfo;
-    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     OHOS::AppExecFwk::BundleMgrProxyNative bundleMgrProxyNative;
-    std::string bundleName;
-    if (!bundleMgrProxyNative.GetBundleNameForUid(uid, bundleName)) {
-        APP_LOGE("can not get bundleName for uid:%{public}d", uid);
+    OHOS::AppExecFwk::BundleInfo bundleInfo;
+    auto bundleInfoFlag = static_cast<int32_t>(OHOS::AppExecFwk::GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_APPLICATION);
+
+    if (!bundleMgrProxyNative.GetBundleInfoForSelf(bundleInfoFlag, bundleInfo)) {
+        APP_LOGE("can not get bundleInfo for self");
         return nativeApplicationInfo;
     };
-    OHOS::AppExecFwk::ApplicationInfo applicationInfo;
-    auto appInfoflag = OHOS::AppExecFwk::ApplicationFlag::GET_APPLICATION_INFO_WITH_CERTIFICATE_FINGERPRINT;
-    if (!bundleMgrProxyNative.GetApplicationInfo(bundleName, appInfoflag, DEFAULT_USERID, applicationInfo)) {
-        APP_LOGE("can not get applicationInfo for bundleName:%{public}s", bundleName.c_str());
-        return nativeApplicationInfo;
-    }
+    OHOS::AppExecFwk::ApplicationInfo applicationInfo = bundleInfo.applicationInfo;
 
     size_t bundleNameLen = applicationInfo.bundleName.size();
     if ((bundleNameLen == 0) || (bundleNameLen + 1) > CHAR_MAX_LENGTH) {

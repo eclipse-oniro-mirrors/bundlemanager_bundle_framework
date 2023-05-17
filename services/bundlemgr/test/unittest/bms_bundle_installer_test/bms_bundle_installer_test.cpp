@@ -74,7 +74,7 @@ const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
 const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
-const std::string TEST_PACK_AGE = "modulePackage";
+const std::string TEST_PACK_AGE = "entry";
 const std::string NOEXIST = "noExist";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
@@ -2831,9 +2831,9 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0600, Function | SmallTest | Lev
 HWTEST_F(BmsBundleInstallerTest, InstallChecker_0700, Function | SmallTest | Level0)
 {
     BundleInstallChecker installChecker;
-    auto ret = installChecker.FindModuleInInstalledPackage("", "");
+    auto ret = installChecker.FindModuleInInstalledPackage("", "", 0);
     EXPECT_EQ(ret, false);
-    ret = installChecker.FindModuleInInstalledPackage("moduleName", "moduleName");
+    ret = installChecker.FindModuleInInstalledPackage("moduleName", "moduleName", 0);
     EXPECT_EQ(ret, false);
 }
 
@@ -3396,6 +3396,109 @@ HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0200, Function | Smal
     EXPECT_EQ(ret, EMPTY_STRING);
 }
 #endif
+
+/**
+ * @tc.number: baseBundleInstaller_5200
+ * @tc.name: test checkAsanEnabled when asanEnabled is set to be ture
+ * @tc.desc: 1.Test checkAsanEnabled
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(ret, true);
+
+    auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+
+    ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_SUCCESS);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5300
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = 999;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+
+    auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, TEST_PACK_AGE, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_USER_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5400
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+
+    auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, WRONG_BUNDLE_NAME, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5500
+ * @tc.name: test ProcessBundleUninstall
+ * @tc.desc: 1.Test ProcessBundleUninstall
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.userId = USERID;
+    installParam.installFlag = InstallFlag::NORMAL;
+    int32_t uid = USERID;
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    bool ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_START);
+    EXPECT_EQ(ret, true);
+
+    auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, TEST_PACK_AGE, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+
+    ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_SUCCESS);
+    EXPECT_EQ(ret, true);
+}
+
 /**
  * @tc.number: ParseFiles_0100
  * @tc.name: test the start function of ParseFiles

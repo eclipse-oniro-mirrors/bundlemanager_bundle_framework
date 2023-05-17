@@ -18,7 +18,6 @@
 
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
-#include "bundle_sandbox_exception_handler.h"
 #include "bundle_sandbox_installer.h"
 #include "bundle_mgr_service.h"
 #include "directory_ex.h"
@@ -1929,9 +1928,6 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0400, Function | SmallTest |
     res = testRet->GetInnerBundleInfoByUid(0, info);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_INTERNAL_ERROR);
 
-    std::shared_ptr<IBundleDataStorage> dataStorage;
-    testRet->RemoveSandboxApp(dataStorage, info);
-
     res = testRet->InstallSandboxApp(BUNDLE_NAME, 0, USERID, APP_INDEX_1);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_APP_NOT_EXISTED);
 
@@ -2040,85 +2036,4 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0200, Function | SmallTest | Level
     int32_t appIndex = 0;
     bool ret = DeleteSandboxAppIndex(bundleName, appIndex);
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: BundleMgrCommonEvent_0100
- * @tc.name: OnReceiveEvent
- * @tc.desc: 1.Test the interface of OnReceiveEvent
- */
-HWTEST_F(BmsSandboxAppTest, BundleMgrCommonEvent_0100, Function | SmallTest | Level1)
-{
-    CommonEventSubscribeInfo subscribeInfo;
-    std::map<int32_t, std::vector<std::string>> sandboxDirs;
-    BundleMgrCommonEventSubscriber Subscriber(subscribeInfo, sandboxDirs);
-    Want want;
-    want.SetAction("usual.event.USER_UNLOCKED");
-    CommonEventData data;
-    data.SetWant(want);
-    Subscriber.OnReceiveEvent(data);
-    EXPECT_EQ(want.GetAction(), "usual.event.USER_UNLOCKED");
-    want.SetAction("action.hello");
-    data.SetWant(want);
-    Subscriber.OnReceiveEvent(data);
-    EXPECT_EQ(want.GetAction(), "action.hello");
-}
-
-/**
- * @tc.number: BundleMgrCommonEvent_0200
- * @tc.name: RemoveSandboxDataDir
- * @tc.desc: 1.Test delete sandbox data dir
- */
-HWTEST_F(BmsSandboxAppTest, BundleMgrCommonEvent_0200, Function | SmallTest | Level1)
-{
-    CommonEventSubscribeInfo subscribeInfo;
-    std::map<int32_t, std::vector<std::string>> sandboxDirs;
-    BundleMgrCommonEventSubscriber subscriber(subscribeInfo, sandboxDirs);
-    std::map<int32_t, std::vector<std::string>> toDeleteSandboxDir;
-    subscriber.RemoveSandboxDataDir(USERID, toDeleteSandboxDir);
-    EXPECT_EQ(toDeleteSandboxDir.empty(), true);
-    std::vector<std::string> dir;
-    toDeleteSandboxDir.try_emplace(USERID, dir);
-    subscriber.RemoveSandboxDataDir(INVALID_USERID, toDeleteSandboxDir);
-    EXPECT_EQ(toDeleteSandboxDir.empty(), false);
-    subscriber.RemoveSandboxDataDir(USERID, toDeleteSandboxDir);
-    EXPECT_EQ(toDeleteSandboxDir.empty(), false);
-}
-
-/**
- * @tc.number: SandboxExceptionHandler_0100
- * @tc.name: KeepSandboxDirs
- * @tc.desc: 1.Test keep sandbox dir
- */
-HWTEST_F(BmsSandboxAppTest, SandboxExceptionHandler_0100, Function | SmallTest | Level1)
-{
-    std::shared_ptr<IBundleDataStorage> dataStorage;
-    BundleSandboxExceptionHandler handler(dataStorage);
-    std::vector<std::string> dirs;
-    handler.sandboxDirs_.try_emplace(INVALID_USERID, dirs);
-    int32_t appIndex = 0;
-    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
-    handler.sandboxDirs_.try_emplace(USERID, dirs);
-    handler.ListeningUserUnlocked();
-    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
-    handler.RemoveDataDir();
-    EXPECT_EQ(handler.sandboxDirs_.empty(), false);
-}
-
-/**
- * @tc.number: SandboxExceptionHandler_0200
- * @tc.name: KeepSandboxDirs
- * @tc.desc: 1.Test keep sandbox dir
- */
-HWTEST_F(BmsSandboxAppTest, SandboxExceptionHandler_0200, Function | SmallTest | Level1)
-{
-    std::shared_ptr<IBundleDataStorage> dataStorage;
-    BundleSandboxExceptionHandler handler(dataStorage);
-    std::vector<std::string> dirs;
-    handler.sandboxDirs_.try_emplace(INVALID_USERID, dirs);
-    int32_t appIndex = 0;
-    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
-    handler.sandboxDirs_.try_emplace(USERID, dirs);
-    handler.KeepSandboxDirs(BUNDLE_NAME, appIndex, USERID);
-    EXPECT_EQ(handler.sandboxDirs_.empty(), false);
 }

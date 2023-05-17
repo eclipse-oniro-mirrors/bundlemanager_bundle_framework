@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -852,7 +852,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Functi
     Want want;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
-    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, abilityInfos, extensionInfos);
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos);
     EXPECT_EQ(ret, false);
 }
 
@@ -1351,5 +1351,151 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9100, Functio
     std::string additionalInfo;
     ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfo("", additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9200
+ * @tc.name: test Install of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Install false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9200, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Install(HAP_FILE_PATH, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9300
+ * @tc.name: test Install of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Install false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9300, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    std::vector<std::string> bundleFilePaths;
+    bundleFilePaths.push_back(HAP_FILE_PATH);
+    bool ret = bundleInstallerHost_->Install(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9400
+ * @tc.name: test Recover of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Recover false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9400, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Recover(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9500
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9500, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9600
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9600, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9700
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9700, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(BUNDLE_NAME, "", installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9800
+ * @tc.name: test Uninstall of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. Uninstall false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9800, Function | SmallTest | Level0)
+{
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->Uninstall(uninstallParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_9900
+ * @tc.name: test InstallByBundleName of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. InstallByBundleName false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9900, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    bool ret = bundleInstallerHost_->InstallByBundleName(BUNDLE_NAME, installParam, statusReceiver);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_10000
+ * @tc.name: test CreateStreamInstaller of BundleInstallerHost
+ * @tc.desc: 1. system running normally
+ *           2. CreateStreamInstaller false by no permission
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_10000, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bundleInstallerHost_->Init();
+    sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, statusReceiver);
+    EXPECT_EQ(ret, nullptr);
 }
 } // OHOS

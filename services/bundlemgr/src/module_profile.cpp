@@ -40,18 +40,6 @@ const std::set<std::string> MODULE_TYPE_SET = {
     "shared"
 };
 
-const std::set<std::string> DEVICE_TYPE_SET = {
-    "default",
-    "phone",
-    "tablet",
-    "tv",
-    "wearable",
-    "liteWearable",
-    "car",
-    "smartVision",
-    "router"
-};
-
 const std::set<std::string> VIRTUAL_MACHINE_SET = {
     "ark",
     "default"
@@ -260,6 +248,7 @@ struct Module {
     std::string targetModule;
     int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
+    std::string buildHash;
     std::string isolationMode;
 };
 
@@ -1322,6 +1311,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
+        MODULE_BUILD_HASH,
+        module.buildHash,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
         MODULE_ISOLATION_MODE,
         module.isolationMode,
         JsonType::STRING,
@@ -1839,9 +1836,7 @@ bool ToAbilityInfo(
     abilityInfo.isStageBasedModel = true;
     abilityInfo.type = AbilityType::PAGE;
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
-        if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
-            abilityInfo.deviceTypes.emplace_back(deviceType);
-        }
+        abilityInfo.deviceTypes.emplace_back(deviceType);
     }
     abilityInfo.startWindowIcon = ability.startWindowIcon;
     abilityInfo.startWindowIconId = ability.startWindowIconId;
@@ -1986,9 +1981,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.process = moduleJson.module.process;
 
     for (const std::string &deviceType : moduleJson.module.deviceTypes) {
-        if (Profile::DEVICE_TYPE_SET.find(deviceType) != Profile::DEVICE_TYPE_SET.end()) {
-            innerModuleInfo.deviceTypes.emplace_back(deviceType);
-        }
+        innerModuleInfo.deviceTypes.emplace_back(deviceType);
     }
 
     if (Profile::VIRTUAL_MACHINE_SET.find(moduleJson.module.virtualMachine) != Profile::VIRTUAL_MACHINE_SET.end()) {
@@ -2010,6 +2003,7 @@ bool ToInnerModuleInfo(
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;

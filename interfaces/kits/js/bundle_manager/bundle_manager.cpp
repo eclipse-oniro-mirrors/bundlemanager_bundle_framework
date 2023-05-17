@@ -39,18 +39,13 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
-constexpr const char* METADATA_NAME = "metadataName";
 constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* ABILITY_INFO = "abilityInfo";
 constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* USER_ID = "userId";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
-constexpr const char* CALLBACK = "callback";
 constexpr const char* STRING_TYPE = "napi_string";
-constexpr const char* FUNCTION_TYPE = "napi_function";
-constexpr const char* NUMBER_TYPE = "napi_number";
-constexpr const char* WRONG_PARAM_TYPE = "BusinessError 401: Wrong param type";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -74,6 +69,7 @@ const std::string INVALID_WANT_ERROR =
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 } // namespace
 using namespace OHOS::AAFwk;
+static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
@@ -146,6 +142,32 @@ void ConvertAppProvisionInfo(
     ConvertValidity(env, appProvisionInfo.validity, validity);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
 }
+}
+
+ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
+{}
+
+void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
+{
+    APP_LOGD("clear bms cache");
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    cache.clear();
+}
+
+void RegisterClearCacheListener()
+{
+    if (g_clearCacheListener != nullptr) {
+        return;
+    }
+    APP_LOGD("register clear cache listener");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    g_clearCacheListener = std::make_shared<ClearCacheListener>(subscribeInfo);
+    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
 }
 
 static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)
@@ -528,9 +550,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_SIZE_THREE) {
             if (valueType == napi_function) {
@@ -585,9 +605,7 @@ napi_value GetApplicationInfos(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -849,16 +867,12 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
         } else if (i == ARGS_POS_TWO) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } else {
-                APP_LOGE("param check error");
-                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
-                return nullptr;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_THREE) {
             if (valueType == napi_function) {
@@ -1027,16 +1041,12 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         } else if ((i == ARGS_POS_TWO) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
         } else if (i == ARGS_POS_THREE) {
-            if (valueType == napi_number) {
-                CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId);
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } else {
-                APP_LOGE("param check error");
-                std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
-                return nullptr;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_FOUR) {
             if (valueType == napi_function) {
@@ -1805,7 +1815,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-
+    asyncCallbackInfo->userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     std::unique_ptr<LaunchWantCallbackInfo> callbackPtr {asyncCallbackInfo};
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
         APP_LOGE("GetLaunchWantForBundle napi func init failed");
@@ -1824,25 +1834,17 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
         } else if (i == ARGS_POS_ONE) {
-            if (valueType == napi_number) {
-                if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                    BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
-                    return nullptr;
-                }
-            } else if (valueType == napi_function) {
+            if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else {
-                APP_LOGE("GetLaunchWantForBundle param check error");
-                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, WRONG_PARAM_TYPE);
-                return nullptr;
+                break;
+            }
+            if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            } else {
-                APP_LOGE("GetLaunchWantForBundle param check error");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
-                return nullptr;
+                break;
             }
         } else {
             APP_LOGE("GetLaunchWantForBundle arg err!");
@@ -2054,19 +2056,14 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->abilityName);
         } else if (i == ARGS_POS_TWO) {
-            if (valueType != napi_string) {
-                APP_LOGE("GetProfile metaData name is not a string!");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, METADATA_NAME, STRING_TYPE);
-                return nullptr;
+            if (!CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName)) {
+                APP_LOGW("Parse metadataName failed, The default value is undefined!");
             }
-            CommonFunc::ParseString(env, args[i], asyncCallbackInfo->metadataName);
         } else if (i == ARGS_POS_THREE) {
-            if (valueType != napi_function) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, CALLBACK, FUNCTION_TYPE);
-                return nullptr;
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
             }
-            NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
-            break;
         } else {
             APP_LOGE("GetProfile arg err!");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
@@ -2728,8 +2725,8 @@ void GetBundleInfoExec(napi_env env, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         {
             std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
-            auto item = cache.find(Query(
-                asyncCallbackInfo->bundleName, GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            auto item = cache.find(Query(asyncCallbackInfo->bundleName,
+                GET_BUNDLE_INFO, asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
             if (item != cache.end()) {
                 asyncCallbackInfo->isSavedInCache = true;
                 APP_LOGD("GetBundleInfo param from cache");
@@ -2812,9 +2809,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_THREE) {
             if (valueType == napi_function) {
@@ -2880,9 +2875,7 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
                 break;
             }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                APP_LOGE("userId %{public}d invalid!", asyncCallbackInfo->userId);
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -3403,12 +3396,8 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
             }
-            if (valueType == napi_undefined) {
-                continue;
-            }
             if (!CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->userId)) {
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, NUMBER_TYPE);
-                return nullptr;
+                APP_LOGW("parse userId failed, set this parameter to the caller userId.");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {

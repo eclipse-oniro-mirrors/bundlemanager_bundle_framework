@@ -3777,7 +3777,7 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
             ConvertFromJsValue(engine, info.argv[PARAM2], userId);
             return nullptr;
         } else {
-            errCode = PARAM_TYPE_ERROR;
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
             return nullptr;
         }
     }
@@ -3786,7 +3786,7 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
         if (info.argv[PARAM2]->TypeOf() == NATIVE_NUMBER) {
             ConvertFromJsValue(engine, info.argv[PARAM2], userId);
         } else {
-            errCode = PARAM_TYPE_ERROR;
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
         }
         return info.argv[PARAM3];
     }
@@ -5307,9 +5307,6 @@ NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo
     } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
         APP_LOGE("conversion failed!");
         installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    if (installParam.installFlag == InstallFlag::NORMAL) {
-        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     }
     AsyncTask::CompleteCallback complete = [obj = this, bundleFilePaths, installParam, resInstall = installResult]
         (NativeEngine &engine, AsyncTask &task, int32_t status) {

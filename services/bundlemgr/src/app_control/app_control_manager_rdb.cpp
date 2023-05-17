@@ -331,6 +331,9 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
     if (!wantString.empty()) {
         controlRuleResult.controlWant = std::make_shared<Want>(*Want::FromString(wantString));
     }
+    if (callingName == AppControlConstants::EDM_CALLING) {
+        controlRuleResult.isEdm = true;
+    }
     return ERR_OK;
 }
 

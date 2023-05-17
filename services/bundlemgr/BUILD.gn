@@ -227,9 +227,13 @@ ohos_shared_library("libbms") {
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "storage_service:storage_manager_sa_proxy",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (storage_service_enable) {
+    external_deps += [ "storage_service:storage_manager_sa_proxy" ]
+    defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
 
   if (window_enable) {
     external_deps += [ "window_manager:libwsutils" ]
@@ -244,6 +248,11 @@ ohos_shared_library("libbms") {
   if (bundle_framework_sandbox_app) {
     sources += sandbox_app
     defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
+
+    if (dlp_permission_enable) {
+      external_deps += [ "dlp_permission_service:libdlp_permission_sdk" ]
+      defines += [ "DLP_PERMISSION_ENABLE" ]
+    }
   }
 
   if (ability_runtime_enable) {

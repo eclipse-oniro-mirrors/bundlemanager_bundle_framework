@@ -19,6 +19,7 @@
 #include <string>
 
 #include "application_info.h"
+#include "bundle_info.h"
 #include "iremote_broker.h"
 #include "iremote_object.h"
 
@@ -28,28 +29,19 @@ class BundleMgrProxyNative {
 public:
     BundleMgrProxyNative() = default;
     virtual ~BundleMgrProxyNative() = default;
+
     /**
-     * @brief Obtains the bundle name of a specified application based on the given UID through the proxy object.
-     * @param uid Indicates the uid.
-     * @param bundleName Indicates the obtained bundle name.
-     * @return Returns true if the bundle name is successfully obtained; returns false otherwise.
-     */
-    bool GetBundleNameForUid(const int uid, std::string &bundleName);
-    /**
-     * @brief Obtains the ApplicationInfo based on a given bundle name through the proxy object.
-     * @param appName Indicates the application bundle name to be queried.
-     * @param flag Indicates the flag used to specify information contained
-     *             in the ApplicationInfo object that will be returned.
+     * @brief Obtains the BundleInfo based on calling uid.
+     * @param bundleName Indicates the application bundle name to be queried.
+     * @param flags Indicates the information contained in the BundleInfo object to be returned.
+     * @param bundleInfo Indicates the obtained BundleInfo object.
      * @param userId Indicates the user ID.
-     * @param appInfo Indicates the obtained ApplicationInfo object.
-     * @return Returns true if the application is successfully obtained; returns false otherwise.
+     * @return Returns true if the BundleInfo is successfully obtained; returns false otherwise.
      */
-    bool GetApplicationInfo(
-        const std::string &appName, ApplicationFlag flags, int32_t userId, ApplicationInfo &appInfo);
+    bool GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo);
 
     enum {
-        GET_APPLICATION_INFO = 0,
-        GET_BUNDLE_NAME_FOR_UID = 7,
+        GET_BUNDLE_INFO_FOR_SELF_NATIVE = 98
     };
 private:
     sptr<IRemoteObject> GetBmsProxy();

@@ -112,7 +112,7 @@ namespace OHOS {
         std::vector<AbilityInfo> abilityInfos;
         abilityInfos.push_back(abilityInfo);
         bundleMgrProxy.ImplicitQueryInfos(want, reinterpret_cast<uintptr_t>(data),
-            reinterpret_cast<uintptr_t>(data), abilityInfos, extensionInfos);
+            reinterpret_cast<uintptr_t>(data), true, abilityInfos, extensionInfos);
 
         std::string abilityName (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.GetAbilityInfo(bundleName, abilityName, abilityInfo);

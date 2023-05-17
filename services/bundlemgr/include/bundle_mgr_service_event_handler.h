@@ -470,10 +470,13 @@ private:
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;
+    void RemoveUnreservedSandbox() const;
     void HandleSceneBoard() const;
     void InnerProcessStockBundleProvisionInfo();
     void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
     void ProcessSharedBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);
+    bool UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const;
+    bool IsNeedToUpdateSharedAppByHash(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     // Used to save the information parsed by Hap in the scanned directory.
     std::map<std::string, std::unordered_map<std::string, InnerBundleInfo>> hapParseInfoMap_;
     // Used to save application information that already exists in the Db.

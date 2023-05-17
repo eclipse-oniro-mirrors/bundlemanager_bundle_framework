@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,6 +20,7 @@
 
 #include "accesstoken_kit.h"
 #include "access_token.h"
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
@@ -36,6 +37,9 @@
 #include "common_event_subscriber.h"
 #ifdef CONFIG_POLOCY_ENABLE
 #include "config_policy_utils.h"
+#endif
+#if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
+#include "dlp_permission_kit.h"
 #endif
 #include "event_report.h"
 #include "installd_client.h"
@@ -251,6 +255,7 @@ void BMSEventHandler::AfterBmsStart()
         DelayedSingleton<BundleMgrService>::GetInstance()->NotifyBundleScanStatus();
     }
     ListeningUserUnlocked();
+    RemoveUnreservedSandbox();
 }
 
 void BMSEventHandler::ClearCache()
@@ -1093,7 +1098,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             if (hasInstalledInfo.versionCode < hapVersionCode) {
                 APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                    filePaths.emplace_back(item.first);
+                filePaths.emplace_back(item.first);
             }
 
             // The versionCode of Hap is equal to the installed versionCode.
@@ -1109,6 +1114,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 if (hasModuleInstalled) {
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                        filePaths.emplace_back(item.first);
+                    }
                     continue;
                 }
 
@@ -1132,6 +1140,27 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 #endif
         }
     }
+}
+
+bool BMSEventHandler::UpdateModuleByHash(const BundleInfo &oldBundleInfo, const InnerBundleInfo &newInfo) const
+{
+    auto moduleName = newInfo.GetModuleNameVec().at(0);
+    std::string existModuleHash;
+    for (auto hapInfo : oldBundleInfo.hapModuleInfos) {
+        if (hapInfo.package == moduleName) {
+            existModuleHash = hapInfo.buildHash;
+        }
+    }
+    std::string curModuleHash;
+    if (!newInfo.GetModuleBuildHash(moduleName, curModuleHash)) {
+        APP_LOGD("module(%{public}s) is not existed.", moduleName.c_str());
+        return false;
+    }
+    if (existModuleHash != curModuleHash) {
+        APP_LOGD("module(%{public}s) buildHash changed, so update corresponding hap or hsp.", moduleName.c_str());
+        return true;
+    }
+    return false;
 }
 
 void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
@@ -1171,15 +1200,41 @@ void BMSEventHandler::InnerProcessRebootSharedBundleInstall(
             continue;
         }
 
-        if (oldBundleInfo.GetVersionCode() >= versionCode) {
+        if (oldBundleInfo.GetVersionCode() > versionCode) {
             APP_LOGD("the installed version is up-to-date");
             continue;
+        }
+        if (oldBundleInfo.GetVersionCode() == versionCode) {
+            if (!IsNeedToUpdateSharedAppByHash(oldBundleInfo, infos.begin()->second)) {
+                APP_LOGD("the installed version is up-to-date");
+                continue;
+            }
         }
 
         if (!OTAInstallSystemSharedBundle({scanPath}, appType, removable)) {
             APP_LOGE("OTA update shared bundle(%{public}s) error.", bundleName.c_str());
         }
     }
+}
+
+bool BMSEventHandler::IsNeedToUpdateSharedAppByHash(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    auto oldSharedModuleMap = oldInfo.GetInnerSharedModuleInfos();
+    auto newSharedModuleMap = newInfo.GetInnerSharedModuleInfos();
+    for (const auto &item : newSharedModuleMap) {
+        auto newModuleName = item.first;
+        auto oldModuleInfos = oldSharedModuleMap[newModuleName];
+        auto newModuleInfos = item.second;
+        if (!oldModuleInfos.empty() && !newModuleInfos.empty()) {
+            auto oldBuildHash = oldModuleInfos[0].buildHash;
+            auto newBuildHash = newModuleInfos[0].buildHash;
+            return oldBuildHash != newBuildHash;
+        } else {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool BMSEventHandler::IsHotPatchApp(const std::string &bundleName)
@@ -1706,6 +1761,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
     APP_LOGI("BMSEventHandler listen the unlock of someone user start.");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
@@ -1713,6 +1769,35 @@ void BMSEventHandler::ListeningUserUnlocked() const
         APP_LOGW("BMSEventHandler subscribe common event %{public}s failed",
             EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED.c_str());
     }
+}
+
+void BMSEventHandler::RemoveUnreservedSandbox() const
+{
+#if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
+    APP_LOGD("Start to RemoveUnreservedSandbox");
+    const int32_t WAIT_TIMES = 40;
+    const int32_t EACH_TIME = 1000; // 1000ms
+    auto execFunc = [](int32_t waitTimes, int32_t eachTime) {
+        int32_t currentUserId = Constants::INVALID_USERID;
+        while (waitTimes--) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(eachTime));
+            APP_LOGD("wait for account started");
+            if (currentUserId == Constants::INVALID_USERID) {
+                currentUserId = AccountHelper::GetCurrentActiveUserId();
+                APP_LOGD("current active userId is %{public}d", currentUserId);
+                if (currentUserId == Constants::INVALID_USERID) {
+                    continue;
+                }
+            }
+            APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
+            Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
+            break;
+        }
+    };
+    std::thread removeThread(execFunc, WAIT_TIMES, EACH_TIME);
+    removeThread.detach();
+#endif
+    APP_LOGD("RemoveUnreservedSandbox finish");
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)

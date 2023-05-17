@@ -91,6 +91,8 @@ constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
     "The uri in data proxy is wrong";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
     "The apl of required permission in non-system data proxy should be system_basic or system_core";
+constexpr const char* ERR_MSG_DISALLOW_UNINSTALL =
+    "Failed to uninstall because enterprise device management disallow uninstall";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
     { ERROR_NOT_SYSTEM_APP, ERR_MSG_NOT_SYSTEM_APP },
@@ -135,7 +137,8 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_UNINSTALL_BUNDLE_IS_SHARED_BUNDLE, ERR_MSG_UNINSTALL_SHARED_LIBRARY },
     { ERROR_DISALLOW_INSTALL, ERR_MSG_DISALLOW_INSTALL },
     { ERROR_INSTALL_WRONG_DATA_PROXY_URI, ERR_MSG_WRONG_PROXY_DATA_URI },
-    { ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION, ERR_MSG_WRONG_PROXY_DATA_PERMISSION},
+    { ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION, ERR_MSG_WRONG_PROXY_DATA_PERMISSION },
+    { ERROR_DISALLOW_UNINSTALL, ERR_MSG_DISALLOW_UNINSTALL },
 };
 } // namespace
 

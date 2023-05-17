@@ -41,6 +41,9 @@ namespace {
     const std::string BUNDLE_NAME = "bundleName";
     const std::string BUNDLE_NAME_ONE = "bundleName01";
     const std::string TEST_BUNDLE_NAME = "bundleName02";
+    const std::string MODULE_NAME = "module1";
+    const std::string MODULE_NAME_TWO = "module2";
+    const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
     const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
 }
 class BmsEventHandlerTest : public testing::Test {
@@ -396,4 +399,126 @@ HWTEST_F(BmsEventHandlerTest, UserUnlockedEventSubscriber_0100, Function | Small
     BundleInfo bundleInfo;
     bool res = CreateBundleDataDir(bundleInfo, Constants::ALL_USERID);
     EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UpdateModuleByHash_0100
+ * @tc.name: UpdateModuleByHash
+ * @tc.desc: test UpdateModuleByHash
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0100, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    HapModuleInfo oldModuleInfo;
+    oldModuleInfo.package = MODULE_NAME;
+    oldBundleInfo.hapModuleInfos.emplace_back(oldModuleInfo);
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.buildHash = BUILD_HASH;
+    std::map<std::string, InnerModuleInfo> innerModuleMaps;
+    innerModuleMaps.emplace(MODULE_NAME, newInnerModuleInfo);
+    newInnerBundleInfo.AddInnerModuleInfo(innerModuleMaps);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->UpdateModuleByHash(oldBundleInfo, newInnerBundleInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: UpdateModuleByHash_0200
+ * @tc.name: UpdateModuleByHash
+ * @tc.desc: test UpdateModuleByHash
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0200, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    HapModuleInfo oldModuleInfo;
+    oldModuleInfo.package = MODULE_NAME;
+    oldModuleInfo.buildHash = BUILD_HASH;
+    oldBundleInfo.hapModuleInfos.emplace_back(oldModuleInfo);
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.buildHash = BUILD_HASH;
+    std::map<std::string, InnerModuleInfo> innerModuleMaps;
+    innerModuleMaps.emplace(MODULE_NAME, newInnerModuleInfo);
+    newInnerBundleInfo.AddInnerModuleInfo(innerModuleMaps);
+
+    std::string moduleHash;
+    auto ret = newInnerBundleInfo.GetModuleBuildHash(MODULE_NAME_TWO, moduleHash);
+    EXPECT_FALSE(ret);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->UpdateModuleByHash(oldBundleInfo, newInnerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedAppByHash_0100
+ * @tc.name: IsNeedToUpdateSharedAppByHash
+ * @tc.desc: test IsNeedToUpdateSharedAppByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInnerBundleInfo;
+    InnerModuleInfo oldInnerModuleInfo;
+    oldInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, oldInnerModuleInfo);
+
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.buildHash = BUILD_HASH;
+    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedAppByHash_0200
+ * @tc.name: IsNeedToUpdateSharedAppByHash
+ * @tc.desc: test IsNeedToUpdateSharedAppByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0200, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInnerBundleInfo;
+    InnerModuleInfo oldInnerModuleInfo;
+    oldInnerModuleInfo.buildHash = BUILD_HASH;
+    oldInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, oldInnerModuleInfo);
+
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerModuleInfo.buildHash = BUILD_HASH;
+    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: IsNeedToUpdateSharedAppByHash_0300
+ * @tc.name: IsNeedToUpdateSharedAppByHash
+ * @tc.desc: test IsNeedToUpdateSharedAppByHash
+ */
+HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0300, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInnerBundleInfo;
+
+    InnerBundleInfo newInnerBundleInfo;
+    InnerModuleInfo newInnerModuleInfo;
+    newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
+
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    EXPECT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
+    EXPECT_TRUE(res);
 }

@@ -164,6 +164,7 @@ constexpr const char* PERMISSION_REMOVECACHEFILE = "ohos.permission.REMOVE_CACHE
 constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.MANAGE_DISPOSED_APP_STATUS";
 constexpr const char* PERMISSION_GET_DEFAULT_APPLICATION = "ohos.permission.GET_DEFAULT_APPLICATION";
 constexpr const char* PERMISSION_SET_DEFAULT_APPLICATION = "ohos.permission.SET_DEFAULT_APPLICATION";
+constexpr const char* PERMISSION_GET_INSTALLED_BUNDLE_LIST = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
@@ -242,9 +243,11 @@ constexpr const char* BUNDLE_RDB_TABLE_NAME = "installed_bundle";
 constexpr const char* PRE_BUNDLE_RDB_TABLE_NAME = "preinstalled_bundle";
 constexpr const char* DEFAULT_APP_RDB_TABLE_NAME = "default_app";
 constexpr const char* QUICK_FIX_RDB_TABLE_NAME = "quick_fix";
+constexpr const char* SAND_BOX_RDB_TABLE_NAME = "sandbox";
 const int32_t BUNDLE_RDB_VERSION = 1;
 
 // ipc
+constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
 
@@ -308,6 +311,9 @@ constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission
 
 // replace want int ecological rule
 constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
+
+constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
+constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -132,6 +132,7 @@ const std::string ERROR_URI = "dataability://";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/bundle_kit/test.hap";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/bundle_kit/test1.hap";
 const std::string ERROR_HAP_FILE_PATH = "/data/test/resource/bms/bundle_kit/error.hap";
+const std::string RELATIVE_HAP_FILE_PATH = "/data/test/resource/bms/bundle_kit/hello/../test.hap";
 const std::string META_DATA = "name";
 const std::string ERROR_META_DATA = "String";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.bundlekit.test";
@@ -3006,6 +3007,20 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0300, Function | SmallTes
     EXPECT_FALSE(listRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfo_0400
+ * @tc.name: hapPath with ../ expect return false
+ * @tc.desc: 1.system run normally
+ *           2.get the bundle archive info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0400, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleArchiveInfo(RELATIVE_HAP_FILE_PATH, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -9543,7 +9558,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAppProvisionInfo_0005, Function | SmallTest
     }
     AppProvisionInfo appProvisionInfo;
     auto ret = bundleMgrProxy->GetAppProvisionInfo(BUNDLE_NAME_TEST, INVALID_UID, appProvisionInfo);
-    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
