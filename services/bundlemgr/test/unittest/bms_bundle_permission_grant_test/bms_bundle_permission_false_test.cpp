@@ -732,6 +732,10 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_4700, Functi
     std::vector<ExtensionAbilityInfo> extensionInfos;
     ErrCode ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosV9(want, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosV9(
+        want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
 /**
@@ -1497,5 +1501,17 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_10000, Functi
     bundleInstallerHost_->Init();
     sptr<IBundleStreamInstaller> ret = bundleInstallerHost_->CreateStreamInstaller(installParam, statusReceiver);
     EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_12000
+ * @tc.name: test GetAppPrivilegeLevel
+ * @tc.desc: 1.system run normally
+ *           2.GetAppPrivilegeLevel is empty
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_11000, Function | SmallTest | Level1)
+{
+    std::string testRet = bundleMgrHostImpl_->GetAppPrivilegeLevel("", USERID);
+    EXPECT_EQ(testRet, Constants::EMPTY_STRING);
 }
 } // OHOS

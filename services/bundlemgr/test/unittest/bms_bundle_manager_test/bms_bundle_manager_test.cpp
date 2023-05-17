@@ -100,6 +100,8 @@ public:
     void ClearBundleInfo();
     void ClearDataMgr();
     void ResetDataMgr();
+    void ClearConnectAbilityMgr();
+    void ResetConnectAbilityMgr();
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -107,6 +109,8 @@ private:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
     const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
         DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    const std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgrInfo_ =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
 };
 
 BmsBundleManagerTest::BmsBundleManagerTest()
@@ -252,6 +256,18 @@ void BmsBundleManagerTest::ResetDataMgr()
     EXPECT_NE(dataMgrInfo_, nullptr);
     bundleMgrService_->dataMgr_ = dataMgrInfo_;
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
+}
+
+void BmsBundleManagerTest::ClearConnectAbilityMgr()
+{
+    bundleMgrService_->connectAbilityMgr_ = nullptr;
+}
+
+void BmsBundleManagerTest::ResetConnectAbilityMgr()
+{
+    EXPECT_NE(connectAbilityMgrInfo_, nullptr);
+    bundleMgrService_->connectAbilityMgr_ = connectAbilityMgrInfo_;
+    EXPECT_NE(bundleMgrService_->connectAbilityMgr_, nullptr);
 }
 
 void BmsBundleManagerTest::StopInstalldService() const
@@ -3981,8 +3997,67 @@ HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | L
 }
 
 /**
- * @tc.number: SilentInstall_0100
+ * @tc.number: BundleFreeInstall_0200
  * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0200, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    AAFwk::Want want;
+    AAFwk::Want want1;
+    want1.ClearWant(&want);
+    int32_t missionId = 0;
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+
+    want.SetElementName("", BUNDLE_BACKUP_NAME, BUNDLE_BACKUP_NAME, MODULE_NAME);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0300
+ * @tc.name: test QueryAbilityInfo
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0300, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    ClearConnectAbilityMgr();
+    ScopeGuard stateGuard([&] { ResetConnectAbilityMgr(); });
+
+    AAFwk::Want want;
+    int32_t flags = 1;
+    AbilityInfo abilityInfo;
+    sptr<IRemoteObject> callBack = nullptr;
+    bool ret = hostImpl->QueryAbilityInfo(want, flags, USERID, abilityInfo, callBack);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0500
+ * @tc.name: test ProcessPreload
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0500, Function | MediumTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    ClearConnectAbilityMgr();
+    ScopeGuard stateGuard([&] { ResetConnectAbilityMgr(); });
+
+    AAFwk::Want want;
+    bool ret = hostImpl->ProcessPreload(want);
+    hostImpl->UpgradeAtomicService(want, USERID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SilentInstall_0100
+ * @tc.name: test SilentInstall
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, SilentInstall_0100, Function | MediumTest | Level1)
@@ -3992,6 +4067,23 @@ HWTEST_F(BmsBundleManagerTest, SilentInstall_0100, Function | MediumTest | Level
     AAFwk::Want want;
     bool ret = hostImpl->SilentInstall(want, USERID, nullptr);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SilentInstall_0200
+ * @tc.name: test SilentInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleManagerTest, SilentInstall_0200, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+
+    ClearConnectAbilityMgr();
+    ScopeGuard stateGuard([&] { ResetConnectAbilityMgr(); });
+
+    AAFwk::Want want;
+    bool ret = hostImpl->SilentInstall(want, USERID, nullptr);
+    EXPECT_EQ(ret, false);
 }
 #endif
 
@@ -4632,5 +4724,81 @@ HWTEST_F(BmsBundleManagerTest, GetAdditionalInfo_0200, Function | SmallTest | Le
 
     ErrCode ret = hostImpl->GetAdditionalInfo(BUNDLE_NAME, additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoBySandBoxPath_0100
+ * @tc.name: test GetBundleArchiveInfoBySandBoxPath
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleArchiveInfoBySandBoxPath_0100, Function | SmallTest | Level1)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t flags = 1;
+    BundleInfo bundleInfo;
+    ErrCode ret = hostImpl->GetBundleArchiveInfoBySandBoxPath(bundlePath, flags, bundleInfo, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    ret = hostImpl->GetBundleArchiveInfoBySandBoxPath(bundlePath, flags, bundleInfo, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: DumpAllBundleInfoNamesByUserId_0100
+ * @tc.name: test DumpAllBundleInfoNamesByUserId
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, DumpAllBundleInfoNamesByUserId_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string result;
+
+    bool ret = hostImpl->DumpAllBundleInfoNamesByUserId(Constants::INVALID_USERID, result);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetSandboxExtAbilityInfos_0100
+ * @tc.name: test GetSandboxExtAbilityInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetSandboxExtAbilityInfos_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    Want want;
+    int32_t appIndex = -1;
+    int32_t flags = 0;
+    std::vector<ExtensionAbilityInfo> infos;
+
+    ErrCode ret = hostImpl->GetSandboxExtAbilityInfos(want, appIndex, flags, USERID, infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    appIndex = 101;
+    ret = hostImpl->GetSandboxExtAbilityInfos(want, appIndex, flags, USERID, infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0100
+ * @tc.name: test DumpAllBundleInfoNamesByUserId
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetSandboxHapModuleInfo_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    AbilityInfo abilityInfo;
+    HapModuleInfo info;
+    int32_t appIndex = -1;
+
+    ErrCode ret = hostImpl->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    appIndex = 101;
+    ret = hostImpl->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 }
 } // OHOS
