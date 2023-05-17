@@ -387,7 +387,7 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
     bool res = CommonFunc::ParsePropertyArray(env, args, HASH_PARAMS, valueVec);
     if (!res) {
         APP_LOGE("parse hashParams failed");
-        return res;
+        return true;
     }
     if (valueVec.empty()) {
         APP_LOGE("value vec is empty");
@@ -641,8 +641,9 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
-static void ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
+static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
+    bool parseRes = true;
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -656,7 +657,7 @@ static void ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
         APP_LOGW("Parse crowdtestDeadline failed,using default value.");
     }
     if (!ParseHashParams(env, args, installParam.hashParams)) {
-        APP_LOGW("Parse hashParams failed,using default value.");
+        parseRes = false;
     }
     if (!ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
         APP_LOGW("Parse sharedBundleDirPaths failed,using default value.");
@@ -667,6 +668,7 @@ static void ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
         APP_LOGW("Parse additionalInfo failed,using default value.");
     }
+    return parseRes;
 }
 
 static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &uninstallParam)
@@ -820,7 +822,11 @@ napi_value Install(napi_env env, napi_callback_info info)
                 break;
             }
             if (valueType == napi_object) {
-                ParseInstallParam(env, args[i], callbackPtr->installParam);
+                if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                    APP_LOGE("Parse installParam.hashParams failed");
+                    BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                    return nullptr;
+                }
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
