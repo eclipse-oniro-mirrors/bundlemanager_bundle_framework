@@ -34,6 +34,7 @@ ohos_shared_library("bundle_ndk") {
     "${common_path}/log/include",
     "${inner_api_path}/appexecfwk_base/include",
     "${inner_api_path}/appexecfwk_base/include/quick_fix",
+    "${inner_api_path}/appexecfwk_base/include/overlay",
     "//third_party/json/include",
   ]
   defines = [
@@ -43,8 +44,10 @@ ohos_shared_library("bundle_ndk") {
   sources = [
     "${inner_api_path}/appexecfwk_base/src/ability_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/compatible_application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/extension_ability_info.cpp",
+    "${inner_api_path}/appexecfwk_base/src/hap_module_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/module_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/quick_fix/app_quick_fix.cpp",
     "${inner_api_path}/appexecfwk_base/src/quick_fix/appqf_info.cpp",
