@@ -287,6 +287,12 @@ bool RdbDataManager::CreateTable()
         APP_LOGE("CreateTable failed, ret: %{public}d", ret);
         return false;
     }
+    for (const auto &sql : bmsRdbConfig_.insertColumnSql) {
+        int32_t insertRet = rdbStore->ExecuteSql(sql);
+        if (insertRet != NativeRdb::E_OK) {
+            APP_LOGW("ExecuteSql insertColumnSql failed, insertRet: %{public}d", insertRet);
+        }
+    }
     return true;
 }
 }  // namespace AppExecFwk
