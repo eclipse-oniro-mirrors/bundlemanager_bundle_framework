@@ -821,12 +821,10 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
                 break;
             }
-            if (valueType == napi_object) {
-                if (!ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                    APP_LOGE("Parse installParam.hashParams failed");
-                    BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
-                    return nullptr;
-                }
+            if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("Parse installParam.hashParams failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
