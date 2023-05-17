@@ -266,6 +266,9 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     targetAbilityInfo->targetInfo.bundleName = bundleName;
     targetAbilityInfo->targetInfo.moduleName = moduleName;
     targetAbilityInfo->targetInfo.abilityName = abilityName;
+    targetAbilityInfo->targetInfo.action = want.GetAction();
+    targetAbilityInfo->targetInfo.uri = want.GetUriString();
+    targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.flags = GetPreloadFlag();
     targetAbilityInfo->targetInfo.callingUid = uid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
@@ -277,7 +280,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
     return true;
 }
 
-bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
+bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo, const Want &want,
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
     APP_LOGI("SilentInstall");
@@ -290,7 +293,6 @@ bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbili
 
     ErmsCallerInfo callerInfo;
     ExperienceRule rule;
-    Want localWant = want;
     bool ret = CheckEcologicalRule(want, callerInfo, rule);
     if (!ret) {
         APP_LOGE("check ecological rule failed, skip.");
@@ -298,14 +300,14 @@ bool BundleConnectAbilityMgr::SilentInstall(const TargetAbilityInfo &targetAbili
         APP_LOGI("ecological rule is allow, keep going.");
     } else if (rule.replaceWant != nullptr) {
         APP_LOGI("ecological rule is replace want.");
-        localWant.SetParam(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
+        targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
     } else {
         APP_LOGW("ecological rule is not allowed, return.");
         return false;
     }
-    auto silentInstallFunc = [this, targetAbilityInfo, localWant, userId, freeInstallParams]() {
+    auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
-        this->SendRequestToServiceCenter(flag, targetAbilityInfo, localWant, userId, freeInstallParams);
+        this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
     handler_->PostTask(silentInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
     return true;
@@ -790,6 +792,9 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     targetAbilityInfo->targetInfo.bundleName = bundleName;
     targetAbilityInfo->targetInfo.moduleName = moduleName;
     targetAbilityInfo->targetInfo.abilityName = abilityName;
+    targetAbilityInfo->targetInfo.action = want.GetAction();
+    targetAbilityInfo->targetInfo.uri = want.GetUriString();
+    targetAbilityInfo->targetInfo.type = want.GetType();
     targetAbilityInfo->targetInfo.callingUid = callingUid;
     targetAbilityInfo->targetInfo.callingAppType = CALLING_TYPE_HARMONY;
     std::string callingAppId = want.GetStringParam(PARAM_FREEINSTALL_APPID);

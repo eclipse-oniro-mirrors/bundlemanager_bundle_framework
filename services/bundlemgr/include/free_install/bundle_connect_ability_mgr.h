@@ -106,7 +106,7 @@ private:
      * @param userId Designation User ID.
      * @return Returns true if create async task successfully called; returns false otherwise.
      */
-    bool SilentInstall(const TargetAbilityInfo &targetAbilityInfo, const Want &want,
+    bool SilentInstall(TargetAbilityInfo &targetAbilityInfo, const Want &want,
         const FreeInstallParams &freeInstallParams, int32_t userId);
 
     /**
