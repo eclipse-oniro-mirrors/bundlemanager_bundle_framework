@@ -4159,18 +4159,16 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
             BundleInfo bundleInfo;
             ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
-            if (ret == ERR_OK) {
-                if (bundleInfo.abilityInfos.size() == 1) {
-                    abilityInfos = bundleInfo.abilityInfos;
-                    APP_LOGD("find default ability.");
-                    return true;
-                } else if (bundleInfo.extensionInfos.size() == 1) {
-                    extensionInfos = bundleInfo.extensionInfos;
-                    APP_LOGD("find default extension.");
-                    return true;
-                } else {
-                    APP_LOGD("GetDefaultApplication failed.");
-                }
+            if (ret == ERR_OK && bundleInfo.abilityInfos.size() == 1) {
+                abilityInfos = bundleInfo.abilityInfos;
+                APP_LOGD("find default ability.");
+                return true;
+            } else if (ret == ERR_OK && bundleInfo.extensionInfos.size() == 1) {
+                extensionInfos = bundleInfo.extensionInfos;
+                APP_LOGD("find default extension.");
+                return true;
+            } else if (ret == ERR_OK) {
+                APP_LOGD("GetDefaultApplication failed.");
             }
         }
     }
