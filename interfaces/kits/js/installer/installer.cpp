@@ -641,7 +641,7 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
-static bool CheckInstallParam(InstallParam &installParam)
+static bool CheckInstallParam(napi_env env, InstallParam &installParam)
 {
     if (installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
         APP_LOGE("Parse specifiedDistributionType size failed");
@@ -852,7 +852,7 @@ napi_value Install(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    if (!CheckInstallParam(callbackPtr->installParam)) {
+    if (!CheckInstallParam(env, callbackPtr->installParam)) {
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
