@@ -2285,7 +2285,6 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
     innerModuleInfo.deviceTypes = configJson.module.deviceType;
     innerModuleInfo.buildHash = configJson.module.buildHash;
-    innerModuleInfo.compressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
     return true;
 }
 

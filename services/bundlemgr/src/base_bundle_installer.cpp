@@ -3445,9 +3445,9 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     std::string targetSoPath;
     std::string cpuAbi;
     std::string nativeLibraryPath;
-    bool IsCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        if (IsCompressNativeLibrary) {
+        if (isCompressNativeLibrary) {
             bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
             if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
                 nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
@@ -3461,7 +3461,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 
     APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
-    if (IsCompressNativeLibrary) {
+    if (isCompressNativeLibrary) {
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
         if (result != ERR_OK) {
             APP_LOGE("fail to extract module dir, error is %{public}d", result);
