@@ -641,6 +641,22 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
+static bool CheckInstallParam(NapiArg& args)
+{
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+        APP_LOGE("init param failed");
+        return false;
+    }
+
+    auto argc = args.GetMaxArgc();
+    APP_LOGD("the number of argc is  %{public}zu", argc);
+    if (argc < ARGS_SIZE_ONE) {
+        APP_LOGE("the params number is incorrect");
+        return true;
+    }
+    return true
+}
+
 static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
     bool parseRes = true;
@@ -791,20 +807,10 @@ napi_value Install(napi_env env, napi_callback_info info)
     APP_LOGD("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        APP_LOGE("init param failed");
+    if (!CheckInstallParam(args)) {
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-
-    auto argc = args.GetMaxArgc();
-    APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_ONE) {
-        APP_LOGE("the params number is incorrect");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::INSTALL;
     for (size_t i = 0; i < argc; ++i) {
