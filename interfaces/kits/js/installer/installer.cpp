@@ -386,11 +386,11 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, HASH_PARAMS, valueVec);
     if (!res) {
-        APP_LOGE("parse hashParams failed");
+        APP_LOGW("hashParams type error,using default value.");
         return true;
     }
     if (valueVec.empty()) {
-        APP_LOGE("value vec is empty");
+        APP_LOGW("hashParams is empty,using default value.");
         return true;
     }
     for (const auto &property : valueVec) {
@@ -660,7 +660,9 @@ static bool CheckInstallParam(napi_env env, InstallParam &installParam)
 
 static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
 {
-    bool parseRes = true;
+    if (!ParseHashParams(env, args, installParam.hashParams)) {
+        return false;
+    }
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -673,9 +675,6 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
         APP_LOGW("Parse crowdtestDeadline failed,using default value.");
     }
-    if (!ParseHashParams(env, args, installParam.hashParams)) {
-        parseRes = false;
-    }
     if (!ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
         APP_LOGW("Parse sharedBundleDirPaths failed,using default value.");
     }
@@ -685,7 +684,7 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
         APP_LOGW("Parse additionalInfo failed,using default value.");
     }
-    return parseRes;
+    return true;
 }
 
 static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &uninstallParam)
