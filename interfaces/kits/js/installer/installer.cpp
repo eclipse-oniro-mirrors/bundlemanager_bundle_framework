@@ -641,20 +641,21 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
-static bool CheckInstallParam(NapiArg& args)
+static bool CheckInstallParam(InstallParam &installParam)
 {
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
-        APP_LOGE("init param failed");
+    if (installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
+        APP_LOGE("Parse specifiedDistributionType size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of specifiedDistributionType is greater than 128");
         return false;
     }
-
-    auto argc = args.GetMaxArgc();
-    APP_LOGD("the number of argc is  %{public}zu", argc);
-    if (argc < ARGS_SIZE_ONE) {
-        APP_LOGE("the params number is incorrect");
-        return true;
+    if (installParam.additionalInfo.size() > ADDITIONAL_INFO_MAX_SIZE) {
+        APP_LOGE("Parse additionalInfo size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of additionalInfo is greater than 3000");
+        return false;
     }
-    return true
+    return true;
 }
 
 static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
@@ -807,7 +808,15 @@ napi_value Install(napi_env env, napi_callback_info info)
     APP_LOGD("Install called");
     // obtain arguments of install interface
     NapiArg args(env, info);
-    if (!CheckInstallParam(args)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_THREE)) {
+        APP_LOGE("init param failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto argc = args.GetMaxArgc();
+    APP_LOGD("the number of argc is  %{public}zu", argc);
+    if (argc < ARGS_SIZE_ONE) {
+        APP_LOGE("the params number is incorrect");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
@@ -843,16 +852,7 @@ napi_value Install(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    if (callbackPtr->installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
-        APP_LOGE("Parse specifiedDistributionType size failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
-            "BusinessError 401: The size of specifiedDistributionType is greater than 128");
-        return nullptr;
-    }
-    if (callbackPtr->installParam.additionalInfo.size() > ADDITIONAL_INFO_MAX_SIZE) {
-        APP_LOGE("Parse additionalInfo size failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
-            "BusinessError 401: The size of additionalInfo is greater than 3000");
+    if (!CheckInstallParam(callbackPtr->installParam)) {
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
