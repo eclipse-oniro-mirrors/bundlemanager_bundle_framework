@@ -377,7 +377,7 @@ int32_t BundleUtil::CreateFileDescriptor(const std::string &bundlePath, long lon
         APP_LOGE("the length of the bundlePath exceeds maximum limitation");
         return fd;
     }
-    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IWGRP | S_IWOTH)) < 0) {
+    if ((fd = open(bundlePath.c_str(), O_CREAT | O_RDWR, S_IRUSR | S_IWUSR)) < 0) {
         APP_LOGE("open bundlePath %{public}s failed", bundlePath.c_str());
         return fd;
     }
