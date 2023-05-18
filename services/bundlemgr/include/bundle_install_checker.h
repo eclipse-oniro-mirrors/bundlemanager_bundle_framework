@@ -178,7 +178,8 @@ private:
 
     bool FindModuleInInstalledPackage(
         const std::string &moduleName,
-        const std::string &bundleName);
+        const std::string &bundleName,
+        uint32_t versionCode);
 
     bool isContainEntry_ = false;
 
