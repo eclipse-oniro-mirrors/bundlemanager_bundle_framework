@@ -154,5 +154,10 @@ ErrCode InstalldClient::CopyFiles(const std::string &sourceDir, const std::strin
     return 0;
 }
 
+ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames)
+{
+    return 0;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

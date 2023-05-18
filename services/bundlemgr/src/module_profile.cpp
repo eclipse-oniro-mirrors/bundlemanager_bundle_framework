@@ -1424,6 +1424,7 @@ void UpdateNativeSoAttrs(
     innerBundleInfo.SetCpuAbi(cpuAbi);
     if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
         APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
+        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
