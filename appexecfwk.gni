@@ -33,6 +33,7 @@ inner_api_path = "${bundle_framework_path}/interfaces/inner_api"
 tools_path = "${bundle_framework_path}/tools"
 base_path = "${bundle_framework_path}/interfaces/inner_api/appexecfwk_base"
 core_path = "${bundle_framework_path}/interfaces/inner_api/appexecfwk_core"
+extension_path = "${bundle_framework_path}/interfaces/inner_api/appexecfwk_extension"
 
 declare_args() {
   bundle_framework_graphics = true
