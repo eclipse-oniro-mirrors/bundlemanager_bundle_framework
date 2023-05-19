@@ -250,6 +250,7 @@ private:
     void PreloadRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo);
     bool ProcessPreloadCheck(const TargetAbilityInfo &targetAbilityInfo);
     void ProcessPreloadRequestToServiceCenter(int32_t flag, const TargetAbilityInfo &targetAbilityInfo);
+    void GetEcologicalCallerInfo(const Want &want, ErmsCallerInfo &callerInfo, int32_t userId);
 
     int32_t GetPreloadFlag();
     bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,

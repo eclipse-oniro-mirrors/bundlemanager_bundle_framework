@@ -61,6 +61,9 @@ constexpr uint32_t OUT_TIME = 30000;
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 constexpr uint32_t FREE_INSTALL_DONE = 0;
+constexpr int32_t TYPE_HARMONEY_INVALID = 0;
+constexpr int32_t TYPE_HARMONEY_APP = 1;
+constexpr int32_t TYPE_HARMONEY_SERVICE  = 2;
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -292,6 +295,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
     }
 
     ErmsCallerInfo callerInfo;
+    GetEcologicalCallerInfo(want, callerInfo, userId);
     ExperienceRule rule;
     bool ret = CheckEcologicalRule(want, callerInfo, rule);
     if (!ret) {
@@ -1129,6 +1133,50 @@ bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerIn
         return false;
     }
     return true;
+}
+
+void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCallerInfo &callerInfo, int32_t userId)
+{
+    callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
+    callerInfo.uid = want.GetIntParam(Want::PARAM_RESV_CALLER_UID, IPCSkeleton::GetCallingUid());
+    callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
+    callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
+    callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
+
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+
+    std::string callerBundleName;
+    ErrCode err = bundleDataMgr_->GetNameForUid(callerInfo.uid, callerBundleName);
+    if (err != ERR_OK) {
+        APP_LOGE("Get callerBundleName failed.");
+        return;
+    }
+    AppExecFwk::ApplicationInfo callerAppInfo;
+    bool getCallerResult = bundleDataMgr_->GetApplicationInfo(callerBundleName,
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, callerAppInfo);
+    if (!getCallerResult) {
+        APP_LOGE("Get callerAppInfo failed.");
+        return;
+    }
+
+    switch (callerAppInfo.bundleType) {
+        case AppExecFwk::BundleType::ATOMIC_SERVICE:
+            APP_LOGD("the caller type is atomic service");
+            callerInfo.callerAppType = TYPE_HARMONEY_SERVICE;
+            break;
+        case AppExecFwk::BundleType::APP:
+            APP_LOGD("the caller type is app");
+            callerInfo.callerAppType = TYPE_HARMONEY_APP;
+            break;
+        default:
+            APP_LOGD("the caller type is invalid type");
+            break;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
