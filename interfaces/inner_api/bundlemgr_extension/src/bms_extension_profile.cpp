@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const int32_t BUFFER_SIZE = 256;
 static const std::string BMS_EXTENSION_PROFILE = "bms-extensions";
 static const std::string BMS_EXTENSION_PROFILE_BUNDLE_MGR = "bundle-mgr";
 static const std::string BUNDLE_MGR_KEY_EXTENSION_NAME = "extension-name";
@@ -50,7 +51,7 @@ bool BmsExtensionProfile::ReadFileIntoJson(const std::string &filePath, nlohmann
     }
 
     std::fstream in;
-    char errBuf[256];
+    char errBuf[BUFFER_SIZE];
     errBuf[0] = '\0';
     in.open(filePath, std::ios_base::in);
     if (!in.is_open()) {
@@ -81,7 +82,7 @@ bool BmsExtensionProfile::ReadFileIntoJson(const std::string &filePath, nlohmann
 ErrCode BmsExtensionProfile::TransformTo(const nlohmann::json &jsonObject,
     BmsExtension &bmsExtension) const
 {
-    APP_LOGE("transform bms-extension.json stream to BmsExtension");
+    APP_LOGD("transform bms-extension.json stream to BmsExtension");
     if (jsonObject.is_discarded()) {
         APP_LOGE("profile format error");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;

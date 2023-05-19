@@ -873,7 +873,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // rename for all temp dirs
     for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser()) {
+        if (info.second.IsOnlyCreateBundleUser() ||
+            !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
             continue;
         }
         if ((result = RenameModuleDir(info.second)) != ERR_OK) {
@@ -2225,28 +2226,11 @@ ErrCode BaseBundleInstaller::DeleteArkProfile(const std::string &bundleName, int
 
 ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::string &modulePath)
 {
-    std::string targetSoPath;
-    std::string cpuAbi;
-    std::string nativeLibraryPath;
-    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-        if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
-            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
-            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
-        }
-        targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-            .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
-            .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
-    }
-
-    APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
-        modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
-    auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+    auto result = InnerProcessNativeLibs(info, modulePath);
     if (result != ERR_OK) {
-        APP_LOGE("fail to extrace module dir, error is %{public}d", result);
+        APP_LOGE("fail to InnerProcessNativeLibs, error is %{public}d", result);
         return result;
     }
-
     result = ExtractArkNativeFile(info, modulePath);
     if (result != ERR_OK) {
         APP_LOGE("fail to extractArkNativeFile, error is %{public}d", result);
@@ -2606,8 +2590,8 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
         return ret;
     }
 
-    if (!CheckApiInfoByCompileSdk(infos)) {
-        APP_LOGE("CheckApiInfoByCompileSdk failed.");
+    if (!CheckApiInfo(infos)) {
+        APP_LOGE("CheckApiInfo failed.");
         return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
     }
 
@@ -2616,17 +2600,15 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::CheckApiInfoByCompileSdk(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     std::string compileSdkType = infos.begin()->second.GetBaseApplicationInfo().compileSdkType;
     auto bundleInfo = infos.begin()->second.GetBaseBundleInfo();
     if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
         return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
-    } else {
-        BmsExtensionDataMgr bmsExtensionDataMgr;
-        return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
     }
-    return true;
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
@@ -3474,6 +3456,45 @@ void BaseBundleInstaller::AddAppProvisionInfo(const std::string &bundleName,
             APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
         }
     }
+}
+
+ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath)
+{
+    std::string targetSoPath;
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        if (isCompressNativeLibrary) {
+            bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
+            if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+                nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+                APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
+            }
+            targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
+        }
+    }
+
+    APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
+        modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
+    if (isCompressNativeLibrary) {
+        auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to extract module dir, error is %{public}d", result);
+            return result;
+        }
+    } else {
+        std::vector<std::string> fileNames;
+        auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to GetNativeLibraryFileNames, error is %{public}d", result);
+            return result;
+        }
+        info.SetNativeLibraryFileNames(info.GetCurModuleName(), fileNames);
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

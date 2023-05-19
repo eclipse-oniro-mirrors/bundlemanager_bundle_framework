@@ -18,6 +18,7 @@
 #include <mutex>
 #include <string>
 
+#include "appexecfwk_errors.h"
 #include "bms_extension.h"
 #include "bundle_info.h"
 
@@ -26,12 +27,12 @@ namespace AppExecFwk {
 class BmsExtensionDataMgr {
 public:
     BmsExtensionDataMgr();
-    bool CheckApiInfo(const BundleInfo &bundleInfo) const;
+    bool CheckApiInfo(const BundleInfo &bundleInfo);
+    ErrCode Init();
 private:
-    void init();
     bool OpenHandler();
-    static BmsExtension bmsExtension;
-    static void *handler;
+    static BmsExtension bmsExtension_;
+    static void *handler_;
     mutable std::mutex stateMutex_;
 };
 }  // namespace AppExecFwk

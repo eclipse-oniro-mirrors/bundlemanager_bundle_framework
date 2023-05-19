@@ -14,21 +14,21 @@
 import("//build/ohos.gni")
 import("../../../appexecfwk.gni")
 
-config("appexecfwk_core_ex_sdk_config") {
+config("bundlemgr_extension_config") {
   include_dirs = [
     "include",
     "../../inner_api/appexecfwk_base/include",
   ]
 }
 
-ohos_shared_library("appexecfwk_extension") {
+ohos_shared_library("bundlemgr_extension") {
   sources = [
     "src/bms_extension_data_mgr.cpp",
     "src/bms_extension_profile.cpp",
-    "src/bundle_mgr_ext_register.cpp"
+    "src/bundle_mgr_ext_register.cpp",
   ]
 
-  public_configs = [ ":appexecfwk_core_ex_sdk_config" ]
+  public_configs = [ ":bundlemgr_extension_config" ]
 
   defines = [
     "APP_LOG_TAG = \"BundleMgrService\"",

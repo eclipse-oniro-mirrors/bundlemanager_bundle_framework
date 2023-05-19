@@ -575,7 +575,8 @@ private:
     bool CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
     bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
-    bool CheckApiInfoByCompileSdk(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    bool CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;

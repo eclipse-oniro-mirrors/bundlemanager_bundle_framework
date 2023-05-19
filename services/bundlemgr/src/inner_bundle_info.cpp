@@ -131,12 +131,15 @@ const std::string MODULE_VERSION_NAME = "versionName";
 const std::string MODULE_PROXY_DATAS = "proxyDatas";
 const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
+const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
     {"nonisolationOnly", IsolationMode::NONISOLATION_ONLY},
     {"isolationFirst", IsolationMode::ISOLATION_FIRST},
 };
+const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -564,7 +567,9 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_VERSION_NAME, info.versionName},
         {MODULE_PROXY_DATAS, info.proxyDatas},
         {MODULE_BUILD_HASH, info.buildHash},
-        {MODULE_ISOLATION_MODE, info.isolationMode}
+        {MODULE_ISOLATION_MODE, info.isolationMode},
+        {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
+        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames}
     };
 }
 
@@ -1084,6 +1089,22 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        info.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_NATIVE_LIBRARY_FILE_NAMES,
+        info.nativeLibraryFileNames,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1753,6 +1774,8 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     }
     hapInfo.buildHash = it->second.buildHash;
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
+    hapInfo.compressNativeLibs = it->second.compressNativeLibs;
+    hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     return hapInfo;
 }
 
@@ -3689,6 +3712,12 @@ bool InnerBundleInfo::FetchNativeSoAttrs(
     }
 
     auto &moduleInfo = moduleIter->second;
+    if (!moduleInfo.compressNativeLibs) {
+        cpuAbi = moduleInfo.cpuAbi;
+        nativeLibraryPath = moduleInfo.nativeLibraryPath;
+        return !nativeLibraryPath.empty();
+    }
+
     if (moduleInfo.isLibIsolated) {
         cpuAbi = moduleInfo.cpuAbi;
         nativeLibraryPath = moduleInfo.nativeLibraryPath;
@@ -3805,6 +3834,45 @@ IsolationMode InnerBundleInfo::GetIsolationMode(const std::string &isolationMode
     } else {
         return IsolationMode::NONISOLATION_FIRST;
     }
+}
+
+void InnerBundleInfo::SetModuleHapPath(const std::string &hapPath)
+{
+    if (innerModuleInfos_.count(currentPackage_) == 1) {
+        innerModuleInfos_.at(currentPackage_).hapPath = hapPath;
+        for (auto &abilityInfo : baseAbilityInfos_) {
+            abilityInfo.second.hapPath = hapPath;
+        }
+        for (auto &extensionInfo : baseExtensionInfos_) {
+            extensionInfo.second.hapPath = hapPath;
+        }
+        if (!innerModuleInfos_.at(currentPackage_).compressNativeLibs &&
+            !innerModuleInfos_.at(currentPackage_).nativeLibraryPath.empty()) {
+            innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
+                hapPath + NATIVE_LIBRARY_PATH_SYMBOL + innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
+        }
+    }
+}
+
+bool InnerBundleInfo::IsCompressNativeLibs(const std::string &moduleName) const
+{
+    auto moduleInfo = GetInnerModuleInfoByModuleName(moduleName);
+    if (!moduleInfo) {
+        APP_LOGE("Get moduleInfo(%{public}s) failed.", moduleName.c_str());
+        return true; // compressNativeLibs default true
+    }
+
+    return moduleInfo->compressNativeLibs;
+}
+
+void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
+    const std::vector<std::string> &fileNames)
+{
+    if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
+        APP_LOGE("innerBundleInfo does not contain the module: %{public}s.", moduleName.c_str());
+        return;
+    }
+    innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -682,7 +682,9 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "srcPath":"",
             "uiSyntax":"hml",
             "upgradeFlag":0,
-            "virtualMachine":"ark"
+            "virtualMachine":"ark",
+            "compressNativeLibs": true,
+            "nativeLibraryFileNames": []
         }
     },
     "installMark":{
@@ -994,6 +996,8 @@ protected:
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
+                "compileSdkType":"OpenHarmony",
+                "compileSdkVersion":"",
                 "cpuAbi": "armeabi-v7a",
                 "dataBaseDir": "/data/app/el2/100/database/com.ohos.launcher",
                 "dataDir": "/data/app/el2/100/base/com.ohos.launcher",
@@ -1303,7 +1307,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 },
                 "com.ohos.launcher.recents": {
                     "abilityKeys": [
@@ -1360,7 +1366,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 },
                 "com.ohos.launcher.settings": {
                     "abilityKeys": [
@@ -1417,7 +1425,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 }
             },
             "installMark": {

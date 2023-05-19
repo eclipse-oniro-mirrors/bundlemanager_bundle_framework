@@ -190,6 +190,9 @@ public:
 
     static bool CopyFiles(const std::string &sourceDir, const std::string &destinationDir);
 
+    static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+        std::vector<std::string> &fileNames);
+
 private:
     static bool OpenHandle(void **handle);
 

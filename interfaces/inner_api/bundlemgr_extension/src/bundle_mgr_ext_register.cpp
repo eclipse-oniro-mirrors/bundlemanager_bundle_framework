@@ -13,16 +13,15 @@
  * limitations under the License.
  */
 
-#include "bundle_mgr_ext_register.h"
-
 #include "app_log_wrapper.h"
+#include "bundle_mgr_ext_register.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-
+std::mutex BundleMgrExtRegister::mutex_;
 BundleMgrExtRegister &BundleMgrExtRegister::GetInstance()
 {
-    APP_LOGE("zhaogan   BundleMgrExtRegister::GetInstance");
+    std::lock_guard<std::mutex> lock(mutex_);
     static BundleMgrExtRegister bundleMgrExt;
     return bundleMgrExt;
 }
@@ -34,16 +33,12 @@ void BundleMgrExtRegister::RegisterBundleMgrExt(const std::string& bundleExtName
 
 std::shared_ptr<BundleMgrExt> BundleMgrExtRegister::GetBundleMgrExt(const std::string &bundleExtName)
 {
-    APP_LOGE("zhaogan   BundleMgrExtRegister::GetBundleMgrExt");
     auto it = bundleMgrExts_.find(bundleExtName);
     if (it == bundleMgrExts_.end()) {
-        APP_LOGE("zhaogan   BundleMgrExtRegister::GetBundleMgrExt11");
         return nullptr;
-    } else {
-        APP_LOGE("zhaogan   BundleMgrExtRegister::GetBundleMgrExt22");
-        return it->second();
     }
-}
+    return it->second();
 
+}
 } // AppExecFwk
 } // OHOS

@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_EXT_INCLUDE_BUNDLE_MGR_EX_REGISTER_H
 
 #include <functional>
+#include <mutex>
 #include <string>
 #include <unordered_map>
 
@@ -26,7 +27,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 using CreateFunc = std::function<std::shared_ptr<BundleMgrExt>(void)>;
-
 class BundleMgrExtRegister {
 public:
     static BundleMgrExtRegister &GetInstance();
@@ -36,6 +36,7 @@ public:
     void RegisterBundleMgrExt(const std::string& bundleExtName, const CreateFunc& createFunc);
     std::shared_ptr<BundleMgrExt> GetBundleMgrExt(const std::string &bundleExtName);
 private:
+    static std::mutex mutex_;
     BundleMgrExtRegister() = default;
     std::unordered_map<std::string, CreateFunc> bundleMgrExts_;
 
@@ -50,5 +51,4 @@ private:
     }
 } // AppExecFwk
 } // OHOS
-
 #endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_EXT_INCLUDE_BUNDLE_MGR_EX_REGISTER_H

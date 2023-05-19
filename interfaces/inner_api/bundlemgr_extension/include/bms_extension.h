@@ -19,8 +19,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct BmsExtensionBundleMgr
-{
+struct BmsExtensionBundleMgr {
     std::string extensionName;
     std::string libPath;
     std::string lib64Path;
@@ -33,8 +32,7 @@ struct BmsExtensionBundleMgr
     }
 };
 
-struct BmsExtension
-{
+struct BmsExtension {
     BmsExtensionBundleMgr bmsExtensionBundleMgr;
 
     std::string ToString() const

@@ -673,5 +673,17 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
     InstalldOperator::CopyFiles(sourceDir, destinationDir);
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -252,6 +252,7 @@ struct Module {
     std::vector<ProxyData> proxyDatas;
     std::string buildHash;
     std::string isolationMode;
+    bool compressNativeLibs = true;
 };
 
 struct ModuleJson {
@@ -1343,6 +1344,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1431,6 +1440,14 @@ void UpdateNativeSoAttrs(
     APP_LOGD("cpuAbi %{public}s, soRelativePath : %{public}s, isLibIsolated : %{public}d",
         cpuAbi.c_str(), soRelativePath.c_str(), isLibIsolated);
     innerBundleInfo.SetCpuAbi(cpuAbi);
+    if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
+        APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
+        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetModuleCpuAbi(cpuAbi);
+        return;
+    }
     if (!isLibIsolated) {
         innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         return;

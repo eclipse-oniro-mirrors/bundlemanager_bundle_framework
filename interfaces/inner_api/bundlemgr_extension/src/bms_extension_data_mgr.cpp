@@ -15,55 +15,52 @@
 
 #include <dlfcn.h>
 
+#include "app_log_wrapper.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
 #include "bundle_mgr_ext_register.h"
-#include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-BmsExtension BmsExtensionDataMgr::bmsExtension;
-void* BmsExtensionDataMgr::handler = nullptr;
+BmsExtension BmsExtensionDataMgr::bmsExtension_;
+void *BmsExtensionDataMgr::handler_ = nullptr;
 namespace {
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 }
 
 BmsExtensionDataMgr::BmsExtensionDataMgr()
 {
-    init();
-    APP_LOGI("base bundle installer instance is created");
-    auto message = bmsExtension.ToString();
-    bool isNullptr = (handler == nullptr);
-    APP_LOGD("bms-extension: %{public}s, handler is nullptr: %{public}d", message.c_str(), isNullptr);
 }
 
-void BmsExtensionDataMgr::init()
+ErrCode BmsExtensionDataMgr::Init()
 {
     std::lock_guard<std::mutex> stateLock(stateMutex_);
-    if (bmsExtension.bmsExtensionBundleMgr.extensionName.empty() || !handler) {
+    if (bmsExtension_.bmsExtensionBundleMgr.extensionName.empty() || !handler_) {
         BmsExtensionProfile bmsExtensionProfile;
-        auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
+        auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension_);
         if (res != ERR_OK) {
-            APP_LOGE("ParseBmsExtension failed, errCode is %{public}d", res);
-            return;
+            APP_LOGW("ParseBmsExtension failed, errCode is %{public}d", res);
+            return ERR_APPEXECFWK_PARSE_UNEXPECTED;
         }
-        APP_LOGD("parse bms-extension.json success, which is: %{public}s", bmsExtension.ToString().c_str());
-        if (OpenHandler()) {
-            APP_LOGD("dlopen bms-extension so success");
+        APP_LOGD("parse bms-extension.json success, which is: %{public}s", bmsExtension_.ToString().c_str());
+        if (!OpenHandler()) {
+            APP_LOGW("dlopen bms-extension so failed");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
     }
+    return ERR_OK;
 }
 
 bool BmsExtensionDataMgr::OpenHandler()
 {
     APP_LOGI("OpenHandler start");
-    auto handle = &handler;
+    auto handle = &handler_;
     if (handle == nullptr) {
         APP_LOGE("OpenHandler error handle is nullptr.");
         return false;
     }
-    auto libPath = bmsExtension.bmsExtensionBundleMgr.libPath.c_str();
-    auto lib64Path = bmsExtension.bmsExtensionBundleMgr.lib64Path.c_str();
+    auto libPath = bmsExtension_.bmsExtensionBundleMgr.libPath.c_str();
+    auto lib64Path = bmsExtension_.bmsExtensionBundleMgr.lib64Path.c_str();
     *handle = dlopen(lib64Path, RTLD_NOW | RTLD_GLOBAL);
     if (*handle == nullptr) {
         APP_LOGW("failed to open %{public}s, err:%{public}s", lib64Path, dlerror());
@@ -77,13 +74,24 @@ bool BmsExtensionDataMgr::OpenHandler()
     return true;
 }
 
-bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo) const
+bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo)
 {
-    if (handler) {
-        auto bundleMgrExtPtr =
-            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension.bmsExtensionBundleMgr.extensionName);
-        return bundleMgrExtPtr->CheckApiInfo(bundleInfo);
+    auto ret = Init();
+
+    if (ret != ERR_OK) {
+        APP_LOGE("Init failed, ErrCode: %{public}d", ret);
+        return false;
     }
+    if (handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr) {
+            return bundleMgrExtPtr->CheckApiInfo(bundleInfo);
+        }
+        APP_LOGE("create class: %{public}s failed.", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
+        return false;
+    }
+    APP_LOGE("dlopen so file failed.");
     return false;
 }
 } // AppExecFwk

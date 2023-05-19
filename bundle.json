@@ -122,7 +122,7 @@
                   },
                   {
                     "header": {
-                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_extension/include",
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension/include",
                       "header_files": [
                         "bms_extension_data_mgr.h",
                         "bms_extension_profile.h",
@@ -131,7 +131,7 @@
                         "bundle_mgr_ext.h"
                       ]
                     },
-                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_extension:appexecfwk_extension"
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension:bundlemgr_extension"
                   }
             ],
             "test": [
