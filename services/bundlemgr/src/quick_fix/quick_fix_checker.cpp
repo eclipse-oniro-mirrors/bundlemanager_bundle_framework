@@ -148,7 +148,7 @@ ErrCode QuickFixChecker::CheckPatchNativeSoWithInstalledBundle(
         auto &hapModuleInfoNativeLibraryPath = iter->nativeLibraryPath;
         auto &hqfInfoNativeLibraryPath = iter->nativeLibraryPath;
         if ((!hapModuleInfoNativeLibraryPath.empty() && !hqfInfoNativeLibraryPath.empty()) &&
-            (hapModuleInfoNativeLibraryPath != hqfInfoNativeLibraryPath)) {
+            (hapModuleInfoNativeLibraryPath.find(hqfInfoNativeLibraryPath)) == std::string::npos) {
             APP_LOGE("hqfInfoNativeLibraryPath: %{public}s, hapModuleInfoNativeLibraryPath: %{public}s",
                 hqfInfoNativeLibraryPath.c_str(), hapModuleInfoNativeLibraryPath.c_str());
             return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;

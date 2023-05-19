@@ -1841,7 +1841,7 @@ ErrCode BaseBundleInstaller::ProcessDeployedHqfInfo(const std::string &nativeLib
         return ERR_OK;
     }
 
-    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath, cpuAbi);
     if (ret != ERR_OK) {
         APP_LOGE("ProcessDeployedHqfInfo failed, errcode: %{public}d", ret);
         return ret;
@@ -1894,7 +1894,7 @@ ErrCode BaseBundleInstaller::ProcessDeployingHqfInfo(
 
     auto appQuickFix = innerAppQuickFix.GetAppQuickFix();
     AppqfInfo &appQfInfo = appQuickFix.deployingAppqfInfo;
-    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath);
+    ErrCode ret = ProcessDiffFiles(appQfInfo, nativeLibraryPath, cpuAbi);
     if (ret != ERR_OK) {
         APP_LOGE("ProcessDeployingHqfInfo failed, errcode: %{public}d", ret);
         return ret;
@@ -1979,7 +1979,23 @@ bool BaseBundleInstaller::CheckHapLibsWithPatchLibs(
     return true;
 }
 
-ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const
+bool BaseBundleInstaller::ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const
+{
+    ExtractParam extractParam;
+    extractParam.extractFileType = ExtractFileType::SO;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = soPath;
+    extractParam.cpuAbi = cpuAbi;
+    if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+        APP_LOGE("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
+        bundleName_.c_str(), modulePackage_.c_str());
+        return false;
+    }
+    return true;
+}
+
+ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
+    const std::string &cpuAbi) const
 {
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     const std::string moduleName = modulePackage_;
@@ -1988,23 +2004,22 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         return hqfInfo.moduleName == moduleName;
     });
     if (iter != appQfInfo.hqfInfos.end()) {
-        // appQfInfo.nativeLibraryPath may be start with patch_versionCode
-        if (!CheckHapLibsWithPatchLibs(nativeLibraryPath, appQfInfo.nativeLibraryPath)) {
-            APP_LOGE("CheckHapLibsWithPatchLibs failed newInfo: %{public}s, hqf: %{public}s",
-                     nativeLibraryPath.c_str(), appQfInfo.nativeLibraryPath.c_str());
-            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            bundleName_ + Constants::TMP_SUFFIX + Constants::LIBS;
+        ScopeGuard guardRemoveTmpSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
+        if (!ExtractSoFiles(oldSoPath, cpuAbi)) {
+            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
+
         const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
             bundleName_ + Constants::TMP_SUFFIX;
         ScopeGuard removeDiffPath([tempDiffPath] { InstalldClient::GetInstance()->RemoveDir(tempDiffPath); });
-        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath,
-            tempDiffPath, appQfInfo.cpuAbi);
+        ErrCode ret = InstalldClient::GetInstance()->ExtractDiffFiles(iter->hqfFilePath, tempDiffPath, cpuAbi);
         if (ret != ERR_OK) {
             APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
-        std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
-            Constants::PATH_SEPARATOR + nativeLibraryPath;
+
         std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
             Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
             std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;

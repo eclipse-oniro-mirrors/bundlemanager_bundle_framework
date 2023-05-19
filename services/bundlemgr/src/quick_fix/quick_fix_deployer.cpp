@@ -336,55 +336,35 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         APP_LOGE("error: creat patch path failed, errcode %{public}d", ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
-
+    BundleInfo bundleInfo;
+    ret = GetBundleInfo(appQuickFix.bundleName, bundleInfo);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
+        Constants::PATH_SEPARATOR + libraryPath;
+    std::string tmpSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+        appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
+    ScopeGuard guardRemoveTmpSoPath([tmpSoPath] {InstalldClient::GetInstance()->RemoveDir(tmpSoPath);});
+    if (NeedExtractSoFiles(bundleInfo)) {
+        ExtractSoFiles(bundleInfo, tmpSoPath);
+        oldSoPath = tmpSoPath;
+    }
+    bool pathExist = false;
+    // if old so path does not exist then return ERR_OK
+    ret = InstalldClient::GetInstance()->IsExistDir(oldSoPath, pathExist);
+    if (!pathExist && (ret == ERR_OK)) {
+        APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
+        return ERR_OK;
+    }
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
-        if (hqf.hqfFilePath.empty()) {
-            APP_LOGE("error: hapFilePath is empty");
-            return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-        }
-
-        std::string libraryPath;
-        std::string cpuAbi;
-        bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
-        if (!FetchPatchNativeSoAttrs(
-            appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
-            continue;
-        }
-
-        std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
-            Constants::PATH_SEPARATOR + libraryPath;
-        APP_LOGD("ProcessPatchDeployEnd oldPath %{public}s", oldSoPath.c_str());
-        bool pathExist = false;
-        // if old so path does not exist then return ERR_OK
-        ret = InstalldClient::GetInstance()->IsExistDir(oldSoPath, pathExist);
-        if (!pathExist && (ret == ERR_OK)) {
-            APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
-            return ERR_OK;
-        }
-
-        // extract diff so, diff so path
-        std::string diffFilePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
-            appQuickFix.bundleName + Constants::TMP_SUFFIX;
-        ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
-
-        // extract so to targetPath
-        ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);
+        auto ret = ProcessApplyDiffPatch(appQuickFix, hqf, bundleInfo, patchPath);
         if (ret != ERR_OK) {
-            APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
-            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
-        }
-
-        // apply diff patch
-        std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
-        ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
-        if (ret != ERR_OK) {
-            APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
-                appQuickFix.bundleName.c_str(), ret);
-            return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
+            APP_LOGE("bundleName: %{public}s ProcessApplyDiffPatch failed.", appQuickFix.bundleName.c_str());
+            return ret;
         }
     }
-
     return ERR_OK;
 }
 
@@ -722,6 +702,75 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
     }
     sysEventInfo.applyQuickFixFrequency = innerBundleInfo.GetApplyQuickFixFrequency();
     EventReport::SendBundleSystemEvent(BundleEventType::QUICK_FIX, sysEventInfo);
+}
+
+bool QuickFixDeployer::NeedExtractSoFiles(const BundleInfo &bundleInfo)
+{
+    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        // if compressNativeLibs is false, SO need extract to tmp path
+        if (!hapInfo.compressNativeLibs) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath)
+{
+    std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
+    std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
+    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        if (!hapInfo.nativeLibraryPath.empty()) {
+            cpuAbi = hapInfo.cpuAbi;
+            nativeLibraryPath = hapInfo.nativeLibraryPath.empty();
+        }
+        if (nativeLibraryPath.empty()) {
+            continue;
+        }
+        ExtractParam extractParam;
+        extractParam.extractFileType = ExtractFileType::SO;
+        extractParam.srcPath = hapInfo.hapPath;
+        extractParam.targetPath = tmpSoPath;
+        extractParam.cpuAbi = cpuAbi;
+        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+            APP_LOGW("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
+                bundleInfo.name.c_str(), hapInfo.moduleName.c_str());
+        }
+    }
+}
+
+ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
+    const std::string &oldSoPath, const std::string &patchPath)
+{
+    if (hqf.hqfFilePath.empty()) {
+        APP_LOGE("error: hapFilePath is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
+    }
+    std::string libraryPath;
+    std::string cpuAbi;
+    bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
+    if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
+        return ERR_OK;
+    }
+    // extract diff so, diff so path
+    std::string diffFilePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+        appQuickFix.bundleName + Constants::TMP_SUFFIX;
+    ScopeGuard guardRemoveDiffPath([diffFilePath] { InstalldClient::GetInstance()->RemoveDir(diffFilePath); });
+    // extract diff so to targetPath
+    auto ret = InstalldClient::GetInstance()->ExtractDiffFiles(hqf.hqfFilePath, diffFilePath, cpuAbi);
+    if (ret != ERR_OK) {
+        APP_LOGE("error: ExtractDiffFiles failed errcode :%{public}d", ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+    }
+    // apply diff patch
+    std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    if (ret != ERR_OK) {
+        APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
+            appQuickFix.bundleName.c_str(), ret);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
+    }
+    return ERR_OK;
 }
 } // AppExecFwk
 } // OHOS
