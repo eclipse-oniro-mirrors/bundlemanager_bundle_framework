@@ -1734,9 +1734,10 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1500, Function | SmallTest 
     hqfInfos.emplace_back(info);
     AppqfInfo appQfInfo;
     appQfInfo.hqfInfos = hqfInfos;
-    std::string nativeLibraryPath = "/an/x86/x86.so";
+    std::string nativeLibraryPath = "libs/armeabi-v7a/";
+    std::string cpuAbi = "arm";
     ErrCode ret = installer.ProcessDiffFiles(
-        appQfInfo, nativeLibraryPath);
+        appQfInfo, nativeLibraryPath, cpuAbi);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
 }
 

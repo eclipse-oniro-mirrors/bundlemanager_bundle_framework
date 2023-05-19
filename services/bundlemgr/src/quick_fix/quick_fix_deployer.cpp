@@ -352,7 +352,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
 
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
-        auto ret = ProcessApplyDiffPatch(appQuickFix, hqf, bundleInfo, patchPath);
+        auto ret = ProcessApplyDiffPatch(appQuickFix, hqf, oldSoPath, patchPath);
         if (ret != ERR_OK) {
             APP_LOGE("bundleName: %{public}s ProcessApplyDiffPatch failed.", appQuickFix.bundleName.c_str());
             return ret;
@@ -700,12 +700,12 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
 bool QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath)
 {
     bool isExistSoFile = false;
-    std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
-    std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
     for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
+        std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
+        std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
         if (!hapInfo.nativeLibraryPath.empty()) {
             cpuAbi = hapInfo.cpuAbi;
-            nativeLibraryPath = hapInfo.nativeLibraryPath.empty();
+            nativeLibraryPath = hapInfo.nativeLibraryPath;
         }
         if (nativeLibraryPath.empty()) {
             continue;
@@ -727,10 +727,6 @@ bool QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::s
 ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
     const std::string &oldSoPath, const std::string &patchPath)
 {
-    if (hqf.hqfFilePath.empty()) {
-        APP_LOGE("error: hapFilePath is empty");
-        return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
-    }
     std::string libraryPath;
     std::string cpuAbi;
     bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);

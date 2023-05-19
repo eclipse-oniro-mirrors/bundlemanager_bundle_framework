@@ -1987,8 +1987,8 @@ bool BaseBundleInstaller::ExtractSoFiles(const std::string &soPath, const std::s
     extractParam.targetPath = soPath;
     extractParam.cpuAbi = cpuAbi;
     if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
-        APP_LOGE("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
-        bundleName_.c_str(), modulePackage_.c_str());
+        APP_LOGE("bundleName: %{public}s moduleName: %{public}s extract so failed", bundleName_.c_str(),
+            modulePackage_.c_str());
         return false;
     }
     return true;
@@ -2006,7 +2006,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
     if (iter != appQfInfo.hqfInfos.end()) {
         std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
             bundleName_ + Constants::TMP_SUFFIX + Constants::LIBS;
-        ScopeGuard guardRemoveTmpSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
+        ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
         if (!ExtractSoFiles(oldSoPath, cpuAbi)) {
             return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
         }
