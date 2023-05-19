@@ -341,22 +341,15 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     if (ret != ERR_OK) {
         return ret;
     }
-    std::string oldSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
-        Constants::PATH_SEPARATOR + libraryPath;
-    std::string tmpSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+    std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
         appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
-    ScopeGuard guardRemoveTmpSoPath([tmpSoPath] {InstalldClient::GetInstance()->RemoveDir(tmpSoPath);});
-    if (NeedExtractSoFiles(bundleInfo)) {
-        ExtractSoFiles(bundleInfo, tmpSoPath);
-        oldSoPath = tmpSoPath;
-    }
-    bool pathExist = false;
-    // if old so path does not exist then return ERR_OK
-    ret = InstalldClient::GetInstance()->IsExistDir(oldSoPath, pathExist);
-    if (!pathExist && (ret == ERR_OK)) {
-        APP_LOGD("bundleName: %{public}s no so path", appQuickFix.bundleName.c_str());
+    ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
+    // if hap has no SO files then return ERR_OK
+    if (!ExtractSoFiles(bundleInfo, oldSoPath)) {
+        APP_LOGD("bundleName: %{public}s has no so files.", bundleInfo.name.c_str());
         return ERR_OK;
     }
+
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
         auto ret = ProcessApplyDiffPatch(appQuickFix, hqf, bundleInfo, patchPath);
@@ -704,19 +697,9 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
     EventReport::SendBundleSystemEvent(BundleEventType::QUICK_FIX, sysEventInfo);
 }
 
-bool QuickFixDeployer::NeedExtractSoFiles(const BundleInfo &bundleInfo)
+bool QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath)
 {
-    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
-        // if compressNativeLibs is false, SO need extract to tmp path
-        if (!hapInfo.compressNativeLibs) {
-            return true;
-        }
-    }
-    return false;
-}
-
-void QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath)
-{
+    bool isExistSoFile = false;
     std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
     std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
     for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
@@ -736,7 +719,9 @@ void QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::s
             APP_LOGW("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
                 bundleInfo.name.c_str(), hapInfo.moduleName.c_str());
         }
+        isExistSoFile = true;
     }
+    return isExistSoFile;
 }
 
 ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
