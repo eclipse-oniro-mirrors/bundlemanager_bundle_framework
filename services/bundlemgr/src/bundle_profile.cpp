@@ -2009,6 +2009,14 @@ void UpdateNativeSoAttrs(
     APP_LOGD("cpuAbi %{public}s, soRelativePath : %{public}s, isLibIsolated : %{public}d",
         cpuAbi.c_str(), soRelativePath.c_str(), isLibIsolated);
     innerBundleInfo.SetCpuAbi(cpuAbi);
+    if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
+        APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
+        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetModuleCpuAbi(cpuAbi);
+        return;
+    }
     if (!isLibIsolated) {
         innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         return;

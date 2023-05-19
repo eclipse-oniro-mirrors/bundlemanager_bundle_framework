@@ -682,7 +682,9 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "srcPath":"",
             "uiSyntax":"hml",
             "upgradeFlag":0,
-            "virtualMachine":"ark"
+            "virtualMachine":"ark",
+            "compressNativeLibs": true,
+            "nativeLibraryFileNames": []
         }
     },
     "installMark":{
@@ -1303,7 +1305,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 },
                 "com.ohos.launcher.recents": {
                     "abilityKeys": [
@@ -1360,7 +1364,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 },
                 "com.ohos.launcher.settings": {
                     "abilityKeys": [
@@ -1417,7 +1423,9 @@ protected:
                     "srcEntrance": "",
                     "srcPath": "",
                     "uiSyntax": "",
-                    "virtualMachine": ""
+                    "virtualMachine": "",
+                    "compressNativeLibs": true,
+                    "nativeLibraryFileNames": []
                 }
             },
             "installMark": {

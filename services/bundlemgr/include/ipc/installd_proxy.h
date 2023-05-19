@@ -143,6 +143,9 @@ public:
 
     virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) override;
 
+    virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+        std::vector<std::string> &fileNames) override;
+
 private:
     ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

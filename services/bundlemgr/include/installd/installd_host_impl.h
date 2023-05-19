@@ -142,6 +142,9 @@ public:
 
     virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) override;
 
+    virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+        std::vector<std::string> &fileNames) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };
