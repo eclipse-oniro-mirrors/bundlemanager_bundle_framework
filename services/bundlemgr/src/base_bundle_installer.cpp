@@ -1811,6 +1811,10 @@ void BaseBundleInstaller::ProcessHqfInfo(
             modulePackage_.c_str());
         return;
     }
+    auto pos = nativeLibraryPath.rfind(Constants::LIBS);
+    if (pos != std::string::npos) {
+        nativeLibraryPath = nativeLibraryPath.substr(pos, nativeLibraryPath.length() - pos);
+    }
 
     ErrCode ret = ProcessDeployedHqfInfo(
         nativeLibraryPath, cpuAbi, newInfo, oldInfo.GetAppQuickFix());

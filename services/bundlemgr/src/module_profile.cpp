@@ -2022,7 +2022,6 @@ bool ToInnerModuleInfo(
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
-    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }
