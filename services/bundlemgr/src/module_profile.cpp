@@ -1424,7 +1424,9 @@ void UpdateNativeSoAttrs(
     innerBundleInfo.SetCpuAbi(cpuAbi);
     if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
         APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
-        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        if (!isLibIsolated) {
+            innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        }
         innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
@@ -2022,6 +2024,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
+    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }

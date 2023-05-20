@@ -2204,6 +2204,10 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
+            sharedModuleInfo.compressNativeLibs = info.compressNativeLibs;
+            sharedModuleInfo.cpuAbi = info.cpuAbi;
+            sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
+            sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
     }
@@ -3873,6 +3877,26 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
         return;
     }
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
+}
+
+void InnerBundleInfo::UpdateSharedModuleInfoByModuleName(const std::string &moduleName)
+{
+    auto iterator = innerSharedModuleInfos_.find(moduleName);
+    if (iterator == innerSharedModuleInfos_.end()) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
+        return;
+    }
+    auto &innerModuleInfoVector = iterator->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end();) {
+        if (iter->versionCode == innerModuleInfos_.at(moduleName).versionCode) {
+            iter->hapPath = innerModuleInfos_.at(moduleName).hapPath;
+            iter->compressNativeLibs = innerModuleInfos_.at(moduleName).compressNativeLibs;
+            iter->cpuAbi = innerModuleInfos_.at(moduleName).cpuAbi;
+            iter->nativeLibraryPath = innerModuleInfos_.at(moduleName).nativeLibraryPath;
+            iter->nativeLibraryFileNames = innerModuleInfos_.at(moduleName).nativeLibraryFileNames;
+            break;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
