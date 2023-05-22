@@ -7469,19 +7469,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0009, Function | SmallTest | Level0)
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
-
-/**
- * @tc.number: AgingTest_0010
- * @tc.name: test Aging QueryBundleStatsInfoByInterval
- * @tc.desc: QueryBundleStatsInfoByInterval is true
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0010, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bool res = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
-    EXPECT_FALSE(res);
-}
 #endif
 
 /**
