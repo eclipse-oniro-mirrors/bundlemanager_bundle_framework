@@ -438,6 +438,12 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     }
     buildHash = Str16ToStr8(parcel.ReadString16());
     isolationMode = static_cast<IsolationMode>(parcel.ReadInt32());
+    compressNativeLibs = parcel.ReadBool();
+    int32_t nativeLibraryFileNamesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
+    for (int32_t i = 0; i < nativeLibraryFileNamesSize; ++i) {
+        nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -546,6 +552,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildHash));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(isolationMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
+    for (auto &fileName : nativeLibraryFileNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
+    }
     return true;
 }
 

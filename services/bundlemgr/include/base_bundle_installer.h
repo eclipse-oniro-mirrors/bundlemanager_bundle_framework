@@ -539,7 +539,8 @@ private:
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
     void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
-    ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath) const;
+    ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
+        const std::string &cpuAbi) const;
     ErrCode ProcessDeployedHqfInfo(const std::string &nativeLibraryPath,
         const std::string &cpuAbi, const InnerBundleInfo &newInfo, const AppQuickFix &appQuickFix) const;
     ErrCode ProcessDeployingHqfInfo(
@@ -576,6 +577,7 @@ private:
     bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
     bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
+    bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;
