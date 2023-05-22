@@ -10400,4 +10400,91 @@ HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0005, Function 
     res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: SetModuleHapPath_001
+ * @tc.name: test set SetModuleHapPath
+ * @tc.desc: 1.system run normally
+ *           2.SetModuleHapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetModuleHapPath_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    std::string hapPath = HAP_FILE_PATH;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_NE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    std::string nativeLibraryPath = "libs/arm";
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = true;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = nativeLibraryPath;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath, nativeLibraryPath);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = "";
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = nativeLibraryPath;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_NE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath, nativeLibraryPath);
+}
+
+/**
+ * @tc.number: IsCompressNativeLibs_001
+ * @tc.name: test IsCompressNativeLibs
+ * @tc.desc: 1.system run normally
+ *           2.IsCompressNativeLibs
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsCompressNativeLibs_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_TRUE(ret);
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.name = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+
+    ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_TRUE(ret);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetNativeLibraryFileNames_001
+ * @tc.name: test SetNativeLibraryFileNames
+ * @tc.desc: 1.system run normally
+ *           2.SetNativeLibraryFileNames
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetNativeLibraryFileNames_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    const std::vector<std::string> fileNames{"com.so"};
+    innerBundleInfo.SetNativeLibraryFileNames(MODULE_NAME_TEST, fileNames);
+    EXPECT_TRUE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryFileNames.empty());
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.name = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+
+    innerBundleInfo.SetNativeLibraryFileNames(MODULE_NAME_TEST, fileNames);
+    EXPECT_FALSE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryFileNames.empty());
+}
 }

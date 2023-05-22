@@ -681,7 +681,10 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
+    if (filePath.empty()) {
+        APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
     return ERR_OK;
 }

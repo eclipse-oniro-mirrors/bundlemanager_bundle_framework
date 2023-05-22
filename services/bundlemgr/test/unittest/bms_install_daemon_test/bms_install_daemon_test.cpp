@@ -71,7 +71,8 @@ public:
     bool CheckBundleDirExist() const;
     bool CheckBundleDataDirExist() const;
     bool GetBundleStats(const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) const;
-
+    int32_t GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames) const;
 private:
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
 };
@@ -206,6 +207,15 @@ bool BmsInstallDaemonTest::GetBundleStats(const std::string &bundleName, const i
         return true;
     }
     return false;
+}
+
+int32_t BmsInstallDaemonTest::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+    std::vector<std::string> &fileNames) const
+{
+    if (!service_->IsServiceReady()) {
+        service_->Start();
+    }
+    return InstalldClient::GetInstance()->GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
 }
 
 /**
@@ -918,7 +928,7 @@ HWTEST_F(BmsInstallDaemonTest, Marshalling_0100, Function | SmallTest | Level0)
             + ", cpuAbi = " + TEST_CPU_ABI
             + ", extractFileType = An]", value);
     extractParam.Unmarshalling(parcel);
-} // OHOS
+}
 
 /**
  * @tc.number: ExtractFiles_0200
@@ -934,5 +944,19 @@ HWTEST_F(BmsInstallDaemonTest, ExtractFiles_0200, Function | SmallTest | Level0)
     extractParam.extractFileType = ExtractFileType::AP;
     auto ret = ExtractFiles(extractParam);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetNativeLibraryFileNames_0001
+ * @tc.name: test the GetNativeLibraryFileNames
+ * @tc.desc: 1. GetNativeLibraryFileNames success
+*/
+HWTEST_F(BmsInstallDaemonTest, GetNativeLibraryFileNames_0001, Function | SmallTest | Level0)
+{
+    std::string apuAbi = "libs/arm";
+    std::vector<std::string> fileNames;
+    auto ret = GetNativeLibraryFileNames(BUNDLE_FILE, apuAbi, fileNames);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(fileNames.empty());
 }
 } // OHOS
