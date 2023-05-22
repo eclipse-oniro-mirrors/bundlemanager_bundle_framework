@@ -46,6 +46,7 @@ const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
 const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
+const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
@@ -1299,12 +1300,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8700, Functi
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_8800
+ * @tc.number: BmsBundlePermissionFalseTest_8800
  * @tc.name: test QueryLauncherAbilityInfos
  * @tc.desc: 1.system run normally
  *           2.bundleInfos is empty
 */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8800, Function | SmallTest | Level1)
 {
     AAFwk::Want want;
     std::vector<AbilityInfo> abilityInfos;
@@ -1313,13 +1314,13 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8800, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_8900
+ * @tc.number: BmsBundlePermissionFalseTest_8900
  * @tc.name: test AppControlManagerHostImpl
  * @tc.desc: 1.SetDisposedStatus test
  *           2.GetDisposedStatus test
  *           3.DeleteDisposedStatus test
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Function | SmallTest | Level1)
 {
     AppControlManagerHostImpl impl;
     Want want;
@@ -1334,11 +1335,11 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8900, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9000
+ * @tc.number: BmsBundlePermissionFalseTest_9000
  * @tc.name: test GetSpecifiedDistributionType
  * @tc.desc: 1.system run normally
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9000, Function | SmallTest | Level1)
 {
     std::string specifiedDistributionType;
     ErrCode ret = bundleMgrHostImpl_->GetSpecifiedDistributionType("", specifiedDistributionType);
@@ -1346,11 +1347,11 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9000, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9100
+ * @tc.number: BmsBundlePermissionFalseTest_9100
  * @tc.name: test GetAdditionalInfo
  * @tc.desc: 1.system run normally
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9100, Function | SmallTest | Level1)
 {
     std::string additionalInfo;
     ErrCode ret = bundleMgrHostImpl_->GetAdditionalInfo("", additionalInfo);
@@ -1358,12 +1359,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9100, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9200
+ * @tc.number: BmsBundlePermissionFalseTest_9200
  * @tc.name: test Install of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Install false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9200, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1374,12 +1375,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9200, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9300
+ * @tc.number: BmsBundlePermissionFalseTest_9300
  * @tc.name: test Install of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Install false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9300, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1392,12 +1393,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9300, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9400
+ * @tc.number: BmsBundlePermissionFalseTest_9400
  * @tc.name: test Recover of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Recover false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9400, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9400, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1408,12 +1409,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9400, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9500
+ * @tc.number: BmsBundlePermissionFalseTest_9500
  * @tc.name: test Uninstall of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Uninstall false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9500, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9500, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1424,12 +1425,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9500, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9600
+ * @tc.number: BmsBundlePermissionFalseTest_9600
  * @tc.name: test Uninstall of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Uninstall false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9600, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9600, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1440,12 +1441,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9600, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9700
+ * @tc.number: BmsBundlePermissionFalseTest_9700
  * @tc.name: test Uninstall of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Uninstall false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9700, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9700, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1456,12 +1457,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9700, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9800
+ * @tc.number: BmsBundlePermissionFalseTest_9800
  * @tc.name: test Uninstall of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. Uninstall false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9800, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9800, Function | SmallTest | Level0)
 {
     UninstallParam uninstallParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1472,12 +1473,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9800, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_9900
+ * @tc.number: BmsBundlePermissionFalseTest_9900
  * @tc.name: test InstallByBundleName of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. InstallByBundleName false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9900, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_9900, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1488,12 +1489,12 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_9900, Functio
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_10000
+ * @tc.number: BmsBundlePermissionFalseTest_10000
  * @tc.name: test CreateStreamInstaller of BundleInstallerHost
  * @tc.desc: 1. system running normally
  *           2. CreateStreamInstaller false by no permission
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_10000, Function | SmallTest | Level0)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_10000, Function | SmallTest | Level0)
 {
     InstallParam installParam;
     sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
@@ -1504,14 +1505,111 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_10000, Functi
 }
 
 /**
- * @tc.number: BmsBundleSyetemAppFalseTest_12000
+ * @tc.number: BmsBundlePermissionFalseTest_11000
  * @tc.name: test GetAppPrivilegeLevel
  * @tc.desc: 1.system run normally
  *           2.GetAppPrivilegeLevel is empty
 */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_11000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_11000, Function | SmallTest | Level1)
 {
     std::string testRet = bundleMgrHostImpl_->GetAppPrivilegeLevel("", USERID);
     EXPECT_EQ(testRet, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_12000
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_12000, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_13000
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_13000, Function | SmallTest | Level1)
+{
+    Element element;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_14000
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_14000, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_15000
+ * @tc.name: test IsElementValid
+ * @tc.desc: 1. IsElementValid failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_15000, Function | SmallTest | Level1)
+{
+    Element element;
+    bool ret = DefaultAppMgr::GetInstance().IsElementValid(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, false);
+
+    element.bundleName = BUNDLE_NAME;
+    ret = DefaultAppMgr::GetInstance().IsElementValid(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, false);
+
+    element.moduleName = BUNDLE_NAME;
+    ret = DefaultAppMgr::GetInstance().IsElementValid(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, false);
+
+    element.abilityName = BUNDLE_NAME;
+    element.extensionName = BUNDLE_NAME;
+    ret = DefaultAppMgr::GetInstance().IsElementValid(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_16000
+ * @tc.name: test IsElementValid
+ * @tc.desc: 1. IsElementValid failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_16000, Function | SmallTest | Level1)
+{
+    Element element;
+    element.bundleName = BUNDLE_NAME;
+    element.moduleName = BUNDLE_NAME;
+    element.abilityName = BUNDLE_NAME;
+    element.extensionName = "";
+    bool ret = DefaultAppMgr::GetInstance().IsElementValid(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, false);
 }
 } // OHOS

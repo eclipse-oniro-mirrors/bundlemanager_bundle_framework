@@ -1338,11 +1338,14 @@ HWTEST_F(BmsSandboxAppTest, BmsSandboxAppUnInstallTest_1800, Function | SmallTes
     ErrCode res = installer->UninstallAllSandboxApps("", USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
 
-    res = installer->UninstallAllSandboxApps("bundleName", USERID);
+    res = installer->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
+
+    res = installer->UninstallSandboxApp(BUNDLE_NAME, USERID, USERID);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
     SetDataMgr();
 
-    res = installer->UninstallAllSandboxApps("bundleName", USERID);
+    res = installer->UninstallAllSandboxApps(BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_OK);
 
     ApplicationInfo appInfo;

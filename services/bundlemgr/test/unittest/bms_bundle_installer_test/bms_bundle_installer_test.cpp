@@ -3412,7 +3412,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest 
     BaseBundleInstaller installer;
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     int32_t uid = USERID;
 
     auto dataMgr = GetBundleDataMgr();
@@ -3483,7 +3483,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest 
     BaseBundleInstaller installer;
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     int32_t uid = USERID;
 
     auto dataMgr = GetBundleDataMgr();

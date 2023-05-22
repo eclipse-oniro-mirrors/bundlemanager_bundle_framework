@@ -358,7 +358,10 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-
+  if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
   if (bundle_framework_app_control) {
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += [
@@ -615,7 +618,10 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-
+  if (bundle_framework_default_app) {
+    sources += default_app
+    defines += [ "BUNDLE_FRAMEWORK_DEFAULT_APP" ]
+  }
   if (bundle_framework_app_control) {
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += [

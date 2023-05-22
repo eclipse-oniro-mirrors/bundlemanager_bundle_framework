@@ -47,6 +47,7 @@ const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
 const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
+const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
@@ -1186,6 +1187,57 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7800
 {
     SharedBundleInfo sharedBundleInfo;
     ErrCode ret = bundleMgrHostImpl_->GetSharedBundleInfoBySelf(BUNDLE_NAME, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7900
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7900, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8000
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8000, Function | SmallTest | Level1)
+{
+    Element element;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8100
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS

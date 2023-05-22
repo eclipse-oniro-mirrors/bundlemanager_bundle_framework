@@ -146,7 +146,7 @@ ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePat
     }
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     bool result = installer->Install(filePath, installParam, receiver);
     EXPECT_TRUE(result);
     return receiver->GetResultCode();
