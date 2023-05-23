@@ -2205,6 +2205,7 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
             sharedModuleInfo.compressNativeLibs = info.compressNativeLibs;
+            sharedModuleInfo.hapPath = info.hapPath;
             sharedModuleInfo.cpuAbi = info.cpuAbi;
             sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
             sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
@@ -3879,22 +3880,22 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
 }
 
-void InnerBundleInfo::UpdateSharedModuleInfoByModuleName(const std::string &moduleName)
+void InnerBundleInfo::UpdateSharedModuleInfo()
 {
-    auto iterator = innerSharedModuleInfos_.find(moduleName);
+    auto iterator = innerSharedModuleInfos_.find(currentPackage_);
     if (iterator == innerSharedModuleInfos_.end()) {
-        APP_LOGE("The shared module(%{public}s) infomation does not exist", moduleName.c_str());
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
         return;
     }
     auto &innerModuleInfoVector = iterator->second;
     for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end();) {
-        if (iter->versionCode == innerModuleInfos_.at(moduleName).versionCode) {
-            iter->hapPath = innerModuleInfos_.at(moduleName).hapPath;
-            iter->compressNativeLibs = innerModuleInfos_.at(moduleName).compressNativeLibs;
-            iter->cpuAbi = innerModuleInfos_.at(moduleName).cpuAbi;
-            iter->nativeLibraryPath = innerModuleInfos_.at(moduleName).nativeLibraryPath;
-            iter->nativeLibraryFileNames = innerModuleInfos_.at(moduleName).nativeLibraryFileNames;
-            break;
+        if (iter->versionCode == innerModuleInfos_.at(currentPackage_).versionCode) {
+            iter->hapPath = innerModuleInfos_.at(currentPackage_).hapPath;
+            iter->compressNativeLibs = innerModuleInfos_.at(currentPackage_).compressNativeLibs;
+            iter->cpuAbi = innerModuleInfos_.at(currentPackage_).cpuAbi;
+            iter->nativeLibraryPath = innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
+            iter->nativeLibraryFileNames = innerModuleInfos_.at(currentPackage_).nativeLibraryFileNames;
+            return;
         }
     }
 }

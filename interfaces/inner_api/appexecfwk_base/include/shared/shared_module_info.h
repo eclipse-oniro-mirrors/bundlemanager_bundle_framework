@@ -30,6 +30,7 @@ struct SharedModuleInfo : public Parcelable {
     std::string description;
     uint32_t descriptionId = 0;
     bool compressNativeLibs = true;
+    std::string hapPath;
     std::string cpuAbi;
     std::string nativeLibraryPath;
     std::vector<std::string> nativeLibraryFileNames;

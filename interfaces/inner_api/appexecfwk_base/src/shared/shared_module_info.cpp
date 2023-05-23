@@ -30,6 +30,7 @@ const std::string SHARED_MODULE_INFO_VERSION_NAME = "versionName";
 const std::string SHARED_MODULE_INFO_DESCRIPTION = "description";
 const std::string SHARED_MODULE_INFO_DESCRIPTION_ID = "descriptionId";
 const std::string SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const std::string SHARED_MODULE_INFO_HAP_PATH = "hapPath";
 const std::string SHARED_MODULE_INFO_CPU_ABI = "cpuAbi";
 const std::string SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
@@ -43,6 +44,7 @@ bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
     description = Str16ToStr8(parcel.ReadString16());
     descriptionId = parcel.ReadUint32();
     compressNativeLibs = parcel.ReadBool();
+    hapPath = Str16ToStr8(parcel.ReadString16());
     cpuAbi = Str16ToStr8(parcel.ReadString16());
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     int32_t nativeLibraryFileNamesSize;
@@ -61,6 +63,7 @@ bool SharedModuleInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(description));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, descriptionId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(nativeLibraryPath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
@@ -90,6 +93,7 @@ void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInf
         {SHARED_MODULE_INFO_DESCRIPTION, sharedModuleInfo.description},
         {SHARED_MODULE_INFO_DESCRIPTION_ID, sharedModuleInfo.descriptionId},
         {SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS, sharedModuleInfo.compressNativeLibs},
+        {SHARED_MODULE_INFO_HAP_PATH, sharedModuleInfo.hapPath},
         {SHARED_MODULE_INFO_CPU_ABI, sharedModuleInfo.cpuAbi},
         {SHARED_MODULE_INFO_NATIVE_LIBRARY_PATH, sharedModuleInfo.nativeLibraryPath},
         {SHARED_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, sharedModuleInfo.nativeLibraryFileNames}
@@ -124,6 +128,10 @@ void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleI
         SHARED_MODULE_INFO_COMPRESS_NATIVE_LIBS,
         sharedModuleInfo.compressNativeLibs, JsonType::BOOLEAN,
         false, parseResult, ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
+        SHARED_MODULE_INFO_HAP_PATH,
+        sharedModuleInfo.hapPath, JsonType::STRING, false, parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject, jsonObjectEnd,
         SHARED_MODULE_INFO_CPU_ABI,
         sharedModuleInfo.cpuAbi, JsonType::STRING, false, parseResult,

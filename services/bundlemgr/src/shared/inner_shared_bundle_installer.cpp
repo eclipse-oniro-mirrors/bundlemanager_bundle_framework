@@ -285,7 +285,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     newInfo.SetModuleHapPath(hspPath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
-    newInfo.UpdateSharedModuleInfoByModuleName(moduleName);
+    newInfo.UpdateSharedModuleInfo();
     return ERR_OK;
 }
 
