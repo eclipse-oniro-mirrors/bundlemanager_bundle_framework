@@ -470,7 +470,7 @@ napi_value GetOverlayModuleInfoByBundleName(napi_env env, napi_callback_info inf
                 break;
             }
             if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
-                APP_LOGW("Parse moduleName error, the interface will query the OverlayModuleInfo of all modules in the specified application!");
+                APP_LOGW("Parse moduleName error, default query for all module OverlayModuleInfo!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -524,7 +524,7 @@ napi_value GetTargetOverlayModuleInfosByBundleName(napi_env env, napi_callback_i
                 break;
             }
             if (!CommonFunc::ParseString(env, args[i], overlayCallbackInfo->moduleName)) {
-                APP_LOGW("Parse moduleName error, the interface will query the OverlayModuleInfo of all modules in the specified application!");
+                APP_LOGW("Parse moduleName error, default query for all module OverlayModuleInfo!");
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {

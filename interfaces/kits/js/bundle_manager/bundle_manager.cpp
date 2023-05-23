@@ -1818,7 +1818,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
                 break;
-            } 
+            }
         } else {
             APP_LOGE("GetLaunchWantForBundle arg err!");
             BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
