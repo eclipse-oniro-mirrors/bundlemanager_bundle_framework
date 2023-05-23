@@ -2176,19 +2176,20 @@ void InnerBundleInfo::InsertInnerSharedModuleInfo(const std::string &moduleName,
 
 void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath)
 {
-    auto iterator = innerSharedModuleInfos_.find(currentPackage_);
-    if (iterator == innerSharedModuleInfos_.end()) {
+    auto sharedModuleInfoIterator = innerSharedModuleInfos_.find(currentPackage_);
+    auto moduleInfoIterator = innerModuleInfos_.find(currentPackage_);
+    if ((sharedModuleInfoIterator == innerSharedModuleInfos_.end()) ||
+        (moduleInfoIterator == innerModuleInfos_.end())) {
         APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
         return;
     }
-    auto innerModuleInfoVector = iterator->second;
-    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end();) {
-        if (iter->versionCode == innerModuleInfos_.at(currentPackage_).versionCode) {
+    auto &innerModuleInfoVector = sharedModuleInfoIterator->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
+        if (iter->versionCode == moduleInfoIterator->second.versionCode) {
             iter->nativeLibraryPath = nativeLibraryPath;
-            break;
+            return;
         }
     }
-    innerSharedModuleInfos_[currentPackage_] = innerModuleInfoVector;
 }
 
 bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const
