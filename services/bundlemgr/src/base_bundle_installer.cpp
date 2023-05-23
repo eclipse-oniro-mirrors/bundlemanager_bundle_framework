@@ -923,6 +923,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(newInfos, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
+    ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
     return result;
 }
@@ -3496,6 +3497,28 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         info.SetNativeLibraryFileNames(info.GetCurModuleName(), fileNames);
     }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
+{
+    if ((oldVersionCode >= versionCode_) || oldNativeLibraryPath.empty()) {
+        return;
+    }
+    for (const auto &item : newInfos) {
+        const auto &moduleInfos = item.second.GetInnerModuleInfos();
+        for (const auto &moduleItem: moduleInfos) {
+            if (moduleItem.second.compressNativeLibs) {
+                // no need to delete library path
+                return;
+            }
+        }
+    }
+    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+        Constants::PATH_SEPARATOR + Constants::LIBS;
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
+        APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
