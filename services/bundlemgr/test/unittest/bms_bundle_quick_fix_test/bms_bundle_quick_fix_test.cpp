@@ -256,10 +256,16 @@ void BmsBundleQuickFixTest::AddInnerBundleInfo(const std::string bundleName,
     userInfo.bundleName = bundleName;
     userInfo.bundleUserInfo.userId = USERID;
 
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = bundleName;
+    moduleInfo.name = bundleName;
+    moduleInfo.modulePackage = bundleName;
+
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.SetBaseBundleInfo(bundleInfo);
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     innerBundleInfo.AddInnerBundleUserInfo(userInfo);
+    innerBundleInfo.InsertInnerModuleInfo(bundleName, moduleInfo);
 
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
@@ -2513,6 +2519,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0093, Function | SmallTest
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0094, Function | SmallTest | Level0)
 {
+    AddInnerBundleInfo(BUNDLE_NAME);
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
@@ -2526,6 +2533,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0094, Function | SmallTest
         ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     }
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -2537,6 +2545,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0094, Function | SmallTest
  */
 HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest | Level0)
 {
+    AddInnerBundleInfo(BUNDLE_NAME);
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
@@ -2544,13 +2553,14 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest
         appQuickFix.deployingAppqfInfo.type = QuickFixType::PATCH;
         appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::PATCH;
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
-        std::string patchPath = "x";
+        std::string patchPath = "data/test";
         ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
-        patchPath = "data/test";
+        EXPECT_EQ(ret, ERR_OK);
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
         ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
     }
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -3645,6 +3655,7 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0100, Function | SmallTest | Le
  */
 HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0200, Function | SmallTest | Level0)
 {
+    AddInnerBundleInfo(BUNDLE_NAME);
     auto deployer = GetQuickFixDeployer();
     EXPECT_FALSE(deployer == nullptr);
     if (deployer != nullptr) {
@@ -3658,6 +3669,7 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixDeployer_0200, Function | SmallTest | Le
         ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
         EXPECT_EQ(ret, ERR_OK);
     }
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -4167,4 +4179,29 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0380, Function | SmallTest
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     }
 }
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0390
+ * Function: ToDeployEndStatus
+ * @tc.name: test ToDeployEndStatus
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ToDeployEndStatus, bundleName not exist
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0390, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.deployingAppqfInfo.type = QuickFixType::PATCH;
+        appQuickFix.deployingAppqfInfo.hqfInfos[0].type = QuickFixType::PATCH;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = "";
+        InnerAppQuickFix newInnerAppQuickFix;
+        newInnerAppQuickFix.SetAppQuickFix(appQuickFix);
+        InnerAppQuickFix oldInnerAppQuickFix;
+        ErrCode ret = deployer->ToDeployEndStatus(newInnerAppQuickFix, oldInnerAppQuickFix);
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
+    }
+}
+
 } // OHOS

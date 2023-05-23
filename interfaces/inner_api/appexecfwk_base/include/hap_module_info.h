@@ -102,6 +102,8 @@ struct HapModuleInfo : public Parcelable {
     bool isLibIsolated = false;
     std::string nativeLibraryPath;
     std::string cpuAbi;
+    bool compressNativeLibs = true;
+    std::vector<std::string> nativeLibraryFileNames;
 
     // quick fix hqf info
     HqfInfo hqfInfo;

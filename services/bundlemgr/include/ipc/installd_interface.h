@@ -184,6 +184,9 @@ public:
 
     virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) = 0;
 
+    virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
+        std::vector<std::string> &fileNames) = 0;
+
 protected:
     enum Message : uint32_t {
         CREATE_BUNDLE_DIR = 1,
@@ -208,7 +211,8 @@ protected:
         IS_DIR_EMPTY,
         OBTAIN_QUICK_FIX_DIR,
         COPY_FILES,
-        EXTRACT_FILES
+        EXTRACT_FILES,
+        GET_NATIVE_LIBRARY_FILE_NAMES
     };
 };
 

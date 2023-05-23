@@ -60,6 +60,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, &InstalldHost::HandObtainQuickFixFileDir);
     funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
     funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
+    funcMap_.emplace(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, &InstalldHost::HandGetNativeLibraryFileNames);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -339,6 +340,20 @@ bool InstalldHost::HandCopyFiles(MessageParcel &data, MessageParcel &reply)
 
     ErrCode result = CopyFiles(sourceDir, destinationDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessageParcel &reply)
+{
+    std::string filePath = Str16ToStr8(data.ReadString16());
+    std::string cupAbi = Str16ToStr8(data.ReadString16());
+    std::vector<std::string> fileNames;
+    ErrCode result = GetNativeLibraryFileNames(filePath, cupAbi, fileNames);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if ((result == ERR_OK) && !reply.WriteStringVector(fileNames)) {
+        APP_LOGE("fail to obtain fileNames from reply");
+        return false;
+    }
     return true;
 }
 }  // namespace AppExecFwk

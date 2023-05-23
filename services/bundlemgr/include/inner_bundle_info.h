@@ -120,6 +120,8 @@ struct InnerModuleInfo {
     std::vector<ProxyData> proxyDatas;
     std::string buildHash;
     std::string isolationMode;
+    bool compressNativeLibs = true;
+    std::vector<std::string> nativeLibraryFileNames;
 };
 
 struct SkillUri {
@@ -872,18 +874,7 @@ public:
         }
     }
 
-    void SetModuleHapPath(const std::string &hapPath)
-    {
-        if (innerModuleInfos_.count(currentPackage_) == 1) {
-            innerModuleInfos_.at(currentPackage_).hapPath = hapPath;
-            for (auto &abilityInfo : baseAbilityInfos_) {
-                abilityInfo.second.hapPath = hapPath;
-            }
-            for (auto &extensionInfo : baseExtensionInfos_) {
-                extensionInfo.second.hapPath = hapPath;
-            }
-        }
-    }
+    void SetModuleHapPath(const std::string &hapPath);
 
     const std::string &GetModuleHapPath(const std::string &modulePackage) const
     {
@@ -1975,6 +1966,8 @@ public:
     bool GetSharedBundleInfo(int32_t flags, BundleInfo &bundleInfo) const;
     ErrCode GetProxyDataInfos(const std::string &moduleName, std::vector<ProxyData> &proxyDatas) const;
     void GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
+    bool IsCompressNativeLibs(const std::string &moduleName) const;
+    void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
 
 private:
     bool IsExistLauncherAbility() const;

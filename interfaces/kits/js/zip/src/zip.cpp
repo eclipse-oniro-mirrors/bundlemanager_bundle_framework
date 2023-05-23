@@ -243,7 +243,7 @@ ErrCode UnzipWithFilterCallback(
         return ERR_ZLIB_SRC_FILE_DISABLED;
     }
 
-    PlatformFile zipFd = open(src.Value().c_str(), S_IREAD);
+    PlatformFile zipFd = open(src.Value().c_str(), S_IREAD, O_CREAT);
     if (zipFd == kInvalidPlatformFile) {
         APP_LOGI("%{public}s called, Failed to open.", __func__);
         return ERR_ZLIB_SRC_FILE_DISABLED;

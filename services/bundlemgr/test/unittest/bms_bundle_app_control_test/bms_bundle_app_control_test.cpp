@@ -1268,4 +1268,114 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3600, Function | Sma
     ErrCode res = appJumpRdb->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_JUMP_INTERCPTOR);
 }
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3700
+ * @tc.name: test ConfirmAppJumpControlRule
+ * @tc.desc: 1.ConfirmAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3700, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->ConfirmAppJumpControlRule("", TARGET_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    res = appControlProxy->ConfirmAppJumpControlRule(CALLER_BUNDLE_NAME, "", USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3800
+ * @tc.name: test AddAppJumpControlRule by AppControlManagerHostImpl
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3800, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+
+    std::vector<AppJumpControlRule> controlRules;
+    auto res = appControlProxy->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_3900
+ * @tc.name: test AddAppJumpControlRule by AppControlManager
+ * @tc.desc: 1.AddAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3900, Function | SmallTest | Level1)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    AppJumpControlRule controlRule;
+    controlRule.callerPkg = CALLER_BUNDLE_NAME;
+    controlRule.targetPkg = TARGET_BUNDLE_NAME;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->AddAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4000
+ * @tc.name: test DeleteRuleByCallerBundleName by AppControlManager
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4000, Function | SmallTest | Level1)
+{
+    std::vector<AppJumpControlRule> controlRules;
+    AppJumpControlRule controlRule;
+    controlRule.callerPkg = CALLER_BUNDLE_NAME;
+    controlRule.targetPkg = TARGET_BUNDLE_NAME;
+    controlRule.controlMessage = CONTROL_MESSAGE;
+    controlRules.emplace_back(controlRule);
+
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteAppJumpControlRule(controlRules, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4100
+ * @tc.name: test DeleteRuleByCallerBundleName by AppControlManager
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4100, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4200
+ * @tc.name: test DeleteRuleByCallerBundleName by AppControlManager
+ * @tc.desc: 1.DeleteRuleByCallerBundleName test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4200, Function | SmallTest | Level1)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->DeleteRuleByTargetBundleName(CALLER_BUNDLE_NAME, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4300
+ * @tc.name: test GetAppJumpControlRule by AppJumpInterceptorManagerRdb
+ * @tc.desc: 1.GetAppJumpControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4300, Function | SmallTest | Level1)
+{
+    AppJumpControlRule controlRule;
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
+    auto res = appControlProxy->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

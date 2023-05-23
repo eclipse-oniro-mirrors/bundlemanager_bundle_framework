@@ -78,6 +78,8 @@ const std::string PROXY_DATA_REQUIRED_WRITE_PERMISSION = "requiredWritePermissio
 const std::string PROXY_DATA_METADATA = "metadata";
 const std::string HAP_MODULE_INFO_BUILD_HASH = "buildHash";
 const std::string HAP_MODULE_INFO_ISOLATION_MODE = "isolationMode";
+const std::string HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
+const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -436,6 +438,12 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     }
     buildHash = Str16ToStr8(parcel.ReadString16());
     isolationMode = static_cast<IsolationMode>(parcel.ReadInt32());
+    compressNativeLibs = parcel.ReadBool();
+    int32_t nativeLibraryFileNamesSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
+    for (int32_t i = 0; i < nativeLibraryFileNamesSize; ++i) {
+        nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -544,6 +552,11 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildHash));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(isolationMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
+    for (auto &fileName : nativeLibraryFileNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
+    }
     return true;
 }
 
@@ -598,7 +611,9 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads},
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
         {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
-        {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode}
+        {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode},
+        {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
+        {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames}
     };
 }
 
@@ -998,6 +1013,22 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS,
+        hapModuleInfo.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES,
+        hapModuleInfo.nativeLibraryFileNames,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
     }

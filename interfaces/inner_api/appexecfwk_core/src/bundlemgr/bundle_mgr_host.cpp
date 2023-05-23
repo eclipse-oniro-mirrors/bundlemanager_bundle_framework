@@ -2668,8 +2668,6 @@ bool BundleMgrHost::WriteParcelableIntoAshmem(
     // The size of item use ASHMEM_LEN.
     int32_t offset = 0;
     int itemLen = static_cast<int>(strlen(infoStr.c_str()));
-    std::string strLen = std::to_string(itemLen);
-    strLen = std::string(std::max(0, static_cast<int32_t>(ASHMEM_LEN - strLen.size())), '0') + strLen;
     ret = ashmem->WriteToAshmem(std::to_string(itemLen).c_str(), ASHMEM_LEN, offset);
     if (!ret) {
         APP_LOGE("Write itemLen to shared memory fail");

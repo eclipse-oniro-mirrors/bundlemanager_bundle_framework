@@ -100,6 +100,11 @@ private:
 
     void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
 
+    bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath);
+
+    ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
+        const std::string &oldSoPath, const std::string &patchPath);
+
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
