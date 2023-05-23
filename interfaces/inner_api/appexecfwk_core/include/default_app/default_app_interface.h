@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_INTERFACE_H
 
+#include "appexecfwk_errors.h"
 #include "bundle_info.h"
 #include "iremote_broker.h"
 #include "want.h"
@@ -28,10 +29,22 @@ public:
 
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.DefaultApp");
     
-    virtual ErrCode IsDefaultApplication(const std::string& type, bool& isDefaultApp) = 0;
-    virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) = 0;
-    virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want) = 0;
-    virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type) = 0;
+    virtual ErrCode IsDefaultApplication(const std::string& type, bool& isDefaultApp)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode ResetDefaultApplication(int32_t userId, const std::string& type)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     enum Message : uint32_t {
         IS_DEFAULT_APPLICATION = 0,

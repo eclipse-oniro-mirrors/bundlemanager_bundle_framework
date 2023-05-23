@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "appexecfwk_errors.h"
 #include "app_jump_control_rule.h"
 #include "app_running_control_rule_result.h"
 #include "app_running_control_rule.h"
@@ -45,34 +46,85 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.appControl");
 
     virtual ErrCode AddAppInstallControlRule(const std::vector<std::string> &appIds,
-        const AppInstallControlRuleType controlRuleType, int32_t userId) = 0;
+        const AppInstallControlRuleType controlRuleType, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
-        const std::vector<std::string> &appIds, int32_t userId) = 0;
-    virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId) = 0;
+        const std::vector<std::string> &appIds, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode GetAppInstallControlRule(
-        const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds) = 0;
-    
+        const AppInstallControlRuleType controlRuleType, int32_t userId, std::vector<std::string> &appIds)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode AddAppRunningControlRule(
-        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) = 0;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode DeleteAppRunningControlRule(
-        const std::vector<AppRunningControlRule> &controlRules, int32_t userId) = 0;
-    virtual ErrCode DeleteAppRunningControlRule(int32_t userId) = 0;
-    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) = 0;
+        const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteAppRunningControlRule(int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode GetAppRunningControlRule(
-        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult) = 0;
-
+        const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRuleResult)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
-        int32_t userId) = 0;
-    virtual ErrCode AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) = 0;
-    virtual ErrCode DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId) = 0;
-    virtual ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId) = 0;
-    virtual ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId) = 0;
+        int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
     virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
-        int32_t userId, AppJumpControlRule &controlRule) = 0;
-
-    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) = 0;
-    virtual ErrCode DeleteDisposedStatus(const std::string &appId) = 0;
-    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) = 0;
+        int32_t userId, AppJumpControlRule &controlRule)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode DeleteDisposedStatus(const std::string &appId)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     enum Message : uint32_t {
         ADD_APP_INSTALL_CONTROL_RULE = 0,
