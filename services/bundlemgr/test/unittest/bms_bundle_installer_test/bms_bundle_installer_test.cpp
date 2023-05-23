@@ -3578,4 +3578,126 @@ HWTEST_F(BmsBundleInstallerTest, CheckDependency_0200, Function | SmallTest | Le
     auto res = installer.CheckDependency(innerBundleInfo);
     EXPECT_FALSE(res);
 }
+
+/**
+ * @tc.number: GetNativeLibraryFileNames_0001
+ * @tc.name: test GetNativeLibraryFileNames
+ * @tc.desc: 1.Test the GetNativeLibraryFileNames of InstalldHostImpl
+*/
+HWTEST_F(BmsBundleInstallerTest, GetNativeLibraryFileNames_0001, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    std::vector<std::string> fileNames;
+    auto ret = impl.GetNativeLibraryFileNames("", "", fileNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.GetNativeLibraryFileNames("/data/test/xxx.hap", "libs/arm", fileNames);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(fileNames.empty());
+}
+
+/**
+ * @tc.number: BmsBundleInstallerTest_0010
+ * @tc.name: InnerProcessNativeLibs
+ * @tc.desc: test InnerProcessNativeLibs isLibIsolated false
+ */
+HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0010, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.isLibIsolated = false;
+    moduleInfo.compressNativeLibs = true;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->nativeLibraryPath = "";
+
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = MODULE_NAME_TEST;
+    installer.modulePath_ = "";
+    std::string modulePath = "";
+    // nativeLibraryPath empty, compressNativeLibs true
+    ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    info.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    // nativeLibraryPath empty, compressNativeLibs false
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // nativeLibraryPath not empty, compressNativeLibs true
+    info.baseApplicationInfo_->cpuAbi = "libs/arm";
+    info.baseApplicationInfo_->nativeLibraryPath = "libs/arm";
+    modulePath = "package_tmp";
+    info.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = true;
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    // nativeLibraryPath not empty, compressNativeLibs false
+    info.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    modulePath = "/data/test/bms_bundle_installer";
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallerTest_0020
+ * @tc.name: InnerProcessNativeLibs
+ * @tc.desc: test InnerProcessNativeLibs isLibIsolated true
+ */
+HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0020, TestSize.Level1)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.cpuAbi = "libs/arm";
+    moduleInfo.nativeLibraryPath = "libs/arm";
+    moduleInfo.isLibIsolated = true;
+    moduleInfo.compressNativeLibs = true;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->nativeLibraryPath = "";
+
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = MODULE_NAME_TEST;
+    installer.modulePath_ = "";
+    std::string modulePath = "";
+    // nativeLibraryPath empty, compressNativeLibs true
+    ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    modulePath = "package_tmp";
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+    modulePath = "/data/test/bms_bundle_installer";
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallerTest_0030
+ * @tc.name: ExtractSoFiles
+ * @tc.desc: test InnerProcessNativeLibs isLibIsolated true
+ */
+HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0030, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    auto ret = installer.ExtractSoFiles("/data/test", "libs/arm");
+    EXPECT_FALSE(ret);
+
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ret = installer.ExtractSoFiles("/data/test", "libs/arm");
+    EXPECT_TRUE(ret);
+}
 } // OHOS
