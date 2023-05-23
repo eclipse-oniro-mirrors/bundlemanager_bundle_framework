@@ -23,6 +23,9 @@
 #include "bundle_info.h"
 #include "bundle_mgr_interface.h"
 #include "clean_cache_callback.h"
+#include "common_event_manager.h"
+#include "common_event_subscriber.h"
+#include "common_event_support.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -34,6 +37,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+class ClearCacheListener final : public EventFwk::CommonEventSubscriber {
+public:
+    explicit ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
+    virtual ~ClearCacheListener() = default;
+    void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+};
 struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
     explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
@@ -245,6 +254,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
 void CreateCompatiblePolicyObject(napi_env env, napi_value value);
+void RegisterClearCacheListener();
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_H
