@@ -1187,7 +1187,7 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
     return ERR_OK;
 }
 
-bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string isolationMode)
+bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string &isolationMode)
 {
     if (((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) &&
         (isolationMode == NONISOLATION_ONLY)) ||
