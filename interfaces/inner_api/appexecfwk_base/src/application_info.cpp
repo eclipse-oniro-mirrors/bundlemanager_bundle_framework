@@ -214,6 +214,7 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
         int32_t customizeDataSize = parcel.ReadInt32();
         std::vector<CustomizeData> customizeDatas;
         metaData[mouduleName] = customizeDatas;
+        CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &metaData);
         for (int j = 0; j < customizeDataSize; j++) {
             std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
             if (!customizeData) {
