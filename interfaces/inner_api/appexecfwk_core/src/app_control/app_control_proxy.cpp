@@ -19,6 +19,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
 #include "ipc_types.h"
+#include "parcel_macro.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -515,6 +516,7 @@ int32_t AppControlProxy::GetParcelableInfos(
     }
 
     int32_t infoSize = reply.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(reply, infoSize, &stringVector);
     for (int32_t i = 0; i < infoSize; i++) {
         stringVector.emplace_back(reply.ReadString());
     }
