@@ -3882,19 +3882,21 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
 
 void InnerBundleInfo::UpdateSharedModuleInfo()
 {
-    auto iterator = innerSharedModuleInfos_.find(currentPackage_);
-    if (iterator == innerSharedModuleInfos_.end()) {
+    auto sharedModuleInfoIter = innerSharedModuleInfos_.find(currentPackage_);
+    auto moduleInfoIter = innerModuleInfos_.find(currentPackage_);
+    if ((sharedModuleInfoIter == innerSharedModuleInfos_.end()) ||
+        (moduleInfoIter == innerModuleInfos_.end())) {
         APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
         return;
     }
-    auto &innerModuleInfoVector = iterator->second;
-    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end();) {
-        if (iter->versionCode == innerModuleInfos_.at(currentPackage_).versionCode) {
-            iter->hapPath = innerModuleInfos_.at(currentPackage_).hapPath;
-            iter->compressNativeLibs = innerModuleInfos_.at(currentPackage_).compressNativeLibs;
-            iter->cpuAbi = innerModuleInfos_.at(currentPackage_).cpuAbi;
-            iter->nativeLibraryPath = innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
-            iter->nativeLibraryFileNames = innerModuleInfos_.at(currentPackage_).nativeLibraryFileNames;
+    auto &innerModuleInfoVector = sharedModuleInfoIter->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
+        if (iter->versionCode == moduleInfoIter->second.versionCode) {
+            iter->hapPath = moduleInfoIter->second.hapPath;
+            iter->compressNativeLibs = moduleInfoIter->second.compressNativeLibs;
+            iter->cpuAbi = moduleInfoIter->second.cpuAbi;
+            iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
+            iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
             return;
         }
     }
