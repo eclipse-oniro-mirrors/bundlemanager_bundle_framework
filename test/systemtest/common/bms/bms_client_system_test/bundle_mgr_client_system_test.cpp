@@ -1785,6 +1785,10 @@ HWTEST_F(BundleMgrClientSystemTest, QueryExtensionAbilityInfos_0001, TestSize.Le
     EXPECT_TRUE(ret);
     EXPECT_EQ(1, infos.size());
 
+    ret = GetBundleMgrProxy()->QueryExtensionAbilityInfos(want, ExtensionAbilityType::FORM,
+        ExtensionAbilityInfoFlag::GET_EXTENSION_INFO_DEFAULT, DEFAULT_USERID, infos);
+    EXPECT_FALSE(ret);
+
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
