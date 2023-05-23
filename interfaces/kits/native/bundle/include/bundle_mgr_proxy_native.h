@@ -29,7 +29,7 @@ class BundleMgrProxyNative {
 public:
     BundleMgrProxyNative() = default;
     virtual ~BundleMgrProxyNative() = default;
-    
+
     /**
      * @brief Obtains the BundleInfo based on calling uid.
      * @param bundleName Indicates the application bundle name to be queried.
