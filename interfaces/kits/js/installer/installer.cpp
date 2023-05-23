@@ -386,11 +386,11 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, HASH_PARAMS, valueVec);
     if (!res) {
-        APP_LOGE("parse hashParams failed");
-        return res;
+        APP_LOGW("hashParams type error,using default value.");
+        return true;
     }
     if (valueVec.empty()) {
-        APP_LOGE("value vec is empty");
+        APP_LOGW("hashParams is empty,using default value.");
         return true;
     }
     for (const auto &property : valueVec) {
@@ -641,8 +641,28 @@ static bool ParseAdditionalInfo(napi_env env, napi_value args, std::string &addi
     return true;
 }
 
-static void ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
+static bool CheckInstallParam(napi_env env, InstallParam &installParam)
 {
+    if (installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
+        APP_LOGE("Parse specifiedDistributionType size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of specifiedDistributionType is greater than 128");
+        return false;
+    }
+    if (installParam.additionalInfo.size() > ADDITIONAL_INFO_MAX_SIZE) {
+        APP_LOGE("Parse additionalInfo size failed");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
+            "BusinessError 401: The size of additionalInfo is greater than 3000");
+        return false;
+    }
+    return true;
+}
+
+static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &installParam)
+{
+    if (!ParseHashParams(env, args, installParam.hashParams)) {
+        return false;
+    }
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -655,9 +675,6 @@ static void ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseCrowdtestDeadline(env, args, installParam.crowdtestDeadline)) {
         APP_LOGW("Parse crowdtestDeadline failed,using default value.");
     }
-    if (!ParseHashParams(env, args, installParam.hashParams)) {
-        APP_LOGW("Parse hashParams failed,using default value.");
-    }
     if (!ParseSharedBundleDirPaths(env, args, installParam.sharedBundleDirPaths)) {
         APP_LOGW("Parse sharedBundleDirPaths failed,using default value.");
     }
@@ -667,6 +684,7 @@ static void ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseAdditionalInfo(env, args, installParam.additionalInfo)) {
         APP_LOGW("Parse additionalInfo failed,using default value.");
     }
+    return true;
 }
 
 static bool ParseUninstallParam(napi_env env, napi_value args, UninstallParam &uninstallParam)
@@ -794,7 +812,6 @@ napi_value Install(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-
     auto argc = args.GetMaxArgc();
     APP_LOGD("the number of argc is  %{public}zu", argc);
     if (argc < ARGS_SIZE_ONE) {
@@ -802,7 +819,6 @@ napi_value Install(napi_env env, napi_callback_info info)
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
     callbackPtr->option = InstallOption::INSTALL;
     for (size_t i = 0; i < argc; ++i) {
@@ -819,8 +835,10 @@ napi_value Install(napi_env env, napi_callback_info info)
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
                 break;
             }
-            if (valueType == napi_object) {
-                ParseInstallParam(env, args[i], callbackPtr->installParam);
+            if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("Parse installParam.hashParams failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
@@ -833,16 +851,7 @@ napi_value Install(napi_env env, napi_callback_info info)
             return nullptr;
         }
     }
-    if (callbackPtr->installParam.specifiedDistributionType.size() > SPECIFIED_DISTRIBUTION_TYPE_MAX_SIZE) {
-        APP_LOGE("Parse specifiedDistributionType size failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
-            "BusinessError 401: The size of specifiedDistributionType is greater than 128");
-        return nullptr;
-    }
-    if (callbackPtr->installParam.additionalInfo.size() > ADDITIONAL_INFO_MAX_SIZE) {
-        APP_LOGE("Parse additionalInfo size failed");
-        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR,
-            "BusinessError 401: The size of additionalInfo is greater than 3000");
+    if (!CheckInstallParam(env, callbackPtr->installParam)) {
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
@@ -993,8 +1002,10 @@ napi_value UninstallOrRecover(napi_env env, napi_callback_info info,
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
                 break;
             }
-            if (valueType == napi_object) {
-                ParseInstallParam(env, args[i], callbackPtr->installParam);
+            if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("Parse installParam.hashParams failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
             }
         } else if (i == ARGS_POS_TWO) {
             if (valueType == napi_function) {
