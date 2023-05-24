@@ -26,6 +26,7 @@
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
+#include "install_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -115,6 +116,9 @@ public:
     {
         return isContainEntry_;
     }
+
+    bool VaildInstallPermission(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 

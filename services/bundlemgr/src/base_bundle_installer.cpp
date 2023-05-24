@@ -2569,6 +2569,14 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
     if (ret != ERR_OK) {
         APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        ret = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     return ret;
 }
