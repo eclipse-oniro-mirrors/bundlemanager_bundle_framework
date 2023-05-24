@@ -364,7 +364,6 @@ sptr<BundleMgrProxy> ActsBmsKitSystemTest::GetBundleMgrProxy()
 sptr<IBundleInstaller> ActsBmsKitSystemTest::GetInstallerProxy()
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
     if (!bundleMgrProxy) {
         APP_LOGE("bundle mgr proxy is nullptr.");
         return nullptr;
