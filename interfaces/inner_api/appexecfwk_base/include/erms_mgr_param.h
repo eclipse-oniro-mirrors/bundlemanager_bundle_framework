@@ -29,9 +29,8 @@ using Want = OHOS::AAFwk::Want;
 
 struct ExperienceRule : public Parcelable {
     bool isAllow = false;
+    std::string sceneCode = "";
     std::shared_ptr<Want> replaceWant = nullptr;
-    int64_t sceneCode = 0L;
-    int64_t allowTypes;
 
     bool ReadFromParcel(Parcel &parcel);
 
@@ -44,6 +43,9 @@ struct CallerInfo : public Parcelable {
     std::string packageName;
     int64_t uid = 0L;
     int64_t pid = 0L;
+
+    int32_t callerAppType = 0;
+    int32_t targetAppType = 0;
 
     bool ReadFromParcel(Parcel &parcel);
 
