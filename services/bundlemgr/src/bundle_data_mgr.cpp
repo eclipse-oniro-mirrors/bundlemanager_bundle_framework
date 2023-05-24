@@ -1251,11 +1251,12 @@ void BundleDataMgr::GetAllLauncherAbility(const Want &want, std::vector<AbilityI
         int64_t installTime = 0;
         std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
         std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
-        for (const auto &userItem : info.GetInnerBundleUserInfos()) {
-            if (userItem.first == userIdKey || userItem.first == userZeroKey) {
-                installTime = userItem.second.installTime;
-                break;
-            }
+        auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
+            [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+            return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+        });
+        if (iter != info.GetInnerBundleUserInfos().end()) {
+            installTime = iter->second.installTime;
         }
         GetMatchLauncherAbilityInfos(want, info, abilityInfos, installTime, userId);
     }
@@ -1288,11 +1289,12 @@ ErrCode BundleDataMgr::GetLauncherAbilityByBundleName(const Want &want, std::vec
     int64_t installTime = 0;
     std::string userIdKey = info.GetBundleName() + "_" + std::to_string(userId);
     std::string userZeroKey = info.GetBundleName() + "_" + std::to_string(0);
-    for (const auto &userItem : info.GetInnerBundleUserInfos()) {
-        if (userItem.first == userIdKey || userItem.first == userZeroKey) {
-            installTime = userItem.second.installTime;
-            break;
-        }
+    auto iter = std::find_if(info.GetInnerBundleUserInfos().begin(), info.GetInnerBundleUserInfos().end(),
+        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
+        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
+    });
+    if (iter != info.GetInnerBundleUserInfos().end()) {
+        installTime = iter->second.installTime;
     }
     GetMatchLauncherAbilityInfos(want, item->second, abilityInfos, installTime, userId);
     FilterAbilityInfosByModuleName(element.GetModuleName(), abilityInfos);
