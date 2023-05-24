@@ -357,7 +357,7 @@ sptr<BundleMgrProxy> ActsBmsKitSystemTest::GetBundleMgrProxy()
         return nullptr;
     }
     auto bundleProxyPtr = iface_cast<BundleMgrProxy>(remoteObject);
-    ASSERT_NE(bundleProxyPtr, nullptr)
+    ASSERT_NE(bundleProxyPtr, nullptr);
     return bundleProxyPtr;
 }
 
@@ -650,7 +650,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0800, Function | MediumTest | Level
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     BundleInfo bundleInfo;
     bool getInfoResult = bundleMgrProxy->GetBundleInfo("", BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     EXPECT_FALSE(getInfoResult);
@@ -666,7 +665,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0800, Function | MediumTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0900, Function | MediumTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     BundleInfo bundleInfo;
     int32_t flags = 1;
@@ -1213,7 +1211,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0200, Function | MediumTest | Leve
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
         std::vector<BundleInfo> bundleInfos;
         bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, USERID);
         EXPECT_TRUE(getInfoResult);
@@ -1232,8 +1229,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0300, Function | MediumTest | Leve
     std::cout << "START GetBundleInfos_0300" << std::endl;
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
-
         std::vector<BundleInfo> bundleInfos;
         bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, INVALIED_ID);
         EXPECT_FALSE(getInfoResult);
@@ -1616,7 +1611,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0500, Function | MediumTest | 
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     ApplicationInfo appInfo;
     bool getInfoResult = bundleMgrProxy->GetApplicationInfo(
@@ -2440,7 +2434,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | 
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     int uid = bundleMgrProxy->GetUidByBundleName(appName, USERID);
     EXPECT_GE(uid, Constants::BASE_USER_RANGE);
 
@@ -2532,7 +2525,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest |
     std::string appName = BASE_BUNDLE_NAME + "1";
     Install(bundleFilePath, InstallFlag::NORMAL, resvec);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     BundleInfo bundleInfo;
     bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
@@ -3256,7 +3248,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0800, Function | MediumTest | Le
     HapModuleInfo hapModuleInfo;
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     bool queryResult = bundleMgrProxy->GetHapModuleInfo(abilityInfo, hapModuleInfo);
     EXPECT_FALSE(queryResult);
@@ -5453,7 +5444,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0100, Function | MediumTest | L
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     Want want;
     ElementName name;
     name.SetAbilityName(abilityName);
@@ -5489,7 +5479,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0200, Function | MediumTest | L
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     Want want;
     ElementName name;
     name.SetAbilityName(abilityName);
@@ -5524,7 +5513,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     EXPECT_EQ(installResult, "Success") << "install fail!";
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     Want want;
     ElementName name;
@@ -5562,7 +5550,6 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAllAbilityInfos_0100, Function | MediumTest 
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     Want want;
     ElementName name;
     name.SetAbilityName(abilityName);
@@ -5598,7 +5585,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppPrivilegeLevel_0100, Function | MediumTest 
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     auto ret = bundleMgrProxy->GetAppPrivilegeLevel(appName, USERID);
     EXPECT_EQ(ret, "system_core");
 
@@ -5617,7 +5603,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppPrivilegeLevel_0100, Function | MediumTest 
 HWTEST_F(ActsBmsKitSystemTest, GetAppPrivilegeLevel_0200, Function | MediumTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     auto ret = bundleMgrProxy->GetAppPrivilegeLevel("", USERID);
     EXPECT_NE(ret, "system_core");
@@ -6358,7 +6343,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleUserMgr_0100, Function | SmallTest | Lev
 HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     int32_t flags = 0;
     int32_t userId = 100;
@@ -6376,7 +6361,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0100, Function | Sma
 HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     int32_t flags = 0;
     int32_t userId = 100;
@@ -6394,7 +6379,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0200, Function | Sma
 HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0300, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     want.SetAction("action.system.home");
     int32_t flags = 0;
@@ -6449,7 +6434,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0400, Function | Sma
 HWTEST_F(ActsBmsKitSystemTest, UpgradeAtomicService_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     int32_t userId = 100;
     bundleMgrProxy->UpgradeAtomicService(want, userId);
@@ -6464,7 +6449,7 @@ HWTEST_F(ActsBmsKitSystemTest, UpgradeAtomicService_0100, Function | SmallTest |
 HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosByUri_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string uri = "invalid";
     std::vector<AbilityInfo> abilityInfos;
     bool ret = bundleMgrProxy->QueryAbilityInfosByUri(uri, abilityInfos);
@@ -6480,7 +6465,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosByUri_0100, Function | SmallTest
 HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string abilityName = "invalid";
     std::string ret = bundleMgrProxy->GetAbilityLabel(bundleName, abilityName);
@@ -6496,7 +6481,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0200, Function | SmallTest | Leve
 HWTEST_F(ActsBmsKitSystemTest, IsApplicationEnabled_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     bool isEnable = false;
     ErrCode ret = bundleMgrProxy->IsApplicationEnabled(bundleName, isEnable);
@@ -6512,7 +6497,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsApplicationEnabled_0100, Function | SmallTest |
 HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string moduleName = "invalid";
     bool isRemovable = false;
@@ -6529,7 +6514,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0100, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string moduleName = "invalid";
     bool isRemovable = false;
     ErrCode ret = bundleMgrProxy->IsModuleRemovable("", moduleName, isRemovable);
@@ -6545,7 +6530,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0200, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0300, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     bool isRemovable = false;
     ErrCode ret = bundleMgrProxy->IsModuleRemovable(bundleName, "", isRemovable);
@@ -6561,7 +6546,7 @@ HWTEST_F(ActsBmsKitSystemTest, IsModuleRemovable_0300, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string moduleName = "invalid";
     bool ret = bundleMgrProxy->SetModuleRemovable(bundleName, moduleName, true);
@@ -6577,7 +6562,7 @@ HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0100, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string moduleName = "invalid";
     bool ret = bundleMgrProxy->SetModuleRemovable("", moduleName, true);
     EXPECT_FALSE(ret);
@@ -6592,7 +6577,7 @@ HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0200, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0300, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     bool ret = bundleMgrProxy->SetModuleRemovable(bundleName, "", true);
     EXPECT_FALSE(ret);
@@ -6607,7 +6592,7 @@ HWTEST_F(ActsBmsKitSystemTest, SetModuleRemovable_0300, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, SetApplicationEnabled_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     int32_t userId = 100;
     ErrCode ret = bundleMgrProxy->SetApplicationEnabled(bundleName, true, userId);
@@ -6623,7 +6608,7 @@ HWTEST_F(ActsBmsKitSystemTest, SetApplicationEnabled_0100, Function | SmallTest 
 HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "";
     std::string abilityName = "invalid";
     AbilityInfo abilityInfo;
@@ -6640,7 +6625,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0200, Function | SmallTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0300, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "";
     std::string moduleName = "invalid";
     std::string abilityName = "invalid";
@@ -6658,7 +6643,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0300, Function | SmallTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0400, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<std::string> resvec;
     CommonTool commonTool;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
@@ -6685,7 +6670,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0400, Function | SmallTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0500, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<std::string> resvec;
     CommonTool commonTool;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
@@ -6713,7 +6698,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0500, Function | SmallTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = BASE_BUNDLE_NAME;
     std::vector<FormInfo> formInfos;
     bool ret = bundleMgrProxy->GetFormsInfoByApp(bundleName, formInfos);
@@ -6756,7 +6741,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0200, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, GetDistributedBundleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string networkId1 = "";
     std::string bundleName1 = "";
     std::string networkId2 = "100";
@@ -6781,7 +6766,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetDistributedBundleInfo_0100, Function | SmallTe
 HWTEST_F(ActsBmsKitSystemTest, GetSandboxBundleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName1 = "";
     std::string bundleName2 = BASE_BUNDLE_NAME;
     int32_t appIndex1 = 0;
@@ -6804,7 +6789,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxBundleInfo_0100, Function | SmallTest |
 HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByModule_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string moduleName = "invalid";
     std::vector<FormInfo> formInfos;
@@ -6821,7 +6806,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByModule_0100, Function | SmallTest |
 HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfoByPriority_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -6844,7 +6829,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfoByPriority_0200, Function | Smal
 HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -6867,7 +6852,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0200, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, GetAppControlProxy_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     sptr<IAppControlMgr> appControlMgr = bundleMgrProxy->GetAppControlProxy();
     EXPECT_NE(appControlMgr, nullptr);
 }
@@ -6881,7 +6866,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppControlProxy_0100, Function | SmallTest | L
 HWTEST_F(ActsBmsKitSystemTest, GetSandboxAbilityInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     int32_t appIndex = 1;
     int32_t flags = 0;
@@ -6906,7 +6891,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxAbilityInfo_0100, Function | SmallTest 
 HWTEST_F(ActsBmsKitSystemTest, GetSandboxExtAbilityInfos_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     int32_t appIndex = 1;
     int32_t flags = 0;
@@ -6931,7 +6916,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxExtAbilityInfos_0100, Function | SmallT
 HWTEST_F(ActsBmsKitSystemTest, GetSandboxHapModuleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     AbilityInfo abilityInfo;
     int32_t appIndex = 1;
     int32_t userId = 100;
@@ -6955,7 +6940,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSandboxHapModuleInfo_0100, Function | SmallTes
 HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "";
     std::string moduleName = "invalid";
     std::string abilityName = "invalid";
@@ -6974,7 +6959,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0100, Function | SmallTest | Level1)
 HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string moduleName = "";
     std::string abilityName = "invalid";
@@ -6993,7 +6978,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0200, Function | SmallTest | Level1)
 HWTEST_F(ActsBmsKitSystemTest, GetMediaData_0300, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::string bundleName = "invalid";
     std::string moduleName = "invalid";
     std::string abilityName = "invalid";
@@ -7093,7 +7078,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0200, Function | MediumTest | L
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     std::vector<ShortcutInfo> shortcutInfos;
     ErrCode testRet = bundleMgrProxy->GetShortcutInfoV9("", shortcutInfos);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
@@ -7143,7 +7127,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Leve
     sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
     EXPECT_NE(callback, nullptr);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
     EXPECT_TRUE(re);
 
@@ -7178,8 +7162,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0200, Function | MediumTest | Leve
     sptr<BundleEventCallbackImpl> callback = (new (std::nothrow) BundleEventCallbackImpl());
     EXPECT_NE(callback, nullptr);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-
+    
     bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
     EXPECT_FALSE(re);
 
@@ -7199,7 +7182,6 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0300, Function | MediumTest | Leve
     std::cout << "begin to test event_callback_0300" << std::endl;
     sptr<BundleEventCallbackImpl> callback = nullptr;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
 
     bool re = bundleMgrProxy->RegisterBundleEventCallback(callback);
     EXPECT_FALSE(re);
@@ -7429,7 +7411,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0100, Function | MediumTest 
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     BundleInfo bundleInfo;
     int32_t flags = 1;
     bool getInfoResult = bundleMgrProxy->GetBundleInfoForSelf(flags, bundleInfo);
@@ -7445,7 +7426,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0100, Function | MediumTest 
 HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoForSelf_0200, Function | MediumTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-
 
     BundleInfo bundleInfo;
     int32_t flags = BundleFlag::GET_BUNDLE_DEFAULT;
@@ -7523,7 +7503,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckNeedPreload_0200, Function | SmallTest | Lev
 HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     want.SetAction("action.system.home");
     want.AddEntity("entity.system.home");
@@ -7558,7 +7538,6 @@ HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0200, Function | MediumTest | Level
     AbilityInfo abilityInfo;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
 
-
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
 
@@ -7581,7 +7560,7 @@ HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0200, Function | MediumTest | Level
 HWTEST_F(ActsBmsKitSystemTest, ProcessPreload_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     Want want;
     want.SetElementName("", BASE_ABILITY_NAME, BASE_ABILITY_NAME, BASE_MODULE_NAME);
     bool res = bundleMgrProxy->ProcessPreload(want);
@@ -7596,7 +7575,7 @@ HWTEST_F(ActsBmsKitSystemTest, ProcessPreload_0100, Function | SmallTest | Level
 HWTEST_F(ActsBmsKitSystemTest, GetAllSharedBundleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<SharedBundleInfo> sharedBundles;
     ErrCode ret = bundleMgrProxy->GetAllSharedBundleInfo(sharedBundles);
     EXPECT_EQ(ret, ERR_OK);
@@ -7610,7 +7589,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllSharedBundleInfo_0100, Function | SmallTest
 HWTEST_F(ActsBmsKitSystemTest, GetDependentBundleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     BundleInfo info;
     ErrCode ret = bundleMgrProxy->GetDependentBundleInfo(BASE_BUNDLE_NAME, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
@@ -7624,7 +7603,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetDependentBundleInfo_0100, Function | SmallTest
 HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     int uid = 0;
     int ret = bundleMgrProxy->GetUidByDebugBundleName(BASE_BUNDLE_NAME, uid);
     EXPECT_EQ(ret, INVALIED_ID);
@@ -7638,7 +7617,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0100, Function | SmallTes
 HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     int uid = 0;
     int ret = bundleMgrProxy->GetUidByDebugBundleName(EMPTY_BUNDLE_NAME, uid);
     EXPECT_EQ(ret, INVALIED_ID);
@@ -7652,7 +7631,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByDebugBundleName_0200, Function | SmallTes
 HWTEST_F(ActsBmsKitSystemTest, GetSharedBundleInfo_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<SharedBundleInfo> sharedBundles;
     ErrCode ret = bundleMgrProxy->GetSharedBundleInfo(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, sharedBundles);
@@ -7774,7 +7753,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0001, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, GetAllProxyDataInfos_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<ProxyData> proxyDatas;
     ErrCode ret = bundleMgrProxy->GetAllProxyDataInfos(proxyDatas);
     EXPECT_EQ(ret, ERR_OK);
@@ -7788,7 +7767,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllProxyDataInfos_0100, Function | SmallTest |
 HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0100, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<ProxyData> proxyDatas;
     ErrCode ret = bundleMgrProxy->GetProxyDataInfos(
         BASE_BUNDLE_NAME, BASE_MODULE_NAME, proxyDatas);
@@ -7803,7 +7782,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0100, Function | SmallTest | Le
 HWTEST_F(ActsBmsKitSystemTest, GetProxyDataInfos_0200, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
+    
     std::vector<ProxyData> proxyDatas;
     ErrCode ret = bundleMgrProxy->GetProxyDataInfos(
         "", BASE_MODULE_NAME, proxyDatas);
