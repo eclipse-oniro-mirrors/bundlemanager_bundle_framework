@@ -119,6 +119,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
+    RegisterClearCacheListener();
     APP_LOGI("init js bundle manager success.");
     return exports;
 }

@@ -2444,6 +2444,26 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0500, Function | SmallTest
 }
 
 /**
+ * @tc.number: GetBundleNameForUid_0600
+ * @tc.name: test can get the bundle names with bundle installed
+ * @tc.desc: 1.system run normally
+ *           2.get installed bundle names successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0600, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::string testResult;
+    bool testRet = GetBundleDataMgr()->GetBundleNameForUid(TEST_UID, testResult);
+    EXPECT_TRUE(testRet);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->VerifyQueryPermission(testResult);
+    EXPECT_TRUE(result);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: CheckIsSystemAppByUid_0100
  * @tc.name: test can check the installed bundle whether system app or not by uid
  * @tc.desc: 1.system run normally
@@ -3920,6 +3940,20 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTes
     bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
     EXPECT_FALSE(result);
     ResetDataMgr();
+}
+
+/**
+ * @tc.number: RegisterBundleStatus_0600
+ * @tc.name: test can not register, the bundle status dataMgr is nullptr
+ * @tc.desc: 1.system run normally
+ *           2.bundle status callback failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0600, Function | SmallTest | Level1)
+{
+    sptr<IBundleStatusCallback> bundleStatusCallback = nullptr;
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(result);
 }
 
 /**
@@ -6389,9 +6423,10 @@ HWTEST_F(BmsBundleKitServiceTest, SeriviceStatusCallback_004, Function | SmallTe
     APP_LOGI("get proxy success.");
     auto proxy = iface_cast<BundleStatusCallbackProxy>(remoteObject);
     std::string bundleName = BUNDLE_NAME_TEST;
-    int32_t userId = 100;
-    proxy->OnBundleRemoved(bundleName, userId);
+    proxy->OnBundleAdded(bundleName, DEFAULT_USER_ID_TEST);
+    proxy->OnBundleUpdated(bundleName, DEFAULT_USER_ID_TEST);
     EXPECT_EQ(bundleName, BUNDLE_NAME_TEST);
+    proxy->OnBundleRemoved(bundleName, DEFAULT_USER_ID_TEST);
 }
 
 /**

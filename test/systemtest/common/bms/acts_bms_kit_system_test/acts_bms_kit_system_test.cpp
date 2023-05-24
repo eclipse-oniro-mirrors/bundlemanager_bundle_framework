@@ -7557,6 +7557,25 @@ HWTEST_F(ActsBmsKitSystemTest, bundle_installer_0700, Function | MediumTest | Le
 }
 
 /**
+ * @tc.number: bundle_installer_0800
+ * @tc.name: 1.test Uninstall interface
+ * @tc.desc: 1. failed condition, return false
+ */
+HWTEST_F(ActsBmsKitSystemTest, bundle_installer_0800, Function | MediumTest | Level1)
+{
+    std::cout << "begin to test bundle_installer_0800" << std::endl;
+    sptr<IRemoteObject> object;
+    BundleInstallerProxy installerProxy(object);
+    std::string bundlePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
+    std::string modulePackage = BASE_MODULE_NAME;
+    UninstallParam uninstallParam;
+    sptr<IStatusReceiver> statusReceiver = nullptr;
+    auto res = installerProxy.Uninstall(uninstallParam, statusReceiver);
+    EXPECT_FALSE(res);
+    std::cout << "test bundle_installer_0800 done" << std::endl;
+}
+
+/**
  * @tc.number: CleanBundleCacheFiles_0100
  * @tc.name: test CleanBundleCacheFiles proxy
  * @tc.desc: 1.system run normally

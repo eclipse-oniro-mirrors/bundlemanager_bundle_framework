@@ -388,4 +388,20 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0700, Function | Sm
     auto id = impl.CreateSharedBundleStream(HSPNAME + Constants::ILLEGAL_PATH_FIELD, DEFAULT_INSTALLER_ID);
     EXPECT_EQ(id, INVAILD_ID);
 }
+
+/**
+ * @tc.number: CreateSharedBundleStream_0800
+ * @tc.name: test true function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function true
+ * @tc.require: issueI5XD60
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0800, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto res = proxy->Install();
+    EXPECT_EQ(res, true);
+}
 } // OHOS

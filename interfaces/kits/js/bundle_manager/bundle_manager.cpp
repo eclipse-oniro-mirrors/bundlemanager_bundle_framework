@@ -69,6 +69,7 @@ const std::string INVALID_WANT_ERROR =
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 } // namespace
 using namespace OHOS::AAFwk;
+static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
 static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
@@ -141,6 +142,32 @@ void ConvertAppProvisionInfo(
     ConvertValidity(env, appProvisionInfo.validity, validity);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
 }
+}
+
+ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
+{}
+
+void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
+{
+    APP_LOGD("clear bms cache");
+    std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    cache.clear();
+}
+
+void RegisterClearCacheListener()
+{
+    if (g_clearCacheListener != nullptr) {
+        return;
+    }
+    APP_LOGD("register clear cache listener");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_ADDED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CHANGED);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    g_clearCacheListener = std::make_shared<ClearCacheListener>(subscribeInfo);
+    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(g_clearCacheListener);
 }
 
 static ErrCode InnerGetBundleArchiveInfo(std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo)

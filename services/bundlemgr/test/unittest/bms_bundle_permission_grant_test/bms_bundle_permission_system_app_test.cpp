@@ -47,6 +47,7 @@ const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
 const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
+const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
 const int32_t UID = 0;
@@ -505,6 +506,10 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_3100
     Want want;
     std::vector<ExtensionAbilityInfo> extensionInfos;
     ErrCode ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosV9(want, FLAGS, USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    ret = bundleMgrHostImpl_->QueryExtensionAbilityInfosV9(
+        want, ExtensionAbilityType::FORM, FLAGS, USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
@@ -1066,5 +1071,173 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_6900
 
     ret = bundleInstallerHost_->InstallSandboxApp("", dplType, USERID, appIndex);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7000
+ * @tc.name: test QueryAbilityInfosByUri
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7000, Function | SmallTest | Level1)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    bool testRet = bundleMgrHostImpl_->QueryAbilityInfosByUri("", abilityInfos);
+    EXPECT_EQ(testRet, true);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7100
+ * @tc.name: test GetBundleArchiveInfo
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7100, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    bool ret = bundleMgrHostImpl_->GetBundleArchiveInfo(HAP_FILE_PATH, FLAGS, bundleInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7200
+ * @tc.name: test GetBundleArchiveInfoBySandBoxPath
+ * @tc.desc: 1.system run normally
+ *           2.bundleInfos is empty
+*/
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7200, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetBundleArchiveInfoBySandBoxPath(HAP_FILE_PATH, FLAGS, bundleInfo, false);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7300
+ * @tc.name: test CleanBundleDataFiles of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. CleanBundleDataFiles false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7300, Function | SmallTest | Level0)
+{
+    bool ret = bundleMgrHostImpl_->CleanBundleDataFiles(BUNDLE_NAME, USERID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7300
+ * @tc.name: test IsApplicationEnabled of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. IsApplicationEnabled false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7400, Function | SmallTest | Level0)
+{
+    bool isEnable = false;
+    ErrCode ret = bundleMgrHostImpl_->IsApplicationEnabled(BUNDLE_NAME, isEnable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7500
+ * @tc.name: test IsAbilityEnabled of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. IsAbilityEnabled false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7500, Function | SmallTest | Level0)
+{
+    AbilityInfo abilityInfo;
+    bool isEnable = false;
+    ErrCode ret = bundleMgrHostImpl_->IsAbilityEnabled(abilityInfo, isEnable);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7600
+ * @tc.name: test GetBundleInstaller of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetBundleInstaller false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7600, Function | SmallTest | Level0)
+{
+    sptr<IBundleInstaller> ret = bundleMgrHostImpl_->GetBundleInstaller();
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7700
+ * @tc.name: test GetAbilityInfo of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetAbilityInfo false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7700, Function | SmallTest | Level0)
+{
+    AbilityInfo abilityInfo;
+    bool ret = bundleMgrHostImpl_->GetAbilityInfo(
+        BUNDLE_NAME, MOUDLE_NAME, ABILITY_NAME, abilityInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7800
+ * @tc.name: test GetSharedBundleInfoBySelf of BundleMgrHostImpl
+ * @tc.desc: 1. system running normally
+ *           2. GetSharedBundleInfoBySelf false by no permission
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7800, Function | SmallTest | Level0)
+{
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode ret = bundleMgrHostImpl_->GetSharedBundleInfoBySelf(BUNDLE_NAME, sharedBundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_7900
+ * @tc.name: test GetDefaultApplication
+ * @tc.desc: 1. GetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_7900, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8000
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1. SetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8000, Function | SmallTest | Level1)
+{
+    Element element;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().SetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO, element);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8100
+ * @tc.name: test ResetDefaultApplication
+ * @tc.desc: 1. ResetDefaultApplication failed
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100, Function | SmallTest | Level1)
+{
+    BundleInfo bundleInfo;
+    auto dataMgr = bundleMgrService_->GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    dataMgr->multiUserIdsSet_.insert(USERID);
+    ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(
+        USERID, DEFAULT_APP_VIDEO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS
