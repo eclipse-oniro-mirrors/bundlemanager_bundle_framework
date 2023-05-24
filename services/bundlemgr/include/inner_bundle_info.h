@@ -1968,6 +1968,7 @@ public:
     void GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
     bool IsCompressNativeLibs(const std::string &moduleName) const;
     void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
+    void UpdateSharedModuleInfo();
 
 private:
     bool IsExistLauncherAbility() const;

@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_MODULE_INFO_H
 
 #include <string>
+#include <vector>
 
 #include "parcel.h"
 
@@ -28,6 +29,11 @@ struct SharedModuleInfo : public Parcelable {
     std::string versionName;
     std::string description;
     uint32_t descriptionId = 0;
+    bool compressNativeLibs = true;
+    std::string hapPath;
+    std::string cpuAbi;
+    std::string nativeLibraryPath;
+    std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

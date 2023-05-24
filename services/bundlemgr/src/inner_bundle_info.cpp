@@ -2205,6 +2205,11 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
+            sharedModuleInfo.compressNativeLibs = info.compressNativeLibs;
+            sharedModuleInfo.hapPath = info.hapPath;
+            sharedModuleInfo.cpuAbi = info.cpuAbi;
+            sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
+            sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
     }
@@ -3874,6 +3879,28 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
         return;
     }
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
+}
+
+void InnerBundleInfo::UpdateSharedModuleInfo()
+{
+    auto sharedModuleInfoIter = innerSharedModuleInfos_.find(currentPackage_);
+    auto moduleInfoIter = innerModuleInfos_.find(currentPackage_);
+    if ((sharedModuleInfoIter == innerSharedModuleInfos_.end()) ||
+        (moduleInfoIter == innerModuleInfos_.end())) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
+        return;
+    }
+    auto &innerModuleInfoVector = sharedModuleInfoIter->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
+        if (iter->versionCode == moduleInfoIter->second.versionCode) {
+            iter->hapPath = moduleInfoIter->second.hapPath;
+            iter->compressNativeLibs = moduleInfoIter->second.compressNativeLibs;
+            iter->cpuAbi = moduleInfoIter->second.cpuAbi;
+            iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
+            iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
+            return;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

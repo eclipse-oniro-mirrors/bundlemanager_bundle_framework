@@ -10474,4 +10474,37 @@ HWTEST_F(BmsBundleKitServiceTest, SetNativeLibraryFileNames_001, Function | Smal
     innerBundleInfo.SetNativeLibraryFileNames(MODULE_NAME_TEST, fileNames);
     EXPECT_FALSE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryFileNames.empty());
 }
+
+/**
+ * @tc.number: UpdateSharedModuleInfo_001
+ * @tc.name: test UpdateSharedModuleInfo
+ * @tc.desc: 1.system run normally
+ *           2.UpdateSharedModuleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateSharedModuleInfo_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = "";
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_.empty());
+    InnerModuleInfo moduleInfo;
+    moduleInfo.versionCode = 1000;
+    std::vector<InnerModuleInfo> moduleInfos;
+    moduleInfos.push_back(moduleInfo);
+    moduleInfo.versionCode = 2000;
+    moduleInfos.push_back(moduleInfo);
+    innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1] = moduleInfos;
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST_1;
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_FALSE(innerBundleInfo.innerSharedModuleInfos_.empty());
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][0].cpuAbi.empty());
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][1].cpuAbi.empty());
+
+    moduleInfo.cpuAbi = "libs/arm";
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST_1] = moduleInfo;
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][0].cpuAbi.empty());
+    EXPECT_FALSE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][1].cpuAbi.empty());
+}
 }
