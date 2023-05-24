@@ -352,7 +352,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath,
     }
     FilePath srcDir(srcPath);
     FilePath destFile(destPath);
-    APP_LOGI("%{public}s called,  srcDir=%{public}s, destFile=%{public}s", __func__,
+    APP_LOGI("%{private}s called,  srcDir=%{private}s, destFile=%{private}s", __func__,
         srcDir.Value().c_str(), destFile.Value().c_str());
 
     if (srcDir.Value().size() == 0) {
