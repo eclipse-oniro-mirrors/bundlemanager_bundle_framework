@@ -91,6 +91,7 @@ constexpr int SIGNATURE_NOT_MATCHED = 1;
 constexpr int SIGNATURE_UNKNOWN_BUNDLE = 2;
 constexpr int PERMISSION_GRANTED = 0;
 constexpr int PERMISSION_NOT_GRANTED = -1;
+constexpr int DEFAULT_STREAM_FD = -1;
 constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
 constexpr int32_t INVALID_API_VERSION = -1;
@@ -98,6 +99,7 @@ constexpr int32_t API_VERSION_EIGHT = 8;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
+constexpr int32_t DEFAULT_INSTALLERID = -1;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
