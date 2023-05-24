@@ -356,13 +356,9 @@ sptr<BundleMgrProxy> ActsBmsKitSystemTest::GetBundleMgrProxy()
         APP_LOGE("fail to get bundle manager proxy.");
         return nullptr;
     }
-
-    if (iface_cast<BundleMgrProxy>(remoteObject)) {
-        APP_LOGE("fail to get bundle manager proxy.");
-        return iface_cast<BundleMgrProxy>(remoteObject);
-    }
-    APP_LOGI("get bundle manager proxy success.");
-    return nullptr;
+    auto bundleProxyPtr = iface_cast<BundleMgrProxy>(remoteObject);
+    ASSERT_NE(bundleProxyPtr, nullptr)
+    return bundleProxyPtr;
 }
 
 sptr<IBundleInstaller> ActsBmsKitSystemTest::GetInstallerProxy()
