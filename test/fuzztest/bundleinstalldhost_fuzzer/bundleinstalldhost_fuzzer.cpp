@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#include "bundlestreaminstallerhost_fuzzer.h"
+#include "bundleinstalldhost_fuzzer.h"
 
 #include <cstddef>
 #include <cstdint>
-#include "bundle_stream_installer_host.h"
+#include "ipc/installd_host.h"
 #include "message_parcel.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t MESSAGE_SIZE = 4;
+constexpr size_t MESSAGE_SIZE = 24;
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -35,14 +35,14 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
-    std::u16string descriptor = BundleStreamInstallerHost::GetDescriptor();
+    std::u16string descriptor = InstalldHost::GetDescriptor();
     datas.WriteInterfaceToken(descriptor);
     datas.WriteBuffer(data, size);
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    BundleStreamInstallerHost host;
-    host.OnRemoteRequest(code, datas, reply, option);
+    InstalldHost installdHost;
+    installdHost.OnRemoteRequest(code, datas, reply, option);
     return true;
 }
 }
