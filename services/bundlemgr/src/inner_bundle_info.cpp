@@ -2106,6 +2106,9 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.moduleName = innerModuleInfo.moduleName;
     baseSharedBundleInfo.versionCode = innerModuleInfo.versionCode;
     baseSharedBundleInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
+    baseSharedBundleInfo.hapPath = innerModuleInfo.hapPath;
+    baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
+    baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
     return true;
 }
 
@@ -2132,6 +2135,9 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.moduleName = item.moduleName;
             baseSharedBundleInfo.versionCode = item.versionCode;
             baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
+            baseSharedBundleInfo.hapPath = item.hapPath;
+            baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
+            baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
             return true;
         }
     }
