@@ -576,6 +576,7 @@ private:
     bool CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
     bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
+    bool CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,

@@ -28,6 +28,7 @@ config("bundlemgr_common_config") {
     "include/shared",
     "include/quick_fix/state/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
+    "../../interfaces/inner_api/bundlemgr_extension/include",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
@@ -78,6 +79,7 @@ ohos_source_set("parser_common") {
 
   external_deps = [
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:bundlemgr_extension",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
   ]
@@ -139,6 +141,7 @@ ohos_source_set("bundle_parser") {
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "bundle_framework:appexecfwk_base",
+    "bundle_framework:bundlemgr_extension",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
@@ -218,6 +221,7 @@ ohos_shared_library("libbms") {
     "appverify:libhapverify",
     "bundle_framework:appexecfwk_base",
     "bundle_framework:appexecfwk_core",
+    "bundle_framework:bundlemgr_extension",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",

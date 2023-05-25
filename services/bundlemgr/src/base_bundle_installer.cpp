@@ -39,6 +39,7 @@
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
@@ -68,6 +69,7 @@ using namespace OHOS::Security;
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
@@ -2608,9 +2610,25 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
         return ret;
     }
 
+    if (!CheckApiInfo(infos)) {
+        APP_LOGE("CheckApiInfo failed.");
+        return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
+    }
+
     bundleName_ = (infos.begin()->second).GetBundleName();
     versionCode_ = (infos.begin()->second).GetVersionCode();
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::string compileSdkType = infos.begin()->second.GetBaseApplicationInfo().compileSdkType;
+    auto bundleInfo = infos.begin()->second.GetBaseBundleInfo();
+    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
+        return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
