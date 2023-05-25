@@ -3860,6 +3860,13 @@ void InnerBundleInfo::SetModuleHapPath(const std::string &hapPath)
         }
         if (!innerModuleInfos_.at(currentPackage_).compressNativeLibs &&
             !innerModuleInfos_.at(currentPackage_).nativeLibraryPath.empty()) {
+            auto pos = hapPath.rfind(Constants::PATH_SEPARATOR);
+            if (pos != std::string::npos) {
+                innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
+                    hapPath.substr(pos + 1, hapPath.length() - pos - 1) + NATIVE_LIBRARY_PATH_SYMBOL +
+                    innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
+                return;
+            }
             innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
                 hapPath + NATIVE_LIBRARY_PATH_SYMBOL + innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
         }
