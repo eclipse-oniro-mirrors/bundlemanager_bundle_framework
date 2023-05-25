@@ -62,6 +62,7 @@ void BundleStreamInstallerHostImpl::UnInit()
 {
     APP_LOGD("destory stream installer with installerId %{public}d and temp dir %{public}s", installerId_,
         tempDir_.c_str());
+    std::lock_guard<std::mutex> lock(fdVecMutex_);
     BundleUtil::CloseFileDescriptor(streamFdVec_);
     BundleUtil::DeleteDir(tempDir_);
     for (const auto &path : installParam_.sharedBundleDirPaths) {
@@ -98,6 +99,7 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
         streamFdVec_.emplace_back(fd);
         isInstallSharedBundlesOnly_ = false;
     }
@@ -140,6 +142,7 @@ int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &h
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
         streamFdVec_.emplace_back(fd);
     }
     return fd;
