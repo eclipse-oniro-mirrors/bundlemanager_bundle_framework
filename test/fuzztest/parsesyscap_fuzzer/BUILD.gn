@@ -32,6 +32,7 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
   sources = [ "parsesyscap_fuzzer.cpp" ]
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:bundle_parser",
     "${services_path}/bundlemgr:parser_common",
@@ -39,7 +40,6 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
   ]

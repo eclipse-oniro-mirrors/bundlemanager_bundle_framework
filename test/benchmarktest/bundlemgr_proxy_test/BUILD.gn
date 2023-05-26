@@ -28,14 +28,14 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/benchmark:benchmark",
   ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

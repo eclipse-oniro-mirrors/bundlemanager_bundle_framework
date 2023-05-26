@@ -31,10 +31,12 @@ ohos_fuzztest("BundleStatusCallbackProxyFuzzTest") {
   ]
   sources = [ "bundlestatuscallbackproxy_fuzzer.cpp" ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "ipc:ipc_core",
   ]

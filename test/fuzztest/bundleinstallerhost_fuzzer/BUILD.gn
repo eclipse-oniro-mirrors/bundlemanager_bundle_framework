@@ -52,13 +52,15 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
 
   deps = bundle_install_deps
+  deps += [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
+  ]
 
   external_deps = [
     "ability_runtime:ability_manager",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",

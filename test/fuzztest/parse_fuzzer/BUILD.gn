@@ -33,6 +33,7 @@ ohos_fuzztest("ParseFuzzTest") {
   sources = [ "parse_fuzzer.cpp" ]
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${services_path}/bundlemgr:bms_target",
     "${services_path}/bundlemgr:bundle_parser",
@@ -40,7 +41,6 @@ ohos_fuzztest("ParseFuzzTest") {
   ]
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
