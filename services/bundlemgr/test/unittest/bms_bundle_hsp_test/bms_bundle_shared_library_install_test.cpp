@@ -785,7 +785,6 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllBundleInfosV9_0100, Function |
     ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
     EXPECT_EQ(installResult, ERR_OK);
 
-    int32_t flags = 0;
     std::vector<BundleInfo> bundleInfos;
     ErrCode res = GetBundleDataMgr()->GetAllBundleInfosV9(
         0, bundleInfos);

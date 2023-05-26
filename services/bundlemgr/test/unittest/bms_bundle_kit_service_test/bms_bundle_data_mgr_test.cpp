@@ -1460,7 +1460,6 @@ HWTEST_F(BmsBundleDataMgrTest, GenerateUidAndGid_0100, Function | SmallTest | Le
     InnerBundleUserInfo innerBundleUserInfo;
     InnerBundleInfo innerBundleInfo;
     ApplicationInfo applicationInfo;
-    bool isEnabled = false;
     applicationInfo.bundleName = BUNDLE_NAME_TEST;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     GetBundleDataMgr()->bundleIdMap_.emplace(Constants::MAX_APP_UID, BUNDLE_TEST1);
