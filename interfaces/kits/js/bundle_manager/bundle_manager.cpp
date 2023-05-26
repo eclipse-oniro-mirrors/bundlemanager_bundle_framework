@@ -2197,6 +2197,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::PRINT), &nPrint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PRINT", nPrint));
 
+    napi_value nAuthorization;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION), &nAuthorization));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_ACCOUNT_AUTHORIZATION", nAuthorization));
+
     napi_value nUI;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::UI), &nUI));
