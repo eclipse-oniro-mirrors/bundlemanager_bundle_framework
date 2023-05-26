@@ -42,14 +42,14 @@ ohos_fuzztest("ZipFuzzTest") {
   sources += [ "zip_fuzzer.cpp" ]
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
     "${kits_path}/js/zip:zlib",
     "//third_party/zlib:libz",
   ]
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hiviewdfx_hilog_native:libhilog",

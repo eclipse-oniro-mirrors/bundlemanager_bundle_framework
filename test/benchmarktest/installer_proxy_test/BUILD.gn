@@ -27,16 +27,16 @@ ohos_benchmarktest("BenchmarkTestInstallerProxy") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/benchmark/benchmarktesthap:benchmarktesthap",
     "${bundle_framework_path}/test/sceneProject/benchmark/ohos_test:copy_ohos_test",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/benchmark:benchmark",
   ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
