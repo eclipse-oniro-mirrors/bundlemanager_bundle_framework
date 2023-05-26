@@ -66,6 +66,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -73,7 +74,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -220,6 +220,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -227,7 +228,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -332,14 +332,13 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -433,14 +432,13 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -540,14 +538,13 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -648,7 +645,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -656,7 +653,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

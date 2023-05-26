@@ -48,6 +48,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
   }
 
   deps = [
+    "${core_path}:appexecfwk_core",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -59,7 +60,6 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "ability_runtime:ability_manager",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",

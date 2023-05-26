@@ -40,6 +40,7 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "${bundle_framework_path}/test/sceneProject/moduletest/other_bundle/bmsThirdBundle14:mstbmsThirdBundle14",
     "${bundle_framework_path}/test/sceneProject/moduletest/other_bundle/bmsThirdBundle2:mstbmsThirdBundle2",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
@@ -47,7 +48,6 @@ ohos_moduletest("BmsBundleParserModuleTest") {
     "ability_base:want",
     "ability_runtime:app_manager",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_core",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

@@ -57,6 +57,7 @@ ohos_unittest("BmsBundleHspTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_D:hsp_D",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_hsp/hsp_entry:hsp_entry",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -64,7 +65,6 @@ ohos_unittest("BmsBundleHspTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -168,6 +168,7 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_without_provision:libA_without_provision",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libB_v10001:libB_v10001",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -175,7 +176,6 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -274,6 +274,7 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10001:libA_v10001",
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10002:libA_v10002",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -281,7 +282,6 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

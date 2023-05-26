@@ -41,13 +41,13 @@ ohos_unittest("BmsBundleExceptionHandlerTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_dependencies/dependencies_entry:dependencies_entry",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${core_path}:appexecfwk_core",
   ]
 
   deps += bundle_install_deps
 
   external_deps = [
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "eventhandler:libeventhandler",
     "init:libbegetutil",
     "safwk:system_ability_fwk",

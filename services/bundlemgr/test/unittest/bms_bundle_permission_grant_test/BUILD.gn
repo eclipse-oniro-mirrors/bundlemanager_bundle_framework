@@ -60,6 +60,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -75,7 +76,6 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -182,6 +182,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -197,7 +198,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -306,6 +306,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -321,7 +322,6 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -444,6 +444,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -459,7 +460,6 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -566,6 +566,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -581,7 +582,6 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -701,6 +701,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -716,7 +717,6 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
