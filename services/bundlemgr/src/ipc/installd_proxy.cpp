@@ -78,6 +78,11 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(IInstalld::Message::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return ERR_APPEXECFWK_PARCEL_ERROR;
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;

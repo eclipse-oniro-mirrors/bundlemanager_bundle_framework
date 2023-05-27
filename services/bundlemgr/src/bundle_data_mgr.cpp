@@ -15,6 +15,7 @@
 
 #include "bundle_data_mgr.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 
@@ -4776,6 +4777,33 @@ std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
         return Constants::EMPTY_STRING;
     }
     return it->second.GetBundleName();
+}
+
+bool BundleDataMgr::SetAOTCompileStatus(
+    const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+{
+    return false;
+}
+
+void BundleDataMgr::ResetAOTFlags()
+{
+}
+
+std::vector<std::string> BundleDataMgr::GetAllBundleName() const
+{
+    std::vector<std::string> vector;
+    return vector;
+}
+
+std::optional<InnerBundleInfo> BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName) const
+{
+    return std::nullopt;
+}
+
+std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) const
+{
+    std::vector<int32_t> vector;
+    return vector;
 }
 
 ErrCode BundleDataMgr::GetSpecifiedDistributionType(

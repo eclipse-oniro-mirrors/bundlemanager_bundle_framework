@@ -21,6 +21,7 @@
 
 #include "iremote_broker.h"
 
+#include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/extract_param.h"
@@ -62,6 +63,11 @@ public:
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam)
     {
         return ERR_OK;
+    }
+
+    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs)
+    {
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
     }
     /**
      * @brief Rename the module directory from temporaily path to the real path.
@@ -284,7 +290,8 @@ protected:
         OBTAIN_QUICK_FIX_DIR,
         COPY_FILES,
         EXTRACT_FILES,
-        GET_NATIVE_LIBRARY_FILE_NAMES
+        GET_NATIVE_LIBRARY_FILE_NAMES,
+        EXECUTE_AOT,
     };
 };
 
