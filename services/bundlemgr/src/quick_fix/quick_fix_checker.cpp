@@ -146,12 +146,14 @@ ErrCode QuickFixChecker::CheckPatchNativeSoWithInstalledBundle(
         }
 
         auto &hapModuleInfoNativeLibraryPath = iter->nativeLibraryPath;
-        auto &hqfInfoNativeLibraryPath = iter->nativeLibraryPath;
-        if ((!hapModuleInfoNativeLibraryPath.empty() && !hqfInfoNativeLibraryPath.empty()) &&
-            (hapModuleInfoNativeLibraryPath.find(hqfInfoNativeLibraryPath)) == std::string::npos) {
-            APP_LOGE("hqfInfoNativeLibraryPath: %{public}s, hapModuleInfoNativeLibraryPath: %{public}s",
-                hqfInfoNativeLibraryPath.c_str(), hapModuleInfoNativeLibraryPath.c_str());
-            return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+        auto &hqfInfoNativeLibraryPath = hqfInfo.nativeLibraryPath;
+        if (!hapModuleInfoNativeLibraryPath.empty() && !hqfInfoNativeLibraryPath.empty()) {
+            if ((hapModuleInfoNativeLibraryPath.find(hqfInfoNativeLibraryPath) == std::string::npos) &&
+                (hapModuleInfoNativeLibraryPath.find(hqfInfo.cpuAbi) == std::string::npos)) {
+                APP_LOGE("hqfInfoNativeLibraryPath: %{public}s, hapModuleInfoNativeLibraryPath: %{public}s",
+                    hqfInfoNativeLibraryPath.c_str(), hapModuleInfoNativeLibraryPath.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_SO_INCOMPATIBLE;
+            }
         }
     }
 
