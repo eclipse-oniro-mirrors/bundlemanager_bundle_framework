@@ -139,6 +139,7 @@ bundle_install_deps = [
 
 bundle_mgr_source = [
   "${services_path}/bundlemgr/src/account_helper.cpp",
+  "${services_path}/bundlemgr/src/aot/aot_loop_task.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_manager.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_rdb.cpp",
   "${services_path}/bundlemgr/src/bms_param.cpp",

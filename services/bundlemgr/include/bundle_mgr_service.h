@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "aot/aot_loop_task.h"
 #include "singleton.h"
 #include "system_ability.h"
 #include "thread_pool.h"
@@ -153,6 +154,7 @@ private:
     bool InitAppControl();
     bool InitQuickFixManager();
     bool InitOverlayManager();
+    void InitAOTLoopTask();
 
 private:
     bool ready_ = false;
@@ -162,6 +164,7 @@ private:
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
+    std::shared_ptr<AOTLoopTask> aotLoopTask_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::shared_ptr<BundleAgingMgr> agingMgr_;
     std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;

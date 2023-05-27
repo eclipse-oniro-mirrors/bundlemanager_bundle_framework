@@ -133,7 +133,15 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
 
 ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
 {
-    return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    APP_LOGD("begin to execute AOT, args : %{public}s", aotArgs.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = ERR_OK;
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    APP_LOGD("execute AOT ret : %{public}d", ret);
+    return ret;
 }
 
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
