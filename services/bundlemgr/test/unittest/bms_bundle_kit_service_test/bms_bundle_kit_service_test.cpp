@@ -8154,6 +8154,7 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallT
     handler.ProcessRebootBundleUninstall();
     bool bundleLevel = false;
     handler.DeletePreInfoInDb("", "", bundleLevel);
+    handler.UpdateAppDataSelinuxLabel("", "", false, false);
 
     std::list<std::string> scanPathList;
     handler.InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);

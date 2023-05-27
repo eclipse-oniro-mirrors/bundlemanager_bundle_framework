@@ -1106,4 +1106,65 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, F
         EXPECT_TRUE(newAppProvisionInfo.apl.empty());
     }
 }
+
+/**
+ * @tc.number: ProcessSharedBundleProvisionInfo_0005
+ * @tc.name: test the start function of HotPatchAppProcessing
+ * @tc.desc: 1. install hap
+ *           2. call HotPatchAppProcessing
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::vector<std::string> bundlePath;
+        InstallParam installParam;
+        installParam.userId = USERID;
+        installParam.installFlag = InstallFlag::NORMAL;
+        installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
+        ErrCode installResult = InstallBundle(bundlePath, installParam);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::list<std::string> scanPathList {HSP_FILE_PATH1};
+        handler->InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::THIRD_PARTY_APP);
+        auto iter = handler->HotPatchAppProcessing(HSP_BUNDLE_NAME);
+        EXPECT_EQ(iter, true);
+
+        ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ParseHapFiles_0001
+ * @tc.name: test the start function of ParseHapFiles
+ * @tc.desc: 1. install hap
+ *           2. call ParseHapFiles
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ParseHapFiles_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner;
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    if (!handler) {
+        EXPECT_NE(handler, nullptr);
+    } else {
+        std::vector<std::string> bundlePath;
+        InstallParam installParam;
+        installParam.userId = USERID;
+        installParam.installFlag = InstallFlag::NORMAL;
+        installParam.sharedBundleDirPaths = std::vector<std::string>{HSP_FILE_PATH1};
+        ErrCode installResult = InstallBundle(bundlePath, installParam);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        std::unordered_map<std::string, InnerBundleInfo> infos;
+        auto iter = handler->ParseHapFiles(HSP_FILE_PATH1, infos);
+        EXPECT_EQ(iter, true);
+
+        ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
 } // OHOS
