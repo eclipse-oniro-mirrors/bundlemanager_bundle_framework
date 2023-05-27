@@ -3512,7 +3512,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             APP_LOGE("fail to GetNativeLibraryFileNames, error is %{public}d", result);
             return result;
         }
-        info.SetNativeLibraryFileNames(info.GetCurModuleName(), fileNames);
+        info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
     return ERR_OK;
 }
