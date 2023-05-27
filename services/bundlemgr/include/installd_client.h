@@ -151,6 +151,7 @@ public:
     ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
+    ErrCode ExecuteAOT(const AOTArgs &aotArgs);
 private:
     /**
      * @brief Get the installd proxy object.

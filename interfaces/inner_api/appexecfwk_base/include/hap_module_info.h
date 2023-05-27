@@ -51,6 +51,12 @@ enum class IsolationMode {
     NONISOLATION_ONLY = 3,
 };
 
+enum class AOTCompileStatus {
+    NOT_COMPILED = 0,
+    COMPILE_SUCCESS = 1,
+    COMPILE_FAILED = 2,
+};
+
 struct PreloadItem : public Parcelable {
     std::string moduleName;
 
@@ -141,6 +147,7 @@ struct HapModuleInfo : public Parcelable {
     std::vector<PreloadItem> preloads;
     std::string buildHash;
     IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
+    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

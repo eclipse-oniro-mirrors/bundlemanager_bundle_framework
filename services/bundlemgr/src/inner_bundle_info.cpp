@@ -133,6 +133,7 @@ const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -155,6 +156,20 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+bool InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+{
+    return false;
+}
+
+AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleName) const
+{
+    return AOTCompileStatus::NOT_COMPILED;
+}
+
+void InnerBundleInfo::ResetAOTFlags()
+{
+}
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
@@ -569,7 +584,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_BUILD_HASH, info.buildHash},
         {MODULE_ISOLATION_MODE, info.isolationMode},
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
-        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames}
+        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
+        {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
     };
 }
 
@@ -1105,6 +1121,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<AOTCompileStatus>(jsonObject,
+        jsonObjectEnd,
+        MODULE_AOT_COMPILE_STATUS,
+        info.aotCompileStatus,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1776,6 +1800,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
+    hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     return hapInfo;
 }
 

@@ -14,6 +14,8 @@
 import("../../appexecfwk.gni")
 
 install_daemon_sources = [
+  "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+  "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
   "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
   "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
   "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
@@ -28,6 +30,8 @@ install_daemon_sources = [
 
 bundle_install_sources = [
   "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
+  "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+  "${services_path}/bundlemgr/src/aot/aot_handler.cpp",
   "${services_path}/bundlemgr/src/base_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
   "${services_path}/bundlemgr/src/bundle_install_checker.cpp",
