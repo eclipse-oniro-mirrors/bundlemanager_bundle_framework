@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
 #include "installd/installd_constants.h"

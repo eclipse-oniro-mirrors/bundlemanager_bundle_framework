@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "aot/aot_executor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "common_profile.h"
@@ -128,6 +129,11 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     }
 
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
 }
 
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
@@ -681,7 +687,10 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
+    if (filePath.empty()) {
+        APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
     InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
     return ERR_OK;
 }

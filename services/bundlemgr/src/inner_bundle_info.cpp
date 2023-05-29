@@ -133,6 +133,7 @@ const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -155,6 +156,20 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+bool InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+{
+    return false;
+}
+
+AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleName) const
+{
+    return AOTCompileStatus::NOT_COMPILED;
+}
+
+void InnerBundleInfo::ResetAOTFlags()
+{
+}
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
@@ -569,7 +584,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_BUILD_HASH, info.buildHash},
         {MODULE_ISOLATION_MODE, info.isolationMode},
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
-        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames}
+        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
+        {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
     };
 }
 
@@ -1105,6 +1121,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<AOTCompileStatus>(jsonObject,
+        jsonObjectEnd,
+        MODULE_AOT_COMPILE_STATUS,
+        info.aotCompileStatus,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1776,6 +1800,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
+    hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     return hapInfo;
 }
 
@@ -2106,6 +2131,9 @@ bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleNam
     baseSharedBundleInfo.moduleName = innerModuleInfo.moduleName;
     baseSharedBundleInfo.versionCode = innerModuleInfo.versionCode;
     baseSharedBundleInfo.nativeLibraryPath = innerModuleInfo.nativeLibraryPath;
+    baseSharedBundleInfo.hapPath = innerModuleInfo.hapPath;
+    baseSharedBundleInfo.compressNativeLibs = innerModuleInfo.compressNativeLibs;
+    baseSharedBundleInfo.nativeLibraryFileNames = innerModuleInfo.nativeLibraryFileNames;
     return true;
 }
 
@@ -2132,6 +2160,9 @@ bool InnerBundleInfo::GetBaseSharedBundleInfo(const std::string &moduleName, uin
             baseSharedBundleInfo.moduleName = item.moduleName;
             baseSharedBundleInfo.versionCode = item.versionCode;
             baseSharedBundleInfo.nativeLibraryPath = item.nativeLibraryPath;
+            baseSharedBundleInfo.hapPath = item.hapPath;
+            baseSharedBundleInfo.compressNativeLibs = item.compressNativeLibs;
+            baseSharedBundleInfo.nativeLibraryFileNames = item.nativeLibraryFileNames;
             return true;
         }
     }
@@ -2176,19 +2207,20 @@ void InnerBundleInfo::InsertInnerSharedModuleInfo(const std::string &moduleName,
 
 void InnerBundleInfo::SetSharedModuleNativeLibraryPath(const std::string &nativeLibraryPath)
 {
-    auto iterator = innerSharedModuleInfos_.find(currentPackage_);
-    if (iterator == innerSharedModuleInfos_.end()) {
+    auto sharedModuleInfoIterator = innerSharedModuleInfos_.find(currentPackage_);
+    auto moduleInfoIterator = innerModuleInfos_.find(currentPackage_);
+    if ((sharedModuleInfoIterator == innerSharedModuleInfos_.end()) ||
+        (moduleInfoIterator == innerModuleInfos_.end())) {
         APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
         return;
     }
-    auto innerModuleInfoVector = iterator->second;
-    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end();) {
-        if (iter->versionCode == innerModuleInfos_.at(currentPackage_).versionCode) {
+    auto &innerModuleInfoVector = sharedModuleInfoIterator->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
+        if (iter->versionCode == moduleInfoIterator->second.versionCode) {
             iter->nativeLibraryPath = nativeLibraryPath;
-            break;
+            return;
         }
     }
-    innerSharedModuleInfos_[currentPackage_] = innerModuleInfoVector;
 }
 
 bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) const
@@ -2204,6 +2236,11 @@ bool InnerBundleInfo::GetSharedBundleInfo(SharedBundleInfo &sharedBundleInfo) co
             sharedModuleInfo.versionName = info.versionName;
             sharedModuleInfo.description = info.description;
             sharedModuleInfo.descriptionId = info.descriptionId;
+            sharedModuleInfo.compressNativeLibs = info.compressNativeLibs;
+            sharedModuleInfo.hapPath = info.hapPath;
+            sharedModuleInfo.cpuAbi = info.cpuAbi;
+            sharedModuleInfo.nativeLibraryPath = info.nativeLibraryPath;
+            sharedModuleInfo.nativeLibraryFileNames = info.nativeLibraryFileNames;
             sharedModuleInfos.emplace_back(sharedModuleInfo);
         }
     }
@@ -3848,6 +3885,13 @@ void InnerBundleInfo::SetModuleHapPath(const std::string &hapPath)
         }
         if (!innerModuleInfos_.at(currentPackage_).compressNativeLibs &&
             !innerModuleInfos_.at(currentPackage_).nativeLibraryPath.empty()) {
+            auto pos = hapPath.rfind(Constants::PATH_SEPARATOR);
+            if (pos != std::string::npos) {
+                innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
+                    hapPath.substr(pos + 1, hapPath.length() - pos - 1) + NATIVE_LIBRARY_PATH_SYMBOL +
+                    innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
+                return;
+            }
             innerModuleInfos_.at(currentPackage_).nativeLibraryPath =
                 hapPath + NATIVE_LIBRARY_PATH_SYMBOL + innerModuleInfos_.at(currentPackage_).nativeLibraryPath;
         }
@@ -3873,6 +3917,28 @@ void InnerBundleInfo::SetNativeLibraryFileNames(const std::string &moduleName,
         return;
     }
     innerModuleInfos_.at(moduleName).nativeLibraryFileNames = fileNames;
+}
+
+void InnerBundleInfo::UpdateSharedModuleInfo()
+{
+    auto sharedModuleInfoIter = innerSharedModuleInfos_.find(currentPackage_);
+    auto moduleInfoIter = innerModuleInfos_.find(currentPackage_);
+    if ((sharedModuleInfoIter == innerSharedModuleInfos_.end()) ||
+        (moduleInfoIter == innerModuleInfos_.end())) {
+        APP_LOGE("The shared module(%{public}s) infomation does not exist", currentPackage_.c_str());
+        return;
+    }
+    auto &innerModuleInfoVector = sharedModuleInfoIter->second;
+    for (auto iter = innerModuleInfoVector.begin(); iter != innerModuleInfoVector.end(); ++iter) {
+        if (iter->versionCode == moduleInfoIter->second.versionCode) {
+            iter->hapPath = moduleInfoIter->second.hapPath;
+            iter->compressNativeLibs = moduleInfoIter->second.compressNativeLibs;
+            iter->cpuAbi = moduleInfoIter->second.cpuAbi;
+            iter->nativeLibraryPath = moduleInfoIter->second.nativeLibraryPath;
+            iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
+            return;
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

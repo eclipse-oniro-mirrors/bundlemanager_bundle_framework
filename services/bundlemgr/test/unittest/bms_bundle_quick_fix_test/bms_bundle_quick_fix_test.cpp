@@ -4204,4 +4204,81 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0390, Function | SmallTest
     }
 }
 
+/**
+ * @tc.number: BmsBundleQuickFixTest_0400
+ * Function: ExtractSoFiles
+ * @tc.name: test ExtractSoFiles
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ExtractSoFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0400, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        BundleInfo bundleInfo;
+        bundleInfo.applicationInfo.nativeLibraryPath = "";
+
+        bool ret = deployer->ExtractSoFiles(bundleInfo, "");
+        EXPECT_FALSE(ret);
+
+        HapModuleInfo moduleInfo;
+        moduleInfo.nativeLibraryPath = "";
+        bundleInfo.hapModuleInfos.push_back(moduleInfo);
+        ret = deployer->ExtractSoFiles(bundleInfo, "");
+        EXPECT_FALSE(ret);
+
+        bundleInfo.applicationInfo.nativeLibraryPath = "libs/arm";
+        ret = deployer->ExtractSoFiles(bundleInfo, "");
+        EXPECT_TRUE(ret);
+
+        bundleInfo.applicationInfo.nativeLibraryPath = "";
+        bundleInfo.hapModuleInfos[0].nativeLibraryPath = "libs/arm";
+        ret = deployer->ExtractSoFiles(bundleInfo, "");
+        EXPECT_TRUE(ret);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0410
+ * Function: ProcessApplyDiffPatch
+ * @tc.name: test ProcessApplyDiffPatch
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ProcessApplyDiffPatch
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0410, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        auto ret = deployer->ProcessApplyDiffPatch(appQuickFix,
+            appQuickFix.deployingAppqfInfo.hqfInfos[0], "", "");
+        EXPECT_EQ(ret, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0420
+ * Function: ProcessApplyDiffPatch
+ * @tc.name: test ProcessApplyDiffPatch
+ * @tc.require: issueI5N7AD
+ * @tc.desc: ProcessApplyDiffPatch
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0420, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME_DEMO);
+
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    if (deployer != nullptr) {
+        AppQuickFix appQuickFix = CreateAppQuickFix();
+        appQuickFix.bundleName = BUNDLE_NAME_DEMO;
+        appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
+        auto ret = deployer->ProcessApplyDiffPatch(appQuickFix,
+            appQuickFix.deployingAppqfInfo.hqfInfos[0], "/data/test/", "/data/test/");
+        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+    }
+    UninstallBundleInfo(BUNDLE_NAME_DEMO);
+}
 } // OHOS

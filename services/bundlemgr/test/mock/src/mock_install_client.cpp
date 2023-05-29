@@ -33,6 +33,11 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return 0;
 }
 
+ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     return 0;

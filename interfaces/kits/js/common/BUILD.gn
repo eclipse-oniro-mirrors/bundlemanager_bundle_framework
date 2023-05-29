@@ -42,5 +42,6 @@ ohos_shared_library("bundle_napi_common") {
   ]
 
   subsystem_name = "bundlemanager"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"
 }

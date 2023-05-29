@@ -24,9 +24,11 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
   ]
@@ -46,8 +48,6 @@ ohos_systemtest("BundleMgrSandboxAppSystemTest") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

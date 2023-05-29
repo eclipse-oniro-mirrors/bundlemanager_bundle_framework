@@ -26,6 +26,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/systemtest/BundleClient/bundleClient1:bundleClient1",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
@@ -44,6 +45,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle9:stbmsThirdBundle9",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
   ]
@@ -52,8 +54,6 @@ ohos_systemtest("ActsBmsKitSystemTest") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

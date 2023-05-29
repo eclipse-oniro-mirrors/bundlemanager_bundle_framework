@@ -28,13 +28,19 @@ public:
      * @brief Create new user.
      * @param userId Indicates the userId.
      */
-    virtual void CreateNewUser(int32_t userId) = 0;
+    virtual void CreateNewUser(int32_t userId)
+    {
+        return;
+    }
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
      */
-    virtual void RemoveUser(int32_t userId) = 0;
-
+    virtual void RemoveUser(int32_t userId)
+    {
+        return;
+    }
+    
     enum class Message {
         CREATE_USER = 0,
         REMOVE_USER = 1,

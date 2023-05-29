@@ -25,12 +25,14 @@ ohos_benchmarktest("BenchmarkTestForBundleMgrClient") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [ "//third_party/benchmark:benchmark" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
+    "//third_party/benchmark:benchmark",
+  ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "ipc:ipc_core",
   ]

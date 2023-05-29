@@ -39,6 +39,7 @@
 #include "ability_manager_helper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
 #include "bundle_mgr_service.h"
@@ -68,6 +69,7 @@ using namespace OHOS::Security;
 namespace {
 const std::string ARK_CACHE_PATH = "/data/local/ark-cache/";
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
@@ -923,6 +925,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(newInfos, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
+    ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
     return result;
 }
@@ -2607,9 +2610,25 @@ ErrCode BaseBundleInstaller::CheckAppLabelInfo(const std::unordered_map<std::str
         return ret;
     }
 
+    if (!CheckApiInfo(infos)) {
+        APP_LOGE("CheckApiInfo failed.");
+        return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
+    }
+
     bundleName_ = (infos.begin()->second).GetBundleName();
     versionCode_ = (infos.begin()->second).GetVersionCode();
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    std::string compileSdkType = infos.begin()->second.GetBaseApplicationInfo().compileSdkType;
+    auto bundleInfo = infos.begin()->second.GetBaseBundleInfo();
+    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
+        return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
@@ -3493,9 +3512,31 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             APP_LOGE("fail to GetNativeLibraryFileNames, error is %{public}d", result);
             return result;
         }
-        info.SetNativeLibraryFileNames(info.GetCurModuleName(), fileNames);
+        info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
+{
+    if ((oldVersionCode >= versionCode_) || oldNativeLibraryPath.empty()) {
+        return;
+    }
+    for (const auto &item : newInfos) {
+        const auto &moduleInfos = item.second.GetInnerModuleInfos();
+        for (const auto &moduleItem: moduleInfos) {
+            if (moduleItem.second.compressNativeLibs) {
+                // no need to delete library path
+                return;
+            }
+        }
+    }
+    std::string oldLibPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
+        Constants::PATH_SEPARATOR + Constants::LIBS;
+    if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
+        APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

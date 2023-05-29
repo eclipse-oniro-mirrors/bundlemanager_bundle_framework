@@ -61,6 +61,9 @@ constexpr uint32_t OUT_TIME = 30000;
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 constexpr uint32_t FREE_INSTALL_DONE = 0;
+constexpr int32_t TYPE_HARMONEY_INVALID = 0;
+constexpr int32_t TYPE_HARMONEY_APP = 1;
+constexpr int32_t TYPE_HARMONEY_SERVICE  = 2;
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -292,6 +295,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
     }
 
     ErmsCallerInfo callerInfo;
+    GetEcologicalCallerInfo(want, callerInfo, userId);
     ExperienceRule rule;
     bool ret = CheckEcologicalRule(want, callerInfo, rule);
     if (!ret) {
@@ -470,7 +474,7 @@ void BundleConnectAbilityMgr::SendCallBack(
         return;
     }
 
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     if (freeInstallParamsMap_[transactId].serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL &&
         resultCode != ServiceCenterResultCode::FREE_INSTALL_OK) {
         APP_LOGE("SendCallBack, freeinstall upgrade return ok");
@@ -479,13 +483,13 @@ void BundleConnectAbilityMgr::SendCallBack(
     freeInstallParamsMap_.erase(transactId);
     APP_LOGI("erase map size = %{public}zu, transactId = %{public}s",
         freeInstallParamsMap_.size(), transactId.c_str());
-    mapMutex_.unlock();
     if (freeInstallParamsMap_.size() == 0) {
         if (connectState_ == ServiceCenterConnectState::CONNECTED) {
             APP_LOGI("DisconnectDelay");
             DisconnectDelay();
         }
     }
+    lock.unlock();
 
     MessageParcel data;
     if (!data.WriteInterfaceToken(ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN)) {
@@ -546,13 +550,13 @@ void BundleConnectAbilityMgr::SendCallBack(const std::string &transactId, const 
 void BundleConnectAbilityMgr::DeathRecipientSendCallback()
 {
     APP_LOGI("DeathRecipientSendCallback start");
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     APP_LOGI("freeInstallParamsMap size = %{public}zu", freeInstallParamsMap_.size());
     for (auto &it : freeInstallParamsMap_) {
         SendCallBack(it.first, it.second);
     }
     freeInstallParamsMap_.clear();
-    mapMutex_.unlock();
+    lock.unlock();
 
     connectState_ = ServiceCenterConnectState::DISCONNECTED;
     serviceCenterRemoteObject_ = nullptr;
@@ -571,9 +575,8 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     }
     APP_LOGI("OnServiceCenterCall, retCode = %{public}d", installResult.result.retCode);
     FreeInstallParams freeInstallParams;
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(installResult.result.transactId);
-    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
@@ -584,6 +587,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
     }
     handler_->RemoveTask(installResult.result.transactId);
     freeInstallParams = node->second;
+    lock.unlock();
     if (installResult.result.retCode == ServiceCenterResultCode::FREE_INSTALL_DOWNLOADING) {
         APP_LOGI("ServiceCenter is downloading, downloadSize = %{public}d, totalSize = %{public}d",
             installResult.progress.downloadSize, installResult.progress.totalSize);
@@ -604,14 +608,14 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 {
     APP_LOGI("BundleConnectAbilityMgr::OutTimeMonitor");
     FreeInstallParams freeInstallParams;
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(transactId);
-    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
     freeInstallParams = node->second;
+    lock.unlock();
     if (handler_ == nullptr) {
         APP_LOGE("OutTimeMonitor, handler is nullptr");
         return;
@@ -662,16 +666,16 @@ void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo 
         SendSysEvent(FreeInstallErrorCode::CONNECT_ERROR, want, userId);
         return;
     }
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto emplaceResult = freeInstallParamsMap_.emplace(targetAbilityInfo.targetInfo.transactId, freeInstallParams);
     APP_LOGI("emplace map size = %{public}zu, transactId = %{public}s",
         freeInstallParamsMap_.size(), targetAbilityInfo.targetInfo.transactId.c_str());
-    mapMutex_.unlock();
     if (!emplaceResult.second) {
         APP_LOGE("freeInstallParamsMap emplace error");
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return;
     }
+    lock.unlock();
     int32_t result = serviceCenterRemoteObject_->SendRequest(flag, data, reply, option);
     if (result != ERR_OK) {
         APP_LOGE("Failed to sendRequest, result = %{public}d", result);
@@ -703,14 +707,14 @@ sptr<IRemoteObject> BundleConnectAbilityMgr::GetAbilityManagerServiceCallBack(st
 {
     APP_LOGI("GetAbilityManagerServiceCallBack");
     FreeInstallParams freeInstallParams;
-    mapMutex_.lock();
+    std::unique_lock<std::mutex> lock(mapMutex_);
     auto node = freeInstallParamsMap_.find(transactId);
-    mapMutex_.unlock();
     if (node == freeInstallParamsMap_.end()) {
         APP_LOGE("Can not find node transactId = %{public}s", transactId.c_str());
         return nullptr;
     }
     freeInstallParams = node->second;
+    lock.unlock();
     return freeInstallParams.callback;
 }
 
@@ -1129,6 +1133,50 @@ bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerIn
         return false;
     }
     return true;
+}
+
+void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCallerInfo &callerInfo, int32_t userId)
+{
+    callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
+    callerInfo.uid = want.GetIntParam(Want::PARAM_RESV_CALLER_UID, IPCSkeleton::GetCallingUid());
+    callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
+    callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
+    callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
+
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+
+    std::string callerBundleName;
+    ErrCode err = bundleDataMgr_->GetNameForUid(callerInfo.uid, callerBundleName);
+    if (err != ERR_OK) {
+        APP_LOGE("Get callerBundleName failed.");
+        return;
+    }
+    AppExecFwk::ApplicationInfo callerAppInfo;
+    bool getCallerResult = bundleDataMgr_->GetApplicationInfo(callerBundleName,
+        AppExecFwk::ApplicationFlag::GET_BASIC_APPLICATION_INFO, userId, callerAppInfo);
+    if (!getCallerResult) {
+        APP_LOGE("Get callerAppInfo failed.");
+        return;
+    }
+
+    switch (callerAppInfo.bundleType) {
+        case AppExecFwk::BundleType::ATOMIC_SERVICE:
+            APP_LOGD("the caller type is atomic service");
+            callerInfo.callerAppType = TYPE_HARMONEY_SERVICE;
+            break;
+        case AppExecFwk::BundleType::APP:
+            APP_LOGD("the caller type is app");
+            callerInfo.callerAppType = TYPE_HARMONEY_APP;
+            break;
+        default:
+            APP_LOGD("the caller type is invalid type");
+            break;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

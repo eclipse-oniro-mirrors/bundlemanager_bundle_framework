@@ -2011,9 +2011,11 @@ void UpdateNativeSoAttrs(
     innerBundleInfo.SetCpuAbi(cpuAbi);
     if (!innerBundleInfo.IsCompressNativeLibs(innerBundleInfo.GetCurModuleName())) {
         APP_LOGD("UpdateNativeSoAttrs compressNativeLibs is false, no need to decompress so");
-        innerBundleInfo.SetNativeLibraryPath(soRelativePath);
-        innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
-        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
+        if (!isLibIsolated) {
+            innerBundleInfo.SetNativeLibraryPath(soRelativePath);
+        }
+        innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+        innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
     }
@@ -2285,6 +2287,7 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.isLibIsolated = configJson.module.isLibIsolated;
     innerModuleInfo.deviceTypes = configJson.module.deviceType;
     innerModuleInfo.buildHash = configJson.module.buildHash;
+    innerModuleInfo.compressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
     return true;
 }
 

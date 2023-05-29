@@ -21,6 +21,7 @@
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
+#include "parcel_macro.h"
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
@@ -3531,6 +3532,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
     ErrCode res = reply.ReadInt32();
     if (res == ERR_OK) {
         int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
         for (int32_t i = 0; i < infoSize; i++) {
             std::unique_ptr<T> info(reply.ReadParcelable<T>());
             if (info == nullptr) {
@@ -3610,6 +3612,7 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
     }
 
     int32_t infoSize = tempParcel.ReadInt32();
+    CONTAINER_SECURITY_VERIFY(tempParcel, infoSize, &parcelableInfos);
     for (int32_t i = 0; i < infoSize; i++) {
         std::unique_ptr<T> info(tempParcel.ReadParcelable<T>());
         if (info == nullptr) {

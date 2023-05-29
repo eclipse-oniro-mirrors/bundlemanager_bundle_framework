@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <fstream>
+#include <limits>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -139,6 +140,11 @@ bool BaseExtractor::IsStageBasedModel(std::string abilityName)
 bool BaseExtractor::IsNewVersion() const
 {
     return isNewVersion_;
+}
+
+bool BaseExtractor::GetFileInfo(const std::string &fileName, uint32_t &offset, uint32_t &length) const
+{
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

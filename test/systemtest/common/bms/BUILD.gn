@@ -54,12 +54,13 @@ ohos_source_set("bms_install_sst_source") {
   deps = [
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
+
+    # "${core_path}:appexecfwk_core",
   ]
 
   external_deps = [
     "ability_base:base",
     "ability_base:want",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

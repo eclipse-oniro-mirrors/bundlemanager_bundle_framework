@@ -26,12 +26,14 @@ ohos_systemtest("BmsSearchSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle17:stbmsThirdBundle17",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle7:stbmsThirdBundle7",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle8:stbmsThirdBundle8",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
   ]
@@ -40,8 +42,6 @@ ohos_systemtest("BmsSearchSystemTest") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_INTERFACE_H
 
+#include "bundle_constants.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -24,13 +25,24 @@ class IBundleStreamInstaller : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleStreamInstaller");
 
-    virtual int CreateStream(const std::string &hapName) = 0;
-    virtual int CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx) = 0;
-    virtual bool Install() = 0;
-
-    virtual uint32_t GetInstallerId() const = 0;
-    virtual void SetInstallerId(uint32_t installerId) = 0;
-    virtual void UnInit() = 0;
+    virtual int CreateStream(const std::string &hapName)
+    {
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    virtual int CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx)
+    {
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    virtual bool Install()
+    {
+        return false;
+    }
+    virtual uint32_t GetInstallerId() const
+    {
+        return Constants::DEFAULT_INSTALLERID;
+    }
+    virtual void SetInstallerId(uint32_t installerId) {};
+    virtual void UnInit() {};
 
     enum StreamMessage : uint32_t {
         CREATE_STREAM = 0,

@@ -7469,19 +7469,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0009, Function | SmallTest | Level0)
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
-
-/**
- * @tc.number: AgingTest_0010
- * @tc.name: test Aging QueryBundleStatsInfoByInterval
- * @tc.desc: QueryBundleStatsInfoByInterval is true
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0010, Function | SmallTest | Level0)
-{
-    BundleAgingMgr bundleAgingMgr;
-    std::vector<DeviceUsageStats::BundleActivePackageStats> results;
-    bool res = bundleAgingMgr.QueryBundleStatsInfoByInterval(results);
-    EXPECT_FALSE(res);
-}
 #endif
 
 /**
@@ -9641,10 +9628,10 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfoTest, Function | SmallTest
     OHOS::Parcel parcel;
     bool res = info.Marshalling(parcel);
     EXPECT_EQ(res, true);
-    BaseSharedBundleInfo newInfo;
-    newInfo.Unmarshalling(parcel);
-    res = newInfo.ReadFromParcel(parcel);
-    EXPECT_EQ(res, true);
+    BaseSharedBundleInfo *newInfo = BaseSharedBundleInfo::Unmarshalling(parcel);
+    EXPECT_TRUE(newInfo != nullptr);
+    delete newInfo;
+    newInfo = nullptr;
 }
 
 /**
@@ -10399,5 +10386,125 @@ HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0005, Function 
 
     res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
     EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: SetModuleHapPath_001
+ * @tc.name: test set SetModuleHapPath
+ * @tc.desc: 1.system run normally
+ *           2.SetModuleHapPath
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetModuleHapPath_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    std::string hapPath = HAP_FILE_PATH;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_NE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    std::string nativeLibraryPath = "libs/arm";
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = true;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = nativeLibraryPath;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath, nativeLibraryPath);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = "";
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_EQ(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].hapPath, hapPath);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath = nativeLibraryPath;
+    innerBundleInfo.SetModuleHapPath(hapPath);
+    EXPECT_NE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryPath, nativeLibraryPath);
+}
+
+/**
+ * @tc.number: IsCompressNativeLibs_001
+ * @tc.name: test IsCompressNativeLibs
+ * @tc.desc: 1.system run normally
+ *           2.IsCompressNativeLibs
+ */
+HWTEST_F(BmsBundleKitServiceTest, IsCompressNativeLibs_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_TRUE(ret);
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.name = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+
+    ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_TRUE(ret);
+
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].compressNativeLibs = false;
+    ret = innerBundleInfo.IsCompressNativeLibs(MODULE_NAME_TEST);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: SetNativeLibraryFileNames_001
+ * @tc.name: test SetNativeLibraryFileNames
+ * @tc.desc: 1.system run normally
+ *           2.SetNativeLibraryFileNames
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetNativeLibraryFileNames_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    const std::vector<std::string> fileNames{"com.so"};
+    innerBundleInfo.SetNativeLibraryFileNames(MODULE_NAME_TEST, fileNames);
+    EXPECT_TRUE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryFileNames.empty());
+
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.name = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+
+    innerBundleInfo.SetNativeLibraryFileNames(MODULE_NAME_TEST, fileNames);
+    EXPECT_FALSE(innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST].nativeLibraryFileNames.empty());
+}
+
+/**
+ * @tc.number: UpdateSharedModuleInfo_001
+ * @tc.name: test UpdateSharedModuleInfo
+ * @tc.desc: 1.system run normally
+ *           2.UpdateSharedModuleInfo
+ */
+HWTEST_F(BmsBundleKitServiceTest, UpdateSharedModuleInfo_001, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.currentPackage_ = "";
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_.empty());
+    InnerModuleInfo moduleInfo;
+    moduleInfo.versionCode = 1000;
+    std::vector<InnerModuleInfo> moduleInfos;
+    moduleInfos.push_back(moduleInfo);
+    moduleInfo.versionCode = 2000;
+    moduleInfos.push_back(moduleInfo);
+    innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1] = moduleInfos;
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST_1;
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_FALSE(innerBundleInfo.innerSharedModuleInfos_.empty());
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][0].cpuAbi.empty());
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][1].cpuAbi.empty());
+
+    moduleInfo.cpuAbi = "libs/arm";
+    innerBundleInfo.innerModuleInfos_[MODULE_NAME_TEST_1] = moduleInfo;
+    innerBundleInfo.UpdateSharedModuleInfo();
+    EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][0].cpuAbi.empty());
+    EXPECT_FALSE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][1].cpuAbi.empty());
 }
 }

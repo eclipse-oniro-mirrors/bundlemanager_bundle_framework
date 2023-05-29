@@ -30,15 +30,27 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.bundleManager.QuickFixManager");
 
     virtual ErrCode DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
+        const sptr<IQuickFixStatusCallback> &statusCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     virtual ErrCode SwitchQuickFix(const std::string &bundleName, bool enable,
-        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
+        const sptr<IQuickFixStatusCallback> &statusCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     virtual ErrCode DeleteQuickFix(const std::string &bundleName,
-        const sptr<IQuickFixStatusCallback> &statusCallback) = 0;
+        const sptr<IQuickFixStatusCallback> &statusCallback)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
-    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) = 0;
+    virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 
     virtual ErrCode CopyFiles(const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles)
     {

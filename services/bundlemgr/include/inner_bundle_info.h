@@ -122,6 +122,7 @@ struct InnerModuleInfo {
     std::string isolationMode;
     bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
+    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
 };
 
 struct SkillUri {
@@ -1968,6 +1969,10 @@ public:
     void GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas) const;
     bool IsCompressNativeLibs(const std::string &moduleName) const;
     void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
+    void UpdateSharedModuleInfo();
+    AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
+    bool SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    void ResetAOTFlags();
 
 private:
     bool IsExistLauncherAbility() const;

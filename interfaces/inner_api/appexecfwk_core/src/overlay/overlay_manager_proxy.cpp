@@ -19,6 +19,7 @@
 #include "appexecfwk_errors.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
+#include "parcel_macro.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -372,6 +373,7 @@ ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(IOverlayManager::Mess
     ErrCode res = reply.ReadInt32();
     if (res == ERR_OK) {
         int32_t infoSize = reply.ReadInt32();
+        CONTAINER_SECURITY_VERIFY(reply, infoSize, &parcelableInfos);
         for (int32_t i = 0; i < infoSize; i++) {
             std::unique_ptr<T> info(reply.ReadParcelable<T>());
             if (info == nullptr) {

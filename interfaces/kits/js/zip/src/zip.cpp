@@ -178,7 +178,7 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
 ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
     DirectoryCreator directoryCreator, UnzipParam &unzipParam)
 {
-    APP_LOGI("%{public}s called, destDir=%{public}s", __func__, destDir.Value().c_str());
+    APP_LOGI("%{public}s called, destDir=%{private}s", __func__, destDir.Value().c_str());
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(srcFile)) {
         APP_LOGI("%{public}s called, Failed to open srcFile.", __func__);
@@ -233,7 +233,7 @@ ErrCode UnzipWithFilterCallback(
 
     FilePath dest = destDir;
 
-    APP_LOGI("%{public}s called,  srcFile=%{public}s, destFile=%{public}s",
+    APP_LOGI("%{public}s called,  srcFile=%{private}s, destFile=%{private}s",
         __func__,
         src.Value().c_str(),
         dest.Value().c_str());
@@ -323,7 +323,7 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
         APP_LOGI("%{public}s called fail, The path where destFile is located doesn't exist.", __func__);
         return ERR_ZLIB_DEST_FILE_DISABLED;
     }
-    
+
     if (FilePath::DirectoryExists(srcDir)) {
         if (!FilePath::PathIsValid(srcDir)) {
             APP_LOGI("%{public}s called fail, srcDir isn't Exist.", __func__);
@@ -352,7 +352,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath,
     }
     FilePath srcDir(srcPath);
     FilePath destFile(destPath);
-    APP_LOGI("%{public}s called,  srcDir=%{public}s, destFile=%{public}s", __func__,
+    APP_LOGI("%{public}s called,  srcDir=%{private}s, destFile=%{private}s", __func__,
         srcDir.Value().c_str(), destFile.Value().c_str());
 
     if (srcDir.Value().size() == 0) {
@@ -363,7 +363,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath,
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
-    
+
     auto innerTask = [srcDir, destFile, includeHiddenFiles, zlibCallbackInfo]() {
         OPTIONS options;
         if (includeHiddenFiles) {

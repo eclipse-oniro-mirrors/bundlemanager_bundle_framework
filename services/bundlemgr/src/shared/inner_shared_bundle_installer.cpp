@@ -262,13 +262,21 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
 
     std::string cpuAbi;
     std::string nativeLibraryPath;
-    newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath);
-    std::string targetSoPath = versionDir + Constants::PATH_SEPARATOR + nativeLibraryPath + Constants::PATH_SEPARATOR;
-    APP_LOGD("targetSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
-        targetSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
-
-    result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, targetSoPath, cpuAbi);
-    CHECK_RESULT(result, "extract module files failed %{public}d");
+    if (newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath)) {
+        if (newInfo.IsCompressNativeLibs(moduleName)) {
+            std::string targetSoPath = versionDir + Constants::PATH_SEPARATOR + nativeLibraryPath +
+                Constants::PATH_SEPARATOR;
+            APP_LOGD("targetSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
+                targetSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
+            result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, targetSoPath, cpuAbi);
+            CHECK_RESULT(result, "extract module files failed %{public}d");
+        } else {
+            std::vector<std::string> fileNames;
+            result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);
+            CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
+            newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
+        }
+    }
 
     std::string hspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName + Constants::INSTALL_SHARED_FILE_SUFFIX;
     result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath);
@@ -277,6 +285,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     newInfo.SetModuleHapPath(hspPath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
+    newInfo.UpdateSharedModuleInfo();
     return ERR_OK;
 }
 

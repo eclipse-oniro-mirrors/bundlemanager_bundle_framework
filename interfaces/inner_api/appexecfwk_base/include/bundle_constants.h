@@ -91,6 +91,7 @@ constexpr int SIGNATURE_NOT_MATCHED = 1;
 constexpr int SIGNATURE_UNKNOWN_BUNDLE = 2;
 constexpr int PERMISSION_GRANTED = 0;
 constexpr int PERMISSION_NOT_GRANTED = -1;
+constexpr int DEFAULT_STREAM_FD = -1;
 constexpr int DUMP_INDENT = 4;
 constexpr unsigned int INSTALLD_UMASK = 0000;
 constexpr int32_t INVALID_API_VERSION = -1;
@@ -98,6 +99,7 @@ constexpr int32_t API_VERSION_EIGHT = 8;
 constexpr int32_t API_VERSION_NINE = 9;
 constexpr int32_t ALL_VERSIONCODE = -1;
 constexpr int32_t INVALID_UDID = -1;
+constexpr int32_t DEFAULT_INSTALLERID = -1;
 
 // native so
 constexpr const char* ABI_DEFAULT = "default";
@@ -108,6 +110,7 @@ constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";
 constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
+constexpr const char* ARM64 = "arm64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
 const std::string AP = "ap/";
@@ -314,6 +317,17 @@ constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+// ark compile mode
+constexpr const char* COMPILE_NONE = "none";
+constexpr const char* COMPILE_PARTIAL = "partial";
+constexpr const char* COMPILE_FULL = "full";
+// ark compile option parameter key
+constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
+constexpr const char* COMPILE_OTA_PARAM_KEY = "persist.bm.ota.arkopt";
+constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+
+constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
