@@ -118,7 +118,6 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitAppControl(), "Init appControl fail");
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
-    InitAOTLoopTask();
     ready_ = true;
     APP_LOGI("Init success");
     return true;
@@ -285,17 +284,6 @@ bool BundleMgrService::InitOverlayManager()
     }
 #endif
     return true;
-}
-
-void BundleMgrService::InitAOTLoopTask()
-{
-    if (aotLoopTask_ != nullptr) {
-        APP_LOGE("aotLoopTask_ already init");
-        return;
-    }
-    aotLoopTask_ = std::make_shared<AOTLoopTask>();
-    aotLoopTask_->ScheduleLoopTask();
-    APP_LOGE("InitAOTLoopTask success");
 }
 
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const

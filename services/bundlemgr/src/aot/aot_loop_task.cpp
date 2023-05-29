@@ -15,37 +15,15 @@
 
 #include "aot/aot_loop_task.h"
 
-#include "aot/aot_handler.h"
-#include "battery_srv_client.h"
-#include "display_power_mgr_client.h"
-
 namespace OHOS {
 namespace AppExecFwk {
 void AOTLoopTask::ScheduleLoopTask()
 {
     running_ = true;
-    // while (true) {
-    //     if (CheckDeviceState()) {
-    //         AgingHandler::GetInstance().HandleIdle();
-    //     }
-    // }
 }
 
 bool AOTLoopTask::CheckDeviceState()
 {
-    DisplayPowerMgr::DisplayState displayState =
-        DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState();
-    if (displayState == DisplayPowerMgr::DisplayState::DISPLAY_OFF) {
-        APP_LOGD("displayState is on, don't AOT");
-        return false;
-    }
-    APP_LOGD("screen is off and in charging state, begin to handle idle AOT");
-    PowerMgr::BatteryChargeState batteryChargeState =
-        OHOS::PowerMgr::BatterySrvClient::GetInstance().GetChargingStatus();
-    if (batteryChargeState == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE
-        || batteryChargeState == PowerMgr::BatteryChargeState::CHARGE_STATE_FULL) {
-        return true;
-    }
     return false;
 }
 }  // namespace AppExecFwk
