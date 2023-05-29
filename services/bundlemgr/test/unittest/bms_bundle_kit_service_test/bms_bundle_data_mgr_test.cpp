@@ -190,6 +190,7 @@ public:
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
     std::shared_ptr<LauncherService> launcherService_ = std::make_shared<LauncherService>();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
@@ -875,25 +876,39 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0200, Function | SmallTest 
 }
 
 /**
- * @tc.number: QueryAbilityInfosByUri_0100
+ * @tc.number: QueryAbilityInfoByUri_0200
  * @tc.name: test QueryAbilityInfoByUri
  * @tc.desc: 1.system run normally
  *           2.check QueryAbilityInfoByUri failed
  */
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoByUri_0300, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    bool res = bundleMgrHostImpl_->QueryAbilityInfoByUri(
+        Constants::DATA_ABILITY_URI_PREFIX + Constants::DATA_ABILITY_URI_SEPARATOR, Constants::ALL_USERID, abilityInfo);
+    EXPECT_EQ(res, false);
+}
+/**
+ * @tc.number: QueryAbilityInfosByUri_0100
+ * @tc.name: test QueryAbilityInfosByUri
+ * @tc.desc: 1.system run normally
+ *           2.check QueryAbilityInfosByUri failed
+ */
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0100, Function | SmallTest | Level1)
 {
     std::vector<AbilityInfo> abilityInfo;
-    InnerBundleInfo innerBundleInfo;
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->QueryAbilityInfosByUri(Constants::DATA_ABILITY_URI_PREFIX, abilityInfo);
     EXPECT_EQ(res, false);
 }
 
 /**
  * @tc.number: QueryAbilityInfosByUri_0200
- * @tc.name: test QueryAbilityInfoByUri
+ * @tc.name: test QueryAbilityInfosByUri
  * @tc.desc: 1.system run normally
- *           2.check QueryAbilityInfoByUri failed
+ *           2.check QueryAbilityInfosByUri failed
  */
 HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0200, Function | SmallTest | Level1)
 {
@@ -908,9 +923,9 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosByUri_0200, Function | SmallTest
 
 /**
  * @tc.number: GetApplicationInfos_0100
- * @tc.name: test QueryAbilityInfoByUri
+ * @tc.name: test GetApplicationInfos
  * @tc.desc: 1.system run normally
- *           2.check QueryAbilityInfoByUri failed
+ *           2.check GetApplicationInfos failed
  */
 HWTEST_F(BmsBundleDataMgrTest, GetApplicationInfos_0100, Function | SmallTest | Level1)
 {
@@ -924,9 +939,9 @@ HWTEST_F(BmsBundleDataMgrTest, GetApplicationInfos_0100, Function | SmallTest | 
 
 /**
  * @tc.number: GetApplicationInfos_0200
- * @tc.name: test QueryAbilityInfoByUri
+ * @tc.name: test GetApplicationInfos
  * @tc.desc: 1.system run normally
- *           2.check QueryAbilityInfoByUri failed
+ *           2.check GetApplicationInfos failed
  */
 HWTEST_F(BmsBundleDataMgrTest, GetApplicationInfos_0200, Function | SmallTest | Level1)
 {
@@ -1283,6 +1298,21 @@ HWTEST_F(BmsBundleDataMgrTest, GetHapModuleInfo_0100, Function | SmallTest | Lev
     bool res = GetBundleDataMgr()->GetHapModuleInfo(abilityInfo, hapModuleInfo, USERID);
     EXPECT_EQ(res, false);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: GetHapModuleInfo_0200
+ * @tc.name: test GetHapModuleInfo
+ * @tc.desc: 1.check ModuleInfo infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetHapModuleInfo_0200, Function | MediumTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    abilityInfo.bundleName = BUNDLE_NAME_TEST;
+    abilityInfo.package = BUNDLE_NAME_TEST;
+    HapModuleInfo hapModuleInfo;
+    bool ret = bundleMgrHostImpl_->GetHapModuleInfo(abilityInfo, USERID, hapModuleInfo);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -1777,7 +1807,7 @@ HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUri_0100, Function | S
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUri(
-        "", USERID, extensionAbilityInfo);
+        uri, USERID, extensionAbilityInfo);
     EXPECT_EQ(false, testRet);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
@@ -1796,9 +1826,22 @@ HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUri_0200, Function | S
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     bool testRet = GetBundleDataMgr()->QueryExtensionAbilityInfoByUri(
-        "", USERID, extensionAbilityInfo);
+        uri, USERID, extensionAbilityInfo);
     EXPECT_EQ(false, testRet);
     GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfoByUri_0300
+ * @tc.name: test QueryExtensionAbilityInfoByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUri_0300, Function | SmallTest | Level1)
+{
+    ExtensionAbilityInfo extensionAbilityInfo;
+    bool testRet = bundleMgrHostImpl_->QueryExtensionAbilityInfoByUri(
+        HAP_FILE_PATH, USERID, extensionAbilityInfo);
+    EXPECT_EQ(false, testRet);
 }
 
 /**
@@ -1820,7 +1863,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllUriPrefix_0100, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: QueryExtensionAbilityInfoByUri_0100
+ * @tc.number: UpdateQuickFixInnerBundleInfo_0100
  * @tc.name: test UpdateQuickFixInnerBundleInfo
  * @tc.desc: 1.system run normally
  */
@@ -1985,5 +2028,251 @@ HWTEST_F(BmsBundleDataMgrTest, GetAdditionalInfo_0100, Function | SmallTest | Le
     ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(
         BUNDLE_TEST1, additionalInfo);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: BundleFreeInstall_0200
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckAbilityEnableInstall_0100, Function | MediumTest | Level1)
+{
+    AAFwk::Want want;
+    int32_t missionId = 0;
+    ElementName name;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+    bool ret = bundleMgrHostImpl_->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: UpgradeAtomicService_0100
+ * @tc.name: test UpgradeAtomicService
+ * @tc.desc: 1.test UpgradeAtomicService
+ */
+HWTEST_F(BmsBundleDataMgrTest, UpgradeAtomicService_0100, Function | MediumTest | Level1)
+{
+    AAFwk::Want want;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitFreeInstall();
+    auto ret = DelayedSingleton<BundleMgrService>::GetInstance()->connectAbilityMgr_;
+    bundleMgrHostImpl_->UpgradeAtomicService(want, USERID);
+    ASSERT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: CheckAbilityEnableInstall_0200
+ * @tc.name: test CheckAbilityEnableInstall
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, CheckAbilityEnableInstall_0200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    AAFwk::Want want;
+    ElementName name;
+    int32_t missionId = 0;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitFreeInstall();
+    bool ret = bundleMgrHostImpl_->CheckAbilityEnableInstall(want, missionId, USERID, remoteObject);
+    EXPECT_EQ(ret, false);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: ProcessPreload_0100
+ * @tc.name: test ProcessPreload
+ * @tc.desc: 1.test ProcessPreload
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessPreload_0100, Function | MediumTest | Level1)
+{
+    AAFwk::Want want;
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitFreeInstall();
+    bool res = bundleMgrHostImpl_->ProcessPreload(want);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UnregisterBundleStatusCallback_0100
+ * @tc.name: test UnregisterBundleStatusCallback
+ * @tc.desc: test UnregisterBundleStatusCallback
+ */
+HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleStatusCallback_0100, Function | MediumTest | Level1)
+{
+    bool retBool = bundleMgrHostImpl_->UnregisterBundleStatusCallback();
+    EXPECT_EQ(retBool, true);
+}
+
+/**
+ * @tc.number: GetAbilityInfo_0100
+ * @tc.name: test GetAbilityInfo
+ * @tc.desc: test GetAbilityInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    AbilityInfo abilityInfo;
+    bool retBool = bundleMgrHostImpl_->GetAbilityInfo(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, abilityInfo);
+    EXPECT_EQ(retBool, false);
+}
+
+/**
+ * @tc.number: ImplicitQueryInfoByPriority_0100
+ * @tc.name: test ImplicitQueryInfoByPriority
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryInfoByPriority_0100, Function | MediumTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfoByPriority(want, 0, USERID, abilityInfo, extensionInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ImplicitQueryInfos_0100
+ * @tc.name: test ImplicitQueryInfos
+ * @tc.desc: 1.check Implicit infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, ImplicitQueryInfos_0100, Function | MediumTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetElementName("", BUNDLE_NAME_TEST, ABILITY_NAME_TEST, MODULE_NAME_TEST);
+    std::vector<AbilityInfo> abilityInfo;
+    std::vector<ExtensionAbilityInfo> extensionInfo;
+
+    bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, 0, USERID, USERID, abilityInfo, extensionInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetAllDependentModuleNames_0100
+ * @tc.name: test GetAllDependentModuleNames
+ * @tc.desc: 1.Get DependentModuleName
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllDependentModuleNames_0100, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    std::vector<std::string> dependentModuleNames;
+    bool ret = bundleMgrHostImpl_->GetAllDependentModuleNames(BUNDLE_NAME_TEST, MODULE_NAME_TEST, dependentModuleNames);
+    EXPECT_EQ(ret, true);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetSandboxBundleInfo_0100
+ * @tc.name: test GetSandboxBundleInfo
+ * @tc.desc: 1.GetSandboxBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSandboxBundleInfo_0100, Function | MediumTest | Level1)
+{
+    int32_t appIndex = 1;
+    BundleInfo info;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxBundleInfo(BUNDLE_NAME_TEST, appIndex, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED);
+}
+
+/**
+ * @tc.number: GetSandboxAbilityInfo_0100
+ * @tc.name: test GetSandboxAbilityInfo
+ * @tc.desc: 1.GetSandboxAbilityInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSandboxAbilityInfo_0100, Function | MediumTest | Level1)
+{
+    int32_t appIndex = -1;
+    Want want;
+    AbilityInfo info;
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, 0, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    appIndex = 101;
+    bundleMgrHostImpl_->GetSandboxAbilityInfo(want, appIndex, 0, USERID, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetStringById_0100
+ * @tc.name: test GetStringById
+ * @tc.desc: test GetStringById
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetStringById_0100, Function | MediumTest | Level1)
+{
+    uint32_t resId = 1;
+    std::string retBool = bundleMgrHostImpl_->GetStringById(BUNDLE_NAME_TEST, MODULE_NAME_TEST, resId, USERID, "");
+    EXPECT_EQ(retBool, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0100
+ * @tc.name: test GetSandboxHapModuleInfo
+ * @tc.desc: 1.GetSandboxHapModuleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSandboxHapModuleInfo_0100, Function | MediumTest | Level1)
+{
+    int32_t appIndex = 1;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo info;
+    GetBundleDataMgr()->sandboxAppHelper_ = nullptr;
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(info, appIndex, USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: GetSandboxHapModuleInfo_0200
+ * @tc.name: test GetSandboxHapModuleInfo
+ * @tc.desc: 1.GetSandboxHapModuleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSandboxHapModuleInfo_0200, Function | MediumTest | Level1)
+{
+    int32_t appIndex = 1;
+    HapModuleInfo hapModuleInfo;
+    AbilityInfo info;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    GetBundleDataMgr()->sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
+    ErrCode ret = bundleMgrHostImpl_->GetSandboxHapModuleInfo(
+        info, appIndex, Constants::INVALID_USERID, hapModuleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
+    GetBundleDataMgr()->multiUserIdsSet_.clear();
+}
+
+/**
+ * @tc.number: GetMediaData_0100
+ * @tc.name: test GetMediaData
+ * @tc.desc: 1.GetMediaData
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetMediaData_0100, Function | MediumTest | Level1)
+{
+    std::unique_ptr<uint8_t[]> mediaDataPtr;
+    size_t len = 7;
+    ErrCode ret = bundleMgrHostImpl_->GetMediaData(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, mediaDataPtr, len, USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetProvisionMetadata_0100
+ * @tc.name: test GetProvisionMetadata
+ * @tc.desc: 1.GetProvisionMetadata
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetProvisionMetadata_0100, Function | MediumTest | Level1)
+{
+    std::vector<Metadata> provisionMetadatas;
+    ErrCode ret = bundleMgrHostImpl_->GetProvisionMetadata(BUNDLE_NAME_TEST, USERID, provisionMetadatas);
+    EXPECT_EQ(ret, ERR_OK);
 }
 }
