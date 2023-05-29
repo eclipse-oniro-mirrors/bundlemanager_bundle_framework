@@ -29,8 +29,9 @@ using Want = OHOS::AAFwk::Want;
 
 struct ExperienceRule : public Parcelable {
     bool isAllow = false;
-    std::string sceneCode = "";
     std::shared_ptr<Want> replaceWant = nullptr;
+    int64_t sceneCode = 0L;
+    int64_t allowTypes;
 
     bool ReadFromParcel(Parcel &parcel);
 
