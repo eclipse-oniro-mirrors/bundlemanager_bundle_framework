@@ -86,7 +86,7 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
 HWTEST_F(BmsEventHandlerTest, BeforeBmsStart_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->needNotifyBundleScanStatus_ = true;
     handler->BeforeBmsStart();
@@ -102,7 +102,7 @@ HWTEST_F(BmsEventHandlerTest, BeforeBmsStart_0100, Function | SmallTest | Level0
 HWTEST_F(BmsEventHandlerTest, OnBmsStarting_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->OnBmsStarting();
     EXPECT_TRUE(handler->needRebootOta_ == true);
@@ -116,7 +116,7 @@ HWTEST_F(BmsEventHandlerTest, OnBmsStarting_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->needNotifyBundleScanStatus_ = false;
     handler->hasLoadAllPreInstallBundleInfosFromDb_ = true;
@@ -132,7 +132,7 @@ HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->needNotifyBundleScanStatus_ = true;
     handler->hasLoadAllPreInstallBundleInfosFromDb_ = true;
@@ -148,7 +148,7 @@ HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0200, Function | SmallTest | Level0)
 HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0300, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->hasLoadAllPreInstallBundleInfosFromDb_ = true;
     bool res = handler->LoadAllPreInstallBundleInfos();
@@ -164,7 +164,7 @@ HWTEST_F(BmsEventHandlerTest, AfterBmsStart_0300, Function | SmallTest | Level0)
 HWTEST_F(BmsEventHandlerTest, GetPreInstallDirFromLoadProFile_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::vector<std::string> bundleDirs;
     handler->LoadPreInstallProFile();
@@ -180,7 +180,7 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallDirFromLoadProFile_0100, Function | S
 HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     PreBundleConfigInfo preBundleConfigInfo;
     EXPECT_TRUE(handler->LoadPreInstallProFile());
@@ -195,7 +195,7 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0100, Function | SmallTest
 HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     PreBundleConfigInfo preBundleConfigInfo;
     preBundleConfigInfo.bundleName = BUNDLE_NAME;
@@ -211,7 +211,7 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0200, Function | SmallTest
 HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     InnerBundleInfo info;
@@ -227,7 +227,7 @@ HWTEST_F(BmsEventHandlerTest, SaveInstallInfoToCache_0100, Function | SmallTest 
 HWTEST_F(BmsEventHandlerTest, CombineBundleInfoAndUserInfo_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
@@ -243,7 +243,7 @@ HWTEST_F(BmsEventHandlerTest, CombineBundleInfoAndUserInfo_0100, Function | Smal
 HWTEST_F(BmsEventHandlerTest, CombineBundleInfoAndUserInfo_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
@@ -266,7 +266,7 @@ HWTEST_F(BmsEventHandlerTest, CombineBundleInfoAndUserInfo_0200, Function | Smal
 HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::string bundleDir = CALL_MOCK_BUNDLE_DIR_SUCCESS;
     int32_t userId = 100;
@@ -283,7 +283,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0100, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::string bundleDir = CALL_MOCK_BUNDLE_DIR_FAILED;
     int32_t userId = 100;
@@ -300,7 +300,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0200, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0300, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     PreScanInfo preScanInfo;
     preScanInfo.bundleDir = CALL_MOCK_BUNDLE_DIR_SUCCESS;
@@ -318,7 +318,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0300, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, ProcessSystemBundleInstall_0400, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     PreScanInfo preScanInfo;
     preScanInfo.bundleDir = CALL_MOCK_BUNDLE_DIR_FAILED;
@@ -350,7 +350,7 @@ HWTEST_F(BmsEventHandlerTest, BundleBootStartEvent_0100, Function | SmallTest | 
 HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::string bundleName = BUNDLE_NAME;
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -366,7 +366,7 @@ HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0100, Function | SmallTest | Le
 HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::string bundleName = BUNDLE_NAME_ONE;
     std::string testBundleName = TEST_BUNDLE_NAME;
@@ -388,7 +388,7 @@ HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0200, Function | SmallTest | Le
 HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0300, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::string bundleName = BUNDLE_NAME_ONE;
     std::string testBundleName = TEST_BUNDLE_NAME;
@@ -415,7 +415,7 @@ HWTEST_F(BmsEventHandlerTest, AddParseInfosToMap_0300, Function | SmallTest | Le
 HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     handler->ProcessRebootBundleUninstall();
@@ -430,7 +430,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0100, Function | Smal
 HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
     PreInstallBundleInfo preInstallBundleInfo;
@@ -457,7 +457,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessRebootBundleUninstall_0200, Function | Smal
 HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::vector<std::string> filePath;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
@@ -473,7 +473,7 @@ HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0100, Function
 HWTEST_F(BmsEventHandlerTest, ProcessOTAInstallSystemSharedBundle_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::vector<std::string> filePath;
     filePath.push_back(UNEXIST_SHARED_LIBRARY);
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
@@ -513,7 +513,7 @@ HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0100, Function | SmallTest | Le
     newInnerBundleInfo.AddInnerModuleInfo(innerModuleMaps);
 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->UpdateModuleByHash(oldBundleInfo, newInnerBundleInfo);
     EXPECT_TRUE(res);
@@ -543,7 +543,7 @@ HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0200, Function | SmallTest | Le
     EXPECT_FALSE(ret);
 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->UpdateModuleByHash(oldBundleInfo, newInnerBundleInfo);
     EXPECT_FALSE(res);
@@ -566,7 +566,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0100, Function | Sma
     newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
     EXPECT_TRUE(res);
@@ -590,7 +590,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0200, Function | Sma
     newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
     EXPECT_FALSE(res);
@@ -610,7 +610,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0300, Function | Sma
     newInnerBundleInfo.InsertInnerSharedModuleInfo(MODULE_NAME, newInnerModuleInfo);
 
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto res = handler->IsNeedToUpdateSharedAppByHash(oldInnerBundleInfo, newInnerBundleInfo);
     EXPECT_TRUE(res);
@@ -624,7 +624,7 @@ HWTEST_F(BmsEventHandlerTest, IsNeedToUpdateSharedAppByHash_0300, Function | Sma
 HWTEST_F(BmsEventHandlerTest, ReInstallAllInstallDirApps_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     handler->InnerProcessBootPreBundleProFileInstall(Constants::ALL_USERID);
     handler->UpdateAppDataSelinuxLabel("", "", false, false);
@@ -641,7 +641,7 @@ HWTEST_F(BmsEventHandlerTest, ReInstallAllInstallDirApps_0100, Function | SmallT
 HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::list<std::string> bundleDirs;
     handler->GetBundleDirFromScan(bundleDirs);
@@ -657,7 +657,7 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
 HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto iter = handler->HotPatchAppProcessing("");
     EXPECT_EQ(iter, false);
@@ -671,7 +671,7 @@ HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0100, Function | SmallTest |
 HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0200, Function | SmallTest | Level0)
 {
     std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
+    ASSERT_NE(nullptr, runner);
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto iter = handler->HotPatchAppProcessing(BUNDLE_NAME);
     EXPECT_EQ(iter, false);
