@@ -2395,7 +2395,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2456,7 +2456,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
 
