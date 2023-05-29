@@ -133,6 +133,7 @@ const std::string MODULE_BUILD_HASH = "buildHash";
 const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -155,6 +156,35 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
     return bundleName + Constants::FILE_UNDERLINE + std::to_string(userId);
 }
 }  // namespace
+
+void InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return;
+    }
+    item->second.aotCompileStatus = aotCompileStatus;
+}
+
+AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleName) const
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return AOTCompileStatus::NOT_COMPILED;
+    }
+    return item->second.aotCompileStatus;
+}
+
+void InnerBundleInfo::ResetAOTFlags()
+{
+    baseApplicationInfo_->arkNativeFilePath.clear();
+    baseApplicationInfo_->arkNativeFileAbi.clear();
+    std::for_each(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](auto &item) {
+        item.second.aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    });
+}
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
@@ -569,7 +599,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_BUILD_HASH, info.buildHash},
         {MODULE_ISOLATION_MODE, info.isolationMode},
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
-        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames}
+        {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
+        {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
     };
 }
 
@@ -1105,6 +1136,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<AOTCompileStatus>(jsonObject,
+        jsonObjectEnd,
+        MODULE_AOT_COMPILE_STATUS,
+        info.aotCompileStatus,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerModuleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -1776,6 +1815,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.isolationMode = GetIsolationMode(it->second.isolationMode);
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
+    hapInfo.aotCompileStatus = it->second.aotCompileStatus;
     return hapInfo;
 }
 
@@ -2355,7 +2395,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2416,7 +2456,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
 

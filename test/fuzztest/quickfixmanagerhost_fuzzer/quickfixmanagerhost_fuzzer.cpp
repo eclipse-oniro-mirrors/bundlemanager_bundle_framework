@@ -26,13 +26,13 @@ namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 4;
-constexpr size_t ZERO_CHAR = 24;
-constexpr size_t ONE_CHAR = 16;
-constexpr size_t TWO_CHAR = 8;
+constexpr size_t DCAMERA_SHIFT_24 = 24;
+constexpr size_t DCAMERA_SHIFT_16 = 16;
+constexpr size_t DCAMERA_SHIFT_8 = 8;
 
 uint32_t GetU32Data(const char* ptr)
 {
-    return (ptr[0] << ZERO_CHAR) | (ptr[1] << ONE_CHAR) | (ptr[2] << TWO_CHAR) | (ptr[3]);
+    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
 }
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
