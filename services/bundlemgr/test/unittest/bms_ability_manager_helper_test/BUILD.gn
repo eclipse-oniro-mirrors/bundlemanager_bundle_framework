@@ -43,7 +43,7 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -51,7 +51,6 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

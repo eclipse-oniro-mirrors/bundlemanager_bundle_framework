@@ -71,6 +71,7 @@ ohos_unittest("BmsBundleUpdaterTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest2:versionTest2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/versionTest3:versionTest3",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/wrong_bundle_name:wrong_bundle_name",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -78,7 +79,6 @@ ohos_unittest("BmsBundleUpdaterTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

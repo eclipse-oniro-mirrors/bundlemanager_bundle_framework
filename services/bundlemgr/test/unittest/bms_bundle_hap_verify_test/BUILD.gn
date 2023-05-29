@@ -51,6 +51,7 @@ ohos_unittest("BmsBundleHapVerifyTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/first_right:first_right",
+    "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
 
@@ -58,7 +59,6 @@ ohos_unittest("BmsBundleHapVerifyTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
