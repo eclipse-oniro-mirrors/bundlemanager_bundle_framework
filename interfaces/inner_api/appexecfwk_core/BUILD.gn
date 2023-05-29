@@ -68,8 +68,8 @@ ohos_shared_library("appexecfwk_core") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
-      "${base_path}:appexecfwk_base",
-      "${common_path}:libappexecfwk_common",
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
   ]
 
   external_deps = [
