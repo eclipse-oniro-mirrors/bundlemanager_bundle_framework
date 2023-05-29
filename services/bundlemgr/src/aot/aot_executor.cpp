@@ -45,21 +45,59 @@ AOTExecutor& AOTExecutor::GetInstance()
 
 std::string AOTExecutor::DecToHex(uint32_t decimal) const
 {
-    return "";
+    APP_LOGD("DecToHex begin, decimal : %{public}u", decimal);
+    std::stringstream ss;
+    ss << std::hex << decimal;
+    std::string hexString = HEX_PREFIX + ss.str();
+    APP_LOGD("hex : %{public}s", hexString.c_str());
+    return hexString;
 }
 
 bool AOTExecutor::CheckArgs(const AOTArgs &aotArgs) const
 {
-    return false;
+    if (aotArgs.compileMode.empty() || aotArgs.hapPath.empty() || aotArgs.outputPath.empty()) {
+        APP_LOGE("aotArgs check failed");
+        return false;
+    }
+    if (aotArgs.compileMode == Constants::COMPILE_PARTIAL && aotArgs.arkProfilePath.empty()) {
+        APP_LOGE("partial mode, arkProfilePath can't be empty");
+        return false;
+    }
+    return true;
 }
 
 bool AOTExecutor::GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const
 {
-    return false;
+    BundleExtractor extractor(hapPath);
+    if (!extractor.Init()) {
+        APP_LOGE("init BundleExtractor failed");
+        return false;
+    }
+    if (!extractor.GetFileInfo(ABC_RELATIVE_PATH, offset, length)) {
+        APP_LOGE("GetFileInfo failed");
+        return false;
+    }
+    APP_LOGD("GetFileInfo success, offset : %{public}u, length : %{public}u", offset, length);
+    return true;
 }
 
 ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const
 {
+    APP_LOGD("PrepareArgs begin");
+    if (!CheckArgs(aotArgs)) {
+        APP_LOGE("param check failed");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    uint32_t offset = 0;
+    uint32_t length = 0;
+    if (!GetAbcFileInfo(aotArgs.hapPath, offset, length)) {
+        APP_LOGE("GetAbcFileInfo failed");
+        return ERR_APPEXECFWK_INSTALLD_AOT_ABC_NOT_EXIST;
+    }
+    completeArgs = aotArgs;
+    completeArgs.offset = offset;
+    completeArgs.length = length;
+    APP_LOGD("PrepareArgs success");
     return ERR_OK;
 }
 

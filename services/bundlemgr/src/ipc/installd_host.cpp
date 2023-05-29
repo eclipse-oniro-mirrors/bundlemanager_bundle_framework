@@ -123,7 +123,15 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 
 bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
 {
-    return false;
+    std::unique_ptr<AOTArgs> aotArgs(data.ReadParcelable<AOTArgs>());
+    if (aotArgs == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    ErrCode result = ExecuteAOT(*aotArgs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
 }
 
 bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &reply)

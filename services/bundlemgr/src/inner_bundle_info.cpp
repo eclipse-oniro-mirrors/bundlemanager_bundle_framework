@@ -157,18 +157,33 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
 }
 }  // namespace
 
-bool InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+void InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
 {
-    return false;
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return;
+    }
+    item->second.aotCompileStatus = aotCompileStatus;
 }
 
 AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleName) const
 {
-    return AOTCompileStatus::NOT_COMPILED;
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return AOTCompileStatus::NOT_COMPILED;
+    }
+    return item->second.aotCompileStatus;
 }
 
 void InnerBundleInfo::ResetAOTFlags()
 {
+    baseApplicationInfo_->arkNativeFilePath.clear();
+    baseApplicationInfo_->arkNativeFileAbi.clear();
+    std::for_each(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](auto &item) {
+        item.second.aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    });
 }
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const

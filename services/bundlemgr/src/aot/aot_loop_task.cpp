@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,22 +13,18 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H
-#define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H
-
-#include <string>
+#include "aot/aot_loop_task.h"
 
 namespace OHOS {
-namespace system {
-bool GetBoolParameter(const std::string& key, bool def);
-
-template<typename T>
-T GetIntParameter(const std::string& key, T def)
+namespace AppExecFwk {
+void AOTLoopTask::ScheduleLoopTask()
 {
-    return def;
+    running_ = true;
 }
 
-std::string GetParameter(const std::string& key, const std::string& def);
-} // namespace system
-} // namespace OHOS
-#endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H
+bool AOTLoopTask::CheckDeviceState()
+{
+    return false;
+}
+}  // namespace AppExecFwk
+}  // namespace OHOS

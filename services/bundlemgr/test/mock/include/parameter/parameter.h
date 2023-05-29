@@ -21,5 +21,6 @@ char *GetDeviceType();
 int GetSdkApiVersion();
 int GetParameter(const char *key, const char *def, char *value, int len);
 int GetIntParameter(const char *key, int def);
+const char *GetAbiList(void);
 } // OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETER_H

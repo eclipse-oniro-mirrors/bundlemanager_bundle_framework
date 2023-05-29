@@ -22,22 +22,52 @@ namespace OHOS {
 namespace AppExecFwk {
 bool AOTArgs::ReadFromParcel(Parcel &parcel)
 {
-    return false;
+    bundleName = Str16ToStr8(parcel.ReadString16());
+    moduleName = Str16ToStr8(parcel.ReadString16());
+    compileMode = Str16ToStr8(parcel.ReadString16());
+    hapPath = Str16ToStr8(parcel.ReadString16());
+    coreLibPath = Str16ToStr8(parcel.ReadString16());
+    outputPath = Str16ToStr8(parcel.ReadString16());
+    arkProfilePath = Str16ToStr8(parcel.ReadString16());
+    offset = parcel.ReadUint32();
+    length = parcel.ReadUint32();
+    return true;
 }
 
 bool AOTArgs::Marshalling(Parcel &parcel) const
 {
-    return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(compileMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(coreLibPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(outputPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkProfilePath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
+    return true;
 }
 
 AOTArgs *AOTArgs::Unmarshalling(Parcel &parcel)
 {
-    return nullptr;
+    AOTArgs *aotArgs = new (std::nothrow) AOTArgs();
+    if (aotArgs) {
+        aotArgs->ReadFromParcel(parcel);
+    }
+    return aotArgs;
 }
 
 std::string AOTArgs::ToString() const
 {
-    return "";
+    return "[ bundleName = " +  bundleName
+            + ", moduleName = " + moduleName
+            + ", compileMode = " + compileMode
+            + ", hapPath = " + hapPath
+            + ", coreLibPath = " + coreLibPath
+            + ", outputPath = " + outputPath
+            + ", arkProfilePath = " + arkProfilePath
+            + ", offset = " + std::to_string(offset)
+            + ", length = " + std::to_string(length) + "]";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

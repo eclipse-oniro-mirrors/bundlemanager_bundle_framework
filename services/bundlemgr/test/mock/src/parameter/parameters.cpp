@@ -21,5 +21,10 @@ bool GetBoolParameter(const std::string& key, bool def)
 {
     return false;
 }
+
+std::string GetParameter(const std::string& key, const std::string& def)
+{
+    return "";
+}
 } // system
 } // OHOS

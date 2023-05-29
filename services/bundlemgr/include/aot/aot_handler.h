@@ -41,7 +41,7 @@ private:
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
-    void HandleInstall(const InnerBundleInfo &info, const std::string &compileMode) const;
+    void HandleInstallInternal(const InnerBundleInfo &info, const std::string &compileMode) const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;

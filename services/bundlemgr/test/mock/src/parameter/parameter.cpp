@@ -53,4 +53,9 @@ int GetIntParameter(const char *key, int def)
 {
     return def;
 }
+
+const char *GetAbiList(void)
+{
+    return "arm64-v8a";
+}
 } // OHOS
