@@ -692,6 +692,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | Sma
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    connectAbilityMgr->iErMgr_ = nullptr;
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
@@ -1511,93 +1512,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
     SetDataMgr();
 }
 
-/**
- * @tc.number: BundleConnectAbilityMgr_0025
- * Function: SilentInstall
- * @tc.name: test SilentInstall
- * @tc.desc: test SilentInstall successed when erms not exist.
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    connectAbilityMgr->iErMgr_ = nullptr;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0026
- * Function: SilentInstall
- * @tc.name: test SilentInstall
- * @tc.desc: test SilentInstall successed when erms available.
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
-    connectAbilityMgr->iErMgr_ = erms;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    ExperienceRule rule;
-    rule.isAllow = true;
-    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
-        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
-    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_TRUE(res);
-    connectAbilityMgr->iErMgr_ = nullptr;
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0027
- * Function: SilentInstall
- * @tc.name: test SilentInstall
- * @tc.desc: test SilentInstall successed when erms not allow with replace want.
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
-    connectAbilityMgr->iErMgr_ = erms;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    ExperienceRule rule;
-    rule.isAllow = false;
-    rule.replaceWant = std::make_shared<Want>();
-    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
-        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
-    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_TRUE(res);
-    connectAbilityMgr->iErMgr_ = nullptr;
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0028
- * Function: SilentInstall
- * @tc.name: test SilentInstall
- * @tc.desc: test SilentInstall failed when erms not allow without replace want.
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0028, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    sptr<MockEcologicalRuleMgrService> erms = new  MockEcologicalRuleMgrService();
-    connectAbilityMgr->iErMgr_ = erms;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    ExperienceRule rule;
-    rule.isAllow = false;
-    rule.replaceWant = nullptr;
-    EXPECT_CALL(*erms, QueryFreeInstallExperience(_, _, _)).Times(1)
-        .WillRepeatedly(DoAll(SetArgReferee<2>(rule), Return(ERR_OK)));
-    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_FALSE(res);
-    connectAbilityMgr->iErMgr_ = nullptr;
-}
 
 /**
  * @tc.number: OnAbilityConnectDone_0001
@@ -2067,6 +1981,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | Smal
 
 /**
  * @tc.number: CheckEcologicalRule_0001
+ * Function: CheckEcologicalRule
  * @tc.name: CheckEcologicalRule
  * @tc.desc: Check Ecological Rule failed
  */
@@ -2085,11 +2000,12 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
 }
 
 /**
- * @tc.number: CheckEcologicalRule_0001
- * @tc.name: CheckEcologicalRule
- * @tc.desc: Check Ecological Rule failed
+ * @tc.number: ErmsCallerInfo_0001
+ * Function: Marshalling
+ * @tc.name: Marshalling
+ * @tc.desc: ErmsCallerInfo Marshalling
  */
-HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0002, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleFreeInstallTest, ErmsCallerInfo_0001, Function | SmallTest | Level0)
 {
     ErmsCallerInfo info;
     Parcel parcel;
@@ -2099,10 +2015,25 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0002, Function | SmallTes
 }
 
 /**
+ * @tc.number: ErmsCallerInfo_0002
+ * Function: Unmarshalling
+ * @tc.name: Unmarshalling
+ * @tc.desc: ErmsCallerInfo Unmarshalling
+ */
+HWTEST_F(BmsBundleFreeInstallTest, ErmsCallerInfo_0002, Function | SmallTest | Level0)
+{
+    ErmsCallerInfo info;
+    Parcel parcel;
+    info.Marshalling(parcel);
+    auto info_ptr = ErmsCallerInfo::Unmarshalling(parcel);
+    EXPECT_NE(info_ptr, nullptr);
+}
+
+/**
  * @tc.number: ExperienceRule_0001
- * Function: PurposeInfo
- * @tc.name: test PurposeInfo
- * @tc.desc: PurposeInfo
+ * Function: Marshalling
+ * @tc.name: test Marshalling
+ * @tc.desc: Marshalling
  */
 HWTEST_F(BmsBundleFreeInstallTest, ExperienceRule_0001, Function | SmallTest | Level0)
 {
@@ -2111,5 +2042,115 @@ HWTEST_F(BmsBundleFreeInstallTest, ExperienceRule_0001, Function | SmallTest | L
     info.Unmarshalling(parcel);
     bool ret = info.Marshalling(parcel);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ExperienceRule_0002
+ * Function: Unmarshalling
+ * @tc.name: test Unmarshalling
+ * @tc.desc: Unmarshalling
+ */
+HWTEST_F(BmsBundleFreeInstallTest, ExperienceRule_0002, Function | SmallTest | Level0)
+{
+    ExperienceRule info;
+    Parcel parcel;
+    info.Marshalling(parcel);
+    auto rule_ptr = ExperienceRule::Unmarshalling(parcel);
+    EXPECT_NE(rule_ptr, nullptr);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0001
+ * Function: QueryFreeInstallExperience
+ * @tc.name: test QueryFreeInstallExperience
+ * @tc.desc: test QueryFreeInstallExperience successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0001, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    Want want;
+    ErmsCallerInfo callerInfo;
+    ExperienceRule rule;
+    int32_t ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0002
+ * Function: EvaluateResolveInfos
+ * @tc.name: test EvaluateResolveInfos
+ * @tc.desc: test EvaluateResolveInfos successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0002, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    Want want;
+    ErmsCallerInfo callerInfo;
+    ExperienceRule rule;
+    int32_t type = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    int32_t ret = erms->EvaluateResolveInfos(want, callerInfo, type, abilityInfos, extensionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0003
+ * Function: QueryStartExperience
+ * @tc.name: test QueryStartExperience
+ * @tc.desc: test QueryStartExperience successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0003, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    Want want;
+    ErmsCallerInfo callerInfo;
+    ExperienceRule rule;
+    int32_t ret = erms->QueryStartExperience(want, callerInfo, rule);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0004
+ * Function: QueryPublishFormExperience
+ * @tc.name: test QueryPublishFormExperience
+ * @tc.desc: test QueryPublishFormExperience successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0004, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    Want want;
+    ExperienceRule rule;
+    int32_t ret = erms->QueryPublishFormExperience(want, rule);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0005
+ * Function: IsSupportPublishForm
+ * @tc.name: test IsSupportPublishForm
+ * @tc.desc: test IsSupportPublishForm successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0005, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    Want want;
+    ErmsCallerInfo callerInfo;
+    ExperienceRule rule;
+    int32_t ret = erms->IsSupportPublishForm(want, callerInfo, rule);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: EcologicalRuleManager_0006
+ * Function: QueryLastSyncTime
+ * @tc.name: test QueryLastSyncTime
+ * @tc.desc: test QueryLastSyncTime successed when erms available.
+ */
+HWTEST_F(BmsBundleFreeInstallTest, EcologicalRuleManager_0006, Function | SmallTest | Level0)
+{
+    sptr<MockEcologicalRuleMgrService> erms = new MockEcologicalRuleMgrService();
+    int32_t ret = erms->QueryLastSyncTime();
+    EXPECT_EQ(ret, ERR_OK);
 }
 } // OHOS
