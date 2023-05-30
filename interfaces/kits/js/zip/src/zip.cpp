@@ -182,7 +182,7 @@ ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(srcFile)) {
         APP_LOGI("%{public}s called, Failed to open srcFile.", __func__);
-        return ERR_ZLIB_SERVICE_DISABLED;
+        return ERR_ZLIB_SRC_FILE_FORMAT_ERROR;
     }
     while (reader.HasMore()) {
         if (!reader.OpenCurrentEntryInZip()) {
