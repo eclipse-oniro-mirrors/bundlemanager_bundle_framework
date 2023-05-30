@@ -349,6 +349,23 @@ ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::IsExistFile(const std::string &path, bool &isExist)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_FILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     MessageParcel data;

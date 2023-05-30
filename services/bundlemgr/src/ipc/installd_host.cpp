@@ -62,6 +62,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
     funcMap_.emplace(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, &InstalldHost::HandGetNativeLibraryFileNames);
     funcMap_.emplace(IInstalld::Message::EXECUTE_AOT, &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(IInstalld::Message::IS_EXIST_FILE, &InstalldHost::HandleIsExistFile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -126,7 +127,7 @@ bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
     std::unique_ptr<AOTArgs> aotArgs(data.ReadParcelable<AOTArgs>());
     if (aotArgs == nullptr) {
         APP_LOGE("readParcelableInfo failed");
-        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+        return false;
     }
 
     ErrCode result = ExecuteAOT(*aotArgs);
@@ -316,6 +317,19 @@ bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         APP_LOGE("fail to IsExistDir from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleIsExistFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string path = Str16ToStr8(data.ReadString16());
+    bool isExist = false;
+    ErrCode result = IsExistFile(path, isExist);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isExist)) {
+        APP_LOGE("fail to IsExistFile from reply");
         return false;
     }
     return true;

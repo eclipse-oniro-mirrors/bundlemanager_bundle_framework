@@ -16,15 +16,14 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_LOOP_TASK
 #define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_LOOP_TASK
 
+#include <cstdint>
+
 namespace OHOS {
 namespace AppExecFwk {
 class AOTLoopTask final {
 public:
-    void ScheduleLoopTask();
-private:
-    bool CheckDeviceState();
-private:
-    bool running_ = false;
+    void ScheduleLoopTask() const;
+    static uint32_t GetAOTIdleInterval();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

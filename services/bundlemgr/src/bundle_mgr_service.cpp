@@ -369,6 +369,11 @@ sptr<IOverlayManager> BundleMgrService::GetOverlayManagerProxy() const
 }
 #endif
 
+std::shared_ptr<AOTLoopTask> BundleMgrService::GetAOTLoopTask() const
+{
+    return aotLoopTask_;
+}
+
 void BundleMgrService::CheckAllUser()
 {
     if (dataMgr_ == nullptr) {

@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "account_helper.h"
+#include "aot/aot_handler.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
@@ -256,6 +257,7 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetAOTLoopTask()->ScheduleLoopTask();
 }
 
 void BMSEventHandler::ClearCache()
@@ -294,6 +296,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         OnBundleRebootStart();
         SaveSystemFingerprint();
+        AOTHandler::GetInstance().HandleOTA();
     }
 
     needNotifyBundleScanStatus_ = true;
@@ -1518,6 +1521,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
     SystemBundleInstaller installer;
     return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
 }
@@ -1539,6 +1543,7 @@ bool BMSEventHandler::OTAInstallSystemSharedBundle(
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = filePaths;
+    installParam.isOTA = true;
     SystemBundleInstaller installer;
     return installer.InstallSystemSharedBundle(installParam, true, appType);
 }

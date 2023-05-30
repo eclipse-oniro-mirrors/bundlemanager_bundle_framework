@@ -244,6 +244,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode IsExistFile(const std::string &path, bool &isExist)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty)
     {
         return ERR_OK;
@@ -292,6 +297,7 @@ protected:
         EXTRACT_FILES,
         GET_NATIVE_LIBRARY_FILE_NAMES,
         EXECUTE_AOT,
+        IS_EXIST_FILE,
     };
 };
 
