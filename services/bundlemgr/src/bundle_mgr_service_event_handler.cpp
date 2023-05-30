@@ -1074,6 +1074,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
+        bool updateBundle = false;
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
             if (parserModuleNames.empty()) {
@@ -1117,12 +1118,9 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                         hasInstalledInfo.applicationInfo.debug);
                     updateSelinuxLabel = true;
                 }
-                if (hasModuleInstalled) {
-                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
-                        parserModuleNames[0].c_str());
-                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
-                        filePaths.emplace_back(item.first);
-                    }
+                if (hasModuleInstalled && UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.", parserModuleNames[0].c_str());
+                    updateBundle = true;
                     continue;
                 }
 
@@ -1130,6 +1128,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     parserModuleNames[0].c_str(), item.first.c_str());
                 filePaths.emplace_back(item.first);
             }
+        }
+
+        if (updateBundle) {
+            filePaths.clear();
+            filePaths.emplace_back(scanPathIter);
         }
 
         if (filePaths.empty()) {
