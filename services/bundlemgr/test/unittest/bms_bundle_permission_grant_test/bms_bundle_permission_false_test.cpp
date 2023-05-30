@@ -46,6 +46,7 @@ const std::string ABILITY_NAME = "abilityName";
 const std::string MOUDLE_NAME = "moduleName";
 const std::string APPID = "appId";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/permission_bundle/";
+const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/bundle_kit/test.hap";
 const std::string DEFAULT_APP_VIDEO = "VIDEO";
 const int32_t USERID = 100;
 const int32_t FLAGS = 0;
@@ -857,6 +858,7 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_5600, Functi
     Want want;
     std::vector<AbilityInfo> abilityInfos;
     std::vector<ExtensionAbilityInfo> extensionInfos;
+    bundleMgrHostImpl_->UpgradeAtomicService(want, USERID);
     bool ret = bundleMgrHostImpl_->ImplicitQueryInfos(want, FLAGS, USERID, true, abilityInfos, extensionInfos);
     EXPECT_EQ(ret, false);
 }
@@ -1611,5 +1613,32 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_16000, Funct
     bool ret = DefaultAppMgr::GetInstance().IsElementValid(
         USERID, DEFAULT_APP_VIDEO, element);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_17000
+ * @tc.name: test GetAppPrivilegeLevel
+ * @tc.desc: 1.system run normally
+ *           2.GetAppPrivilegeLevel is empty
+*/
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_17000, Function | SmallTest | Level1)
+{
+    std::vector<AbilityInfo> abilityInfos;
+    bool testRet = bundleMgrHostImpl_->QueryAbilityInfosByUri("", abilityInfos);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_18000
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_18000, Function | SmallTest | Level1)
+{
+    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
+    bundleStatusCallback->SetBundleName(HAP_FILE_PATH1);
+    bool result = bundleMgrHostImpl_->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_EQ(result, false);
 }
 } // OHOS
