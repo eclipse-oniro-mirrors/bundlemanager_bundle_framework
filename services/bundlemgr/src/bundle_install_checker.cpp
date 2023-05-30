@@ -53,14 +53,14 @@ const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
 const std::string SLASH = "/";
 const std::string DOUBLE_SLASH = "//";
-const std::string SUPPORT_ISOLATION_MODE = "supportIsolationMode";
+const std::string SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
 const std::string VALUE_TRUE = "true";
 const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
 const int32_t SLAH_OFFSET = 2;
-const int32_t THRESHOLD_VAL_LEN = 20;
+const int32_t THRESHOLD_VAL_LEN = 40;
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
