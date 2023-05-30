@@ -55,6 +55,7 @@ const std::string SLASH = "/";
 const std::string DOUBLE_SLASH = "//";
 const std::string SUPPORT_ISOLATION_MODE = "supportIsolationMode";
 const std::string VALUE_TRUE = "true";
+const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
@@ -1185,12 +1186,17 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
 
 bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string &isolationMode)
 {
-    if (((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) &&
-        (isolationMode == NONISOLATION_ONLY)) ||
-        ((std::strcmp(szIsolationModeThresholdMb, VALUE_FALSE.c_str()) == 0) &&
-        (isolationMode == ISOLATION_ONLY))) {
-        APP_LOGE("Parser isolation mode failed.");
-        return false;
+    if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) ||
+        (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL.c_str()) == 0)) {
+        if (isolationMode == NONISOLATION_ONLY) {
+            APP_LOGE("check isolation mode failed.");
+            return false;
+        }
+    } else {
+        if (isolationMode == ISOLATION_ONLY) {
+            APP_LOGE("check isolation mode failed.");
+            return false;
+        }
     }
     return true;
 }
@@ -1205,11 +1211,10 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
             int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
-                APP_LOGE("GetParameter failed");
-                continue;
+                APP_LOGW("GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
-                APP_LOGE("Parser isolation mode failed.");
+                APP_LOGE("check isolation mode failed.");
                 return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }
