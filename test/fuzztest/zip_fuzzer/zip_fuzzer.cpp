@@ -27,7 +27,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t SIZE_fLAG = 2;
+constexpr size_t SIZE_FLAG = 2;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
