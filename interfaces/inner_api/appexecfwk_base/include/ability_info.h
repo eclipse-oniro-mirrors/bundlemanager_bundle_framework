@@ -232,6 +232,7 @@ struct AbilityInfo : public Parcelable {
     int32_t startWindowBackgroundId;
     // whether to display in the missions list
     bool excludeFromMissions = false;
+    bool unclearableMission = false;
     // whether to support recover UI interface
     bool recoverable = false;
 

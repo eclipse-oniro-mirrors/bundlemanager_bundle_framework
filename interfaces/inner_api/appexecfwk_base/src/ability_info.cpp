@@ -98,6 +98,7 @@ const std::string JOSN_KEY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 const std::string JOSN_KEY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+const std::string JOSN_KEY_UNCLEARABLE_MISSION = "unclearableMission";
 const std::string JSON_KEY_RECOVERABLE = "recoverable";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
@@ -503,6 +504,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_MIN_WINDOW_HEIGHT, abilityInfo.minWindowHeight},
         {JOSN_KEY_UID, abilityInfo.uid},
         {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions},
+        {JOSN_KEY_UNCLEARABLE_MISSION, abilityInfo.unclearableMission},
         {JSON_KEY_RECOVERABLE, abilityInfo.recoverable}
     };
     if (abilityInfo.maxWindowRatio == 0) {
@@ -1117,6 +1119,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         jsonObjectEnd,
         JOSN_KEY_EXCLUDE_FROM_MISSIONS,
         abilityInfo.excludeFromMissions,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JOSN_KEY_UNCLEARABLE_MISSION,
+        abilityInfo.unclearableMission,
         JsonType::BOOLEAN,
         false,
         parseResult,
