@@ -101,6 +101,8 @@ struct ApiVersion {
     uint32_t compatible = 0;
     uint32_t target = 0;
     std::string releaseType = "Release";
+    std::string compileSdkVersion;
+    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
 };
 // config.json app
 struct App {
@@ -398,6 +400,22 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
         jsonObjectEnd,
         BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE,
         apiVersion.releaseType,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_VERSION,
+        apiVersion.compileSdkVersion,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_TYPE,
+        apiVersion.compileSdkType,
         JsonType::STRING,
         false,
         g_parseResult,
@@ -2135,6 +2153,8 @@ bool ToApplicationInfo(
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
     applicationInfo.asanEnabled = configJson.app.asanEnabled;
+    applicationInfo.compileSdkVersion = configJson.app.apiVersion.compileSdkVersion;
+    applicationInfo.compileSdkType = configJson.app.apiVersion.compileSdkType;
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
