@@ -26,10 +26,13 @@ namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 32;
+constexpr size_t DCAMERA_SHIFT_24 = 24;
+constexpr size_t DCAMERA_SHIFT_16 = 16;
+constexpr size_t DCAMERA_SHIFT_8 = 8;
 
 uint32_t GetU32Data(const char* ptr)
 {
-    return (ptr[0] << 24) | (ptr[1] << 16) | (ptr[2] << 8) | (ptr[3]);
+    return (ptr[0] << DCAMERA_SHIFT_24) | (ptr[1] << DCAMERA_SHIFT_16) | (ptr[2] << DCAMERA_SHIFT_8) | (ptr[3]);
 }
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
@@ -64,7 +67,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
         return 0;
     }
 
-    char* ch = (char *)malloc(size + 1);
+    char* ch = static_cast<char*>(malloc(size + 1));
     if (ch == nullptr) {
         return 0;
     }
