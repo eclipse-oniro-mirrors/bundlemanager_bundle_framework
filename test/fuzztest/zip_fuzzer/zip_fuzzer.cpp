@@ -35,7 +35,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string destPath = "";
     std::shared_ptr<LIBZIP::ZlibCallbackInfo> zlibCallbackInfo;
     bool includeHiddenFiles = false;
-    if (size % SIZE_fLAG == 0) {
+    if (size % SIZE_FLAG == 0) {
         includeHiddenFiles = true;
     }
     Zip(srcPath, destPath, includeHiddenFiles, zlibCallbackInfo);
