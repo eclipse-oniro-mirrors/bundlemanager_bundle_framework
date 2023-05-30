@@ -77,7 +77,6 @@ bool BmsExtensionDataMgr::OpenHandler()
 bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo)
 {
     auto ret = Init();
-
     if (ret != ERR_OK) {
         APP_LOGE("Init failed, ErrCode: %{public}d", ret);
         return false;
