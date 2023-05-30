@@ -44,7 +44,11 @@ ohos_unittest("BmsRdbDataManagerTest") {
     "${services_path}/bundlemgr/test:bundlemgr_test_config",
   ]
 
-  deps = bundle_install_deps
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
+  ]
+  deps += bundle_install_deps
 
   cflags = []
   if (target_cpu == "arm") {
@@ -56,8 +60,6 @@ ohos_unittest("BmsRdbDataManagerTest") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",

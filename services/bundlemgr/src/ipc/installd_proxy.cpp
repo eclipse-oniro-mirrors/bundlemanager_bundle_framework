@@ -78,6 +78,20 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(IInstalld::Message::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&aotArgs)) {
+        APP_LOGE("WriteParcelable aotArgs failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(IInstalld::Message::EXECUTE_AOT, data, reply, option);
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;

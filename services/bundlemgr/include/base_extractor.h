@@ -60,6 +60,7 @@ public:
     bool IsDirExist(const std::string &dir) const;
     bool IsStageBasedModel(std::string abilityName);
     bool IsNewVersion() const;
+    bool GetFileInfo(const std::string &fileName, uint32_t &offset, uint32_t &length) const;
 
 protected:
     const std::string sourceFile_;

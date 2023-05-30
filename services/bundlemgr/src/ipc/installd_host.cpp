@@ -61,6 +61,7 @@ void InstalldHost::init()
     funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
     funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
     funcMap_.emplace(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, &InstalldHost::HandGetNativeLibraryFileNames);
+    funcMap_.emplace(IInstalld::Message::EXECUTE_AOT, &InstalldHost::HandleExecuteAOT);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -116,6 +117,19 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
     }
 
     ErrCode result = ExtractFiles(*info);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<AOTArgs> aotArgs(data.ReadParcelable<AOTArgs>());
+    if (aotArgs == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    ErrCode result = ExecuteAOT(*aotArgs);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

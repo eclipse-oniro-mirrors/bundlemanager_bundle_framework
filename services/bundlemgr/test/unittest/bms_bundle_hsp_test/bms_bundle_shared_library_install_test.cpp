@@ -662,5 +662,218 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, ProcessBundleUninstall_0200, Functio
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+/**
+ * @tc.number: GetSharedBundleInfoBySelf_0100
+ * @tc.name: test GetSharedBundleInfoBySelf
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSharedBundleInfoBySelf_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    SharedBundleInfo sharedBundleInfo;
+    ErrCode res = GetBundleDataMgr()->GetSharedBundleInfoBySelf(
+        SHARED_BUNDLE_NAME_A, sharedBundleInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBaseSharedBundleInfo_0100
+ * @tc.name: test GetBaseSharedBundleInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetBaseSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    Dependency dependency;
+    BaseSharedBundleInfo baseSharedBundleInfo;
+    dependency.bundleName = SHARED_BUNDLE_NAME_A;
+    bool res = GetBundleDataMgr()->GetBaseSharedBundleInfo(
+        dependency, baseSharedBundleInfo);
+    EXPECT_EQ(res, true);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfos_0100
+ * @tc.name: test GetBundleInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetBundleInfos_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    bool res = GetBundleDataMgr()->GetBundleInfos(
+        flags, bundleInfos, USERID);
+    EXPECT_EQ(res, true);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllBundleInfos_0100
+ * @tc.name: test GetAllBundleInfos
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllBundleInfos_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    bool res = GetBundleDataMgr()->GetAllBundleInfos(
+        flags, bundleInfos);
+    EXPECT_EQ(res, true);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfosV9_0100
+ * @tc.name: test GetBundleInfosV9
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetBundleInfosV9_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t flags = 0;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode res = GetBundleDataMgr()->GetBundleInfosV9(
+        flags, bundleInfos, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllBundleInfosV9_0100
+ * @tc.name: test GetAllBundleInfosV9
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllBundleInfosV9_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode res = GetBundleDataMgr()->GetAllBundleInfosV9(
+        0, bundleInfos);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAppProvisionInfo_0100
+ * @tc.name: test GetAllBundleInfosV9
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAppProvisionInfo_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    int32_t flags = 0;
+    AppProvisionInfo appProvisionInfo;
+    ErrCode res = GetBundleDataMgr()->GetAppProvisionInfo(SHARED_BUNDLE_NAME_A,
+        flags, appProvisionInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfo_0100
+ * @tc.name: test GetAllSharedBundleInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAllSharedBundleInfo_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode res = GetBundleDataMgr()->GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetSpecifiedDistributionType_0100
+ * @tc.name: test GetSpecifiedDistributionType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetSpecifiedDistributionType_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::string specifiedDistributionType = "";
+    ErrCode res = GetBundleDataMgr()->GetSpecifiedDistributionType(SHARED_BUNDLE_NAME_A, specifiedDistributionType);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: GetAdditionalInfo_0100
+ * @tc.name: test GetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleSharedLibraryInstallTest, GetAdditionalInfo_0100, Function | SmallTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths{};
+    std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_V10001};
+    ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::string additionalInfo = "";
+    ErrCode res = GetBundleDataMgr()->GetAdditionalInfo(SHARED_BUNDLE_NAME_A, additionalInfo);
+    EXPECT_EQ(res, ERR_OK);
+
+    ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
 }
 }

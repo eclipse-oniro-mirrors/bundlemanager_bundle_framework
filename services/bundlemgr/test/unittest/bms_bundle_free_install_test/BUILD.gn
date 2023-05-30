@@ -26,6 +26,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -59,6 +60,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   }
 
   deps = [
+    "${core_path}:appexecfwk_core",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -71,7 +73,6 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "battery_manager:batterysrv_client",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "device_usage_statistics:usagestatsinner",
@@ -147,6 +148,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -179,6 +181,8 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
+    "${core_path}:appexecfwk_core",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
   ]
@@ -190,8 +194,6 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "battery_manager:batterysrv_client",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "device_usage_statistics:usagestatsinner",

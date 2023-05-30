@@ -23,6 +23,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -51,13 +52,13 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = bundle_install_deps
+  deps = [ "${core_path}:appexecfwk_core" ]
+  deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -182,14 +183,16 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
   deps += bundle_install_deps
 
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -271,7 +274,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -279,7 +282,6 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -361,7 +363,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -369,7 +371,6 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
@@ -450,7 +451,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -458,7 +459,6 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",

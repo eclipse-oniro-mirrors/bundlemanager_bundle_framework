@@ -50,6 +50,8 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractFiles(const ExtractParam &extractParam) override;
+
+    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs) override;
     /**
      * @brief Rename the module directory from temporaily path to the real path through a proxy object.
      * @param oldPath Indicates the old path name.

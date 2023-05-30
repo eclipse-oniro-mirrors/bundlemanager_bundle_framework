@@ -240,6 +240,9 @@ struct ApplicationInfo : public Parcelable {
     bool split = true;
     BundleType bundleType = BundleType::APP;
 
+    std::string compileSdkVersion;
+    std::string compileSdkType = "OpenHarmony";
+
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

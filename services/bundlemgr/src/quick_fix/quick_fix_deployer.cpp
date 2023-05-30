@@ -352,10 +352,10 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
 
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
-        auto ret = ProcessApplyDiffPatch(appQuickFix, hqf, oldSoPath, patchPath);
-        if (ret != ERR_OK) {
+        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, oldSoPath, patchPath);
+        if (result != ERR_OK) {
             APP_LOGE("bundleName: %{public}s ProcessApplyDiffPatch failed.", appQuickFix.bundleName.c_str());
-            return ret;
+            return result;
         }
     }
     return ERR_OK;

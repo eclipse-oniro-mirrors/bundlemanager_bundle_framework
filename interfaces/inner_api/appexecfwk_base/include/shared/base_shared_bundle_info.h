@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_BASE_INCLUDE_BASE_SHARED_BUNDLE_INFO_H
 
 #include <string>
+#include <vector>
 
 #include "parcel.h"
 
@@ -27,6 +28,9 @@ struct BaseSharedBundleInfo : public Parcelable {
     std::string moduleName;
     uint32_t versionCode;
     std::string nativeLibraryPath;
+    std::string hapPath;
+    bool compressNativeLibs = true;
+    std::vector<std::string> nativeLibraryFileNames;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

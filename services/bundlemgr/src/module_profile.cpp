@@ -223,6 +223,8 @@ struct App {
     int32_t targetPriority = 0;
     bool asanEnabled = false;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
+    std::string compileSdkVersion;
+    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
 };
 
 struct Module {
@@ -1117,6 +1119,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        COMPILE_SDK_VERSION,
+        app.compileSdkVersion,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        COMPILE_SDK_TYPE,
+        app.compileSdkType,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1436,8 +1454,8 @@ void UpdateNativeSoAttrs(
         if (!isLibIsolated) {
             innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         }
-        innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
-        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
+        innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+        innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
     }
@@ -1754,6 +1772,8 @@ bool ToApplicationInfo(
     if (iterBundleType != Profile::BUNDLE_TYPE_MAP.end()) {
         applicationInfo.bundleType = iterBundleType->second;
     }
+    applicationInfo.compileSdkVersion = app.compileSdkVersion;
+    applicationInfo.compileSdkType = app.compileSdkType;
     return true;
 }
 
@@ -2034,6 +2054,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
+    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }

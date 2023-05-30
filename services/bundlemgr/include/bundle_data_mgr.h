@@ -27,6 +27,7 @@
 #include "want.h"
 
 #include "ability_info.h"
+#include "aot/aot_args.h"
 #include "application_info.h"
 #include "app_provision_info.h"
 #include "bundle_data_storage_interface.h"
@@ -813,6 +814,14 @@ public:
     ErrCode GetAllProxyDataInfos(int32_t userId, std::vector<ProxyData> &proxyDatas) const;
 
     std::string GetBundleNameByAppId(const std::string &appId) const;
+
+    void SetAOTCompileStatus(
+        const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    void ResetAOTFlags();
+    std::vector<std::string> GetAllBundleName() const;
+    std::optional<InnerBundleInfo> GetInnerBundleInfo(const std::string &bundleName) const;
+    std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
+
 private:
     /**
      * @brief Init transferStates.

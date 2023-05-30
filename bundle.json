@@ -119,6 +119,42 @@
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_core:appexecfwk_core"
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension/include",
+                      "header_files": [
+                        "bms_extension_data_mgr.h",
+                        "bms_extension_profile.h",
+                        "bms_extension.h",
+                        "bundle_mgr_ext_register.h",
+                        "bundle_mgr_ext.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/bundlemgr_extension:bundlemgr_extension"
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/common/log/include",
+                      "header_files": [
+                        "app_log_wrapper.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/common:libappexecfwk_common"
+                  },
+                  {
+                    "header": {
+                      "header_base": "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common",
+                      "header_files": [
+                        "base_cb_info.h",
+                        "bundle_errors.h",
+                        "business_error.h",
+                        "common_func.h",
+                        "napi_arg.h",
+                        "napi_constants.h"
+                      ]
+                    },
+                    "name": "//foundation/bundlemanager/bundle_framework/interfaces/kits/js/common:bundle_napi_common"
                   }
             ],
             "test": [

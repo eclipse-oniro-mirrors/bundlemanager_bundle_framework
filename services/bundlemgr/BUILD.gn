@@ -18,6 +18,7 @@ import("appexecfwk_bundlemgr.gni")
 config("bundlemgr_common_config") {
   include_dirs = [
     "include",
+    "include/aot",
     "include/app_provision_info",
     "include/default_app",
     "include/free_install",
@@ -28,6 +29,7 @@ config("bundlemgr_common_config") {
     "include/shared",
     "include/quick_fix/state/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
+    "../../interfaces/inner_api/bundlemgr_extension/include",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs
@@ -72,12 +74,13 @@ ohos_source_set("parser_common") {
   public_configs = bundlemgr_parser_common_config
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${extension_path}:bundlemgr_extension",
     "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
   ]
@@ -132,13 +135,14 @@ ohos_source_set("bundle_parser") {
   deps = [
     ":parser_common",
     ":rpcid_decode",
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${extension_path}:bundlemgr_extension",
   ]
 
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
@@ -206,7 +210,10 @@ ohos_shared_library("libbms") {
   deps = [
     ":bundle_parser",
     ":parser_common",
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${extension_path}:bundlemgr_extension",
     "//third_party/zlib:shared_libz",
   ]
 
@@ -216,8 +223,6 @@ ohos_shared_library("libbms") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",

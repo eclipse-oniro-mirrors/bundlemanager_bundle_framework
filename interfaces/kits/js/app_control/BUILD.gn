@@ -31,14 +31,14 @@ ohos_shared_library("appcontrol") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
   ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",

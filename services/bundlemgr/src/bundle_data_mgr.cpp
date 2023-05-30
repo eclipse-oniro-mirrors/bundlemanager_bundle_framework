@@ -15,6 +15,7 @@
 
 #include "bundle_data_mgr.h"
 
+#include <algorithm>
 #include <chrono>
 #include <cinttypes>
 
@@ -4776,6 +4777,77 @@ std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
         return Constants::EMPTY_STRING;
     }
     return it->second.GetBundleName();
+}
+
+void BundleDataMgr::SetAOTCompileStatus(
+    const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+{
+    APP_LOGD("SetAOTCompileStatus, bundleName : %{public}s, moduleName : %{public}s, aotCompileStatus : %{public}d",
+        bundleName.c_str(), moduleName.c_str(), aotCompileStatus);
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return;
+    }
+    item->second.SetAOTCompileStatus(moduleName, aotCompileStatus);
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+    }
+}
+
+void BundleDataMgr::ResetAOTFlags()
+{
+    APP_LOGD("ResetAOTFlags begin");
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
+        item.second.ResetAOTFlags();
+        if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
+            APP_LOGE("SaveStorageBundleInfo failed, bundleName : %{public}s", item.second.GetBundleName().c_str());
+        }
+    });
+    APP_LOGD("ResetAOTFlags end");
+}
+
+std::vector<std::string> BundleDataMgr::GetAllBundleName() const
+{
+    APP_LOGD("GetAllBundleName begin");
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> vector(bundleInfos_.size());
+    std::transform(bundleInfos_.cbegin(), bundleInfos_.cend(), std::back_inserter(vector), [](const auto &item) {
+        return item.first;
+    });
+    return vector;
+}
+
+std::optional<InnerBundleInfo> BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName) const
+{
+    APP_LOGD("GetInnerBundleInfo begin, bundleName : %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    for (const auto &item : bundleInfos_) {
+        if (item.first == bundleName) {
+            return item.second;
+        }
+    }
+    APP_LOGD("GetInnerBundleInfo failed");
+    return std::nullopt;
+}
+
+std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) const
+{
+    APP_LOGD("GetUserIds begin, bundleName : %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::vector<int32_t> vector;
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGD("can't find bundleName : %{public}s", bundleName.c_str());
+        return vector;
+    }
+    auto userInfos = infoItem->second.GetInnerBundleUserInfos();
+    std::transform(userInfos.cbegin(), userInfos.cend(), std::back_inserter(vector), [](const auto &item) {
+        return item.second.bundleUserInfo.userId;
+    });
+    return vector;
 }
 
 ErrCode BundleDataMgr::GetSpecifiedDistributionType(

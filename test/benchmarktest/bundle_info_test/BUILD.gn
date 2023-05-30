@@ -25,10 +25,12 @@ ohos_benchmarktest("BenchmarkTestForBundleInfo") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [ "//third_party/benchmark:benchmark" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "//third_party/benchmark:benchmark",
+  ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "ipc:ipc_core",
   ]

@@ -89,6 +89,7 @@ const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
 const std::string NORMAL_BUNDLE_NAME = "bundleName";
 const std::string FIRST_RIGHT_HAP = "first_right.hap";
 #endif
+const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -240,6 +241,7 @@ void BmsBundleInstallerTest::TearDown()
 {
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
     OHOS::ForceRemoveDirectory(BUNDLE_CODE_DIR);
+    OHOS::ForceRemoveDirectory(BUNDLE_LIBRARY_PATH_DIR);
 }
 
 void BmsBundleInstallerTest::CheckFileExist() const
@@ -3688,7 +3690,7 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0020, TestSize.Level1)
 /**
  * @tc.number: BmsBundleInstallerTest_0030
  * @tc.name: ExtractSoFiles
- * @tc.desc: test InnerProcessNativeLibs isLibIsolated true
+ * @tc.desc: test ExtractSoFiles
  */
 HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0030, TestSize.Level1)
 {
@@ -3699,5 +3701,56 @@ HWTEST_F(BmsBundleInstallerTest, BmsBundleInstallerTest_0030, TestSize.Level1)
     installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
     ret = installer.ExtractSoFiles("/data/test", "libs/arm");
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: ProcessOldNativeLibraryPath_0010
+ * @tc.name: ExtractSoFiles
+ * @tc.desc: test ProcessOldNativeLibraryPath
+ */
+HWTEST_F(BmsBundleInstallerTest, ProcessOldNativeLibraryPath_0010, TestSize.Level1)
+{
+    bool ret = OHOS::ForceCreateDirectory(BUNDLE_LIBRARY_PATH_DIR);
+    EXPECT_TRUE(ret);
+
+    BaseBundleInstaller installer;
+    installer.bundleName_ = BUNDLE_NAME;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    int32_t oldVersionCode = 1000;
+    std::string nativeLibraryPath = "";
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    auto exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    nativeLibraryPath = "libs/arm";
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    installer.versionCode_ = 2000;
+    nativeLibraryPath = "";
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    nativeLibraryPath = "libs/arm";
+    InnerBundleInfo innerBundleInfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.compressNativeLibs = true;
+    innerBundleInfo.innerModuleInfos_["aaa"] = moduleInfo;
+    moduleInfo.compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_["bbb"] = moduleInfo;
+    newInfos["a"] = innerBundleInfo;
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_EQ(exist, 0);
+
+    moduleInfo.compressNativeLibs = false;
+    innerBundleInfo.innerModuleInfos_["aaa"] = moduleInfo;
+    newInfos["a"] = innerBundleInfo;
+
+    installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
+    exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
+    EXPECT_NE(exist, 0);
 }
 } // OHOS
