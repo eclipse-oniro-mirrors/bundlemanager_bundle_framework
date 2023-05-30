@@ -819,7 +819,7 @@ public:
         const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     void ResetAOTFlags();
     std::vector<std::string> GetAllBundleName() const;
-    std::optional<InnerBundleInfo> GetInnerBundleInfo(const std::string &bundleName) const;
+    bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
 
 private:

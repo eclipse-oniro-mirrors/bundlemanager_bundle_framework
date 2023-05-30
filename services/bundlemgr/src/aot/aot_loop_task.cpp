@@ -15,16 +15,46 @@
 
 #include "aot/aot_loop_task.h"
 
+#include <chrono>
+#include <string>
+#include <thread>
+
+#include "aot/aot_handler.h"
+#include "parameters.h"
+
 namespace OHOS {
 namespace AppExecFwk {
-void AOTLoopTask::ScheduleLoopTask()
-{
-    running_ = true;
+namespace {
+const std::string AOT_INTERVAL = "bms.aot.idle.interval";
+constexpr uint32_t EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
 }
 
-bool AOTLoopTask::CheckDeviceState()
+uint32_t AOTLoopTask::GetAOTIdleInterval()
 {
-    return false;
+    uint32_t interval = EIGHT_HOURS_MS;
+    std::string str = system::GetParameter(AOT_INTERVAL, "");
+    if (!str.empty()) {
+        try {
+            interval = std::stoi(str);
+        } catch (...) {
+            APP_LOGE("convert AOT_INTERVAL failed");
+        }
+    }
+    APP_LOGI("aot idle interval ms : %{public}u", interval);
+    return interval;
+}
+
+void AOTLoopTask::ScheduleLoopTask() const
+{
+    APP_LOGI("ScheduleLoopTask begin");
+    auto task = []() {
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(AOTLoopTask::GetAOTIdleInterval()));
+            AOTHandler::GetInstance().HandleIdle();
+        }
+    };
+    std::thread t(task);
+    t.detach();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

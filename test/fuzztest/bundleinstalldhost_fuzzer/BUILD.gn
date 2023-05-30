@@ -71,6 +71,9 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += aot_external_deps
+
   configs += [ "../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
   sources += [
