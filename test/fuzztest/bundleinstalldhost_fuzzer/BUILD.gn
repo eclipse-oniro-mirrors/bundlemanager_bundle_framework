@@ -72,7 +72,9 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  external_deps += aot_external_deps
+  if (bundle_framework_power_mgr_enable) {
+    external_deps += aot_external_deps
+  }
 
   configs += [ "../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
