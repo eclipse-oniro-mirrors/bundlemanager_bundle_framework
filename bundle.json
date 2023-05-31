@@ -93,9 +93,7 @@
                         "ability_info.h",
                         "appexecfwk_errors.h",
                         "application_info.h",
-                        "bundle_info.h",
-                        "erms_mgr_param.h",
-                        "erms_mgr_interface.h"
+                        "bundle_info.h"
                       ]
                     },
                     "name": "//foundation/bundlemanager/bundle_framework/interfaces/inner_api/appexecfwk_base:appexecfwk_base"
