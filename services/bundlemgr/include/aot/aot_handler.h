@@ -48,7 +48,7 @@ private:
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
     bool CheckDeviceState() const;
-    void AOTInternal(std::optional<AOTArgs> aotArgs) const;
+    void AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
 private:
     mutable std::mutex mutex_;
 };

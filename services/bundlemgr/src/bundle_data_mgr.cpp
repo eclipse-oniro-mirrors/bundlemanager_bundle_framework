@@ -4779,8 +4779,8 @@ std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
     return it->second.GetBundleName();
 }
 
-void BundleDataMgr::SetAOTCompileStatus(
-    const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    AOTCompileStatus aotCompileStatus, uint32_t versionCode)
 {
     APP_LOGD("SetAOTCompileStatus, bundleName : %{public}s, moduleName : %{public}s, aotCompileStatus : %{public}d",
         bundleName.c_str(), moduleName.c_str(), aotCompileStatus);
@@ -4788,6 +4788,11 @@ void BundleDataMgr::SetAOTCompileStatus(
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return;
+    }
+    if (item->second.GetVersionCode() != versionCode) {
+        APP_LOGE("versionCode inconsistent, param : %{public}u, current : %{public}u",
+            versionCode, item->second.GetVersionCode());
         return;
     }
     item->second.SetAOTCompileStatus(moduleName, aotCompileStatus);
