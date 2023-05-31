@@ -815,8 +815,8 @@ public:
 
     std::string GetBundleNameByAppId(const std::string &appId) const;
 
-    void SetAOTCompileStatus(
-        const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    void SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        AOTCompileStatus aotCompileStatus, uint32_t versionCode);
     void ResetAOTFlags();
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;

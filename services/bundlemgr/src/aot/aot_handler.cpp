@@ -15,7 +15,6 @@
 
 #include "aot/aot_handler.h"
 
-#include <sys/stat.h>
 #include <thread>
 #include <vector>
 
@@ -98,7 +97,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     return aotArgs;
 }
 
-void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs) const
+void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const
 {
     if (!aotArgs) {
         APP_LOGI("aotArgs empty");
@@ -117,13 +116,13 @@ void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs) const
         return;
     }
     AOTCompileStatus status = ret == ERR_OK ? AOTCompileStatus::COMPILE_SUCCESS : AOTCompileStatus::COMPILE_FAILED;
-    dataMgr->SetAOTCompileStatus(aotArgs->bundleName, aotArgs->moduleName, status);
+    dataMgr->SetAOTCompileStatus(aotArgs->bundleName, aotArgs->moduleName, status, versionCode);
 }
 
 void AOTHandler::HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const
 {
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, info.GetCurrentModulePackage(), compileMode);
-    AOTInternal(aotArgs);
+    AOTInternal(aotArgs, info.GetVersionCode());
 }
 
 void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundleInfo> &infos) const
@@ -155,17 +154,17 @@ void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundle
 
 void AOTHandler::ClearArkCacheDir() const
 {
-    ErrCode ret = InstalldClient::GetInstance()->RemoveDir(Constants::ARK_CACHE_PATH);
-    if (ret != ERR_OK) {
-        ret = InstalldClient::GetInstance()->RemoveDir(Constants::ARK_CACHE_PATH);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return;
     }
-    APP_LOGI("RemoveDir ret : %{public}d", ret);
-    mode_t mode = S_IRWXU | S_IXGRP | S_IXOTH;
-    ret = InstalldClient::GetInstance()->Mkdir(Constants::ARK_CACHE_PATH, mode, 0, 0);
-    if (ret != ERR_OK) {
-        ret = InstalldClient::GetInstance()->Mkdir(Constants::ARK_CACHE_PATH, mode, 0, 0);
-    }
-    APP_LOGI("Mkdir ret : %{public}d", ret);
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    std::for_each(bundleNames.cbegin(), bundleNames.cend(), [dataMgr](const auto &bundleName) {
+        std::string removeDir = Constants::ARK_CACHE_PATH + bundleName;
+        ErrCode ret = InstalldClient::GetInstance()->RemoveDir(removeDir);
+        APP_LOGD("removeDir %{public}s, ret : %{public}d", removeDir.c_str(), ret);
+    });
 }
 
 void AOTHandler::ResetAOTFlags() const
@@ -195,7 +194,7 @@ void AOTHandler::HandleIdleWithSingleHap(
         return;
     }
     std::optional<AOTArgs> aotArgs = BuildAOTArgs(info, moduleName, compileMode);
-    AOTInternal(aotArgs);
+    AOTInternal(aotArgs, info.GetVersionCode());
 }
 
 bool AOTHandler::CheckDeviceState() const
