@@ -68,6 +68,8 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "samgr:samgr_proxy",
   ]
 
+  external_deps += aot_external_deps
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -121,6 +123,8 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",
   ]
+
+  external_deps += aot_external_deps
 
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -201,6 +205,8 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += aot_external_deps
 
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
@@ -290,6 +296,9 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += aot_external_deps
+
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }
@@ -378,6 +387,9 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += aot_external_deps
+
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }
@@ -466,6 +478,9 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += aot_external_deps
+
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }

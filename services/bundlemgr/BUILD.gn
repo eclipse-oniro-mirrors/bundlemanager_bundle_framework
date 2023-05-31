@@ -235,6 +235,8 @@ ohos_shared_library("libbms") {
     "syscap_codec:syscap_interface_shared",
   ]
 
+  external_deps += aot_external_deps
+
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]

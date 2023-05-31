@@ -38,7 +38,6 @@ std::shared_ptr<BundleMgrExt> BundleMgrExtRegister::GetBundleMgrExt(const std::s
         return nullptr;
     }
     return it->second();
-
 }
 } // AppExecFwk
 } // OHOS

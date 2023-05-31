@@ -137,6 +137,12 @@ bundle_install_deps = [
   "${services_path}/bundlemgr:parser_common",
 ]
 
+aot_external_deps = [
+  "battery_manager:batterysrv_client",
+  "display_manager:displaymgr",
+  "power_manager:powermgr_client",
+]
+
 bundle_mgr_source = [
   "${services_path}/bundlemgr/src/account_helper.cpp",
   "${services_path}/bundlemgr/src/aot/aot_loop_task.cpp",

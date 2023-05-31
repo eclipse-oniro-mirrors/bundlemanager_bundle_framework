@@ -25,6 +25,7 @@
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #include "aging/bundle_aging_mgr.h"
 #endif
+#include "aot/aot_handler.h"
 #include "app_control_constants.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
@@ -926,6 +927,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     GetInstallEventInfo(newInfos, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
+    ProcessAOT(installParam.isOTA, newInfos);
     sync();
     return result;
 }
@@ -3537,6 +3539,15 @@ void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<s
     if (InstalldClient::GetInstance()->RemoveDir(oldLibPath) != ERR_OK) {
         APP_LOGW("bundleNmae: %{public}s remove old libs dir failed.", bundleName_.c_str());
     }
+}
+
+void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    if (isOTA) {
+        APP_LOGD("is OTA, no need to AOT");
+        return;
+    }
+    AOTHandler::GetInstance().HandleInstall(infos);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

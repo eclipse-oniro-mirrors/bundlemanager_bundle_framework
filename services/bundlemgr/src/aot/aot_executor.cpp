@@ -101,16 +101,77 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
     return ERR_OK;
 }
 
+std::vector<const char*> AOTExecutor::GetArgv(const AOTArgs &aotArgs) const
+{
+    std::vector<std::string> tmpVector = {
+        "/system/bin/ark_aot_compiler",
+        "--target-compiler-mode=" + aotArgs.compileMode,
+        "--hap-path=" + aotArgs.hapPath,
+        "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
+        "--hap-abc-offset=" + DecToHex(aotArgs.offset),
+        "--hap-abc-size=" + DecToHex(aotArgs.length),
+    };
+    if (aotArgs.compileMode == Constants::COMPILE_PARTIAL) {
+        tmpVector.emplace_back("--compiler-pgo-profiler-path=" + aotArgs.arkProfilePath);
+    }
+    tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
+
+    std::vector<const char*> argv;
+    argv.reserve(tmpVector.size() + 1);
+    for (const auto &arg : tmpVector) {
+        argv.emplace_back(arg.c_str());
+    }
+    argv.emplace_back(nullptr);
+    APP_LOGD("argv size : %{public}zu", argv.size());
+    for (const auto &arg : argv) {
+        APP_LOGD("%{public}s", arg);
+    }
+    return argv;
+}
+
 void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
 {
+    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
+    std::vector<const char*> argv = GetArgv(aotArgs);
+    execv(argv[0], const_cast<char* const*>(argv.data()));
+    APP_LOGE("execv failed : %{public}s", strerror(errno));
+    exit(-1);
 }
 
 void AOTExecutor::ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const
 {
+    int status;
+    waitpid(childPid, &status, 0);
+    if (WIFEXITED(status)) {
+        int exit_status = WEXITSTATUS(status);
+        APP_LOGI("child process exited with status: %{public}d", exit_status);
+        ret = exit_status == 0 ? ERR_OK : ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else if (WIFSIGNALED(status)) {
+        int signal_number = WTERMSIG(status);
+        APP_LOGW("child process terminated by signal: %{public}d", signal_number);
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
 }
 
 void AOTExecutor::ExecuteAOT(const AOTArgs &aotArgs, ErrCode &ret) const
 {
+    AOTArgs completeArgs;
+    ret = PrepareArgs(aotArgs, completeArgs);
+    if (ret != ERR_OK) {
+        APP_LOGE("PrepareArgs failed");
+        return;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    APP_LOGD("begin to fork");
+    pid_t pid = fork();
+    if (pid == -1) {
+        APP_LOGE("fork process failed : %{public}s", strerror(errno));
+        ret = ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    } else if (pid == 0) {
+        ExecuteInChildProcess(completeArgs);
+    } else {
+        ExecuteInParentProcess(pid, ret);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
