@@ -39,8 +39,8 @@ const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
-const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionTypeSync";
-const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfoSync";
+const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
+const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
@@ -1056,9 +1056,9 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
     return jsthis;
 }
 
-napi_value GetSpecifiedDistributionTypeSync(napi_env env, napi_callback_info info)
+napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("GetSpecifiedDistributionTypeSync napi called");
+    APP_LOGD("GetSpecifiedDistributionType napi called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
@@ -1096,13 +1096,13 @@ napi_value GetSpecifiedDistributionTypeSync(napi_env env, napi_callback_info inf
 
     napi_value nSpecifiedDistributionType;
     napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
-    APP_LOGD("call GetSpecifiedDistributionTypeSync done.");
+    APP_LOGD("call GetSpecifiedDistributionType done.");
     return nSpecifiedDistributionType;
 }
 
-napi_value GetAdditionalInfoSync(napi_env env, napi_callback_info info)
+napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("GetAdditionalInfoSync napi called");
+    APP_LOGD("GetAdditionalInfo napi called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
@@ -1139,7 +1139,7 @@ napi_value GetAdditionalInfoSync(napi_env env, napi_callback_info info)
 
     napi_value nAdditionalInfo;
     napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
-    APP_LOGD("call GetAdditionalInfoSync done.");
+    APP_LOGD("call GetAdditionalInfo done.");
     return nAdditionalInfo;
 }
 } // AppExecFwk
