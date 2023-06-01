@@ -132,7 +132,8 @@ declare_args() {
   }
 }
 
-print("bundle_framework_power_mgr_enable = " + "$bundle_framework_power_mgr_enable")
+print("bundle_framework_power_mgr_enable = " +
+      "$bundle_framework_power_mgr_enable")
 print("bundle_framework_graphics = " + "$bundle_framework_graphics")
 print("bundle_framework_free_install = " + "$bundle_framework_free_install")
 print("bundle_framework_default_app = " + "$bundle_framework_default_app")
