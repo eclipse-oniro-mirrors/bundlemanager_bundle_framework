@@ -3318,7 +3318,7 @@ ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::st
             result = overlayChecker->CheckInternalBundle(newInfos, info.second);
         }
         if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
-            isExternalOverlayExisted = false;
+            isExternalOverlayExisted = true;
             result = overlayChecker->CheckExternalBundle(info.second, userId);
         }
         if (result != ERR_OK) {

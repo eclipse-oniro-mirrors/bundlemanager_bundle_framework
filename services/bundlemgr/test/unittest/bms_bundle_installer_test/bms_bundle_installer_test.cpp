@@ -38,6 +38,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "scope_guard.h"
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
 #include "want.h"
@@ -90,6 +91,8 @@ const std::string NORMAL_BUNDLE_NAME = "bundleName";
 const std::string FIRST_RIGHT_HAP = "first_right.hap";
 #endif
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
+const std::string BUNDLE_NAME_TEST = "bundleNameTest";
+const std::string DEVICE_ID = "PHONE-001";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -577,7 +580,6 @@ HWTEST_F(BmsBundleInstallerTest, CreateUninstallTask_0200, Function | SmallTest 
     EXPECT_NE(ERR_OK, result);
 }
 
-
 /**
  * @tc.number: ParseModuleJson_0100
  * @tc.name: parse module json
@@ -596,65 +598,66 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     bool result =
         dataMgr->GetApplicationInfo(SYSTEMFIEID_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
-    EXPECT_EQ(info.name, "com.query.test");
-    EXPECT_EQ(info.description, "$string:description_application");
-    EXPECT_EQ(info.descriptionId, 16777217);
-    EXPECT_EQ(info.label, "$string:app_name");
-    EXPECT_EQ(info.labelId, 16777216);
-    EXPECT_EQ(info.iconPath, "$media:app_icon");
-    EXPECT_EQ(info.iconId, 16777228);
-    EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
-    EXPECT_EQ(info.versionName, "1.0");
-    EXPECT_EQ(info.minCompatibleVersionCode, 1);
-    EXPECT_EQ(info.apiCompatibleVersion, 8);
-    EXPECT_EQ(info.apiTargetVersion, 8);
-    EXPECT_EQ(info.keepAlive, true);
-    EXPECT_EQ(info.removable, false);
-    EXPECT_EQ(info.userDataClearable, false);
-    EXPECT_EQ(info.accessible, true);
-    AbilityInfo abilityInfo;
-    abilityInfo.bundleName = SYSTEMFIEID_NAME;
-    abilityInfo.package = "module01";
-    HapModuleInfo hapModuleInfo;
-    bool ret = dataMgr->GetHapModuleInfo(abilityInfo, hapModuleInfo);
-    EXPECT_TRUE(ret);
-    EXPECT_EQ(hapModuleInfo.name, "module01");
-    EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
-    EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
-    EXPECT_EQ(hapModuleInfo.process, "bba");
-    EXPECT_EQ(hapModuleInfo.virtualMachine, "");
-    EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
-    EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
-    EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
-    EXPECT_EQ(hapModuleInfo.installationFree, false);
-    EXPECT_EQ(hapModuleInfo.srcEntrance, "./MyAbilityStage.ts");
-    EXPECT_EQ(hapModuleInfo.isolationMode, IsolationMode::NONISOLATION_FIRST);
+    if (result) {
+        EXPECT_EQ(info.name, "com.query.test");
+        EXPECT_EQ(info.description, "$string:description_application");
+        EXPECT_EQ(info.descriptionId, 16777217);
+        EXPECT_EQ(info.label, "$string:app_name");
+        EXPECT_EQ(info.labelId, 16777216);
+        EXPECT_EQ(info.iconPath, "$media:app_icon");
+        EXPECT_EQ(info.iconId, 16777228);
+        EXPECT_EQ(static_cast<uint32_t>(info.versionCode), 1);
+        EXPECT_EQ(info.versionName, "1.0");
+        EXPECT_EQ(info.minCompatibleVersionCode, 1);
+        EXPECT_EQ(info.apiCompatibleVersion, 8);
+        EXPECT_EQ(info.apiTargetVersion, 8);
+        EXPECT_EQ(info.keepAlive, true);
+        EXPECT_EQ(info.removable, false);
+        EXPECT_EQ(info.userDataClearable, false);
+        EXPECT_EQ(info.accessible, true);
+        AbilityInfo abilityInfo;
+        abilityInfo.bundleName = SYSTEMFIEID_NAME;
+        abilityInfo.package = "module01";
+        HapModuleInfo hapModuleInfo;
+        bool ret = dataMgr->GetHapModuleInfo(abilityInfo, hapModuleInfo);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(hapModuleInfo.name, "module01");
+        EXPECT_EQ(hapModuleInfo.description, "$string:description_application");
+        EXPECT_EQ(hapModuleInfo.mainAbility, "MainAbility");
+        EXPECT_EQ(hapModuleInfo.process, "bba");
+        EXPECT_EQ(hapModuleInfo.virtualMachine, "");
+        EXPECT_EQ(hapModuleInfo.uiSyntax, "hml");
+        EXPECT_EQ(hapModuleInfo.pages, "$profile:page_config");
+        EXPECT_EQ(hapModuleInfo.deliveryWithInstall, true);
+        EXPECT_EQ(hapModuleInfo.installationFree, false);
+        EXPECT_EQ(hapModuleInfo.srcEntrance, "./MyAbilityStage.ts");
+        EXPECT_EQ(hapModuleInfo.isolationMode, IsolationMode::NONISOLATION_FIRST);
 
-    auto abilityInfos = hapModuleInfo.abilityInfos.front();
-    EXPECT_EQ(abilityInfos.name, "MainAbility");
-    EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
-    EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
-    EXPECT_EQ(abilityInfos.descriptionId, 16777219);
-    EXPECT_EQ(hapModuleInfo.label, "Login");
+        auto abilityInfos = hapModuleInfo.abilityInfos.front();
+        EXPECT_EQ(abilityInfos.name, "MainAbility");
+        EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
+        EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
+        EXPECT_EQ(abilityInfos.descriptionId, 16777219);
+        EXPECT_EQ(hapModuleInfo.label, "Login");
 
-    auto metadata = abilityInfos.metadata.front();
-    EXPECT_EQ(metadata.name, "a01");
-    EXPECT_EQ(metadata.value, "v01");
-    EXPECT_EQ(metadata.resource, "hello");
+        auto metadata = abilityInfos.metadata.front();
+        EXPECT_EQ(metadata.name, "a01");
+        EXPECT_EQ(metadata.value, "v01");
+        EXPECT_EQ(metadata.resource, "hello");
 
-    auto extensionInfos = hapModuleInfo.extensionInfos.front();
-    EXPECT_EQ(extensionInfos.name, "FormName");
-    EXPECT_EQ(extensionInfos.srcEntrance, "./form/MyForm.ts");
-    EXPECT_EQ(extensionInfos.description, "$string:form_description");
-    EXPECT_EQ(extensionInfos.descriptionId, 16777221);
-    EXPECT_EQ(extensionInfos.visible, true);
-    EXPECT_EQ(extensionInfos.icon, "$media:icon");
-    EXPECT_EQ(extensionInfos.iconId, 16777229);
-    EXPECT_EQ(extensionInfos.label, "$string:extension_name");
-    EXPECT_EQ(extensionInfos.labelId, 16777220);
-    EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
-    EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
-
+        auto extensionInfos = hapModuleInfo.extensionInfos.front();
+        EXPECT_EQ(extensionInfos.name, "FormName");
+        EXPECT_EQ(extensionInfos.srcEntrance, "./form/MyForm.ts");
+        EXPECT_EQ(extensionInfos.description, "$string:form_description");
+        EXPECT_EQ(extensionInfos.descriptionId, 16777221);
+        EXPECT_EQ(extensionInfos.visible, true);
+        EXPECT_EQ(extensionInfos.icon, "$media:icon");
+        EXPECT_EQ(extensionInfos.iconId, 16777229);
+        EXPECT_EQ(extensionInfos.label, "$string:extension_name");
+        EXPECT_EQ(extensionInfos.labelId, 16777220);
+        EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
+        EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
+    }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
 
@@ -3752,5 +3755,391 @@ HWTEST_F(BmsBundleInstallerTest, ProcessOldNativeLibraryPath_0010, TestSize.Leve
     installer.ProcessOldNativeLibraryPath(newInfos, oldVersionCode, nativeLibraryPath);
     exist = access(BUNDLE_LIBRARY_PATH_DIR.c_str(), F_OK);
     EXPECT_NE(exist, 0);
+}
+
+/**
+ * @tc.number: UninstallHspVersion_0010
+ * @tc.name: UninstallHspVersion
+ * @tc.desc: test UninstallHspVersion
+ */
+HWTEST_F(BmsBundleInstallerTest, UninstallHspVersion_0010, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    int32_t versionCode = 9;
+    InnerBundleInfo info;
+    std::string uninstallDir;
+    auto ret = installer.UninstallHspVersion(uninstallDir, versionCode, info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: CheckEnableRemovable_0010
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0010, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.emplace("", newInfo);
+    InnerBundleInfo oldInfo;
+    bool isFreeInstallFlag = true;
+    bool isAppExist = false;
+    int32_t userId = 100;
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, isFreeInstallFlag, isAppExist);
+
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, false);
+}
+
+/**
+ * @tc.number: CheckEnableRemovable_0020
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.emplace("", newInfo);
+    InnerBundleInfo oldInfo;
+    bool isFreeInstallFlag = true;
+    bool isAppExist = false;
+    int32_t userId = 100;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    newInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, isFreeInstallFlag, isAppExist);
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, true);
+}
+
+/**
+ * @tc.number: CheckEnableRemovable_0030
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0030, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.emplace("", newInfo);
+    InnerBundleInfo oldInfo;
+    bool isFreeInstallFlag = true;
+    bool isAppExist = true;
+    int32_t userId = 100;
+
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    newInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, isFreeInstallFlag, isAppExist);
+
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, true);
+}
+
+/**
+ * @tc.number: ProcessModuleUpdate_0010
+ * @tc.name: test ProcessBundleInstallStatus
+ * @tc.desc: 1.Test the ProcessBundleInstallStatus
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInfo;
+    AbilityInfo info;
+    bool isReplace = false;
+    bool noSkipsKill = false;
+    info.uri = "dataability://";
+    innerBundleInfo.userId_ = Constants::ALL_USERID;
+    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
+    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
+}
+
+/**
+ * @tc.number: ProcessModuleUpdate_0020
+ * @tc.name: test ProcessBundleInstallStatus
+ * @tc.desc: 1.Test the ProcessBundleInstallStatus
+*/
+HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo oldInfo;
+    bool isReplace = true;
+    bool noSkipsKill = false;
+    innerBundleInfo.userId_ = USERID;
+    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INCONSISTENT_MODULE_NAME);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0010
+ * @tc.name: test CreateBundleDataDir
+ * @tc.desc: 1.Test the CreateBundleDataDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.userId_ = Constants::NOT_EXIST_USERID;
+    InnerBundleInfo info;
+    ErrCode res = installer.CreateBundleDataDir(info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_GENERATE_UID_ERROR);
+}
+
+/**
+ * @tc.number: CreateBundleDataDir_0020
+ * @tc.name: test CreateBundleDataDir
+ * @tc.desc: 1.Test the CreateBundleDataDir
+*/
+HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    BundleInfo bundleInfo;
+    bundleInfo.name = BUNDLE_NAME_TEST;
+    bundleInfo.applicationInfo.name = BUNDLE_NAME;
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = BUNDLE_NAME_TEST;
+    applicationInfo.deviceId = DEVICE_ID;
+    applicationInfo.bundleName = BUNDLE_NAME_TEST;
+    info.SetBaseBundleInfo(bundleInfo);
+    info.SetBaseApplicationInfo(applicationInfo);
+    info.SetAppType(Constants::AppType::SYSTEM_APP);
+    InnerBundleUserInfo innerBundleUserInfo;
+    innerBundleUserInfo.bundleUserInfo.userId = 0;
+    innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+    bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
+    bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
+    bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
+    EXPECT_TRUE(ret1);
+    EXPECT_TRUE(ret2);
+    EXPECT_TRUE(ret3);
+
+    BaseBundleInstaller installer;
+    installer.userId_ = USERID;
+    ErrCode res = installer.CreateBundleDataDir(info);
+    EXPECT_NE(res, ERR_OK);
+
+    ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_START);
+    EXPECT_TRUE(ret3);
+}
+
+/**
+ * @tc.number: ExtractModule_0010
+ * @tc.name: test ExtractModule
+ * @tc.desc: 1.Test the ExtractModule
+*/
+HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Level0)
+{
+    InnerBundleInfo info;
+    info.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.name = MODULE_NAME_TEST;
+    moduleInfo.moduleName = MODULE_NAME_TEST;
+    moduleInfo.modulePackage = MODULE_NAME_TEST;
+    moduleInfo.isLibIsolated = false;
+    moduleInfo.compressNativeLibs = true;
+    info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
+    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->nativeLibraryPath = "";
+
+    BaseBundleInstaller installer;
+    installer.modulePackage_ = MODULE_NAME_TEST;
+    std::string modulePath = "/data/test/bms_bundle_installer";
+    installer.modulePath_ = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
+    ErrCode ret = installer.InnerProcessNativeLibs(info, modulePath);
+    EXPECT_EQ(ret, ERR_OK);
+
+    info.SetIsNewVersion(true);
+    ErrCode res = installer.ExtractModule(info, modulePath);
+    EXPECT_EQ(res, ERR_OK);
+
+    info.baseApplicationInfo_->arkNativeFilePath = "";
+    info.baseApplicationInfo_->arkNativeFileAbi = "errorType";
+    res = installer.ExtractModule(info, modulePath);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_AN_FAILED);
+}
+
+/**
+ * @tc.number: RenameModuleDir_0010
+ * @tc.name: test RenameModuleDir
+ * @tc.desc: 1.Test the RenameModuleDir
+*/
+HWTEST_F(BmsBundleInstallerTest, RenameModuleDir_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo info;
+    info.currentPackage_ = BUNDLE_NAME_TEST;
+    ErrCode res = installer.RenameModuleDir(info);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+}
+
+/**
+ * @tc.number: CheckApiInfo_0010
+ * @tc.name: test CheckApiInfo
+ * @tc.desc: 1.Test the CheckApiInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::SINGLETON_TO_NON;
+    bool noSkipsKill = false;
+    std::unordered_map<std::string, InnerBundleInfo> info;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony";
+    installer.OnSingletonChange(noSkipsKill);
+    info.try_emplace("OpenHarmony", innerBundleInfo);
+
+    bool res = installer.CheckApiInfo(info);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CheckApiInfo_0020
+ * @tc.name: test CheckApiInfo
+ * @tc.desc: 1.Test the CheckApiInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
+    bool noSkipsKill = false;
+    std::unordered_map<std::string, InnerBundleInfo> info;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
+    installer.OnSingletonChange(noSkipsKill);
+    info.try_emplace("OpenHarmony2", innerBundleInfo);
+
+    bool res = installer.CheckApiInfo(info);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: UninstallLowerVersionFeature_0010
+ * @tc.name: test UninstallLowerVersionFeature
+ * @tc.desc: 1.Test the UninstallLowerVersionFeature
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> packageVec;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { SetDataMgr(); });
+    ErrCode res = installer.UninstallLowerVersionFeature(packageVec);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: UninstallLowerVersionFeature_0020
+ * @tc.name: test UninstallLowerVersionFeature
+ * @tc.desc: 1.Test the UninstallLowerVersionFeature
+*/
+HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::vector<std::string> packageVec;
+    installer.bundleName_ = "";
+    ErrCode res = installer.UninstallLowerVersionFeature(packageVec);
+    EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: GetUserId_0010
+ * @tc.name: test GetUserId
+ * @tc.desc: 1.Test the GetUserId
+*/
+HWTEST_F(BmsBundleInstallerTest, GetUserId_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    int32_t res = installer.GetUserId(Constants::INVALID_USERID);
+    EXPECT_EQ(res, Constants::INVALID_USERID);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0010
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->versionName = BUNDLE_NAME_TEST;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_VERSIONNAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0020
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->minCompatibleVersionCode = USERID;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_MINCOMPATIBLE_VERSIONCODE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0030
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->vendor = BUNDLE_NAME_TEST;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0040
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0040, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->targetVersion = USERID;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0050
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0050, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseBundleInfo_->compatibleVersion = USERID;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
 }
 } // OHOS
