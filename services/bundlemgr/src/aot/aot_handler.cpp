@@ -20,15 +20,17 @@
 
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
-#include "battery_srv_client.h"
 #include "bundle_constants.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
-#include "display_power_mgr_client.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
 #include "string_ex.h"
+#ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
+#include "battery_srv_client.h"
+#include "display_power_mgr_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -199,6 +201,7 @@ void AOTHandler::HandleIdleWithSingleHap(
 
 bool AOTHandler::CheckDeviceState() const
 {
+#ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
     DisplayPowerMgr::DisplayState displayState =
         DisplayPowerMgr::DisplayPowerMgrClient::GetInstance().GetDisplayState();
     if (displayState != DisplayPowerMgr::DisplayState::DISPLAY_OFF) {
@@ -214,6 +217,10 @@ bool AOTHandler::CheckDeviceState() const
     }
     APP_LOGI("device is not in charging state");
     return false;
+#else
+    APP_LOGI("device not support power system");
+    return false;
+#endif
 }
 
 void AOTHandler::HandleIdle() const
