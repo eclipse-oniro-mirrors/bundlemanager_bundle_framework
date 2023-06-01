@@ -927,8 +927,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     GetInstallEventInfo(newInfos, sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
-    ProcessAOT(installParam.isOTA, newInfos);
     sync();
+    ProcessAOT(installParam.isOTA, newInfos);
     return result;
 }
 
@@ -2361,18 +2361,12 @@ ErrCode BaseBundleInstaller::ExtractArkProfileFile(
 
 ErrCode BaseBundleInstaller::DeleteOldArkNativeFile(const InnerBundleInfo &oldInfo)
 {
-    std::string arkNativeFilePath = oldInfo.GetArkNativeFilePath();
-    if (arkNativeFilePath.empty()) {
-        APP_LOGD("OldInfo(%{public}s) no arkNativeFilePath", oldInfo.GetBundleName().c_str());
-        return ERR_OK;
-    }
-
     std::string targetPath;
     targetPath.append(ARK_CACHE_PATH).append(oldInfo.GetBundleName());
     auto result = InstalldClient::GetInstance()->RemoveDir(targetPath);
     if (result != ERR_OK) {
         APP_LOGE("fail to remove arkNativeFilePath %{public}s, error is %{public}d",
-            arkNativeFilePath.c_str(), result);
+            targetPath.c_str(), result);
     }
 
     return result;

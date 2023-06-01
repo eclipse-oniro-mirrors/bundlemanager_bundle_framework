@@ -4796,6 +4796,14 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
         return;
     }
     item->second.SetAOTCompileStatus(moduleName, aotCompileStatus);
+    std::string abi;
+    std::string path;
+    if (aotCompileStatus == AOTCompileStatus::COMPILE_SUCCESS) {
+        abi = Constants::ARM64_V8A;
+        path = Constants::ARM64 + Constants::PATH_SEPARATOR;
+    }
+    item->second.SetArkNativeFileAbi(abi);
+    item->second.SetArkNativeFilePath(path);
     if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
         APP_LOGE("SaveStorageBundleInfo failed");
     }
