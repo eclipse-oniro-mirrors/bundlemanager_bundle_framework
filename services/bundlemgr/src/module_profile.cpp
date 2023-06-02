@@ -78,7 +78,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "print",
     "ui",
     "push",
-    "driver"
+    "driver",
+    "appAccountAuthorization"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
