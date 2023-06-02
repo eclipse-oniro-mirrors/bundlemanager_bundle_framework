@@ -230,7 +230,7 @@ void AOTHandler::HandleIdle() const
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;
     }
-    std::string compileMode = system::GetParameter(Constants::COMPILE_IDLE_PARA_KEY, Constants::COMPILE_NONE);
+    std::string compileMode = system::GetParameter(Constants::COMPILE_IDLE_PARA_KEY, Constants::COMPILE_PARTIAL);
     APP_LOGI("%{public}s = %{public}s", Constants::COMPILE_IDLE_PARA_KEY, compileMode.c_str());
     if (compileMode == Constants::COMPILE_NONE) {
         APP_LOGI("%{public}s = none, no need to AOT", Constants::COMPILE_IDLE_PARA_KEY);
