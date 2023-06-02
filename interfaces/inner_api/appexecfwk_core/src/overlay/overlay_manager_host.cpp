@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
+#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,22 +37,23 @@ OverlayManagerHost::~OverlayManagerHost()
 
 void OverlayManagerHost::init()
 {
-    funcMap_.emplace(IOverlayManager::Message::GET_ALL_OVERLAY_MODULE_INFO,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_ALL_OVERLAY_MODULE_INFO),
         &OverlayManagerHost::HandleGetAllOverlayModuleInfo);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_NAME),
         &OverlayManagerHost::HandleGetOverlayModuleInfoByName);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO),
         &OverlayManagerHost::HandleGetOverlayModuleInfo);
-    funcMap_.emplace(IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS),
         &OverlayManagerHost::HandleGetTargetOverlayModuleInfo);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME),
         &OverlayManagerHost::HandleGetOverlayModuleInfoByBundleName);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET),
         &OverlayManagerHost::HandleGetOverlayBundleInfoForTarget);
-    funcMap_.emplace(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET),
         &OverlayManagerHost::HandleGetOverlayModuleInfoForTarget);
-    funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED, &OverlayManagerHost::HandleSetOverlayEnabled);
-    funcMap_.emplace(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF,
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED),
+        &OverlayManagerHost::HandleSetOverlayEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED_FOR_SELF),
         &OverlayManagerHost::HandleSetOverlayEnabledForSelf);
 }
 

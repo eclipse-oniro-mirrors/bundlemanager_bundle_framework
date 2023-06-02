@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
+#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,13 +46,13 @@ int StatusReceiverHost::OnRemoteRequest(uint32_t code, MessageParcel &data, Mess
     }
 
     switch (code) {
-        case static_cast<uint32_t>(IStatusReceiver::Message::ON_FINISHED): {
+        case static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_FINISHED): {
             int32_t resultCode = data.ReadInt32();
             std::string resultMsg = Str16ToStr8(data.ReadString16());
             OnFinished(resultCode, resultMsg);
             break;
         }
-        case static_cast<uint32_t>(IStatusReceiver::Message::ON_STATUS_NOTIFY): {
+        case static_cast<uint32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY): {
             int32_t progress = data.ReadInt32();
             OnStatusNotify(progress);
             break;

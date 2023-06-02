@@ -24,6 +24,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_mgr_service.h"
+#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -562,7 +563,8 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
     }
 
     int32_t ret =
-        remote->SendRequest(static_cast<int32_t>(IStatusReceiver::Message::ON_STATUS_NOTIFY), data, reply, option);
+        remote->SendRequest(
+            static_cast<int32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to call OnStatusNotify, for transact is failed, error code is: %{public}d", ret);
     }
@@ -597,7 +599,8 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
         return;
     }
 
-    int32_t ret = remote->SendRequest(static_cast<int32_t>(IStatusReceiver::Message::ON_FINISHED), data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<int32_t>(StatusReceiverInterfaceCode::ON_FINISHED), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to call OnFinished, for transact is failed, error code is: %{public}d", ret);
     }

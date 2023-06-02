@@ -43,12 +43,6 @@ public:
     }
     virtual void SetInstallerId(uint32_t installerId) {};
     virtual void UnInit() {};
-
-    enum StreamMessage : uint32_t {
-        CREATE_STREAM = 0,
-        STREAM_INSTALL = 1,
-        CREATE_SHARED_BUNDLE_STREAM = 2,
-    };
 };
 } // AppExecFwk
 } // OHOS

@@ -52,7 +52,7 @@ int BundleStreamInstallerProxy::CreateStream(const std::string &hapName)
     }
 
     MessageParcel reply;
-    if (!SendStreamInstallRequest(IBundleStreamInstaller::StreamMessage::CREATE_STREAM, data, reply)) {
+    if (!SendStreamInstallRequest(BundleStreamInstallerInterfaceCode::CREATE_STREAM, data, reply)) {
         APP_LOGE("fail to SendStreamInstallRequest");
         return fd;
     }
@@ -93,7 +93,7 @@ int BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &hspN
     }
 
     MessageParcel reply;
-    if (!SendStreamInstallRequest(IBundleStreamInstaller::StreamMessage::CREATE_SHARED_BUNDLE_STREAM, data, reply)) {
+    if (!SendStreamInstallRequest(BundleStreamInstallerInterfaceCode::CREATE_SHARED_BUNDLE_STREAM, data, reply)) {
         APP_LOGE("fail to SendStreamInstallRequest");
         return fd;
     }
@@ -121,7 +121,7 @@ bool BundleStreamInstallerProxy::Install()
     }
 
     MessageParcel reply;
-    bool res = SendStreamInstallRequest(IBundleStreamInstaller::StreamMessage::STREAM_INSTALL, data, reply);
+    bool res = SendStreamInstallRequest(BundleStreamInstallerInterfaceCode::STREAM_INSTALL, data, reply);
     if (!res) {
         APP_LOGE("fail to SendStreamInstallRequest");
         return res;
@@ -140,8 +140,8 @@ void BundleStreamInstallerProxy::SetInstallerId(uint32_t installerId)
     installerId_ = installerId;
 }
 
-bool BundleStreamInstallerProxy::SendStreamInstallRequest(const uint32_t& code, MessageParcel& data,
-    MessageParcel& reply)
+bool BundleStreamInstallerProxy::SendStreamInstallRequest(
+    BundleStreamInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -150,7 +150,7 @@ bool BundleStreamInstallerProxy::SendStreamInstallRequest(const uint32_t& code, 
     }
 
     MessageOption option(MessageOption::TF_SYNC);
-    int32_t ret = remote->SendRequest(code, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
         return false;

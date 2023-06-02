@@ -20,6 +20,7 @@
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
 #include "string_ex.h"
+#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -36,11 +37,11 @@ QuickFixStatusCallbackHost::~QuickFixStatusCallbackHost()
 
 void QuickFixStatusCallbackHost::Init()
 {
-    funcMap_.emplace(IQuickFixStatusCallback::Message::ON_PATCH_DEPLOYED,
+    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED),
         &QuickFixStatusCallbackHost::HandleOnPatchDeployed);
-    funcMap_.emplace(IQuickFixStatusCallback::Message::ON_PATCH_SWITCHED,
+    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED),
         &QuickFixStatusCallbackHost::HandleOnPatchSwitched);
-    funcMap_.emplace(IQuickFixStatusCallback::Message::ON_PATCH_DELETED,
+    funcMap_.emplace(static_cast<uint32_t>(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED),
         &QuickFixStatusCallbackHost::HandleOnPatchDeleted);
 }
 

@@ -21,6 +21,7 @@
 #include "iremote_proxy.h"
 #include "appexecfwk_errors.h"
 #include "ipc/installd_interface.h"
+#include "bundle_manager_services_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -151,7 +152,7 @@ public:
         std::vector<std::string> &fileNames) override;
 
 private:
-    ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
     static inline BrokerDelegator<InstalldProxy> delegator_;
 };

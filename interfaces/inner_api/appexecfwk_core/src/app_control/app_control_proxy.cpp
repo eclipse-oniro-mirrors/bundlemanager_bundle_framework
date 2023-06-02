@@ -60,7 +60,7 @@ ErrCode AppControlProxy::AddAppInstallControlRule(const std::vector<std::string>
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::ADD_APP_INSTALL_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::ADD_APP_INSTALL_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
@@ -90,7 +90,7 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(const AppInstallControlRule
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_APP_INSTALL_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::DELETE_APP_INSTALL_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteAppInstallControlRule(
@@ -112,7 +112,7 @@ ErrCode AppControlProxy::DeleteAppInstallControlRule(
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::CLEAN_APP_INSTALL_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::CLEAN_APP_INSTALL_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::GetAppInstallControlRule(
@@ -132,7 +132,7 @@ ErrCode AppControlProxy::GetAppInstallControlRule(
         APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfos(IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
+    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_INSTALL_CONTROL_RULE, data, appIds);
 }
 
 ErrCode AppControlProxy::AddAppRunningControlRule(
@@ -157,7 +157,7 @@ ErrCode AppControlProxy::AddAppRunningControlRule(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::ADD_APP_RUNNING_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::ADD_APP_RUNNING_CONTROL_RULE, data, reply);
 }
 ErrCode AppControlProxy::DeleteAppRunningControlRule(
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
@@ -182,7 +182,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_APP_RUNNING_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::DELETE_APP_RUNNING_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
@@ -199,7 +199,7 @@ ErrCode AppControlProxy::DeleteAppRunningControlRule(int32_t userId)
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::CLEAN_APP_RUNNING_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::CLEAN_APP_RUNNING_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds)
@@ -214,7 +214,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(int32_t userId, std::vector<st
         APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfos(IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
+    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE, data, appIds);
 }
 
 ErrCode AppControlProxy::GetAppRunningControlRule(
@@ -235,7 +235,7 @@ ErrCode AppControlProxy::GetAppRunningControlRule(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfo<AppRunningControlRuleResult>(
-        IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRuleResult);
+        AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE_RESULT, data, controlRuleResult);
 }
 
 ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBundleName,
@@ -263,7 +263,7 @@ ErrCode AppControlProxy::ConfirmAppJumpControlRule(const std::string &callerBund
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::CONFIRM_APP_JUMP_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::CONFIRM_APP_JUMP_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
@@ -287,7 +287,7 @@ ErrCode AppControlProxy::AddAppJumpControlRule(const std::vector<AppJumpControlR
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::ADD_APP_JUMP_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::ADD_APP_JUMP_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpControlRule> &controlRules, int32_t userId)
@@ -306,7 +306,7 @@ ErrCode AppControlProxy::DeleteAppJumpControlRule(const std::vector<AppJumpContr
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerBundleName, int32_t userId)
@@ -325,7 +325,7 @@ ErrCode AppControlProxy::DeleteRuleByCallerBundleName(const std::string &callerB
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER, data, reply);
 }
 
 ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetBundleName, int32_t userId)
@@ -345,7 +345,7 @@ ErrCode AppControlProxy::DeleteRuleByTargetBundleName(const std::string &targetB
     }
 
     MessageParcel reply;
-    return SendRequest(IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET, data, reply);
+    return SendRequest(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET, data, reply);
 }
 
 ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleName,
@@ -369,7 +369,7 @@ ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleNa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfo<AppJumpControlRule>(
-        IAppControlMgr::Message::GET_APP_JUMP_CONTROL_RULE, data, controlRule);
+        AppControlManagerInterfaceCode::GET_APP_JUMP_CONTROL_RULE, data, controlRule);
 }
 
 ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
@@ -389,7 +389,7 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    ErrCode ret = SendRequest(IAppControlMgr::Message::SET_DISPOSED_STATUS, data, reply);
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_STATUS, data, reply);
     if (ret != ERR_OK) {
         APP_LOGE("SendRequest failed.");
         return ret;
@@ -416,7 +416,7 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
     }
 
     MessageParcel reply;
-    ErrCode ret = SendRequest(IAppControlMgr::Message::DELETE_DISPOSED_STATUS, data, reply);
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS, data, reply);
     if (ret != ERR_OK) {
         APP_LOGE("SendRequest failed.");
         return ret;
@@ -441,7 +441,7 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
         APP_LOGE("write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ErrCode ret = GetParcelableInfo<Want>(IAppControlMgr::Message::GET_DISPOSED_STATUS, data, want);
+    ErrCode ret = GetParcelableInfo<Want>(AppControlManagerInterfaceCode::GET_DISPOSED_STATUS, data, want);
     if (ret != ERR_OK) {
         APP_LOGE("host return error : %{public}d", ret);
         return ret;
@@ -484,7 +484,7 @@ bool AppControlProxy::WriteParcelableVector(const std::vector<T> &parcelableVect
 }
 
 template<typename T>
-ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, MessageParcel& data, T& parcelableInfo)
+ErrCode AppControlProxy::GetParcelableInfo(AppControlManagerInterfaceCode code, MessageParcel& data, T& parcelableInfo)
 {
     MessageParcel reply;
     int32_t ret = SendRequest(code, data, reply);
@@ -507,7 +507,7 @@ ErrCode AppControlProxy::GetParcelableInfo(IAppControlMgr::Message code, Message
 }
 
 int32_t AppControlProxy::GetParcelableInfos(
-    IAppControlMgr::Message code, MessageParcel &data, std::vector<std::string> &stringVector)
+    AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<std::string> &stringVector)
 {
     MessageParcel reply;
     int32_t ret = SendRequest(code, data, reply);
@@ -524,7 +524,7 @@ int32_t AppControlProxy::GetParcelableInfos(
     return NO_ERROR;
 }
 
-int32_t AppControlProxy::SendRequest(IAppControlMgr::Message code, MessageParcel &data, MessageParcel &reply)
+int32_t AppControlProxy::SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
@@ -532,7 +532,7 @@ int32_t AppControlProxy::SendRequest(IAppControlMgr::Message code, MessageParcel
         APP_LOGE("failed to send request %{public}d due to remote object null.", code);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    int32_t result = remote->SendRequest(code, data, reply, option);
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
     }

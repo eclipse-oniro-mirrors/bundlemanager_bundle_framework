@@ -26,6 +26,7 @@
 #include "mock_bundle_manager_callback_stub.h"
 #include "bundle_distributed_manager.h"
 #include "bundle_manager_callback_proxy.h"
+#include "bundle_manager_services_ipc_interface_code.h"
 #define private public
 
 using namespace testing::ext;
@@ -400,7 +401,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function | MediumTest | Level1)
 {
     MockBundleManagerCallbackStub stub;
-    uint32_t code = IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK;
+    uint32_t code = static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

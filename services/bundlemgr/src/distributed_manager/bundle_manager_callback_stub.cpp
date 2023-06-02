@@ -19,6 +19,7 @@
 #include "bundle_memory_guard.h"
 #include "message_parcel.h"
 #include "string_ex.h"
+#include "bundle_manager_services_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,7 +40,7 @@ int32_t BundleManagerCallbackStub::OnRemoteRequest(
         return OBJECT_NULL;
     }
     switch (code) {
-        case static_cast<uint32_t>(IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK):
+        case static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK):
             return HandleQueryRpcIdCallBack(data, reply);
         default:
             APP_LOGW("BundleManagerCallbackStub receives unknown code, code = %{public}d", code);
