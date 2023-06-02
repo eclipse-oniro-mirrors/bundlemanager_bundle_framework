@@ -44,6 +44,7 @@ const std::string X86 = "x86";
 const std::string X86_SO_PATH = "/lib/x86/x86.so";
 const std::string X86_AN_PATH = "/an/x86/x86.so";
 const std::string BUNDLE_NAME = "com.example.test";
+const std::string TEST_PATH = "//com.example.test/";
 const std::string MODULE_PACKAGE = "com.example.test";
 const std::string MODULE_PATH = "test_tmp";
 const std::string ENTRY = "entry";
@@ -407,7 +408,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0100, Function | Sma
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = ".entry";
     newInfo.currentPackage_ = "";
-    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("", innerModuleInfo));
+    newInfo.InsertInnerModuleInfo("", innerModuleInfo);
     auto ret = installChecker.IsExistedDistroModule(newInfo, info);
     EXPECT_FALSE(ret);
 }
@@ -425,7 +426,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0200, Function | Sma
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "";
     newInfo.currentPackage_ = "1";
-    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("1", innerModuleInfo));
+    newInfo.InsertInnerModuleInfo("1", innerModuleInfo);
     auto ret = installChecker.IsExistedDistroModule(newInfo, info);
     EXPECT_FALSE(ret);
 }
@@ -443,9 +444,50 @@ HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0300, Function | Sma
     InnerModuleInfo innerModuleInfo;
     innerModuleInfo.moduleName = "";
     newInfo.currentPackage_ = "1";
-    newInfo.innerModuleInfos_.insert(pair<string, InnerModuleInfo>("", innerModuleInfo));
+    newInfo.InsertInnerModuleInfo("", innerModuleInfo);
     auto ret = installChecker.IsExistedDistroModule(newInfo, info);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsExistedDistroModule_0400
+ * @tc.name: test the start function of IsExistedDistroModule
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0400, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    info.InsertInnerModuleInfo(HAP, innerModuleInfo);
+    innerModuleInfo.moduleName = ENTRY;
+    newInfo.SetCurrentModulePackage(MODULE_PACKAGE);
+    newInfo.SetIsNewVersion(false);
+    newInfo.InsertInnerModuleInfo(HAP, innerModuleInfo);
+    auto ret = installChecker.IsExistedDistroModule(newInfo, info);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: IsExistedDistroModule_0500
+ * @tc.name: test the start function of IsExistedDistroModule
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, IsExistedDistroModule_0500, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo newInfo;
+    InnerBundleInfo info;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = HAP;
+    newInfo.SetCurrentModulePackage(HAP);
+    newInfo.SetIsNewVersion(true);
+    newInfo.InsertInnerModuleInfo(HAP, innerModuleInfo);
+    info.SetIsNewVersion(false);
+    info.InsertInnerModuleInfo(HAP, innerModuleInfo);
+    auto ret = installChecker.IsExistedDistroModule(newInfo, info);
+    EXPECT_TRUE(ret);
 }
 
 /**
@@ -460,6 +502,47 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMainElement_0100, Function | SmallTes
     info.innerModuleInfos_.clear();
     auto ret = installChecker.CheckMainElement(info);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMainElement_0200
+ * @tc.name: test the start function of CheckMainElement
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMainElement_0200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.distro.moduleType = Profile::MODULE_TYPE_SHARED;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    info.AddInnerModuleInfo(innerModuleInfos);
+    auto ret = installChecker.CheckMainElement(info);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckMainElement_0300
+ * @tc.name: test the start function of CheckMainElement
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckMainElement_0300, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo info;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.distro.moduleType = Profile::MODULE_TYPE_ENTRY;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    info.AddInnerModuleInfo(innerModuleInfos);
+    auto ret = installChecker.CheckMainElement(info);
+    EXPECT_EQ(ret, ERR_OK);
+    BundleInfo bundleInfo;
+    bundleInfo.entryInstallationFree = true;
+    info.SetBaseBundleInfo(bundleInfo);
+    ret = installChecker.CheckMainElement(info);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
 }
 
 /**
@@ -1288,6 +1371,26 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0008, Function | SmallTe
     BundleInstallChecker installChecker;
     std::unordered_map<std::string, InnerBundleInfo> infos;
     InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo;
+    bundleInfo.compatibleVersion = PRIORITY_ONE;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo);
+    InnerBundleInfo innerBundleInfo2;
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0009
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0009
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0009, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
     InnerBundleInfo innerBundleInfo2;
     ApplicationInfo applicationInfo;
     applicationInfo.debug = false;
@@ -1298,6 +1401,46 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0008, Function | SmallTe
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0010
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0010
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0010, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo;
+    bundleInfo.targetVersion = PRIORITY_ONE;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo);
+    InnerBundleInfo innerBundleInfo2;
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_RELEASETYPE_TARGET_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0011
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0011
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0011, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    BundleInfo bundleInfo;
+    bundleInfo.vendor = PRIORITY_ONE;
+    innerBundleInfo1.SetBaseBundleInfo(bundleInfo);
+    InnerBundleInfo innerBundleInfo2;
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
 }
 
 /**
@@ -1366,6 +1509,79 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0003, Function | SmallTest
     innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
     auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0004
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0004, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    ProxyData data;
+    data.uri = MODULE_PATH;
+    innerModuleInfo.proxyDatas.emplace_back(data);
+    innerModuleInfos.try_emplace(HAP, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_URI_FAILED);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0005
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0005, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    ProxyData data;
+    data.uri = TEST_PATH;
+    innerModuleInfo.proxyDatas.emplace_back(data);
+    innerModuleInfos.try_emplace(HAP, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+    ApplicationInfo applicationInfo;
+    applicationInfo.isSystemApp = false;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED);
+}
+
+/**
+ * @tc.number: CheckProxyDatas_0006
+ * @tc.name: test the start function of CheckProxyDatas
+ * @tc.desc: 1. test CheckProxyDatas
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0006, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InnerBundleInfo innerBundleInfo;
+    auto ret = installChecker.CheckProxyDatas(innerBundleInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckIsolationMode_0001
+ * @tc.name: test the start function of CheckIsolationMode
+ * @tc.desc: 1. test CheckIsolationMode
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckIsolationMode_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    auto ret = installChecker.CheckIsolationMode(infos);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
