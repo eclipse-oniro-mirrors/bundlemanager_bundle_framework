@@ -101,8 +101,9 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
     return ERR_OK;
 }
 
-std::vector<const char*> AOTExecutor::GetArgv(const AOTArgs &aotArgs) const
+void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
 {
+    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
     std::vector<std::string> tmpVector = {
         "/system/bin/ark_aot_compiler",
         "--target-compiler-mode=" + aotArgs.compileMode,
@@ -126,13 +127,6 @@ std::vector<const char*> AOTExecutor::GetArgv(const AOTArgs &aotArgs) const
     for (const auto &arg : argv) {
         APP_LOGD("%{public}s", arg);
     }
-    return argv;
-}
-
-void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
-{
-    APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
-    std::vector<const char*> argv = GetArgv(aotArgs);
     execv(argv[0], const_cast<char* const*>(argv.data()));
     APP_LOGE("execv failed : %{public}s", strerror(errno));
     exit(-1);

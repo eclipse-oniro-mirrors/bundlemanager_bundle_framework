@@ -37,7 +37,6 @@ private:
     bool CheckArgs(const AOTArgs &aotArgs) const;
     bool GetAbcFileInfo(const std::string &hapPath, uint32_t &offset, uint32_t &length) const;
     ErrCode PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) const;
-    std::vector<const char*> GetArgv(const AOTArgs &aotArgs) const;
     void ExecuteInChildProcess(const AOTArgs &aotArgs) const;
     void ExecuteInParentProcess(pid_t childPid, ErrCode &ret) const;
 private:
