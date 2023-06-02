@@ -1691,7 +1691,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("VerifyUriPrefix failed");
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
-    // update module type is forbiden
+    // update module type is forbidden
     if (newInfo.HasEntry() && oldInfo.HasEntry()) {
         if (!oldInfo.IsEntryModule(modulePackage_)) {
             APP_LOGE("install more than one entry module");
@@ -1705,8 +1705,8 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     ErrCode result = ERR_OK;
-    if (versionCode_ == oldInfo.GetVersionCode()) {
-        if ((result = CheckAppLabel(oldInfo, newInfo)) != ERR_OK) {
+    if (!otaInstall_ && (versionCode_ == oldInfo.GetVersionCode())) {
+        if (((result = CheckAppLabel(oldInfo, newInfo)) != ERR_OK)) {
             APP_LOGE("CheckAppLabel failed %{public}d", result);
             return result;
         }
