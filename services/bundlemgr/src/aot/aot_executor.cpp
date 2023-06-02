@@ -132,7 +132,29 @@ std::vector<const char*> AOTExecutor::GetArgv(const AOTArgs &aotArgs) const
 void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
 {
     APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
-    std::vector<const char*> argv = GetArgv(aotArgs);
+    std::vector<std::string> tmpVector = {
+        "/system/bin/ark_aot_compiler",
+        "--target-compiler-mode=" + aotArgs.compileMode,
+        "--hap-path=" + aotArgs.hapPath,
+        "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
+        "--hap-abc-offset=" + DecToHex(aotArgs.offset),
+        "--hap-abc-size=" + DecToHex(aotArgs.length),
+    };
+    if (aotArgs.compileMode == Constants::COMPILE_PARTIAL) {
+        tmpVector.emplace_back("--compiler-pgo-profiler-path=" + aotArgs.arkProfilePath);
+    }
+    tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
+
+    std::vector<const char*> argv;
+    argv.reserve(tmpVector.size() + 1);
+    for (const auto &arg : tmpVector) {
+        argv.emplace_back(arg.c_str());
+    }
+    argv.emplace_back(nullptr);
+    APP_LOGD("argv size : %{public}zu", argv.size());
+    for (const auto &arg : argv) {
+        APP_LOGD("%{public}s", arg);
+    }
     execv(argv[0], const_cast<char* const*>(argv.data()));
     APP_LOGE("execv failed : %{public}s", strerror(errno));
     exit(-1);
