@@ -4788,6 +4788,7 @@ void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std
     auto item = bundleInfos_.find(bundleName);
     if (item == bundleInfos_.end()) {
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        (void)InstalldClient::GetInstance()->RemoveDir(Constants::ARK_CACHE_PATH + bundleName);
         return;
     }
     if (item->second.GetVersionCode() != versionCode) {
