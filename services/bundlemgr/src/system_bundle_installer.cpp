@@ -36,6 +36,7 @@ bool SystemBundleInstaller::InstallSystemBundle(
     Constants::AppType appType)
 {
     MarkPreBundleSyeEventBootTag(true);
+    installParam.withCopyHaps = false;
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
@@ -51,6 +52,7 @@ bool SystemBundleInstaller::InstallSystemSharedBundle(
 {
     MarkPreBundleSyeEventBootTag(!isOTA);
     std::vector<std::string> bundlePaths{};
+    installParam.withCopyHaps = false;
     ErrCode result = InstallBundle(bundlePaths, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
@@ -72,6 +74,7 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
 
     for (auto allUserId : dataMgr->GetAllUser()) {
         installParam.userId = allUserId;
+        installParam.withCopyHaps = false;
         MarkPreBundleSyeEventBootTag(false);
         ErrCode result = InstallBundle(filePaths, installParam, appType);
         if (result != ERR_OK) {

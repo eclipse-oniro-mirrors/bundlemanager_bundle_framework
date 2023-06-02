@@ -320,7 +320,7 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
     }
 }
 
-static std::string CreateTempDir(const std::string &tempDir)
+std::string BundleUtil::CreateTempDir(const std::string &tempDir)
 {
     if (!OHOS::ForceCreateDirectory(tempDir)) {
         APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
@@ -335,7 +335,7 @@ static std::string CreateTempDir(const std::string &tempDir)
         APP_LOGE("change mode failed, temp install dir : %{private}s", tempDir.c_str());
         return "";
     }
-    return tempDir;
+    return temppDir;
 }
 
 std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)

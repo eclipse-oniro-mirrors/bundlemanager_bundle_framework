@@ -463,7 +463,7 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         InstallParam installParam;
         installParam.userId = Constants::ALL_USERID;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-        installParam.streamInstallMode = true;
+        installParam.withCopyHaps = false;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
         innerReceiverImpl->SetBundleName(hapPaths.first);
         std::vector<std::string> tempHaps;

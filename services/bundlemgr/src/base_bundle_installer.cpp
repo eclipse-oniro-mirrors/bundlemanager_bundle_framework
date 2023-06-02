@@ -800,6 +800,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "hap file check failed %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
+    // copy the haps to the dir which can be accessed from caller
+    if (installParam.withCopyHaps) {
+        CopyHapsToSecurityDir(bundlePaths);
+    }
+
     // check syscap
     result = CheckSysCap(bundlePaths);
     CHECK_RESULT(result, "hap syscap check failed %{public}d");
@@ -3548,6 +3553,51 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
         return;
     }
     AOTHandler::GetInstance().HandleInstall(infos);
+}
+
+void BaseBundleInstaller::CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths) const
+{
+    for (size_t index = 0; index < bundlePaths.size(); ++index) {
+        APP_LOGD("the original dir is %{public}s", bundlePaths[index].c_str());
+        std::string desternation = "";
+        std::string subStr = Constants::STREAM_INSTALL_PATH;
+        auto pos = bundlePaths[index].find(subStr);
+        if (pos == std::string::npos) {
+            auto lastPathSeperator = bundlePaths[index].rfind(Constants::PATH_SEPARATOR);
+            if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != bundlePaths[index].length() - 1)) {
+                desternation.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR)
+                    .append(Constants::SECURITY_STREAM_INSTALL_PATH).append(Constants::PATH_SEPARATOR)
+                    .append(bundlePaths[index].substr(lastPathSeperator + 1));
+            }
+        } else {
+            desternation.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR)
+                    .append(Constants::SECURITY_STREAM_INSTALL_PATH);
+            desternation = BundleUtil::CreateTempDir(desternation);
+            auto secondLastPathSep = bundlePaths[index].find(Constants::PATH_SEPARATOR, pos);
+            if (secondLastPathSep == bundlePaths[index].length() - 1) {
+                continue;
+            }
+            auto thirdLastPathSep =
+                bundlePaths[index].find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+            if (thirdLastPathSep == bundlePaths[index].length() - 1) {
+                continue;
+            }
+            std::string innerSubstr =
+                bundlePaths[index].substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
+            desternation = BundleUtil::CreateTempDir(desternation.append(innerSubstr));
+            desternation.append(bundlePaths[index].substr(thirdLastPathSep + 1));
+        }
+        APP_LOGD("the destination dir is %{public}s", desternation.c_str());
+        if (desternation.empty()) {
+            continue;
+        }
+        if (!BundleUtil::CopyFile(bundlePaths[index], desternation)) {
+            APP_LOGW("copy file from %{public}s to %{public}s failed", bundlePaths[index].c_str(),
+                desternation.c_str());
+            continue;
+        }
+        bundlePaths[index] = desternation;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
