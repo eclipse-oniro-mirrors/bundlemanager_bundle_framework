@@ -53,7 +53,7 @@ struct InstallParam : public Parcelable {
     // OTA upgrade skips the killing process
     bool noSkipsKill  = true;
     bool needSendEvent = true;
-    bool withCopyHaps = true;
+    bool withCopyHaps = false;
     std::map<std::string, std::string> hashParams;
     // whether need copy hap to install path
     bool copyHapToInstallPath = true;

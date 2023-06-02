@@ -335,7 +335,7 @@ std::string BundleUtil::CreateTempDir(const std::string &tempDir)
         APP_LOGE("change mode failed, temp install dir : %{private}s", tempDir.c_str());
         return "";
     }
-    return temppDir;
+    return tempDir;
 }
 
 std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType &type)

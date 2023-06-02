@@ -39,7 +39,6 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
 {
     installParam_ = installParam;
     receiver_ = statusReceiver;
-    installParam_.streamInstallMode = true;
     std::string tempDir = BundleUtil::CreateInstallTempDir(installerId_, DirType::STREAM_INSTALL_DIR);
     if (tempDir.empty()) {
         return false;
@@ -165,6 +164,7 @@ bool BundleStreamInstallerHostImpl::Install()
     if (!isInstallSharedBundlesOnly_) {
         pathVec.emplace_back(tempDir_);
     }
+    installParam_.withCopyHaps = true;
     auto res = installer->Install(pathVec, installParam_, receiver_);
     if (!res) {
         APP_LOGE("install bundle failed");
