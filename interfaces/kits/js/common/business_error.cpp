@@ -91,8 +91,12 @@ constexpr const char* ERR_MSG_WRONG_PROXY_DATA_URI =
     "The uri in data proxy is wrong";
 constexpr const char* ERR_MSG_WRONG_PROXY_DATA_PERMISSION =
     "The apl of required permission in non-system data proxy should be system_basic or system_core";
+constexpr const char* ERR_MSG_WRONG_MODE_ISOLATION =
+    "Failed to install the HAP because the isolationMode configured is not supported";
 constexpr const char* ERR_MSG_DISALLOW_UNINSTALL =
     "Failed to uninstall because enterprise device management disallow uninstall";
+constexpr const char* ERR_MSG_ALREADY_EXIST =
+    "Failed to install the HAP because the VersionCode to be updated is not greater than the current VersionCode";
 constexpr const char* ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG =
     "The input source file is not ZIP format or damaged.";
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
@@ -140,7 +144,9 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DISALLOW_INSTALL, ERR_MSG_DISALLOW_INSTALL },
     { ERROR_INSTALL_WRONG_DATA_PROXY_URI, ERR_MSG_WRONG_PROXY_DATA_URI },
     { ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION, ERR_MSG_WRONG_PROXY_DATA_PERMISSION },
+    { ERROR_INSTALL_WRONG_MODE_ISOLATION, ERR_MSG_WRONG_MODE_ISOLATION },
     { ERROR_DISALLOW_UNINSTALL, ERR_MSG_DISALLOW_UNINSTALL },
+    { ERROR_INSTALL_ALREADY_EXIST, ERR_MSG_ALREADY_EXIST },
     { ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED, ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG },
 };
 } // namespace
