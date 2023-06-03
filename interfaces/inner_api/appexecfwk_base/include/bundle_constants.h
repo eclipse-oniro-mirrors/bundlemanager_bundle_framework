@@ -157,6 +157,9 @@ constexpr int32_t DFS_GID = 1009;
 constexpr const char* PROFILE_KEY_UID_SIZE = "size";
 constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
+// for render process
+constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
+constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
