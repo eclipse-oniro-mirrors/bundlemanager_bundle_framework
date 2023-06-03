@@ -1166,6 +1166,11 @@ void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission 
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nUsedScene));
     ConvertRequestPermissionUsedScene(env, requestPermission.usedScene, nUsedScene);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "usedScene", nUsedScene));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, requestPermission.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "moduleName", nModuleName));
 }
 
 void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value)

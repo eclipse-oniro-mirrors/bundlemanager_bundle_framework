@@ -3307,13 +3307,17 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
-        for (const auto &item : info.second.requestPermissions) {
+        for (auto item : info.second.requestPermissions) {
+            item.moduleName = info.second.name;
             requestPermissions.push_back(item);
         }
     }
     if (!requestPermissions.empty()) {
         std::sort(requestPermissions.begin(), requestPermissions.end(),
             [](RequestPermission reqPermA, RequestPermission reqPermB) {
+                if (reqPermA.name == reqPermB.name) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
                 return reqPermA.name < reqPermB.name;
             });
         auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
