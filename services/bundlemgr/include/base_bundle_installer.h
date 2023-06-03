@@ -40,6 +40,7 @@ public:
     void SetCallingUid(int32_t callingUid);
 
 protected:
+    bool otaInstall_ = false;
     enum class InstallerState {
         INSTALL_START,
         INSTALL_BUNDLE_CHECKED = 5,
