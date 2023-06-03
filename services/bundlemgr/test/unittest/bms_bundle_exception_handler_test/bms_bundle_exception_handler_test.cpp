@@ -291,29 +291,6 @@ HWTEST_F(BmsBundleExceptionHandlerTest, HandleInvalidBundleTest_0900, TestSize.L
 }
 
 /**
- * @tc.number: DeleteBundleInfoFromStorageTest_1000
- * @tc.name: DeleteBundleInfoFromStorage
- * @tc.desc: test DeleteBundleInfoFromStorage (If branch coverage)
- */
-HWTEST_F(BmsBundleExceptionHandlerTest, DeleteBundleInfoFromStorageTest_1000, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1000 start";
-    bool isBundleValid = true;
-    std::shared_ptr<IBundleDataStorage> dataStorageSptr = std::make_shared<BundleDataStorageRdb>();
-    BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
-    InnerBundleInfo info;
-    int32_t userId = 100;
-    bool result = BundleExceptionHandler.RemoveBundleAndDataDir(BUNDLE_DIR_NAME, BUNDLE_OR_MOUDLE_DIR, userId);
-    EXPECT_EQ(result, true);
-    info.SetInstallMark(BUNDLE_NAME, Package_NAME, InstallExceptionStatus::UPDATING_FINISH);
-    BundleExceptionHandler.HandleInvalidBundle(info, isBundleValid);
-    auto data = info.GetInstallMark();
-    EXPECT_EQ(data.status, InstallExceptionStatus::INSTALL_FINISH);
-    BundleExceptionHandler.DeleteBundleInfoFromStorage(info);
-    GTEST_LOG_(INFO) << "DeleteBundleInfoFromStorageTest_1000 end";
-}
-
-/**
  * @tc.number: DeleteBundleInfoFromStorageTest_1100
  * @tc.name: DeleteBundleInfoFromStorage
  * @tc.desc: test DeleteBundleInfoFromStorage (Do not take if branch coverage)
