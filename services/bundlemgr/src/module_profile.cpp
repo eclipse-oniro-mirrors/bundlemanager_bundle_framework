@@ -1446,8 +1446,10 @@ void UpdateNativeSoAttrs(
         if (!isLibIsolated) {
             innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         }
-        innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
-        innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+        if (!soRelativePath.empty()) {
+            innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+            innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+        }
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
     }
