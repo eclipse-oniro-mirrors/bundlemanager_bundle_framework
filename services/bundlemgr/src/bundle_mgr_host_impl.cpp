@@ -705,7 +705,7 @@ std::string BundleMgrHostImpl::GetAbilityLabel(const std::string &bundleName, co
 {
     APP_LOGD("start GetAbilityLabel, bundleName : %{public}s, abilityName : %{public}s",
         bundleName.c_str(), abilityName.c_str());
-    if (!VerifySystemApi()) {
+    if (!VerifySystemApi(Constants::API_VERSION_NINE)) {
         APP_LOGD("non-system app calling system api");
         return Constants::EMPTY_STRING;
     }
