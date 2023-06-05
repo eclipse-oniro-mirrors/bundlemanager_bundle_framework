@@ -581,7 +581,7 @@ private:
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-        int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
+        uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
