@@ -1893,7 +1893,6 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     if (abilitys.empty()) {
         return std::nullopt;
     }
-
     return abilitys;
 }
 

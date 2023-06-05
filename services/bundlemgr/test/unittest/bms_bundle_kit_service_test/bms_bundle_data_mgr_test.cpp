@@ -76,6 +76,7 @@ const std::string BUNDLE_JOINT_USERID = "3";
 const uint32_t BUNDLE_VERSION_CODE = 1001;
 const std::string BUNDLE_NAME_DEMO = "com.example.bundlekit.demo";
 const std::string MODULE_NAME_DEMO = "com.example.bundlekit.demo.entry";
+const std::string MODULE_NAME1 = "moduleName1";
 const std::string ABILITY_NAME_DEMO = ".Writing";
 const std::string PACKAGE_NAME = "com.example.bundlekit.test.entry";
 const std::string PROCESS_TEST = "test.process";
@@ -2273,6 +2274,181 @@ HWTEST_F(BmsBundleDataMgrTest, GetProvisionMetadata_0100, Function | MediumTest 
 {
     std::vector<Metadata> provisionMetadatas;
     ErrCode ret = bundleMgrHostImpl_->GetProvisionMetadata(BUNDLE_NAME_TEST, USERID, provisionMetadatas);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: TestAOTCompileStatus_0100
+ * @tc.name: test SetAOTCompileStatus
+ * @tc.desc: 1.AOTCompileStatus
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestAOTCompileStatus_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::COMPILE_SUCCESS);
+    AOTCompileStatus ret = info.GetAOTCompileStatus(MODULE_NAME1);
+    EXPECT_EQ(ret, AOTCompileStatus::NOT_COMPILED);
+}
+
+/**
+ * @tc.number: TestAOTCompileStatus_0200
+ * @tc.name: test SetAOTCompileStatus
+ * @tc.desc: 1.AOTCompileStatus
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestAOTCompileStatus_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+    info.SetAOTCompileStatus(MODULE_NAME1, AOTCompileStatus::COMPILE_SUCCESS);
+
+    AOTCompileStatus ret = info.GetAOTCompileStatus(MODULE_NAME1);
+    EXPECT_EQ(ret, AOTCompileStatus::COMPILE_SUCCESS);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0100
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ALL_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0200
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ANY_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0300
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0300, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+    info.baseAbilityInfos_.clear();
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ALL_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0400
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0400, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    moduleInfo.moduleName = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+    info.baseAbilityInfos_.clear();
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ALL_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0500
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0500, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::OVERLAY_STATE;
+    userInfo.bundleName = MODULE_NAME1;
+    info.innerBundleUserInfos_.try_emplace(MODULE_NAME1, userInfo);
+    info.baseAbilityInfos_.clear();
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ALL_USERID);
+    EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestFindAbilityInfos_0500
+ * @tc.name: test AddModuleInfo
+ * @tc.desc: 1.AddModuleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestAddModuleInfo_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleInfo newinfo;
+    InnerModuleInfo moduleInfo;
+    newinfo.currentPackage_ = MODULE_NAME1;
+    newinfo.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+    bool ret = info.AddModuleInfo(info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: TestGetApplicationInfoV9_0100
+ * @tc.name: test GetApplicationInfoV9
+ * @tc.desc: 1.GetApplicationInfoV9
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestGetApplicationInfoV9_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    ApplicationInfo appInfo;
+    auto permissionFlag =
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION);
+    auto ret = info.GetApplicationInfoV9(permissionFlag, Constants::ALL_USERID, appInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: TestGetShortcutInfos_0100
+ * @tc.name: test GetShortcutInfos
+ * @tc.desc: 1.GetShortcutInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestGetShortcutInfos_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    std::vector<ShortcutInfo> shortcutInfos;
+    info.isNewVersion_ = true;
+    info.innerModuleInfos_.clear();
+    info.GetShortcutInfos(shortcutInfos);
+    EXPECT_TRUE(shortcutInfos.empty());
+}
+
+/**
+ * @tc.number: TestIsAbilityEnabledV9_0100
+ * @tc.name: test IsAbilityEnabledV9
+ * @tc.desc: 1.IsAbilityEnabledV9
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestIsAbilityEnabledV9_0100, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    bool isEnable;
+    ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, Constants::NOT_EXIST_USERID, isEnable);
     EXPECT_EQ(ret, ERR_OK);
 }
 }
