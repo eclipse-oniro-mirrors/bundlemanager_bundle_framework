@@ -37,6 +37,7 @@ struct PreBundleConfigInfo {
     bool formVisibleNotify = false;
     bool allowQueryPriority = false;
     bool allowExcludeFromMissions = false;
+    bool allowMissionNotCleared = false;
     bool userDataClearable = true;
     bool hideDesktopIcon = false;
     bool appShareLibrary = false;
@@ -61,6 +62,7 @@ struct PreBundleConfigInfo {
         formVisibleNotify = false;
         allowQueryPriority = false;
         allowExcludeFromMissions = false;
+        allowMissionNotCleared = false;
         userDataClearable = true;
         hideDesktopIcon = false;
         appShareLibrary = false;
@@ -81,6 +83,7 @@ struct PreBundleConfigInfo {
             + ", formVisibleNotify = " + GetBoolStrVal(formVisibleNotify)
             + ", allowQueryPriority = " + GetBoolStrVal(allowQueryPriority)
             + ", allowExcludeFromMissions = " + GetBoolStrVal(allowExcludeFromMissions)
+            + ", allowMissionNotCleared = " + GetBoolStrVal(allowMissionNotCleared)
             + ", userDataClearable = " + GetBoolStrVal(userDataClearable)
             + ", hideDesktopIcon = " + GetBoolStrVal(hideDesktopIcon)
             + ", appShareLibrary = " + GetBoolStrVal(appShareLibrary) + "]";

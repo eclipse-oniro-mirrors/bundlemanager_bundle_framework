@@ -37,6 +37,7 @@ const std::string PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
 const std::string PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
 const std::string PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
 const std::string PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
+const std::string PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
 const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
 const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
 const std::string PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
@@ -45,6 +46,7 @@ const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
 const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
 const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
@@ -91,6 +93,10 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
             { PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
                     appPrivilegeCapability.allowExcludeFromMissions = true;
+                } },
+            { PRIVILEGE_ALLOW_MISSION_NOT_CLEARED,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowMissionNotCleared = true;
                 } },
             { PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
@@ -968,6 +974,10 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
         configInfo.allowExcludeFromMissions, appPrivilegeCapability.allowExcludeFromMissions);
 
+    appPrivilegeCapability.allowMissionNotCleared = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_MISSION_NOT_CLEARED,
+        configInfo.allowMissionNotCleared, appPrivilegeCapability.allowMissionNotCleared);
+
     appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_FORM_VISIBLE_NOTIFY,
         configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
@@ -1020,6 +1030,9 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         }
         if (!appPrivilegeCapability.allowExcludeFromMissions) {
             iter->second.excludeFromMissions = false;
+        }
+        if (!appPrivilegeCapability.allowMissionNotCleared || !applicationInfo.isSystemApp) {
+            iter->second.unclearableMission = false;
         }
 #else
         if (!applicationInfo.isSystemApp || !bundleInfo.isPreInstallApp) {
