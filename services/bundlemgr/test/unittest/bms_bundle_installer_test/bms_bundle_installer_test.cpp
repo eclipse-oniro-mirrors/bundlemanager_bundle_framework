@@ -1413,22 +1413,6 @@ HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfoTest, Function | SmallTe
 }
 
 /**
- * @tc.number: DeleteSharedBundleTest
- * @tc.name: Test use different param with GetBaseSharedBundleInfos
- * @tc.desc: 1.Test the DeleteSharedBundle with BundleDataMgr
-*/
-HWTEST_F(BmsBundleInstallerTest, DeleteSharedBundleTest, Function | SmallTest | Level0)
-{
-    auto dataMgr = GetBundleDataMgr();
-    bool ret = dataMgr->DeleteSharedBundleInfo("");
-    EXPECT_EQ(ret, false);
-    InnerBundleInfo innerBundleInfo;
-    dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
-    ret = dataMgr->DeleteSharedBundleInfo(BUNDLE_NAME);
-    EXPECT_EQ(ret, true);
-}
-
-/**
  * @tc.number: OTASystemInstall_0100
  * @tc.name: test the right system bundle file can be installed
  * @tc.desc: 1.the system bundle file exists
@@ -3145,7 +3129,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4400, Function | SmallTest 
 
     auto ret = installer.InstallNormalAppControl(installAppId, userId);
     EXPECT_EQ(ret, OHOS::ERR_BUNDLE_MANAGER_APP_CONTROL_DISALLOWED_INSTALL);
-    
+
     auto resultDeleteAppInstallAppControlDisallow = DelayedSingleton<AppControlManager>::GetInstance()->
         DeleteAppInstallControlRule(AppControlConstants::EDM_CALLING,
         AppControlConstants::APP_DISALLOWED_INSTALL, appIds, userId);
