@@ -1244,10 +1244,9 @@ HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Leve
     std::string hapPath = "/data/test.hap";
     uint32_t offset = 0;
     uint32_t length = 0;
-    bool ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
     EXPECT_EQ(ret, false);
 
-    AOTArgs aotArgs;
     AOTArgs completeArgs;
     ErrCode retCode = AOTExecutor::GetInstance().PrepareArgs(aotArgs, completeArgs);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
