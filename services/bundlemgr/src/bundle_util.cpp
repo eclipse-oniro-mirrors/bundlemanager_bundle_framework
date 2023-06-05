@@ -320,7 +320,7 @@ void BundleUtil::RemoveFsConfig(const std::string &bundleName, const std::string
     }
 }
 
-static std::string CreateTempDir(const std::string &tempDir)
+std::string BundleUtil::CreateTempDir(const std::string &tempDir)
 {
     if (!OHOS::ForceCreateDirectory(tempDir)) {
         APP_LOGE("mkdir %{private}s failed", tempDir.c_str());
