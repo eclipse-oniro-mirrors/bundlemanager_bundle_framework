@@ -1772,10 +1772,6 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0007, Function | SmallTest | Level1)
 {
     struct Skill skill;
     SkillUri skillUri;
-    skillUri.scheme = "scheme";
-    skillUri.host = "hovst";
-    skillUri.port = "port";
-    skillUri.path = "";
     skillUri.type = "image/*";
     skill.uris.emplace_back(skillUri);
     bool ret = skill.MatchMimeType(".jpg");
