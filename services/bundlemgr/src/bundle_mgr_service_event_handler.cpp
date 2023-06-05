@@ -1146,10 +1146,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         }
 
         if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
-            APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+            APP_LOGW("OTA bundle(%{public}s) failed", bundleName.c_str());
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
+            SystemBundleInstaller installer;
+            if (!installer.UninstallSystemBundle(bundleName, true)) {
+                APP_LOGW("keep data to uninstall app(%{public}s) error", bundleName.c_str());
+            }
+            if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
+                APP_LOGE("OTA try install bundle(%{public}s) again failed", bundleName.c_str());
+            }
         }
     }
 }
