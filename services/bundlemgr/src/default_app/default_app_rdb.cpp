@@ -24,7 +24,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t INITIAL_USER_ID = -1;
-const std::string DEFAULT_APP_JSON_PATH = "/system/etc/app/default_app.json";
+const std::string DEFAULT_APP_JSON_PATH = "/etc/app/default_app.json";
 }
 DefaultAppRdb::DefaultAppRdb()
 {
@@ -151,24 +151,36 @@ bool DefaultAppRdb::DeleteDefaultApplicationInfo(int32_t userId, const std::stri
     return true;
 }
 
+bool DefaultAppRdb::ParseConfig(DefaultAppData &defaultAppData)
+{
+    // load default app config from json file
+    std::vector<std::string> rootDirs;
+    BMSEventHandler::GetPreInstallRootDirList(rootDirs);
+    if (rootDirs.empty()) {
+        APP_LOGW("rootDirs empty");
+        return false;
+    }
+    std::for_each(rootDirs.cbegin(), rootDirs.cend(), [&defaultAppData](const auto &rootDir) {
+        std::string path = rootDir + DEFAULT_APP_JSON_PATH;
+        APP_LOGD("default app json path : %{public}s", path.c_str());
+        nlohmann::json jsonObject;
+        if (!BundleParser::ReadFileIntoJson(path, jsonObject)) {
+            APP_LOGW("read default app json failed");
+            return;
+        }
+        defaultAppData.ParseDefaultApplicationConfig(jsonObject);
+    });
+    return !defaultAppData.infos.empty();
+}
+
 void DefaultAppRdb::LoadDefaultApplicationConfig()
 {
     APP_LOGD("begin to LoadDefaultApplicationConfig.");
-    // load default app config from json file
-    nlohmann::json jsonObject;
-    bool ret = BundleParser::ReadFileIntoJson(DEFAULT_APP_JSON_PATH, jsonObject);
-    if (!ret) {
-        APP_LOGW("read default app json file failed.");
-        return;
-    }
-
     DefaultAppData defaultAppData;
-    ret = defaultAppData.ParseDefaultApplicationConfig(jsonObject);
-    if (!ret) {
-        APP_LOGW("default app json file format invalid.");
+    if (!ParseConfig(defaultAppData)) {
+        APP_LOGD("default app config empty");
         return;
     }
-
     // get pre default app config
     std::map<std::string, Element> preInfos;
     GetDefaultApplicationInfos(INITIAL_USER_ID, preInfos);
