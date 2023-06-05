@@ -46,6 +46,8 @@ const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
+const std::string HAP_FILE_DIR = "/data/storage/el2/base";
+const std::string BUNDLE_NAME_TEST = "com.ohos.test";
 int32_t INVALID_DLP_TYPE = 0;
 int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
@@ -95,6 +97,7 @@ private:
 
     std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> bundleSandboxAppHelper_ =
@@ -2039,4 +2042,188 @@ HWTEST_F(BmsSandboxAppTest, GetSandboxAppInfo_0200, Function | SmallTest | Level
     int32_t appIndex = 0;
     bool ret = DeleteSandboxAppIndex(bundleName, appIndex);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoBySandBoxPath_0100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. install a hap successfully
+ *           2. the sandbox app install successfully
+ *           3. get sandbox app bundleInfo information success by uid
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, GetBundleArchiveInfoBySandBoxPath_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME_TEST);
+
+    setuid(TEST_UID);
+    std::string hapFilePath = HAP_FILE_DIR;
+    BundleInfo bundleInfo;
+    bool fromV9 = false;
+    ErrCode res = bundleMgrHostImpl_->GetBundleArchiveInfoBySandBoxPath(hapFilePath, APP_INDEX_1, bundleInfo, fromV9);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfoBySandBoxPath_0200
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. save sandbox info successfully
+ *           2. get sandbox app bundleInfo information failed
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, GetBundleArchiveInfoBySandBoxPath_0200, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME_TEST);
+
+    setuid(TEST_UID);
+    std::string hapFilePath = "";
+    BundleInfo bundleInfo;
+    bool fromV9 = false;
+    ErrCode res = bundleMgrHostImpl_->GetBundleArchiveInfoBySandBoxPath(hapFilePath, APP_INDEX_1, bundleInfo, fromV9);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    hapFilePath = "/";
+    res = bundleMgrHostImpl_->GetBundleArchiveInfoBySandBoxPath(hapFilePath, APP_INDEX_1, bundleInfo, fromV9);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: GetBundleInfoForSelf_0100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. save sandbox info successfully
+ *           2. get sandbox app bundleInfo information failed
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME_TEST);
+
+    setuid(TEST_UID);
+    BundleInfo bundleInfo;
+    ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: VerifyDependency_0100
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. save sandbox info successfully
+ *           2. test VerifyDependency
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, VerifyDependency_0100, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME_TEST);
+
+    setuid(TEST_UID);
+    bool res = bundleMgrHostImpl_->VerifyDependency(BUNDLE_NAME_TEST);
+    EXPECT_EQ(res, false);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+}
+
+/**
+ * @tc.number: VerifyDependency_0200
+ * @tc.name: get sandbox app bundleInfo information
+ * @tc.desc: 1. save sandbox info successfully
+ *           2. test VerifyDependency
+ * @tc.require: issueI5Y75O
+ */
+HWTEST_F(BmsSandboxAppTest, VerifyDependency_0200, Function | SmallTest | Level1)
+{
+    ApplicationInfo appInfo;
+    appInfo.bundleName = BUNDLE_NAME_TEST;
+
+    InnerBundleUserInfo innerUserInfo;
+    innerUserInfo.bundleUserInfo.userId = USERID;
+    innerUserInfo.uid = TEST_UID;
+
+    InnerBundleInfo info;
+    info.SetBaseApplicationInfo(appInfo);
+    info.AddInnerBundleUserInfo(innerUserInfo);
+
+    SaveSandboxAppInfo(info, APP_INDEX_1);
+
+    InnerBundleInfo newInfo;
+    ErrCode testRet = GetInnerBundleInfoByUid(TEST_UID, newInfo);
+    EXPECT_EQ(testRet, ERR_OK);
+    EXPECT_EQ(newInfo.GetBundleName(), BUNDLE_NAME_TEST);
+
+    setuid(TEST_UID);
+
+    bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
+    bool res = bundleMgrHostImpl_->VerifyDependency(BUNDLE_NAME_TEST);
+    EXPECT_EQ(res, false);
+
+    DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
 }

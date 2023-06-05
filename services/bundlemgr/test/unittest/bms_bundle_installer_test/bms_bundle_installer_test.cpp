@@ -3921,6 +3921,8 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     innerBundleUserInfo.bundleName = BUNDLE_NAME_TEST;
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     ASSERT_NE(dataMgr, nullptr);
+    dataMgr->installStates_.clear();
+    dataMgr->bundleInfos_.clear();
     bool ret1 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::INSTALL_START);
     bool ret2 = dataMgr->AddInnerBundleInfo(BUNDLE_NAME_TEST, info);
     bool ret3 = dataMgr->GenerateUidAndGid(innerBundleUserInfo);
@@ -3929,7 +3931,7 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
     EXPECT_TRUE(ret3);
 
     BaseBundleInstaller installer;
-    installer.userId_ = USERID;
+    installer.userId_ = Constants::NOT_EXIST_USERID;
     ErrCode res = installer.CreateBundleDataDir(info);
     EXPECT_NE(res, ERR_OK);
 
