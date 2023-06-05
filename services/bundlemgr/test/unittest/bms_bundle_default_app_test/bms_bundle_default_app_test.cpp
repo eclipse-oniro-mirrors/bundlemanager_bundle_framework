@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "aot/aot_executor.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -1225,4 +1226,30 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
     EXPECT_EQ(testRet, true);
 }
 
+/**
+ * @tc.number: AOT_EXECUTOR_0100
+ * @tc.name: test AOTExecutor
+ * @tc.desc: decimal convert to correct hex
+ */
+HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Level1)
+{
+    uint32_t decimal = 16;
+    std::string hex = AOTExecutor::GetInstance().DecToHex(decimal);
+    EXPECT_EQ(hex, "0x10");
+
+    AOTArgs aotArgs;
+    bool ret = AOTExecutor::GetInstance().CheckArgs(aotArgs);
+    EXPECT_EQ(ret, false);
+
+    std::string hapPath = "/data/test.hap";
+    uint32_t offset = 0;
+    uint32_t length = 0;
+    bool ret = AOTExecutor::GetInstance().GetAbcFileInfo(hapPath, offset, length);
+    EXPECT_EQ(ret, false);
+
+    AOTArgs aotArgs;
+    AOTArgs completeArgs;
+    ErrCode retCode = AOTExecutor::GetInstance().PrepareArgs(aotArgs, completeArgs);
+    EXPECT_EQ(retCode, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
 } // OHOS
