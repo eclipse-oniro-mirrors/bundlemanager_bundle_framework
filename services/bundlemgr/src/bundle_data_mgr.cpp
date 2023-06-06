@@ -2418,7 +2418,7 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
         APP_LOGE("GetInnerBundleInfoWithFlags: bundleName not find");
         return false;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
+    const InnerBundleInfo innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return false;
@@ -2452,7 +2452,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
         APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
+    const InnerBundleInfo innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
@@ -2491,7 +2491,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
         APP_LOGE("GetInnerBundleInfoWithFlagsV9: bundleName not find");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-    const InnerBundleInfo &innerBundleInfo = item->second;
+    const InnerBundleInfo innerBundleInfo = item->second;
     if (innerBundleInfo.IsDisabled()) {
         APP_LOGE("bundleName: %{public}s status is disabled", innerBundleInfo.GetBundleName().c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
