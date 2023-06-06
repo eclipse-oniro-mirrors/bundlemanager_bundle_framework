@@ -47,7 +47,7 @@ const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string HAP_FILE_DIR = "/data/storage/el2/base";
-const std::string BUNDLE_NAME_TEST = "com.ohos.test";
+const std::string BUNDLE_NAME_TEST = "com.sandbox.test";
 int32_t INVALID_DLP_TYPE = 0;
 int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
@@ -2152,10 +2152,12 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
 
     setuid(TEST_UID);
     BundleInfo bundleInfo;
+    bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
     ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_OK);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
 }
 
 /**
@@ -2226,4 +2228,5 @@ HWTEST_F(BmsSandboxAppTest, VerifyDependency_0200, Function | SmallTest | Level1
     EXPECT_EQ(res, false);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
 }
