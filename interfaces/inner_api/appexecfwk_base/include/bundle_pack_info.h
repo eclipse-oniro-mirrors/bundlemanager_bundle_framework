@@ -102,6 +102,8 @@ struct BundlePackInfo : public Parcelable {
     Summary summary;
     std::vector<Packages> packages;
 
+    BundlePackInfo &operator=(const BundlePackInfo &info);
+
     bool GetValid() const
     {
         return isValid_;

@@ -470,24 +470,18 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->skillInfos_ = info.skillInfos_;
     this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
     this->bundlePackInfo_ = std::make_shared<BundlePackInfo>();
-    if (this->bundlePackInfo_ == nullptr) {
-        APP_LOGE("bundlePackInfo_ is nullptr, create failed");
-    } else {
+    if (info.bundlePackInfo_ != nullptr) {
         *(this->bundlePackInfo_) = *(info.bundlePackInfo_);
     }
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
-    if (this->baseApplicationInfo_ == nullptr) {
-        APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
-    } else {
+    if (info.baseApplicationInfo_ != nullptr) {
         *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
     }
     this->baseBundleInfo_ = std::make_shared<BundleInfo>();
-    if (this->baseBundleInfo_ == nullptr) {
-        APP_LOGE("baseBundleInfo_ is nullptr, create failed");
-    } else {
+    if (info.baseBundleInfo_ != nullptr) {
         *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
     this->hqfInfos_ = info.hqfInfos_;
