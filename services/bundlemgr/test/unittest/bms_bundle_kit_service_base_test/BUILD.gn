@@ -65,6 +65,7 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
