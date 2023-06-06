@@ -3515,7 +3515,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 }
 
 void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-    int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
+    uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
 {
     if ((oldVersionCode >= versionCode_) || oldNativeLibraryPath.empty()) {
         return;

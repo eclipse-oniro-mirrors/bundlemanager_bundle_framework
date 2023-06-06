@@ -1031,7 +1031,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         if (!appPrivilegeCapability.allowExcludeFromMissions) {
             iter->second.excludeFromMissions = false;
         }
-        if (!appPrivilegeCapability.allowMissionNotCleared || !applicationInfo.isSystemApp) {
+        if (!appPrivilegeCapability.allowMissionNotCleared) {
             iter->second.unclearableMission = false;
         }
 #else

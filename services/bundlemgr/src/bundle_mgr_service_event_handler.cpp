@@ -1121,7 +1121,8 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     updateSelinuxLabel = true;
                 }
                 if (hasModuleInstalled && UpdateModuleByHash(hasInstalledInfo, item.second)) {
-                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.", parserModuleNames[0].c_str());
+                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
+                        parserModuleNames[0].c_str());
                     updateBundle = true;
                     continue;
                 }
