@@ -130,6 +130,14 @@ public:
     {
         return 0;
     }
+    virtual int ScheduleCommandAbilityWindowDone(
+        const sptr<IRemoteObject> &token,
+        const sptr<AAFwk::SessionInfo> &sessionInfo,
+        AAFwk::WindowCommand winCmd,
+        AAFwk::AbilityCommand abilityCmd) override
+    {
+        return 0;
+    }
     virtual void DumpState(const std::string &args, std::vector<std::string> &state) override
     {
         return;
