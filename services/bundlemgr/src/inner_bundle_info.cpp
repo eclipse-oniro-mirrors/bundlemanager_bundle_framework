@@ -29,6 +29,7 @@
 #include "distributed_module_info.h"
 #include "distributed_ability_info.h"
 #include "free_install_params.h"
+#include "mime_type_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -292,7 +293,8 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
                 return true;
             }
         }
-        return false;
+        // if uri is a file path, match type by the suffix
+        return MatchMimeType(uriString);
     } else if (uriString.empty() && !type.empty()) {
         // case3 : param uri empty, param type not empty
         for (const SkillUri &skillUri : uris) {
@@ -425,6 +427,23 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     } else {
         return type == skillUriType;
     }
+}
+
+bool Skill::MatchMimeType(const std::string & uriString) const
+{
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    for (const SkillUri &skillUri : uris) {
+        for (const auto &mimeType : mimeTypes) {
+            if (skillUri.scheme.empty() && MatchType(mimeType, skillUri.type)) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 InnerBundleInfo::InnerBundleInfo()
