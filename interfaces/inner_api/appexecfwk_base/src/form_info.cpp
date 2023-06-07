@@ -59,6 +59,7 @@ const std::string JSON_KEY_WINDOW = "window";
 const std::string JSON_KEY_DESIGN_WIDTH = "designWidth";
 const std::string JSON_KEY_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 const std::string JSON_KEY_IS_STATIC = "isStatic";
+const std::string JSON_KEY_DATA_PROXY_ENABLED = "dataProxyEnabled";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -96,6 +97,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &metadata : formInfo.metadata) {
         customizeDatas.push_back(metadata);
     }
+    dataProxyEnabled = formInfo.dataProxyEnabled;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -176,6 +178,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 
     window.designWidth = parcel.ReadInt32();
     window.autoDesignWidth = parcel.ReadBool();
+    dataProxyEnabled = parcel.ReadBool();
     return true;
 }
 
@@ -242,6 +245,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, window.designWidth);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, window.autoDesignWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, dataProxyEnabled);
     return true;
 }
 
@@ -298,7 +302,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_CUSTOMIZE_DATA, formInfo.customizeDatas},
         {JSON_KEY_LANDSCAPE_LAYOUTS, formInfo.landscapeLayouts},
         {JSON_KEY_PORTRAIT_LAYOUTS, formInfo.portraitLayouts},
-        {JSON_KEY_WINDOW, formInfo.window}
+        {JSON_KEY_WINDOW, formInfo.window},
+        {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled}
         };
 }
 
@@ -351,6 +356,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         JSON_KEY_UI_SYNTAX,
         formInfo.uiSyntax,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DATA_PROXY_ENABLED,
+        formInfo.dataProxyEnabled,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
