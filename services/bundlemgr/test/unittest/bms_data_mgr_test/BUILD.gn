@@ -197,6 +197,10 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
   external_deps += [ "kv_store:distributeddata_inner" ]
   configs += [ "../../../../../services/bundlemgr:rdb_config" ]
   external_deps += [ "relational_store:native_rdb" ]
