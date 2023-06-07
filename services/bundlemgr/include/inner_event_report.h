@@ -22,6 +22,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+#define HISYSEVENT_PERIOD 5
+#define HISYSEVENT_THRESHOLD 500
 class InnerEventReport {
 public:
     /**
