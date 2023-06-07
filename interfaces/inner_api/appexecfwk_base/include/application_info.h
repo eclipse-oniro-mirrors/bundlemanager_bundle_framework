@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
     static const std::string AVAILABLELEVEL_NORMAL = "normal";
     static const std::string DEFAULT_ENTITY_TYPE = "unspecified";
+    static const std::string DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -241,7 +242,7 @@ struct ApplicationInfo : public Parcelable {
     BundleType bundleType = BundleType::APP;
 
     std::string compileSdkVersion;
-    std::string compileSdkType = "OpenHarmony";
+    std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
