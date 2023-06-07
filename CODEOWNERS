@@ -12,5 +12,5 @@
 # limitations under the License.
 
 # any change to xxx_ipc_interface_code.h needs to be reviewed by @leonchan5
-interfaces/inner_api/appexecfwk_core/include/bundle_appexecfwk_core_ipc_interface_code.h @leonchan5
-services/bundlemgr/include/bundle_manager_services_ipc_interface_code.h @leonchan5
+interfaces/inner_api/appexecfwk_core/include/bundle_framework_core_ipc_interface_code.h @leonchan5
+services/bundlemgr/include/bundle_framework_services_ipc_interface_code.h @leonchan5

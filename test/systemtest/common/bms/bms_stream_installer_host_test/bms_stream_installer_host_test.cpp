@@ -19,7 +19,6 @@
 #define private public
 #include "bundle_stream_installer_host.h"
 #include "bundle_user_mgr_host.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 #undef private
 
 using namespace testing::ext;
@@ -92,7 +91,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_001, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_002, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
+    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -110,7 +109,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_002, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_003, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
+    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
     MessageParcel reply;
@@ -133,7 +132,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_003, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_004, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
+    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
     MessageParcel reply;
@@ -156,7 +155,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_004, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_005, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM);
+    uint32_t code = BundleStreamInstallerHost::StreamMessage::CREATE_STREAM;
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
     MessageParcel reply;

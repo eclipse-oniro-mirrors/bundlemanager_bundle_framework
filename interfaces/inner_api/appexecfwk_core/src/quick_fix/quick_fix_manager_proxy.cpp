@@ -68,7 +68,7 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     }
 
     MessageParcel reply;
-    if (!SendRequest(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX, data, reply)) {
+    if (!SendRequest(IQuickFixManager::Message::DEPLOY_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
@@ -106,7 +106,7 @@ ErrCode QuickFixManagerProxy::SwitchQuickFix(const std::string &bundleName, bool
     }
 
     MessageParcel reply;
-    if (!SendRequest(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX, data, reply)) {
+    if (!SendRequest(IQuickFixManager::Message::SWITCH_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
@@ -140,7 +140,7 @@ ErrCode QuickFixManagerProxy::DeleteQuickFix(const std::string &bundleName,
     }
 
     MessageParcel reply;
-    if (!SendRequest(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX, data, reply)) {
+    if (!SendRequest(IQuickFixManager::Message::DELETE_QUICK_FIX, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_BUNDLEMANAGER_QUICK_FIX_SEND_REQUEST_FAILED;
     }
@@ -165,7 +165,7 @@ ErrCode QuickFixManagerProxy::CreateFd(const std::string &fileName, int32_t &fd,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendRequest(QuickFixManagerInterfaceCode::CREATE_FD, data, reply)) {
+    if (!SendRequest(IQuickFixManager::Message::CREATE_FD, data, reply)) {
         APP_LOGE("send request failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -241,7 +241,7 @@ ErrCode QuickFixManagerProxy::CopyFiles(
     return ERR_OK;
 }
 
-bool QuickFixManagerProxy::SendRequest(QuickFixManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+bool QuickFixManagerProxy::SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
@@ -249,7 +249,7 @@ bool QuickFixManagerProxy::SendRequest(QuickFixManagerInterfaceCode code, Messag
         APP_LOGE("failed to send request %{public}d due to remote object null.", code);
         return false;
     }
-    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    int32_t result = remote->SendRequest(code, data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
         return false;

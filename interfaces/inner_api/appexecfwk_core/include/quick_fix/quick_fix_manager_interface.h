@@ -56,6 +56,12 @@ public:
     {
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
+    enum Message : uint32_t {
+        DEPLOY_QUICK_FIX = 0,
+        SWITCH_QUICK_FIX = 1,
+        DELETE_QUICK_FIX = 2,
+        CREATE_FD = 3
+    };
 };
 } // AppExecFwk
 } // OHOS

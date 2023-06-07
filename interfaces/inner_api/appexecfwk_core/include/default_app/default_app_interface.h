@@ -45,6 +45,13 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    enum Message : uint32_t {
+        IS_DEFAULT_APPLICATION = 0,
+        GET_DEFAULT_APPLICATION = 1,
+        SET_DEFAULT_APPLICATION = 2,
+        RESET_DEFAULT_APPLICATION = 3,
+    };
 };
 }
 }

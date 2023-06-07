@@ -20,7 +20,6 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -55,7 +54,7 @@ void BundleEventCallbackProxy::OnReceiveEvent(const EventFwk::CommonEventData ev
         return;
     }
     int32_t ret = remote->SendRequest(
-        static_cast<int32_t>(BundleEventCallbackInterfaceCode::ON_RECEIVE_EVENT), data, reply, option);
+        static_cast<int32_t>(IBundleEventCallback::Message::ON_RECEIVE_EVENT), data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGW("failed to SendRequest, errorCode : %{public}d", ret);
     }

@@ -20,7 +20,6 @@
 #include "ipc_types.h"
 #include "iremote_proxy.h"
 #include "parcel.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -39,7 +38,7 @@ public:
 private:
     static inline BrokerDelegator<BundleStreamInstallerProxy> delegator_;
     uint32_t installerId_ = -1;
-    bool SendStreamInstallRequest(BundleStreamInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply);
+    bool SendStreamInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply);
 };
 } // AppExecFwk
 } // OHOS

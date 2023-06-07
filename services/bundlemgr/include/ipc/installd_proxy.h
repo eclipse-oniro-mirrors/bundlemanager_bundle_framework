@@ -18,10 +18,10 @@
 
 #include <string>
 
-#include "iremote_proxy.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_services_ipc_interface_code.h"
+#include "iremote_proxy.h"
 #include "ipc/installd_interface.h"
-#include "bundle_manager_services_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {

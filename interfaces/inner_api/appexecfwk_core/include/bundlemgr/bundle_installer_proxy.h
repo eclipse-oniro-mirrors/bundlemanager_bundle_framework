@@ -20,7 +20,6 @@
 
 #include "bundle_installer_interface.h"
 #include "status_receiver_interface.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -111,7 +110,7 @@ public:
         const sptr<IStatusReceiver> &statusReceiver) override;
 
 private:
-    bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
+    bool SendInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
     ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
 

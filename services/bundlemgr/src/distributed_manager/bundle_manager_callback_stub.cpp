@@ -16,10 +16,10 @@
 #include "bundle_manager_callback_stub.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "message_parcel.h"
 #include "string_ex.h"
-#include "bundle_manager_services_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {

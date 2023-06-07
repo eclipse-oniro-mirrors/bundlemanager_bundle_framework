@@ -59,6 +59,10 @@ public:
      */
     virtual void OnBundleRemoved(const std::string &bundleName, const int userId) = 0;
 
+    enum class Message {
+        ON_BUNDLE_STATE_CHANGED,
+    };
+
     std::string GetBundleName()
     {
         return bundleName_;

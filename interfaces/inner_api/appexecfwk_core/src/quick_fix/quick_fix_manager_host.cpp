@@ -23,7 +23,6 @@
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -50,13 +49,13 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     }
 
     switch (code) {
-        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX):
+        case IQuickFixManager::Message::DEPLOY_QUICK_FIX:
             return HandleDeployQuickFix(data, reply);
-        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX):
+        case IQuickFixManager::Message::SWITCH_QUICK_FIX:
             return HandleSwitchQuickFix(data, reply);
-        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX):
+        case IQuickFixManager::Message::DELETE_QUICK_FIX:
             return HandleDeleteQuickFix(data, reply);
-        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::CREATE_FD):
+        case IQuickFixManager::Message::CREATE_FD:
             return HandleCreateFd(data, reply);
         default:
             APP_LOGW("QuickFixManagerHost receive unknown code, code = %{public}d", code);

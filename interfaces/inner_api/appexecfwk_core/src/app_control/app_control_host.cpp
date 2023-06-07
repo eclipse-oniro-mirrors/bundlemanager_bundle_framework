@@ -18,9 +18,9 @@
 #include "app_control_constants.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {

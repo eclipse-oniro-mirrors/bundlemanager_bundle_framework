@@ -41,7 +41,7 @@ void QuickFixStatusCallbackProxy::OnPatchDeployed(const std::shared_ptr<QuickFix
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
-    if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DEPLOYED, data, reply)) {
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DEPLOYED, data, reply)) {
         APP_LOGE("fail to OnPatchDeployed due to transact command fail");
     }
 }
@@ -52,7 +52,7 @@ void QuickFixStatusCallbackProxy::OnPatchSwitched(const std::shared_ptr<QuickFix
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
-    if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_SWITCHED, data, reply)) {
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_SWITCHED, data, reply)) {
         APP_LOGE("fail to OnPatchSwitched due to transact command fail");
     }
 }
@@ -63,13 +63,12 @@ void QuickFixStatusCallbackProxy::OnPatchDeleted(const std::shared_ptr<QuickFixR
     MessageParcel reply;
     WRITE_PARCEL_AND_RETURN(InterfaceToken, data, QuickFixStatusCallbackProxy::GetDescriptor());
     WRITE_PARCEL_AND_RETURN(Parcelable, data, result.get());
-    if (!SendTransactCmd(QuickFixStatusCallbackInterfaceCode::ON_PATCH_DELETED, data, reply)) {
+    if (!SendTransactCmd(IQuickFixStatusCallback::Message::ON_PATCH_DELETED, data, reply)) {
         APP_LOGE("fail to OnPatchDeleted due to transact command fail");
     }
 }
 
-bool QuickFixStatusCallbackProxy::SendTransactCmd(
-    QuickFixStatusCallbackInterfaceCode code, MessageParcel &data, MessageParcel &reply)
+bool QuickFixStatusCallbackProxy::SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
@@ -78,7 +77,7 @@ bool QuickFixStatusCallbackProxy::SendTransactCmd(
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    int32_t result = remote->SendRequest(code, data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;

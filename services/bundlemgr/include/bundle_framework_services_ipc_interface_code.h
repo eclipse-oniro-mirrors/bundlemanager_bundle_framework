@@ -16,6 +16,8 @@
 #ifndef OHOS_BUNDLE_MANAGER_SERVICE_IPC_INTERFACE_CODE_H
 #define OHOS_BUNDLE_MANAGER_SERVICE_IPC_INTERFACE_CODE_H
 
+#include <stdint.h>
+
 /* SAID: 401 */
 namespace OHOS {
 namespace AppExecFwk {

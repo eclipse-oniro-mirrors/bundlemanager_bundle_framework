@@ -18,7 +18,6 @@
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,7 +44,7 @@ int BundleEventCallbackHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(BundleEventCallbackInterfaceCode::ON_RECEIVE_EVENT): {
+        case static_cast<uint32_t>(IBundleEventCallback::Message::ON_RECEIVE_EVENT): {
             std::unique_ptr<EventFwk::CommonEventData> dataPtr(data.ReadParcelable<EventFwk::CommonEventData>());
             if (dataPtr == nullptr) {
                 APP_LOGE("get CommonEventData failed");

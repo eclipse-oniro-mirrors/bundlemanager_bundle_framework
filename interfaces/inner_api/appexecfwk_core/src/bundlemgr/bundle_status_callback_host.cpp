@@ -20,7 +20,6 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -47,7 +46,7 @@ int BundleStatusCallbackHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(BundleStatusCallbackInterfaceCode::ON_BUNDLE_STATE_CHANGED): {
+        case static_cast<uint32_t>(IBundleStatusCallback::Message::ON_BUNDLE_STATE_CHANGED): {
             uint8_t installType = data.ReadUint8();
             int32_t resultCode = data.ReadInt32();
             std::string resultMsg = Str16ToStr8(data.ReadString16());

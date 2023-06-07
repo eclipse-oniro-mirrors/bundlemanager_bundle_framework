@@ -50,7 +50,7 @@ ErrCode DefaultAppProxy::IsDefaultApplication(const std::string& type, bool& isD
     }
 
     MessageParcel reply;
-    if (!SendRequest(DefaultAppInterfaceCode::IS_DEFAULT_APPLICATION, data, reply)) {
+    if (!SendRequest(IDefaultApp::Message::IS_DEFAULT_APPLICATION, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -84,7 +84,7 @@ ErrCode DefaultAppProxy::GetDefaultApplication(int32_t userId, const std::string
         APP_LOGE("write type failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfo<BundleInfo>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION, data, bundleInfo);
+    return GetParcelableInfo<BundleInfo>(IDefaultApp::Message::GET_DEFAULT_APPLICATION, data, bundleInfo);
 }
 
 ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string& type, const Want& want)
@@ -111,7 +111,7 @@ ErrCode DefaultAppProxy::SetDefaultApplication(int32_t userId, const std::string
     }
 
     MessageParcel reply;
-    if (!SendRequest(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION, data, reply)) {
+    if (!SendRequest(IDefaultApp::Message::SET_DEFAULT_APPLICATION, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -144,7 +144,7 @@ ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::stri
     }
 
     MessageParcel reply;
-    if (!SendRequest(DefaultAppInterfaceCode::RESET_DEFAULT_APPLICATION, data, reply)) {
+    if (!SendRequest(IDefaultApp::Message::RESET_DEFAULT_APPLICATION, data, reply)) {
         APP_LOGE("SendRequest failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -153,7 +153,7 @@ ErrCode DefaultAppProxy::ResetDefaultApplication(int32_t userId, const std::stri
 }
 
 template<typename T>
-ErrCode DefaultAppProxy::GetParcelableInfo(DefaultAppInterfaceCode code, MessageParcel& data, T& parcelableInfo)
+ErrCode DefaultAppProxy::GetParcelableInfo(IDefaultApp::Message code, MessageParcel& data, T& parcelableInfo)
 {
     MessageParcel reply;
     if (!SendRequest(code, data, reply)) {
@@ -176,7 +176,7 @@ ErrCode DefaultAppProxy::GetParcelableInfo(DefaultAppInterfaceCode code, Message
     return ERR_OK;
 }
 
-bool DefaultAppProxy::SendRequest(DefaultAppInterfaceCode code, MessageParcel& data, MessageParcel& reply)
+bool DefaultAppProxy::SendRequest(IDefaultApp::Message code, MessageParcel& data, MessageParcel& reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
     sptr<IRemoteObject> remote = Remote();
@@ -184,7 +184,7 @@ bool DefaultAppProxy::SendRequest(DefaultAppInterfaceCode code, MessageParcel& d
         APP_LOGE("failed to send request %{public}d due to remote object null.", code);
         return false;
     }
-    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    int32_t result = remote->SendRequest(code, data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error code %{public}d in transact %{public}d", result, code);
         return false;

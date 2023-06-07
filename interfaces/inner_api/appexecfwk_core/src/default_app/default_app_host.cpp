@@ -20,7 +20,6 @@
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -47,13 +46,13 @@ int DefaultAppHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(DefaultAppInterfaceCode::IS_DEFAULT_APPLICATION):
+        case IDefaultApp::Message::IS_DEFAULT_APPLICATION:
             return HandleIsDefaultApplication(data, reply);
-        case static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION):
+        case IDefaultApp::Message::GET_DEFAULT_APPLICATION:
             return HandleGetDefaultApplication(data, reply);
-        case static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION):
+        case IDefaultApp::Message::SET_DEFAULT_APPLICATION:
             return HandleSetDefaultApplication(data, reply);
-        case static_cast<uint32_t>(DefaultAppInterfaceCode::RESET_DEFAULT_APPLICATION):
+        case IDefaultApp::Message::RESET_DEFAULT_APPLICATION:
             return HandleResetDefaultApplication(data, reply);
         default:
             APP_LOGW("DefaultAppHost receive unknown code, code = %{public}d", code);

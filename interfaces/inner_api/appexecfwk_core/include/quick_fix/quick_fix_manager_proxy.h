@@ -18,7 +18,6 @@
 
 #include "quick_fix_manager_interface.h"
 #include "iremote_proxy.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,7 +40,7 @@ public:
 
 private:
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
-    bool SendRequest(QuickFixManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    bool SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<QuickFixManagerProxy> delegator_;
 };

@@ -19,7 +19,6 @@
 #define private public
 #include "clean_cache_callback_host.h"
 #include "bundle_user_mgr_host.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 #undef private
 
 using namespace testing::ext;
@@ -56,7 +55,7 @@ void BmsCleanCacheCallbackHostTest::TearDown() {}
  */
 HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_001, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK);
+    uint32_t code = static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -74,7 +73,7 @@ HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_001, TestSize.Lev
  */
 HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_002, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK);
+    uint32_t code = static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK);
     MessageParcel data;
     sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost = new (std::nothrow) MockCleanCacheCallbackHost();
     data.WriteInterfaceToken(CleanCacheCallbackHost::GetDescriptor());
@@ -94,7 +93,7 @@ HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_002, TestSize.Lev
  */
 HWTEST_F(BmsCleanCacheCallbackHostTest, CleanCacheCallbackHost_003, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK) + 1;
+    uint32_t code = static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK) + 1;
     MessageParcel data;
     sptr<MockCleanCacheCallbackHost> cleanCacheCallbackHost = new (std::nothrow) MockCleanCacheCallbackHost();
     data.WriteInterfaceToken(CleanCacheCallbackHost::GetDescriptor());

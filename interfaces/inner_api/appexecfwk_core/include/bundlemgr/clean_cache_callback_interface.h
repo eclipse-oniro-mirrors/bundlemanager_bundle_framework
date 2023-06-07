@@ -29,6 +29,10 @@ public:
      * @param succeeded Indicates the result of the clean cache files progress.
      */
     virtual void OnCleanCacheFinished(bool succeeded) = 0;
+
+    enum class Message {
+        ON_CLEAN_CACHE_CALLBACK,
+    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

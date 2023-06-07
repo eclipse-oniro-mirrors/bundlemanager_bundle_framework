@@ -39,6 +39,11 @@ public:
 
     virtual void SetStreamInstallId(uint32_t installerId) = 0;
 
+    enum class Message {
+        ON_STATUS_NOTIFY,
+        ON_FINISHED,
+    };
+
     enum {
         SUCCESS = 0,
         ERR_INSTALL_INTERNAL_ERROR = 9568260,

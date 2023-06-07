@@ -26,7 +26,6 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -68,34 +67,34 @@ int BundleInstallerHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL):
+        case IBundleInstaller::Message::INSTALL:
             HandleInstallMessage(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS):
+        case IBundleInstaller::Message::INSTALL_MULTIPLE_HAPS:
             HandleInstallMultipleHapsMessage(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL):
+        case IBundleInstaller::Message::UNINSTALL:
             HandleUninstallMessage(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_MODULE):
+        case IBundleInstaller::Message::UNINSTALL_MODULE:
             HandleUninstallModuleMessage(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM):
+        case IBundleInstaller::Message::UNINSTALL_BY_UNINSTALL_PARAM:
             HandleUninstallByUninstallParam(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::RECOVER):
+        case IBundleInstaller::Message::RECOVER:
             HandleRecoverMessage(data);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_SANDBOX_APP):
+        case IBundleInstaller::Message::INSTALL_SANDBOX_APP:
             HandleInstallSandboxApp(data, reply);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_SANDBOX_APP):
+        case IBundleInstaller::Message::UNINSTALL_SANDBOX_APP:
             HandleUninstallSandboxApp(data, reply);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER):
+        case IBundleInstaller::Message::CREATE_STREAM_INSTALLER:
             HandleCreateStreamInstaller(data, reply);
             break;
-        case static_cast<uint32_t>(BundleInstallerInterfaceCode::DESTORY_STREAM_INSTALLER):
+        case IBundleInstaller::Message::DESTORY_STREAM_INSTALLER:
             HandleDestoryBundleStreamInstaller(data, reply);
             break;
         default:

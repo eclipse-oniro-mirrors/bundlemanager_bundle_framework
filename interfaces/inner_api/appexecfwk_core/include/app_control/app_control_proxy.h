@@ -17,8 +17,8 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_APP_CONTROL_PROXY_H
 
 #include "app_control_interface.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "iremote_proxy.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {

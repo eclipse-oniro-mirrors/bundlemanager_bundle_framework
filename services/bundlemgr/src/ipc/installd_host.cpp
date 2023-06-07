@@ -18,10 +18,10 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
-#include "bundle_manager_services_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -71,16 +71,12 @@ void InstalldHost::init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_DIR_EMPTY), &InstalldHost::HandleIsDirEmpty);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR),
         &InstalldHost::HandObtainQuickFixFileDir);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES),
-        &InstalldHost::HandCopyFiles);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES),
-        &InstalldHost::HandleExtractFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES), &InstalldHost::HandCopyFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES), &InstalldHost::HandleExtractFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
         &InstalldHost::HandGetNativeLibraryFileNames);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT),
-        &InstalldHost::HandleExecuteAOT);
-    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE),
-        &InstalldHost::HandleIsExistFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)

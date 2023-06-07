@@ -18,7 +18,6 @@
 
 #include "overlay_manager_interface.h"
 #include "iremote_proxy.h"
-#include "bundle_appexecfwk_core_ipc_interface_code.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -57,13 +56,13 @@ public:
 
 private:
     template<typename T>
-    ErrCode GetParcelableInfo(OverlayManagerInterfaceCode code, MessageParcel &data, T &parcelableInfo);
+    ErrCode GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo);
 
     template<typename T>
-    ErrCode GetParcelableInfosWithErrCode(OverlayManagerInterfaceCode code, MessageParcel &data,
+    ErrCode GetParcelableInfosWithErrCode(IOverlayManager::Message code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
 
-    bool SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(IOverlayManager::Message code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<OverlayManagerProxy> delegator_;
 };
