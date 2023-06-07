@@ -127,7 +127,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo bundleInfo;
     bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo);
+    #ifdef USE_BUNDLE_EXTENSION
+    EXPECT_EQ(res, true);
+    #else
     EXPECT_EQ(res, false);
+    #endif
 }
 
 /**
@@ -139,7 +143,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool res = bmsExtensionDataMgr.OpenHandler();
+    #ifdef USE_BUNDLE_EXTENSION
+    EXPECT_EQ(res, true);
+    #else
     EXPECT_EQ(res, false);
+    #endif
 }
 
 /**
@@ -204,7 +212,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionProfile_0006, Function | SmallTest
     BmsExtensionProfile bmsExtensionProfile;
     BmsExtension bmsExtension;
     ErrCode res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
+    #ifdef USE_BUNDLE_EXTENSION
+    EXPECT_EQ(res, ERR_OK);
+    #else
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+    #endif
 }
 
 /**

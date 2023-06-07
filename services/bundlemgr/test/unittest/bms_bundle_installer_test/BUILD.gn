@@ -102,6 +102,9 @@ ohos_unittest("BmsBundleInstallerTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
 
   if (build_selinux) {
     external_deps += [ "selinux:libhap_restorecon" ]
