@@ -75,14 +75,10 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);
-        if ((errCode != ERR_OK) &&
-            (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) &&
-            (errCode != ERR_APPEXECFWK_INSTALL_SINGLETON_NOT_SAME) &&
-            (errCode != ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE)) {
+        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle fail, error: %{public}d", errCode);
             ret = false;
         }
-        otaInstall_ = false;
         ResetInstallProperties();
     }
 

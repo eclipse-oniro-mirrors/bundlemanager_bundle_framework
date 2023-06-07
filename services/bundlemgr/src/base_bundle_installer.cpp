@@ -1595,7 +1595,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
 
-    if (newInfo.HasEntry() && oldInfo.HasEntry()) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         APP_LOGE("install more than one entry module");
         return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
     }
@@ -1607,7 +1607,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 
     // same version need to check app label
     ErrCode result = ERR_OK;
-    if (oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
+    if (!otaInstall_ && (oldInfo.GetVersionCode() == newInfo.GetVersionCode())) {
         result = CheckAppLabel(oldInfo, newInfo);
         if (result != ERR_OK) {
             APP_LOGE("CheckAppLabel failed %{public}d", result);
@@ -1692,7 +1692,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
     // update module type is forbidden
-    if (newInfo.HasEntry() && oldInfo.HasEntry()) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         if (!oldInfo.IsEntryModule(modulePackage_)) {
             APP_LOGE("install more than one entry module");
             return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
@@ -3180,6 +3180,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     sysEventInfo_.Reset();
     moduleName_.clear();
     toDeleteTempHapPath_.clear();
+    otaInstall_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
