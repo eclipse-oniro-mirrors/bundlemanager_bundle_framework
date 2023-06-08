@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_data_mgr.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_mgr_service.h"
 #include "installd/installd_service.h"
 #include "bundle_manager_callback.h"
@@ -400,7 +401,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function | MediumTest | Level1)
 {
     MockBundleManagerCallbackStub stub;
-    uint32_t code = IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK;
+    uint32_t code = static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;

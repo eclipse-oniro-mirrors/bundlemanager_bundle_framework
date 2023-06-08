@@ -16,6 +16,7 @@
 #include "bundle_manager_callback_stub.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "message_parcel.h"
 #include "string_ex.h"
@@ -39,7 +40,7 @@ int32_t BundleManagerCallbackStub::OnRemoteRequest(
         return OBJECT_NULL;
     }
     switch (code) {
-        case static_cast<uint32_t>(IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK):
+        case static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK):
             return HandleQueryRpcIdCallBack(data, reply);
         default:
             APP_LOGW("BundleManagerCallbackStub receives unknown code, code = %{public}d", code);
