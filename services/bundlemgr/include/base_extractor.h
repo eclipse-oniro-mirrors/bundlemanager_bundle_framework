@@ -50,7 +50,7 @@ public:
      * @param fileName Indicates the obtained file names in hap.
      * @return Returns true if the file names obtained successfully; returns false otherwise.
      */
-    bool GetZipFileNames(std::vector<std::string> &fileNames);
+    bool GetZipFileNames(std::vector<std::string> &fileNames) const;
     /**
      * @brief Has entry by name.
      * @param entryName Indicates the entry name.

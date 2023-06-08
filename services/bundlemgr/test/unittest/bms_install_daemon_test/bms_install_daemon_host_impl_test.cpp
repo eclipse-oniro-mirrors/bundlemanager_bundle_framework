@@ -779,4 +779,19 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4200, Function | Sma
     ret = hostImpl->ApplyDiffPatch("", "", TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldHostImplTest_4300
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling VerifyCodeSignature of hostImpl
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4300, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto ret = hostImpl->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
 } // OHOS

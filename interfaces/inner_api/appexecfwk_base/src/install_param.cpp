@@ -55,6 +55,15 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
     }
     specifiedDistributionType = Str16ToStr8(parcel.ReadString16());
     additionalInfo = Str16ToStr8(parcel.ReadString16());
+
+    int32_t verifyCodeParamSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, verifyCodeParamSize);
+    CONTAINER_SECURITY_VERIFY(parcel, verifyCodeParamSize, &verifyCodeParams);
+    for (int32_t i = 0; i < verifyCodeParamSize; ++i) {
+        std::string moduleName = Str16ToStr8(parcel.ReadString16());
+        std::string signatureFilePath = Str16ToStr8(parcel.ReadString16());
+        verifyCodeParams.emplace(moduleName, signatureFilePath);
+    }
     return true;
 }
 
@@ -77,7 +86,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isKeepData);
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(hashParams.size()));
-    for (auto& hashParam : hashParams) {
+    for (const auto &hashParam : hashParams) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hashParam.second));
     }
@@ -90,6 +99,11 @@ bool InstallParam::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(specifiedDistributionType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(additionalInfo));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(verifyCodeParams.size()));
+    for (const auto &verifyCodeParam : verifyCodeParams) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.second));
+    }
     return true;
 }
 

@@ -346,6 +346,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    } else if (type == DirType::SIG_FILE_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     } else {
         return "";
     }
@@ -594,6 +596,59 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
         return 0;
     }
     return fileInfo.st_size;
+}
+
+std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
+    std::vector<std::string> &toDeletePaths)
+{
+    APP_LOGD("the original dir is %{public}s", filePath.c_str());
+    std::string destination = "";
+    std::string subStr = "";
+    destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR);
+    if (dirType == DirType::STREAM_INSTALL_DIR) {
+        subStr = Constants::STREAM_INSTALL_PATH;
+        destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
+    }
+    if (dirType == DirType::SIG_FILE_DIR) {
+        subStr = Constants::SIGNATURE_FILE_PATH;
+        destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
+    }
+
+    destination = BundleUtil::CreateTempDir(destination);
+    auto pos = filePath.find(subStr);
+    if (pos == std::string::npos) { // this circumstance could not be considered laterly
+        auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
+        if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
+            destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
+            destination = BundleUtil::CreateTempDir(destination);
+            toDeletePaths.emplace_back(destination);
+            destination.append(filePath.substr(lastPathSeperator));
+        }
+    } else {
+        auto secondLastPathSep = filePath.find(Constants::PATH_SEPARATOR, pos);
+        if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        auto thirdLastPathSep =
+            filePath.find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+        if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        std::string innerSubstr =
+            filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
+        destination = BundleUtil::CreateTempDir(destination.append(innerSubstr));
+        toDeletePaths.emplace_back(destination);
+        destination.append(filePath.substr(thirdLastPathSep + 1));
+    }
+    APP_LOGD("the destination dir is %{public}s", destination.c_str());
+    if (destination.empty()) {
+        return "";
+    }
+    if (!BundleUtil::CopyFile(filePath, destination)) {
+        APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+        return "";
+    }
+    return destination;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
