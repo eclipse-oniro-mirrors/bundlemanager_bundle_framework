@@ -65,7 +65,7 @@ bool BundleInstallerProxy::Install(
         return false;
     }
 
-    return SendInstallRequest(IBundleInstaller::Message::INSTALL, data, reply, option);
+    return SendInstallRequest(BundleInstallerInterfaceCode::INSTALL, data, reply, option);
 }
 
 bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
@@ -93,7 +93,7 @@ bool BundleInstallerProxy::Install(const std::vector<std::string> &bundleFilePat
         return false;
     }
 
-    return SendInstallRequest(IBundleInstaller::Message::INSTALL_MULTIPLE_HAPS, data, reply,
+    return SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS, data, reply,
         option);
 }
 
@@ -117,7 +117,7 @@ bool BundleInstallerProxy::Recover(const std::string &bundleName,
         return false;
     }
 
-    return SendInstallRequest(IBundleInstaller::Message::RECOVER, data, reply,
+    return SendInstallRequest(BundleInstallerInterfaceCode::RECOVER, data, reply,
         option);
 }
 
@@ -141,7 +141,7 @@ bool BundleInstallerProxy::Uninstall(
         return false;
     }
 
-    return SendInstallRequest(IBundleInstaller::Message::UNINSTALL, data, reply, option);
+    return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL, data, reply, option);
 }
 
 bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::string &modulePackage,
@@ -165,7 +165,7 @@ bool BundleInstallerProxy::Uninstall(const std::string &bundleName, const std::s
         return false;
     }
 
-    return SendInstallRequest(IBundleInstaller::Message::UNINSTALL_MODULE, data, reply, option);
+    return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_MODULE, data, reply, option);
 }
 
 bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
@@ -184,7 +184,7 @@ bool BundleInstallerProxy::Uninstall(const UninstallParam &uninstallParam,
         APP_LOGE("write parcel failed");
         return false;
     }
-    return SendInstallRequest(IBundleInstaller::Message::UNINSTALL_BY_UNINSTALL_PARAM, data, reply, option);
+    return SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM, data, reply, option);
 }
 
 ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, int32_t dlpType, int32_t userId,
@@ -213,7 +213,7 @@ ErrCode BundleInstallerProxy::InstallSandboxApp(const std::string &bundleName, i
     }
 
     auto ret =
-        SendInstallRequest(IBundleInstaller::Message::INSTALL_SANDBOX_APP, data, reply, option);
+        SendInstallRequest(BundleInstallerInterfaceCode::INSTALL_SANDBOX_APP, data, reply, option);
     if (!ret) {
         APP_LOGE("install sandbox app failed due to send request fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR;
@@ -251,7 +251,7 @@ ErrCode BundleInstallerProxy::UninstallSandboxApp(const std::string &bundleName,
     }
 
     auto ret =
-        SendInstallRequest(IBundleInstaller::Message::UNINSTALL_SANDBOX_APP, data, reply, option);
+        SendInstallRequest(BundleInstallerInterfaceCode::UNINSTALL_SANDBOX_APP, data, reply, option);
     if (!ret) {
         APP_LOGE("uninstall sandbox app failed due to send request fail");
         return ERR_APPEXECFWK_SANDBOX_INSTALL_SEND_REQUEST_ERROR;
@@ -290,7 +290,7 @@ sptr<IBundleStreamInstaller> BundleInstallerProxy::CreateStreamInstaller(const I
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = SendInstallRequest(IBundleInstaller::Message::CREATE_STREAM_INSTALLER, data, reply, option);
+    bool res = SendInstallRequest(BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER, data, reply, option);
     if (!res) {
         APP_LOGE("CreateStreamInstaller failed due to send request fail");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
@@ -326,7 +326,7 @@ bool BundleInstallerProxy::DestoryBundleStreamInstaller(uint32_t streamInstaller
 
     PARCEL_WRITE_INTERFACE_TOKEN(data, GetDescriptor());
     PARCEL_WRITE(data, Uint32, streamInstallerId);
-    bool res = SendInstallRequest(IBundleInstaller::Message::DESTORY_STREAM_INSTALLER, data, reply, option);
+    bool res = SendInstallRequest(BundleInstallerInterfaceCode::DESTORY_STREAM_INSTALLER, data, reply, option);
     if (!res) {
         APP_LOGE("CreateStreamInstaller failed due to send request fail");
         return false;
@@ -498,8 +498,8 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
     return ERR_OK;
 }
 
-bool BundleInstallerProxy::SendInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply,
-    MessageOption& option)
+bool BundleInstallerProxy::SendInstallRequest(
+    BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply, MessageOption& option)
 {
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
@@ -507,7 +507,7 @@ bool BundleInstallerProxy::SendInstallRequest(const uint32_t& code, MessageParce
         return false;
     }
 
-    int32_t ret = remote->SendRequest(code, data, reply, option);
+    int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
         return false;
