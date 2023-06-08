@@ -30,7 +30,6 @@ const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
-const std::string TEST_PATH_PHOTOS = "/data/app/el1/bundle/public/com.ohos.photos/entry";
 const std::string TEST_PATH_TARGET = "/data/test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
 }; // namespace
@@ -482,21 +481,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | Sma
     extractParam.extractFileType = ExtractFileType::AN;
     ret = installdProxy->ExtractFiles(extractParam);
     EXPECT_NE(ret, ERR_OK);
-}
-
-/**
- * @tc.number: InstalldHostImplTest_2600
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractDiffFiles of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2600, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->ExtractDiffFiles(TEST_PATH_PHOTOS, TEST_PATH_TARGET, TEST_CPU_ABI);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
 /**

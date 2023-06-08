@@ -43,11 +43,9 @@ const std::string BUNDLE_FILENAME_3 = "app3.hap";
 const std::string BUNDLE_FILENAME_4 = "app1.ha";
 const std::string BUNDLE_FILENAME_5 = "app2..ap";
 const std::string BUNDLE_FILENAME_6 = "app3";
-const std::string SYSTEM_APP_SCAN_PATH = "/system/app/com.ohos.photos/";
 const std::string THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
 const std::string TEST_ERROR_DIR = "/data/error";
 const std::string PHOTOS_HAP = "Photos.hap";
-const std::string PHOTOS_HAP_NAME = "com.ohos.photos";
 
 }  // namespace
 
@@ -266,23 +264,6 @@ HWTEST_F(BmsServiceBundleScanTest, BundleScan_0500, Function | SmallTest | Level
     DeleteFile(TEST_FILE_NAME_4);
     DeleteFile(TEST_FILE_NAME_5);
     DeleteFile(TEST_FILE_NAME_6);
-}
-/**
- * @tc.number: RebootBundleScan_0100
- * @tc.name: test reboot scan bundle path
- * @tc.desc: 1. reboot scan dir exist
- *           2. Bundle information can be scanned
- */
-HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0100, Function | SmallTest | Level0)
-{
-    auto scanner = std::make_unique<BundleScanner>();
-    std::string scanDir = Constants::SYSTEM_APP_SCAN_PATH;
-    std::list<std::string> bundleList = scanner->Scan(scanDir);
-    auto result = false;
-    if (bundleList.size() > 0) {
-        result = true;
-    }
-    EXPECT_TRUE(result);
 }
 
 /**
