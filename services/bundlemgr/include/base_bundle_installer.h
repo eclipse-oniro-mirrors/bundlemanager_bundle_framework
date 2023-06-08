@@ -583,9 +583,9 @@ private:
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    void CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths);
-    void DeleteTempHapPaths() const;
+    ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
+    ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -616,6 +616,8 @@ private:
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
     std::string moduleName_;
+    // utilizing for code-signature
+    std::map<std::string, std::string> verifyCodeParams_;
 
     std::vector<std::string> toDeleteTempHapPath_;
 

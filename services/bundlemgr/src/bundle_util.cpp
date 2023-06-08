@@ -51,8 +51,9 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
     }
     if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, Constants::INSTALL_SHARED_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap, hsp or hqf");
+        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap, hsp, hqf or sig");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
     }
     if (!PathToRealPath(bundlePath, realPath)) {
@@ -614,13 +615,13 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
 
-    destination = BundleUtil::CreateTempDir(destination);
+    destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
         auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
         if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
             destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
-            destination = BundleUtil::CreateTempDir(destination);
+            destination = CreateTempDir(destination);
             toDeletePaths.emplace_back(destination);
             destination.append(filePath.substr(lastPathSeperator));
         }
@@ -636,7 +637,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         }
         std::string innerSubstr =
             filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
-        destination = BundleUtil::CreateTempDir(destination.append(innerSubstr));
+        destination = CreateTempDir(destination.append(innerSubstr));
         toDeletePaths.emplace_back(destination);
         destination.append(filePath.substr(thirdLastPathSep + 1));
     }
@@ -644,11 +645,19 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
     if (destination.empty()) {
         return "";
     }
-    if (!BundleUtil::CopyFile(filePath, destination)) {
+    if (!CopyFile(filePath, destination)) {
         APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
         return "";
     }
     return destination;
+}
+
+void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
+{
+    for (const auto &tempDir : tempDirs) {
+        APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
+        BundleUtil::DeleteDir(tempDir);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

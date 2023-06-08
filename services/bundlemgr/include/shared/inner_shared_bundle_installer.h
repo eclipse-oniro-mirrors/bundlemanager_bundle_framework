@@ -90,10 +90,15 @@ private:
     void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     void SaveInstallParamInfo(const std::string &bundleName, const InstallParam &installParam) const;
+    ErrCode CopyHspToSecurityDir(std::vector<std::string> &bundlePaths);
+    ErrCode ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
+        std::vector<std::string> &bundlePaths, std::string &signatureFilePath);
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;
+    std::string signatureFileDir_;
+    std::vector<std::string> toDeleteTempHspPath_;
     // the key is the real path of each hsp file
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
     // created directories during installation, will be deleted when rollback.

@@ -807,10 +807,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
     // copy the haps to the dir which cannot be accessed from caller
-    ScopeGuard securityTempHapPathsGuard([this] { DeleteTempHapPaths(); });
-    if (installParam.withCopyHaps) {
-        CopyHapsToSecurityDir(bundlePaths);
-    }
+    ScopeGuard securityTempHapPathsGuard([this] { BundleUtil::DeleteTempDirs(toDeleteTempHapPath_); });
+    result = CopyHapsToSecurityDir(installParam, bundlePaths);
+    CHECK_RESULT(result, "copy file failed %{public}d");
 
     // check syscap
     result = CheckSysCap(bundlePaths);
@@ -878,6 +877,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     });
 
     InnerBundleInfo oldInfo;
+    verifyCodeParams_ = installParam.verifyCodeParams;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -3180,6 +3180,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     sysEventInfo_.Reset();
     moduleName_.clear();
     toDeleteTempHapPath_.clear();
+    verifyCodeParams_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -3496,10 +3497,22 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 
     APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
+    std::string signatureFileDir = "";
+    auto ret = FindSignatureFileDir(info.GetCurModuleName(), signatureFileDir);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     if (isCompressNativeLibrary) {
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
         if (result != ERR_OK) {
             APP_LOGE("fail to extract module dir, error is %{public}d", result);
+            return result;
+        }
+        // verify hap or hsp code signature for compressed so files
+        result = InstalldClient::GetInstance()->VerifyCodeSignature(modulePath_, cpuAbi, targetSoPath,
+            signatureFileDir);
+        if (result != ERR_OK) {
+            APP_LOGE("fail to VerifyCodeSignature, error is %{public}d", result);
             return result;
         }
     } else {
@@ -3510,6 +3523,13 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             return result;
         }
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
+
+        // verify hap or hsp code signature for uncompressed so files
+        if (!bundleInstallChecker_->VerifyCodeSignature(modulePath_, signatureFileDir)) {
+            APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
+                modulePath_.c_str(), signatureFileDir.c_str());
+            return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+        }
     }
     return ERR_OK;
 }
@@ -3545,54 +3565,24 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
-void BaseBundleInstaller::CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths)
+ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
+    std::vector<std::string> &bundlePaths)
 {
+    if (!installParam.withCopyHaps) {
+        APP_LOGD("no need to copy preInstallApp to secure dir");
+        return ERR_OK;
+    }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
-        APP_LOGD("the original dir is %{public}s", bundlePaths[index].c_str());
-        std::string destination = "";
-        std::string subStr = Constants::STREAM_INSTALL_PATH;
-        destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR)
-            .append(Constants::SECURITY_STREAM_INSTALL_PATH);
-        destination = BundleUtil::CreateTempDir(destination);
-
-        auto pos = bundlePaths[index].find(subStr);
-        if (pos == std::string::npos) { // this circumstance could not be considered laterly
-            auto lastPathSeperator = bundlePaths[index].rfind(Constants::PATH_SEPARATOR);
-            if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != bundlePaths[index].length() - 1)) {
-                destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
-                destination = BundleUtil::CreateTempDir(destination);
-                toDeleteTempHapPath_.emplace_back(destination);
-                destination.append(bundlePaths[index].substr(lastPathSeperator));
-            }
-        } else {
-            auto secondLastPathSep = bundlePaths[index].find(Constants::PATH_SEPARATOR, pos);
-            if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == bundlePaths[index].length() - 1)) {
-                continue;
-            }
-            auto thirdLastPathSep =
-                bundlePaths[index].find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
-            if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == bundlePaths[index].length() - 1)) {
-                continue;
-            }
-            std::string innerSubstr =
-                bundlePaths[index].substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
-            destination = BundleUtil::CreateTempDir(destination.append(innerSubstr));
-            toDeleteTempHapPath_.emplace_back(destination);
-            destination.append(bundlePaths[index].substr(thirdLastPathSep + 1));
-        }
-        APP_LOGD("the destination dir is %{public}s", destination.c_str());
+        auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
+            toDeleteTempHapPath_);
         if (destination.empty()) {
-            continue;
-        }
-        if (!BundleUtil::CopyFile(bundlePaths[index], destination)) {
-            APP_LOGW("copy file from %{public}s to %{public}s failed", bundlePaths[index].c_str(),
-                destination.c_str());
-            continue;
+            APP_LOGE("copy file %{public}s to security dir failed", bundlePaths[index].c_str());
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
         bundlePaths[index] = destination;
     }
+    return ERR_OK;
 }
-
 
 ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
 {
@@ -3612,12 +3602,39 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
     return ret;
 }
 
-void BaseBundleInstaller::DeleteTempHapPaths() const
+ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir)
 {
-    for (const auto &tempDir : toDeleteTempHapPath_) {
-        APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
-        BundleUtil::DeleteDir(tempDir);
+    APP_LOGD("begin to find code signature file of moudle %{public}s", moduleName.c_str());
+    if (verifyCodeParams_.empty()) {
+        signatureFileDir = "";
+        APP_LOGD("verifyCodeParams_ is empty and no need to verify code signature of module %{public}s",
+            moduleName.c_str());
+        return ERR_OK;
     }
+
+    auto iterator = verifyCodeParams_.find(moduleName);
+    if (iterator == verifyCodeParams_.end()) {
+        APP_LOGE("no signature file dir exist of module %{public}s", moduleName.c_str());
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    signatureFileDir = verifyCodeParams_.at(moduleName);
+
+    // check signature file suffix
+    auto ret = bundleInstallChecker_->CheckSignatureFileDir(signatureFileDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("checkout signature file dir %{public}s failed", signatureFileDir.c_str());
+        return ret;
+    }
+
+    // copy code signature file to security dir
+    std::string destinationStr =
+        BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
+    if (destinationStr.empty()) {
+        APP_LOGE("copy file %{public}s to security dir failed", signatureFileDir.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
+    signatureFileDir = destinationStr;
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -50,7 +50,10 @@ ErrCode SharedBundleInstaller::ParseFiles()
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);
         result = installer->ParseFiles(checkParam);
         CHECK_RESULT(result, "parse file failed %{public}d");
-
+        if (innerInstallers_.find(installer->GetBundleName()) != innerInstallers_.end()) {
+            APP_LOGW("sharedBundleDirPaths does not support that different paths contain hsp of same bundleName");
+            continue;
+        }
         innerInstallers_.emplace(installer->GetBundleName(), installer);
     }
 

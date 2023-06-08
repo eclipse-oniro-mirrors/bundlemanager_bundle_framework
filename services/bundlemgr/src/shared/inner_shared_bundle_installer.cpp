@@ -20,6 +20,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
+#include "scope_guard.h"
 #include "shared/base_shared_bundle_info.h"
 
 namespace OHOS {
@@ -27,6 +28,7 @@ namespace AppExecFwk {
 using namespace OHOS::Security;
 namespace {
 const std::string HSP_VERSION_PREFIX = "v";
+const int32_t MAX_FILE_NUMBER = 2;
 }
 
 InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
@@ -46,9 +48,19 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     ErrCode result = ERR_OK;
 
     // check file paths
-    std::vector<std::string> bundlePaths;
-    result = BundleUtil::CheckFilePath({sharedBundlePath_}, bundlePaths);
+    std::vector<std::string> inBundlePaths;
+    result = BundleUtil::CheckFilePath({sharedBundlePath_}, inBundlePaths);
     CHECK_RESULT(result, "hsp files check failed %{public}d");
+
+    // copy the haps to the dir which cannot be accessed from caller
+    ScopeGuard securityTempHapPathsGuard([this] { BundleUtil::DeleteTempDirs(toDeleteTempHspPath_); });
+    result = CopyHspToSecurityDir(inBundlePaths);
+    CHECK_RESULT(result, "copy file failed %{public}d");
+
+    // check number and type of the hsp and sig files
+    std::vector<std::string> bundlePaths;
+    result = ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFileDir_);
+    CHECK_RESULT(result, "obtain hsp file path or signature file path failed due to %{public}d");
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(bundlePaths);
@@ -270,11 +282,26 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
                 targetSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
             result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, targetSoPath, cpuAbi);
             CHECK_RESULT(result, "extract module files failed %{public}d");
+
+            // verify hap or hsp code signature for compressed so files
+            result = InstalldClient::GetInstance()->VerifyCodeSignature(bundlePath, cpuAbi, targetSoPath,
+                signatureFileDir_);
+            if (result != ERR_OK) {
+                APP_LOGE("fail to VerifyCodeSignature, error is %{public}d", result);
+                return result;
+            }
         } else {
             std::vector<std::string> fileNames;
             result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);
             CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
             newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
+
+            // verify hap or hsp code signature for uncompressed so files
+            if (!bundleInstallChecker_->VerifyCodeSignature(bundlePath, signatureFileDir_)) {
+                APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
+                    bundlePath.c_str(), signatureFileDir_.c_str());
+                return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+            }
         }
     }
 
@@ -423,6 +450,59 @@ void InnerSharedBundleInstaller::SaveInstallParamInfo(
             APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
         }
     }
+}
+
+ErrCode InnerSharedBundleInstaller::CopyHspToSecurityDir(std::vector<std::string> &bundlePaths)
+{
+    for (size_t index = 0; index < bundlePaths.size(); ++index) {
+        auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
+            toDeleteTempHspPath_);
+        if (destination.empty()) {
+            APP_LOGE("copy file %{public}s to security dir failed", bundlePaths[index].c_str());
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+        }
+        bundlePaths[index] = destination;
+    }
+    return ERR_OK;
+}
+
+ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
+    std::vector<std::string> &bundlePaths, std::string &signatureFilePath)
+{
+    if (inBundlePaths.empty() || inBundlePaths.size() > MAX_FILE_NUMBER) {
+        APP_LOGE("number of files in single shared lib path is illegal");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    if (inBundlePaths.size() == 1) {
+        if (!BundleUtil::EndWith(inBundlePaths[0], Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+            APP_LOGE("invalid file in shared bundle dir");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        bundlePaths.emplace_back(inBundlePaths[0]);
+        return ERR_OK;
+    }
+    int32_t numberOfHsp = 0;
+    int32_t numberOfSignatureFile = 0;
+    for (const auto &path : inBundlePaths) {
+        if ((path.find(Constants::INSTALL_SHARED_FILE_SUFFIX) == std::string::npos) &&
+            (path.find(Constants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
+            APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+        if (BundleUtil::EndWith(path, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+            numberOfHsp++;
+            bundlePaths.emplace_back(path);
+        }
+        if (BundleUtil::EndWith(path, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+            numberOfSignatureFile++;
+            signatureFilePath = path;
+        }
+        if ((numberOfHsp >= MAX_FILE_NUMBER) || (numberOfSignatureFile >= MAX_FILE_NUMBER)) {
+            APP_LOGE("only one hsp and one signature file can be contained in a single shared bundle dir");
+            return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+        }
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

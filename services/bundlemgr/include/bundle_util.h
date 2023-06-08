@@ -167,6 +167,7 @@ public:
     static std::string CreateTempDir(const std::string &tempDir);
     static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
         std::vector<std::string> &toDeletePaths);
+    static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
