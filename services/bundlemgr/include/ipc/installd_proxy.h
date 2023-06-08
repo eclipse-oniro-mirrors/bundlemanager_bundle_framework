@@ -151,6 +151,9 @@ public:
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
 
+    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir) override;
+
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);

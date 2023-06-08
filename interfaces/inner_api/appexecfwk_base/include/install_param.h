@@ -67,7 +67,8 @@ struct InstallParam : public Parcelable {
     std::string additionalInfo = "";
     // for AOT
     bool isOTA = false;
-
+    // utilizing for code-signature
+    std::map<std::string, std::string> verifyCodeParams;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -107,7 +107,7 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
     return true;
 }
 
-bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames)
+bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames) const
 {
     auto &entryMap = zipFile_.GetAllEntries();
     auto entryFilter = [&fileNames](const auto &entry) {

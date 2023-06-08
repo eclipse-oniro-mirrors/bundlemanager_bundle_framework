@@ -195,7 +195,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0800, Function | SmallTest | Level0)
 {
     std::string path;
-    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = InstalldOperator::ExtractFiles(path, TEST_STRING, TEST_STRING);
     EXPECT_FALSE(ret);
 }
 
@@ -208,8 +208,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0900, Function | SmallTest | Level0)
 {
-    std::string path;
-    auto ret = InstalldOperator::IsNativeSo(TEST_STRING, path, TEST_STRING);
+    auto ret = InstalldOperator::IsNativeSo(TEST_STRING, TEST_STRING);
     EXPECT_FALSE(ret);
 }
 
@@ -222,8 +221,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_0900, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_01000, Function | SmallTest | Level0)
 {
-    std::string path;
-    auto ret = InstalldOperator::IsNativeSo(TEST_STRING, TEST_STRING, TEST_CPU_ABI);
+    auto ret = InstalldOperator::IsNativeSo(TEST_STRING, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
 }
 
@@ -236,8 +234,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_01000, Function | Sm
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1100, Function | SmallTest | Level0)
 {
-    std::string path;
-    auto ret = InstalldOperator::IsNativeSo(TEST_ERROR_LIB_STRING, TEST_STRING, TEST_CPU_ABI);
+    auto ret = InstalldOperator::IsNativeSo(TEST_ERROR_LIB_STRING, TEST_CPU_ABI);
     EXPECT_FALSE(ret);
 }
 
@@ -250,8 +247,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1100, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_1200, Function | SmallTest | Level0)
 {
-    std::string path;
-    auto ret = InstalldOperator::IsNativeSo(TEST_LIB_STRING, TEST_STRING, TEST_CPU_ABI);
+    auto ret = InstalldOperator::IsNativeSo(TEST_LIB_STRING, TEST_CPU_ABI);
     EXPECT_TRUE(ret);
 }
 
@@ -948,5 +944,18 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5800, Function | Sma
     std::string dir = TEST_ERROR_PATH;
     auto ret = InstalldOperator::ObtainQuickFixFileDir(dir, vec);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_5900
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldOperator
+ *           2. return false
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | SmallTest | Level0)
+{
+    auto ret = InstalldOperator::VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, "");
+    EXPECT_TRUE(ret);
 }
 } // OHOS

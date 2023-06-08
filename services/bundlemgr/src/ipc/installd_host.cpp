@@ -77,6 +77,8 @@ void InstalldHost::init()
         &InstalldHost::HandGetNativeLibraryFileNames);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
+        &InstalldHost::HandVerifyCodeSignature);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -396,6 +398,18 @@ bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessagePar
         APP_LOGE("fail to obtain fileNames from reply");
         return false;
     }
+    return true;
+}
+
+bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply)
+{
+    std::string modulePath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    std::string targetSoPath = Str16ToStr8(data.ReadString16());
+    std::string signatureFileDir = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
 }  // namespace AppExecFwk

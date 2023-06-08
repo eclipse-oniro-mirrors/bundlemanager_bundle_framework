@@ -269,6 +269,12 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

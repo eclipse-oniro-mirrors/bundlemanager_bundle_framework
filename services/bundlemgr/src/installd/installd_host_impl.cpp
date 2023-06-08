@@ -102,7 +102,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         APP_LOGE("create target dir %{private}s failed", targetPath.c_str());
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    if (!InstalldOperator::ExtractFiles(srcModulePath, targetPath, targetSoPath, cpuAbi)) {
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi)) {
         APP_LOGE("extract %{private}s to %{private}s failed", srcModulePath.c_str(), targetPath.c_str());
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
@@ -710,6 +710,25 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (modulePath.empty() || cpuAbi.empty() || targetSoPath.empty()) {
+        APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
+        APP_LOGE("verify code signature failed");
+        return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk
