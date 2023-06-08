@@ -19,6 +19,7 @@
 #include <cstdint>
 #include "bundle_installer_host.h"
 #include "message_parcel.h"
+#include "securec.h"
 
 using namespace OHOS::AppExecFwk;
 namespace OHOS {
@@ -60,12 +61,19 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     /* Validate the length of size */
-    if (size == 0 || size > OHOS::FOO_MAX_LEN) {
+    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 
-    char* ch = (char *)malloc(size + 1);
+    char* ch = static_cast<char*>(malloc(size + 1));
     if (ch == nullptr) {
+        return 0;
+    }
+
+    (void)memset_s(ch, size + 1, 0x00, size + 1);
+    if (memcpy_s(ch, size, data, size) != EOK) {
+        free(ch);
+        ch = nullptr;
         return 0;
     }
 

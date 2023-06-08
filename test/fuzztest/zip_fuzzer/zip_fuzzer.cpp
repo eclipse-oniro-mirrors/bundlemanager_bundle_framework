@@ -27,7 +27,7 @@ using namespace OHOS::AppExecFwk;
 namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
-constexpr size_t SIZE_fLAG = 2;
+constexpr size_t SIZE_FLAG = 2;
 
 bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
 {
@@ -35,7 +35,7 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     std::string destPath = "";
     std::shared_ptr<LIBZIP::ZlibCallbackInfo> zlibCallbackInfo;
     bool includeHiddenFiles = false;
-    if (size % SIZE_fLAG == 0) {
+    if (size % SIZE_FLAG == 0) {
         includeHiddenFiles = true;
     }
     Zip(srcPath, destPath, includeHiddenFiles, zlibCallbackInfo);
@@ -60,7 +60,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     }
 
     /* Validate the length of size */
-    if (size == 0 || size > OHOS::FOO_MAX_LEN) {
+    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
     OHOS::DoSomethingInterestingWithMyAPI(data, size);

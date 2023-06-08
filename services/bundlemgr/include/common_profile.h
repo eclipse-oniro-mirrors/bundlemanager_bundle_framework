@@ -58,6 +58,8 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE = "compatible";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET = "target";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE = "releaseType";
 constexpr const char* APP_RELEASE_TYPE_VALUE_RELEASE = "Release";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_VERSION = "compileSdkVersion";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_TYPE = "compileSdkType";
 // sub  BUNDLE_PROFILE_KEY_DEVICE_CONFIG
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_DEFAULT = "default";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_PHONE = "phone";
@@ -403,6 +405,7 @@ constexpr const char* ABILITY_MIN_WINDOW_WIDTH = "minWindowWidth";
 constexpr const char* ABILITY_MAX_WINDOW_HEIGHT = "maxWindowHeight";
 constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
+constexpr const char* ABILITY_UNCLEARABLE_MISSION = "unclearableMission";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";

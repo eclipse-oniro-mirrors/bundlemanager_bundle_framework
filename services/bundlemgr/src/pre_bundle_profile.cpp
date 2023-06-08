@@ -44,6 +44,7 @@ const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
 const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
 const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
@@ -294,6 +295,14 @@ ErrCode PreBundleProfile::TransformTo(
             ArrayType::NOT_ARRAY);
         GetValueIfFindKey<bool>(array,
             jsonObjectEnd,
+            ALLOW_MISSION_NOT_CLEARED,
+            preBundleConfigInfo.allowMissionNotCleared,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
             ALLOW_APP_USE_PRIVILEGE_EXTENSION,
             preBundleConfigInfo.allowUsePrivilegeExtension,
             JsonType::BOOLEAN,
@@ -331,6 +340,9 @@ ErrCode PreBundleProfile::TransformTo(
         }
         if (array.find(ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS);
+        }
+        if (array.find(ALLOW_MISSION_NOT_CLEARED) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_MISSION_NOT_CLEARED);
         }
         if (array.find(ALLOW_APP_USE_PRIVILEGE_EXTENSION) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_USE_PRIVILEGE_EXTENSION);

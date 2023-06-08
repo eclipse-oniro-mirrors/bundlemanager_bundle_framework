@@ -75,13 +75,13 @@ ohos_source_set("parser_common") {
   public_configs = bundlemgr_parser_common_config
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${extension_path}:bundlemgr_extension",
     "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:bundlemgr_extension",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
   ]
@@ -136,14 +136,14 @@ ohos_source_set("bundle_parser") {
   deps = [
     ":parser_common",
     ":rpcid_decode",
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${extension_path}:bundlemgr_extension",
   ]
 
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:bundlemgr_extension",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
@@ -211,7 +211,10 @@ ohos_shared_library("libbms") {
   deps = [
     ":bundle_parser",
     ":parser_common",
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${extension_path}:bundlemgr_extension",
     "//third_party/zlib:shared_libz",
   ]
 
@@ -221,9 +224,6 @@ ohos_shared_library("libbms") {
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
-    "bundle_framework:bundlemgr_extension",
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",
@@ -235,6 +235,10 @@ ohos_shared_library("libbms") {
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
   ]
+
+  if (bundle_framework_power_mgr_enable) {
+    external_deps += aot_external_deps
+  }
 
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
@@ -284,6 +288,10 @@ ohos_shared_library("libbms") {
       "power_manager:powermgr_client",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+
+  if (bundle_framework_power_mgr_enable) {
+    defines += [ "BUNDLE_FRAMEWORK_POWER_MGR_ENABLE" ]
   }
 
   if (bundle_framework_default_app) {

@@ -27,6 +27,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -60,6 +61,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -75,10 +77,10 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -149,6 +151,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -182,6 +185,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -197,10 +201,10 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -274,6 +278,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
@@ -306,6 +311,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -321,10 +327,10 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -411,6 +417,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -444,6 +451,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission4:bmsGrantPermission4",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission6:bmsGrantPermission6",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission7:bmsGrantPermission7",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -459,10 +467,10 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -534,6 +542,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
@@ -566,6 +575,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -581,10 +591,10 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -672,6 +682,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "${inner_api_path}/appexecfwk_base/src/application_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_info.cpp",
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/installd/installd_service.cpp",
@@ -701,6 +712,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/permission_bundle/bmsGrantPermission1:bmsGrantPermission1",
+    "${core_path}:appexecfwk_core",
   ]
 
   if (bundle_framework_graphics) {
@@ -716,10 +728,10 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

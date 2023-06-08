@@ -163,6 +163,7 @@ public:
     static bool StartWith(const std::string &source, const std::string &suffix);
     static bool EndWith(const std::string &source, const std::string &suffix);
     static int64_t GetFileSize(const std::string &filePath);
+    static std::string CreateTempDir(const std::string &tempDir);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

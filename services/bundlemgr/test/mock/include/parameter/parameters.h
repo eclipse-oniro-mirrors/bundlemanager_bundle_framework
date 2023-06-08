@@ -27,6 +27,8 @@ T GetIntParameter(const std::string& key, T def)
 {
     return def;
 }
+
+std::string GetParameter(const std::string& key, const std::string& def);
 } // namespace system
 } // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H

@@ -33,10 +33,6 @@ public:
      * @param RpcIdResult the json of InstallResult
      */
     virtual int32_t OnQueryRpcIdFinished(const std::string &RpcIdResult) = 0;
-
-    enum Message : uint32_t {
-        QUERY_RPC_ID_CALLBACK = 0,
-    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

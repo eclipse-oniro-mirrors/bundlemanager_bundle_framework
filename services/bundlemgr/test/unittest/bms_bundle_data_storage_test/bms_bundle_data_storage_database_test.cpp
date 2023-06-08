@@ -821,6 +821,7 @@ protected:
                     "targetAbility": "",
                     "theme": "",
                     "type": 1,
+                    "unclearableMission": false,
                     "uri": "",
                     "visible": true,
                     "writePermission": ""

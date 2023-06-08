@@ -244,6 +244,11 @@ public:
         return ERR_OK;
     }
 
+    virtual ErrCode IsExistFile(const std::string &path, bool &isExist)
+    {
+        return ERR_OK;
+    }
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty)
     {
         return ERR_OK;
@@ -264,35 +269,6 @@ public:
     {
         return ERR_OK;
     }
-
-protected:
-    enum Message : uint32_t {
-        CREATE_BUNDLE_DIR = 1,
-        EXTRACT_MODULE_FILES,
-        RENAME_MODULE_DIR,
-        CREATE_BUNDLE_DATA_DIR,
-        CLEAN_BUNDLE_DATA_DIR,
-        REMOVE_BUNDLE_DATA_DIR,
-        REMOVE_MODULE_DATA_DIR,
-        REMOVE_DIR,
-        GET_BUNDLE_STATS,
-        SET_DIR_APL,
-        GET_BUNDLE_CACHE_PATH,
-        SCAN_DIR,
-        MOVE_FILE,
-        COPY_FILE,
-        MKDIR,
-        GET_FILE_STAT,
-        EXTRACT_DIFF_FILES,
-        APPLY_DIFF_PATCH,
-        IS_EXIST_DIR,
-        IS_DIR_EMPTY,
-        OBTAIN_QUICK_FIX_DIR,
-        COPY_FILES,
-        EXTRACT_FILES,
-        GET_NATIVE_LIBRARY_FILE_NAMES,
-        EXECUTE_AOT,
-    };
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

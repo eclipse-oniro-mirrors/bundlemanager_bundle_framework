@@ -38,12 +38,14 @@ ohos_shared_library("bundlemgr_graphics") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",

@@ -258,6 +258,11 @@ ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
     return CallService(&IInstalld::IsExistDir, dir, isExist);
 }
 
+ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
+{
+    return CallService(&IInstalld::IsExistFile, path, isExist);
+}
+
 ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return CallService(&IInstalld::IsDirEmpty, dir, isDirEmpty);

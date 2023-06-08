@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_HANDLER
 #define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_HANDLER
 
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -41,10 +42,15 @@ private:
     std::string GetArkProfilePath(const std::string &bundleName, const std::string &moduleName) const;
     std::optional<AOTArgs> BuildAOTArgs(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
-    void HandleInstall(const InnerBundleInfo &info, const std::string &compileMode) const;
+    void HandleInstallWithSingleHap(const InnerBundleInfo &info, const std::string &compileMode) const;
+    void ClearArkCacheDir() const;
     void ResetAOTFlags() const;
     void HandleIdleWithSingleHap(
         const InnerBundleInfo &info, const std::string &moduleName, const std::string &compileMode) const;
+    bool CheckDeviceState() const;
+    void AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
+private:
+    mutable std::mutex mutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

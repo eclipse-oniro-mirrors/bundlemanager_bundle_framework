@@ -37,6 +37,7 @@ public:
     void UnRegisterDeathListener() override;
 
 private:
+    bool ParseConfig(DefaultAppData &defaultAppData);
     void LoadDefaultApplicationConfig();
     bool GetDataFromDb(int32_t userId, std::map<std::string, Element>& infos);
     bool SaveDataToDb(int32_t userId, const std::map<std::string, Element>& infos);

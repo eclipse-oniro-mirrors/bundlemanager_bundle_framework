@@ -1972,7 +1972,7 @@ public:
     void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
     void UpdateSharedModuleInfo();
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
-    bool SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     void ResetAOTFlags();
 
 private:

@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
@@ -37,31 +38,45 @@ InstalldHost::~InstalldHost()
 
 void InstalldHost::init()
 {
-    funcMap_.emplace(IInstalld::Message::CREATE_BUNDLE_DIR, &InstalldHost::HandleCreateBundleDir);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_MODULE_FILES, &InstalldHost::HandleExtractModuleFiles);
-    funcMap_.emplace(IInstalld::Message::RENAME_MODULE_DIR, &InstalldHost::HandleRenameModuleDir);
-    funcMap_.emplace(IInstalld::Message::CREATE_BUNDLE_DATA_DIR, &InstalldHost::HandleCreateBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::REMOVE_BUNDLE_DATA_DIR, &InstalldHost::HandleRemoveBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::REMOVE_MODULE_DATA_DIR, &InstalldHost::HandleRemoveModuleDataDir);
-    funcMap_.emplace(IInstalld::Message::CLEAN_BUNDLE_DATA_DIR, &InstalldHost::HandleCleanBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::SET_DIR_APL, &InstalldHost::HandleSetDirApl);
-    funcMap_.emplace(IInstalld::Message::REMOVE_DIR, &InstalldHost::HandleRemoveDir);
-    funcMap_.emplace(IInstalld::Message::GET_BUNDLE_STATS, &InstalldHost::HandleGetBundleStats);
-    funcMap_.emplace(IInstalld::Message::GET_BUNDLE_CACHE_PATH, &InstalldHost::HandleGetBundleCachePath);
-    funcMap_.emplace(IInstalld::Message::SCAN_DIR, &InstalldHost::HandleScanDir);
-    funcMap_.emplace(IInstalld::Message::MOVE_FILE, &InstalldHost::HandleMoveFile);
-    funcMap_.emplace(IInstalld::Message::COPY_FILE, &InstalldHost::HandleCopyFile);
-    funcMap_.emplace(IInstalld::Message::MKDIR, &InstalldHost::HandleMkdir);
-    funcMap_.emplace(IInstalld::Message::GET_FILE_STAT, &InstalldHost::HandleGetFileStat);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_DIFF_FILES, &InstalldHost::HandleExtractDiffFiles);
-    funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
-    funcMap_.emplace(IInstalld::Message::IS_EXIST_DIR, &InstalldHost::HandleIsExistDir);
-    funcMap_.emplace(IInstalld::Message::IS_DIR_EMPTY, &InstalldHost::HandleIsDirEmpty);
-    funcMap_.emplace(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, &InstalldHost::HandObtainQuickFixFileDir);
-    funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
-    funcMap_.emplace(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, &InstalldHost::HandGetNativeLibraryFileNames);
-    funcMap_.emplace(IInstalld::Message::EXECUTE_AOT, &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR),
+        &InstalldHost::HandleCreateBundleDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES),
+        &InstalldHost::HandleExtractModuleFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::RENAME_MODULE_DIR),
+        &InstalldHost::HandleRenameModuleDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleCreateBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleRemoveBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR),
+        &InstalldHost::HandleRemoveModuleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleCleanBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL), &InstalldHost::HandleSetDirApl);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR), &InstalldHost::HandleRemoveDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS),
+        &InstalldHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH),
+        &InstalldHost::HandleGetBundleCachePath);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR), &InstalldHost::HandleScanDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE), &InstalldHost::HandleMoveFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE), &InstalldHost::HandleCopyFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MKDIR), &InstalldHost::HandleMkdir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_FILE_STAT), &InstalldHost::HandleGetFileStat);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DIFF_FILES),
+        &InstalldHost::HandleExtractDiffFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::APPLY_DIFF_PATCH),
+        &InstalldHost::HandleApplyDiffPatch);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_DIR), &InstalldHost::HandleIsExistDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_DIR_EMPTY), &InstalldHost::HandleIsDirEmpty);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR),
+        &InstalldHost::HandObtainQuickFixFileDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES), &InstalldHost::HandCopyFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES), &InstalldHost::HandleExtractFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
+        &InstalldHost::HandGetNativeLibraryFileNames);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -123,7 +138,15 @@ bool InstalldHost::HandleExtractFiles(MessageParcel &data, MessageParcel &reply)
 
 bool InstalldHost::HandleExecuteAOT(MessageParcel &data, MessageParcel &reply)
 {
-    return false;
+    std::unique_ptr<AOTArgs> aotArgs(data.ReadParcelable<AOTArgs>());
+    if (aotArgs == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+
+    ErrCode result = ExecuteAOT(*aotArgs);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
 }
 
 bool InstalldHost::HandleRenameModuleDir(MessageParcel &data, MessageParcel &reply)
@@ -308,6 +331,19 @@ bool InstalldHost::HandleIsExistDir(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         APP_LOGE("fail to IsExistDir from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleIsExistFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string path = Str16ToStr8(data.ReadString16());
+    bool isExist = false;
+    ErrCode result = IsExistFile(path, isExist);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isExist)) {
+        APP_LOGE("fail to IsExistFile from reply");
         return false;
     }
     return true;

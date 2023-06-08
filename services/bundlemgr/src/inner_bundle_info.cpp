@@ -158,18 +158,33 @@ const std::string NameAndUserIdToKey(const std::string &bundleName, int32_t user
 }
 }  // namespace
 
-bool InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+void InnerBundleInfo::SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus)
 {
-    return false;
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return;
+    }
+    item->second.aotCompileStatus = aotCompileStatus;
 }
 
 AOTCompileStatus InnerBundleInfo::GetAOTCompileStatus(const std::string &moduleName) const
 {
-    return AOTCompileStatus::NOT_COMPILED;
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return AOTCompileStatus::NOT_COMPILED;
+    }
+    return item->second.aotCompileStatus;
 }
 
 void InnerBundleInfo::ResetAOTFlags()
 {
+    baseApplicationInfo_->arkNativeFilePath.clear();
+    baseApplicationInfo_->arkNativeFileAbi.clear();
+    std::for_each(innerModuleInfos_.begin(), innerModuleInfos_.end(), [](auto &item) {
+        item.second.aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    });
 }
 
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
@@ -474,24 +489,18 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->skillInfos_ = info.skillInfos_;
     this->innerBundleUserInfos_ = info.innerBundleUserInfos_;
     this->bundlePackInfo_ = std::make_shared<BundlePackInfo>();
-    if (this->bundlePackInfo_ == nullptr) {
-        APP_LOGE("bundlePackInfo_ is nullptr, create failed");
-    } else {
+    if (info.bundlePackInfo_ != nullptr) {
         *(this->bundlePackInfo_) = *(info.bundlePackInfo_);
     }
     this->isNewVersion_ = info.isNewVersion_;
     this->baseExtensionInfos_= info.baseExtensionInfos_;
     this->extensionSkillInfos_ = info.extensionSkillInfos_;
     this->baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
-    if (this->baseApplicationInfo_ == nullptr) {
-        APP_LOGE("baseApplicationInfo_ is nullptr, create failed");
-    } else {
+    if (info.baseApplicationInfo_ != nullptr) {
         *(this->baseApplicationInfo_) = *(info.baseApplicationInfo_);
     }
     this->baseBundleInfo_ = std::make_shared<BundleInfo>();
-    if (this->baseBundleInfo_ == nullptr) {
-        APP_LOGE("baseBundleInfo_ is nullptr, create failed");
-    } else {
+    if (info.baseBundleInfo_ != nullptr) {
         *(this->baseBundleInfo_) = *(info.baseBundleInfo_);
     }
     this->hqfInfos_ = info.hqfInfos_;
@@ -1897,7 +1906,6 @@ std::optional<std::vector<AbilityInfo>> InnerBundleInfo::FindAbilityInfos(int32_
     if (abilitys.empty()) {
         return std::nullopt;
     }
-
     return abilitys;
 }
 
@@ -2399,7 +2407,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2460,7 +2468,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (!CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
         appInfo.removable = false;
     }
 

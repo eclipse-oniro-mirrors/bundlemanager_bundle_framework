@@ -3192,6 +3192,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest
         ret = deployer->SaveAppQuickFix(innerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
     }
+    quickFixMgr->quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
 }
 
 /**
@@ -3706,21 +3707,6 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | 
     EXPECT_EQ(rdb.quickFixManagerDb_, nullptr);
     bool ret = rdb.DeleteInnerAppQuickFix("");
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: QuickFixManagerRdb_0200
- * @tc.name: Test QuickFixManagerRdb
- * @tc.desc: 1.Test the failed scene of QuickFixManagerRdb
- */
-HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0200, Function | SmallTest | Level0)
-{
-    QuickFixManagerRdb rdb;
-    rdb.rdbDataManager_.reset();
-    ASSERT_EQ(rdb.rdbDataManager_, nullptr);
-    InnerAppQuickFix innerAppQuickFix;
-    bool ret = rdb.GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
-    EXPECT_EQ(ret, true);
 }
 
 /**

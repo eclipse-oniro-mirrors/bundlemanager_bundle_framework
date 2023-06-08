@@ -4779,31 +4779,90 @@ std::string BundleDataMgr::GetBundleNameByAppId(const std::string &appId) const
     return it->second.GetBundleName();
 }
 
-bool BundleDataMgr::SetAOTCompileStatus(
-    const std::string &bundleName, const std::string &moduleName, AOTCompileStatus aotCompileStatus)
+void BundleDataMgr::SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    AOTCompileStatus aotCompileStatus, uint32_t versionCode)
 {
-    return false;
+    APP_LOGD("SetAOTCompileStatus, bundleName : %{public}s, moduleName : %{public}s, aotCompileStatus : %{public}d",
+        bundleName.c_str(), moduleName.c_str(), aotCompileStatus);
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        (void)InstalldClient::GetInstance()->RemoveDir(Constants::ARK_CACHE_PATH + bundleName);
+        return;
+    }
+    if (item->second.GetVersionCode() != versionCode) {
+        APP_LOGE("versionCode inconsistent, param : %{public}u, current : %{public}u",
+            versionCode, item->second.GetVersionCode());
+        return;
+    }
+    item->second.SetAOTCompileStatus(moduleName, aotCompileStatus);
+    std::string abi;
+    std::string path;
+    if (aotCompileStatus == AOTCompileStatus::COMPILE_SUCCESS) {
+        abi = Constants::ARM64_V8A;
+        path = Constants::ARM64 + Constants::PATH_SEPARATOR;
+    }
+    item->second.SetArkNativeFileAbi(abi);
+    item->second.SetArkNativeFilePath(path);
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+    }
 }
 
 void BundleDataMgr::ResetAOTFlags()
 {
+    APP_LOGI("ResetAOTFlags begin");
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::for_each(bundleInfos_.begin(), bundleInfos_.end(), [this](auto &item) {
+        item.second.ResetAOTFlags();
+        if (!dataStorage_->SaveStorageBundleInfo(item.second)) {
+            APP_LOGE("SaveStorageBundleInfo failed, bundleName : %{public}s", item.second.GetBundleName().c_str());
+        }
+    });
+    APP_LOGI("ResetAOTFlags end");
 }
 
 std::vector<std::string> BundleDataMgr::GetAllBundleName() const
 {
-    std::vector<std::string> vector;
-    return vector;
+    APP_LOGD("GetAllBundleName begin");
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::vector<std::string> bundleNames;
+    bundleNames.reserve(bundleInfos_.size());
+    std::transform(bundleInfos_.cbegin(), bundleInfos_.cend(), std::back_inserter(bundleNames), [](const auto &item) {
+        return item.first;
+    });
+    return bundleNames;
 }
 
-std::optional<InnerBundleInfo> BundleDataMgr::GetInnerBundleInfo(const std::string &bundleName) const
+bool BundleDataMgr::QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const
 {
-    return std::nullopt;
+    APP_LOGD("QueryInnerBundleInfo begin, bundleName : %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGD("QueryInnerBundleInfo failed");
+        return false;
+    }
+    info = item->second;
+    return true;
 }
 
 std::vector<int32_t> BundleDataMgr::GetUserIds(const std::string &bundleName) const
 {
-    std::vector<int32_t> vector;
-    return vector;
+    APP_LOGD("GetUserIds begin, bundleName : %{public}s", bundleName.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    std::vector<int32_t> userIds;
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGD("can't find bundleName : %{public}s", bundleName.c_str());
+        return userIds;
+    }
+    auto userInfos = infoItem->second.GetInnerBundleUserInfos();
+    std::transform(userInfos.cbegin(), userInfos.cend(), std::back_inserter(userIds), [](const auto &item) {
+        return item.second.bundleUserInfo.userId;
+    });
+    return userIds;
 }
 
 ErrCode BundleDataMgr::GetSpecifiedDistributionType(

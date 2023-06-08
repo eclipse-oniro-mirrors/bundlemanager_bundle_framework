@@ -17,6 +17,7 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_APP_CONTROL_PROXY_H
 
 #include "app_control_interface.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "iremote_proxy.h"
 
 namespace OHOS {
@@ -62,13 +63,13 @@ public:
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);
     template <typename T>
-    ErrCode GetParcelableInfo(IAppControlMgr::Message code, MessageParcel& data, T& parcelableInfo);
+    ErrCode GetParcelableInfo(AppControlManagerInterfaceCode code, MessageParcel& data, T& parcelableInfo);
     template<typename T>
     bool WriteParcelableVector(const std::vector<T> &parcelableVector, MessageParcel &data);
     bool WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data);
     int32_t GetParcelableInfos(
-        IAppControlMgr::Message code, MessageParcel &data, std::vector<std::string> &stringVector);
-    int32_t SendRequest(IAppControlMgr::Message code, MessageParcel &data, MessageParcel &reply);
+        AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<std::string> &stringVector);
+    int32_t SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     static inline BrokerDelegator<AppControlProxy> delegator_;
 };
 } // namespace AppExecFwk

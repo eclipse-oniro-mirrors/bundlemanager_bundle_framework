@@ -24,6 +24,7 @@ struct AppPrivilegeCapability {
     bool allowMultiProcess = false;
     bool allowQueryPriority = false;
     bool allowExcludeFromMissions = false;
+    bool allowMissionNotCleared = false;
     bool allowUsePrivilegeExtension = false;
     bool userDataClearable = true;
     bool hideDesktopIcon = false;
@@ -35,6 +36,7 @@ struct AppPrivilegeCapability {
         return "[ allowMultiProcess = " + BundleUtil::GetBoolStrVal(allowMultiProcess)
             + ", allowQueryPriority = " + BundleUtil::GetBoolStrVal(allowQueryPriority)
             + ", allowExcludeFromMissions = " + BundleUtil::GetBoolStrVal(allowExcludeFromMissions)
+            + ", allowMissionNotCleared = " + BundleUtil::GetBoolStrVal(allowMissionNotCleared)
             + ", allowUsePrivilegeExtension = " + BundleUtil::GetBoolStrVal(allowUsePrivilegeExtension)
             + ", userDataClearable = " + BundleUtil::GetBoolStrVal(userDataClearable)
             + ", hideDesktopIcon = " + BundleUtil::GetBoolStrVal(hideDesktopIcon)

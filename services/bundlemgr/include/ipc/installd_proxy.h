@@ -18,8 +18,9 @@
 
 #include <string>
 
-#include "iremote_proxy.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_services_ipc_interface_code.h"
+#include "iremote_proxy.h"
 #include "ipc/installd_interface.h"
 
 namespace OHOS {
@@ -139,6 +140,8 @@ public:
 
     virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
 
+    virtual ErrCode IsExistFile(const std::string &path, bool &isExist) override;
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
 
     virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;
@@ -149,7 +152,7 @@ public:
         std::vector<std::string> &fileNames) override;
 
 private:
-    ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
     static inline BrokerDelegator<InstalldProxy> delegator_;
 };

@@ -24,7 +24,9 @@ ohos_unittest("BmsBundleMgrServiceDeathRecipientTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gmock_main",
     "//third_party/googletest:gtest_main",
@@ -34,8 +36,6 @@ ohos_unittest("BmsBundleMgrServiceDeathRecipientTest") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

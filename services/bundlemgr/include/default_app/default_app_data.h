@@ -29,7 +29,7 @@ struct DefaultAppData {
     std::string ToString() const;
     void ToJson(nlohmann::json& jsonObject) const;
     int32_t FromJson(const nlohmann::json& jsonObject);
-    bool ParseDefaultApplicationConfig(const nlohmann::json& jsonObject);
+    void ParseDefaultApplicationConfig(const nlohmann::json& jsonObject);
 };
 
 void to_json(nlohmann::json &jsonObject, const Element& element);
