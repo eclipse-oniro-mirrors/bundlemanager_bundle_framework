@@ -390,6 +390,11 @@ ohos_executable("installs") {
     "samgr:samgr_proxy",
   ]
 
+  if (code_signature_enable) {
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
+
   if (build_selinux) {
     external_deps += [ "selinux:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]

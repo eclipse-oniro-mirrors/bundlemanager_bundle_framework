@@ -59,6 +59,7 @@ declare_args() {
   use_pre_bundle_profile = true
   window_enable = true
   dlp_permission_enable = true
+  code_signature_enable = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -129,6 +130,11 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.security_dlp_permission_service)) {
     dlp_permission_enable = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.security_code_signature)) {
+    code_signature_enable = false
   }
 }
 

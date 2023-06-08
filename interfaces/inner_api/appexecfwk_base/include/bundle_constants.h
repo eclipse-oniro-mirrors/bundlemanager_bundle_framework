@@ -332,6 +332,12 @@ constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
 
 constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+
+// code signature
+constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
+constexpr const char* CODE_SIGNATURE_HAP = "Hap";
+constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
+constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -171,5 +171,11 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

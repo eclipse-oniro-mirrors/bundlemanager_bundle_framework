@@ -441,6 +441,26 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(modulePath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFileDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

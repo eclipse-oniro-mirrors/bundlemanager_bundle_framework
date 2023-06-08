@@ -154,6 +154,10 @@ public:
         std::vector<std::string> &fileNames);
 
     ErrCode ExecuteAOT(const AOTArgs &aotArgs);
+
+    ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
+        const std::string &targetSoPath, const std::string &signatureFileDir);
+
 private:
     /**
      * @brief Get the installd proxy object.

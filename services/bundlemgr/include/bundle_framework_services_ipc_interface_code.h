@@ -52,6 +52,7 @@ enum class InstalldInterfaceCode : uint32_t {
     GET_NATIVE_LIBRARY_FILE_NAMES,
     EXECUTE_AOT,
     IS_EXIST_FILE,
+    VERIFY_CODE_SIGNATURE,
 };
 
 } // namespace AppExecFwk

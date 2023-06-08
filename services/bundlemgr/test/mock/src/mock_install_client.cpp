@@ -169,5 +169,11 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
 {
     return 0;
 }
+
+ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
