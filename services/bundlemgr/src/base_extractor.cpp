@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <fstream>
+#include <limits>
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
@@ -139,6 +140,25 @@ bool BaseExtractor::IsStageBasedModel(std::string abilityName)
 bool BaseExtractor::IsNewVersion() const
 {
     return isNewVersion_;
+}
+
+bool BaseExtractor::GetFileInfo(const std::string &fileName, uint32_t &offset, uint32_t &length) const
+{
+    if (!initial_) {
+        APP_LOGE("extractor is not initial");
+        return false;
+    }
+    ZipPos tmpOffset = 0;
+    if (!zipFile_.GetDataOffsetRelative(fileName, tmpOffset, length)) {
+        APP_LOGE("GetDataOffsetRelative failed");
+        return false;
+    }
+    if (tmpOffset > std::numeric_limits<uint32_t>::max()) {
+        APP_LOGE("offset too large");
+        return false;
+    }
+    offset = static_cast<uint32_t>(tmpOffset);
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -122,6 +122,7 @@ struct InnerModuleInfo {
     std::string isolationMode;
     bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
+    AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
 };
 
 struct SkillUri {
@@ -148,6 +149,7 @@ private:
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
+    bool MatchMimeType(const std::string &uriString) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 
@@ -1969,6 +1971,9 @@ public:
     bool IsCompressNativeLibs(const std::string &moduleName) const;
     void SetNativeLibraryFileNames(const std::string &moduleName, const std::vector<std::string> &fileNames);
     void UpdateSharedModuleInfo();
+    AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
+    void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
+    void ResetAOTFlags();
 
 private:
     bool IsExistLauncherAbility() const;

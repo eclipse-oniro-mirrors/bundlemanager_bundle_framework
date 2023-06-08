@@ -27,12 +27,14 @@ ohos_shared_library("bundle_napi_common") {
     "napi_arg.cpp",
   ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+  ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_single",
@@ -42,5 +44,6 @@ ohos_shared_library("bundle_napi_common") {
   ]
 
   subsystem_name = "bundlemanager"
+  innerapi_tags = [ "platformsdk" ]
   part_name = "bundle_framework"
 }

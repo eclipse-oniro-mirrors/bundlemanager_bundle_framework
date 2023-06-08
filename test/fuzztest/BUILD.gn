@@ -28,6 +28,8 @@ group("fuzztest") {
     "bundlefileutil_fuzzer:BundleFileUtilFuzzTest",
     "bundleinfo_fuzzer:BundleInfoFuzzTest",
     "bundleinfofromjson_fuzzer:BundleInfoFromJsonFuzzTest",
+    "bundleinstalldhost_fuzzer:BundleInstalldHostFuzzTest",
+    "bundleinstallerhost_fuzzer:BundleInstallerHostFuzzTest",
     "bundleinstallerproxy_fuzzer:BundleInstallerProxyFuzzTest",
     "bundlemgrhost_fuzzer:BundleMgrHostFuzzTest",
     "bundlemgrproxy_fuzzer:BundleMgrProxyFuzzTest",
@@ -91,6 +93,7 @@ group("fuzztest") {
     "switchquickfix_fuzzer:SwitchQuickFixFuzzTest",
     "upgradeatomicservice_fuzzer:UpgradeAtomicServiceFuzzTest",
     "verifycallingpermission_fuzzer:VerifyCallingPermissionFuzzTest",
+    "zip_fuzzer:ZipFuzzTest",
   ]
 
   if (bundle_framework_default_app) {

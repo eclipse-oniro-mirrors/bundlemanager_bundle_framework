@@ -36,6 +36,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
+#include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
 #include "scope_guard.h"
 #include "system_bundle_installer.h"
@@ -1736,6 +1737,45 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0004, Function | SmallTest | Level1)
     skill.actions.emplace_back("action001");
     bool ret = skill.MatchType(Constants::TYPE_ONLY_MATCH_WILDCARD, "*/*");
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SkillFalse_0005
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0005, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    bool ret = skill.MatchMimeType(".notatype");
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: SkillFalse_0006
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0006, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    bool ret = skill.MatchMimeType(".jpg");
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: SkillFalse_0007
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0007, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    bool ret = skill.MatchMimeType(".jpg");
+    EXPECT_EQ(true, ret);
 }
 
 /**
@@ -4501,7 +4541,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0200, Function | SmallTest |
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    
+
     ErrCode ret = hostImpl->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_WITH_ABILITIES, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
@@ -4800,5 +4840,44 @@ HWTEST_F(BmsBundleManagerTest, GetSandboxHapModuleInfo_0100, Function | SmallTes
     appIndex = 101;
     ret = hostImpl->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0100
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0100, Function | SmallTest | Level1)
+{
+    std::string wrongUri = "wrong";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(wrongUri, types);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0200
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0200, Function | SmallTest | Level1)
+{
+    std::string wrongUri = "wrong.wongtype";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(wrongUri, types);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0300
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0300, Function | SmallTest | Level1)
+{
+    std::string rightUri = "right.jpg";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(rightUri, types);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS

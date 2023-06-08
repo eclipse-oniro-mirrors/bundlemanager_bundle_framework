@@ -78,6 +78,7 @@ const std::string PROXY_DATA_REQUIRED_WRITE_PERMISSION = "requiredWritePermissio
 const std::string PROXY_DATA_METADATA = "metadata";
 const std::string HAP_MODULE_INFO_BUILD_HASH = "buildHash";
 const std::string HAP_MODULE_INFO_ISOLATION_MODE = "isolationMode";
+const std::string HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const size_t MODULE_CAPACITY = 10240; // 10K
@@ -438,6 +439,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     }
     buildHash = Str16ToStr8(parcel.ReadString16());
     isolationMode = static_cast<IsolationMode>(parcel.ReadInt32());
+    aotCompileStatus = static_cast<AOTCompileStatus>(parcel.ReadInt32());
     compressNativeLibs = parcel.ReadBool();
     int32_t nativeLibraryFileNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
@@ -552,6 +554,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(buildHash));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(isolationMode));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(aotCompileStatus));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, compressNativeLibs);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNames.size());
     for (auto &fileName : nativeLibraryFileNames) {
@@ -612,6 +615,7 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
         {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
         {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode},
+        {HAP_MODULE_INFO_AOT_COMPILE_STATUS, hapModuleInfo.aotCompileStatus},
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
         {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames}
     };
@@ -1009,6 +1013,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         jsonObjectEnd,
         HAP_MODULE_INFO_ISOLATION_MODE,
         hapModuleInfo.isolationMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<AOTCompileStatus>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_AOT_COMPILE_STATUS,
+        hapModuleInfo.aotCompileStatus,
         JsonType::NUMBER,
         false,
         parseResult,

@@ -8154,6 +8154,7 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallT
     handler.ProcessRebootBundleUninstall();
     bool bundleLevel = false;
     handler.DeletePreInfoInDb("", "", bundleLevel);
+    handler.UpdateAppDataSelinuxLabel("", "", false, false);
 
     std::list<std::string> scanPathList;
     handler.InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
@@ -9628,10 +9629,10 @@ HWTEST_F(BmsBundleKitServiceTest, BaseSharedBundleInfoTest, Function | SmallTest
     OHOS::Parcel parcel;
     bool res = info.Marshalling(parcel);
     EXPECT_EQ(res, true);
-    BaseSharedBundleInfo newInfo;
-    newInfo.Unmarshalling(parcel);
-    res = newInfo.ReadFromParcel(parcel);
-    EXPECT_EQ(res, true);
+    BaseSharedBundleInfo *newInfo = BaseSharedBundleInfo::Unmarshalling(parcel);
+    EXPECT_TRUE(newInfo != nullptr);
+    delete newInfo;
+    newInfo = nullptr;
 }
 
 /**
@@ -10007,7 +10008,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetSpecifiedDistributionType_0002, Function | 
     } else {
         std::string specifiedDistributionType;
         auto ret = bundleMgrProxy->GetSpecifiedDistributionType("", specifiedDistributionType);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 
@@ -10115,7 +10116,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetAdditionalInfo_0002, Function | SmallTest |
     } else {
         std::string additionalInfo;
         auto ret = bundleMgrProxy->GetAdditionalInfo("", additionalInfo);
-        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+        EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
     }
 }
 

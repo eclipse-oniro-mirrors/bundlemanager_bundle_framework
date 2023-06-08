@@ -16,7 +16,8 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_STREAM_INSTALLER_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_STREAM_INSTALLER_HOST_IMPL_H
 
-#include<vector>
+#include <mutex>
+#include <vector>
 
 #include "bundle_stream_installer_host.h"
 #include "install_param.h"
@@ -48,6 +49,7 @@ private:
     bool isInstallStarted_ = false;
     sptr<IStatusReceiver> receiver_ = nullptr;
     bool isInstallSharedBundlesOnly_ = true;
+    std::mutex fdVecMutex_;
 };
 } // AppExecFwk
 } // OHOS

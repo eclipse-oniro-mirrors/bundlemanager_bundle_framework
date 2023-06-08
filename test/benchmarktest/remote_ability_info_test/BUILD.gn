@@ -25,11 +25,13 @@ ohos_benchmarktest("BenchmarkTestForRemoteAbilityInfo") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
 
-  deps = [ "//third_party/benchmark:benchmark" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "//third_party/benchmark:benchmark",
+  ]
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
   ]
 }

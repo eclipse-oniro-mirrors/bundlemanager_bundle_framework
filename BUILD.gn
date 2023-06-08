@@ -19,11 +19,13 @@ group("bms_target") {
     "common:common_target",
     "interfaces/inner_api/appexecfwk_base:appexecfwk_base",
     "interfaces/inner_api/appexecfwk_core:appexecfwk_core",
+    "interfaces/inner_api/bundlemgr_extension:bundlemgr_extension",
     "interfaces/kits/js:napi_packages",
     "interfaces/kits/native/app_detail_ability:app_detail_ability",
     "interfaces/kits/native/bundle:bundle_ndk",
     "sa_profile:appexecfwk_sa_profile",
     "services/bundlemgr:bms_target",
+    "services/bundlemgr/etc:bms_etc",
   ]
   if (bundle_framework_graphics) {
     deps += [ "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics" ]

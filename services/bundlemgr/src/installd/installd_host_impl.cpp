@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+#include "aot/aot_executor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "common_profile.h"
@@ -128,6 +129,19 @@ ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
     }
 
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    APP_LOGD("begin to execute AOT, args : %{public}s", aotArgs.ToString().c_str());
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    ErrCode ret = ERR_OK;
+    AOTExecutor::GetInstance().ExecuteAOT(aotArgs, ret);
+    APP_LOGD("execute AOT ret : %{public}d", ret);
+    return ret;
 }
 
 ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
@@ -640,6 +654,16 @@ ErrCode InstalldHostImpl::IsExistDir(const std::string &dir, bool &isExist)
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
     isExist = InstalldOperator::IsExistDir(dir);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::IsExistFile(const std::string &path, bool &isExist)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    isExist = InstalldOperator::IsExistFile(path);
     return ERR_OK;
 }
 

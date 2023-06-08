@@ -40,6 +40,7 @@ public:
     void SetCallingUid(int32_t callingUid);
 
 protected:
+    bool otaInstall_ = false;
     enum class InstallerState {
         INSTALL_START,
         INSTALL_BUNDLE_CHECKED = 5,
@@ -482,7 +483,7 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
-    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId);
+    ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
 
 private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
@@ -576,8 +577,16 @@ private:
     bool CheckDuplicateProxyData(const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool CheckDuplicateProxyData(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo);
     bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
+    bool CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
+    void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
+    void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    void CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths);
+    void DeleteTempHapPaths() const;
+    ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
+
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
     std::string bundleName_;
@@ -607,6 +616,8 @@ private:
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
     std::string moduleName_;
+
+    std::vector<std::string> toDeleteTempHapPath_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

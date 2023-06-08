@@ -2537,4 +2537,142 @@ HWTEST_F(BmsBundleOverlayCheckerTest, TestOverlayByDataMgrFalse_2300, Function |
     AddOverlayModuleStates(newInfo, userInfo);
     ResetDataMgr();
 }
+
+/**
+ * @tc.number: CheckAppLabel_0010
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckAppLabel_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->targetBundleName = TEST_MODULE_NAME;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_BUNDLE_NAME_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabel_0020
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckAppLabel_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.baseApplicationInfo_->targetPriority = FOUR;
+    ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_PRIORITY_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckOverlayInstallation_0010
+ * @tc.name: test CheckOverlayInstallation
+ * @tc.desc: 1.Test the CheckOverlayInstallation
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayInstallation_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo newInfo;
+    newInfo.SetOverlayState(NON_OVERLAY_TYPE);
+    newInfos.try_emplace(TEST_MODULE_NAME, newInfo);
+    ErrCode res = installer.CheckOverlayInstallation(newInfos, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckOverlayInstallation_0020
+ * @tc.name: test CheckOverlayInstallation
+ * @tc.desc: 1.Test the CheckOverlayInstallation
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayInstallation_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo info1;
+    info1.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
+    newInfos.try_emplace(TEST_MODULE_NAME, info1);
+    ErrCode res = installer.CheckOverlayInstallation(newInfos, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
+}
+
+/**
+ * @tc.number: CheckOverlayInstallation_0030
+ * @tc.name: test CheckOverlayInstallation
+ * @tc.desc: 1.Test the CheckOverlayInstallation
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayInstallation_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo info1;
+    info1.SetOverlayType(OVERLAY_EXTERNAL_BUNDLE);
+    newInfos.try_emplace(TEST_MODULE_NAME, info1);
+    ErrCode res = installer.CheckOverlayInstallation(newInfos, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_ERROR_HAP_TYPE);
+}
+
+/**
+ * @tc.number: GetNotifyType_0010
+ * @tc.name: test GetNotifyType
+ * @tc.desc: 1.Test the GetNotifyType
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, GetNotifyType_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.hasInstalledInUser_ = true;
+    installer.overlayType_ = OVERLAY_EXTERNAL_BUNDLE;
+    NotifyType res = installer.GetNotifyType();
+    EXPECT_EQ(res, NotifyType::OVERLAY_UPDATE);
+}
+
+/**
+ * @tc.number: GetNotifyType_0020
+ * @tc.name: test GetNotifyType
+ * @tc.desc: 1.Test the GetNotifyType
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, GetNotifyType_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.hasInstalledInUser_ = true;
+    installer.overlayType_ = NON_OVERLAY_TYPE;
+    NotifyType res = installer.GetNotifyType();
+    EXPECT_EQ(res, NotifyType::UPDATE);
+}
+
+/**
+ * @tc.number: GetNotifyType_0030
+ * @tc.name: test GetNotifyType
+ * @tc.desc: 1.Test the GetNotifyType
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, GetNotifyType_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = false;
+    installer.hasInstalledInUser_ = true;
+    installer.overlayType_ = OVERLAY_EXTERNAL_BUNDLE;
+    NotifyType res = installer.GetNotifyType();
+    EXPECT_EQ(res, NotifyType::OVERLAY_INSTALL);
+}
+
+/**
+ * @tc.number: GetNotifyType_0040
+ * @tc.name: test GetNotifyType
+ * @tc.desc: 1.Test the GetNotifyType
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, GetNotifyType_0040, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.isAppExist_ = true;
+    installer.hasInstalledInUser_ = false;
+    installer.overlayType_ = NON_OVERLAY_TYPE;
+    NotifyType res = installer.GetNotifyType();
+    EXPECT_EQ(res, NotifyType::INSTALL);
+}
 } // OHOS

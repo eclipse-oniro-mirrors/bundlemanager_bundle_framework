@@ -32,7 +32,7 @@ ohos_unittest("BmsEventHandlerTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
 
   deps += bundle_install_deps
 
@@ -40,10 +40,10 @@ ohos_unittest("BmsEventHandlerTest") {
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
@@ -109,16 +109,16 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
   if (target_cpu == "arm") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
-  deps = []
+  deps = [ "${core_path}:appexecfwk_core" ]
   deps += bundle_install_deps
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
-    "bundle_framework:appexecfwk_core",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
     "hitrace_native:hitrace_meter",
+    "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",

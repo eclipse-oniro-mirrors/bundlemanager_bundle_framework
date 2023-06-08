@@ -821,6 +821,7 @@ protected:
                     "targetAbility": "",
                     "theme": "",
                     "type": 1,
+                    "unclearableMission": false,
                     "uri": "",
                     "visible": true,
                     "writePermission": ""
@@ -996,6 +997,8 @@ protected:
                 "bundleName": "com.ohos.launcher",
                 "cacheDir": "/data/app/el2/100/base/com.ohos.launcher/cache",
                 "codePath": "/data/app/el1/bundle/public/com.ohos.launcher",
+                "compileSdkType":"OpenHarmony",
+                "compileSdkVersion":"",
                 "cpuAbi": "armeabi-v7a",
                 "dataBaseDir": "/data/app/el2/100/database/com.ohos.launcher",
                 "dataDir": "/data/app/el2/100/base/com.ohos.launcher",

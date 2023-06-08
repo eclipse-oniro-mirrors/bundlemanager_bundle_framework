@@ -21,6 +21,7 @@
 
 #include "iremote_broker.h"
 
+#include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/extract_param.h"
@@ -37,7 +38,10 @@ public:
      * @param bundleDir Indicates the bundle code directory path that to be created.
      * @return Returns ERR_OK if the bundle directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDir(const std::string &bundleDir) = 0;
+    virtual ErrCode CreateBundleDir(const std::string &bundleDir)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Extract the files of a HAP module to the code directory.
      * @param srcModulePath Indicates the HAP file path.
@@ -47,52 +51,81 @@ public:
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
     virtual ErrCode ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi) = 0;
+        const std::string &targetSoPath, const std::string &cpuAbi)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Extract the files.
      * @param extractParam Indicates the extractParam.
      * @return Returns ERR_OK if the HAP file extracted successfully; returns error code otherwise.
      */
-    virtual ErrCode ExtractFiles(const ExtractParam &extractParam) = 0;
+    virtual ErrCode ExtractFiles(const ExtractParam &extractParam)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ExecuteAOT(const AOTArgs &aotArgs)
+    {
+        return ERR_APPEXECFWK_INSTALLD_AOT_EXECUTE_FAILED;
+    }
     /**
      * @brief Rename the module directory from temporaily path to the real path.
      * @param oldPath Indicates the old path name.
      * @param newPath Indicates the new path name.
      * @return Returns ERR_OK if the module directory renamed successfully; returns error code otherwise.
      */
-    virtual ErrCode RenameModuleDir(const std::string &oldDir, const std::string &newDir) = 0;
+    virtual ErrCode RenameModuleDir(const std::string &oldDir, const std::string &newDir)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Create a bundle data directory.
      * @param createDirParam Indicates param to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirParam) = 0;
+    virtual ErrCode CreateBundleDataDir(const CreateDirParam &createDirParam)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Remove a bundle data directory.
      * @param bundleDir Indicates the bundle data directory path that to be created.
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the bundle data directory created successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int userid) = 0;
+    virtual ErrCode RemoveBundleDataDir(const std::string &bundleDir, const int userid)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Remove a module and it's abilities data directory.
      * @param ModuleDir Indicates the module data directory path that to be created.
      * @param userid Indicates userid to be set to the directory.
      * @return Returns ERR_OK if the data directories created successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveModuleDataDir(const std::string &ModuleDir, const int userid)= 0;
+    virtual ErrCode RemoveModuleDataDir(const std::string &ModuleDir, const int userid)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Remove a directory.
      * @param dir Indicates the directory path that to be removed.
      * @return Returns ERR_OK if the  directory removed successfully; returns error code otherwise.
      */
-    virtual ErrCode RemoveDir(const std::string &dir) = 0;
+    virtual ErrCode RemoveDir(const std::string &dir)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Clean all files in a bundle data directory.
      * @param bundleDir Indicates the data directory path that to be cleaned.
      * @return Returns ERR_OK if the data directory cleaned successfully; returns error code otherwise.
      */
-    virtual ErrCode CleanBundleDataDir(const std::string &bundleDir) = 0;
+    virtual ErrCode CleanBundleDataDir(const std::string &bundleDir)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Get bundle Stats.
      * @param bundleName Indicates the bundle name.
@@ -101,7 +134,10 @@ public:
      * @return Returns ERR_OK if get stats successfully; returns error code otherwise.
      */
     virtual ErrCode GetBundleStats(
-        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats) = 0;
+        const std::string &bundleName, const int32_t userId, std::vector<int64_t> &bundleStats)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Set dir apl.
      * @param dir Indicates the data dir.
@@ -112,14 +148,20 @@ public:
      * @return Returns ERR_OK if set apl successfully; returns error code otherwise.
      */
     virtual ErrCode SetDirApl(const std::string &dir, const std::string &bundleName, const std::string &apl,
-        bool isPreInstallApp, bool debug) = 0;
+        bool isPreInstallApp, bool debug)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Get all cache file path.
      * @param dir Indicates the data dir.
      * @param cachesPath Indicates the cache file path.
      * @return Returns ERR_OK if get cache file path successfully; returns error code otherwise.
      */
-    virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath) = 0;
+    virtual ErrCode GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
+    {
+        return ERR_OK;
+    }
     /**
      * @brief Scan dir by scanMode and resultMode. this interface has higher permissions to scan.
      * @param dir Indicates the directory to be scanned.
@@ -133,7 +175,10 @@ public:
      * @return Returns ERR_OK if scan dir successfully; returns error code otherwise.
      */
     virtual ErrCode ScanDir(
-        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths) = 0;
+        const std::string &dir, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths)
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Move file from oldPath to newPath.
@@ -141,7 +186,10 @@ public:
      * @param newPath Indicates newPath.
      * @return Returns ERR_OK if move file successfully; returns error code otherwise.
      */
-    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) = 0;
+    virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath)
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Copy file from oldPath to newPath.
@@ -149,7 +197,10 @@ public:
      * @param newPath Indicates newPath.
      * @return Returns ERR_OK if copy file successfully; returns error code otherwise.
      */
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) = 0;
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath)
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Create directory recursively.
@@ -160,7 +211,10 @@ public:
      * @return Returns ERR_OK if create directory successfully; returns error code otherwise.
      */
     virtual ErrCode Mkdir(
-        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) = 0;
+        const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid)
+    {
+        return ERR_OK;
+    }
 
     /**
      * @brief Get file stat.
@@ -168,24 +222,53 @@ public:
      * @param fileStat Indicates fileStat.
      * @return Returns ERR_OK if get file stat successfully; returns error code otherwise.
      */
-    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat) = 0;
+    virtual ErrCode GetFileStat(const std::string &file, FileStat &fileStat)
+    {
+        return ERR_OK;
+    }
 
     virtual ErrCode ExtractDiffFiles(const std::string &filePath, const std::string &targetPath,
-        const std::string &cpuAbi) = 0;
+        const std::string &cpuAbi)
+    {
+        return ERR_OK;
+    }
 
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath) = 0;
+    const std::string &newSoPath)
+    {
+        return ERR_OK;
+    }
 
-    virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) = 0;
+    virtual ErrCode IsExistDir(const std::string &dir, bool &isExist)
+    {
+        return ERR_OK;
+    }
 
-    virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) = 0;
+    virtual ErrCode IsExistFile(const std::string &path, bool &isExist)
+    {
+        return ERR_OK;
+    }
 
-    virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) = 0;
+    virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty)
+    {
+        return ERR_OK;
+    }
 
-    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir) = 0;
+    virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CopyFiles(const std::string &sourceDir, const std::string &destinationDir)
+    {
+        return ERR_OK;
+    }
 
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
-        std::vector<std::string> &fileNames) = 0;
+        std::vector<std::string> &fileNames)
+    {
+        return ERR_OK;
+    }
 
 protected:
     enum Message : uint32_t {
@@ -212,7 +295,9 @@ protected:
         OBTAIN_QUICK_FIX_DIR,
         COPY_FILES,
         EXTRACT_FILES,
-        GET_NATIVE_LIBRARY_FILE_NAMES
+        GET_NATIVE_LIBRARY_FILE_NAMES,
+        EXECUTE_AOT,
+        IS_EXIST_FILE,
     };
 };
 

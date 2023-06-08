@@ -74,6 +74,7 @@ struct ExtensionFormProfileInfo {
     std::string defaultDimension;
     std::vector<std::string> supportDimensions {};
     std::vector<Metadata> metadata {};
+    bool dataProxyEnabled = false;
 };
 
 struct ExtensionFormProfileInfoVec {
@@ -253,6 +254,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         false,
         parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DATA_PROXY_ENABLED,
+        extensionFormProfileInfo.dataProxyEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoVec &infos)
@@ -357,6 +366,8 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         customizeData.value = data.value;
         info.metadata.emplace_back(customizeData);
     }
+
+    info.dataProxyEnabled = form.dataProxyEnabled;
     return true;
 }
 

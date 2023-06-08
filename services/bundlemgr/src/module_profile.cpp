@@ -78,7 +78,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "print",
     "ui",
     "push",
-    "driver"
+    "driver",
+    "appAccountAuthorization"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -172,6 +173,7 @@ struct Ability {
     uint32_t minWindowHeight = 0;
     bool excludeFromMissions = false;
     bool recoverable = false;
+    bool unclearableMission = false;
 };
 
 struct Extension {
@@ -222,6 +224,8 @@ struct App {
     int32_t targetPriority = 0;
     bool asanEnabled = false;
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
+    std::string compileSdkVersion;
+    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
 };
 
 struct Module {
@@ -557,6 +561,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         jsonObjectEnd,
         ABILITY_RECOVERABLE,
         ability.recoverable,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_UNCLEARABLE_MISSION,
+        ability.unclearableMission,
         JsonType::BOOLEAN,
         false,
         g_parseResult,
@@ -1108,6 +1120,22 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        COMPILE_SDK_VERSION,
+        app.compileSdkVersion,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        COMPILE_SDK_TYPE,
+        app.compileSdkType,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1427,8 +1455,10 @@ void UpdateNativeSoAttrs(
         if (!isLibIsolated) {
             innerBundleInfo.SetNativeLibraryPath(soRelativePath);
         }
-        innerBundleInfo.SetModuleNativeLibraryPath(soRelativePath);
-        innerBundleInfo.SetSharedModuleNativeLibraryPath(soRelativePath);
+        if (!soRelativePath.empty()) {
+            innerBundleInfo.SetModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+            innerBundleInfo.SetSharedModuleNativeLibraryPath(Constants::LIBS + cpuAbi);
+        }
         innerBundleInfo.SetModuleCpuAbi(cpuAbi);
         return;
     }
@@ -1745,6 +1775,8 @@ bool ToApplicationInfo(
     if (iterBundleType != Profile::BUNDLE_TYPE_MAP.end()) {
         applicationInfo.bundleType = iterBundleType->second;
     }
+    applicationInfo.compileSdkVersion = app.compileSdkVersion;
+    applicationInfo.compileSdkType = app.compileSdkType;
     return true;
 }
 
@@ -1834,6 +1866,7 @@ bool ToAbilityInfo(
     abilityInfo.labelId = ability.labelId;
     abilityInfo.priority = ability.priority;
     abilityInfo.excludeFromMissions = ability.excludeFromMissions;
+    abilityInfo.unclearableMission = ability.unclearableMission;
     abilityInfo.recoverable = ability.recoverable;
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
@@ -2024,6 +2057,7 @@ bool ToInnerModuleInfo(
     innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
+    innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
     // abilities and extensionAbilities store in InnerBundleInfo
     return true;
 }

@@ -31,10 +31,12 @@ ohos_fuzztest("ElementNameFuzzTest") {
   ]
   sources = [ "elementname_fuzzer.cpp" ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+  ]
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
     "c_utils:utils",
   ]
 }

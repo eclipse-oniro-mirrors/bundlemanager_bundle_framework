@@ -52,6 +52,11 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return CallService(&IInstalld::ExtractFiles, extractParam);
 }
 
+ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return CallService(&IInstalld::ExecuteAOT, aotArgs);
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     if (oldPath.empty() || newPath.empty()) {
@@ -251,6 +256,11 @@ ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::
 ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
 {
     return CallService(&IInstalld::IsExistDir, dir, isExist);
+}
+
+ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
+{
+    return CallService(&IInstalld::IsExistFile, path, isExist);
 }
 
 ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)

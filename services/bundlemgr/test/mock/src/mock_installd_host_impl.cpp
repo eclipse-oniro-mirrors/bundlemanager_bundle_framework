@@ -136,6 +136,11 @@ ErrCode InstalldHostImpl::IsExistDir(const std::string &dir, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::IsExistFile(const std::string &path, bool &isExist)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return ERR_OK;
@@ -152,6 +157,11 @@ ErrCode InstalldHostImpl::CopyFiles(const std::string &sourceDir, const std::str
 }
 
 ErrCode InstalldHostImpl::ExtractFiles(const ExtractParam &extractParam)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
 {
     return ERR_OK;
 }

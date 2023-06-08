@@ -67,6 +67,7 @@ constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
+constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
@@ -110,6 +111,7 @@ constexpr const char* ARM_EABI_V7A = "armeabi-v7a";
 constexpr const char* ARM64_V8A = "arm64-v8a";
 constexpr const char* X86 = "x86";
 constexpr const char* X86_64 = "x86_64";
+constexpr const char* ARM64 = "arm64";
 const std::string LIBS = "libs/";
 const std::string AN = "an/";
 const std::string AP = "ap/";
@@ -156,6 +158,9 @@ constexpr int32_t DFS_GID = 1009;
 constexpr const char* PROFILE_KEY_UID_SIZE = "size";
 constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
+// for render process
+constexpr int32_t START_UID_FOR_RENDER_PROCESS = 1000000;
+constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
@@ -317,6 +322,17 @@ constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+// ark compile mode
+constexpr const char* COMPILE_NONE = "none";
+constexpr const char* COMPILE_PARTIAL = "partial";
+constexpr const char* COMPILE_FULL = "full";
+// ark compile option parameter key
+constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
+constexpr const char* COMPILE_OTA_PARAM_KEY = "persist.bm.ota.arkopt";
+constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+
+constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
+constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

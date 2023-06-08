@@ -73,11 +73,12 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
     for (auto allUserId : dataMgr->GetAllUser()) {
         installParam.userId = allUserId;
         MarkPreBundleSyeEventBootTag(false);
+        otaInstall_ = true;
         ErrCode result = InstallBundle(filePaths, installParam, appType);
         if (result != ERR_OK) {
             APP_LOGW("install system bundle fail, error: %{public}d", result);
         }
-
+        otaInstall_ = false;
         ResetInstallProperties();
     }
 

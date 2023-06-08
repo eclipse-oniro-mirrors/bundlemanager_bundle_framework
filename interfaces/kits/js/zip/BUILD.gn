@@ -52,14 +52,14 @@ ohos_shared_library("zlib") {
   }
 
   deps = [
+    "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${kits_path}/js/common:bundle_napi_common",
     "//third_party/zlib:shared_libz",
   ]
 
   external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog_native:libhilog_base",

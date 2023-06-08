@@ -37,6 +37,7 @@ const std::string PRIVILEGE_ALLOW_APP_MULTI_PROCESS = "AllowAppMultiProcess";
 const std::string PRIVILEGE_ALLOW_APP_DESKTOP_ICON_HIDE = "AllowAppDesktopIconHide";
 const std::string PRIVILEGE_ALLOW_ABILITY_PRIORITY_QUERIED = "AllowAbilityPriorityQueried";
 const std::string PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "AllowAbilityExcludeFromMissions";
+const std::string PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared";
 const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
 const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
 const std::string PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
@@ -45,6 +46,7 @@ const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
 const std::string ALLOW_ABILITY_PRIORITY_QUERIED = "allowAbilityPriorityQueried";
 const std::string ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS = "allowAbilityExcludeFromMissions";
+const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
@@ -53,13 +55,14 @@ const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
 const std::string SLASH = "/";
 const std::string DOUBLE_SLASH = "//";
-const std::string SUPPORT_ISOLATION_MODE = "supportIsolationMode";
+const std::string SUPPORT_ISOLATION_MODE = "persist.bms.supportIsolationMode";
 const std::string VALUE_TRUE = "true";
+const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
 const int32_t SLAH_OFFSET = 2;
-const int32_t THRESHOLD_VAL_LEN = 20;
+const int32_t THRESHOLD_VAL_LEN = 40;
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -90,6 +93,10 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
             { PRIVILEGE_ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
                     appPrivilegeCapability.allowExcludeFromMissions = true;
+                } },
+            { PRIVILEGE_ALLOW_MISSION_NOT_CLEARED,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowMissionNotCleared = true;
                 } },
             { PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
@@ -238,25 +245,25 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
     bool isCallByShell = installParam.isCallByShell;
     if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
-        return false;
+        return true;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
                 APP_LOGE("install enterprise bundle permission denied");
-                return true;
+                return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 APP_LOGE("install enterprise bundle permission denied");
-                return true;
+                return false;
             }
         } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
             APP_LOGE("install permission denied");
-            return true;
+            return false;
         }
     }
-    return false;
+    return true;
 }
 
 ErrCode BundleInstallChecker::ParseHapFiles(
@@ -761,10 +768,6 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
         }
     }
-    // check api sdk version
-    if ((infos.begin()->second).GetCompatibleVersion() > static_cast<uint32_t>(GetSdkApiVersion())) {
-        return ERR_APPEXECFWK_INSTALL_SDK_INCOMPATIBLE;
-    }
     APP_LOGD("finish check APP label");
     return ret;
 }
@@ -1000,6 +1003,10 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         ALLOW_ABILITY_EXCLUDE_FROM_MISSIONS,
         configInfo.allowExcludeFromMissions, appPrivilegeCapability.allowExcludeFromMissions);
 
+    appPrivilegeCapability.allowMissionNotCleared = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_MISSION_NOT_CLEARED,
+        configInfo.allowMissionNotCleared, appPrivilegeCapability.allowMissionNotCleared);
+
     appPrivilegeCapability.formVisibleNotify = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_FORM_VISIBLE_NOTIFY,
         configInfo.formVisibleNotify, appPrivilegeCapability.formVisibleNotify);
@@ -1052,6 +1059,9 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         }
         if (!appPrivilegeCapability.allowExcludeFromMissions) {
             iter->second.excludeFromMissions = false;
+        }
+        if (!appPrivilegeCapability.allowMissionNotCleared) {
+            iter->second.unclearableMission = false;
         }
 #else
         if (!applicationInfo.isSystemApp || !bundleInfo.isPreInstallApp) {
@@ -1218,12 +1228,17 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
 
 bool CheckSupportIsolation(const char *szIsolationModeThresholdMb, const std::string &isolationMode)
 {
-    if (((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) &&
-        (isolationMode == NONISOLATION_ONLY)) ||
-        ((std::strcmp(szIsolationModeThresholdMb, VALUE_FALSE.c_str()) == 0) &&
-        (isolationMode == ISOLATION_ONLY))) {
-        APP_LOGE("Parser isolation mode failed.");
-        return false;
+    if ((std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE.c_str()) == 0) ||
+        (std::strcmp(szIsolationModeThresholdMb, VALUE_TRUE_BOOL.c_str()) == 0)) {
+        if (isolationMode == NONISOLATION_ONLY) {
+            APP_LOGE("check isolation mode failed.");
+            return false;
+        }
+    } else {
+        if (isolationMode == ISOLATION_ONLY) {
+            APP_LOGE("check isolation mode failed.");
+            return false;
+        }
     }
     return true;
 }
@@ -1238,11 +1253,10 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
             int32_t ret = GetParameter(SUPPORT_ISOLATION_MODE.c_str(), "",
                 szIsolationModeThresholdMb, THRESHOLD_VAL_LEN);
             if (ret <= 0) {
-                APP_LOGE("GetParameter failed");
-                continue;
+                APP_LOGW("GetParameter failed");
             }
             if (!CheckSupportIsolation(szIsolationModeThresholdMb, isolationMode)) {
-                APP_LOGE("Parser isolation mode failed.");
+                APP_LOGE("check isolation mode failed.");
                 return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }

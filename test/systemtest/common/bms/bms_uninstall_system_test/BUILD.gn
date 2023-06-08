@@ -25,6 +25,7 @@ ohos_systemtest("BmsUninstallSystemTest") {
     cflags += [ "-DBINDER_IPC_32BIT" ]
   }
   deps = [
+    "${base_path}:appexecfwk_base",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/stSystemBundle/bmsSystemBundle1:bmsSystemBundle1",
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle1:stbmsThirdBundle1",
@@ -37,6 +38,7 @@ ohos_systemtest("BmsUninstallSystemTest") {
     "${bundle_framework_path}/test/sceneProject/systemtest/stThirdBundle/bmsThirdBundle9:stbmsThirdBundle9",
     "${bundle_framework_path}/test/sceneProject/systemtest/stVendorBundle/bmsVendorBundle1:bmsVendorBundle1",
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
     "//third_party/googletest:gtest_main",
   ]
@@ -45,8 +47,6 @@ ohos_systemtest("BmsUninstallSystemTest") {
 
   external_deps = [
     "ability_base:want",
-    "bundle_framework:appexecfwk_base",
-    "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",

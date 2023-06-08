@@ -140,6 +140,8 @@ public:
 
     ErrCode IsExistDir(const std::string &dir, bool &isExist);
 
+    ErrCode IsExistFile(const std::string &path, bool &isExist);
+
     ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty);
 
     ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec);
@@ -151,6 +153,7 @@ public:
     ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
+    ErrCode ExecuteAOT(const AOTArgs &aotArgs);
 private:
     /**
      * @brief Get the installd proxy object.

@@ -21,6 +21,7 @@
 #include "accesstoken_kit.h"
 #include "access_token.h"
 #include "account_helper.h"
+#include "aot/aot_handler.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
@@ -256,6 +257,7 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
+    DelayedSingleton<BundleMgrService>::GetInstance()->GetAOTLoopTask()->ScheduleLoopTask();
 }
 
 void BMSEventHandler::ClearCache()
@@ -294,6 +296,7 @@ void BMSEventHandler::BundleRebootStartEvent()
     if (IsSystemUpgrade()) {
         OnBundleRebootStart();
         SaveSystemFingerprint();
+        AOTHandler::GetInstance().HandleOTA();
     }
 
     needNotifyBundleScanStatus_ = true;
@@ -460,7 +463,6 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         InstallParam installParam;
         installParam.userId = Constants::ALL_USERID;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
-        installParam.streamInstallMode = true;
         sptr<InnerReceiverImpl> innerReceiverImpl(new (std::nothrow) InnerReceiverImpl());
         innerReceiverImpl->SetBundleName(hapPaths.first);
         std::vector<std::string> tempHaps;
@@ -1074,6 +1076,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         std::vector<std::string> filePaths;
         bool updateSelinuxLabel = false;
+        bool updateBundle = false;
         for (auto item : infos) {
             auto parserModuleNames = item.second.GetModuleNameVec();
             if (parserModuleNames.empty()) {
@@ -1117,12 +1120,10 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                         hasInstalledInfo.applicationInfo.debug);
                     updateSelinuxLabel = true;
                 }
-                if (hasModuleInstalled) {
+                if (hasModuleInstalled && UpdateModuleByHash(hasInstalledInfo, item.second)) {
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
-                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
-                        filePaths.emplace_back(item.first);
-                    }
+                    updateBundle = true;
                     continue;
                 }
 
@@ -1130,6 +1131,11 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                     parserModuleNames[0].c_str(), item.first.c_str());
                 filePaths.emplace_back(item.first);
             }
+        }
+
+        if (updateBundle) {
+            filePaths.clear();
+            filePaths.emplace_back(scanPathIter);
         }
 
         if (filePaths.empty()) {
@@ -1515,6 +1521,7 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
+    installParam.isOTA = true;
     SystemBundleInstaller installer;
     return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
 }
@@ -1536,6 +1543,7 @@ bool BMSEventHandler::OTAInstallSystemSharedBundle(
     installParam.removable = removable;
     installParam.needSavePreInstallInfo = true;
     installParam.sharedBundleDirPaths = filePaths;
+    installParam.isOTA = true;
     SystemBundleInstaller installer;
     return installer.InstallSystemSharedBundle(installParam, true, appType);
 }

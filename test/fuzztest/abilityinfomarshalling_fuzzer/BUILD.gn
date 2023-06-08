@@ -31,9 +31,9 @@ ohos_fuzztest("AbilityInfoMarshallingFuzzTest") {
   ]
   sources = [ "abilityinfomarshalling_fuzzer.cpp" ]
 
-  deps = [ "${common_path}:libappexecfwk_common" ]
-  external_deps = [
-    "bundle_framework:appexecfwk_base",
-    "c_utils:utils",
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
   ]
+  external_deps = [ "c_utils:utils" ]
 }

@@ -78,6 +78,20 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
     return TransactInstalldCmd(IInstalld::Message::EXTRACT_FILES, data, reply, option);
 }
 
+ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&aotArgs)) {
+        APP_LOGE("WriteParcelable aotArgs failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option;
+    return TransactInstalldCmd(IInstalld::Message::EXECUTE_AOT, data, reply, option);
+}
+
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     MessageParcel data;
@@ -327,6 +341,23 @@ ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_DIR, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isExist = reply.ReadBool();
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::IsExistFile(const std::string &path, bool &isExist)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(path));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_FILE, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;

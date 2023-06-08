@@ -33,6 +33,11 @@ ErrCode InstalldClient::ExtractFiles(const ExtractParam &extractParam)
     return 0;
 }
 
+ErrCode InstalldClient::ExecuteAOT(const AOTArgs &aotArgs)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
 {
     return 0;
@@ -135,6 +140,11 @@ ErrCode InstalldClient::ApplyDiffPatch(
 }
 
 ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
+{
+    return 0;
+}
+
+ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
 {
     return 0;
 }

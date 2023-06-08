@@ -44,6 +44,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/install_daemon/right:right",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/rightTest:rightTest",
+    "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
@@ -51,7 +52,6 @@ ohos_unittest("BmsInstallDaemonTest") {
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
-    "bundle_framework:appexecfwk_core",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
@@ -77,6 +77,8 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
@@ -94,12 +96,12 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   }
   deps = [
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "ipc:ipc_core",
@@ -125,6 +127,8 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
@@ -144,12 +148,12 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   }
   deps = [
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hiviewdfx_hilog_native:libhilog",
     "init:libbegetutil",
@@ -176,6 +180,8 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   module_out_path = module_output_path
 
   sources = [
+    "${services_path}/bundlemgr/src/aot/aot_args.cpp",
+    "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
@@ -191,12 +197,12 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   }
   deps = [
     "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
     "${services_path}/bundlemgr:bundle_parser",
   ]
 
   external_deps = [
     "access_token:libtokenid_sdk",
-    "bundle_framework:appexecfwk_core",
     "c_utils:utils",
     "hitrace_native:hitrace_meter",
     "hiviewdfx_hilog_native:libhilog",

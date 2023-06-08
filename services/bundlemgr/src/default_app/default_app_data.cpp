@@ -34,6 +34,7 @@ namespace {
     const std::string ABILITY_NAME = "abilityName";
     const std::string EXTENSION_NAME = "extensionName";
     const std::string TYPE = "type";
+    const std::string APP_TYPE = "appType";
 }
 
 std::string DefaultAppData::ToString() const
@@ -72,12 +73,12 @@ int32_t DefaultAppData::FromJson(const nlohmann::json& jsonObject)
     return ret;
 }
 
-bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
+void DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObject)
 {
     APP_LOGD("begin to ParseDefaultApplicationConfig.");
     if (jsonObject.is_discarded() || !jsonObject.is_array() || jsonObject.empty()) {
         APP_LOGW("json format error.");
-        return false;
+        return;
     }
     std::lock_guard<std::mutex> lock(g_mutex);
     for (const auto& object : jsonObject) {
@@ -95,7 +96,6 @@ bool DefaultAppData::ParseDefaultApplicationConfig(const nlohmann::json& jsonObj
         }
         infos.try_emplace(element.type, element);
     }
-    return true;
 }
 
 void to_json(nlohmann::json& jsonObject, const Element& element)
@@ -149,6 +149,14 @@ void from_json(const nlohmann::json& jsonObject, Element& element)
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         TYPE,
+        element.type,
+        JsonType::STRING,
+        false,
+        g_defaultAppJson,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_TYPE,
         element.type,
         JsonType::STRING,
         false,

@@ -49,6 +49,7 @@ bool SharedModuleInfo::ReadFromParcel(Parcel &parcel)
     nativeLibraryPath = Str16ToStr8(parcel.ReadString16());
     int32_t nativeLibraryFileNamesSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, nativeLibraryFileNamesSize);
+    CONTAINER_SECURITY_VERIFY(parcel, nativeLibraryFileNamesSize, &nativeLibraryFileNames);
     for (int32_t i = 0; i < nativeLibraryFileNamesSize; ++i) {
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }

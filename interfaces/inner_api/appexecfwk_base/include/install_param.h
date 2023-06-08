@@ -59,7 +59,7 @@ struct InstallParam : public Parcelable {
     // OTA upgrade skips the killing process
     bool noSkipsKill  = true;
     bool needSendEvent = true;
-    bool streamInstallMode = false;
+    bool withCopyHaps = false;
     std::map<std::string, std::string> hashParams;
     // whether need copy hap to install path
     bool copyHapToInstallPath = true;
@@ -77,6 +77,8 @@ struct InstallParam : public Parcelable {
     std::string specifiedDistributionType = "";
     // Indicates the additional Info
     std::string additionalInfo = "";
+    // for AOT
+    bool isOTA = false;
 
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
