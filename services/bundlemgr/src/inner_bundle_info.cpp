@@ -3308,7 +3308,7 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
         for (auto item : info.second.requestPermissions) {
-            item.moduleName = info.second.name;
+            item.moduleName = info.second.moduleName;
             requestPermissions.push_back(item);
         }
     }
