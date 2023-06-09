@@ -904,6 +904,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         }
         APP_LOGD("copy hap to install path success");
     }
+
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
@@ -3147,6 +3148,12 @@ void BaseBundleInstaller::SaveHapPathToRecords(
         if (hapPathIter == hapPathRecords_.end()) {
             hapPathRecords_.emplace(item.first, GetHapPath(item.second));
         }
+        std::string signatureFileDir = "";
+        FindSignatureFileDir(item.second.GetCurModuleName(), signatureFileDir);
+        auto signatureFileIter = signatureFileMap_.find(item.first);
+        if (signatureFileIter == signatureFileMap_.end()) {
+            signatureFileMap_.emplace(item.first, signatureFileDir);
+        }
     }
 }
 
@@ -3155,10 +3162,20 @@ bool BaseBundleInstaller::SaveHapToInstallPath()
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)",
             hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (InstalldClient::GetInstance()->CopyFile(
-            hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-            APP_LOGE("Copy hap to install path failed");
-            return false;
+
+        if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
+            (!signatureFileMap_.at(hapPathRecord.first).empty())) {
+            if (InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
+                signatureFileMap_.at(hapPathRecord.first))!= ERR_OK) {
+                APP_LOGE("Copy hap to install path failed or code signature hap failed");
+                return false;
+            }
+        } else {
+            if (InstalldClient::GetInstance()->CopyFile(
+                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+                APP_LOGE("Copy hap to install path failed");
+                return false;
+            }
         }
     }
     return true;
@@ -3182,6 +3199,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     toDeleteTempHapPath_.clear();
     verifyCodeParams_.clear();
     otaInstall_ = false;
+    signatureFileMap_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -3529,7 +3547,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         if (!bundleInstallChecker_->VerifyCodeSignature(modulePath_, signatureFileDir)) {
             APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
                 modulePath_.c_str(), signatureFileDir.c_str());
-            return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+            return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
         }
     }
     return ERR_OK;
@@ -3635,6 +3653,7 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
     signatureFileDir = destinationStr;
+    APP_LOGD("signatureFileDir is %{public}s", signatureFileDir.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

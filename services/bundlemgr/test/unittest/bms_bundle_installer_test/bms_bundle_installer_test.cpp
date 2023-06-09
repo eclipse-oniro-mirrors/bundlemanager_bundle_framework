@@ -94,6 +94,7 @@ const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.exa
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
+const std::string TEST_CPU_ABI = "arm64";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -3888,7 +3889,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     moduleInfo.isLibIsolated = false;
     moduleInfo.compressNativeLibs = true;
     info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
-    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->cpuAbi = TEST_CPU_ABI;
     info.baseApplicationInfo_->nativeLibraryPath = "";
 
     BaseBundleInstaller installer;

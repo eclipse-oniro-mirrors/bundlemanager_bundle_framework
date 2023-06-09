@@ -20,7 +20,6 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "installd_client.h"
-#include "scope_guard.h"
 #include "shared/base_shared_bundle_info.h"
 
 namespace OHOS {
@@ -40,6 +39,7 @@ InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
 InnerSharedBundleInstaller::~InnerSharedBundleInstaller()
 {
     APP_LOGI("inner shared bundle installer instance is destroyed");
+    BundleUtil::DeleteTempDirs(toDeleteTempHspPath_);
 }
 
 ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkParam)
@@ -53,7 +53,6 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     CHECK_RESULT(result, "hsp files check failed %{public}d");
 
     // copy the haps to the dir which cannot be accessed from caller
-    ScopeGuard securityTempHapPathsGuard([this] { BundleUtil::DeleteTempDirs(toDeleteTempHspPath_); });
     result = CopyHspToSecurityDir(inBundlePaths);
     CHECK_RESULT(result, "copy file failed %{public}d");
 
@@ -300,13 +299,13 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
             if (!bundleInstallChecker_->VerifyCodeSignature(bundlePath, signatureFileDir_)) {
                 APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
                     bundlePath.c_str(), signatureFileDir_.c_str());
-                return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+                return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
             }
         }
     }
 
     std::string hspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName + Constants::INSTALL_SHARED_FILE_SUFFIX;
-    result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath);
+    result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath, signatureFileDir_);
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
 
     newInfo.SetModuleHapPath(hspPath);
@@ -502,6 +501,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
     }
+    APP_LOGD("signatureFilePath is %{public}s", signatureFilePath.c_str());
     return ERR_OK;
 }
 }  // namespace AppExecFwk

@@ -51,8 +51,28 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
 
 ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, MessageParcel &reply)
 {
-    std::string hapName = data.ReadString();
-    int32_t fd = CreateStream(hapName);
+    std::string fileName = data.ReadString();
+    if (fileName.empty()) {
+        APP_LOGE("HandleCreateStream param fileName is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t fd = CreateStream(fileName);
+    if (!reply.WriteFileDescriptor(fd)) {
+        APP_LOGE("write fd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleStreamInstallerHost::HandleCreateSignatureFileStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string moduleName = data.ReadString();
+    std::string fileName = data.ReadString();
+    if (moduleName.empty() || fileName.empty()) {
+        APP_LOGE("HandleCreateSignatureFileStream params are invalid");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t fd = CreateSignatureFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -97,6 +117,10 @@ void BundleStreamInstallerHost::init()
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
             return this->HandleInstall(data, reply);
         });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_SIGNATURE_FILE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateSignatureFileStream(data, reply);
+    });
 }
 } // AppExecFwk
 } // OHOS
