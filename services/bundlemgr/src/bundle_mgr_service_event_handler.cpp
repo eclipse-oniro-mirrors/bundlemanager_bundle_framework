@@ -1083,31 +1083,21 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 APP_LOGE("module is empty when parser path(%{public}s).", item.first.c_str());
                 continue;
             }
-
-            // Used to judge whether the module has been installed.
-            bool hasModuleInstalled = std::find(
-                hasInstalledInfo.hapModuleNames.begin(), hasInstalledInfo.hapModuleNames.end(),
-                parserModuleNames[0]) != hasInstalledInfo.hapModuleNames.end();
-            if (HasModuleSavedInPreInstalledDb(bundleName, item.first) && !hasModuleInstalled) {
-                APP_LOGW("module(%{public}s) has been uninstalled and do not OTA install",
-                    parserModuleNames[0].c_str());
-                continue;
+            // Generally, when the versionCode of Hap is greater than the installed versionCode,
+            // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
+            if (hasInstalledInfo.versionCode < hapVersionCode) {
+                APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
+                    parserModuleNames[0].c_str(), item.first.c_str());
+                updateBundle = true;
+                break;
             }
 
             // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
             if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
                 APP_LOGD("OTA update module(%{public}s) by path(%{private}s), accessTokenIdEx is equal to 0",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                filePaths.emplace_back(item.first);
-                continue;
-            }
-
-            // Generally, when the versionCode of Hap is greater than the installed versionCode,
-            // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
-            if (hasInstalledInfo.versionCode < hapVersionCode) {
-                APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
-                    parserModuleNames[0].c_str(), item.first.c_str());
-                filePaths.emplace_back(item.first);
+                updateBundle = true;
+                break;
             }
 
             // The versionCode of Hap is equal to the installed versionCode.
@@ -1120,10 +1110,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                         hasInstalledInfo.applicationInfo.debug);
                     updateSelinuxLabel = true;
                 }
-                if (hasModuleInstalled && UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                // Used to judge whether the module has been installed.
+                bool hasModuleInstalled = std::find(
+                    hasInstalledInfo.hapModuleNames.begin(), hasInstalledInfo.hapModuleNames.end(),
+                    parserModuleNames[0]) != hasInstalledInfo.hapModuleNames.end();
+                if (hasModuleInstalled) {
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                        updateBundle = true;
+                        break;
+                    }
                     APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
                         parserModuleNames[0].c_str());
-                    updateBundle = true;
                     continue;
                 }
 
