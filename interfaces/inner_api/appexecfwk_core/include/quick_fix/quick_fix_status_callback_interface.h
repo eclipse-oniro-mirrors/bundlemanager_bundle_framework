@@ -28,12 +28,6 @@ public:
     virtual void OnPatchDeployed(const std::shared_ptr<QuickFixResult> &result) = 0;
     virtual void OnPatchSwitched(const std::shared_ptr<QuickFixResult> &result) = 0;
     virtual void OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result) = 0;
-
-    enum Message : uint32_t {
-        ON_PATCH_DEPLOYED = 1,
-        ON_PATCH_SWITCHED = 2,
-        ON_PATCH_DELETED = 3
-    };
 };
 } // AppExecFwk
 } // OHOS

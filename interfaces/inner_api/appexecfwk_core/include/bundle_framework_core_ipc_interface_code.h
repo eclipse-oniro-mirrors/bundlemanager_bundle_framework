@@ -83,6 +83,32 @@ enum class DefaultAppInterfaceCode : uint32_t {
     SET_DEFAULT_APPLICATION = 2,
     RESET_DEFAULT_APPLICATION = 3,
 };
+
+enum class OverlayManagerInterfaceCode : uint32_t {
+    GET_ALL_OVERLAY_MODULE_INFO = 0,
+    GET_OVERLAY_MODULE_INFO_BY_NAME = 1,
+    GET_OVERLAY_MODULE_INFO = 2,
+    GET_TARGET_OVERLAY_MODULE_INFOS = 3,
+    GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME = 4,
+    GET_OVERLAY_BUNDLE_INFO_FOR_TARGET = 5,
+    GET_OVERLAY_MODULE_INFO_FOR_TARGET = 6,
+    SET_OVERLAY_ENABLED = 7,
+    SET_OVERLAY_ENABLED_FOR_SELF = 8,
+};
+
+enum class QuickFixManagerInterfaceCode : uint32_t {
+    DEPLOY_QUICK_FIX = 0,
+    SWITCH_QUICK_FIX = 1,
+    DELETE_QUICK_FIX = 2,
+    CREATE_FD = 3
+};
+
+enum class QuickFixStatusCallbackInterfaceCode : uint32_t {
+    ON_PATCH_DEPLOYED = 1,
+    ON_PATCH_SWITCHED = 2,
+    ON_PATCH_DELETED = 3
+};
+
 } // namespace AppExecFwk
 } // namespace OHOS
 #endif // OHOS_BUNDLE_APPEXECFWK_CORE_IPC_INTERFACE_CODE_H
