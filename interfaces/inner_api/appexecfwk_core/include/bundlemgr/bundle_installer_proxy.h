@@ -18,6 +18,7 @@
 
 #include "iremote_proxy.h"
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_installer_interface.h"
 #include "status_receiver_interface.h"
 
@@ -110,7 +111,7 @@ public:
         const sptr<IStatusReceiver> &statusReceiver) override;
 
 private:
-    bool SendInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply,
+    bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
     ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
 

@@ -15,10 +15,10 @@
 
 #include "clean_cache_callback_host.h"
 
-#include "ipc_types.h"
-
 #include "app_log_wrapper.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "ipc_types.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,7 +45,7 @@ int CleanCacheCallbackHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(ICleanCacheCallback::Message::ON_CLEAN_CACHE_CALLBACK): {
+        case static_cast<uint32_t>(CleanCacheCallbackInterfaceCode::ON_CLEAN_CACHE_CALLBACK): {
             bool succeed = data.ReadBool();
             OnCleanCacheFinished(succeed);
             break;

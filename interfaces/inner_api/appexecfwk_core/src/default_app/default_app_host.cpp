@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
@@ -46,13 +47,13 @@ int DefaultAppHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case IDefaultApp::Message::IS_DEFAULT_APPLICATION:
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::IS_DEFAULT_APPLICATION):
             return HandleIsDefaultApplication(data, reply);
-        case IDefaultApp::Message::GET_DEFAULT_APPLICATION:
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::GET_DEFAULT_APPLICATION):
             return HandleGetDefaultApplication(data, reply);
-        case IDefaultApp::Message::SET_DEFAULT_APPLICATION:
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::SET_DEFAULT_APPLICATION):
             return HandleSetDefaultApplication(data, reply);
-        case IDefaultApp::Message::RESET_DEFAULT_APPLICATION:
+        case static_cast<uint32_t>(DefaultAppInterfaceCode::RESET_DEFAULT_APPLICATION):
             return HandleResetDefaultApplication(data, reply);
         default:
             APP_LOGW("DefaultAppHost receive unknown code, code = %{public}d", code);

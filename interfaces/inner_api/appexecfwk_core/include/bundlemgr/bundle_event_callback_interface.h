@@ -26,10 +26,6 @@ public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleEventCallback");
 
     virtual void OnReceiveEvent(const EventFwk::CommonEventData eventData) = 0;
-
-    enum class Message {
-        ON_RECEIVE_EVENT,
-    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

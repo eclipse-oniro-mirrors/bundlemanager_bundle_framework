@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
 
@@ -84,16 +85,18 @@ ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessagePar
 
 void BundleStreamInstallerHost::init()
 {
-    funcMap_.emplace(StreamMessage::CREATE_STREAM, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
-        return this->HandleCreateStream(data, reply);
-    });
-    funcMap_.emplace(StreamMessage::CREATE_SHARED_BUNDLE_STREAM,
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateStream(data, reply);
+        });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_SHARED_BUNDLE_STREAM),
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
             return this->HandleCreateSharedBundleStream(data, reply);
         });
-    funcMap_.emplace(StreamMessage::STREAM_INSTALL, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
-        return this->HandleInstall(data, reply);
-    });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleInstall(data, reply);
+        });
 }
 } // AppExecFwk
 } // OHOS
