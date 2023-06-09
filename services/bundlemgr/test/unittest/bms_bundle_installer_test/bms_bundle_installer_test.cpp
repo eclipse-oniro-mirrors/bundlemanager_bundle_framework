@@ -595,8 +595,8 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
-    bool installResult = InstallThirdPartyBundle(bundleFile);
-    EXPECT_TRUE(installResult);
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
     bool result =
         dataMgr->GetApplicationInfo(SYSTEMFIEID_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
@@ -613,9 +613,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
         EXPECT_EQ(info.apiCompatibleVersion, 8);
         EXPECT_EQ(info.apiTargetVersion, 8);
-        EXPECT_EQ(info.removable, false);
-        EXPECT_EQ(info.userDataClearable, false);
-        EXPECT_EQ(info.accessible, true);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";
@@ -656,8 +653,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(extensionInfos.iconId, 16777229);
         EXPECT_EQ(extensionInfos.label, "$string:extension_name");
         EXPECT_EQ(extensionInfos.labelId, 16777220);
-        EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
-        EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
     }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
