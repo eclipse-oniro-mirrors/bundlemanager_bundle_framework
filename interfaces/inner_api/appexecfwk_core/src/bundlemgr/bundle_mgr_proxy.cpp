@@ -3447,6 +3447,98 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
     return ret;
 }
 
+ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("bundleName, moduleName or abilityName is empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (extName.empty() && mimeType.empty()) {
+        APP_LOGE("extName and mimeType are empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(extName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write extName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(mimeType)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write mimeType fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::SET_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    return ret;
+}
+
+ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
+        APP_LOGE("bundleName, moduleName or abilityName is empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    if (extName.empty() && mimeType.empty()) {
+        APP_LOGE("extName and mimeType are empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(abilityName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write abilityName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(extName)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write extName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(mimeType)) {
+        APP_LOGE("fail to GetAdditionalInfo due to write mimeType fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(IBundleMgr::Message::DEL_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    auto ret = reply.ReadInt32();
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
 {

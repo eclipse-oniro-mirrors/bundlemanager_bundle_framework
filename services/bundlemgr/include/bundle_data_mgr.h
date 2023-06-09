@@ -821,6 +821,10 @@ public:
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
+    ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType);
+    ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType);
 
 private:
     /**
@@ -930,6 +934,8 @@ private:
     ErrCode GetLauncherAbilityByBundleName(const Want &want, std::vector<AbilityInfo> &abilityInfos,
         const int32_t userId, const int32_t requestUserId) const;
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
+    bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
+        const std::vector<std::string> &supportMimeTypes) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

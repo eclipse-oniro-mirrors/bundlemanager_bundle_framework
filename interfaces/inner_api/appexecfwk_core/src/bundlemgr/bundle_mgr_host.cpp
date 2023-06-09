@@ -221,6 +221,8 @@ void BundleMgrHost::init()
     funcMap_.emplace(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE,
         &BundleMgrHost::HandleGetSpecifiedDistributionType);
     funcMap_.emplace(IBundleMgr::Message::GET_ADDITIONAL_INFO, &BundleMgrHost::HandleGetAdditionalInfo);
+    funcMap_.emplace(IBundleMgr::SET_EXT_NAME_OR_MIME_TO_APP, &BundleMgrHost::HandleSetExtNameOrMIMEToApp);
+    funcMap_.emplace(IBundleMgr::DEL_EXT_NAME_OR_MIME_TO_APP, &BundleMgrHost::HandleDelExtNameOrMIMEToApp);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2619,6 +2621,38 @@ ErrCode BundleMgrHost::HandleGetAdditionalInfo(MessageParcel &data, MessageParce
     }
     if ((ret == ERR_OK) && !reply.WriteString(additionalInfo)) {
         APP_LOGE("write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    std::string extName = data.ReadString();
+    std::string mimeType = data.ReadString();
+    ErrCode ret = SetExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleSetExtNameOrMIMEToApp write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::string abilityName = data.ReadString();
+    std::string extName = data.ReadString();
+    std::string mimeType = data.ReadString();
+    ErrCode ret = DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleDelExtNameOrMIMEToApp write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

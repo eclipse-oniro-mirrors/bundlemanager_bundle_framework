@@ -100,6 +100,8 @@ const std::string JOSN_KEY_UID = "uid";
 const std::string JOSN_KEY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 const std::string JOSN_KEY_UNCLEARABLE_MISSION = "unclearableMission";
 const std::string JSON_KEY_RECOVERABLE = "recoverable";
+const std::string JSON_KEY_SUPPORT_EXT_NAMES = "supportExtNames";
+const std::string JSON_KEY_SUPPORT_MIME_TYPES = "supportMimeTypes";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -251,6 +253,18 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
     uid = parcel.ReadInt32();
     recoverable = parcel.ReadBool();
     installTime = parcel.ReadInt64();
+    int32_t supportExtNameSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportExtNameSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportExtNameSize, &supportExtNames);
+    for (auto i = 0; i < supportExtNameSize; i++) {
+        supportExtNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
+    int32_t supportMimeTypeSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportMimeTypeSize);
+    CONTAINER_SECURITY_VERIFY(parcel, supportMimeTypeSize, &supportMimeTypes);
+    for (auto i = 0; i < supportMimeTypeSize; i++) {
+        supportMimeTypes.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -382,6 +396,14 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, recoverable);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int64, parcel, installTime);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportExtNames.size());
+    for (auto &supporExtName : supportExtNames) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(supporExtName));
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportMimeTypes.size());
+    for (auto &supportMimeType : supportMimeTypes) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(supportMimeType));
+    }
     return true;
 }
 
@@ -505,7 +527,9 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_UID, abilityInfo.uid},
         {JOSN_KEY_EXCLUDE_FROM_MISSIONS, abilityInfo.excludeFromMissions},
         {JOSN_KEY_UNCLEARABLE_MISSION, abilityInfo.unclearableMission},
-        {JSON_KEY_RECOVERABLE, abilityInfo.recoverable}
+        {JSON_KEY_RECOVERABLE, abilityInfo.recoverable},
+        {JSON_KEY_SUPPORT_EXT_NAMES, abilityInfo.supportExtNames},
+        {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes}
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1139,6 +1163,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_EXT_NAMES,
+        abilityInfo.supportExtNames,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("AbilityInfo from_json error, error code : %{public}d", parseResult);
     }

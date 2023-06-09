@@ -43,6 +43,7 @@
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_info.h"
 #endif
+#include "mime_type_mgr.h"
 #include "nlohmann/json.hpp"
 #include "free_install_params.h"
 #include "parameters.h"
@@ -1025,12 +1026,14 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
     }
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
+        bool isPrivateType = MatchPrivateType(
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
         }
         for (const Skill &skill : skillsPair->second) {
-            if (skill.Match(want)) {
+            if (isPrivateType || skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
@@ -1066,8 +1069,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
     if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) ==
-        static_cast<int32_t>((GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) &&
-        !info.IsSystemApp()) {
+        static_cast<int32_t>((GetAbilityInfoFlag::GET_ABILITY_INFO_ONLY_SYSTEM_APP)) && !info.IsSystemApp()) {
         APP_LOGE("target not system app");
         return;
     }
@@ -1077,8 +1079,10 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         if (skillsPair == skillInfos.end()) {
             continue;
         }
+        bool isPrivateType = MatchPrivateType(
+            want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
         for (const Skill &skill : skillsPair->second) {
-            if (skill.Match(want)) {
+            if (isPrivateType || skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
@@ -4915,6 +4919,93 @@ ErrCode BundleDataMgr::GetAdditionalInfo(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (!extName.empty()) {
+        APP_LOGI("setting extName");
+        item->second.SetExtName(moduleName, abilityName, extName);
+    }
+    if (!mimeType.empty()) {
+        APP_LOGI("setting mimeType");
+        item->second.SetMimeType(moduleName, abilityName, mimeType);
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode ret;
+    if (!extName.empty()) {
+        ret = item->second.DelExtName(moduleName, abilityName, extName);
+        if (ret != ERR_OK) {
+            APP_LOGE("delete ext name to app failed");
+            return ret;
+        }
+    }
+    if (!mimeType.empty()) {
+        ret = item->second.DelMimeType(moduleName, abilityName, mimeType);
+        if (ret != ERR_OK) {
+            APP_LOGE("delete mime type to app failed");
+            return ret;
+        }
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGE("SaveStorageBundleInfo failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+bool BundleDataMgr::MatchPrivateType(const Want &want,
+    const std::vector<std::string> &supportExtNames, const std::vector<std::string> &supportMimeTypes) const
+{
+    APP_LOGD("MatchPrivateType, uri is %{public}s", want.GetUriString().c_str());
+    std::string uri = want.GetUriString();
+    auto suffixIndex = uri.rfind('.');
+    if (suffixIndex == std::string::npos) {
+        APP_LOGI("uri has not suffix");
+        return false;
+    }
+    std::string suffix = uri.substr(suffixIndex + 1);
+    bool supportPrivateType = std::any_of(supportExtNames.begin(), supportExtNames.end(), [&](const auto &extName) {
+        return extName == suffix;
+    });
+    if (supportPrivateType) {
+        APP_LOGI("uri is a supported private-type file");
+        return true;
+    }
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uri, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    auto iter = std::find_first_of(
+        mimeTypes.begin(), mimeTypes.end(), supportMimeTypes.begin(), supportMimeTypes.end());
+    if (iter != mimeTypes.end()) {
+        APP_LOGI("uri is a supported mime-type file");
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
