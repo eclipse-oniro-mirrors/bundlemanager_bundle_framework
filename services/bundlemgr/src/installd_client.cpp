@@ -287,7 +287,7 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
 ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir)
 {
-    if (modulePath.empty() || cpuAbi.empty() || targetSoPath.empty()) {
+    if (modulePath.empty() || cpuAbi.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::VerifyCodeSignature, modulePath, cpuAbi, targetSoPath,

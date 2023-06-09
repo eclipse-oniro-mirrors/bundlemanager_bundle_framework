@@ -1234,5 +1234,40 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
     }
     return ERR_OK;
 }
+
+ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signatureFileDir) const
+{
+    if (!BundleUtil::CheckFileName(signatureFileDir)) {
+        APP_LOGE("code signature file dir is invalid");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    if (!BundleUtil::CheckFileType(signatureFileDir, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("signatureFileDir is not suffixed with .sig");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir)
+{
+    APP_LOGD("begin to verify code signature");
+    if (modulePath.empty()) {
+        return false;
+    }
+    if (signatureFileDir.empty()) {
+        APP_LOGD("signature file dir is empty");
+        return true;
+    }
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("VerifyCode failed due to %{public}d", ret);
+        return false;
+    }
+#endif
+    APP_LOGD("VerifyCodeSignature finished");
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -129,6 +129,11 @@ public:
     ErrCode CheckProxyDatas(const InnerBundleInfo &info) const;
 
     ErrCode CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
+    ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
+
+    bool VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir);
+
 private:
 
     ErrCode ParseBundleInfo(
