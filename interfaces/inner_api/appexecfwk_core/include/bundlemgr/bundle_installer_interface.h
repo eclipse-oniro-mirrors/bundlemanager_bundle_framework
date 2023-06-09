@@ -120,19 +120,6 @@ public:
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) = 0;
     virtual ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;
-
-    enum Message : uint32_t {
-        INSTALL = 0,
-        INSTALL_MULTIPLE_HAPS,
-        UNINSTALL,
-        UNINSTALL_MODULE,
-        UNINSTALL_BY_UNINSTALL_PARAM,
-        RECOVER,
-        INSTALL_SANDBOX_APP,
-        UNINSTALL_SANDBOX_APP,
-        CREATE_STREAM_INSTALLER,
-        DESTORY_STREAM_INSTALLER,
-    };
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

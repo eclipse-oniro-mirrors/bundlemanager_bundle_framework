@@ -15,12 +15,12 @@
 
 #include "bundle_status_callback_proxy.h"
 
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
-
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -209,7 +209,7 @@ void BundleStatusCallbackProxy::OnBundleStateChanged(
     }
 
     int32_t ret = remote->SendRequest(
-        static_cast<int32_t>(IBundleStatusCallback::Message::ON_BUNDLE_STATE_CHANGED), data, reply, option);
+        static_cast<int32_t>(BundleStatusCallbackInterfaceCode::ON_BUNDLE_STATE_CHANGED), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGW("fail to call OnBundleStateChanged, for transact is failed, error code is: %{public}d", ret);
     }

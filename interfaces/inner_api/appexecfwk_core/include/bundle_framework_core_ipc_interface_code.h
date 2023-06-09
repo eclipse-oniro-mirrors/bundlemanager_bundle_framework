@@ -41,6 +41,48 @@ enum class AppControlManagerInterfaceCode : uint32_t {
     DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET,
     GET_APP_JUMP_CONTROL_RULE,
 };
+enum class BundleEventCallbackInterfaceCode : uint32_t {
+    ON_RECEIVE_EVENT,
+};
+
+enum class BundleInstallerInterfaceCode : uint32_t {
+    INSTALL = 0,
+    INSTALL_MULTIPLE_HAPS,
+    UNINSTALL,
+    UNINSTALL_MODULE,
+    UNINSTALL_BY_UNINSTALL_PARAM,
+    RECOVER,
+    INSTALL_SANDBOX_APP,
+    UNINSTALL_SANDBOX_APP,
+    CREATE_STREAM_INSTALLER,
+    DESTORY_STREAM_INSTALLER,
+};
+
+enum class BundleStatusCallbackInterfaceCode : uint32_t {
+    ON_BUNDLE_STATE_CHANGED,
+};
+
+enum class BundleStreamInstallerInterfaceCode : uint32_t {
+    CREATE_STREAM = 0,
+    STREAM_INSTALL = 1,
+    CREATE_SHARED_BUNDLE_STREAM = 2,
+};
+
+enum class CleanCacheCallbackInterfaceCode : uint32_t {
+    ON_CLEAN_CACHE_CALLBACK,
+};
+
+enum class StatusReceiverInterfaceCode : uint32_t {
+    ON_STATUS_NOTIFY,
+    ON_FINISHED,
+};
+
+enum class DefaultAppInterfaceCode : uint32_t {
+    IS_DEFAULT_APPLICATION = 0,
+    GET_DEFAULT_APPLICATION = 1,
+    SET_DEFAULT_APPLICATION = 2,
+    RESET_DEFAULT_APPLICATION = 3,
+};
 } // namespace AppExecFwk
 } // namespace OHOS
 #endif // OHOS_BUNDLE_APPEXECFWK_CORE_IPC_INTERFACE_CODE_H

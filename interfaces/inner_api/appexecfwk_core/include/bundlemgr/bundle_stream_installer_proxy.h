@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_PROXY_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_stream_installer_interface.h"
 #include "ipc_types.h"
 #include "iremote_proxy.h"
@@ -38,7 +39,7 @@ public:
 private:
     static inline BrokerDelegator<BundleStreamInstallerProxy> delegator_;
     uint32_t installerId_ = -1;
-    bool SendStreamInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply);
+    bool SendStreamInstallRequest(BundleStreamInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply);
 };
 } // AppExecFwk
 } // OHOS
