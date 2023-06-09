@@ -60,6 +60,7 @@ const std::string JSON_KEY_DESIGN_WIDTH = "designWidth";
 const std::string JSON_KEY_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 const std::string JSON_KEY_IS_STATIC = "isStatic";
 const std::string JSON_KEY_DATA_PROXY_ENABLED = "dataProxyEnabled";
+const std::string JSON_KEY_IS_DYNAMIC = "isDynamic";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -98,6 +99,7 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
         customizeDatas.push_back(metadata);
     }
     dataProxyEnabled = formInfo.dataProxyEnabled;
+    isDynamic = formInfo.isDynamic;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -179,6 +181,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     window.designWidth = parcel.ReadInt32();
     window.autoDesignWidth = parcel.ReadBool();
     dataProxyEnabled = parcel.ReadBool();
+    isDynamic = parcel.ReadBool();
     return true;
 }
 
@@ -246,6 +249,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, window.designWidth);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, window.autoDesignWidth);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, dataProxyEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDynamic);
     return true;
 }
 
@@ -303,7 +307,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_LANDSCAPE_LAYOUTS, formInfo.landscapeLayouts},
         {JSON_KEY_PORTRAIT_LAYOUTS, formInfo.portraitLayouts},
         {JSON_KEY_WINDOW, formInfo.window},
-        {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled}
+        {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled},
+        {JSON_KEY_IS_DYNAMIC, formInfo.isDynamic}
         };
 }
 
@@ -363,6 +368,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         jsonObjectEnd,
         JSON_KEY_DATA_PROXY_ENABLED,
         formInfo.dataProxyEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_DYNAMIC,
+        formInfo.isDynamic,
         JsonType::BOOLEAN,
         false,
         parseResult,
