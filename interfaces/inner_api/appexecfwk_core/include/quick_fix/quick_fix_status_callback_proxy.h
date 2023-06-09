@@ -16,8 +16,8 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_STATUS_CALLBACK_PROXY_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_STATUS_CALLBACK_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "iremote_proxy.h"
-
 #include "quick_fix_status_callback_interface.h"
 
 namespace OHOS {
@@ -32,7 +32,7 @@ public:
     virtual void OnPatchDeleted(const std::shared_ptr<QuickFixResult> &result) override;
 
 private:
-    bool SendTransactCmd(uint32_t code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(QuickFixStatusCallbackInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<QuickFixStatusCallbackProxy> delegator_;
 };
