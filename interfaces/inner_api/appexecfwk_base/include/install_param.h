@@ -37,6 +37,12 @@ enum class InstallLocation {
     PREFER_EXTERNAL = 2,
 };
 
+enum class PermissionStatus {
+    NOT_VERIFIED_PERMISSION_STATUS = 0,
+    HAVE_PERMISSION_STATUS,
+    NON_HAVE_PERMISSION_STATUS
+};
+
 // provides parameters required for installing or uninstalling an application
 struct InstallParam : public Parcelable {
     InstallFlag installFlag = InstallFlag::NORMAL;
@@ -61,6 +67,12 @@ struct InstallParam : public Parcelable {
     bool isAgingUninstall = false;
     // shared bundle directory paths
     std::vector<std::string> sharedBundleDirPaths;
+    // status of install bundle permission
+    PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install enterprise bundle permission
+    PermissionStatus installEnterpriseBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // is shell token
+    bool isCallByShell = false;
     // Indicates the distribution type
     std::string specifiedDistributionType = "";
     // Indicates the additional Info

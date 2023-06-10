@@ -237,6 +237,35 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     return ERR_OK;
 }
 
+bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    PermissionStatus installBundlestatus = installParam.installBundlePermissionStatus;
+    PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
+    bool isCallByShell = installParam.isCallByShell;
+    if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        return true;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+            if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+        } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            APP_LOGE("install permission denied");
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::ParseHapFiles(
     const std::vector<std::string> &bundlePaths,
     const InstallCheckParam &checkParam,

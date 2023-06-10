@@ -71,7 +71,8 @@ void BundleStreamInstallerHostImpl::UnInit()
 
 int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("CreateStream permission denied");
         return -1;
     }

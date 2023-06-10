@@ -328,7 +328,8 @@ bool BundleInstallerHost::Install(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -350,7 +351,8 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -372,7 +374,8 @@ bool BundleInstallerHost::Recover(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -457,7 +460,8 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -542,7 +546,8 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    InstallParam installParam2 = installParam;
+    if (!IsPermissionVaild(installParam, installParam2)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
@@ -555,7 +560,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = streamInstaller->Init(installParam, statusReceiver);
+    bool res = streamInstaller->Init(installParam2, statusReceiver);
     if (!res) {
         APP_LOGE("stream installer init failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
@@ -564,13 +569,36 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
     return streamInstaller;
 }
 
+bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2)
+{
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        installParam2.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    } else {
+        installParam2.installBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    }
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        installParam2.isCallByShell = true;
+    }
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    } else {
+        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    }
+    if (installParam2.installBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS &&
+        installParam2.installEnterpriseBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS) {
+        return false;
+    }
+    return true;
+}
+
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
     if (!BundlePermissionMgr::VerifySystemApp()) {
         APP_LOGE("Uninstall permission denied");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         return false;
     }
