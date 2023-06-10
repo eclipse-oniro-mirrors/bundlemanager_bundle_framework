@@ -275,7 +275,9 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "uid":-1,
             "uri":"",
             "visible":true,
-            "writePermission":""
+            "writePermission":"",
+            "supportExtNames": [],
+			"supportMimeTypes": []
         }
     },
     "baseApplicationInfo":{
