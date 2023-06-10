@@ -114,7 +114,7 @@ bool BundleMgrProxy::GetApplicationInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFO, data, appInfo)) {
+    if (!GetParcelableInfo<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFO, data, appInfo)) {
         APP_LOGE("fail to GetApplicationInfo from server");
         return false;
     }
@@ -149,7 +149,8 @@ bool BundleMgrProxy::GetApplicationInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS, data, appInfo)) {
+    if (!GetParcelableInfo<ApplicationInfo>(
+        BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS, data, appInfo)) {
         APP_LOGE("fail to GetApplicationInfo from server");
         return false;
     }
@@ -185,7 +186,7 @@ ErrCode BundleMgrProxy::GetApplicationInfoV9(
     }
 
     auto res = GetParcelableInfoWithErrCode<ApplicationInfo>(
-        IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
+        BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9, data, appInfo);
     if (res != ERR_OK) {
         APP_LOGE("fail to GetApplicationInfoV9 from server, error code: %{public}d", res);
         return res;
@@ -212,7 +213,7 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
 
-    if (!GetParcelableInfos<ApplicationInfo>(IBundleMgr::Message::GET_APPLICATION_INFOS, data, appInfos)) {
+    if (!GetParcelableInfos<ApplicationInfo>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS, data, appInfos)) {
         APP_LOGE("fail to GetApplicationInfos from server");
         return false;
     }
@@ -238,7 +239,7 @@ bool BundleMgrProxy::GetApplicationInfos(
         return false;
     }
     if (!GetVectorFromParcelIntelligent<ApplicationInfo>(
-        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, appInfos)) {
+        BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS, data, appInfos)) {
         APP_LOGE("failed to GetApplicationInfos from server");
         return false;
     }
@@ -264,7 +265,7 @@ ErrCode BundleMgrProxy::GetApplicationInfosV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<ApplicationInfo>(
-        IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, appInfos);
+        BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9, data, appInfos);
 }
 
 bool BundleMgrProxy::GetBundleInfo(
@@ -295,7 +296,7 @@ bool BundleMgrProxy::GetBundleInfo(
         return false;
     }
 
-    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO, data, bundleInfo)) {
+    if (!GetBigParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -329,7 +330,7 @@ bool BundleMgrProxy::GetBundleInfo(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-    if (!GetBigParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
+    if (!GetBigParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -365,7 +366,7 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
     }
 
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
     if (res != ERR_OK) {
         APP_LOGE("fail to GetBundleInfoV9 from server, error code: %{public}d", res);
         return res;
@@ -389,7 +390,7 @@ ErrCode BundleMgrProxy::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleIn
     }
 
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF, data, bundleInfo);
     if (res != ERR_OK) {
         APP_LOGE("fail to GetBundleInfoForSelf from server, error code: %{public}d", res);
         return res;
@@ -412,7 +413,7 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto res = GetParcelableInfoWithErrCode<BundleInfo>(
-        IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO, data, bundleInfo);
     if (res != ERR_OK) {
         APP_LOGE("fail to GetDependentBundleInfo from server, error code: %{public}d", res);
         return res;
@@ -448,7 +449,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundlePackInfo>(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, data,
+    return GetParcelableInfoWithErrCode<BundlePackInfo>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO, data,
         bundlePackInfo);
 }
 
@@ -481,7 +482,7 @@ ErrCode BundleMgrProxy::GetBundlePackInfo(
     }
 
     return GetParcelableInfoWithErrCode<BundlePackInfo>(
-        IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, bundlePackInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS, data, bundlePackInfo);
 }
 
 bool BundleMgrProxy::GetBundleInfos(
@@ -503,7 +504,7 @@ bool BundleMgrProxy::GetBundleInfos(
         return false;
     }
     if (!GetVectorFromParcelIntelligent<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFOS, data, bundleInfos)) {
+        BundleMgrInterfaceCode::GET_BUNDLE_INFOS, data, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -529,7 +530,7 @@ bool BundleMgrProxy::GetBundleInfos(
         return false;
     }
     if (!GetVectorFromParcelIntelligent<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, bundleInfos)) {
+        BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS, data, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfos from server");
         return false;
     }
@@ -554,7 +555,7 @@ ErrCode BundleMgrProxy::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
+        BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9, data, bundleInfos);
 }
 
 int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int userId)
@@ -581,7 +582,7 @@ int BundleMgrProxy::GetUidByBundleName(const std::string &bundleName, const int 
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_BUNDLE_NAME, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_UID_BY_BUNDLE_NAME, data, reply)) {
         APP_LOGE("failed to GetUidByBundleName from server");
         return Constants::INVALID_UID;
     }
@@ -614,7 +615,7 @@ int BundleMgrProxy::GetUidByDebugBundleName(const std::string &bundleName, const
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_UID_BY_DEBUG_BUNDLE_NAME, data, reply)) {
         APP_LOGE("failed to GetUidByBundleName from server");
         return Constants::INVALID_UID;
     }
@@ -647,7 +648,7 @@ std::string BundleMgrProxy::GetAppIdByBundleName(const std::string &bundleName, 
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APPID_BY_BUNDLE_NAME, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME, data, reply)) {
         APP_LOGE("failed to GetAppIdByBundleName from server");
         return Constants::EMPTY_STRING;
     }
@@ -671,7 +672,7 @@ bool BundleMgrProxy::GetBundleNameForUid(const int uid, std::string &bundleName)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_NAME_FOR_UID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetBundleNameForUid from server");
         return false;
     }
@@ -698,7 +699,7 @@ bool BundleMgrProxy::GetBundlesForUid(const int uid, std::vector<std::string> &b
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLES_FOR_UID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLES_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetBundlesForUid from server");
         return false;
     }
@@ -728,7 +729,7 @@ ErrCode BundleMgrProxy::GetNameForUid(const int uid, std::string &name)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_NAME_FOR_UID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_NAME_FOR_UID, data, reply)) {
         APP_LOGE("fail to GetNameForUid from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -756,7 +757,7 @@ bool BundleMgrProxy::GetBundleGids(const std::string &bundleName, std::vector<in
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_GIDS, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_GIDS, data, reply)) {
         APP_LOGE("fail to GetBundleGids from server");
         return false;
     }
@@ -790,7 +791,7 @@ bool BundleMgrProxy::GetBundleGidsByUid(const std::string &bundleName, const int
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_GIDS_BY_UID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_GIDS_BY_UID, data, reply)) {
         APP_LOGE("fail to GetBundleGidsByUid from server");
         return false;
     }
@@ -825,7 +826,7 @@ std::string BundleMgrProxy::GetAppType(const std::string &bundleName)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APP_TYPE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APP_TYPE, data, reply)) {
         APP_LOGE("failed to GetAppType from server");
         return Constants::EMPTY_STRING;
     }
@@ -849,7 +850,7 @@ bool BundleMgrProxy::CheckIsSystemAppByUid(const int uid)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CHECK_IS_SYSTEM_APP_BY_UID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID, data, reply)) {
         APP_LOGE("fail to CheckIsSystemAppByUid from server");
         return false;
     }
@@ -875,7 +876,7 @@ bool BundleMgrProxy::GetBundleInfosByMetaData(const std::string &metaData, std::
         return false;
     }
 
-    if (!GetParcelableInfos<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_INFOS_BY_METADATA, data, bundleInfos)) {
+    if (!GetParcelableInfos<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_BY_METADATA, data, bundleInfos)) {
         APP_LOGE("fail to GetBundleInfosByMetaData from server");
         return false;
     }
@@ -895,7 +896,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, AbilityInfo &abilityInfo
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFO, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO, data, abilityInfo)) {
         APP_LOGE("fail to query ability info from server");
         return false;
     }
@@ -931,7 +932,8 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFO_WITH_CALLBACK, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(
+        BundleMgrInterfaceCode::QUERY_ABILITY_INFO_WITH_CALLBACK, data, abilityInfo)) {
         APP_LOGE("fail to query ability info from server");
         return false;
     }
@@ -964,7 +966,7 @@ bool BundleMgrProxy::SilentInstall(const Want &want, int32_t userId, const sptr<
     }
 
     MessageParcel reply;
-    return SendTransactCmd(IBundleMgr::Message::SILENT_INSTALL, data, reply);
+    return SendTransactCmd(BundleMgrInterfaceCode::SILENT_INSTALL, data, reply);
 }
 
 void BundleMgrProxy::UpgradeAtomicService(const Want &want, int32_t userId)
@@ -1008,7 +1010,7 @@ bool BundleMgrProxy::QueryAbilityInfo(const Want &want, int32_t flags, int32_t u
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFO_MUTI_PARAM, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_MUTI_PARAM, data, abilityInfo)) {
         APP_LOGE("fail to query ability info mutiparam from server");
         return false;
     }
@@ -1028,7 +1030,7 @@ bool BundleMgrProxy::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo
         return false;
     }
 
-    if (!GetParcelableInfos<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS, data, abilityInfos)) {
+    if (!GetParcelableInfos<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos from server");
         return false;
     }
@@ -1057,7 +1059,7 @@ bool BundleMgrProxy::QueryAbilityInfos(
         return false;
     }
     if (!GetVectorFromParcelIntelligent<AbilityInfo>(
-        IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM, data, abilityInfos)) {
+        BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_MUTI_PARAM, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos mutiparam from server");
         return false;
     }
@@ -1086,7 +1088,7 @@ ErrCode BundleMgrProxy::QueryAbilityInfosV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
-        IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
+        BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9, data, abilityInfos);
 }
 
 ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
@@ -1107,7 +1109,7 @@ ErrCode BundleMgrProxy::QueryLauncherAbilityInfos(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetVectorFromParcelIntelligentWithErrCode<AbilityInfo>(
-        IBundleMgr::Message::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
+        BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO, data, abilityInfo);
 }
 
 bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos)
@@ -1127,7 +1129,7 @@ bool BundleMgrProxy::QueryAllAbilityInfos(const Want &want, int32_t userId, std:
         return false;
     }
     if (!GetVectorFromParcelIntelligent<AbilityInfo>(
-        IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
+        BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfos from server");
         return false;
     }
@@ -1147,7 +1149,7 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(const std::string &abilityUri, Abilit
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI, data, abilityInfo)) {
         APP_LOGE("fail to QueryAbilityInfoByUri from server");
         return false;
     }
@@ -1167,7 +1169,7 @@ bool BundleMgrProxy::QueryAbilityInfosByUri(const std::string &abilityUri, std::
         return false;
     }
 
-    if (!GetParcelableInfos<AbilityInfo>(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, data, abilityInfos)) {
+    if (!GetParcelableInfos<AbilityInfo>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_BY_URI, data, abilityInfos)) {
         APP_LOGE("fail to QueryAbilityInfosByUri from server");
         return false;
     }
@@ -1192,7 +1194,7 @@ bool BundleMgrProxy::QueryAbilityInfoByUri(
     }
 
     if (!GetParcelableInfo<AbilityInfo>(
-        IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI_FOR_USERID, data, abilityInfo)) {
+        BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI_FOR_USERID, data, abilityInfo)) {
         APP_LOGE("fail to QueryAbilityInfoByUri from server");
         return false;
     }
@@ -1210,7 +1212,7 @@ bool BundleMgrProxy::QueryKeepAliveBundleInfos(std::vector<BundleInfo> &bundleIn
         return false;
     }
 
-    if (!GetParcelableInfos<BundleInfo>(IBundleMgr::Message::QUERY_KEEPALIVE_BUNDLE_INFOS, data, bundleInfos)) {
+    if (!GetParcelableInfos<BundleInfo>(BundleMgrInterfaceCode::QUERY_KEEPALIVE_BUNDLE_INFOS, data, bundleInfos)) {
         APP_LOGE("fail to QueryKeepAliveBundleInfos from server");
         return false;
     }
@@ -1241,7 +1243,7 @@ std::string BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_LABEL, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ABILITY_LABEL, data, reply)) {
         APP_LOGE("fail to GetAbilityLabel from server");
         return Constants::EMPTY_STRING;
     }
@@ -1275,7 +1277,7 @@ ErrCode BundleMgrProxy::GetAbilityLabel(const std::string &bundleName, const std
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ABILITY_LABEL_WITH_MODULE_NAME, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t errCode = reply.ReadInt32();
@@ -1309,7 +1311,7 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, const 
         return false;
     }
 
-    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO, data, bundleInfo)) {
+    if (!GetParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleArchiveInfo from server");
         return false;
     }
@@ -1339,7 +1341,8 @@ bool BundleMgrProxy::GetBundleArchiveInfo(const std::string &hapFilePath, int32_
         return false;
     }
 
-    if (!GetParcelableInfo<BundleInfo>(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
+    if (!GetParcelableInfo<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
         APP_LOGE("fail to GetBundleArchiveInfo from server");
         return false;
     }
@@ -1369,7 +1372,7 @@ ErrCode BundleMgrProxy::GetBundleArchiveInfoV9(const std::string &hapFilePath, i
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfoWithErrCode<BundleInfo>(
-        IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
+        BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
 }
 
 bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleInfo &hapModuleInfo)
@@ -1391,7 +1394,7 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, HapModuleI
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(IBundleMgr::Message::GET_HAP_MODULE_INFO, data, hapModuleInfo)) {
+    if (!GetParcelableInfo<HapModuleInfo>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO, data, hapModuleInfo)) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -1421,7 +1424,8 @@ bool BundleMgrProxy::GetHapModuleInfo(const AbilityInfo &abilityInfo, int32_t us
         return false;
     }
 
-    if (!GetParcelableInfo<HapModuleInfo>(IBundleMgr::Message::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)) {
+    if (!GetParcelableInfo<HapModuleInfo>(
+        BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID, data, hapModuleInfo)) {
         APP_LOGE("fail to GetHapModuleInfo from server");
         return false;
     }
@@ -1454,7 +1458,7 @@ ErrCode BundleMgrProxy::GetLaunchWantForBundle(const std::string &bundleName, Wa
     }
 
     return GetParcelableInfoWithErrCode<Want>(
-        IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
+        BundleMgrInterfaceCode::GET_LAUNCH_WANT_FOR_BUNDLE, data, want);
 }
 
 ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, PermissionDef &permissionDef)
@@ -1471,7 +1475,8 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<PermissionDef>(IBundleMgr::Message::GET_PERMISSION_DEF, data, permissionDef);
+    return GetParcelableInfoWithErrCode<PermissionDef>(
+        BundleMgrInterfaceCode::GET_PERMISSION_DEF, data, permissionDef);
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
@@ -1507,7 +1512,7 @@ ErrCode BundleMgrProxy::CleanBundleCacheFiles(
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES, data, reply)) {
         APP_LOGE("fail to CleanBundleCacheFiles from server");
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
@@ -1538,7 +1543,7 @@ bool BundleMgrProxy::CleanBundleDataFiles(const std::string &bundleName, const i
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES, data, reply)) {
         APP_LOGE("fail to CleanBundleDataFiles from server");
         return false;
     }
@@ -1569,7 +1574,7 @@ bool BundleMgrProxy::RegisterBundleStatusCallback(const sptr<IBundleStatusCallba
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::REGISTER_BUNDLE_STATUS_CALLBACK, data, reply)) {
         APP_LOGE("fail to RegisterBundleStatusCallback from server");
         return false;
     }
@@ -1596,7 +1601,7 @@ bool BundleMgrProxy::RegisterBundleEventCallback(const sptr<IBundleEventCallback
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::REGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
         APP_LOGE("fail to RegisterBundleEventCallback from server");
         return false;
     }
@@ -1623,7 +1628,7 @@ bool BundleMgrProxy::UnregisterBundleEventCallback(const sptr<IBundleEventCallba
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_EVENT_CALLBACK, data, reply)) {
         APP_LOGE("fail to UnregisterBundleEventCallback from server");
         return false;
     }
@@ -1650,7 +1655,7 @@ bool BundleMgrProxy::ClearBundleStatusCallback(const sptr<IBundleStatusCallback>
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CLEAR_BUNDLE_STATUS_CALLBACK, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CLEAR_BUNDLE_STATUS_CALLBACK, data, reply)) {
         APP_LOGE("fail to CleanBundleCacheFiles from server");
         return false;
     }
@@ -1668,7 +1673,7 @@ bool BundleMgrProxy::UnregisterBundleStatusCallback()
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::UNREGISTER_BUNDLE_STATUS_CALLBACK, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_STATUS_CALLBACK, data, reply)) {
         APP_LOGE("fail to UnregisterBundleStatusCallback from server");
         return false;
     }
@@ -1699,7 +1704,7 @@ bool BundleMgrProxy::DumpInfos(
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::DUMP_INFOS, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::DUMP_INFOS, data, reply)) {
         APP_LOGE("fail to dump from server");
         return false;
     }
@@ -1745,7 +1750,7 @@ ErrCode BundleMgrProxy::IsModuleRemovable(const std::string &bundleName, const s
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_MODULE_REMOVABLE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_MODULE_REMOVABLE, data, reply)) {
         APP_LOGE("fail to IsModuleRemovable from server");
         return false;
     }
@@ -1784,7 +1789,7 @@ bool BundleMgrProxy::SetModuleRemovable(const std::string &bundleName, const std
         return false;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_MODULE_REMOVABLE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_MODULE_REMOVABLE, data, reply)) {
         APP_LOGE("fail to SetModuleRemovable from server");
         return false;
     }
@@ -1815,7 +1820,7 @@ bool BundleMgrProxy::GetModuleUpgradeFlag(const std::string &bundleName, const s
         return false;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_MODULE_NEED_UPDATE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_MODULE_NEED_UPDATE, data, reply)) {
         APP_LOGE("fail to GetModuleUpgradeFlag from server");
         return false;
     }
@@ -1855,7 +1860,7 @@ ErrCode BundleMgrProxy::SetModuleUpgradeFlag(const std::string &bundleName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_MODULE_NEED_UPDATE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_MODULE_NEED_UPDATE, data, reply)) {
         APP_LOGE("fail to SetModuleUpgradeFlag from server");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -1881,7 +1886,7 @@ ErrCode BundleMgrProxy::IsApplicationEnabled(const std::string &bundleName, bool
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_APPLICATION_ENABLED, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_APPLICATION_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();
@@ -1919,7 +1924,7 @@ ErrCode BundleMgrProxy::SetApplicationEnabled(const std::string &bundleName, boo
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_APPLICATION_ENABLED, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_APPLICATION_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
@@ -1943,7 +1948,7 @@ ErrCode BundleMgrProxy::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &i
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IS_ABILITY_ENABLED, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IS_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     int32_t ret = reply.ReadInt32();
@@ -1981,7 +1986,7 @@ ErrCode BundleMgrProxy::SetAbilityEnabled(const AbilityInfo &abilityInfo, bool i
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_ABILITY_ENABLED, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ABILITY_ENABLED, data, reply)) {
         return ERR_BUNDLE_MANAGER_IPC_TRANSACTION;
     }
     return reply.ReadInt32();
@@ -2011,7 +2016,7 @@ bool BundleMgrProxy::GetAbilityInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::GET_ABILITY_INFO, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(BundleMgrInterfaceCode::GET_ABILITY_INFO, data, abilityInfo)) {
         APP_LOGE("fail to GetAbilityInfo from server");
         return false;
     }
@@ -2048,7 +2053,8 @@ bool BundleMgrProxy::GetAbilityInfo(
         return false;
     }
 
-    if (!GetParcelableInfo<AbilityInfo>(IBundleMgr::Message::GET_ABILITY_INFO_WITH_MODULE_NAME, data, abilityInfo)) {
+    if (!GetParcelableInfo<AbilityInfo>(
+        BundleMgrInterfaceCode::GET_ABILITY_INFO_WITH_MODULE_NAME, data, abilityInfo)) {
         APP_LOGE("fail to GetAbilityInfo from server");
         return false;
     }
@@ -2065,7 +2071,7 @@ sptr<IBundleInstaller> BundleMgrProxy::GetBundleInstaller()
         APP_LOGE("fail to GetBundleInstaller due to write InterfaceToken fail");
         return nullptr;
     }
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_INSTALLER, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_INSTALLER, data, reply)) {
         return nullptr;
     }
 
@@ -2092,7 +2098,7 @@ sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
         APP_LOGE("fail to get bundle user mgr due to write InterfaceToken fail");
         return nullptr;
     }
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_USER_MGR, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_USER_MGR, data, reply)) {
         return nullptr;
     }
 
@@ -2118,7 +2124,7 @@ bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
         return false;
     }
 
-    if (!GetParcelableInfos<FormInfo>(IBundleMgr::Message::GET_ALL_FORMS_INFO, data, formInfos)) {
+    if (!GetParcelableInfos<FormInfo>(BundleMgrInterfaceCode::GET_ALL_FORMS_INFO, data, formInfos)) {
         APP_LOGE("fail to GetAllFormsInfo from server");
         return false;
     }
@@ -2142,7 +2148,7 @@ bool BundleMgrProxy::GetFormsInfoByApp(const std::string &bundleName, std::vecto
         APP_LOGE("fail to GetFormsInfoByApp due to write bundleName fail");
         return false;
     }
-    if (!GetParcelableInfos<FormInfo>(IBundleMgr::Message::GET_FORMS_INFO_BY_APP, data, formInfos)) {
+    if (!GetParcelableInfos<FormInfo>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_APP, data, formInfos)) {
         APP_LOGE("fail to GetFormsInfoByApp from server");
         return false;
     }
@@ -2174,7 +2180,7 @@ bool BundleMgrProxy::GetFormsInfoByModule(
         return false;
     }
 
-    if (!GetParcelableInfos<FormInfo>(IBundleMgr::Message::GET_FORMS_INFO_BY_MODULE, data, formInfos)) {
+    if (!GetParcelableInfos<FormInfo>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_MODULE, data, formInfos)) {
         APP_LOGE("fail to GetFormsInfoByModule from server");
         return false;
     }
@@ -2200,7 +2206,7 @@ bool BundleMgrProxy::GetShortcutInfos(const std::string &bundleName, std::vector
         return false;
     }
 
-    if (!GetParcelableInfos<ShortcutInfo>(IBundleMgr::Message::GET_SHORTCUT_INFO, data, shortcutInfos)) {
+    if (!GetParcelableInfos<ShortcutInfo>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO, data, shortcutInfos)) {
         APP_LOGE("fail to GetShortcutInfos from server");
         return false;
     }
@@ -2226,7 +2232,8 @@ ErrCode BundleMgrProxy::GetShortcutInfoV9(const std::string &bundleName,
         APP_LOGE("fail to GetShortcutInfos due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ShortcutInfo>(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
+    return GetParcelableInfosWithErrCode<ShortcutInfo>(
+        BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9, data, shortcutInfos);
 }
 
 bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vector<CommonEventInfo> &commonEventInfos)
@@ -2248,7 +2255,8 @@ bool BundleMgrProxy::GetAllCommonEventInfo(const std::string &eventKey, std::vec
         return false;
     }
 
-    if (!GetParcelableInfos<CommonEventInfo>(IBundleMgr::Message::GET_ALL_COMMON_EVENT_INFO, data, commonEventInfos)) {
+    if (!GetParcelableInfos<CommonEventInfo>(
+        BundleMgrInterfaceCode::GET_ALL_COMMON_EVENT_INFO, data, commonEventInfos)) {
         APP_LOGE("fail to GetAllCommonEventInfo from server");
         return false;
     }
@@ -2280,7 +2288,7 @@ bool BundleMgrProxy::GetDistributedBundleInfo(const std::string &networkId, cons
     }
     MessageParcel reply;
     if (!GetParcelableInfo<DistributedBundleInfo>(
-            IBundleMgr::Message::GET_DISTRIBUTE_BUNDLE_INFO, data, distributedBundleInfo)) {
+            BundleMgrInterfaceCode::GET_DISTRIBUTE_BUNDLE_INFO, data, distributedBundleInfo)) {
         APP_LOGE("fail to GetDistributedBundleInfo from server");
         return false;
     }
@@ -2309,7 +2317,7 @@ std::string BundleMgrProxy::GetAppPrivilegeLevel(const std::string &bundleName, 
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APPLICATION_PRIVILEGE_LEVEL, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APPLICATION_PRIVILEGE_LEVEL, data, reply)) {
         APP_LOGE("fail to GetAppPrivilegeLevel from server");
         return Constants::EMPTY_STRING;
     }
@@ -2337,7 +2345,7 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const int32_t 
         return false;
     }
 
-    if (!GetParcelableInfos(IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE, data, extensionInfos)) {
+    if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE, data, extensionInfos)) {
         APP_LOGE("fail to obtain extensionInfos");
         return false;
     }
@@ -2365,7 +2373,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, int32_t f
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return GetParcelableInfosWithErrCode(
-        IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos);
+        BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const ExtensionAbilityType &extensionType,
@@ -2393,7 +2401,7 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const Want &want, const Extensio
         return false;
     }
 
-    if (!GetParcelableInfos(IBundleMgr::Message::QUERY_EXTENSION_INFO, data, extensionInfos)) {
+    if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO, data, extensionInfos)) {
         APP_LOGE("fail to obtain extensionInfos");
         return false;
     }
@@ -2424,7 +2432,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosV9(const Want &want, const Ext
         APP_LOGE("fail to QueryExtensionAbilityInfosV9 due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, data, extensionInfos);
+    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_V9, data, extensionInfos);
 }
 
 bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &extensionType, const int32_t &userId,
@@ -2444,7 +2452,7 @@ bool BundleMgrProxy::QueryExtensionAbilityInfos(const ExtensionAbilityType &exte
         return false;
     }
 
-    if (!GetParcelableInfos(IBundleMgr::Message::QUERY_EXTENSION_INFO_BY_TYPE, data, extensionInfos)) {
+    if (!GetParcelableInfos(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_BY_TYPE, data, extensionInfos)) {
         APP_LOGE("fail to obtain extensionInfos");
         return false;
     }
@@ -2466,7 +2474,7 @@ bool BundleMgrProxy::VerifyCallingPermission(const std::string &permission)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_CALLING_PERMISSION, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::VERIFY_CALLING_PERMISSION, data, reply)) {
         APP_LOGE("fail to sendRequest");
         return false;
     }
@@ -2497,7 +2505,7 @@ bool BundleMgrProxy::QueryExtensionAbilityInfoByUri(const std::string &uri, int3
     }
 
     if (!GetParcelableInfo<ExtensionAbilityInfo>(
-        IBundleMgr::Message::QUERY_EXTENSION_ABILITY_INFO_BY_URI, data, extensionAbilityInfo)) {
+        BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI, data, extensionAbilityInfo)) {
         APP_LOGE("failed to QueryExtensionAbilityInfoByUri from server");
         return false;
     }
@@ -2528,7 +2536,7 @@ bool BundleMgrProxy::ImplicitQueryInfoByPriority(const Want &want, int32_t flags
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IMPLICIT_QUERY_INFO_BY_PRIORITY, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY, data, reply)) {
         return false;
     }
 
@@ -2581,7 +2589,7 @@ bool BundleMgrProxy::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::IMPLICIT_QUERY_INFOS, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFOS, data, reply)) {
         return false;
     }
     if (!reply.ReadBool()) {
@@ -2636,7 +2644,7 @@ ErrCode BundleMgrProxy::GetSandboxBundleInfo(const std::string &bundleName, int3
         return ERR_APPEXECFWK_SANDBOX_INSTALL_WRITE_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<BundleInfo>(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
+    return GetParcelableInfoWithErrCode<BundleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO, data, info);
 }
 
 bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,
@@ -2663,7 +2671,7 @@ bool BundleMgrProxy::GetAllDependentModuleNames(const std::string &bundleName, c
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ALL_DEPENDENT_MODULE_NAMES, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ALL_DEPENDENT_MODULE_NAMES, data, reply)) {
         APP_LOGE("fail to GetAllDependentModuleNames from server");
         return false;
     }
@@ -2690,7 +2698,7 @@ bool BundleMgrProxy::ObtainCallingBundleName(std::string &bundleName)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::QUERY_CALLING_BUNDLE_NAME, data, reply)) {
         APP_LOGE("fail to ObtainCallingBundleName from server");
         return false;
     }
@@ -2726,7 +2734,7 @@ bool BundleMgrProxy::GetBundleStats(const std::string &bundleName, int32_t userI
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_BUNDLE_STATS, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_STATS, data, reply)) {
         APP_LOGE("fail to GetBundleStats from server");
         return false;
     }
@@ -2774,7 +2782,7 @@ bool BundleMgrProxy::CheckAbilityEnableInstall(
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL, data, reply)) {
         return false;
     }
     return reply.ReadBool();
@@ -2817,7 +2825,7 @@ std::string BundleMgrProxy::GetStringById(const std::string &bundleName, const s
         return Constants::EMPTY_STRING;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_STRING_BY_ID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_STRING_BY_ID, data, reply)) {
         APP_LOGE("fail to GetStringById from server");
         return Constants::EMPTY_STRING;
     }
@@ -2862,7 +2870,7 @@ std::string BundleMgrProxy::GetIconById(
         return Constants::EMPTY_STRING;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ICON_BY_ID, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ICON_BY_ID, data, reply)) {
         APP_LOGE("fail to GetIconById from server");
         return Constants::EMPTY_STRING;
     }
@@ -2879,7 +2887,7 @@ sptr<IDefaultApp> BundleMgrProxy::GetDefaultAppProxy()
         APP_LOGE("fail to get default app proxy due to write InterfaceToken failed.");
         return nullptr;
     }
-    if (!SendTransactCmd(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_DEFAULT_APP_PROXY, data, reply)) {
         return nullptr;
     }
 
@@ -2907,7 +2915,7 @@ sptr<IAppControlMgr> BundleMgrProxy::GetAppControlProxy()
         APP_LOGE("fail to get app control proxy due to write InterfaceToken failed.");
         return nullptr;
     }
-    if (!SendTransactCmd(IBundleMgr::Message::GET_APP_CONTROL_PROXY, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_APP_CONTROL_PROXY, data, reply)) {
         return nullptr;
     }
 
@@ -2956,7 +2964,8 @@ ErrCode BundleMgrProxy::GetSandboxAbilityInfo(const Want &want, int32_t appIndex
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<AbilityInfo>(IBundleMgr::Message::GET_SANDBOX_APP_ABILITY_INFO, data, info);
+    return GetParcelableInfoWithErrCode<AbilityInfo>(
+        BundleMgrInterfaceCode::GET_SANDBOX_APP_ABILITY_INFO, data, info);
 }
 
 ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appIndex, int32_t flags, int32_t userId,
@@ -2991,7 +3000,7 @@ ErrCode BundleMgrProxy::GetSandboxExtAbilityInfos(const Want &want, int32_t appI
     }
 
     return GetParcelableInfosWithErrCode<ExtensionAbilityInfo>(
-        IBundleMgr::Message::GET_SANDBOX_APP_EXTENSION_INFOS, data, infos);
+        BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS, data, infos);
 }
 
 ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, int32_t appIndex, int32_t userId,
@@ -3021,7 +3030,7 @@ ErrCode BundleMgrProxy::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo, 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfoWithErrCode<HapModuleInfo>(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, data, info);
+    return GetParcelableInfoWithErrCode<HapModuleInfo>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO, data, info);
 }
 
 ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::string &moduleName,
@@ -3056,7 +3065,7 @@ ErrCode BundleMgrProxy::GetMediaData(const std::string &bundleName, const std::s
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_MEDIA_DATA, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_MEDIA_DATA, data, reply)) {
         APP_LOGE("SendTransactCmd result false");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -3110,7 +3119,7 @@ sptr<IQuickFixManager> BundleMgrProxy::GetQuickFixManagerProxy()
         return nullptr;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_QUICK_FIX_MANAGER_PROXY, data, reply)) {
         return nullptr;
     }
 
@@ -3140,7 +3149,7 @@ ErrCode BundleMgrProxy::SetDebugMode(bool isDebug)
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_DEBUG_MODE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_DEBUG_MODE, data, reply)) {
         return ERR_BUNDLEMANAGER_SET_DEBUG_MODE_SEND_REQUEST_ERROR;
     }
 
@@ -3162,7 +3171,7 @@ bool BundleMgrProxy::VerifySystemApi(int32_t beginApiVersion)
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::VERIFY_SYSTEM_API, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::VERIFY_SYSTEM_API, data, reply)) {
         APP_LOGE("fail to sendRequest");
         return false;
     }
@@ -3183,7 +3192,8 @@ bool BundleMgrProxy::ProcessPreload(const Want &want)
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
-    auto res = Remote()->SendRequest(IBundleMgr::Message::PROCESS_PRELOAD, data, reply, option);
+    auto res = Remote()->SendRequest(
+        static_cast<uint32_t>(BundleMgrInterfaceCode::PROCESS_PRELOAD), data, reply, option);
     if (res != ERR_OK) {
         APP_LOGE("SendRequest fail, error: %{public}d", res);
         return false;
@@ -3200,7 +3210,7 @@ sptr<IOverlayManager> BundleMgrProxy::GetOverlayManagerProxy()
         return nullptr;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY, data, reply)) {
         return nullptr;
     }
 
@@ -3240,7 +3250,7 @@ ErrCode BundleMgrProxy::GetAppProvisionInfo(const std::string &bundleName, int32
         APP_LOGE("fail to GetAppProvisionInfo due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfoWithErrCode<AppProvisionInfo>(IBundleMgr::Message::GET_APP_PROVISION_INFO,
+    return GetParcelableInfoWithErrCode<AppProvisionInfo>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO,
         data, appProvisionInfo);
 }
 
@@ -3262,7 +3272,7 @@ ErrCode BundleMgrProxy::GetBaseSharedBundleInfos(const std::string &bundleName,
         APP_LOGE("fail to GetBaseSharedBundleInfos due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(IBundleMgr::Message::GET_BASE_SHARED_BUNDLE_INFOS,
+    return GetParcelableInfosWithErrCode<BaseSharedBundleInfo>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS,
         data, baseSharedBundleInfos);
 }
 
@@ -3276,7 +3286,7 @@ ErrCode BundleMgrProxy::GetAllSharedBundleInfo(std::vector<SharedBundleInfo> &sh
         APP_LOGE("fail to GetAllSharedBundleInfo due to write InterfaceToken fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO,
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO,
         data, sharedBundles);
 }
 
@@ -3299,7 +3309,7 @@ ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const
         APP_LOGE("fail to GetSharedBundleInfo due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO,
+    return GetParcelableInfosWithErrCode<SharedBundleInfo>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO,
         data, sharedBundles);
 }
 
@@ -3317,7 +3327,7 @@ ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName,
         APP_LOGE("fail to GetSharedBundleInfoBySelf due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfoWithErrCode<SharedBundleInfo>(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
+    return GetParcelableInfoWithErrCode<SharedBundleInfo>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO_BY_SELF,
         data, sharedBundleInfo);
 }
 
@@ -3344,7 +3354,8 @@ ErrCode BundleMgrProxy::GetSharedDependencies(const std::string &bundleName, con
         APP_LOGE("fail to GetSharedDependencies due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<Dependency>(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, data, dependencies);
+    return GetParcelableInfosWithErrCode<Dependency>(
+        BundleMgrInterfaceCode::GET_SHARED_DEPENDENCIES, data, dependencies);
 }
 
 ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
@@ -3374,7 +3385,7 @@ ErrCode BundleMgrProxy::GetProxyDataInfos(const std::string &bundleName, const s
         APP_LOGE("fail to GetProxyDataInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_PROXY_DATA_INFOS, data, proxyDatas);
+    return GetParcelableInfosWithErrCode<ProxyData>(BundleMgrInterfaceCode::GET_PROXY_DATA_INFOS, data, proxyDatas);
 }
 
 ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas, int32_t userId)
@@ -3390,7 +3401,8 @@ ErrCode BundleMgrProxy::GetAllProxyDataInfos(std::vector<ProxyData> &proxyDatas,
         APP_LOGE("fail to GetProxyDataInfos due to write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetParcelableInfosWithErrCode<ProxyData>(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, data, proxyDatas);
+    return GetParcelableInfosWithErrCode<ProxyData>(
+        BundleMgrInterfaceCode::GET_ALL_PROXY_DATA_INFOS, data, proxyDatas);
 }
 
 ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleName,
@@ -3410,7 +3422,7 @@ ErrCode BundleMgrProxy::GetSpecifiedDistributionType(const std::string &bundleNa
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_SPECIFIED_DISTRIBUTED_TYPE, data, reply)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -3437,7 +3449,7 @@ ErrCode BundleMgrProxy::GetAdditionalInfo(const std::string &bundleName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::GET_ADDITIONAL_INFO, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO, data, reply)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -3486,7 +3498,7 @@ ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, con
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::SET_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -3532,7 +3544,7 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IBundleMgr::Message::DEL_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
+    if (!SendTransactCmd(BundleMgrInterfaceCode::DEL_EXT_NAME_OR_MIME_TO_APP, data, reply)) {
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     auto ret = reply.ReadInt32();
@@ -3540,7 +3552,7 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
 }
 
 template<typename T>
-bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
+bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -3563,7 +3575,8 @@ bool BundleMgrProxy::GetParcelableInfo(IBundleMgr::Message code, MessageParcel &
 }
 
 template <typename T>
-ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
+ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -3586,7 +3599,8 @@ ErrCode BundleMgrProxy::GetParcelableInfoWithErrCode(IBundleMgr::Message code, M
 }
 
 template<typename T>
-bool BundleMgrProxy::GetParcelableInfos(IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+bool BundleMgrProxy::GetParcelableInfos(
+    BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -3612,7 +3626,7 @@ bool BundleMgrProxy::GetParcelableInfos(IBundleMgr::Message code, MessageParcel 
 }
 
 template<typename T>
-ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
+ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
     std::vector<T> &parcelableInfos)
 {
     MessageParcel reply;
@@ -3641,7 +3655,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(IBundleMgr::Message code, 
 
 template<typename T>
 bool BundleMgrProxy::GetVectorFromParcelIntelligent(
-    IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+    BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     APP_LOGD("GetParcelableInfos start");
     MessageParcel reply;
@@ -3664,7 +3678,7 @@ bool BundleMgrProxy::GetVectorFromParcelIntelligent(
 
 template<typename T>
 ErrCode BundleMgrProxy::GetVectorFromParcelIntelligentWithErrCode(
-    IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos)
+    BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -3717,7 +3731,7 @@ ErrCode BundleMgrProxy::InnerGetVectorFromParcelIntelligent(
     return ERR_OK;
 }
 
-bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply)
+bool BundleMgrProxy::SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
@@ -3726,7 +3740,7 @@ bool BundleMgrProxy::SendTransactCmd(IBundleMgr::Message code, MessageParcel &da
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    int32_t result = remote->SendRequest(code, data, reply, option);
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
@@ -3754,7 +3768,7 @@ bool ParseStr(const char *buf, const int itemLen, int index, std::string &result
 }
 
 template<typename T>
-bool BundleMgrProxy::GetBigParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo)
+bool BundleMgrProxy::GetBigParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {

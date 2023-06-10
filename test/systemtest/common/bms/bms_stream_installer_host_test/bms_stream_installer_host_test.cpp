@@ -194,7 +194,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_006, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_001, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::CREATE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -223,13 +223,13 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_002, TestSize.Level1)
 /**
  * @tc.number: UserMgrHost_003
  * @tc.name: OnRemoteRequest
- * @tc.desc: 1.code is IBundleUserMgr::Message::CREATE_USER.
+ * @tc.desc: 1.code is BundleUserMgrInterfaceCode::CREATE_USER.
  *           2.data is write interface token.
  *           3.Verify the returned result successfully.
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_003, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::CREATE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER);
     MessageParcel data;
     data.WriteInterfaceToken(BundleUserMgrHost::GetDescriptor());
     MessageParcel reply;
@@ -243,13 +243,13 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_003, TestSize.Level1)
 /**
  * @tc.number: UserMgrHost_004
  * @tc.name: OnRemoteRequest
- * @tc.desc: 1.code is IBundleUserMgr::Message::REMOVE_USER.
+ * @tc.desc: 1.code is BundleUserMgrInterfaceCode::REMOVE_USER.
  *           2.data is write interface token.
  *           3.Verify the returned result successfully.
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_004, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::REMOVE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::REMOVE_USER);
     MessageParcel data;
     data.WriteInterfaceToken(BundleUserMgrHost::GetDescriptor());
     MessageParcel reply;

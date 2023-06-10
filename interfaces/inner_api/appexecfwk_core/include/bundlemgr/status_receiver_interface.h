@@ -38,7 +38,7 @@ public:
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) = 0;
 
     virtual void SetStreamInstallId(uint32_t installerId) = 0;
-    
+
     enum {
         SUCCESS = 0,
         ERR_INSTALL_INTERNAL_ERROR = 9568260,
