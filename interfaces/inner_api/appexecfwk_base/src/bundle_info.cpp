@@ -69,6 +69,7 @@ const std::string REQUESTPERMISSION_USEDSCENE = "usedScene";
 const std::string REQUESTPERMISSION_ABILITIES = "abilities";
 const std::string REQUESTPERMISSION_ABILITY = "ability";
 const std::string REQUESTPERMISSION_WHEN = "when";
+const std::string REQUESTPERMISSION_MODULE_NAME = "moduleName";
 const std::string SIGNATUREINFO_APPID = "appId";
 const std::string SIGNATUREINFO_FINGERPRINT = "fingerprint";
 const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
@@ -122,6 +123,7 @@ bool RequestPermission::ReadFromParcel(Parcel &parcel)
         return false;
     }
     usedScene = *scene;
+    moduleName = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -131,6 +133,7 @@ bool RequestPermission::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(reason));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, reasonId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &usedScene);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     return true;
 }
 
@@ -474,7 +477,8 @@ void to_json(nlohmann::json &jsonObject, const RequestPermission &requestPermiss
         {REQUESTPERMISSION_NAME, requestPermission.name},
         {REQUESTPERMISSION_REASON, requestPermission.reason},
         {REQUESTPERMISSION_REASON_ID, requestPermission.reasonId},
-        {REQUESTPERMISSION_USEDSCENE, requestPermission.usedScene}
+        {REQUESTPERMISSION_USEDSCENE, requestPermission.usedScene},
+        {REQUESTPERMISSION_MODULE_NAME, requestPermission.moduleName}
     };
 }
 
@@ -552,6 +556,14 @@ void from_json(const nlohmann::json &jsonObject, RequestPermission &requestPermi
         REQUESTPERMISSION_USEDSCENE,
         requestPermission.usedScene,
         JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        REQUESTPERMISSION_MODULE_NAME,
+        requestPermission.moduleName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
