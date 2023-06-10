@@ -3971,5 +3971,72 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
         }
     }
 }
+
+ErrCode InnerBundleInfo::SetExtName(
+    const std::string &moduleName, const std::string &abilityName, const std::string extName)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    abilityInfoPair->second.supportExtNames.emplace_back(extName);
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::SetMimeType(
+    const std::string &moduleName, const std::string &abilityName, const std::string mimeType)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    abilityInfoPair->second.supportMimeTypes.emplace_back(mimeType);
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::DelExtName(
+    const std::string &moduleName, const std::string &abilityName, const std::string extName)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportExtNames = abilityInfoPair->second.supportExtNames;
+    supportExtNames.erase(std::remove(supportExtNames.begin(), supportExtNames.end(), extName), supportExtNames.end());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::DelMimeType(
+    const std::string &moduleName, const std::string &abilityName, const std::string mimeType)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportMimeTypes = abilityInfoPair->second.supportMimeTypes;
+    supportMimeTypes.erase(
+        std::remove(supportMimeTypes.begin(), supportMimeTypes.end(), mimeType), supportMimeTypes.end());
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -1974,6 +1974,10 @@ public:
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
     void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     void ResetAOTFlags();
+    ErrCode SetExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    ErrCode SetMimeType(const std::string &moduleName, const std::string &abilityName, const std::string mimeType);
+    ErrCode DelExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    ErrCode DelMimeType(const std::string &moduleName, const std::string &abilityName, const std::string extName);
 
 private:
     bool IsExistLauncherAbility() const;

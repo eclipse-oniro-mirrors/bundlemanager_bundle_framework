@@ -2696,5 +2696,41 @@ ErrCode BundleMgrHostImpl::GetAdditionalInfo(const std::string &bundleName,
     }
     return dataMgr->GetAdditionalInfo(bundleName, additionalInfo);
 }
+
+ErrCode BundleMgrHostImpl::SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    APP_LOGD("SetExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
+        abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SetExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+}
+
+ErrCode BundleMgrHostImpl::DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+{
+    APP_LOGD("DelExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
+        abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

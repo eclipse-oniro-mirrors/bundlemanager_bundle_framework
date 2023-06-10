@@ -1178,6 +1178,18 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
+    virtual ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
     enum Message : uint32_t {
         GET_APPLICATION_INFO = 0,
         GET_APPLICATION_INFOS,
@@ -1296,6 +1308,8 @@ public:
         GET_ADDITIONAL_INFO,
         GET_PROXY_DATA_INFOS,
         GET_ALL_PROXY_DATA_INFOS,
+        SET_EXT_NAME_OR_MIME_TO_APP,
+        DEL_EXT_NAME_OR_MIME_TO_APP,
     };
 };
 }  // namespace AppExecFwk

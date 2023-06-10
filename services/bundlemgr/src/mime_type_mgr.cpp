@@ -55,6 +55,7 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::stri
 
 void MimeTypeMgr::InitMimeMap()
 {
+    APP_LOGD("init mime map");
     std::unique_lock<std::shared_mutex> lock(mapMutex_);
     mimeTypeMap_.emplace("323", "text/h323");
     mimeTypeMap_.emplace("3g2", "video/3gpp2");
