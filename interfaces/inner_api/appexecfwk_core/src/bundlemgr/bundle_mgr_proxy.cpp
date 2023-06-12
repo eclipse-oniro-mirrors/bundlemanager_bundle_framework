@@ -3461,27 +3461,27 @@ ErrCode BundleMgrProxy::SetExtNameOrMIMEToApp(const std::string &bundleName, con
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write InterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write moduleName fail");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write abilityName fail");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write abilityName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(extName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write extName fail");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write extName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(mimeType)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write mimeType fail");
+        APP_LOGE("fail to SetExtNameOrMIMEToApp due to write mimeType fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -3507,27 +3507,27 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetAdditionalInfo due to write InterfaceToken failed.");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write InterfaceToken failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write bundleName fail");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write bundleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(moduleName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write moduleName fail");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(abilityName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write abilityName fail");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write abilityName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(extName)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write extName fail");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write extName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(mimeType)) {
-        APP_LOGE("fail to GetAdditionalInfo due to write mimeType fail");
+        APP_LOGE("fail to DelExtNameOrMIMEToApp due to write mimeType fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 

@@ -2703,6 +2703,10 @@ ErrCode BundleMgrHostImpl::SetExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("SetExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
@@ -2717,6 +2721,10 @@ ErrCode BundleMgrHostImpl::DelExtNameOrMIMEToApp(const std::string &bundleName, 
     APP_LOGD("DelExtNameOrMIMEToApp bundleName: %{public}s, moduleName: %{public}s, \
         abilityName: %{public}s, extName: %{public}s, mimeType: %{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str(), extName.c_str(), mimeType.c_str());
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
