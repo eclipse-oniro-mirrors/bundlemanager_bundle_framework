@@ -4930,11 +4930,20 @@ ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, cons
         APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    ErrCode ret;
     if (!extName.empty()) {
-        item->second.SetExtName(moduleName, abilityName, extName);
+        ret = item->second.SetExtName(moduleName, abilityName, extName);
+        if (ret != ERR_OK) {
+            APP_LOGE("set ext name to app failed");
+            return ret;
+        }
     }
     if (!mimeType.empty()) {
         item->second.SetMimeType(moduleName, abilityName, mimeType);
+        if (ret != ERR_OK) {
+            APP_LOGE("set mime type to app failed");
+            return ret;
+        }
     }
     if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
         APP_LOGE("SaveStorageBundleInfo failed");

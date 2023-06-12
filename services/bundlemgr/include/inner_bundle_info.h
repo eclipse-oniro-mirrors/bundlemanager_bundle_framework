@@ -59,6 +59,7 @@ struct DefinePermission {
     int32_t descriptionId = 0;
 };
 
+
 struct InnerModuleInfo {
     std::string name;
     std::string modulePackage;

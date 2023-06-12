@@ -39,7 +39,7 @@ const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
 const std::string EMPTY_STRING = "";
-const std::string MODULE_NAEM = "entry";
+const std::string MODULE_NAME = "entry";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -1677,7 +1677,7 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0001, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
 
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerModuleInfo.moduleName = MODULE_NAME;
     innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
     std::vector<ProxyData> proxyDatas;
 
@@ -1708,7 +1708,7 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
 
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerModuleInfo.moduleName = MODULE_NAME;
     innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
     std::vector<ProxyData> proxyDatas;
 
@@ -1738,5 +1738,155 @@ HWTEST_F(BmsDataMgrTest, GetIsolationMode_0002, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
     IsolationMode res = innerBundleInfo.GetIsolationMode(ISOLATION_ONLY);
     EXPECT_EQ(res, IsolationMode::ISOLATION_ONLY);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0001
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetExtNameToApp
+ */
+HWTEST_F(BmsDataMgrTest, SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string extName = "ext";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.ext");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0002
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsDataMgrTest, SetExtNameOrMIMEToApp_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsDataMgrTest, SetExtNameOrMIMEToApp_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_NAME, wrongName, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsDataMgrTest, SetExtNameOrMIMEToApp_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->DelExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_NAME, wrongName, ABILITY_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0001
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<std::string> supportExtNames;
+    supportExtNames.emplace_back("book");
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0002
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0003
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0004
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.jpg");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    supportMimeTypes.emplace_back("image/jpeg");
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

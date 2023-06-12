@@ -76,6 +76,7 @@ const std::string TYPE_001 = "type001";
 const std::string TYPE_002 = "VIDEO";
 const std::string TEST_BUNDLE_NAME = "bundleName";
 const std::string OVER_MAX_SIZE(300, 'x');
+const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
@@ -4879,5 +4880,101 @@ HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0300, Function | SmallTest | Lev
     std::vector<std::string> types;
     bool ret = MimeTypeMgr::GetMimeTypeByUri(rightUri, types);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SetExtName_0100
+ * @tc.name: test SetExtName
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string extName = "jpg";
+    auto ret = innerBundleInfo.SetExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = innerBundleInfo.DelExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetExtName_0200
+ * @tc.name: test SetMimeType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string mimeType = "image/jpeg";
+    auto ret = innerBundleInfo.SetMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = innerBundleInfo.DelMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetExtName_0300
+ * @tc.name: test SetExtName
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::string extName = "jpg";
+    auto ret = innerBundleInfo.SetExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    ret = innerBundleInfo.DelExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string wrongModuleName = "wrong";
+    ret = innerBundleInfo.SetExtName(wrongModuleName, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = innerBundleInfo.DelExtName(wrongModuleName, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtName_0400
+ * @tc.name: test SetMimeType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::string mimeType = "image/jpeg";
+    auto ret = innerBundleInfo.SetMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    ret = innerBundleInfo.DelMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string wrongModuleName = "wrong";
+    ret = innerBundleInfo.SetMimeType(wrongModuleName, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = innerBundleInfo.DelMimeType(wrongModuleName, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
 }
 } // OHOS
