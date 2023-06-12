@@ -277,7 +277,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "visible":true,
             "writePermission":"",
             "supportExtNames": [],
-			"supportMimeTypes": []
+            "supportMimeTypes": []
         }
     },
     "baseApplicationInfo":{
@@ -826,7 +826,9 @@ protected:
                     "unclearableMission": false,
                     "uri": "",
                     "visible": true,
-                    "writePermission": ""
+                    "writePermission": "",
+                    "supportExtNames": [],
+                    "supportMimeTypes": []
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
