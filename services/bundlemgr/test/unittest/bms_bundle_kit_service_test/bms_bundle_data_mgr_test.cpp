@@ -2365,7 +2365,6 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0400, Function | MediumTest 
     abilityInfo.name = Constants::APP_DETAIL_ABILITY;
     moduleInfo.moduleName = MODULE_NAME1;
     info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
-    info.baseAbilityInfos_.clear();
     info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
@@ -2385,7 +2384,6 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0500, Function | MediumTest 
     abilityInfo.name = Constants::OVERLAY_STATE;
     userInfo.bundleName = MODULE_NAME1;
     info.innerBundleUserInfos_.try_emplace(MODULE_NAME1, userInfo);
-    info.baseAbilityInfos_.clear();
     info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
     std::optional<std::vector<AbilityInfo>> ret =
         info.FindAbilityInfos(Constants::ALL_USERID);
@@ -2393,7 +2391,27 @@ HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0500, Function | MediumTest 
 }
 
 /**
- * @tc.number: TestFindAbilityInfos_0500
+ * @tc.number: TestFindAbilityInfos_0600
+ * @tc.name: test FindAbilityInfos
+ * @tc.desc: 1.FindAbilityInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestFindAbilityInfos_0600, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+    std::optional<std::vector<AbilityInfo>> ret =
+        info.FindAbilityInfos(Constants::ALL_USERID);
+    EXPECT_EQ(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: TestAddModuleInfo_0100
  * @tc.name: test AddModuleInfo
  * @tc.desc: 1.AddModuleInfo
  */
@@ -2404,6 +2422,24 @@ HWTEST_F(BmsBundleDataMgrTest, TestAddModuleInfo_0100, Function | MediumTest | L
     InnerModuleInfo moduleInfo;
     newinfo.currentPackage_ = MODULE_NAME1;
     newinfo.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
+    bool ret = info.AddModuleInfo(info);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: TestAddModuleInfo_0200
+ * @tc.name: test AddModuleInfo
+ * @tc.desc: 1.AddModuleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, TestAddModuleInfo_0200, Function | MediumTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleInfo newinfo;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = MODULE_NAME1;
+    moduleInfo.name = MODULE_NAME1;
+    newinfo.currentPackage_ = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(MODULE_NAME1, moduleInfo);
     bool ret = info.AddModuleInfo(info);
     EXPECT_EQ(ret, false);
 }
