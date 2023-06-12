@@ -618,8 +618,10 @@ private:
     std::string moduleName_;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams_;
-
     std::vector<std::string> toDeleteTempHapPath_;
+    // key is the temp path of hap or hsp
+    // value is the signature file path
+    std::map<std::string, std::string> signatureFileMap_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

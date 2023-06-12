@@ -258,7 +258,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallCompati
 
     sharedBundlePaths = {MODULE_FILE_PATH + LIBA_NORMAL_HAP};
     installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -321,7 +321,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallParam_0
     std::vector<std::string> bundleFilePaths{};
     std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_NORMAL_HAP};
     ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 
 /**

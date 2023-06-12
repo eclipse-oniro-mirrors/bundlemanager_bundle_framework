@@ -37,6 +37,7 @@ private:
 
     void init();
     ErrCode HandleCreateStream(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleCreateSignatureFileStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateSharedBundleStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleInstall(MessageParcel &data, MessageParcel &reply);
 

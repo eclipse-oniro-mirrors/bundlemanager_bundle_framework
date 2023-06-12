@@ -253,12 +253,14 @@ ErrCode InstalldProxy::MoveFile(const std::string &oldPath, const std::string &n
     return TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILE, data, reply, option);
 }
 
-ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);

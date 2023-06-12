@@ -275,7 +275,9 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = CopyFile(oldPath, newPath);
+    std::string signatureFilePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyFile(oldPath, newPath, signatureFilePath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

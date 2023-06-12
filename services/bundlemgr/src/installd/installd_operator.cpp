@@ -926,6 +926,8 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
 bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir)
 {
+    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s", modulePath.c_str(),
+        signatureFileDir.c_str());
     if (signatureFileDir.empty()) {
         APP_LOGD("signature file dir is empty and does not need to verify code signature");
         return true;

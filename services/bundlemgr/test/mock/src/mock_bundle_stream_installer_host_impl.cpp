@@ -27,7 +27,6 @@ BundleStreamInstallerHostImpl::BundleStreamInstallerHostImpl(uint32_t installerI
     APP_LOGD("create bundle stream installer host impl instance");
     installerId_ = installerId;
     installedUid_ = installedUid;
-    isInstallStarted_ = true;
 }
 
 BundleStreamInstallerHostImpl::~BundleStreamInstallerHostImpl()
@@ -51,6 +50,11 @@ void BundleStreamInstallerHostImpl::UnInit()
 int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
 {
     isInstallSharedBundlesOnly_ = false;
+    return -1;
+}
+
+int BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName)
+{
     return -1;
 }
 

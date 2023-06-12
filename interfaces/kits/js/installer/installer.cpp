@@ -61,6 +61,8 @@ const std::string VERSION_CODE = "versionCode";
 const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
 const std::string ADDITIONAL_INFO = "additionalInfo";
+const std::string VERIFY_CODE_PARAM = "verifyCodeParam";
+const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
 
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
@@ -339,10 +341,12 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_INSTALL_WRONG_DATA_PROXY_URI},
         { IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
             ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION},
-        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
         { IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
         { IStatusReceiver::ERR_INSTALL_ISOLATION_MODE_FAILED, ERROR_INSTALL_WRONG_MODE_ISOLATION },
         { IStatusReceiver::ERR_UNINSTALL_DISALLOWED, ERROR_DISALLOW_UNINSTALL },
+        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED}
     };
 }
 
@@ -405,6 +409,55 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
             return false;
         }
         hashParams.emplace(key, value);
+    }
+    return true;
+}
+
+static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key, std::string &value)
+{
+    APP_LOGD("start to parse moduleName");
+    bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
+    if (!ret || key.empty()) {
+        APP_LOGE("param string moduleName is empty.");
+        return false;
+    }
+    APP_LOGD("ParseVerifyCodeParam moduleName is %{public}s.", key.c_str());
+
+    APP_LOGD("start to parse signatureFilePath");
+    ret = CommonFunc::ParseStringPropertyFromObject(env, args, SIGNATURE_FILE_PATH, true, value);
+    if (!ret || value.empty()) {
+        APP_LOGE("param string signatureFilePath is empty.");
+        return false;
+    }
+    APP_LOGD("ParseVerifyCodeParam signatureFilePath is %{public}s.", value.c_str());
+    return true;
+}
+
+static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::string, std::string> &verifyCodeParams)
+{
+    APP_LOGD("start to parse verifyCodeParams");
+    std::vector<napi_value> valueVec;
+    bool res = CommonFunc::ParsePropertyArray(env, args, VERIFY_CODE_PARAM, valueVec);
+    if (!res) {
+        APP_LOGW("verifyCodeParam type error, using default value.");
+        return true;
+    }
+    if (valueVec.empty()) {
+        APP_LOGW("verifyCodeParam is empty, using default value.");
+        return true;
+    }
+    for (const auto &property : valueVec) {
+        std::string key;
+        std::string value;
+        if (!ParseVerifyCodeParam(env, property, key, value)) {
+            APP_LOGE("parse verify code param failed");
+            return false;
+        }
+        if (verifyCodeParams.find(key) != verifyCodeParams.end()) {
+            APP_LOGE("moduleName(%{public}s) is duplicate", key.c_str());
+            return false;
+        }
+        verifyCodeParams.emplace(key, value);
     }
     return true;
 }
@@ -663,6 +716,9 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseHashParams(env, args, installParam.hashParams)) {
         return false;
     }
+    if (!ParseVerifyCodeParams(env, args, installParam.verifyCodeParams)) {
+        return false;
+    }
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -705,7 +761,9 @@ static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { ERR_APPEXECFWK_INSTALL_PARAM_ERROR, IStatusReceiver::ERR_INSTALL_PARAM_ERROR },
         { ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR },
         { ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
-        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT }
+        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT },
+        { ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID,
+            IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID}
     };
 }
 
@@ -836,7 +894,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 break;
             }
             if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("Parse installParam.hashParams failed");
+                APP_LOGE("Parse installParam failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
