@@ -51,7 +51,7 @@
                 "device_usage_statistics",
                 "display_manager",
                 "eventhandler",
-                "hicollie_native",
+                "hicollie",
                 "hilog_native",
                 "hisysevent_native",
                 "hitrace_native",
