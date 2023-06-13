@@ -89,6 +89,9 @@ ohos_unittest("BmsEventHandlerTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_EXTENSION" ]
+  }
 }
 
 ohos_unittest("BmsEventHandlerUnLockedTest") {
