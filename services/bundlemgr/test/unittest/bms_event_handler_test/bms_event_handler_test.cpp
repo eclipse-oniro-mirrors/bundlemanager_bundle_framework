@@ -645,7 +645,11 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     std::list<std::string> bundleDirs;
     handler->GetBundleDirFromScan(bundleDirs);
+    #ifdef USE_BUNDLE_EXTENSION
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
+    #else
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
+    #endif
     EXPECT_NE(iter, bundleDirs.end());
 }
 
