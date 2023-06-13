@@ -16,6 +16,7 @@ import("../../../appexecfwk.gni")
 
 config("bundlemgr_sdk_config") {
   include_dirs = [
+    "include",
     "include/app_control",
     "include/bundlemgr",
     "include/default_app",

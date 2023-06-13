@@ -19,6 +19,7 @@
 #include <string>
 
 #include "bundle_event_callback_interface.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_status_callback_interface.h"
 #include "clean_cache_callback_interface.h"
@@ -833,7 +834,7 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns true if message send successfully; returns false otherwise.
      */
-    bool SendTransactCmd(IBundleMgr::Message code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(BundleMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     /**
      * @brief Send a command message and then get a parcelable information object from the reply.
      * @param code Indicates the message code to be sent.
@@ -842,10 +843,10 @@ private:
      * @return Returns true if objects get successfully; returns false otherwise.
      */
     template <typename T>
-    bool GetParcelableInfo(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo);
+    bool GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
 
     template <typename T>
-    ErrCode GetParcelableInfoWithErrCode(IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo);
+    ErrCode GetParcelableInfoWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
     /**
      * @brief Send a command message and then get a vector of parcelable information objects from the reply.
      * @param code Indicates the message code to be sent.
@@ -854,19 +855,19 @@ private:
      * @return Returns true if the vector get successfully; returns false otherwise.
      */
     template <typename T>
-    bool GetParcelableInfos(IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+    bool GetParcelableInfos(BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos);
 
     template <typename T>
-    ErrCode GetParcelableInfosWithErrCode(IBundleMgr::Message code, MessageParcel &data,
+    ErrCode GetParcelableInfosWithErrCode(BundleMgrInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
 
     template<typename T>
     bool GetVectorFromParcelIntelligent(
-        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+        BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos);
 
     template<typename T>
     ErrCode GetVectorFromParcelIntelligentWithErrCode(
-        IBundleMgr::Message code, MessageParcel &data, std::vector<T> &parcelableInfos);
+        BundleMgrInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos);
 
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
@@ -876,7 +877,7 @@ private:
 
     template<typename T>
     bool GetBigParcelableInfo(
-        IBundleMgr::Message code, MessageParcel &data, T &parcelableInfo);
+        BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
 
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;

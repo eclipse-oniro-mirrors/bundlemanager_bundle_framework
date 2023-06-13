@@ -15,11 +15,11 @@
 
 #include "bundle_user_mgr_proxy.h"
 
+#include "app_log_wrapper.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
-
-#include "app_log_wrapper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -47,7 +47,7 @@ void BundleUserMgrProxy::CreateNewUser(int32_t userId)
 
     data.WriteInt32(static_cast<int32_t>(userId));
     SendRequest(
-        static_cast<int32_t>(IBundleUserMgr::Message::CREATE_USER), data, reply, option);
+        static_cast<int32_t>(BundleUserMgrInterfaceCode::CREATE_USER), data, reply, option);
 }
 
 void BundleUserMgrProxy::RemoveUser(int32_t userId)
@@ -63,7 +63,7 @@ void BundleUserMgrProxy::RemoveUser(int32_t userId)
 
     data.WriteInt32(static_cast<int32_t>(userId));
     SendRequest(
-        static_cast<int32_t>(IBundleUserMgr::Message::REMOVE_USER), data, reply, option);
+        static_cast<int32_t>(BundleUserMgrInterfaceCode::REMOVE_USER), data, reply, option);
 }
 
 bool BundleUserMgrProxy::SendRequest(const int32_t& code, MessageParcel& data, MessageParcel& reply,

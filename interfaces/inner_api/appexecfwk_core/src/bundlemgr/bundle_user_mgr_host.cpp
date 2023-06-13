@@ -15,10 +15,10 @@
 
 #include "bundle_user_mgr_host.h"
 
-#include "ipc_types.h"
-
 #include "app_log_wrapper.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "ipc_types.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -45,11 +45,11 @@ int BundleUserMgrHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case static_cast<uint32_t>(IBundleUserMgr::Message::CREATE_USER): {
+        case static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER): {
             HandleCreateNewUser(data, reply);
             break;
         }
-        case static_cast<uint32_t>(IBundleUserMgr::Message::REMOVE_USER): {
+        case static_cast<uint32_t>(BundleUserMgrInterfaceCode::REMOVE_USER): {
             HandleRemoveUser(data, reply);
             break;
         }
