@@ -54,6 +54,7 @@ struct FormInfo : public Parcelable {
     std::vector<std::string> portraitLayouts;
     std::vector<FormCustomizeData> customizeDatas;
     bool dataProxyEnabled = false;
+    bool isDynamic = true;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);
