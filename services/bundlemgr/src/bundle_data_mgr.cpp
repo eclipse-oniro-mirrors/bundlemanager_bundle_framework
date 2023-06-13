@@ -4939,7 +4939,7 @@ ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, cons
         }
     }
     if (!mimeType.empty()) {
-        item->second.SetMimeType(moduleName, abilityName, mimeType);
+        ret = item->second.SetMimeType(moduleName, abilityName, mimeType);
         if (ret != ERR_OK) {
             APP_LOGE("set mime type to app failed");
             return ret;

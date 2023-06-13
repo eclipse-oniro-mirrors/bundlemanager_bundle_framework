@@ -67,7 +67,7 @@ const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
 const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
-const std::string ABILITY_BACKUP_NAME = "MainAbility";
+const std::string ABILITY_BACKUP_NAME = "com.example.backuptest.entry.MainAbility";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
@@ -77,6 +77,7 @@ const std::string TYPE_002 = "VIDEO";
 const std::string TEST_BUNDLE_NAME = "bundleName";
 const std::string OVER_MAX_SIZE(300, 'x');
 const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
+const std::string EMPTY_STRING = "";
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
@@ -4976,5 +4977,107 @@ HWTEST_F(BmsBundleManagerTest, SetExtName_0400, Function | SmallTest | Level1)
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
     ret = innerBundleInfo.DelMimeType(wrongModuleName, ABILITY_NAME, mimeType);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0001
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetExtNameToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string extName = "ext";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.ext");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0002
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, wrongName, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, wrongName, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0004, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->DelExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, wrongName, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, wrongName, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS
