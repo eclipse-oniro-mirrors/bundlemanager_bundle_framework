@@ -4150,4 +4150,225 @@ HWTEST_F(BmsBundleInstallerTest, SetDirApl_0100, Function | SmallTest | Level0)
     ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
+
+/**
+ * @tc.number: GetHapFilesFromBundlePath_0100
+ * @tc.name: test GetHapFilesFromBundlePath, reach the max hap number 128, stop to add more
+ * @tc.desc: 1.test GetHapFilesFromBundlePath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, GetHapFilesFromBundlePath_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string currentPath = "/data/service/el2/100/hmdfs/account/data/com.example.backuptest";
+    std::vector<std::string> fileList = {"test1.hap"};
+    for (int i = 0; i < Constants::MAX_HAP_NUMBER; i++) {
+        fileList.emplace_back("test1.hap");
+    }
+    bundleUtil.MakeFsConfig("cjc.hap", 1, "/data/cjc");
+    bool res = bundleUtil.GetHapFilesFromBundlePath(currentPath, fileList);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1700
+ * @tc.name: test CreateInstallTempDir
+ * @tc.desc: 1.test type == DirType::SIG_FILE_DIR
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1700, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2022;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::SIG_FILE_DIR);
+    EXPECT_NE(res, "");
+}
+
+/**
+ * @tc.number: CreateFileDescriptor_100
+ * @tc.name: test CreateFileDescriptor
+ * @tc.desc: 1.test the length of the bundlePath exceeds maximum limitation
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptor_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    bundlePath.append(std::string(256, '/'));
+    long long offset = 0;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptor_200
+ * @tc.name: test CreateFileDescriptor
+ * @tc.desc: 1.test offset > 0
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptor_200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_NE(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptorForReadOnly_100
+ * @tc.name: test CreateFileDescriptorForReadOnly
+ * @tc.desc: 1.file is not real path
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptorForReadOnly_100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/cjc/testcjc.hap";
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptorForReadOnly_200
+ * @tc.name: test CreateFileDescriptorForReadOnly
+ * @tc.desc: 1.test offset > 0
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptorForReadOnly_200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_NE(ret, -1);
+}
+
+/**
+ * @tc.number: DeleteDir_100
+ * @tc.name: test DeleteDir
+ * @tc.desc: 1.file exist
+ */
+HWTEST_F(BmsBundleInstallerTest, DeleteDir_100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.DeleteDir(bundlePath);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateDir_100
+ * @tc.name: test CreateDir
+ * @tc.desc: 1.dir exist
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateDir_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.CreateDir(RESOURCE_ROOT_PATH);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_100
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    auto ret = bundleUtil.CopyFileToSecurityDir("", DirType::STREAM_INSTALL_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_200
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    auto ret = bundleUtil.CopyFileToSecurityDir("", DirType::STREAM_INSTALL_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_300
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_300, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    std::string bundlePath = Constants::HAP_COPY_PATH;
+    auto ret = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_NE(ret, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_400
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_400, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    std::string bundlePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
+    auto ret = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_500
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_500, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    std::string bundlePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
+    auto ret = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_600
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_600, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    std::string bundlePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
+    bundlePath.append("test");
+    auto ret = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+    bundlePath.append(Constants::PATH_SEPARATOR);
+    auto ret1 = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret1, "");
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_700
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_700, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    toDeletePaths.emplace_back("");
+    std::string bundlePath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
+    bundlePath.append("test").append(Constants::PATH_SEPARATOR).append("false");
+    auto ret = bundleUtil.CopyFileToSecurityDir(bundlePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+}
 } // OHOS
