@@ -26,6 +26,11 @@ using namespace testing::ext;
 using testing::_;
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 4;
+const std::string TEST_FILE_NAME = "/data/test/test.hap";
+} // namespace
+
 class BundleStreamInstallerHostMock : public BundleStreamInstallerHost {
 public:
     BundleStreamInstallerHostMock() = default;
@@ -82,7 +87,7 @@ void BmsStreamInstallerHostTest::TearDown() {}
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_001, TestSize.Level1)
 {
     auto size = static_cast<int32_t>(streamInstallerHost_->funcMap_.size());
-    EXPECT_EQ(size, 3);
+    EXPECT_EQ(size, FUNCTION_SIZE_OF_STREAM_INSTALL_HOST);
 }
 
 /**
@@ -159,10 +164,11 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_005, TestSize.Level1)
     uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM);
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
+    data.WriteString(TEST_FILE_NAME);
     MessageParcel reply;
     MessageOption option;
 
-    auto func = [](const std::string &hapName) -> int32_t { return -1; };
+    auto func = [](const std::string &fileName) -> int32_t { return -1; };
     EXPECT_CALL(*streamInstallerHost_, CreateStream(_)).Times(1).WillOnce(testing::Invoke(func));
 
     auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
@@ -185,6 +191,25 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_006, TestSize.Level1)
     MessageOption option;
     auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, IPC_STUB_UNKNOW_TRANS_ERR);
+}
+
+/**
+ * @tc.number: StreamInstallerHost_007
+ * @tc.name: OnRemoteRequest
+ * @tc.desc: 1.code is StreamMessage::CREATE_STREAM.
+ *           2.data is write interface token.
+ *           3.Failed to verify the returned result.
+ */
+HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_007, TestSize.Level1)
+{
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM);
+    MessageParcel data;
+    data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option;
+
+    auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
 }
 
 /**

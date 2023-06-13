@@ -61,7 +61,7 @@ const std::string VERSION_CODE = "versionCode";
 const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
 const std::string ADDITIONAL_INFO = "additionalInfo";
-const std::string VERIFY_CODE_PARAM = "verifyCodeParam";
+const std::string VERIFY_CODE_PARAM = "verifyCodeParams";
 const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
 
 constexpr int32_t FIRST_PARAM = 0;
@@ -439,11 +439,11 @@ static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::s
     std::vector<napi_value> valueVec;
     bool res = CommonFunc::ParsePropertyArray(env, args, VERIFY_CODE_PARAM, valueVec);
     if (!res) {
-        APP_LOGW("verifyCodeParam type error, using default value.");
+        APP_LOGW("verifyCodeParams type error, using default value.");
         return true;
     }
     if (valueVec.empty()) {
-        APP_LOGW("verifyCodeParam is empty, using default value.");
+        APP_LOGW("verifyCodeParams is empty, using default value.");
         return true;
     }
     for (const auto &property : valueVec) {
