@@ -1799,6 +1799,81 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: OverlayDataMgr_4200
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of BuildInternalOverlayConnection.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4200, Function | SmallTest | Level0)
+{
+    OverlayDataMgr overlayDataMgr;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetOverlayType(OVERLAY_INTERNAL_BUNDLE);
+    InnerModuleInfo moduleInfo;
+    moduleInfo.targetModuleName = TEST_MODULE_NAME;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    moduleInfo.moduleName = TEST_MODULE_NAME;
+    innerModuleInfos[TEST_PACK_AGE] = moduleInfo;
+    moduleInfo.moduleName = TEST_PACK_AGE;
+    moduleInfo.targetModuleName = TEST_PACK_AGE;
+    innerModuleInfos[TEST_MODULE_NAME] = moduleInfo;
+    oldInfo.AddInnerModuleInfo(innerModuleInfos);
+
+    ClearDataMgr();
+    BuildInternalOverlayConnection(TEST_MODULE_NAME, oldInfo, USERID);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: OverlayDataMgr_4300
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of QueryOverlayInnerBundleInfo.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4300, Function | SmallTest | Level0)
+{
+    OverlayDataMgr overlayDataMgr;
+    overlayDataMgr.dataMgr_ = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo info;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    overlayDataMgr.dataMgr_->bundleInfos_[NO_EXIST] = info;
+    bool ret = overlayDataMgr.QueryOverlayInnerBundleInfo(NO_EXIST, info);
+    auto iterator = overlayDataMgr.dataMgr_->bundleInfos_.find(NO_EXIST);
+    if (iterator != overlayDataMgr.dataMgr_->bundleInfos_.end()) {
+        overlayDataMgr.dataMgr_->bundleInfos_.erase(iterator);
+    }
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: OverlayDataMgr_4400
+ * @tc.name: test OverlayDataMgr.
+ * @tc.desc: 1.OverlayDataMgr of QueryOverlayInnerBundleInfo.
+ *           2.system run normally.
+ */
+HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_4400, Function | SmallTest | Level0)
+{
+    OverlayDataMgr overlayDataMgr;
+    overlayDataMgr.dataMgr_ = std::make_shared<BundleDataMgr>();
+    InnerBundleInfo info;
+    info.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfos[TEST_MODULE_NAME] = innerModuleInfo;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    overlayDataMgr.dataMgr_->bundleInfos_[NO_EXIST] = info;
+    std::vector<OverlayModuleInfo> overlayModuleInfo;
+    auto ret = overlayDataMgr.GetAllOverlayModuleInfo(NO_EXIST, overlayModuleInfo,
+        Constants::NOT_EXIST_USERID);
+    auto iterator = overlayDataMgr.dataMgr_->bundleInfos_.find(NO_EXIST);
+    if (iterator != overlayDataMgr.dataMgr_->bundleInfos_.end()) {
+        overlayDataMgr.dataMgr_->bundleInfos_.erase(iterator);
+    }
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: OverlayManagerHostImpl_0100
  * @tc.name: test overlayManagerHostImpl.
  * @tc.desc: 1.overlayManagerHostImpl of GetAllOverlayModuleInfo.
