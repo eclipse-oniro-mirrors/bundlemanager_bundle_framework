@@ -54,6 +54,11 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
         }
         installParam_.sharedBundleDirPaths.emplace_back(tempDir);
     }
+
+    tempSignatureFileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::SIG_FILE_DIR);
+    if (tempSignatureFileDir_.empty()) {
+        return false;
+    }
     return true;
 }
 
@@ -67,9 +72,10 @@ void BundleStreamInstallerHostImpl::UnInit()
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         BundleUtil::DeleteDir(path);
     }
+    BundleUtil::DeleteDir(tempSignatureFileDir_);
 }
 
-int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
+int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
@@ -78,24 +84,24 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != installedUid_ || isInstallStarted_) {
+    if (callingUid != installedUid_) {
         APP_LOGE("calling uid is inconsistent");
         return -1;
     }
 
-    if (!BundleUtil::CheckFileType(hapName, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::CheckFileType(hapName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+    if (!BundleUtil::CheckFileType(fileName, Constants::INSTALL_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(fileName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
         return -1;
     }
     // to prevent the hap copied to relevant path
-    if (hapName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
-        APP_LOGE("CreateStream failed due to invalid hapName");
+    if (fileName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateStream failed due to invalid fileName");
         return -1;
     }
-    std::string bundlePath = tempDir_ + hapName;
+    std::string filePath = tempDir_ + fileName;
     int32_t fd = -1;
-    if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
+    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
@@ -106,7 +112,51 @@ int BundleStreamInstallerHostImpl::CreateStream(const std::string &hapName)
     return fd;
 }
 
-int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
+int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::string &moduleName,
+    const std::string &fileName)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        APP_LOGE("CreateStream permission denied");
+        return -1;
+    }
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != installedUid_) {
+        APP_LOGE("calling uid is inconsistent");
+        return -1;
+    }
+
+    if (!BundleUtil::CheckFileType(fileName, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("file is not sig");
+        return -1;
+    }
+
+    auto iterator = installParam_.verifyCodeParams.find(moduleName);
+    if (iterator == installParam_.verifyCodeParams.end()) {
+        APP_LOGE("module name cannot be found");
+        return -1;
+    }
+
+    // to prevent the sig copied to relevant path
+    if (fileName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateStream failed due to invalid fileName");
+        return -1;
+    }
+    std::string filePath = tempSignatureFileDir_ + fileName;
+    int32_t fd = -1;
+    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
+        APP_LOGE("stream installer create file descriptor failed");
+    }
+
+    if (fd > 0) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        streamFdVec_.emplace_back(fd);
+        installParam_.verifyCodeParams.at(moduleName) = filePath;
+    }
+    return fd;
+}
+
+int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
         APP_LOGE("CreateSharedBundleStream permission denied");
@@ -114,13 +164,14 @@ int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &h
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    if (callingUid != installedUid_ || isInstallStarted_) {
+    if (callingUid != installedUid_) {
         APP_LOGE("calling uid is inconsistent");
         return -1;
     }
 
     if (!BundleUtil::CheckFileType(hspName, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::CheckFileType(hspName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        !BundleUtil::CheckFileType(hspName, Constants::INSTALL_SHARED_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(hspName, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
         return -1;
     }

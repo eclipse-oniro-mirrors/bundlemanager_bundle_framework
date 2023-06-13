@@ -1171,6 +1171,14 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_MIME_TYPES,
+        abilityInfo.supportMimeTypes,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     if (parseResult != ERR_OK) {
         APP_LOGE("AbilityInfo from_json error, error code : %{public}d", parseResult);
     }

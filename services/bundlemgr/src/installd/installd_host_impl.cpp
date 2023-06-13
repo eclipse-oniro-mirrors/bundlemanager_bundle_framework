@@ -28,6 +28,9 @@
 #include "aot/aot_executor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#if defined(CODE_SIGNATURE_ENABLE)
+#include "code_sign_utils.h"
+#endif
 #include "common_profile.h"
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
@@ -552,7 +555,8 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
@@ -568,6 +572,20 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         APP_LOGE("change mode failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
+
+    if (signatureFilePath.empty()) {
+        APP_LOGD("signature file path is empty and no need to process code signature");
+        return ERR_OK;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, newPath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
+    if (ret != ERR_OK) {
+        APP_LOGE("hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 
@@ -716,6 +734,7 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
 ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir)
 {
+    APP_LOGD("start to process the code signature for so files");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
@@ -727,7 +746,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, con
     }
     if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
         APP_LOGE("verify code signature failed");
-        return ERR_BUNDLEMANAGER_INSTALLD_CODE_SIGNATURE_FAILED;
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
     return ERR_OK;
 }

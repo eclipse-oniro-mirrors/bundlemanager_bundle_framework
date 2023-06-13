@@ -25,11 +25,15 @@ class IBundleStreamInstaller : public IRemoteBroker {
 public:
     DECLARE_INTERFACE_DESCRIPTOR(u"ohos.appexecfwk.BundleStreamInstaller");
 
-    virtual int CreateStream(const std::string &hapName)
+    virtual int32_t CreateStream(const std::string &fileName)
     {
         return Constants::DEFAULT_STREAM_FD;
     }
-    virtual int CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx)
+    virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName)
+    {
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    virtual int32_t CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx)
     {
         return Constants::DEFAULT_STREAM_FD;
     }

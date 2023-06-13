@@ -33,8 +33,9 @@ public:
     bool Init(const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver);
     virtual void UnInit() override;
 
-    virtual int CreateStream(const std::string &bundleName) override;
-    virtual int CreateSharedBundleStream(const std::string &bundleName, uint32_t sharedBundleIdx) override;
+    virtual int32_t CreateStream(const std::string &fileName) override;
+    virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName) override;
+    virtual int32_t CreateSharedBundleStream(const std::string &bundleName, uint32_t sharedBundleIdx) override;
     virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;
@@ -46,9 +47,9 @@ private:
     std::vector<int32_t> streamFdVec_;
     InstallParam installParam_;
     int32_t installedUid_;
-    bool isInstallStarted_ = false;
     sptr<IStatusReceiver> receiver_ = nullptr;
     bool isInstallSharedBundlesOnly_ = true;
+    std::string tempSignatureFileDir_;
     std::mutex fdVecMutex_;
 };
 } // AppExecFwk

@@ -4931,11 +4931,9 @@ ErrCode BundleDataMgr::SetExtNameOrMIMEToApp(const std::string &bundleName, cons
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     if (!extName.empty()) {
-        APP_LOGI("setting extName");
         item->second.SetExtName(moduleName, abilityName, extName);
     }
     if (!mimeType.empty()) {
-        APP_LOGI("setting mimeType");
         item->second.SetMimeType(moduleName, abilityName, mimeType);
     }
     if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
@@ -4983,7 +4981,6 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
     std::string uri = want.GetUriString();
     auto suffixIndex = uri.rfind('.');
     if (suffixIndex == std::string::npos) {
-        APP_LOGI("uri has not suffix");
         return false;
     }
     std::string suffix = uri.substr(suffixIndex + 1);

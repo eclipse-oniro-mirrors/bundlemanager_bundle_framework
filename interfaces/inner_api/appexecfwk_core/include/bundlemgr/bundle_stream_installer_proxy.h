@@ -29,8 +29,9 @@ public:
     explicit BundleStreamInstallerProxy(const sptr<IRemoteObject> &impl);
     virtual ~BundleStreamInstallerProxy() override;
 
-    virtual int CreateStream(const std::string &hapName) override;
-    virtual int CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx) override;
+    virtual int32_t CreateStream(const std::string &fileName) override;
+    virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName) override;
+    virtual int32_t CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx) override;
     virtual bool Install() override;
     virtual uint32_t GetInstallerId() const override;
     virtual void SetInstallerId(uint32_t installerId) override;

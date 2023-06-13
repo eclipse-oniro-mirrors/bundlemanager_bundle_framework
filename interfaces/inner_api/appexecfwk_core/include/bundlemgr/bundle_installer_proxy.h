@@ -113,10 +113,15 @@ public:
 private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
-    ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
+
+    ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
+        const std::string &moduleName = "");
 
     ErrCode WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
         const std::string &path, uint32_t index);
+
+    ErrCode CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
+        const InstallParam &installParam);
 
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };
