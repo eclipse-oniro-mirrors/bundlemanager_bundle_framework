@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "datetime_ex.h"
@@ -64,165 +65,246 @@ BundleMgrHost::BundleMgrHost()
 
 void BundleMgrHost::init()
 {
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO, &BundleMgrHost::HandleGetApplicationInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO),
+        &BundleMgrHost::HandleGetApplicationInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetApplicationInfoWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS, &BundleMgrHost::HandleGetApplicationInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS),
+        &BundleMgrHost::HandleGetApplicationInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFO_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetApplicationInfoWithIntFlagsV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetApplicationInfosWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetApplicationInfosWithIntFlagsV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO, &BundleMgrHost::HandleGetBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetBundleInfoWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetBundleInfoWithIntFlagsV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO, &BundleMgrHost::HandleGetBundlePackInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO),
+        &BundleMgrHost::HandleGetBundlePackInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetBundlePackInfoWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS, &BundleMgrHost::HandleGetBundleInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS),
+        &BundleMgrHost::HandleGetBundleInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetBundleInfosWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_NAME_FOR_UID, &BundleMgrHost::HandleGetBundleNameForUid);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLES_FOR_UID, &BundleMgrHost::HandleGetBundlesForUid);
-    funcMap_.emplace(IBundleMgr::Message::GET_NAME_FOR_UID, &BundleMgrHost::HandleGetNameForUid);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_GIDS, &BundleMgrHost::HandleGetBundleGids);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_GIDS_BY_UID, &BundleMgrHost::HandleGetBundleGidsByUid);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFOS_BY_METADATA,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_NAME_FOR_UID),
+        &BundleMgrHost::HandleGetBundleNameForUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLES_FOR_UID),
+        &BundleMgrHost::HandleGetBundlesForUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_NAME_FOR_UID),
+        &BundleMgrHost::HandleGetNameForUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS),
+        &BundleMgrHost::HandleGetBundleGids);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_GIDS_BY_UID),
+        &BundleMgrHost::HandleGetBundleGidsByUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFOS_BY_METADATA),
         &BundleMgrHost::HandleGetBundleInfosByMetaData);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO, &BundleMgrHost::HandleQueryAbilityInfo);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_MUTI_PARAM,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO),
+        &BundleMgrHost::HandleQueryAbilityInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_MUTI_PARAM),
         &BundleMgrHost::HandleQueryAbilityInfoMutiparam);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS, &BundleMgrHost::HandleQueryAbilityInfos);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_MUTI_PARAM,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS),
+        &BundleMgrHost::HandleQueryAbilityInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_MUTI_PARAM),
         &BundleMgrHost::HandleQueryAbilityInfosMutiparam);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_V9, &BundleMgrHost::HandleQueryAbilityInfosV9);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_LAUNCHER_ABILITY_INFO, &BundleMgrHost::HandleQueryLauncherAbilityInfos);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ALL_ABILITY_INFOS, &BundleMgrHost::HandleQueryAllAbilityInfos);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI, &BundleMgrHost::HandleQueryAbilityInfoByUri);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFOS_BY_URI, &BundleMgrHost::HandleQueryAbilityInfosByUri);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_BY_URI_FOR_USERID,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_V9),
+        &BundleMgrHost::HandleQueryAbilityInfosV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_LAUNCHER_ABILITY_INFO),
+        &BundleMgrHost::HandleQueryLauncherAbilityInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ALL_ABILITY_INFOS),
+        &BundleMgrHost::HandleQueryAllAbilityInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI),
+        &BundleMgrHost::HandleQueryAbilityInfoByUri);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFOS_BY_URI),
+        &BundleMgrHost::HandleQueryAbilityInfosByUri);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_BY_URI_FOR_USERID),
         &BundleMgrHost::HandleQueryAbilityInfoByUriForUserId);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_KEEPALIVE_BUNDLE_INFOS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_KEEPALIVE_BUNDLE_INFOS),
         &BundleMgrHost::HandleQueryKeepAliveBundleInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_LABEL, &BundleMgrHost::HandleGetAbilityLabel);
-    funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_LABEL_WITH_MODULE_NAME,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL),
+        &BundleMgrHost::HandleGetAbilityLabel);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_LABEL_WITH_MODULE_NAME),
         &BundleMgrHost::HandleGetAbilityLabelWithModuleName);
-    funcMap_.emplace(IBundleMgr::Message::CHECK_IS_SYSTEM_APP_BY_UID, &BundleMgrHost::HandleCheckIsSystemAppByUid);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO, &BundleMgrHost::HandleGetBundleArchiveInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_IS_SYSTEM_APP_BY_UID),
+        &BundleMgrHost::HandleCheckIsSystemAppByUid);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO),
+        &BundleMgrHost::HandleGetBundleArchiveInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS),
         &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlags);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9),
         &BundleMgrHost::HandleGetBundleArchiveInfoWithIntFlagsV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO, &BundleMgrHost::HandleGetHapModuleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_LAUNCH_WANT_FOR_BUNDLE, &BundleMgrHost::HandleGetLaunchWantForBundle);
-    funcMap_.emplace(IBundleMgr::Message::GET_PERMISSION_DEF, &BundleMgrHost::HandleGetPermissionDef);
-    funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_CACHE_FILES, &BundleMgrHost::HandleCleanBundleCacheFiles);
-    funcMap_.emplace(IBundleMgr::Message::CLEAN_BUNDLE_DATA_FILES, &BundleMgrHost::HandleCleanBundleDataFiles);
-    funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_STATUS_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO),
+        &BundleMgrHost::HandleGetHapModuleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_LAUNCH_WANT_FOR_BUNDLE),
+        &BundleMgrHost::HandleGetLaunchWantForBundle);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PERMISSION_DEF),
+        &BundleMgrHost::HandleGetPermissionDef);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_CACHE_FILES),
+        &BundleMgrHost::HandleCleanBundleCacheFiles);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAN_BUNDLE_DATA_FILES),
+        &BundleMgrHost::HandleCleanBundleDataFiles);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_STATUS_CALLBACK),
         &BundleMgrHost::HandleRegisterBundleStatusCallback);
-    funcMap_.emplace(IBundleMgr::Message::REGISTER_BUNDLE_EVENT_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::REGISTER_BUNDLE_EVENT_CALLBACK),
         &BundleMgrHost::HandleRegisterBundleEventCallback);
-    funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_EVENT_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_EVENT_CALLBACK),
         &BundleMgrHost::HandleUnregisterBundleEventCallback);
-    funcMap_.emplace(IBundleMgr::Message::CLEAR_BUNDLE_STATUS_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CLEAR_BUNDLE_STATUS_CALLBACK),
         &BundleMgrHost::HandleClearBundleStatusCallback);
-    funcMap_.emplace(IBundleMgr::Message::UNREGISTER_BUNDLE_STATUS_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UNREGISTER_BUNDLE_STATUS_CALLBACK),
         &BundleMgrHost::HandleUnregisterBundleStatusCallback);
-    funcMap_.emplace(IBundleMgr::Message::IS_APPLICATION_ENABLED, &BundleMgrHost::HandleIsApplicationEnabled);
-    funcMap_.emplace(IBundleMgr::Message::SET_APPLICATION_ENABLED, &BundleMgrHost::HandleSetApplicationEnabled);
-    funcMap_.emplace(IBundleMgr::Message::IS_ABILITY_ENABLED, &BundleMgrHost::HandleIsAbilityEnabled);
-    funcMap_.emplace(IBundleMgr::Message::SET_ABILITY_ENABLED, &BundleMgrHost::HandleSetAbilityEnabled);
-    funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_INFO, &BundleMgrHost::HandleGetAbilityInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_ABILITY_INFO_WITH_MODULE_NAME,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleIsApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_APPLICATION_ENABLED),
+        &BundleMgrHost::HandleSetApplicationEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_ABILITY_ENABLED),
+        &BundleMgrHost::HandleIsAbilityEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ABILITY_ENABLED),
+        &BundleMgrHost::HandleSetAbilityEnabled);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO),
+        &BundleMgrHost::HandleGetAbilityInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ABILITY_INFO_WITH_MODULE_NAME),
         &BundleMgrHost::HandleGetAbilityInfoWithModuleName);
-    funcMap_.emplace(IBundleMgr::Message::DUMP_INFOS, &BundleMgrHost::HandleDumpInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INSTALLER, &BundleMgrHost::HandleGetBundleInstaller);
-    funcMap_.emplace(IBundleMgr::Message::GET_ALL_FORMS_INFO, &BundleMgrHost::HandleGetAllFormsInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_APP, &BundleMgrHost::HandleGetFormsInfoByApp);
-    funcMap_.emplace(IBundleMgr::Message::GET_FORMS_INFO_BY_MODULE, &BundleMgrHost::HandleGetFormsInfoByModule);
-    funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO, &BundleMgrHost::HandleGetShortcutInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_SHORTCUT_INFO_V9, &BundleMgrHost::HandleGetShortcutInfoV9);
-    funcMap_.emplace(IBundleMgr::Message::GET_ALL_COMMON_EVENT_INFO, &BundleMgrHost::HandleGetAllCommonEventInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_USER_MGR, &BundleMgrHost::HandleGetBundleUserMgr);
-    funcMap_.emplace(IBundleMgr::Message::GET_DISTRIBUTE_BUNDLE_INFO, &BundleMgrHost::HandleGetDistributedBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPLICATION_PRIVILEGE_LEVEL, &BundleMgrHost::HandleGetAppPrivilegeLevel);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::DUMP_INFOS),
+        &BundleMgrHost::HandleDumpInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INSTALLER),
+        &BundleMgrHost::HandleGetBundleInstaller);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_FORMS_INFO),
+        &BundleMgrHost::HandleGetAllFormsInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_APP),
+        &BundleMgrHost::HandleGetFormsInfoByApp);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_FORMS_INFO_BY_MODULE),
+        &BundleMgrHost::HandleGetFormsInfoByModule);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO),
+        &BundleMgrHost::HandleGetShortcutInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHORTCUT_INFO_V9),
+        &BundleMgrHost::HandleGetShortcutInfoV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_COMMON_EVENT_INFO),
+        &BundleMgrHost::HandleGetAllCommonEventInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_USER_MGR),
+        &BundleMgrHost::HandleGetBundleUserMgr);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DISTRIBUTE_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetDistributedBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPLICATION_PRIVILEGE_LEVEL),
+        &BundleMgrHost::HandleGetAppPrivilegeLevel);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE),
         &BundleMgrHost::HandleQueryExtAbilityInfosWithoutType);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9),
         &BundleMgrHost::HandleQueryExtAbilityInfosWithoutTypeV9);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO, &BundleMgrHost::HandleQueryExtAbilityInfos);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_V9, &BundleMgrHost::HandleQueryExtAbilityInfosV9);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_INFO_BY_TYPE,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO),
+        &BundleMgrHost::HandleQueryExtAbilityInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_V9),
+        &BundleMgrHost::HandleQueryExtAbilityInfosV9);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_INFO_BY_TYPE),
         &BundleMgrHost::HandleQueryExtAbilityInfosByType);
-    funcMap_.emplace(IBundleMgr::Message::VERIFY_CALLING_PERMISSION, &BundleMgrHost::HandleVerifyCallingPermission);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_EXTENSION_ABILITY_INFO_BY_URI,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_CALLING_PERMISSION),
+        &BundleMgrHost::HandleVerifyCallingPermission);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_BY_URI),
         &BundleMgrHost::HandleQueryExtensionAbilityInfoByUri);
-    funcMap_.emplace(IBundleMgr::Message::GET_APPID_BY_BUNDLE_NAME, &BundleMgrHost::HandleGetAppIdByBundleName);
-    funcMap_.emplace(IBundleMgr::Message::GET_APP_TYPE, &BundleMgrHost::HandleGetAppType);
-    funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByBundleName);
-    funcMap_.emplace(IBundleMgr::Message::IS_MODULE_REMOVABLE, &BundleMgrHost::HandleIsModuleRemovable);
-    funcMap_.emplace(IBundleMgr::Message::SET_MODULE_REMOVABLE, &BundleMgrHost::HandleSetModuleRemovable);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_ABILITY_INFO_WITH_CALLBACK,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APPID_BY_BUNDLE_NAME),
+        &BundleMgrHost::HandleGetAppIdByBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_TYPE),
+        &BundleMgrHost::HandleGetAppType);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_BUNDLE_NAME),
+        &BundleMgrHost::HandleGetUidByBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_REMOVABLE),
+        &BundleMgrHost::HandleIsModuleRemovable);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_REMOVABLE),
+        &BundleMgrHost::HandleSetModuleRemovable);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_ABILITY_INFO_WITH_CALLBACK),
         &BundleMgrHost::HandleQueryAbilityInfoWithCallback);
-    funcMap_.emplace(IBundleMgr::Message::UPGRADE_ATOMIC_SERVICE, &BundleMgrHost::HandleUpgradeAtomicService);
-    funcMap_.emplace(IBundleMgr::Message::IS_MODULE_NEED_UPDATE, &BundleMgrHost::HandleGetModuleUpgradeFlag);
-    funcMap_.emplace(IBundleMgr::Message::SET_MODULE_NEED_UPDATE, &BundleMgrHost::HandleSetModuleUpgradeFlag);
-    funcMap_.emplace(IBundleMgr::Message::GET_HAP_MODULE_INFO_WITH_USERID,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::UPGRADE_ATOMIC_SERVICE),
+        &BundleMgrHost::HandleUpgradeAtomicService);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IS_MODULE_NEED_UPDATE),
+        &BundleMgrHost::HandleGetModuleUpgradeFlag);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_MODULE_NEED_UPDATE),
+        &BundleMgrHost::HandleSetModuleUpgradeFlag);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_HAP_MODULE_INFO_WITH_USERID),
         &BundleMgrHost::HandleGetHapModuleInfoWithUserId);
-    funcMap_.emplace(IBundleMgr::Message::IMPLICIT_QUERY_INFO_BY_PRIORITY,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFO_BY_PRIORITY),
         &BundleMgrHost::HandleImplicitQueryInfoByPriority);
-    funcMap_.emplace(IBundleMgr::Message::IMPLICIT_QUERY_INFOS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::IMPLICIT_QUERY_INFOS),
         &BundleMgrHost::HandleImplicitQueryInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_ALL_DEPENDENT_MODULE_NAMES,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_DEPENDENT_MODULE_NAMES),
         &BundleMgrHost::HandleGetAllDependentModuleNames);
-    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_BUNDLE_INFO, &BundleMgrHost::HandleGetSandboxBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::QUERY_CALLING_BUNDLE_NAME, &BundleMgrHost::HandleObtainCallingBundleName);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_STATS, &BundleMgrHost::HandleGetBundleStats);
-    funcMap_.emplace(IBundleMgr::Message::CHECK_ABILITY_ENABLE_INSTALL,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetSandboxBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_CALLING_BUNDLE_NAME),
+        &BundleMgrHost::HandleObtainCallingBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_STATS),
+        &BundleMgrHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_ABILITY_ENABLE_INSTALL),
         &BundleMgrHost::HandleCheckAbilityEnableInstall);
-    funcMap_.emplace(IBundleMgr::Message::GET_STRING_BY_ID, &BundleMgrHost::HandleGetStringById);
-    funcMap_.emplace(IBundleMgr::Message::GET_ICON_BY_ID, &BundleMgrHost::HandleGetIconById);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_STRING_BY_ID),
+        &BundleMgrHost::HandleGetStringById);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ICON_BY_ID),
+        &BundleMgrHost::HandleGetIconById);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    funcMap_.emplace(IBundleMgr::Message::GET_DEFAULT_APP_PROXY, &BundleMgrHost::HandleGetDefaultAppProxy);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEFAULT_APP_PROXY),
+        &BundleMgrHost::HandleGetDefaultAppProxy);
 #endif
-    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_ABILITY_INFO, &BundleMgrHost::HandleGetSandboxAbilityInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_APP_EXTENSION_INFOS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_ABILITY_INFO),
+        &BundleMgrHost::HandleGetSandboxAbilityInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_APP_EXTENSION_INFOS),
         &BundleMgrHost::HandleGetSandboxExtAbilityInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_SANDBOX_MODULE_INFO, &BundleMgrHost::HandleGetSandboxHapModuleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_MEDIA_DATA, &BundleMgrHost::HandleGetMediaData);
-    funcMap_.emplace(IBundleMgr::Message::GET_QUICK_FIX_MANAGER_PROXY, &BundleMgrHost::HandleGetQuickFixManagerProxy);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SANDBOX_MODULE_INFO),
+        &BundleMgrHost::HandleGetSandboxHapModuleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_MEDIA_DATA),
+        &BundleMgrHost::HandleGetMediaData);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_QUICK_FIX_MANAGER_PROXY),
+        &BundleMgrHost::HandleGetQuickFixManagerProxy);
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    funcMap_.emplace(IBundleMgr::Message::GET_APP_CONTROL_PROXY, &BundleMgrHost::HandleGetAppControlProxy);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_CONTROL_PROXY),
+        &BundleMgrHost::HandleGetAppControlProxy);
 #endif
-    funcMap_.emplace(IBundleMgr::Message::SET_DEBUG_MODE, &BundleMgrHost::HandleSetDebugMode);
-    funcMap_.emplace(IBundleMgr::Message::GET_BUNDLE_INFO_FOR_SELF, &BundleMgrHost::HandleGetBundleInfoForSelf);
-    funcMap_.emplace(IBundleMgr::Message::VERIFY_SYSTEM_API, &BundleMgrHost::HandleVerifySystemApi);
-    funcMap_.emplace(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY, &BundleMgrHost::HandleGetOverlayManagerProxy);
-    funcMap_.emplace(IBundleMgr::Message::SILENT_INSTALL, &BundleMgrHost::HandleSilentInstall);
-    funcMap_.emplace(IBundleMgr::Message::PROCESS_PRELOAD, &BundleMgrHost::HandleProcessPreload);
-    funcMap_.emplace(IBundleMgr::Message::GET_APP_PROVISION_INFO, &BundleMgrHost::HandleGetAppProvisionInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_PROVISION_METADATA, &BundleMgrHost::HandleGetProvisionMetadata);
-    funcMap_.emplace(IBundleMgr::Message::GET_BASE_SHARED_BUNDLE_INFOS,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_DEBUG_MODE),
+        &BundleMgrHost::HandleSetDebugMode);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_FOR_SELF),
+        &BundleMgrHost::HandleGetBundleInfoForSelf);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::VERIFY_SYSTEM_API),
+        &BundleMgrHost::HandleVerifySystemApi);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY),
+        &BundleMgrHost::HandleGetOverlayManagerProxy);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SILENT_INSTALL),
+        &BundleMgrHost::HandleSilentInstall);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::PROCESS_PRELOAD),
+        &BundleMgrHost::HandleProcessPreload);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_APP_PROVISION_INFO),
+        &BundleMgrHost::HandleGetAppProvisionInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROVISION_METADATA),
+        &BundleMgrHost::HandleGetProvisionMetadata);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BASE_SHARED_BUNDLE_INFOS),
         &BundleMgrHost::HandleGetBaseSharedBundleInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_ALL_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetAllSharedBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO, &BundleMgrHost::HandleGetSharedBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_SHARED_BUNDLE_INFO_BY_SELF,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_SHARED_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetAllSharedBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetSharedBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_BUNDLE_INFO_BY_SELF),
         &BundleMgrHost::HandleGetSharedBundleInfoBySelf);
-    funcMap_.emplace(IBundleMgr::Message::GET_SHARED_DEPENDENCIES, &BundleMgrHost::HandleGetSharedDependencies);
-    funcMap_.emplace(IBundleMgr::Message::GET_DEPENDENT_BUNDLE_INFO, &BundleMgrHost::HandleGetDependentBundleInfo);
-    funcMap_.emplace(IBundleMgr::Message::GET_UID_BY_DEBUG_BUNDLE_NAME, &BundleMgrHost::HandleGetUidByDebugBundleName);
-    funcMap_.emplace(IBundleMgr::Message::GET_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetProxyDataInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_ALL_PROXY_DATA_INFOS, &BundleMgrHost::HandleGetAllProxyDataInfos);
-    funcMap_.emplace(IBundleMgr::Message::GET_SPECIFIED_DISTRIBUTED_TYPE,
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SHARED_DEPENDENCIES),
+        &BundleMgrHost::HandleGetSharedDependencies);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_DEPENDENT_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetDependentBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UID_BY_DEBUG_BUNDLE_NAME),
+        &BundleMgrHost::HandleGetUidByDebugBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PROXY_DATA_INFOS),
+        &BundleMgrHost::HandleGetProxyDataInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ALL_PROXY_DATA_INFOS),
+        &BundleMgrHost::HandleGetAllProxyDataInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_SPECIFIED_DISTRIBUTED_TYPE),
         &BundleMgrHost::HandleGetSpecifiedDistributionType);
-    funcMap_.emplace(IBundleMgr::Message::GET_ADDITIONAL_INFO, &BundleMgrHost::HandleGetAdditionalInfo);
-    funcMap_.emplace(IBundleMgr::SET_EXT_NAME_OR_MIME_TO_APP, &BundleMgrHost::HandleSetExtNameOrMIMEToApp);
-    funcMap_.emplace(IBundleMgr::DEL_EXT_NAME_OR_MIME_TO_APP, &BundleMgrHost::HandleDelExtNameOrMIMEToApp);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_ADDITIONAL_INFO),
+        &BundleMgrHost::HandleGetAdditionalInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_EXT_NAME_OR_MIME_TO_APP),
+        &BundleMgrHost::HandleSetExtNameOrMIMEToApp);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::DEL_EXT_NAME_OR_MIME_TO_APP),
+        &BundleMgrHost::HandleDelExtNameOrMIMEToApp);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)

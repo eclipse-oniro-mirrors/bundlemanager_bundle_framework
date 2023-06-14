@@ -17,13 +17,13 @@
 
 #include <map>
 
+#include "app_log_wrapper.h"
+#include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
+#include "bundle_mgr_service.h"
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
-
-#include "app_log_wrapper.h"
-#include "appexecfwk_errors.h"
-#include "bundle_mgr_service.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -206,6 +206,8 @@ const char* MSG_ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME =
 const char* MSG_ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR =
     "[ERR_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_DIR]";
 const char* MSG_ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME = "[MSG_ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME]";
+const char* MSG_ERR_INSTALL_CODE_SIGNATURE_FAILED = "[MSG_ERR_INSTALL_CODE_SIGNATURE_FAILED]";
+const char* MSG_ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID = "[MSG_ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID]";
 
 const std::map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
     {ERR_OK, {IStatusReceiver::SUCCESS, MSG_SUCCESS}},
@@ -525,6 +527,10 @@ const std::map<int32_t, struct ReceivedResult> MAP_RECEIVED_RESULTS {
         {IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME, MSG_ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME}},
     {ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED,
         {IStatusReceiver::ERR_INSTALL_ISOLATION_MODE_FAILED, MSG_ERR_INSTALL_ISOLATION_MODE_FAILED}},
+    {ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED,
+        {IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, MSG_ERR_INSTALL_CODE_SIGNATURE_FAILED}},
+    {ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID,
+        {IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, MSG_ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID}}
 };
 }  // namespace
 
@@ -562,7 +568,7 @@ void StatusReceiverProxy::OnStatusNotify(const int32_t progress)
     }
 
     int32_t ret =
-        remote->SendRequest(static_cast<int32_t>(IStatusReceiver::Message::ON_STATUS_NOTIFY), data, reply, option);
+        remote->SendRequest(static_cast<int32_t>(StatusReceiverInterfaceCode::ON_STATUS_NOTIFY), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to call OnStatusNotify, for transact is failed, error code is: %{public}d", ret);
     }
@@ -597,7 +603,8 @@ void StatusReceiverProxy::OnFinished(const int32_t resultCode, const std::string
         return;
     }
 
-    int32_t ret = remote->SendRequest(static_cast<int32_t>(IStatusReceiver::Message::ON_FINISHED), data, reply, option);
+    int32_t ret = remote->SendRequest(
+        static_cast<int32_t>(StatusReceiverInterfaceCode::ON_FINISHED), data, reply, option);
     if (ret != NO_ERROR) {
         APP_LOGE("fail to call OnFinished, for transact is failed, error code is: %{public}d", ret);
     }

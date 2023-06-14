@@ -18,6 +18,7 @@
 
 #include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
+#include "bundle_mgr_service.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_rdb.h"
 #endif
@@ -26,6 +27,7 @@
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
+using namespace OHOS;
 
 namespace {
 const std::string DB_PATH = "/data/test/";
@@ -314,6 +316,87 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0300, Function | SmallTest | Level
     defaultAppRdb.rdbDataManager_ = nullptr;
     bool ret = defaultAppRdb.SetDefaultApplicationInfo(Constants::INVALID_UID, "", element);
     EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: DefaultAppRdb_0400
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfo
+ *           2.GetDefaultApplicationInfo
+ *           3.DeleteDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0400, Function | SmallTest | Level1)
+{
+    std::unique_ptr<IDefaultAppDb> defaultAppDb = std::make_unique<DefaultAppRdb>();
+    Element element1;
+    element1.bundleName = TEST_BUNDLE_NAME;
+    bool ret = defaultAppDb->SetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element1);
+    EXPECT_TRUE(ret);
+
+    Element element2;
+    ret = defaultAppDb->GetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element2);
+    EXPECT_TRUE(ret);
+
+    bool isDefaultApp = false;
+    ErrCode res = DefaultAppMgr::GetInstance().IsDefaultApplication(TEST_USERID, TEST_DEFAULT_APP_TYPE, isDefaultApp);
+    EXPECT_EQ(res, ERR_OK);
+
+    ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DefaultAppRdb_0600
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfo
+ *           2.GetDefaultApplicationInfo
+ *           3.DeleteDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0500, Function | SmallTest | Level1)
+{
+    std::unique_ptr<IDefaultAppDb> defaultAppDb = std::make_unique<DefaultAppRdb>();
+    Element element1;
+    element1.bundleName = TEST_BUNDLE_NAME;
+    bool ret = defaultAppDb->SetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element1);
+    EXPECT_TRUE(ret);
+
+    Element element2;
+    ret = defaultAppDb->GetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element2);
+    EXPECT_TRUE(ret);
+
+    DefaultAppMgr::GetInstance().HandleUninstallBundle(TEST_USERID, "");
+    ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: DefaultAppRdb_0600
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfo
+ *           2.GetDefaultApplicationInfo
+ *           3.DeleteDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0600, Function | SmallTest | Level1)
+{
+    std::unique_ptr<IDefaultAppDb> defaultAppDb = std::make_unique<DefaultAppRdb>();
+    Element element1;
+    element1.bundleName = TEST_BUNDLE_NAME;
+    bool ret = defaultAppDb->SetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element1);
+    EXPECT_TRUE(ret);
+
+    Element element2;
+    ret = defaultAppDb->GetDefaultApplicationInfo(TEST_USERID, TEST_DEFAULT_APP_TYPE, element2);
+    EXPECT_TRUE(ret);
+
+    BundleInfo bundleInfo;
+    ErrCode res = DefaultAppMgr::GetInstance().GetBundleInfoByAppType(TEST_USERID, TEST_DEFAULT_APP_TYPE, bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_DEFAULT_APP_NOT_EXIST);
+
+    ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
+    EXPECT_TRUE(ret);
 }
 #endif
 }  // namespace

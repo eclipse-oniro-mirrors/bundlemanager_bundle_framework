@@ -42,6 +42,7 @@ constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
+constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
 constexpr const char* SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
 constexpr const char* THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
@@ -164,6 +165,7 @@ constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";

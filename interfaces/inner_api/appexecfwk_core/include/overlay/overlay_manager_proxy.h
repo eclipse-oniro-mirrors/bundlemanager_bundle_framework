@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_OVERLAY_MANAGER_PROXY_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_OVERLAY_MANAGER_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "overlay_manager_interface.h"
 #include "iremote_proxy.h"
 
@@ -56,13 +57,13 @@ public:
 
 private:
     template<typename T>
-    ErrCode GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo);
+    ErrCode GetParcelableInfo(OverlayManagerInterfaceCode code, MessageParcel &data, T &parcelableInfo);
 
     template<typename T>
-    ErrCode GetParcelableInfosWithErrCode(IOverlayManager::Message code, MessageParcel &data,
+    ErrCode GetParcelableInfosWithErrCode(OverlayManagerInterfaceCode code, MessageParcel &data,
         std::vector<T> &parcelableInfos);
 
-    bool SendTransactCmd(IOverlayManager::Message code, MessageParcel &data, MessageParcel &reply);
+    bool SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<OverlayManagerProxy> delegator_;
 };

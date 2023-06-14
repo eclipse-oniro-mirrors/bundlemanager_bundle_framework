@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_PROXY_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_INCLUDE_QUICK_FIX_MANAGER_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "quick_fix_manager_interface.h"
 #include "iremote_proxy.h"
 
@@ -40,7 +41,7 @@ public:
 
 private:
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
-    bool SendRequest(IQuickFixManager::Message code, MessageParcel &data, MessageParcel &reply);
+    bool SendRequest(QuickFixManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<QuickFixManagerProxy> delegator_;
 };

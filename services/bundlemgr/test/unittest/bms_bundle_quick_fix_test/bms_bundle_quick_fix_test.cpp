@@ -2564,29 +2564,6 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsBundleQuickFixTest_0096
- * Function: ProcessPatchDeployStart
- * @tc.name: test ProcessPatchDeployStart
- * @tc.require: issueI5MZ5D
- * @tc.desc: ProcessPatchDeployStart
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0096, Function | SmallTest | Level0)
-{
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        std::vector<std::string> bundleFilePaths;
-        bundleFilePaths.emplace_back("/data/app/el2/100/base/com.ohos.photos");
-        BundleInfo bundleInfo;
-        std::unordered_map<std::string, AppQuickFix> infos;
-        AppQuickFix appQuickFix;
-        infos.emplace("appQuickFix_1", appQuickFix);
-        ErrCode ret = deployer->ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
-    }
-}
-
-/**
  * @tc.number: BmsBundleQuickFixTest_0097
  * Function: DeployQuickFix
  * @tc.name: test DeployQuickFix

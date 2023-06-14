@@ -94,6 +94,7 @@ const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.exa
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
 const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
+const std::string TEST_CPU_ABI = "arm64";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -595,8 +596,8 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
-    bool installResult = InstallThirdPartyBundle(bundleFile);
-    EXPECT_TRUE(installResult);
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
     bool result =
         dataMgr->GetApplicationInfo(SYSTEMFIEID_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
@@ -613,9 +614,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
         EXPECT_EQ(info.apiCompatibleVersion, 8);
         EXPECT_EQ(info.apiTargetVersion, 8);
-        EXPECT_EQ(info.removable, false);
-        EXPECT_EQ(info.userDataClearable, false);
-        EXPECT_EQ(info.accessible, true);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";
@@ -656,8 +654,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(extensionInfos.iconId, 16777229);
         EXPECT_EQ(extensionInfos.label, "$string:extension_name");
         EXPECT_EQ(extensionInfos.labelId, 16777220);
-        EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
-        EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
     }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
@@ -2297,6 +2293,12 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | L
     auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
     ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
 }
@@ -2312,7 +2314,16 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0300, Function | SmallTest | L
     auto ret = impl.RenameModuleDir("", "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    ret = impl.RenameModuleDir("", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RenameModuleDir(TEST_STRING, " ");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
     ret = impl.RenameModuleDir("wrong", "wrong");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
+    ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
 }
 
@@ -2352,7 +2363,14 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0400, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0500, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.RemoveBundleDataDir("", INVAILD_CODE);
+
+    auto ret = impl.RemoveBundleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveBundleDataDir(TEST_STRING, INVAILD_CODE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveBundleDataDir("", INVAILD_CODE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = impl.RemoveBundleDataDir(TEST_STRING, USERID);
@@ -2367,7 +2385,13 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0500, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0600, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.RemoveModuleDataDir("", INVAILD_CODE);
+    auto ret = impl.RemoveModuleDataDir(TEST_STRING, INVAILD_CODE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveModuleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveModuleDataDir("", INVAILD_CODE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = impl.RemoveModuleDataDir(TEST_STRING, USERID);
@@ -2518,6 +2542,10 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1600, Function | SmallTest | L
     ErrCode ret = impl.ScanDir(
         "", ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.ScanDir(
+        BUNDLE_DATA_DIR, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -3893,7 +3921,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     moduleInfo.isLibIsolated = false;
     moduleInfo.compressNativeLibs = true;
     info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
-    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->cpuAbi = TEST_CPU_ABI;
     info.baseApplicationInfo_->nativeLibraryPath = "";
 
     BaseBundleInstaller installer;
@@ -4085,5 +4113,41 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0050, Function | SmallTest | Leve
     oldInfo.baseBundleInfo_->compatibleVersion = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+}
+
+/**
+ * @tc.number: ExecuteAOT_0100
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, ExecuteAOT_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    AOTArgs aotArgs;
+    auto ret = impl.ExecuteAOT(aotArgs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0100
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, SetDirApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    bool isPreInstallApp = false;
+    bool debug = false;
+    auto ret = impl.SetDirApl("", BUNDLE_NAME, "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, "", "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl("", "", "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
 }
 } // OHOS

@@ -18,6 +18,7 @@
 
 #include "iremote_proxy.h"
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_installer_interface.h"
 #include "status_receiver_interface.h"
 
@@ -110,12 +111,17 @@ public:
         const sptr<IStatusReceiver> &statusReceiver) override;
 
 private:
-    bool SendInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply,
+    bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
-    ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
+
+    ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
+        const std::string &moduleName = "");
 
     ErrCode WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
         const std::string &path, uint32_t index);
+
+    ErrCode CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
+        const InstallParam &installParam);
 
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };

@@ -69,20 +69,20 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
         APP_LOGE("Get dataMgr shared_ptr nullptr");
         return false;
     }
-
+    bool ret = true;
     for (auto allUserId : dataMgr->GetAllUser()) {
         installParam.userId = allUserId;
         MarkPreBundleSyeEventBootTag(false);
         otaInstall_ = true;
-        ErrCode result = InstallBundle(filePaths, installParam, appType);
-        if (result != ERR_OK) {
-            APP_LOGW("install system bundle fail, error: %{public}d", result);
+        ErrCode errCode = InstallBundle(filePaths, installParam, appType);
+        if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
+            APP_LOGE("install system bundle fail, error: %{public}d", errCode);
+            ret = false;
         }
-        otaInstall_ = false;
         ResetInstallProperties();
     }
 
-    return true;
+    return ret;
 }
 
 bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)

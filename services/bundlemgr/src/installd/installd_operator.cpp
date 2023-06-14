@@ -926,6 +926,8 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
 bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
     const std::string &targetSoPath, const std::string &signatureFileDir)
 {
+    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s", modulePath.c_str(),
+        signatureFileDir.c_str());
     if (signatureFileDir.empty()) {
         APP_LOGD("signature file dir is empty and does not need to verify code signature");
         return true;
@@ -944,16 +946,18 @@ bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const 
 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
-    const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
-        std::string fileName = entry.substr(prefix.length());
-        std::string path = targetSoPath;
-        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-            path += Constants::FILE_SEPARATOR_CHAR;
-        }
-        entryMap.emplace(entry, path + fileName);
-        APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
-    });
+    if (!targetSoPath.empty()) {
+        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
+            std::string fileName = entry.substr(prefix.length());
+            std::string path = targetSoPath;
+            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+                path += Constants::FILE_SEPARATOR_CHAR;
+            }
+            entryMap.emplace(entry, path + fileName);
+            APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
+        });
+    }
     ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
     if (ret != ERR_OK) {
         APP_LOGE("VerifyCode failed due to %{public}d", ret);

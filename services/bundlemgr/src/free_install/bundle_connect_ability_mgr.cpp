@@ -22,6 +22,7 @@
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
 #include "free_install_params.h"
+#include "hitrace_meter.h"
 #include "json_util.h"
 #include "parcel.h"
 #include "service_center_connection.h"
@@ -283,6 +284,7 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo, const Want &want,
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("SilentInstall");
     if (handler_ == nullptr) {
         CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
@@ -628,6 +630,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
 void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
     int32_t userId, const FreeInstallParams &freeInstallParams)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -959,6 +962,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
 bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     int32_t userId, AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("QueryAbilityInfo");
     InnerBundleInfo innerBundleInfo;
     if (IsObtainAbilityInfo(want, flags, userId, abilityInfo, callBack, innerBundleInfo)) {

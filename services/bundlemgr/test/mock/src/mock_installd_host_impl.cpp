@@ -103,7 +103,8 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     return ERR_OK;
 }

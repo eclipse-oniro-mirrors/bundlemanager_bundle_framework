@@ -2230,3 +2230,74 @@ HWTEST_F(BmsSandboxAppTest, VerifyDependency_0200, Function | SmallTest | Level1
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
     bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
 }
+
+/**
+ * @tc.number: RestoreSandboxPersistentInnerBundleInfo_0100
+ * @tc.name: test RestoreSandboxPersistentInnerBundleInfo
+ * @tc.desc: 1. test RestoreSandboxPersistentInnerBundleInfo is false
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxPersistentInnerBundleInfo_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    sundleSandboxDataMgr.sandboxAppInfos_.emplace("", innerBundleInfo);
+    bool res = sundleSandboxDataMgr.RestoreSandboxPersistentInnerBundleInfo();
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: RestoreSandboxAppIndex_0100
+ * @tc.name: test RestoreSandboxAppIndex
+ * @tc.desc: 1. test RestoreSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxAppIndex_0100, Function | SmallTest | Level1)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    int32_t appIndex = 1;
+    bool res = sundleSandboxDataMgr.RestoreSandboxAppIndex("", appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: RestoreSandboxAppIndex_0200
+ * @tc.name: test RestoreSandboxAppIndex
+ * @tc.desc: 1. test RestoreSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxAppIndex_0200, Function | SmallTest | Level1)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    int32_t appIndex = 1;
+    std::set<int32_t> innerSet { appIndex };
+    sundleSandboxDataMgr.sandboxAppIndexMap_.emplace(BUNDLE_NAME_TEST, innerSet);
+    bool ret = sundleSandboxDataMgr.RestoreSandboxAppIndex(BUNDLE_NAME_TEST, appIndex);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SaveSandboxPersistentInfo_0100
+ * @tc.name: test SaveSandboxPersistentInfo
+ * @tc.desc: 1.the sandboxManagerDb_ is empty
+ *           2.the SaveSandboxPersistentInfo failed
+ */
+HWTEST_F(BmsSandboxAppTest, SaveSandboxPersistentInfo_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    sundleSandboxDataMgr.sandboxManagerDb_ = nullptr;
+    bool ret = sundleSandboxDataMgr.SaveSandboxPersistentInfo("", innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RemoveSandboxPersistentInfo_0100
+ * @tc.name: test RemoveSandboxPersistentInfo
+ * @tc.desc: 1.the sandboxManagerDb_ is empty
+ *           2.the sandboxManagerDb_ failed
+ */
+HWTEST_F(BmsSandboxAppTest, RemoveSandboxPersistentInfo_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    sundleSandboxDataMgr.sandboxManagerDb_ = nullptr;
+    bool ret = sundleSandboxDataMgr.RemoveSandboxPersistentInfo("");
+    EXPECT_EQ(ret, false);
+}

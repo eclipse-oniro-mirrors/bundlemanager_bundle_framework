@@ -4601,6 +4601,136 @@ HWTEST_F(BmsBundleManagerTest, GetAllSharedBundleInfo_0001, Function | SmallTest
 }
 
 /**
+ * @tc.number: SharedBundleInfoTest_0001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedBundleInfoTest_0001, Function | SmallTest | Level1)
+{
+    SharedBundleInfo sharedBundle;
+    std::vector<SharedModuleInfo> sharedModuleInfos;
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfos.emplace_back(sharedModuleInfo);
+    sharedBundle.sharedModuleInfos = sharedModuleInfos;
+    Parcel parcel;
+    bool ret = sharedBundle.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SharedBundleInfoTest_0002
+ * @tc.name: test Unmarshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedBundleInfoTest_0002, Function | SmallTest | Level1)
+{
+    SharedBundleInfo sharedBundle;
+    std::vector<SharedModuleInfo> sharedModuleInfos;
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfos.emplace_back(sharedModuleInfo);
+    sharedBundle.sharedModuleInfos = sharedModuleInfos;
+    Parcel parcel;
+    sharedBundle.Marshalling(parcel);
+    auto ret = sharedBundle.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedModuleInfoTest_001, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    Parcel parcel;
+    bool ret = sharedModuleInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_002
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedModuleInfoTest_002, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    Parcel parcel;
+    sharedModuleInfo.Marshalling(parcel);
+    auto ret = sharedModuleInfo.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+    EXPECT_EQ(sharedModuleInfo.name, MODULE_NAME);
+}
+
+/**
+ * @tc.number: InstallParamTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, InstallParamTest_001, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    std::map<std::string, std::string> hashParams;
+    hashParams.insert(pair<string, string>("1", "2"));
+    installParam.hashParams = hashParams;
+    installParam.sharedBundleDirPaths = std::vector<std::string>{INVALID_PATH};
+    Parcel parcel;
+    bool ret = installParam.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallParamTest_002
+ * @tc.name: test Unmarshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, InstallParamTest_002, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    Parcel parcel;
+    installParam.userId = USERID;
+    installParam.Marshalling(parcel);
+    auto ret = installParam.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+    EXPECT_EQ(installParam.userId, USERID);
+}
+
+/**
+ * @tc.number: AgingUtilTest_0001
+ * @tc.name: test SortTwoAgingBundleInfos
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, AgingUtilTest_0001, Function | SmallTest | Level1)
+{
+    AgingUtil util;
+    AgingBundleInfo bundle1;
+    AgingBundleInfo bundle2;
+    bundle2.recentlyUsedTime_ = NUMBER_ONE;
+    bool ret = util.SortTwoAgingBundleInfos(bundle1, bundle2);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetInstallerIdTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetInstallerIdTest_001, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.SetInstallerId(USERID);
+    installedUid = impl.GetInstallerId();
+    EXPECT_EQ(installedUid, USERID);
+}
+
+/**
  * @tc.number: GetUidByDebugBundleName_0100
  * @tc.name: test GetUidByDebugBundleName
  * @tc.desc: 1.system run normally

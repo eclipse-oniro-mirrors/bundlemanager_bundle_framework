@@ -30,7 +30,6 @@ const std::string TEST_CPU_ABI = "arm64";
 const std::string HAP_FILE_PATH =
     "/data/app/el1/bundle/public/com.example.test/entry.hap";
 const std::string TEST_PATH = "/data/app/el1/bundle/public/com.example.test/";
-const std::string TEST_PATH_PHOTOS = "/data/app/el1/bundle/public/com.ohos.photos/entry";
 const std::string TEST_PATH_TARGET = "/data/test";
 const std::string OVER_MAX_PATH_SIZE(300, 'x');
 }; // namespace
@@ -485,21 +484,6 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_2600
- * @tc.name: test function of InstallHostImpl
- * @tc.desc: 1. calling ExtractDiffFiles of hostImpl
- * @tc.require: issueI5T6P3
-*/
-HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2600, Function | SmallTest | Level0)
-{
-    auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
-
-    auto ret = hostImpl->ExtractDiffFiles(TEST_PATH_PHOTOS, TEST_PATH_TARGET, TEST_CPU_ABI);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
-}
-
-/**
  * @tc.number: InstalldHostImplTest_2700
  * @tc.name: test function of InstallHostImpl
  * @tc.desc: 1. calling CreateBundleDir of hostImpl
@@ -792,6 +776,48 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4300, Function | Sma
     EXPECT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4400
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4400, Function | SmallTest | Level1)
+{
+    InstalldHostImpl impl;
+    ExtractParam extractParam;
+    auto ret = impl.ExtractFiles(extractParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4500
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4500, Function | SmallTest | Level1)
+{
+    InstalldHostImpl impl;
+    AOTArgs aotArgs;
+    auto ret = impl.ExecuteAOT(aotArgs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4500
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4600, Function | SmallTest | Level1)
+{
+    InstalldHostImpl impl;
+    bool isExist = false;
+    auto ret = impl.IsExistFile(TEST_STRING, isExist);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

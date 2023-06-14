@@ -237,6 +237,35 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     return ERR_OK;
 }
 
+bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    PermissionStatus installBundlestatus = installParam.installBundlePermissionStatus;
+    PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
+    bool isCallByShell = installParam.isCallByShell;
+    if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        return true;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+            if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+        } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            APP_LOGE("install permission denied");
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::ParseHapFiles(
     const std::vector<std::string> &bundlePaths,
     const InstallCheckParam &checkParam,
@@ -1233,6 +1262,41 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
         }
     }
     return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signatureFileDir) const
+{
+    if (!BundleUtil::CheckFileName(signatureFileDir)) {
+        APP_LOGE("code signature file dir is invalid");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    if (!BundleUtil::CheckFileType(signatureFileDir, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("signatureFileDir is not suffixed with .sig");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+bool BundleInstallChecker::VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir)
+{
+    APP_LOGD("begin to verify code signature");
+    if (modulePath.empty()) {
+        return false;
+    }
+    if (signatureFileDir.empty()) {
+        APP_LOGD("signature file dir is empty");
+        return true;
+    }
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("VerifyCode failed due to %{public}d", ret);
+        return false;
+    }
+#endif
+    APP_LOGD("VerifyCodeSignature finished");
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

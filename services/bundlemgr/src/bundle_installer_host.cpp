@@ -15,17 +15,17 @@
 
 #include "bundle_installer_host.h"
 
-#include "ipc_skeleton.h"
-#include "ipc_types.h"
-#include "string_ex.h"
-
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
+#include "ipc_skeleton.h"
+#include "ipc_types.h"
+#include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -67,34 +67,34 @@ int BundleInstallerHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case IBundleInstaller::Message::INSTALL:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL):
             HandleInstallMessage(data);
             break;
-        case IBundleInstaller::Message::INSTALL_MULTIPLE_HAPS:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_MULTIPLE_HAPS):
             HandleInstallMultipleHapsMessage(data);
             break;
-        case IBundleInstaller::Message::UNINSTALL:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL):
             HandleUninstallMessage(data);
             break;
-        case IBundleInstaller::Message::UNINSTALL_MODULE:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_MODULE):
             HandleUninstallModuleMessage(data);
             break;
-        case IBundleInstaller::Message::UNINSTALL_BY_UNINSTALL_PARAM:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_BY_UNINSTALL_PARAM):
             HandleUninstallByUninstallParam(data);
             break;
-        case IBundleInstaller::Message::RECOVER:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::RECOVER):
             HandleRecoverMessage(data);
             break;
-        case IBundleInstaller::Message::INSTALL_SANDBOX_APP:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::INSTALL_SANDBOX_APP):
             HandleInstallSandboxApp(data, reply);
             break;
-        case IBundleInstaller::Message::UNINSTALL_SANDBOX_APP:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::UNINSTALL_SANDBOX_APP):
             HandleUninstallSandboxApp(data, reply);
             break;
-        case IBundleInstaller::Message::CREATE_STREAM_INSTALLER:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::CREATE_STREAM_INSTALLER):
             HandleCreateStreamInstaller(data, reply);
             break;
-        case IBundleInstaller::Message::DESTORY_STREAM_INSTALLER:
+        case static_cast<uint32_t>(BundleInstallerInterfaceCode::DESTORY_STREAM_INSTALLER):
             HandleDestoryBundleStreamInstaller(data, reply);
             break;
         default:
@@ -328,7 +328,8 @@ bool BundleInstallerHost::Install(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -350,7 +351,8 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -372,7 +374,8 @@ bool BundleInstallerHost::Recover(
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -457,7 +460,8 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -542,7 +546,8 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    InstallParam installParam2 = installParam;
+    if (!IsPermissionVaild(installParam, installParam2)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
@@ -555,7 +560,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = streamInstaller->Init(installParam, statusReceiver);
+    bool res = streamInstaller->Init(installParam2, statusReceiver);
     if (!res) {
         APP_LOGE("stream installer init failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
@@ -564,13 +569,36 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
     return streamInstaller;
 }
 
+bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2)
+{
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+        installParam2.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    } else {
+        installParam2.installBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    }
+    if (BundlePermissionMgr::IsNativeTokenType()) {
+        installParam2.isCallByShell = true;
+    }
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    } else {
+        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    }
+    if (installParam2.installBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS &&
+        installParam2.installEnterpriseBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS) {
+        return false;
+    }
+    return true;
+}
+
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
 {
     if (!BundlePermissionMgr::VerifySystemApp()) {
         APP_LOGE("Uninstall permission denied");
         return false;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
         APP_LOGE("install permission denied");
         return false;
     }

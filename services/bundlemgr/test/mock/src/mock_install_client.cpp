@@ -112,7 +112,8 @@ ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &
     return 0;
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     return 0;
 }
