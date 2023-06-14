@@ -47,6 +47,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "perf_profile.h"
+#include "pre_bundle_profile.h"
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
@@ -133,6 +134,58 @@ const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
 const std::string COMMON_EVENT_TYPE = "type";
 const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
+const nlohmann::json INSTALL_LIST = R"(
+{
+    "install_list": [
+        {
+            "app_dir":"app_dir",
+            "removable":true
+        }
+    ]
+}
+)"_json;
+const nlohmann::json INSTALL_LIST1 = R"(
+{
+    "install_list1": [
+        {
+            "app_dir":"app_dir",
+            "removable":true
+        }
+    ]
+}
+)"_json;
+const nlohmann::json INSTALL_LIST2 = R"(
+{
+    "install_list":
+        {
+            "app_dir":"app_dir",
+            "removable":true
+        }
+}
+)"_json;
+const nlohmann::json INSTALL_LIST3 = R"(
+{
+    "install_list":
+        [{
+            "bundleName":"bundleName",
+            "keepAlive":true,
+            "singleton":true,
+            "allowCommonEvent":[],
+            "app_signature":[],
+            "runningResourcesApply":true,
+            "associatedWakeUp":true,
+            "allowAppDataNotCleared":true,
+            "allowAppMultiProcess":true,
+            "allowAppDesktopIconHide":true,
+            "allowAbilityPriorityQueried":true,
+            "allowAbilityExcludeFromMissions":true,
+            "allowMissionNotCleared":true,
+            "allowAppUsePrivilegeExtension":true,
+            "allowFormVisibleNotify":true,
+            "allowAppShareLibrary":true
+        }]
+}
+)"_json;
 const int FORMINFO_DESCRIPTIONID = 123;
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
@@ -2486,5 +2539,130 @@ HWTEST_F(BmsBundleDataMgrTest, TestIsAbilityEnabledV9_0100, Function | MediumTes
     bool isEnable;
     ErrCode ret = info.IsAbilityEnabledV9(abilityInfo, Constants::NOT_EXIST_USERID, isEnable);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: PreloadItem_0001
+ * Function: test PreloadItem
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreloadItem_0001, Function | SmallTest | Level0)
+{
+    PreloadItem info;
+    info.moduleName = MODULE_NAME1;
+    Parcel parcel;
+    auto result = info.Unmarshalling(parcel);
+    EXPECT_NE(result->moduleName, MODULE_NAME1);
+    info.Marshalling(parcel);
+    result = info.Unmarshalling(parcel);
+    EXPECT_EQ(result->moduleName, MODULE_NAME1);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0100
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0100, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0200
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0200, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST1, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0300
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0300, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    nlohmann::json errorTypeJson = INSTALL_LIST;
+    errorTypeJson["install_list"][100] = {0};
+    ErrCode res = preBundleProfile.TransformTo(errorTypeJson, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0400
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0400, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreScanInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST2, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0500
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_OK
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0500, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST3, scanInfos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0600
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0600, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST1, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0700
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0700, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    nlohmann::json errorTypeJson = INSTALL_LIST;
+    errorTypeJson["install_list"][100] = {0};
+    ErrCode res = preBundleProfile.TransformTo(errorTypeJson, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: PreBundleProfile_0800
+ * @tc.name: test TransformTo
+ * @tc.desc: 1. call TransformTo, return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR
+ */
+HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0800, Function | SmallTest | Level1)
+{
+    PreBundleProfile preBundleProfile;
+    std::set<PreBundleConfigInfo> scanInfos;
+    ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST2, scanInfos);
+    EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
 }
 }
