@@ -45,6 +45,8 @@ namespace {
     const std::string MODULE_NAME_TWO = "module2";
     const std::string BUILD_HASH = "8670157ae28ac2dc08075c4a9364e320898b4aaf4c1ab691df6afdb854a6811b";
     const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
+    const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
+    const std::string BUNDLE_PATH = "/data/app/el1/bundle/public/";
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -550,6 +552,47 @@ HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0200, Function | SmallTest | Le
 }
 
 /**
+ * @tc.number: UpdateModuleByHash_0300
+ * @tc.name: UpdateModuleByHash
+ * @tc.desc: test UpdateModuleByHash
+ */
+HWTEST_F(BmsEventHandlerTest, UpdateModuleByHash_0300, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    HapModuleInfo oldModuleInfo;
+    oldModuleInfo.package = MODULE_NAME;
+    oldModuleInfo.buildHash = BUILD_HASH;
+    oldBundleInfo.hapModuleInfos.emplace_back(oldModuleInfo);
+
+    InnerModuleInfo newInnerModuleInfo;
+    std::map<std::string, InnerModuleInfo> innerModuleMaps;
+    innerModuleMaps.emplace(MODULE_NAME_TWO, newInnerModuleInfo);
+    InnerBundleInfo newInnerBundleInfo;
+    newInnerBundleInfo.AddInnerModuleInfo(innerModuleMaps);
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto res = handler->UpdateModuleByHash(oldBundleInfo, newInnerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: InnerProcessRebootTest_0100
+ * @tc.name: InnerProcessRebootSharedBundleInstall
+ * @tc.desc: test InnerProcessRebootSharedBundleInstall
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessRebootTest_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::list<std::string> scanPathList {BUNDLE_PATH};
+    auto appType = Constants::AppType::SYSTEM_APP;
+    handler->InnerProcessRebootSharedBundleInstall(scanPathList, appType);
+    EXPECT_FALSE(scanPathList.empty());
+}
+
+/**
  * @tc.number: IsNeedToUpdateSharedAppByHash_0100
  * @tc.name: IsNeedToUpdateSharedAppByHash
  * @tc.desc: test IsNeedToUpdateSharedAppByHash
@@ -679,4 +722,64 @@ HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0200, Function | SmallTest |
     std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
     auto iter = handler->HotPatchAppProcessing(BUNDLE_NAME);
     EXPECT_EQ(iter, false);
+}
+
+/**
+ * @tc.number: HotPatchAppProcessing_0300
+ * @tc.name: HotPatchAppProcessing
+ * @tc.desc: test HotPatchAppProcessing
+ */
+HWTEST_F(BmsEventHandlerTest, HotPatchAppProcessing_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    InnerBundleInfo info;
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    std::vector<Metadata> datas;
+    Metadata data;
+    data.name = HOT_PATCH_METADATA;
+    datas.emplace_back(data);
+    innerModuleInfo.metadata = datas;
+    info.AddInnerModuleInfo(innerModuleInfos);
+    info.isNewVersion_ = true;
+    dataMgr->bundleInfos_[TEST_BUNDLE_NAME] = info;
+    bool ret = handler->HotPatchAppProcessing(BUNDLE_NAME);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: HasModuleSavedInPreInstalledDbTest_0100
+ * @tc.name: HasModuleSavedInPreInstalledDb
+ * @tc.desc: test HasModuleSavedInPreInstalledDb
+ */
+HWTEST_F(BmsEventHandlerTest, HasModuleSavedInPreInstalledDbTest_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    PreInstallBundleInfo info;
+    handler->loadExistData_[BUNDLE_NAME] = info;
+    bool ret = handler->HasModuleSavedInPreInstalledDb(BUNDLE_NAME_ONE, BUNDLE_PATH);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: HasModuleSavedInPreInstalledDbTest_0200
+ * @tc.name: HasModuleSavedInPreInstalledDb
+ * @tc.desc: test HasModuleSavedInPreInstalledDb
+ */
+HWTEST_F(BmsEventHandlerTest, HasModuleSavedInPreInstalledDbTest_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    PreInstallBundleInfo info;
+    std::vector<std::string> bundlePaths = {BUNDLE_PATH};
+    info.bundlePaths_ = bundlePaths;
+    handler->loadExistData_[BUNDLE_NAME] = info;
+    bool ret = handler->HasModuleSavedInPreInstalledDb(BUNDLE_NAME, BUNDLE_PATH);
+    EXPECT_EQ(ret, true);
 }
