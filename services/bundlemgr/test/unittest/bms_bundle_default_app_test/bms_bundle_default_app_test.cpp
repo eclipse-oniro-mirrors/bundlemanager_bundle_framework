@@ -80,6 +80,16 @@ const std::string INVALID_TYPE3 = "/abc";
 const std::string INVALID_TYPE4 = "*/abc";
 const std::string INVALID_TYPE5 = "abc/*";
 const std::string INVALID_TYPE6 = "*/*";
+const nlohmann::json DEFAULT_CONFIG = R"(
+[{
+    "bundleName": "bundleName",
+    "moduleName": "moduleName",
+    "abilityName": "abilityName",
+    "extensionName": "extensionName",
+    "type": "type",
+    "appType": "appType"
+}]
+)"_json;
 const int32_t LABEL_ID = 16777218;
 const int32_t ICON_ID = 16777222;
 const int32_t DESCRIPTION_ID = 16777217;
@@ -1243,6 +1253,102 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
     EXPECT_EQ(testRet, true);
 }
 
+/**
+ * @tc.number: BmsBundleDefaultApp_5700
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5700, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    defaultAppData.ParseDefaultApplicationConfig(DEFAULT_CONFIG);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5800
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5800, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["type"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5900
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5900, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["bundleName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6000
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6000, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["moduleName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6100
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6100, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["abilityName"] = "";
+    errorTypeJson[0]["extensionName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6200
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6200, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json rightTypeJson = DEFAULT_CONFIG;
+    rightTypeJson[0]["extensionName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
+    EXPECT_NE(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6300
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6300, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json rightTypeJson = DEFAULT_CONFIG;
+    rightTypeJson[0]["abilityName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
+    EXPECT_NE(defaultAppData.infos.size(), 0);
+}
 /**
  * @tc.number: AOT_EXECUTOR_0100
  * @tc.name: test AOTExecutor
