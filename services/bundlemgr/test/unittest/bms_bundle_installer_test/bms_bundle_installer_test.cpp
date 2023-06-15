@@ -119,7 +119,7 @@ public:
     void CreateInstallerManager();
     void ClearBundleInfo();
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
@@ -282,7 +282,7 @@ void BmsBundleInstallerTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleInstallerTest::SetDataMgr()
+void BmsBundleInstallerTest::ResetDataMgr()
 {
     EXPECT_NE(dataMgrInfo_, nullptr);
     bundleMgrService_->dataMgr_ = dataMgrInfo_;
@@ -1874,7 +1874,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
     InnerBundleInfo info;
     bool res = installer.GetInnerBundleInfo(info, recoverMode);
     EXPECT_EQ(res, false);
-    SetDataMgr();
+    ResetDataMgr();
 
     installParam.userId = Constants::INVALID_USERID;
     ret = installer.ProcessBundleUninstall(
@@ -2632,6 +2632,47 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0100, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: BaseExtractor_0200
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0200, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("file.zip");
+    bool ret = extractor.ExtractFile("entry", "/data/test");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0300
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0300, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("file.zip");
+    uint32_t offset = 1;
+    uint32_t length = 10;
+    bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0400
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = true;
+    uint32_t offset = 1;
+    uint32_t length = 10;
+    bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: InstallFailed_0100
  * @tc.name: Test CheckHapHashParams
  * @tc.desc: 1.Test CheckHapHashParams of BundleInstallChecker
@@ -3345,6 +3386,36 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: baseBundleInstaller_5200
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = "";
+    auto ret = installer.UninstallBundleByUninstallParam(uninstallParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5300
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = BUNDLE_NAME;
+    ClearDataMgr();
+    auto ret = installer.UninstallBundleByUninstallParam(uninstallParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
+}
+
+/**
  * @tc.number: appControlManagerHostImpl_0100
  * @tc.name: test GetControlRuleType
  * @tc.desc: 1.Test the GetControlRuleType of AppControlManagerHostImpl
@@ -3370,11 +3441,11 @@ HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0200, Function | Smal
 #endif
 
 /**
- * @tc.number: baseBundleInstaller_5200
+ * @tc.number: baseBundleInstaller_5400
  * @tc.name: test checkAsanEnabled when asanEnabled is set to be ture
  * @tc.desc: 1.Test checkAsanEnabled
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3401,11 +3472,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5300
+ * @tc.number: baseBundleInstaller_5500
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
     InstallParam installParam;
@@ -3418,11 +3489,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5400
+ * @tc.number: baseBundleInstaller_5600
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5600, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3441,11 +3512,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5500
+ * @tc.number: baseBundleInstaller_5700
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5700, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3814,6 +3885,96 @@ HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0030, TestSize.Level1)
 }
 
 /**
+ * @tc.number: CheckEnableRemovable_0040
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0040, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    int32_t userId = USERID;
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, true, true);
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, false);
+}
+
+/**
+ * @tc.number: CheckEnableRemovable_0050
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0050, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.emplace("", newInfo);
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::string key = BUNDLE_NAME + "_100";
+    oldInfo.innerBundleUserInfos_.insert(pair<std::string, InnerBundleUserInfo>(key, innerBundleUserInfo));
+    int32_t userId = USERID;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    newInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, true, true);
+
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, true);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0010
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0010, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(pair<std::string, InnerBundleInfo>());
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    int32_t uid = EDM_UID;
+    installer.isAppExist_ = true;
+    ClearDataMgr();
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    installer.RollBack(newInfos, oldInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0020
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(BUNDLE_NAME_TEST, innerBundleInfo));
+    int32_t uid = EDM_UID;
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    installer.isAppExist_ = true;
+    oldInfo.SetApplicationBundleType(BundleType::SHARED);
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
  * @tc.number: ProcessModuleUpdate_0010
  * @tc.name: test ProcessBundleInstallStatus
  * @tc.desc: 1.Test the ProcessBundleInstallStatus
@@ -4009,7 +4170,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0010, Function | S
     BaseBundleInstaller installer;
     std::vector<std::string> packageVec;
     ClearDataMgr();
-    ScopeGuard stateGuard([&] { SetDataMgr(); });
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     ErrCode res = installer.UninstallLowerVersionFeature(packageVec);
     EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
