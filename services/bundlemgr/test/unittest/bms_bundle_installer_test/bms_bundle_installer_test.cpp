@@ -4294,10 +4294,10 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_200, Function | SmallTest
     bool res2 = SaveStringToFile(TEST_CREATE_FILE_PATH, TEST_CREATE_FILE_PATH);
     EXPECT_TRUE(res2);
     bundleUtil.CopyFileToSecurityDir(TEST_CREATE_FILE_PATH, DirType::SIG_FILE_DIR, toDeletePaths);
-    ASSERT_GT(toDeletePaths.size(), 0);
-    bundleUtil.DeleteTempDirs(toDeletePaths);
     bool res3 = bundleUtil.DeleteDir(TEST_CREATE_DIR_PATH);
     EXPECT_TRUE(res3);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
 }
 
 /**
@@ -4370,9 +4370,9 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_600, Function | SmallTest
     bool ret2 = SaveStringToFile(sourceFile, sourceFile);
     EXPECT_TRUE(ret2);
     bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
-    ASSERT_GT(toDeletePaths.size(), 0);
-    bundleUtil.DeleteTempDirs(toDeletePaths);
     bool ret3 = bundleUtil.DeleteDir(sourcePath);
     EXPECT_TRUE(ret3);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
 }
 } // OHOS
