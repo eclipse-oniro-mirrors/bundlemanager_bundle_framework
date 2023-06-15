@@ -4277,6 +4277,7 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_100, Function | SmallTest
     std::vector<std::string> toDeletePaths;
     auto ret = bundleUtil.CopyFileToSecurityDir("", DirType::STREAM_INSTALL_DIR, toDeletePaths);
     EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
 }
 
 /**
@@ -4288,13 +4289,13 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_200, Function | SmallTest
 {
     BundleUtil bundleUtil;
     std::vector<std::string> toDeletePaths;
-    std::vector<std::string> emptyPath;
     bool res1 = bundleUtil.CreateDir(TEST_CREATE_DIR_PATH);
     EXPECT_TRUE(res1);
     bool res2 = SaveStringToFile(TEST_CREATE_FILE_PATH, TEST_CREATE_FILE_PATH);
     EXPECT_TRUE(res2);
     bundleUtil.CopyFileToSecurityDir(TEST_CREATE_FILE_PATH, DirType::SIG_FILE_DIR, toDeletePaths);
-    EXPECT_NE(toDeletePaths, emptyPath);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
     bool res3 = bundleUtil.DeleteDir(TEST_CREATE_DIR_PATH);
     EXPECT_TRUE(res3);
 }
@@ -4311,6 +4312,7 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_300, Function | SmallTest
     std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     auto ret = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
     EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
 }
 
 /**
@@ -4326,6 +4328,7 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_400, Function | SmallTest
         Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
     auto ret = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
     EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
 }
 
 /**
@@ -4342,9 +4345,11 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_500, Function | SmallTest
     sourcePath.append("test");
     auto ret1 = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
     EXPECT_EQ(ret1, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
     sourcePath.append(Constants::PATH_SEPARATOR);
     auto ret2 = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
     EXPECT_EQ(ret2, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
 }
 
 /**
@@ -4356,17 +4361,17 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_600, Function | SmallTest
 {
     BundleUtil bundleUtil;
     std::vector<std::string> toDeletePaths;
-    std::vector<std::string> emptyPath;
     std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR +
-        Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
-    sourcePath.append("test").append(Constants::PATH_SEPARATOR).append("testSourcePath");
+        Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR + "test" +
+        Constants::PATH_SEPARATOR + "testSourcePath";
     bool ret1 = bundleUtil.CreateDir(sourcePath);
     EXPECT_TRUE(ret1);
     std::string sourceFile = sourcePath.append(Constants::PATH_SEPARATOR).append("testSourceFile.hap");
     bool ret2 = SaveStringToFile(sourceFile, sourceFile);
     EXPECT_TRUE(ret2);
     bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
-    EXPECT_NE(toDeletePaths, emptyPath);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
     bool ret3 = bundleUtil.DeleteDir(sourcePath);
     EXPECT_TRUE(ret3);
 }
