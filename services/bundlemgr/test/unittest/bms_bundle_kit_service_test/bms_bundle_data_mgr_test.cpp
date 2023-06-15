@@ -2850,6 +2850,8 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0004, Function | SmallTest 
         BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+
+/**
  * @tc.number: GetAbilityLabel_0100
  * @tc.name: test GetAbilityLabel
  * @tc.desc: 1.check ability infos
