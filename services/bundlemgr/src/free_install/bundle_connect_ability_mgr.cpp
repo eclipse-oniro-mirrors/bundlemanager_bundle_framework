@@ -195,7 +195,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
         APP_LOGE("GetInnerBundleInfoWithFlags failed.");
         return false;
     }
-    if (innerBundleInfo.GetBaseApplicationInfo().bundleType == BundleType::APP) {
+    if (innerBundleInfo.GetBaseApplicationInfo().bundleType != BundleType::ATOMIC_SERVICE) {
         return false;
     }
     if (moduleName.empty()) {

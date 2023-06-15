@@ -48,6 +48,7 @@
 #include "nlohmann/json.hpp"
 #include "perf_profile.h"
 #include "pre_bundle_profile.h"
+#include "scope_guard.h"
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
@@ -1719,6 +1720,20 @@ HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfos_0300, Function | Small
 }
 
 /**
+ * @tc.number: QueryExtensionAbilityInfos_0400
+ * @tc.name: test QueryExtensionAbilityInfos
+ * @tc.desc: 1.system run normally
+ *           2.check QueryExtensionAbilityInfos false
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfos_0400, Function | SmallTest | Level1)
+{
+    Want want;
+    std::vector<ExtensionAbilityInfo> extensionInfo;
+    bool ret = bundleMgrHostImpl_->QueryExtensionAbilityInfos(want, 0, Constants::INVALID_USERID, extensionInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: ExplicitQueryExtensionInfo_0100
  * @tc.name: test ExplicitQueryExtensionInfo
  * @tc.desc: 1.system run normally
@@ -2014,6 +2029,18 @@ HWTEST_F(BmsBundleDataMgrTest, GetSharedBundleInfo_0400, Function | SmallTest | 
 {
     BundleInfo bundleInfo;
     ErrCode ret = GetBundleDataMgr()->GetSharedBundleInfo("", GET_ABILITY_INFO_DEFAULT, bundleInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetSharedBundleInfo_0500
+ * @tc.name: Test GetSharedBundleInfo
+ * @tc.desc: Test GetSharedBundleInfo
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetSharedBundleInfo_0500, Function | SmallTest | Level1)
+{
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrHostImpl_->GetSharedBundleInfo("", "", sharedBundles);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
 }
 
@@ -2823,5 +2850,123 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0004, Function | SmallTest 
         BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+ * @tc.number: GetAbilityLabel_0100
+ * @tc.name: test GetAbilityLabel
+ * @tc.desc: 1.check ability infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAbilityLabel_0100, Function | MediumTest | Level1)
+{
+    std::string ret = bundleMgrHostImpl_->GetAbilityLabel("", "");
+    EXPECT_EQ(ret, Constants::EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetLaunchWantForBundle_0100
+ * @tc.name: test GetLaunchWantForBundle
+ * @tc.desc: 1.get launch want infos
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetLaunchWantForBundle_0100, Function | MediumTest | Level1)
+{
+    Want want;
+    ErrCode ret = bundleMgrHostImpl_->GetLaunchWantForBundle("", want, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+}
+
+/**
+ * @tc.number: GetBundleUserMgr_0100
+ * @tc.name: test GetBundleUserMgr
+ * @tc.desc: 1.get bundle user mgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleUserMgr_0100, Function | MediumTest | Level1)
+{
+    setuid(Constants::FOUNDATION_UID);
+    sptr<IBundleUserMgr> ret = bundleMgrHostImpl_->GetBundleUserMgr();
+    EXPECT_EQ(ret, nullptr);
+}
+
+/**
+ * @tc.number: GetBundleUserMgr_0200
+ * @tc.name: test GetBundleUserMgr
+ * @tc.desc: 1.get bundle user mgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleUserMgr_0200, Function | MediumTest | Level1)
+{
+    setuid(Constants::ACCOUNT_UID);
+    sptr<IBundleUserMgr> ret = bundleMgrHostImpl_->GetBundleUserMgr();
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: GetAllSharedBundleInfo_0100
+ * @tc.name: test GetAllSharedBundleInfo
+ * @tc.desc: 1.get bundle user mgr
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllSharedBundleInfo_0100, Function | MediumTest | Level1)
+{
+    std::vector<SharedBundleInfo> sharedBundles;
+    ErrCode ret = bundleMgrHostImpl_->GetAllSharedBundleInfo(sharedBundles);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: VerifyDependency_0100
+ * @tc.name: test VerifyDependency
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, VerifyDependency_0100, Function | MediumTest | Level1)
+{
+    setuid(Constants::ACCOUNT_UID);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->VerifyDependency("");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0100
+ * @tc.name: test SetExtNameOrMIMEToApp
+ * @tc.desc: 1.SetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0100, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0200
+ * @tc.name: test SetExtNameOrMIMEToApp
+ * @tc.desc: 1.SetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0200, Function | MediumTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0100
+ * @tc.name: test DelExtNameOrMIMEToApp
+ * @tc.desc: 1.DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0100, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0200
+ * @tc.name: test DelExtNameOrMIMEToApp
+ * @tc.desc: 1.DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0200, Function | MediumTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 }

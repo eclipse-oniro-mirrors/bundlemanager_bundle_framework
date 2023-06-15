@@ -2191,7 +2191,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         APP_LOGE("fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
-    if (info.GetEntryInstallationFree()) {
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         std::string bundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
             Constants::PATH_SEPARATOR + std::to_string(userId_) + Constants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
