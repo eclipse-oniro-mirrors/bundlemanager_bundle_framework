@@ -326,6 +326,144 @@ void BmsBundleManagerTest::ClearBundleInfo()
 }
 
 /**
+ * @tc.number: BundleStreamInstallerHostImpl_0100
+ * @tc.name: test Init
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0100, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bool ret = impl.Init(installParam, statusReceiver);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0200
+ * @tc.name: test UnInit
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0200, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths = {"pata1", "path2"};
+    InstallParam installParam;
+    impl.UnInit();
+    EXPECT_EQ(impl.installParam_.sharedBundleDirPaths.empty(), false);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0300
+ * @tc.name: test UnInit
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0300, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths = {"pata1", "path2"};
+    impl.UnInit();
+    EXPECT_EQ(impl.installParam_.sharedBundleDirPaths.empty(), false);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0400
+ * @tc.name: test Install
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0400, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    impl.receiver_ = statusReceiver;
+    bool ret = impl.Install();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0500
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0500, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    int ret = impl.CreateStream(BUNDLE_NAME);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0600
+ * @tc.name: test CreateSharedBundleStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0600, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths.push_back(OVER_MAX_SIZE);
+    auto ret = impl.CreateSharedBundleStream(BUNDLE_NAME, USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0700
+ * @tc.name: test CreateSharedBundleStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0700, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    bool ret = impl.Install();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0800
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0800, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = BUNDLE_NAME;
+    auto ret = impl.CreateStream(hapName);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0900
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0900, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.isInstallSharedBundlesOnly_ = false;
+    auto ret = impl.Install();
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: QueryExtensionAbilityInfosV9_0100
  * @tc.name: test the backup type
  * @tc.desc: 1.install the hap

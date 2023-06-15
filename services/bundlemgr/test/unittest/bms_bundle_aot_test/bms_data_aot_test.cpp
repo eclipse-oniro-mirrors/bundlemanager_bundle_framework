@@ -43,6 +43,10 @@ const std::string OUT_PUT_PATH = "/data/test/resource/bms/aot_bundle/";
 const std::string ABC_RELATIVE_PATH = "ets/modules.abc";
 const std::string AOT_BUNDLE_NAME = "aotBundleName";
 const std::string AOT_MODULE_NAME = "aotModuleName";
+const std::string STRING_TYPE_ONE = "string1";
+const std::string STRING_TYPE_TWO = "string2";
+const int32_t USERID_ONE = 100;
+const int32_t USERID_TWO = -1;
 
 }  // namespace
 
@@ -379,6 +383,70 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_0800, Function | SmallTest | Level0)
     AOTHandler::GetInstance().HandleIdleWithSingleHap(info, AOT_MODULE_NAME, "");
     AOTCompileStatus ret = info.GetAOTCompileStatus(AOT_MODULE_NAME);
     EXPECT_EQ(ret, AOTCompileStatus::COMPILE_SUCCESS);
+}
+
+/**
+ * @tc.number: AOTHandler_0900
+ * @tc.name: test AOTHandler
+ * @tc.desc: 1. system running normally
+ *           2. verify function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_0900, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::map<std::string, InnerBundleUserInfo> innerBundleUserInfos;
+    InnerBundleUserInfo info;
+    info.bundleUserInfo.userId = USERID_ONE;
+    innerBundleUserInfos[STRING_TYPE_ONE] = info;
+    info.bundleUserInfo.userId = USERID_TWO;
+    innerBundleUserInfos[STRING_TYPE_TWO] = info;
+    innerBundleInfo.innerBundleUserInfos_ = innerBundleUserInfos;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    auto ret = AOTHandler::GetInstance().GetArkProfilePath(AOT_BUNDLE_NAME, AOT_MODULE_NAME);
+    EXPECT_EQ(ret, "");
+    auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    if (iterator != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iterator);
+    }
+}
+
+/**
+ * @tc.number: AOTHandler_1000
+ * @tc.name: test AOTHandler
+ * @tc.desc: 1. system running normally
+ *           2. verify function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = AOT_BUNDLE_NAME;
+    BundleInfo bundleInfo;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    dataMgr->bundleInfos_.emplace(AOT_BUNDLE_NAME, innerBundleInfo);
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo,
+        AOT_MODULE_NAME, Constants::COMPILE_PARTIAL);
+    EXPECT_EQ(ret, std::nullopt);
+    auto iterator = dataMgr->bundleInfos_.find(AOT_BUNDLE_NAME);
+    if (iterator != dataMgr->bundleInfos_.end()) {
+        dataMgr->bundleInfos_.erase(iterator);
+    }
+}
+
+/**
+ * @tc.number: AOTHandler_1100
+ * @tc.name: test AOTHandler
+ * @tc.desc: 1. system running normally
+ *           2. verify function return value
+ */
+HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
+{
+    InnerBundleInfo innerBundleInfo;
+    auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
+    EXPECT_NE(ret, std::nullopt);
 }
 
 /**
