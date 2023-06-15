@@ -552,7 +552,7 @@ void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInf
     const InnerBundleInfo &innerBundleInfo) const
 {
     if (innerBundleInfo.GetIsNewVersion()) {
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP) {
+        if (innerBundleInfo.GetApplicationBundleType() != BundleType::ATOMIC_SERVICE) {
             for (auto &item : bundlePackInfo.summary.modules) {
                 item.distro.installationFree = false;
             }
