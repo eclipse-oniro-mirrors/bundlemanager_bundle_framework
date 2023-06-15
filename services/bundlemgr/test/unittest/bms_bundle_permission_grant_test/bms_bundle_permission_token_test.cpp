@@ -285,4 +285,26 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1400, Functi
     auto ret = bundleMgrHostImpl_->GetAllProxyDataInfos(proxyDatas);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1500
+ * @tc.name: test SetExtNameOrMIMEToApp
+ * @tc.desc: 1.SetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1500, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1600
+ * @tc.name: test DelExtNameOrMIMEToApp
+ * @tc.desc: 1.DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1600, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 } // OHOS

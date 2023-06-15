@@ -4023,19 +4023,40 @@ HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
 
-    AAFwk::Want want;
     int32_t missionId = 0;
-    int32_t userId = 100;
-    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    AAFwk::Want want;
+    ElementName name;
+    name.SetBundleName(BUNDLE_BACKUP_NAME);
+    name.SetAbilityName(ABILITY_BACKUP_NAME);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+
+    auto bundleDistributedManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleDistributedManager();
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ =
+        std::make_shared<BundleDistributedManager>();
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
-    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ = nullptr;
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", "", "", MODULE_NAME);
-    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    name.SetBundleName("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
+
+    name.SetAbilityName("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+
+    name.SetDeviceID("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ = bundleDistributedManager;
 }
 
 /**
@@ -4047,14 +4068,19 @@ HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0200, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
 
-    AAFwk::Want want;
-    AAFwk::Want want1;
-    want1.ClearWant(&want);
     int32_t missionId = 0;
+    AAFwk::Want want;
+    ElementName name;
+    name.SetBundleName(BUNDLE_BACKUP_NAME);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+
     bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", BUNDLE_BACKUP_NAME, BUNDLE_BACKUP_NAME, MODULE_NAME);
+    name.SetAbilityName(ABILITY_BACKUP_NAME);
+    name.SetDeviceID("");
+    want.SetElement(name);
     ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 }
@@ -4337,7 +4363,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleGids_0100, Function | SmallTest | Level0
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | Level1)
@@ -4350,7 +4376,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0200
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetAllFreeInstallBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0200, Function | MediumTest | Level1)
@@ -4363,7 +4389,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0200, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0300
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetFreeInstallModules
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | Level1)
@@ -4376,7 +4402,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0400
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0400, Function | MediumTest | Level1)

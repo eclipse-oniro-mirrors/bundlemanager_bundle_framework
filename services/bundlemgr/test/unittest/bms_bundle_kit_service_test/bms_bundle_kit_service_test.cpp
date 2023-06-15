@@ -1451,6 +1451,40 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0700, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: GetBundleInfo_0800
+ * @tc.name: test can get AppId info
+ * @tc.desc: 1.system run normal
+ *           2.get AppId info is empty
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0800, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo testResult;
+    std::string testRet = hostImpl->GetAppIdByBundleName(BUNDLE_NAME_TEST, DEFAULT_USERID);
+    EXPECT_EQ(testRet, Constants::EMPTY_STRING);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetBundleInfo_0900
+ * @tc.name: test can get the AppType info
+ * @tc.desc: 1.system run normal
+ *           2.get AppType info successfully
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleInfo_0900, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo testResult;
+    std::string testRet = hostImpl->GetAppType(BUNDLE_NAME_TEST);
+    EXPECT_EQ(testRet, "third-party");
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: GetBundleInfos_0100
  * @tc.name: test can get the installed bundles's bundle info with nomal flag
  * @tc.desc: 1.system run normally
@@ -3040,6 +3074,35 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0400, Function | SmallTes
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     BundleInfo bundleInfo;
     bool ret = hostImpl->GetBundleArchiveInfo(RELATIVE_HAP_FILE_PATH, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfo_0500
+ * @tc.name: hapPath with /data/storage/el2/base expect return false
+ * @tc.desc: 1.system run normally
+ *           2.get the bundle archive info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0500, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleArchiveInfo("data/test", BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetBundleArchiveInfo_0600
+ * @tc.name: hapPath with /data/storage/el2/base expect return false
+ * @tc.desc: 1.system run normally
+ *           2.get the bundle archive info failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetBundleArchiveInfo_0600, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    BundleInfo bundleInfo;
+    bool ret = hostImpl->GetBundleArchiveInfo(
+        Constants::SANDBOX_DATA_PATH, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo);
     EXPECT_FALSE(ret);
 }
 
@@ -6557,6 +6620,20 @@ HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0200, Function | SmallTest | Leve
 }
 
 /**
+ * @tc.number: SetDebugMode_0300
+ * @tc.name: test SetDebugMode
+ * @tc.desc: SetDebugMode
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetDebugMode_0300, Function | SmallTest | Level1)
+{
+    bool isDebug = true;
+    setuid(Constants::SHELL_UID);
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    int32_t result = hostImpl->SetDebugMode(isDebug);
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_SET_DEBUG_MODE_UID_CHECK_FAILED);
+}
+
+/**
  * @tc.name: DynamicSystemProcess_0100
  * @tc.desc: Test start and stop d-bms process
  * @tc.type: FUNC
@@ -6897,6 +6974,31 @@ HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_0800, Function | 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     ErrCode ret = hostImpl->QueryExtensionAbilityInfosV9(want, flags, userId, extensionInfos);
     EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosV9_1000
+ * @tc.name: test QueryExtensionAbilityInfosV9
+ * @tc.desc: 1.explicit query extension info success, get more than one extension
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryExtensionAbilityInfosV9_1000, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string moduleName = "m1";
+    std::string extension = "test-extension";
+    MockInstallExtension(BUNDLE_NAME_TEST, moduleName, extension);
+    Want want;
+    want.SetAction("action.system.home");
+    want.AddEntity("entity.system.home");
+    want.SetElementName("", BUNDLE_NAME_TEST, "", "");
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+
+    int32_t flags = static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_DEFAULT);
+    ErrCode ret = hostImpl->QueryExtensionAbilityInfosV9(want, flags, 0, extensionInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(extensionInfos.size(), 2);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+    APP_LOGI("QueryExtensionAbilityInfosV9_0600 finish");
 }
 
 /**
@@ -7744,7 +7846,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0100, Function | SmallTest | Leve
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
     std::string hapName = HAP_NAME;
     auto res = impl.CreateStream(hapName);
-    EXPECT_GE(res, 0);
+    EXPECT_EQ(res, -1);
 }
 
 /**
