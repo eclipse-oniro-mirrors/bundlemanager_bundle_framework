@@ -2633,7 +2633,8 @@ bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, Inn
         return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo(),
+        static_cast<uint32_t>(GetSdkApiVersion()));
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(

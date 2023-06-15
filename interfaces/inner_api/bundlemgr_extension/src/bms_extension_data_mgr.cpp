@@ -26,6 +26,7 @@ BmsExtension BmsExtensionDataMgr::bmsExtension_;
 void *BmsExtensionDataMgr::handler_ = nullptr;
 namespace {
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
+const uint32_t API_VERSION_BASE = 1000;
 }
 
 BmsExtensionDataMgr::BmsExtensionDataMgr()
@@ -74,14 +75,9 @@ bool BmsExtensionDataMgr::OpenHandler()
     return true;
 }
 
-bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo)
+bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion)
 {
-    auto ret = Init();
-    if (ret != ERR_OK) {
-        APP_LOGE("Init failed, ErrCode: %{public}d", ret);
-        return false;
-    }
-    if (handler_) {
+    if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
             BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr) {
@@ -90,8 +86,15 @@ bool BmsExtensionDataMgr::CheckApiInfo(const BundleInfo &bundleInfo)
         APP_LOGE("create class: %{public}s failed.", bmsExtension_.bmsExtensionBundleMgr.extensionName.c_str());
         return false;
     }
-    APP_LOGE("dlopen so file failed.");
-    return false;
+    APP_LOGW("access bms-extension failed.");
+    return CheckApiInfo(bundleInfo.compatibleVersion, sdkVersion);
+}
+
+bool BmsExtensionDataMgr::CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion)
+{
+    APP_LOGD("CheckApiInfo with compatibleVersion:%{public}d, sdkVersion:%{public}d", compatibleVersion, sdkVersion);
+    uint32_t compatibleVersionOHOS = compatibleVersion % API_VERSION_BASE;
+    return compatibleVersionOHOS <= sdkVersion;
 }
 } // AppExecFwk
 } // OHOS
