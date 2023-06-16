@@ -165,11 +165,6 @@ protected:
         sysEventInfo_.preBundleScene =
             isBootScene ? InstallScene::BOOT : InstallScene::REBOOT;
     }
-    /**
-     * @brief Save hap to install path when install.
-     * @return Returns true if copy success; returns false otherwise.
-     */
-    bool SaveHapToInstallPath();
 
 private:
     /**
@@ -586,6 +581,9 @@ private:
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
+    ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    std::string GetTempHapPath(const InnerBundleInfo &info);
+    ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

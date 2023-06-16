@@ -882,28 +882,28 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
-    // rename for all temp dirs
+    // copy hap or hsp to real install dir
+    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    if (installParam.copyHapToInstallPath) {
+        APP_LOGD("begin to copy hap to install path");
+        result = SaveHapToInstallPath(newInfos);
+        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    }
+
+    // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
+    // when someone failure occurs in the installation flow
     result = RenameAllTempDir(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "rename temp dirs failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_RENAMED);                         // ---- 90%
 
+    // delete low-version hap or hsp when higher-version hap or hsp installed
     if (!uninstallModuleVec_.empty()) {
         UninstallLowerVersionFeature(uninstallModuleVec_);
     }
 
+    // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
-
-    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
-    RemoveEmptyDirs(newInfos);
-    if (installParam.copyHapToInstallPath) {
-        APP_LOGD("begin to copy hap to install path");
-        if (!SaveHapToInstallPath()) {
-            APP_LOGE("copy hap to install path failed.");
-            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
-        }
-        APP_LOGD("copy hap to install path success");
-    }
 
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
@@ -1770,10 +1770,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
-    if (result != ERR_OK) {
-        APP_LOGE("extract module and rename failed");
-        return result;
-    }
+    CHECK_RESULT(result, "extract module and rename failed %{public}d");
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("old module update state failed");
@@ -3155,8 +3152,14 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     for (const auto &item : infos) {
         auto hapPathIter = hapPathRecords_.find(item.first);
         if (hapPathIter == hapPathRecords_.end()) {
-            hapPathRecords_.emplace(item.first, GetHapPath(item.second));
+            std::string tempDir = GetTempHapPath(item.second);
+            if (tempDir.empty()) {
+                APP_LOGW("get temp hap path failed");
+                continue;
+            }
+            hapPathRecords_.emplace(item.first, tempDir);
         }
+
         std::string signatureFileDir = "";
         FindSignatureFileDir(item.second.GetCurModuleName(), signatureFileDir);
         auto signatureFileIter = signatureFileMap_.find(item.first);
@@ -3166,28 +3169,49 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     }
 }
 
-bool BaseBundleInstaller::SaveHapToInstallPath()
+ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    // size of code signature files should be same with the size of hap and hsp
+    if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
+        APP_LOGE("each hap or hsp needs to be verified code signature");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    // 1. copy hsp or hap file to temp installation dir
+    ErrCode result = ERR_OK;
     for (const auto &hapPathRecord : hapPathRecords_) {
-        APP_LOGD("Save from(%{public}s) to(%{public}s)",
-            hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
+        APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
+        // // to check if the temp dir existed
+        // auto posOfLastPathSep = hapPathRecord.second.rfind(Constants::PATH_SEPARATOR);
+        // if (posOfLastPathSep == std::string::npos) {
+        //     APP_LOGE("invalid hapPath %{public}s", hapPathRecord.second.c_str());
+        //     return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+        // }
+        // std::string tempDir = hapPathRecord.second.substr(0, posOfLastPathSep);
+        // auto result = InstalldClient::GetInstance()->CreateBundleDir(tempDir);
+        // CHECK_RESULT(result, "create temp dir failed %{public}d");
 
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
-            if (InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
-                signatureFileMap_.at(hapPathRecord.first))!= ERR_OK) {
-                APP_LOGE("Copy hap to install path failed or code signature hap failed");
-                return false;
-            }
+            result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
+                signatureFileMap_.at(hapPathRecord.first));
+            CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
         } else {
             if (InstalldClient::GetInstance()->CopyFile(
                 hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
                 APP_LOGE("Copy hap to install path failed");
-                return false;
+                return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
             }
         }
     }
-    return true;
+    APP_LOGD("copy hap to install path success");
+
+    // 2. move hap from temp dir to real installation dir
+    if ((result = MoveFileToRealInstallationDir(infos)) != ERR_OK) {
+        APP_LOGE("move file to real installation path failed %{public}d", result);
+        return result;
+    }
+
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::ResetInstallProperties()
@@ -3551,13 +3575,6 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
             return result;
         }
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
-
-        // verify hap or hsp code signature for uncompressed so files
-        if (!bundleInstallChecker_->VerifyCodeSignature(modulePath_, signatureFileDir)) {
-            APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
-                modulePath_.c_str(), signatureFileDir.c_str());
-            return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
-        }
     }
     return ERR_OK;
 }
@@ -3626,7 +3643,7 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
             break;
         }
     }
-
+    RemoveEmptyDirs(newInfos);
     return ret;
 }
 
@@ -3663,6 +3680,54 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     }
     signatureFileDir = destinationStr;
     APP_LOGD("signatureFileDir is %{public}s", signatureFileDir.c_str());
+    return ERR_OK;
+}
+
+std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
+{
+    std::string hapPath = GetHapPath(info);
+    if (hapPath.empty() || (!BundleUtil::EndWith(hapPath, Constants::INSTALL_FILE_SUFFIX) &&
+        !BundleUtil::EndWith(hapPath, Constants::INSTALL_SHARED_FILE_SUFFIX))) {
+        APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
+        return "";
+    }
+    auto posOfPathSep = hapPath.rfind(Constants::PATH_SEPARATOR);
+    if (posOfPathSep == std::string::npos) {
+        return "";
+    }
+
+    std::string tempDir = hapPath.substr(0, posOfPathSep + 1) + info.GetCurrentModulePackage();
+    if (installedModules_[info.GetCurrentModulePackage()]) {
+        tempDir += Constants::TMP_SUFFIX;
+    }
+
+    // auto result = InstalldClient::GetInstance()->CreateBundleDir(tempDir);
+    // if (result != ERR_OK) {
+    //     APP_LOGE("create temp dir %{public}s failed", tempDir.c_str());
+    //     return "";
+    // }
+    return tempDir.append(hapPath.substr(posOfPathSep));
+}
+
+ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+{
+    APP_LOGD("start to move file to real installation dir");
+    for (const auto &info : infos) {
+        if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
+            APP_LOGE("path %{public}s cannot be found in hapPathRecord", info.first.c_str());
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+
+        std::string realInstallationPath = GetHapPath(info.second);
+        APP_LOGD("move file from path %{public}s to path %{public}s", hapPathRecords_.at(info.first).c_str(),
+            realInstallationPath.c_str());
+        auto result = InstalldClient::GetInstance()->MoveFile(hapPathRecords_.at(info.first), realInstallationPath);
+        if (result != ERR_OK) {
+            APP_LOGE("move file to real path failed %{public}d", result);
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

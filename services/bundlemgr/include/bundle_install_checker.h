@@ -136,8 +136,6 @@ public:
 
     ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
 
-    bool VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir);
-
 private:
 
     ErrCode ParseBundleInfo(

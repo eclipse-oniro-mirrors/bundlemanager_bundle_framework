@@ -945,7 +945,7 @@ bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const 
     }
 
 #if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
+    Security::CodeSign::EntryMap entryMap;
     if (!targetSoPath.empty()) {
         const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
         for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {

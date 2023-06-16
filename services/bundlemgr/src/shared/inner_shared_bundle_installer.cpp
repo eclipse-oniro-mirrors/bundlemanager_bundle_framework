@@ -294,21 +294,32 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
             result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(bundlePath, cpuAbi, fileNames);
             CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
             newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
-
-            // verify hap or hsp code signature for uncompressed so files
-            if (!bundleInstallChecker_->VerifyCodeSignature(bundlePath, signatureFileDir_)) {
-                APP_LOGE("fail to VerifyCodeSignature of modulePath %{public}s and signatureFileDir %{public}s",
-                    bundlePath.c_str(), signatureFileDir_.c_str());
-                return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
-            }
         }
     }
 
-    std::string hspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName + Constants::INSTALL_SHARED_FILE_SUFFIX;
-    result = InstalldClient::GetInstance()->CopyFile(bundlePath, hspPath, signatureFileDir_);
+    // create temp dir
+    std::string tempHspDir = moduleDir.append(Constants::PATH_SEPARATOR).append(moduleName);
+    result = MkdirIfNotExist(tempHspDir);
+    CHECK_RESULT(result, "create tempHspDir dir failed %{public}d");
+
+    // copy hsp to installation dir, and then to verify code signature of hsp
+    std::string tempHspPath = tempHspDir.append(Constants::PATH_SEPARATOR).append(moduleName)
+        .append(Constants::INSTALL_SHARED_FILE_SUFFIX);
+    result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
 
-    newInfo.SetModuleHapPath(hspPath);
+    // move hsp to real installation dir
+    std::string realHspPath = moduleDir.append(Constants::PATH_SEPARATOR).append(moduleName)
+        .append(Constants::INSTALL_SHARED_FILE_SUFFIX);
+    result = InstalldClient::GetInstance()->MoveFile(tempHspPath, realHspPath);
+    CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
+
+    // remove temp dir
+    result = InstalldClient::GetInstance()->RemoveDir(tempHspDir);
+    if (result != ERR_OK) {
+        APP_LOGW("remove temp hsp dir %{public}s failed, error is %{public}d", tempHspDir.c_str(), result);
+    }
+    newInfo.SetModuleHapPath(realHspPath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
     newInfo.UpdateSharedModuleInfo();
