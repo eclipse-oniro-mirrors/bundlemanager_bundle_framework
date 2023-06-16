@@ -385,7 +385,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
         for (const auto &path : realPaths) {
-            ErrCode res = WriteSharedFileToStream(streamInstaller, path, i);
+            res = WriteSharedFileToStream(streamInstaller, path, i);
             if (res != ERR_OK) {
                 DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
                 APP_LOGE("WriteSharedFileToStream(sharedBundleDirPaths) failed due to %{public}d", res);
