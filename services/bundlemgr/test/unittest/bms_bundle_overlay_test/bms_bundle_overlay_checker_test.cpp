@@ -2901,4 +2901,192 @@ HWTEST_F(BmsBundleOverlayCheckerTest, GetNotifyType_0040, Function | SmallTest |
     NotifyType res = installer.GetNotifyType();
     EXPECT_EQ(res, NotifyType::INSTALL);
 }
+
+/**
+ * @tc.number: CheckOverlayUpdate_0010
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    newInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckOverlayUpdate_0020
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.SetOverlayType(OverlayType::OVERLAY_INTERNAL_BUNDLE);
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckOverlayUpdate_0030
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.currentPackage_ = TEST_PACK_AGE;
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckOverlayUpdate_0040
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0040, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+
+    newInfo.currentPackage_ = TEST_PACK_AGE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetModuleName = "";
+    oldInfo.innerModuleInfos_[TEST_PACK_AGE] = innerModuleInfo;
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckOverlayUpdate_0050
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0050, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.SetOverlayType(OverlayType::NON_OVERLAY_TYPE);
+
+    newInfo.currentPackage_ = TEST_PACK_AGE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetModuleName = "targetModuleName";
+    oldInfo.innerModuleInfos_[TEST_PACK_AGE] = innerModuleInfo;
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckOverlayUpdate_0060
+ * @tc.name: test CheckOverlayUpdate
+ * @tc.desc: 1.Test the CheckOverlayUpdate
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CheckOverlayUpdate_0060, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+    newInfo.SetOverlayType(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
+
+    newInfo.currentPackage_ = TEST_PACK_AGE;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.targetModuleName = "targetModuleName";
+    oldInfo.innerModuleInfos_[TEST_PACK_AGE] = innerModuleInfo;
+    ErrCode res = installer.CheckOverlayUpdate(oldInfo, newInfo, USERID);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: CopyHapsToSecurityDir_0010
+ * @tc.name: test CopyHapsToSecurityDir
+ * @tc.desc: 1.Test the CopyHapsToSecurityDir
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CopyHapsToSecurityDir_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.withCopyHaps = true;
+    std::vector<std::string> bundlePaths;
+    bundlePaths.push_back("data/test/test");
+    ErrCode res = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+}
+
+/**
+ * @tc.number: CopyHapsToSecurityDir_0020
+ * @tc.name: test CopyHapsToSecurityDir
+ * @tc.desc: 1.Test the CopyHapsToSecurityDir
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, CopyHapsToSecurityDir_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InstallParam installParam;
+    installParam.withCopyHaps = true;
+    std::vector<std::string> bundlePaths;
+    ErrCode res = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: FindSignatureFileDir_0010
+ * @tc.name: test FindSignatureFileDir
+ * @tc.desc: 1.Test the FindSignatureFileDir
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0010, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string signatureFileDir;
+
+    installer.verifyCodeParams_.emplace(TEST_MODULE_NAME, TEST_MODULE_NAME);
+    ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME + "1", signatureFileDir);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED);
+}
+
+/**
+ * @tc.number: FindSignatureFileDir_0020
+ * @tc.name: test FindSignatureFileDir
+ * @tc.desc: 1.Test the FindSignatureFileDir
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0020, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string signatureFileDir;
+
+    installer.verifyCodeParams_.emplace(TEST_MODULE_NAME, TEST_MODULE_NAME);
+    ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME, signatureFileDir);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID);
+}
+
+/**
+ * @tc.number: FindSignatureFileDir_0030
+ * @tc.name: test FindSignatureFileDir
+ * @tc.desc: 1.Test the FindSignatureFileDir
+*/
+HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    std::string signatureFileDir = "testModuleName.sig";
+
+    installer.verifyCodeParams_.emplace(TEST_MODULE_NAME, signatureFileDir);
+    ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME, signatureFileDir);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+}
 } // OHOS
