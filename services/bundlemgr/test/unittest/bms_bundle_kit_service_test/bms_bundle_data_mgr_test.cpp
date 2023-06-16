@@ -2855,7 +2855,7 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0004, Function | SmallTest 
 /**
  * @tc.number: GetAbilityLabel_0100
  * @tc.name: test GetAbilityLabel
-1 * @tc.desc: 1.check ability infos
+ * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleDataMgrTest, GetAbilityLabel_0100, Function | MediumTest | Level1)
 {
