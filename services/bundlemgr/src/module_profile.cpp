@@ -76,7 +76,7 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "thumbnail",
     "preview",
     "print",
-    "ui",
+    "",
     "push",
     "driver",
     "appAccountAuthorization"
@@ -1916,6 +1916,10 @@ bool ToAbilityInfo(
 
 ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
 {
+    if (type == "ui") {
+        return ExtensionAbilityType::UI;
+    }
+
     for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
         if (Profile::EXTENSION_TYPE_SET[index] == type) {
             return static_cast<ExtensionAbilityType>(index);

@@ -54,10 +54,10 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
-    UI = 16,
     PUSH = 17,
     DRIVER = 18,
     APP_ACCOUNT_AUTHORIZATION = 19,
+    UI = 254,
     UNSPECIFIED = 255
 };
 
