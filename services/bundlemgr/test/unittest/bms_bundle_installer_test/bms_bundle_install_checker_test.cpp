@@ -1636,4 +1636,76 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckDuplicateProxyData_0003, Function | S
     bool ret = baseBundleInstaller.CheckDuplicateProxyData(newInfos);
     EXPECT_EQ(ret, true);
 }
+
+/**
+ * @tc.number: CheckSignatureFileDir_0001
+ * @tc.name: test the start function of CheckSignatureFileDir
+ * @tc.desc: 1. test CheckSignatureFileDir
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSignatureFileDir_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSignatureFileDir("");
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID);
+}
+
+/**
+ * @tc.number: CheckSignatureFileDir_0002
+ * @tc.name: test the start function of CheckSignatureFileDir
+ * @tc.desc: 1. test CheckSignatureFileDir
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSignatureFileDir_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSignatureFileDir("data/test");
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID);
+}
+
+/**
+ * @tc.number: CheckSignatureFileDir_0003
+ * @tc.name: test the start function of CheckSignatureFileDir
+ * @tc.desc: 1. test CheckSignatureFileDir
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckSignatureFileDir_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckSignatureFileDir("test.sig");
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_0001
+ * @tc.name: test the start function of VerifyCodeSignature
+ * @tc.desc: 1. test VerifyCodeSignature
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VerifyCodeSignature_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    bool ret = installChecker.VerifyCodeSignature("", "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_0002
+ * @tc.name: test the start function of VerifyCodeSignature
+ * @tc.desc: 1. test VerifyCodeSignature
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VerifyCodeSignature_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    bool ret = installChecker.VerifyCodeSignature("modulePath", "");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: VerifyCodeSignature_0003
+ * @tc.name: test the start function of VerifyCodeSignature
+ * @tc.desc: 1. test VerifyCodeSignature
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VerifyCodeSignature_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    bool ret = installChecker.VerifyCodeSignature("modulePath", "signatureFileDir");
+    EXPECT_EQ(ret, true);
+}
 } // OHOS

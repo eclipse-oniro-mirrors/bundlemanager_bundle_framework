@@ -593,6 +593,26 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessRebootTest_0100, Function | SmallTest 
 }
 
 /**
+ * @tc.number: InnerProcessRebootTest_0200
+ * @tc.name: InnerProcessRebootSharedBundleInstall
+ * @tc.desc: test InnerProcessRebootSharedBundleInstall
+ */
+HWTEST_F(BmsEventHandlerTest, InnerProcessRebootTest_0200, Function | SmallTest | Level0)
+{
+    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
+    ASSERT_NE(nullptr, runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::list<std::string> scanPathList {BUNDLE_PATH};
+    auto appType = Constants::AppType::SYSTEM_APP;
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    handler->InnerProcessRebootSharedBundleInstall(scanPathList, appType);
+    bool removable = handler->IsPreInstallRemovable(BUNDLE_PATH);
+    EXPECT_FALSE(removable);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
  * @tc.number: IsNeedToUpdateSharedAppByHash_0100
  * @tc.name: IsNeedToUpdateSharedAppByHash
  * @tc.desc: test IsNeedToUpdateSharedAppByHash

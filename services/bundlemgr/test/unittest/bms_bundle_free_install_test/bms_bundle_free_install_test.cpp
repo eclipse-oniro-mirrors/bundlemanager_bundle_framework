@@ -1998,4 +1998,43 @@ HWTEST_F(BmsBundleFreeInstallTest, CheckEcologicalRule_0001, Function | SmallTes
     bool ret = connectAbilityMgr->CheckEcologicalRule(want, callerInfo, rule);
     EXPECT_FALSE(ret);
 }
+
+/**
+ * @tc.number: GetEcologicalCallerInfo_0001
+ * Function: GetEcologicalCallerInfo
+ * @tc.name: test GetEcologicalCallerInfo
+ * @tc.desc: test GetEcologicalCallerInfo success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, GetEcologicalCallerInfo_0001, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    ErmsCallerInfo callerInfo;
+    std::string callerBundleName;
+
+    setuid(1);
+    connectAbilityMgr->GetEcologicalCallerInfo(want, callerInfo, USERID);
+    auto bundleDataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    bool result = bundleDataMgr_->GetNameForUid(IPCSkeleton::GetCallingUid(), callerBundleName);
+    EXPECT_EQ(result, true);
+}
+
+/**
+ * @tc.number: GetEcologicalCallerInfo_0002
+ * Function: GetEcologicalCallerInfo
+ * @tc.name: test GetEcologicalCallerInfo
+ * @tc.desc: test GetEcologicalCallerInfo success
+ */
+HWTEST_F(BmsBundleFreeInstallTest, GetEcologicalCallerInfo_0002, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    ErmsCallerInfo callerInfo;
+
+    auto bundleDataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    connectAbilityMgr->GetEcologicalCallerInfo(want, callerInfo, USERID);
+    ASSERT_NE(bundleDataMgr_, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = bundleDataMgr_;
+}
 } // OHOS
