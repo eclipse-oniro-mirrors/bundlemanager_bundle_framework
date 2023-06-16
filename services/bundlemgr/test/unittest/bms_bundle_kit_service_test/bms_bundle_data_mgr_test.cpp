@@ -135,6 +135,9 @@ const std::string COMMON_EVENT_PERMISSION = "permission";
 const std::string COMMON_EVENT_DATA = "data";
 const std::string COMMON_EVENT_TYPE = "type";
 const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
+const std::string EXT_NAME = "extName";
+const std::string MIME_TYPE = "application/x-maker";
+const std::string EMPTY_STRING = "";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -2691,6 +2694,162 @@ HWTEST_F(BmsBundleDataMgrTest, PreBundleProfile_0800, Function | SmallTest | Lev
     std::set<PreBundleConfigInfo> scanInfos;
     ErrCode res = preBundleProfile.TransformTo(INSTALL_LIST2, scanInfos);
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0001
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        EMPTY_STRING, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, EMPTY_STRING, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0002
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0002, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        EMPTY_STRING, EMPTY_STRING, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        EMPTY_STRING, MODULE_NAME_TEST, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0003, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, EMPTY_STRING, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        EMPTY_STRING, EMPTY_STRING, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, EMPTY_STRING);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0004
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetExtNameOrMIMEToApp_0004, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EMPTY_STRING, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EMPTY_STRING, EMPTY_STRING);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    res = bundleMgrProxy->SetExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0001
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: 1. DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        EMPTY_STRING, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, EMPTY_STRING, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0002
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: 1. DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0002, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        EMPTY_STRING, EMPTY_STRING, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        EMPTY_STRING, MODULE_NAME_TEST, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0003
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: 1. DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0003, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, EMPTY_STRING, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        EMPTY_STRING, EMPTY_STRING, EMPTY_STRING, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, EMPTY_STRING);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: DelExtNameOrMIMEToApp_0004
+ * @tc.name: DelExtNameOrMIMEToApp
+ * @tc.desc: 1. DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0004, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    auto res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EMPTY_STRING, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EMPTY_STRING, EMPTY_STRING);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    res = bundleMgrProxy->DelExtNameOrMIMEToApp(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_DEMO, EXT_NAME, MIME_TYPE);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
