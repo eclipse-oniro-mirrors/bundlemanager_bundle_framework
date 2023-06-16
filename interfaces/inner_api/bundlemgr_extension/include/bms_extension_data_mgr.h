@@ -27,7 +27,8 @@ namespace AppExecFwk {
 class BmsExtensionDataMgr {
 public:
     BmsExtensionDataMgr();
-    bool CheckApiInfo(const BundleInfo &bundleInfo);
+    bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
+    bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode Init();
 private:
     bool OpenHandler();
