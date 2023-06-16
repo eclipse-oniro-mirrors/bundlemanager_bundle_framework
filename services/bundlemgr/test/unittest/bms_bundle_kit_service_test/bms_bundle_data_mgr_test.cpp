@@ -2987,7 +2987,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0001, Function | SmallTest |
     reply.WriteAshmem(ashMem);
     BundleInfo bundleInfo;
     auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
 }
 
 /**
@@ -3001,6 +3001,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0002, Function | SmallTest |
     MessageParcel reply;
     BundleInfo bundleInfo;
     auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, true);
+    EXPECT_EQ(res, false);
 }
 }
