@@ -38,6 +38,8 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_TEST = "app_bundleName";
+const std::string APPID = "com.third.hiworld.example1_BNtg4JBClbl92Rgc3jm/"
+    "RfcAdrHXaM8F0QOiwVEhnV5ebE5jNIYnAx+weFRT3QTyUjRNdhmc2aAzWyi+5t5CoBM=";
 const int32_t USERID = 100;
 }  // namespace
 
@@ -485,5 +487,19 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0090, Function |
     Want want;
     auto res = impl.GetDisposedStatus("", want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_0100
+ * @tc.name: test CheckAppInstallControl by InnerBundleInfo
+ * @tc.desc: 1.CheckAppInstallControl test
+ */
+HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    seteuid(1000);
+
+    bool res = info.CheckAppInstallControl(APPID, USERID);
+    EXPECT_EQ(res, true);
 }
 } // OHOS
