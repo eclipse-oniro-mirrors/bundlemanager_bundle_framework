@@ -4244,4 +4244,21 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0420, Function | SmallTest
     }
     UninstallBundleInfo(BUNDLE_NAME_DEMO);
 }
+
+/**
+ * @tc.number: DeployQuickFix_0001
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0001, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    std::string path = VALID_FILE_PATH_3;
+    deployer->patchPaths_.push_back(path);
+    ErrCode ret = deployer->DeployQuickFix();
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+}
 } // OHOS
