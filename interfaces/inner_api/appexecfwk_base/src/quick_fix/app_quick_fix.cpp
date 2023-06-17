@@ -70,6 +70,9 @@ void from_json(const nlohmann::json &jsonObject, AppQuickFix &appQuickFix)
         APP_QUICK_FIX_DEPLOYING_APP_QF_INFO, appQuickFix.deployingAppqfInfo,
         JsonType::OBJECT, false, parseResult,
         ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module appQuickFix from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 bool AppQuickFix::ReadFromParcel(Parcel &parcel)
