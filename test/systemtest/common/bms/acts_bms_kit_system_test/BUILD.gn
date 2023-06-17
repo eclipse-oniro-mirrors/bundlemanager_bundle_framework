@@ -55,7 +55,7 @@ ohos_systemtest("ActsBmsKitSystemTest") {
   external_deps = [
     "ability_base:want",
     "common_event_service:cesfwk_innerkits",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]

@@ -36,7 +36,7 @@ ohos_shared_library("installer") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
   ]
@@ -50,7 +50,7 @@ ohos_shared_library("installer") {
   external_deps += [
     "ability_base:want",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
 

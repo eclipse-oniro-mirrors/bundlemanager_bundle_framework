@@ -52,7 +52,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
@@ -103,7 +103,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
   ]
@@ -155,7 +155,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
     "samgr:samgr_proxy",
@@ -204,8 +204,8 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
   ]

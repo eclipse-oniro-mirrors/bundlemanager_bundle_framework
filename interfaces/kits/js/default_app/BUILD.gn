@@ -36,7 +36,7 @@ ohos_shared_library("defaultappmanager") {
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
