@@ -93,6 +93,10 @@ private:
     ErrCode CopyHspToSecurityDir(std::vector<std::string> &bundlePaths);
     ErrCode ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
         std::vector<std::string> &bundlePaths, std::string &signatureFilePath);
+    ErrCode SaveHspToRealInstallationDir(const std::string &bundlePath, const std::string &moduleDir,
+        const std::string &moduleName, const std::string &realHspPath, const std::string &versionDir);
+    std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
+
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
@@ -107,6 +111,7 @@ private:
     InnerBundleInfo oldBundleInfo_;
     InnerBundleInfo newBundleInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::string nativeLibraryPath_;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 

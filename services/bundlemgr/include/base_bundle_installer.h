@@ -581,7 +581,7 @@ private:
     ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
     ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
-    ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+    ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
@@ -620,6 +620,7 @@ private:
     // key is the temp path of hap or hsp
     // value is the signature file path
     std::map<std::string, std::string> signatureFileMap_;
+    std::string nativeLibraryPath_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

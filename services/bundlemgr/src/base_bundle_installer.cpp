@@ -3180,16 +3180,6 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     ErrCode result = ERR_OK;
     for (const auto &hapPathRecord : hapPathRecords_) {
         APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        // // to check if the temp dir existed
-        // auto posOfLastPathSep = hapPathRecord.second.rfind(Constants::PATH_SEPARATOR);
-        // if (posOfLastPathSep == std::string::npos) {
-        //     APP_LOGE("invalid hapPath %{public}s", hapPathRecord.second.c_str());
-        //     return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
-        // }
-        // std::string tempDir = hapPathRecord.second.substr(0, posOfLastPathSep);
-        // auto result = InstalldClient::GetInstance()->CreateBundleDir(tempDir);
-        // CHECK_RESULT(result, "create temp dir failed %{public}d");
-
         if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
             (!signatureFileMap_.at(hapPathRecord.first).empty())) {
             result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
@@ -3205,12 +3195,11 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     APP_LOGD("copy hap to install path success");
 
-    // 2. move hap from temp dir to real installation dir
+    // 2. move file from temp dir to real installation dir
     if ((result = MoveFileToRealInstallationDir(infos)) != ERR_OK) {
         APP_LOGE("move file to real installation path failed %{public}d", result);
         return result;
     }
-
     return ERR_OK;
 }
 
@@ -3535,15 +3524,21 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     std::string nativeLibraryPath;
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+        nativeLibraryPath_ = nativeLibraryPath;
         if (isCompressNativeLibrary) {
             bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-            if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
-                nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+                if (isLibIsolated) {
+                    nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+                } else {
+                    nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
+                        Constants::PATH_SEPARATOR + nativeLibraryPath;
+                }
                 APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
             }
             targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
+                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
+                .append(Constants::PATH_SEPARATOR);
         }
     }
 
@@ -3700,17 +3695,11 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     if (installedModules_[info.GetCurrentModulePackage()]) {
         tempDir += Constants::TMP_SUFFIX;
     }
-
-    // auto result = InstalldClient::GetInstance()->CreateBundleDir(tempDir);
-    // if (result != ERR_OK) {
-    //     APP_LOGE("create temp dir %{public}s failed", tempDir.c_str());
-    //     return "";
-    // }
     return tempDir.append(hapPath.substr(posOfPathSep));
 }
 
 ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
-    const std::unordered_map<std::string, InnerBundleInfo> &infos) const
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     APP_LOGD("start to move file to real installation dir");
     for (const auto &info : infos) {
@@ -3720,12 +3709,37 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
         }
 
         std::string realInstallationPath = GetHapPath(info.second);
-        APP_LOGD("move file from path %{public}s to path %{public}s", hapPathRecords_.at(info.first).c_str(),
-            realInstallationPath.c_str());
+        APP_LOGD("move hsp or hsp file from path %{public}s to path %{public}s",
+            hapPathRecords_.at(info.first).c_str(), realInstallationPath.c_str());
+        // 1. move hap or hsp to real installation dir
         auto result = InstalldClient::GetInstance()->MoveFile(hapPathRecords_.at(info.first), realInstallationPath);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+        // 2. move so files to real lib dir
+        bool isLibIsolated = info.second.IsLibIsolated(info.second.GetCurModuleName());
+        if (isLibIsolated) {
+            APP_LOGI("so files are isolated and no necessary to move so files");
+            return ERR_OK;
+        }
+        if (installedModules_[info.second.GetCurrentModulePackage()] && !nativeLibraryPath_.empty()) {
+            std::string tempSoDir;
+            tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(info.second.GetCurrentModulePackage())
+                .append(Constants::TMP_SUFFIX).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath_);
+            std::string realSoDir;
+            realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+                     .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                     .append(nativeLibraryPath_);
+            APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
+            auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            if (result != ERR_OK) {
+                APP_LOGE("move file to real path failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
         }
     }
     return ERR_OK;

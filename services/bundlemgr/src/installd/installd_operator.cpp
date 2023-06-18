@@ -995,5 +995,49 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
     return true;
 }
 
+bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    APP_LOGD("srcDir is %{public}s, desDir is %{public}s", srcDir.c_str(), desDir.c_str());
+    if (srcDir.empty() || desDir.empty()) {
+        APP_LOGE("move file failed due to srcDir or desDir is empty");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(srcDir, realPath)) {
+        APP_LOGE("srcDir(%{public}s) is not real path", srcDir.c_str());
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("MoveFiles open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
+            std::string innerDesStr = desDir + Constants::PATH_SEPARATOR + currentName;
+            if (!RenameFile(curPath, innerDesStr)) {
+                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s)", curPath.c_str(),
+                    innerDesStr.c_str());
+                closedir(directory);
+                return false;
+            }
+            mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            OHOS::ChangeModeFile(innerDesStr, mode);
+        }
+    }
+    closedir(directory);
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

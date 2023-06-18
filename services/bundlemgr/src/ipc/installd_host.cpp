@@ -79,6 +79,7 @@ void InstalldHost::init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
         &InstalldHost::HandVerifyCodeSignature);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -411,6 +412,16 @@ bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &r
     std::string signatureFileDir = Str16ToStr8(data.ReadString16());
 
     ErrCode result = VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcDir = Str16ToStr8(data.ReadString16());
+    std::string desDir = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = MoveFiles(srcDir, desDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

@@ -272,18 +272,20 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     CHECK_RESULT(result, "check module dir failed %{public}d");
 
     std::string cpuAbi;
-    std::string nativeLibraryPath;
-    if (newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath)) {
+    if (newInfo.FetchNativeSoAttrs(moduleName, cpuAbi, nativeLibraryPath_)) {
         if (newInfo.IsCompressNativeLibs(moduleName)) {
-            std::string targetSoPath = versionDir + Constants::PATH_SEPARATOR + nativeLibraryPath +
-                Constants::PATH_SEPARATOR;
-            APP_LOGD("targetSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
-                targetSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
-            result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, targetSoPath, cpuAbi);
+            std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
+            if (tempNativeLibraryPath.empty()) {
+                return ERR_APPEXECFWK_INSTALLD_EXTRACT_FILES_FAILED;
+            }
+            std::string tempSoPath = versionDir + Constants::PATH_SEPARATOR + tempNativeLibraryPath;
+            APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
+                tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
+            result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, tempSoPath, cpuAbi);
             CHECK_RESULT(result, "extract module files failed %{public}d");
 
             // verify hap or hsp code signature for compressed so files
-            result = InstalldClient::GetInstance()->VerifyCodeSignature(bundlePath, cpuAbi, targetSoPath,
+            result = InstalldClient::GetInstance()->VerifyCodeSignature(bundlePath, cpuAbi, tempSoPath,
                 signatureFileDir_);
             if (result != ERR_OK) {
                 APP_LOGE("fail to VerifyCodeSignature, error is %{public}d", result);
@@ -297,28 +299,12 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
         }
     }
 
-    // create temp dir
-    std::string tempHspDir = moduleDir.append(Constants::PATH_SEPARATOR).append(moduleName);
-    result = MkdirIfNotExist(tempHspDir);
-    CHECK_RESULT(result, "create tempHspDir dir failed %{public}d");
+    // save hsp and so files to installation dir
+    std::string realHspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName +
+        Constants::INSTALL_SHARED_FILE_SUFFIX;
+    result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath, versionDir);
+    CHECK_RESULT(result, "save hsp file failed %{public}d");
 
-    // copy hsp to installation dir, and then to verify code signature of hsp
-    std::string tempHspPath = tempHspDir.append(Constants::PATH_SEPARATOR).append(moduleName)
-        .append(Constants::INSTALL_SHARED_FILE_SUFFIX);
-    result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
-    CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
-
-    // move hsp to real installation dir
-    std::string realHspPath = moduleDir.append(Constants::PATH_SEPARATOR).append(moduleName)
-        .append(Constants::INSTALL_SHARED_FILE_SUFFIX);
-    result = InstalldClient::GetInstance()->MoveFile(tempHspPath, realHspPath);
-    CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
-
-    // remove temp dir
-    result = InstalldClient::GetInstance()->RemoveDir(tempHspDir);
-    if (result != ERR_OK) {
-        APP_LOGW("remove temp hsp dir %{public}s failed, error is %{public}d", tempHspDir.c_str(), result);
-    }
     newInfo.SetModuleHapPath(realHspPath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
@@ -514,6 +500,83 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
     }
     APP_LOGD("signatureFilePath is %{public}s", signatureFilePath.c_str());
     return ERR_OK;
+}
+
+ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::string &bundlePath,
+    const std::string &moduleDir,
+    const std::string &moduleName,
+    const std::string &realHspPath,
+    const std::string &versionDir)
+{
+    // 1. create temp dir
+    ErrCode result = ERR_OK;
+    std::string tempHspDir = moduleDir + Constants::PATH_SEPARATOR + moduleName;
+    result = MkdirIfNotExist(tempHspDir);
+    CHECK_RESULT(result, "create tempHspDir dir failed %{public}d");
+
+    // 2. copy hsp to installation dir, and then to verify code signature of hsp
+    std::string tempHspPath = tempHspDir + Constants::PATH_SEPARATOR + moduleName +
+        Constants::INSTALL_SHARED_FILE_SUFFIX;
+    result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
+    CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
+
+    // 3. move hsp to real installation dir
+    APP_LOGD("move file from temp path %{public}s to real path %{public}s", tempHspPath.c_str(), realHspPath.c_str());
+    result = InstalldClient::GetInstance()->MoveFile(tempHspPath, realHspPath);
+    CHECK_RESULT(result, "move hsp to install dir failed %{public}d");
+
+    // 4. remove temp dir
+    result = InstalldClient::GetInstance()->RemoveDir(tempHspDir);
+    if (result != ERR_OK) {
+        APP_LOGW("remove temp hsp dir %{public}s failed, error is %{public}d", tempHspDir.c_str(), result);
+    }
+
+    // 5. move so files to real installation dir
+    std::string realSoPath = versionDir + Constants::PATH_SEPARATOR + nativeLibraryPath_ +
+        Constants::PATH_SEPARATOR;
+    result = MkdirIfNotExist(realSoPath);
+    CHECK_RESULT(result, "check module dir failed %{public}d");
+
+    std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath_);
+    if (tempNativeLibraryPath.empty()) {
+        APP_LOGI("no so libs existed");
+        return ERR_OK;
+    }
+    std::string tempSoPath = versionDir + Constants::PATH_SEPARATOR + tempNativeLibraryPath;
+    APP_LOGD("move so files from path %{public}s to path %{public}s", tempSoPath.c_str(), realSoPath.c_str());
+    result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
+    if (result != ERR_OK) {
+        APP_LOGE("move file to real path failed %{public}d", result);
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+
+    // 6. remove so temp dir
+    std::string deleteTempDir = versionDir + Constants::PATH_SEPARATOR + moduleName + Constants::TMP_SUFFIX;
+    result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
+    if (result != ERR_OK) {
+        APP_LOGW("remove hsp temp so dir %{public}s failed, error is %{public}d", deleteTempDir.c_str(), result);
+    }
+
+    return ERR_OK;
+}
+
+std::string InnerSharedBundleInstaller::ObtainTempSoPath(const std::string &moduleName,
+    const std::string &nativeLibPath)
+{
+    std::string tempSoPath;
+    if (nativeLibPath.empty()) {
+        APP_LOGE("invalid native libs path");
+        return tempSoPath;
+    }
+    tempSoPath = nativeLibPath;
+    auto pos = tempSoPath.find(moduleName);
+    if (pos == std::string::npos) {
+        tempSoPath = moduleName + Constants::TMP_SUFFIX + Constants::PATH_SEPARATOR + tempSoPath;
+    } else {
+        std::string innerTempStr = moduleName + Constants::TMP_SUFFIX;
+        tempSoPath.replace(pos, moduleName.length(), innerTempStr);
+    }
+    return tempSoPath + Constants::PATH_SEPARATOR;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
