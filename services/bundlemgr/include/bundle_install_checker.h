@@ -33,6 +33,12 @@ namespace AppExecFwk {
 struct InstallCheckParam {
     bool isPreInstallApp = false;
     bool removable = true;
+    // status of install bundle permission
+    PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install enterprise bundle permission
+    PermissionStatus installEnterpriseBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // is shell token
+    bool isCallByShell = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
 };
@@ -118,6 +124,9 @@ public:
     }
 
     bool VaildInstallPermission(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    bool VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
