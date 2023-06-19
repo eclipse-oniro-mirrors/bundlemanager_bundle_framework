@@ -21,6 +21,7 @@
 #include "appexecfwk_errors.h"
 #include "bms_extension.h"
 #include "bundle_info.h"
+#include "interfaces/hap_verify.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -29,6 +30,7 @@ public:
     BmsExtensionDataMgr();
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
+    ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
     ErrCode Init();
 private:
     bool OpenHandler();
