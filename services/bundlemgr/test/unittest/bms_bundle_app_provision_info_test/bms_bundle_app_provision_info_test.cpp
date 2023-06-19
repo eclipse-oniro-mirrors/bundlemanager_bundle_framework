@@ -797,6 +797,148 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0008, Function | Sm
 }
 
 /**
+ * @tc.number: InnerSharedBundleInstallerTest_0100
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0100, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    installer.oldBundleInfo_ = innerBundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> parsedBundles;
+    parsedBundles[HAP_FILE_PATH1] = innerBundleInfo;
+    installer.parsedBundles_ = parsedBundles;
+    auto ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0200
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0200, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    installer.oldBundleInfo_ = innerBundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> parsedBundles;
+    parsedBundles[HAP_FILE_PATH1] = innerBundleInfo;
+    std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerSharedModuleInfos[HAP_FILE_PATH1] = innerModuleInfos;
+    installer.parsedBundles_ = parsedBundles;
+    innerBundleInfo.innerSharedModuleInfos_ = innerSharedModuleInfos;
+    auto ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfos.emplace_back(innerModuleInfo);
+    innerSharedModuleInfos[HAP_FILE_PATH1] = innerModuleInfos;
+    ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0400
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0400, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo newInfo;
+    auto ret = installer.ExtractSharedBundles("", newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0500
+ * @tc.name: test the start function of CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0500, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> bundlePaths = {"stream_install"};
+    auto ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0600
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0600, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths;
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0700
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0700, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths = {HSP_FILE_PATH1};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    inBundlePaths.emplace_back(HAP_FILE_PATH1);
+    inBundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0800
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths = {HAP_FILE_PATH1, HAP_FILE_PATH1};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths.clear();
+    inBundlePaths = {HSP_FILE_PATH1, HSP_FILE_PATH1};
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths[0] = "test.sig";
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InnerProcessStockBundleProvisionInfo_0001
  * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
  * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos

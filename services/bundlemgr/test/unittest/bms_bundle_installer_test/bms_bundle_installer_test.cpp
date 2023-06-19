@@ -2619,6 +2619,36 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0200, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: ZipFile_0300
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckCoherencyLocalHeader
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0300, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntry zipEntry;
+    zipEntry.localHeaderOffset = -1;
+    uint16_t extraSize = 0;
+    bool ret = file.CheckCoherencyLocalHeader(zipEntry, extraSize);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0400
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test SeekToEntryStart
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0400, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntry zipEntry;
+    zipEntry.localHeaderOffset = 1;
+    uint16_t extraSize = 0;
+    bool ret = file.SeekToEntryStart(zipEntry, extraSize);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: BaseExtractor_0100
  * @tc.name: Test HasEntry
  * @tc.desc: 1.Test HasEntry of BaseExtractor
@@ -2883,6 +2913,172 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Lev
     infos.clear();
     auto ret = installChecker.CheckDeviceType(infos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallChecker_1000
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1000, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName;
+    auto ret = installChecker.CheckBundleName("", "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1100
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName = BUNDLE_NAME;
+    auto ret = installChecker.CheckBundleName(provisionBundleName, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1200
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName = BUNDLE_NAME;
+    auto ret = installChecker.CheckBundleName(provisionBundleName, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallChecker_1300
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1300, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckBundleName("", BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1400
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1400, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1500
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1500, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+    installParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+    installParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1600
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1600, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::DEBUG;
+    result.SetProvisionInfo(info);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1700
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1700, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallChecker_1800
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1800, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallChecker_1900
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1900, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
 }
 
 /**
