@@ -270,13 +270,10 @@ bool BundlePermissionMgr::GetNewPermissionDefList(Security::AccessToken::AccessT
         APP_LOGE("BundlePermissionMgr::GetNewPermissionDefList GetDefPermissions failed errcode: %{public}d", ret);
         return false;
     }
-    APP_LOGE("lin_test1");
     for (const auto &perm : permissionDef) {
-        APP_LOGE("lin_test2");
         if (std::find_if(newPermissionDef.begin(), newPermissionDef.end(), [&perm](const auto &newPerm) {
             return newPerm.permissionName == perm.permissionName;
             }) == newPermissionDef.end()) {
-            APP_LOGE("lin_test3");
             APP_LOGD("BundlePermissionMgr::GetNewPermissionDefList add define permission %{public}s",
                      perm.permissionName.c_str());
             newPermissionDef.emplace_back(perm);
