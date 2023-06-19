@@ -1954,6 +1954,7 @@ bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
+    UpdateIsCompressNativeLibs();
     return true;
 }
 
@@ -2134,6 +2135,7 @@ void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
+    UpdateIsCompressNativeLibs();
 }
 
 bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
@@ -4037,6 +4039,14 @@ ErrCode InnerBundleInfo::DelMimeType(
     supportMimeTypes.erase(
         std::remove(supportMimeTypes.begin(), supportMimeTypes.end(), mimeType), supportMimeTypes.end());
     return ERR_OK;
+}
+
+void InnerBundleInfo::UpdateIsCompressNativeLibs()
+{
+    for (const auto &info : innerModuleInfos_) {
+        baseApplicationInfo_->isCompressNativeLibs =
+            (baseApplicationInfo_->isCompressNativeLibs || info.second.compressNativeLibs) ? true : false;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
