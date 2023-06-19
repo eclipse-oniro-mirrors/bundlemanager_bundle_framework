@@ -2427,6 +2427,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
+    applicationInfo.isCompressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
     if (!ToApplicationInfo(configJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;
