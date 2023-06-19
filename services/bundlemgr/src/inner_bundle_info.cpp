@@ -3984,7 +3984,15 @@ ErrCode InnerBundleInfo::SetExtName(
         APP_LOGE("module %{public}s not exists", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
-    abilityInfoPair->second.supportExtNames.emplace_back(extName);
+    auto &supportExtNames = abilityInfoPair->second.supportExtNames;
+    bool duplicated = std::any_of(supportExtNames.begin(), supportExtNames.end(), [&extName](const auto &name) {
+            return extName == name;
+    });
+    if (duplicated) {
+        APP_LOGW("extName %{public}s already exist in ability %{public}s", extName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE;
+    }
+    supportExtNames.emplace_back(extName);
     return ERR_OK;
 }
 
@@ -3999,6 +4007,14 @@ ErrCode InnerBundleInfo::SetMimeType(
     if (moduleName != abilityInfoPair->second.moduleName) {
         APP_LOGE("module %{public}s not exists", moduleName.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportMimeTypes = abilityInfoPair->second.supportMimeTypes;
+    bool duplicated = std::any_of(supportMimeTypes.begin(), supportMimeTypes.end(), [&mimeType](const auto &type) {
+            return mimeType == type;
+    });
+    if (duplicated) {
+        APP_LOGW("MIME type %{public}s already exist in ability %{public}s", mimeType.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE;
     }
     abilityInfoPair->second.supportMimeTypes.emplace_back(mimeType);
     return ERR_OK;
