@@ -523,7 +523,7 @@ napi_value ZipFileWrap(napi_env env, napi_callback_info info, AsyncZipCallbackIn
         }
     }, nullptr, nullptr);
     CompressExcute(env, asyncZipCallbackInfo);
-    if (cbInfo != nullptr && *cbInfo != nullptr) {
+    if (cbInfo != nullptr) {
         delete cbInfo;
         cbInfo = nullptr;
     }

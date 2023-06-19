@@ -31,6 +31,7 @@ using OHOS::DelayedSingleton;
 
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t TOKENID = 100;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 } // namespace
 
@@ -864,4 +865,71 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
     param.rdbDataManager_.reset();
     ret = param.SaveBmsParam("bms_param", "bms_value");
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ConvertPermissionDef_0100
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::DefinePermission definePermission;
+    definePermission.grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
+    BundlePermissionMgr::ConvertPermissionDef(permDef, definePermission, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(permDef.grantMode, AccessToken::GrantMode::SYSTEM_GRANT);
+}
+
+/**
+ * @tc.number: ConvertPermissionDef_0200
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0200, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::DefinePermission definePermission;
+    definePermission.grantMode = Profile::DEFINEPERMISSION_PROVISION_ENABLE;
+    BundlePermissionMgr::ConvertPermissionDef(permDef, definePermission, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(permDef.grantMode, AccessToken::GrantMode::USER_GRANT);
+}
+
+/**
+ * @tc.number: GetNeedDeleteDefinePermissionName_0100
+ * @tc.name: test GetNeedDeleteDefinePermissionName
+ * @tc.desc: 1.test GetNeedDeleteDefinePermissionName of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, GetNeedDeleteDefinePermissionName_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = BUNDLE_TEMP_NAME;
+    newInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    oldInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    auto ret = BundlePermissionMgr::GetNeedDeleteDefinePermissionName(oldInfo, newInfo);
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: GetNewPermissionDefList_0100
+ * @tc.name: test GetNewPermissionDefList
+ * @tc.desc: 1.test GetNewPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::AccessTokenID tokenId = TOKENID;
+    std::vector<AccessToken::PermissionDef> permissionDef;
+    std::vector<AccessToken::PermissionDef> newPermissionDef;
+    auto ret = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDef, newPermissionDef);
+    EXPECT_NE(ret, 0);
 }
