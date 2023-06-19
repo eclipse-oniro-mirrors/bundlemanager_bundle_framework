@@ -170,6 +170,9 @@ void from_json(const nlohmann::json &jsonObject, ShortcutIntent &shortcutIntent)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module shortcutIntent from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
@@ -280,6 +283,9 @@ void from_json(const nlohmann::json &jsonObject, ShortcutInfo &shortcutInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module shortcutInfo from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, ShortcutWant &shortcutWant)

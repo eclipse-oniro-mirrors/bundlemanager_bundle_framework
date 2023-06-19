@@ -95,6 +95,9 @@ void from_json(const nlohmann::json &jsonObject, HqfInfo &hqfInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module hqfInfo from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 bool HqfInfo::ReadFromParcel(Parcel &parcel)
