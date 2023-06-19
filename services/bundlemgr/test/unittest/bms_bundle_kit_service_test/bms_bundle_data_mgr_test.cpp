@@ -3003,4 +3003,230 @@ HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0002, Function | SmallTest |
     auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: RemoveModuleInfo_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    ShortcutInfo shortcutInfo;
+    std::string key = "." + PACKAGE_NAME + ".";
+    info.shortcutInfos_.try_emplace(key, shortcutInfo);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+    EXPECT_EQ(info.shortcutInfos_.size(), 0);
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0200
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    CommonEventInfo commonEventInfo;
+    std::string key = "." + PACKAGE_NAME + ".";
+    info.commonEvents_.try_emplace(key, commonEventInfo);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+    EXPECT_EQ(info.commonEvents_.size(), 0);
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0300
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    moduleInfo.abilityKeys.push_back("keys");;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    AbilityInfo abilityInfo;
+    std::string key = "key";
+    info.baseAbilityInfos_.try_emplace(key, abilityInfo);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+
+    auto abilityItem = info.baseAbilityInfos_.find("keys");
+    EXPECT_EQ(abilityItem, info.baseAbilityInfos_.end());
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0400
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    moduleInfo.skillKeys.push_back("keys");;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    std::vector<Skill> skills;
+    std::string key = "key";
+    info.skillInfos_.try_emplace(key, skills);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+
+    auto skillItem = info.skillInfos_.find("keys");
+    EXPECT_EQ(skillItem, info.skillInfos_.end());
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0500
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0500, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    moduleInfo.extensionKeys.push_back("keys");;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    ExtensionAbilityInfo extensionAbilityInfo;
+    std::string key = "key";
+    info.baseExtensionInfos_.try_emplace(key, extensionAbilityInfo);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+
+    auto extensionItem = info.baseExtensionInfos_.find("keys");
+    EXPECT_EQ(extensionItem, info.baseExtensionInfos_.end());
+}
+
+/**
+ * @tc.number: RemoveModuleInfo_0600
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call RemoveModuleInfo, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, RemoveModuleInfo_0600, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    moduleInfo.extensionSkillKeys.push_back("keys");;
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+
+    std::vector<Skill> skills;
+    std::string key = "key";
+    info.extensionSkillInfos_.try_emplace(key, skills);
+    info.RemoveModuleInfo(PACKAGE_NAME);
+
+    auto extensionSkillItem = info.extensionSkillInfos_.find("keys");
+    EXPECT_EQ(extensionSkillItem, info.extensionSkillInfos_.end());
+}
+
+/**
+ * @tc.number: GetBundleWithReqPermissionsV9_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call GetBundleWithReqPermissionsV9, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleWithReqPermissionsV9_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    info.innerModuleInfos_.clear();
+
+    BundleInfo bundleInfo;
+    bundleInfo.defPermissions.push_back("oho.permissions.test");
+    info.GetBundleWithReqPermissionsV9(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION),
+            Constants::ALL_USERID, bundleInfo);
+    EXPECT_EQ(bundleInfo.defPermissions.size(), 1);
+}
+
+/**
+ * @tc.number: ProcessBundleWithHapModuleInfoFlag_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call ProcessBundleWithHapModuleInfoFlag, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, ProcessBundleWithHapModuleInfoFlag_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.modulePackage = PACKAGE_NAME;
+    moduleInfo.name = MODULE_NAME1;
+    moduleInfo.hapPath = "";
+    info.innerModuleInfos_.try_emplace(PACKAGE_NAME, moduleInfo);
+    BundleInfo bundleInfo;
+    bundleInfo.defPermissions.push_back("oho.permissions.test");
+
+    info.ProcessBundleWithHapModuleInfoFlag(
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), bundleInfo, USERID);
+    auto it = info.FindHapModuleInfo(PACKAGE_NAME, USERID);
+    EXPECT_EQ(it->hqfInfo.moduleName, "");
+}
+
+/**
+ * @tc.number: ClearOverlayModuleStates_0100
+ * @tc.name: test InnerBundleInfo
+ * @tc.desc: 1. call ClearOverlayModuleStates, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, ClearOverlayModuleStates_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleName = MODULE_NAME1;
+    userInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_NAME1);
+    info.innerBundleUserInfos_.try_emplace(MODULE_NAME1, userInfo);
+
+    info.ClearOverlayModuleStates(MODULE_NAME1);
+    EXPECT_EQ(info.innerBundleUserInfos_.empty(), false);
+}
+
+/**
+ * @tc.number: GetUriPrefixList_0100
+ * @tc.name: test GetUriPrefixList
+ * @tc.desc: 1. call GetUriPrefixList, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetUriPrefixList_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    AbilityInfo abilityInfo;
+    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
+    abilityInfo.uri = "data/test";
+    info.baseAbilityInfos_.clear();
+    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
+
+    std::vector<std::string> uriPrefixList;
+    info.GetUriPrefixList(uriPrefixList, MODULE_NAME1);
+    EXPECT_EQ(uriPrefixList.size(), 0);
+}
+
+/**
+ * @tc.number: GetUriPrefixList_0200
+ * @tc.name: test GetUriPrefixList
+ * @tc.desc: 1. call GetUriPrefixList, return false
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetUriPrefixList_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    ExtensionAbilityInfo extensionAbilityInfo;
+    extensionAbilityInfo.uri = "data/test";
+    info.baseExtensionInfos_.clear();
+    info.baseExtensionInfos_.try_emplace(MODULE_NAME1, extensionAbilityInfo);
+
+    std::vector<std::string> uriPrefixList;
+    info.GetUriPrefixList(uriPrefixList, MODULE_NAME1);
+    EXPECT_EQ(uriPrefixList.size(), 0);
+}
 }
