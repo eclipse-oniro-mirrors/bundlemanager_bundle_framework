@@ -1276,27 +1276,5 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
     }
     return ERR_OK;
 }
-
-bool BundleInstallChecker::VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir)
-{
-    APP_LOGD("begin to verify code signature");
-    if (modulePath.empty()) {
-        return false;
-    }
-    if (signatureFileDir.empty()) {
-        APP_LOGD("signature file dir is empty");
-        return true;
-    }
-#if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
-    if (ret != ERR_OK) {
-        APP_LOGE("VerifyCode failed due to %{public}d", ret);
-        return false;
-    }
-#endif
-    APP_LOGD("VerifyCodeSignature finished");
-    return true;
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

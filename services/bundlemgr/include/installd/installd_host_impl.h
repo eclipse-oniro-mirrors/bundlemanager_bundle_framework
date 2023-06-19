@@ -153,6 +153,8 @@ public:
     virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) override;
 
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

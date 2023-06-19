@@ -176,5 +176,10 @@ ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

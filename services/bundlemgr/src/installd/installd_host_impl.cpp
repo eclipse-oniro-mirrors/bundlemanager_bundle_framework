@@ -750,5 +750,23 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, con
     }
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (srcDir.empty() || desDir.empty()) {
+        APP_LOGE("Calling the function MoveFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::MoveFiles(srcDir, desDir)) {
+        APP_LOGE("move files failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

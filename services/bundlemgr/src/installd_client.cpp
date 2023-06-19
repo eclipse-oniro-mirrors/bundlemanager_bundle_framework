@@ -294,5 +294,13 @@ ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const
     return CallService(&IInstalld::VerifyCodeSignature, modulePath, cpuAbi, targetSoPath,
         signatureFileDir);
 }
+
+ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    if (srcDir.empty() || desDir.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::MoveFiles, srcDir, desDir);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
