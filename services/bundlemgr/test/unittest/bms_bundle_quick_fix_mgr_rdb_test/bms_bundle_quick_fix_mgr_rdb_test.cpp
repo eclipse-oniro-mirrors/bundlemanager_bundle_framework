@@ -529,7 +529,7 @@ HWTEST_F(BmsBundleQuickFixMgrRdbTest, BmsBundleQuickFixManagerHostImplTest_0003,
     sptr<IRemoteObject> object = nullptr;
     sptr<IQuickFixStatusCallback> statusCallback = new (std::nothrow) QuickFixStatusCallbackProxy(object);
     auto result = impl->DeployQuickFix(bundleFilePaths, statusCallback);
-    EXPECT_EQ(result, ERR_OK);
+    EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
 
 /**

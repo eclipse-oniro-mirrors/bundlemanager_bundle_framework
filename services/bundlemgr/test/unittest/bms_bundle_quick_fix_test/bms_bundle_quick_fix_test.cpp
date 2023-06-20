@@ -1104,14 +1104,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0028, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HAP_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    auto callbackRes = callback->GetResCode();
-    EXPECT_TRUE(callbackRes != nullptr);
-    if (callbackRes != nullptr) {
-        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
-        const int32_t resultCode = jsonObject[RESULT_CODE];
-        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
-    }
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
 
 /**
@@ -1129,13 +1122,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HQF_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    auto callbackRes = callback->GetResCode();
-    if (callbackRes != nullptr) {
-        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
-        const int32_t resultCode = jsonObject[RESULT_CODE];
-        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
-    }
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
 
 /**
@@ -1588,10 +1575,14 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0049, Function | SmallTest
         auto res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
         EXPECT_EQ(res, ERR_OK);
         const std::vector<std::string> sourceFiles {path};
+        std::vector<std::string> secureDirs;
+        res = quickFixManagerHostImpl.CopyHqfToSecurityDir(sourceFiles, secureDirs);
+        EXPECT_EQ(res, ERR_OK);
         std::vector<std::string> realFilePaths;
-        auto ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        auto ret = deployer->ProcessBundleFilePaths(secureDirs, realFilePaths);
         EXPECT_EQ(ret, ERR_OK);
         DeleteFiles(sourceFiles);
+        DeleteFiles(secureDirs);
     }
 }
 

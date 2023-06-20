@@ -49,8 +49,13 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         APP_LOGE("QuickFixManagerHostImpl::DeployQuickFix quickFixerMgr is nullptr");
         return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
-
-    return quickFixMgr_->DeployQuickFix(bundleFilePaths, statusCallback);
+    std::vector<std::string> securityFilePaths;
+    ErrCode result = CopyHqfToSecurityDir(bundleFilePaths, securityFilePaths);
+    if (result != ERR_OK) {
+        APP_LOGE("QuickFixManagerHostImpl::CopyHqfToSecurityDir copy file to secure dir failed %{public}d", result);
+        return result;
+    }
+    return quickFixMgr_->DeployQuickFix(securityFilePaths, statusCallback);
 }
 
 ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool enable,
@@ -143,6 +148,40 @@ bool QuickFixManagerHostImpl::IsFileNameValid(const std::string &fileName) const
         return false;
     }
     return true;
+}
+
+ErrCode QuickFixManagerHostImpl::CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
+    std::vector<std::string> &securityFilePaths) const
+{
+    APP_LOGD("start to copy hqf files to securityFilePaths");
+    std::string prefixStr = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    for (const auto &path : bundleFilePaths) {
+        if (path.find(prefixStr) == std::string::npos) {
+            APP_LOGE("invalid hqf path %{public}s", path.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+        }
+        std::string securityPathPrefix = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
+            Constants::SECURITY_QUICK_FIX_PATH;
+        std::string securityPath = path;
+        securityPath.replace(0, prefixStr.length(), securityPathPrefix);
+
+        auto pos = securityPath.rfind(Constants::PATH_SEPARATOR);
+        if (pos == std::string::npos) {
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+        }
+        std::string secureDir = securityPath.substr(0, pos);
+        if (!BundleUtil::CreateDir(secureDir)) {
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+        APP_LOGD("copy hqf file from path(%{public}s) to securePath(%{public}s)", path.c_str(), securityPath.c_str());
+        if (!BundleUtil::CopyFile(path, securityPath)) {
+            APP_LOGE("CopyFile failed");
+            return ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED;
+        }
+        securityFilePaths.emplace_back(securityPath);
+    }
+    BundleUtil::DeleteDir(prefixStr);
+    return ERR_OK;
 }
 }
 } // namespace OHOS
