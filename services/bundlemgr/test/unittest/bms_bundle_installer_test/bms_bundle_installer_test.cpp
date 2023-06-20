@@ -4750,4 +4750,63 @@ HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_600, Function | SmallTest
     ASSERT_GT(toDeletePaths.size(), 0);
     bundleUtil.DeleteTempDirs(toDeletePaths);
 }
+
+/**
+ * @tc.number: CheckDependency_0010
+ * @tc.name: test CheckDependency
+ * @tc.desc: 1.CheckDependency
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckDependency_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    Dependency dependency;
+    dependency.bundleName = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.dependencies.push_back(dependency);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>(BUNDLE_NAME, innerModuleInfo));
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleInstaller.CheckDependency(innerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: FindDependencyInInstalledBundles_0010
+ * @tc.name: test FindDependencyInInstalledBundles
+ * @tc.desc: 1.FindDependencyInInstalledBundles
+ */
+HWTEST_F(BmsBundleInstallerTest, FindDependencyInInstalledBundles_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    Dependency dependency;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleInstaller.FindDependencyInInstalledBundles(dependency);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0010
+ * @tc.name: test GetCallingEventInfo
+ * @tc.desc: 1.GetCallingEventInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    EventInfo eventInfo;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, EMPTY_STRING);
+}
 } // OHOS
