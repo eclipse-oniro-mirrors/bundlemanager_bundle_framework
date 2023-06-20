@@ -33,6 +33,7 @@
 #include "install_result.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
+#include "scope_guard.h"
 #include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "perf_profile.h"
@@ -63,6 +64,7 @@ const std::string ABILITY_NAME_TEST = "MainAbility";
 const std::string ABILITY_NAME_EMPTY = "";
 const std::string DEVICE_ID = "PHONE-001";
 const int32_t USERID = 100;
+const int32_t OTHER_USERID = 101;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t UPGRADE_FLAG = 1;
 const int32_t FLAG_ONE = 1;
@@ -89,7 +91,7 @@ public:
     static sptr<BundleMgrProxy> GetBundleMgrProxy();
     void StartBundleService();
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 private:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -126,7 +128,7 @@ void BmsBundleFreeInstallTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleFreeInstallTest::SetDataMgr()
+void BmsBundleFreeInstallTest::ResetDataMgr()
 {
     EXPECT_NE(dataMgrInfo_, nullptr);
     bundleMgrService_->dataMgr_ = dataMgrInfo_;
@@ -986,7 +988,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0035, Function | Sma
     sptr<TargetAbilityInfo> targetAbilityInfo;
     bool res = connectAbilityMgr->GetPreloadList(BUNDLE_NAME, MODULE_NAME_TEST, USERID, targetAbilityInfo);
     EXPECT_FALSE(res);
-    SetDataMgr();
+    ResetDataMgr();
 }
 
 /**
@@ -1458,7 +1460,25 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | Smal
     ClearDataMgr();
     connectAbilityMgr->GetCallingInfo(USERID, USERID, bundleNames, callingAppIds);
     EXPECT_EQ(bundleNames.size(), 0);
-    SetDataMgr();
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0020
+ * Function: GetBundleConnectAbilityMgr
+ * @tc.name: test GetBundleConnectAbilityMgr
+ * @tc.desc: test GetCallingInfo
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+{
+    AddInnerBundleInfo(BUNDLE_NAME, FLAG_ONE);
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    std::vector<std::string> bundleNames;
+    bundleNames.push_back(BUNDLE_NAME);
+    std::vector<std::string> callingAppIds;
+    connectAbilityMgr->GetCallingInfo(USERID, OTHER_USERID, bundleNames, callingAppIds);
+    EXPECT_EQ(bundleNames.size(), 1);
+    UninstallBundleInfo(BUNDLE_NAME);
 }
 
 /**
@@ -1483,7 +1503,27 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
     connectAbilityMgr->UpgradeAtomicService(want, USERID);
     bool res = connectAbilityMgr->IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
     EXPECT_FALSE(res);
-    SetDataMgr();
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0027
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.dependencies.push_back(dependency);
+    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -1509,7 +1549,49 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0024, Function | Smal
     connectAbilityMgr->UpgradeAtomicService(want, USERID);
     bool res = connectAbilityMgr->IsObtainAbilityInfo(want, flag, USERID, abilityInfo, callBack, innerBundleInfo);
     EXPECT_FALSE(res);
-    SetDataMgr();
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0025
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.dependencies.push_back(dependency);
+    innerBundleInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
+    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0026
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    Want want;
+    ElementName name;
+    name.SetAbilityName(ABILITY_NAME_TEST);
+    name.SetBundleName(BUNDLE_NAME);
+    want.SetElement(name);
+    ErmsCallerInfo callerInfo;
+    ClearDataMgr();
+    connectAbilityMgr->GetEcologicalCallerInfo(want, callerInfo, USERID);
+    EXPECT_EQ(callerInfo.uid, 0);
+    ResetDataMgr();
 }
 
 

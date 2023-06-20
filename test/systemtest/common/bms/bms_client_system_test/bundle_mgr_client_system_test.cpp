@@ -2264,6 +2264,19 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0010, TestSize.Level1)
 }
 
 /**
+ * @tc.number: BundleMgrClientImpl_0011
+ * @tc.name: GetResFromResMgr
+ * @tc.desc: 1.Test the interface of GetResFromResMgr
+ */
+HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0011, TestSize.Level1)
+{
+    BundleMgrClientImpl impl;
+    std::shared_ptr<Global::Resource::ResourceManager> resMgr
+        = impl.InitResMgr("");
+    EXPECT_EQ(resMgr, nullptr);
+}
+
+/**
  * @tc.number: BundleMgrClientImplIsNull_0400
  * @tc.name: 1.test BundleMgrClient with impl_ is nullptr
  * @tc.desc: 1. test is failed
