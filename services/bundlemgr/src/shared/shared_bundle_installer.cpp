@@ -45,6 +45,9 @@ ErrCode SharedBundleInstaller::ParseFiles()
     checkParam.crowdtestDeadline = installParam_.crowdtestDeadline;
     checkParam.appType = appType_;
     checkParam.removable = installParam_.removable;
+    checkParam.installBundlePermissionStatus = installParam_.installBundlePermissionStatus;
+    checkParam.installEnterpriseBundlePermissionStatus = installParam_.installEnterpriseBundlePermissionStatus;
+    checkParam.isCallByShell = installParam_.isCallByShell;
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);
