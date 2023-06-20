@@ -272,7 +272,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree()) {
+        if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
