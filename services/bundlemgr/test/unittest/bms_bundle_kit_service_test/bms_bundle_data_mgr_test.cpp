@@ -34,6 +34,7 @@
 #include "bundle_mgr_proxy.h"
 #include "bundle_status_callback_proxy.h"
 #include "bundle_stream_installer_host_impl.h"
+#include "bundle_exception_handler.h"
 #include "clean_cache_callback_proxy.h"
 #include "directory_ex.h"
 #include "hidump_helper.h"
@@ -52,6 +53,7 @@
 #include "service_control.h"
 #include "system_ability_helper.h"
 #include "want.h"
+#include "user_unlocked_event_subscriber.h"
 
 using namespace testing::ext;
 using namespace OHOS;
@@ -245,6 +247,7 @@ public:
         bool userDataClearable, bool isSystemApp) const;
     void ClearDataMgr();
     void ResetDataMgr();
+    void RemoveBundleinfo(const std::string &bundleName);
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -298,6 +301,13 @@ void BmsBundleDataMgrTest::ResetDataMgr()
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
+void BmsBundleDataMgrTest::RemoveBundleinfo(const std::string &bundleName)
+{
+    auto iterator = bundleMgrService_->GetDataMgr()->bundleInfos_.find(bundleName);
+    if (iterator != bundleMgrService_->GetDataMgr()->bundleInfos_.end()) {
+        bundleMgrService_->GetDataMgr()->bundleInfos_.erase(iterator);
+    }
+}
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleDataMgrTest::GetBundleDistributedManager() const
 {
@@ -1197,6 +1207,66 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0200, Function | SmallTest | Le
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: GetAllBundleInfos_0300
+ * @tc.name: test GetAllBundleInfos
+ * @tc.desc: 1.system run normally
+ *           2.check GetAllBundleInfos failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0300, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    BundleInfo bundleInfo;
+    bundleInfo.singleton = true;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+
+    bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
+    EXPECT_EQ(res, true);
+
+    RemoveBundleinfo(BUNDLE_TEST1);
+}
+
+/**
+ * @tc.number: GetAllBundleInfos_0400
+ * @tc.name: test GetAllBundleInfos
+ * @tc.desc: 1.system run normally
+ *           2.check GetAllBundleInfos failed
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0400, Function | SmallTest | Level1)
+{
+    std::vector<BundleInfo> bundleInfos;
+
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    BundleInfo bundleInfo;
+    bundleInfo.singleton = false;
+    innerBundleInfo.SetBaseBundleInfo(bundleInfo);
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
+    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+
+    bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
+    EXPECT_EQ(res, true);
+
+    RemoveBundleinfo(BUNDLE_TEST1);
 }
 
 /**
@@ -3228,5 +3298,87 @@ HWTEST_F(BmsBundleDataMgrTest, GetUriPrefixList_0200, Function | SmallTest | Lev
     std::vector<std::string> uriPrefixList;
     info.GetUriPrefixList(uriPrefixList, MODULE_NAME1);
     EXPECT_EQ(uriPrefixList.size(), 0);
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0001
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest | Level0)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
+    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    ASSERT_NE(bundleInstaller, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0002
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest | Level0)
+{
+    auto multiUserIdsSet = GetBundleDataMgr()->multiUserIdsSet_;
+    auto iterator = GetBundleDataMgr()->multiUserIdsSet_.find(999);
+    if (iterator != GetBundleDataMgr()->multiUserIdsSet_.end()) {
+        GetBundleDataMgr()->multiUserIdsSet_.erase(iterator);
+    }
+    bundleUserMgrHostImpl_->OnCreateNewUser(999);
+    bundleUserMgrHostImpl_->RemoveUser(999);
+    bool res = GetBundleDataMgr()->HasUserId(999);
+    EXPECT_EQ(res, false);
+    GetBundleDataMgr()->multiUserIdsSet_ = multiUserIdsSet;
+}
+
+/**
+ * @tc.number: BundleExceptionHandler_0100
+ * Function: BundleExceptionHandler
+ * @tc.name: test HandleInvalidBundle
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0100, TestSize.Level1)
+{
+    std::string moduleDir = Constants::BUNDLE_CODE_DIR + BUNDLE_TEST1 +
+        Constants::PATH_SEPARATOR + PACKAGE_NAME + Constants::TMP_SUFFIX;
+    bool ret = BundleUtil::CreateDir(moduleDir);
+    EXPECT_TRUE(ret);
+
+    InnerBundleInfo info;
+    info.SetInstallMark(BUNDLE_TEST1, PACKAGE_NAME, InstallExceptionStatus::UPDATING_EXISTED_START);
+    bool isBundleValid = false;
+
+    std::shared_ptr<IBundleDataStorage> dataStorageSptr = nullptr;
+    BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
+    BundleExceptionHandler.HandleInvalidBundle(info, isBundleValid);
+    auto mark = info.GetInstallMark();
+    EXPECT_EQ(mark.status, InstallExceptionStatus::INSTALL_FINISH);
+
+    ret = BundleUtil::DeleteDir(moduleDir);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: BundleExceptionHandler_0200
+ * Function: BundleExceptionHandler
+ * @tc.name: test HandleInvalidBundle
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0200, TestSize.Level1)
+{
+    std::string moduleDir = "data/test/bundleDir";
+    bool ret = BundleUtil::CreateDir(moduleDir);
+    EXPECT_TRUE(ret);
+
+    std::shared_ptr<IBundleDataStorage> dataStorageSptr = nullptr;
+    BundleExceptionHandler BundleExceptionHandler(dataStorageSptr);
+    BundleExceptionHandler.RemoveBundleAndDataDir(moduleDir, moduleDir + Constants::HAPS, USERID);
+    EXPECT_TRUE(ret);
+
+    ret = BundleUtil::DeleteDir(moduleDir);
+    EXPECT_TRUE(ret);
 }
 }
