@@ -34,8 +34,6 @@ namespace AppExecFwk {
 using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
 using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
 namespace {
-const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
@@ -128,8 +126,20 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
     const TargetAbilityInfo &targetAbilityInfo)
 {
     APP_LOGD("ProcessPreloadRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
@@ -356,8 +366,20 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     const Want &want, int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     APP_LOGI("SendRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return false;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         if (freeInstallParams.serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL) {

@@ -32,8 +32,6 @@ namespace {
 const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
 const uint32_t OUT_TIME = 3000;
 const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
-const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 }
@@ -184,8 +182,20 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
         APP_LOGE("fail to connect ServiceCenter");
         return false;
     }
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return false;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool ret = connectAbility->ConnectAbility(serviceCenterWant, nullptr);
     if (!ret) {
         APP_LOGE("fail to connect ServiceCenter");

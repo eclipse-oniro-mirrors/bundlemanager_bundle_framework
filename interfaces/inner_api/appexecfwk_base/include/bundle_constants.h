@@ -340,6 +340,9 @@ constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";
 constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
 constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
+
+//freeInstall action
+constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
