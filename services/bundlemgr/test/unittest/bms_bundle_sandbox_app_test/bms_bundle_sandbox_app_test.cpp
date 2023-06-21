@@ -2301,3 +2301,21 @@ HWTEST_F(BmsSandboxAppTest, RemoveSandboxPersistentInfo_0100, Function | SmallTe
     bool ret = sundleSandboxDataMgr.RemoveSandboxPersistentInfo("");
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: DeleteSandboxAppIndex_0100
+ * @tc.name: test DeleteSandboxAppIndex
+ * @tc.desc: 1.the DeleteSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr dataMgr;
+    std::set<int32_t> set;
+    int32_t appIndex1 = 100;
+    int32_t appIndex2 = 10;
+    set.insert(appIndex1);
+    set.insert(appIndex2);
+    dataMgr.sandboxAppIndexMap_.insert(std::pair<std::string, std::set<int32_t>>(BUNDLE_NAME, set));
+    bool ret = dataMgr.DeleteSandboxAppIndex(BUNDLE_NAME, INVALID_APP_INDEX);
+    EXPECT_EQ(ret, false);
+}

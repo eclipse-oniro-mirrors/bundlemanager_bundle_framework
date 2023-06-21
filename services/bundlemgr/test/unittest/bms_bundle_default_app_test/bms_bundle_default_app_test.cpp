@@ -1580,4 +1580,21 @@ HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0300, Function | SmallTest | Lev
     bool res = DefaultAppMgr::GetInstance().MatchFileType("", skills);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: SetDefaultApplication_0100
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0100, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = impl.SetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
 } // OHOS
