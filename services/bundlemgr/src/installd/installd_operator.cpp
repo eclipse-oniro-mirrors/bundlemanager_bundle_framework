@@ -1009,6 +1009,12 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         return false;
     }
 
+    std::string realDesDir = "";
+    if (!PathToRealPath(desDir, realDesDir)) {
+        APP_LOGE("desDir(%{public}s) is not real path", desDir.c_str());
+        return false;
+    }
+
     DIR* directory = opendir(realPath.c_str());
     if (directory == nullptr) {
         APP_LOGE("MoveFiles open dir(%{public}s) fail", realPath.c_str());
@@ -1025,9 +1031,9 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
         struct stat s;
         if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
-            std::string innerDesStr = desDir + Constants::PATH_SEPARATOR + currentName;
+            std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
             if (!RenameFile(curPath, innerDesStr)) {
-                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s)", curPath.c_str(),
+                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s) failed", curPath.c_str(),
                     innerDesStr.c_str());
                 closedir(directory);
                 return false;
