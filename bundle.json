@@ -43,7 +43,6 @@
                 "access_token",
                 "appverify",
                 "battery_manager",
-                "common",
                 "common_event_service",
                 "config_policy",
                 "c_utils",
