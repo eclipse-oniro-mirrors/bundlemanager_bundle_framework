@@ -463,6 +463,23 @@ ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const 
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(srcDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(desDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILES, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {

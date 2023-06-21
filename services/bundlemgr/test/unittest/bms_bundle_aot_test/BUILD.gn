@@ -94,7 +94,7 @@ ohos_unittest("BmsAOTMgrTest") {
     defines += [ "BUNDLE_FRAMEWORK_POWER_MGR_ENABLE" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 

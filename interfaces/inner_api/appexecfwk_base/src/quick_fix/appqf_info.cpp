@@ -77,6 +77,9 @@ void from_json(const nlohmann::json &jsonObject, AppqfInfo &appqfInfo)
         APP_QF_INFO_HQF_INFOS, appqfInfo.hqfInfos,
         JsonType::ARRAY, false, parseResult,
         ArrayType::OBJECT);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module appqfInfo from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 bool AppqfInfo::ReadFromParcel(Parcel &parcel)

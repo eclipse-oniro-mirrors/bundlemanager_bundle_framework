@@ -35,7 +35,7 @@ uint32_t AOTLoopTask::GetAOTIdleInterval()
     std::string str = system::GetParameter(AOT_INTERVAL, "");
     if (!str.empty()) {
         try {
-            interval = std::stoi(str);
+            interval = static_cast<uint32_t>(std::stoi(str));
         } catch (...) {
             APP_LOGE("convert AOT_INTERVAL failed");
         }

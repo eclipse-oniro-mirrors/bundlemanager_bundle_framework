@@ -53,6 +53,7 @@ enum class InstalldInterfaceCode : uint32_t {
     EXECUTE_AOT,
     IS_EXIST_FILE,
     VERIFY_CODE_SIGNATURE,
+    MOVE_FILES,
 };
 
 } // namespace AppExecFwk

@@ -196,6 +196,8 @@ public:
     static bool VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
         const std::string &targetSoPath, const std::string &signatureFileDir);
 
+    static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
+
 private:
     static bool OpenHandle(void **handle);
 

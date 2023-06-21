@@ -229,7 +229,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (hisysevent_enable) {
@@ -322,7 +322,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (hisysevent_enable) {
@@ -416,7 +416,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (hisysevent_enable) {
@@ -510,7 +510,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (hisysevent_enable) {

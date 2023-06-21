@@ -41,6 +41,7 @@ const std::string MODULE_NAME_TEST{"test"};
 const std::string MODULE_PACKGE{"com.example.test.entry"};
 const std::string MODULE_STATE_0{"test_0"};
 const std::string MODULE_STATE_1{"test_1"};
+const std::string MODULE_STATE_2{"test2"};
 const std::string MODULE_NAME{"entry"};
 const std::string TEST_PACK_AGE = "modulePackage";
 const std::string TEST_NAME = "com.ohos.launcher";
@@ -2306,6 +2307,28 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2700, Function | Smal
 }
 
 /**
+ * @tc.number: InnerBundleInfo_2800
+ * @tc.name: Test IsBundleRemovable
+ * @tc.desc: 1.Test the IsBundleRemovable of InnerBundleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, InnerBundleInfo_2800, Function | SmallTest | Level1)
+{
+    InnerBundleInfo info;
+    InnerModuleInfo moduleInfo;
+    moduleInfo.moduleName = MODULE_NAME;
+    moduleInfo.installationFree = true;
+    moduleInfo.isRemovable.try_emplace(MODULE_NAME, false);
+    moduleInfo.isRemovable.try_emplace(MODULE_NAME_TEST, true);
+    info.innerModuleInfos_.try_emplace(MODULE_NAME, moduleInfo);
+    bool ret = info.IsBundleRemovable();
+    EXPECT_EQ(ret, false);
+
+    std::vector<std::string> moduleToDelete;
+    ret = info.GetRemovableModules(moduleToDelete);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: Test_0500
  * @tc.name: Test Unmarshalling
  * @tc.desc: 1.Test the Unmarshalling of Parcel
@@ -2615,6 +2638,7 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, GetOverlayModuleStateTest, Function |
     EXPECT_EQ(ret, true);
 
     newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_0);
+    newInfo.bundleUserInfo.overlayModulesState.emplace_back(MODULE_STATE_2);
     innerBundleUserInfos[BUNDLE_NAME_WITH_USERID] = newInfo;
     info.innerBundleUserInfos_ = innerBundleUserInfos;
     ret = info.GetOverlayModuleState(MODULE_NAME_TEST, userId, state);

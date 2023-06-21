@@ -109,7 +109,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
@@ -231,7 +231,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 

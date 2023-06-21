@@ -343,8 +343,44 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
+    if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    PermissionStatus installBundlestatus = checkParam.installBundlePermissionStatus;
+    PermissionStatus installEnterpriseBundleStatus = checkParam.installEnterpriseBundlePermissionStatus;
+    bool isCallByShell = checkParam.isCallByShell;
+    if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        return true;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+            if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+        } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            APP_LOGE("install permission denied");
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
@@ -1275,28 +1311,6 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     return ERR_OK;
-}
-
-bool BundleInstallChecker::VerifyCodeSignature(const std::string &modulePath, const std::string &signatureFileDir)
-{
-    APP_LOGD("begin to verify code signature");
-    if (modulePath.empty()) {
-        return false;
-    }
-    if (signatureFileDir.empty()) {
-        APP_LOGD("signature file dir is empty");
-        return true;
-    }
-#if defined(CODE_SIGNATURE_ENABLE)
-    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, modulePath }};
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
-    if (ret != ERR_OK) {
-        APP_LOGE("VerifyCode failed due to %{public}d", ret);
-        return false;
-    }
-#endif
-    APP_LOGD("VerifyCodeSignature finished");
-    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

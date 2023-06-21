@@ -2100,6 +2100,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
+    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs;
     if (!ToApplicationInfo(moduleJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;

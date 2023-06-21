@@ -135,7 +135,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
@@ -277,7 +277,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (global_resmgr_enable) {
@@ -390,7 +390,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (global_resmgr_enable) {
@@ -491,7 +491,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (global_resmgr_enable) {
@@ -598,7 +598,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (global_resmgr_enable) {
@@ -709,7 +709,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (global_resmgr_enable) {
