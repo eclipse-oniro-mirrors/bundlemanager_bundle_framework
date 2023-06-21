@@ -3577,7 +3577,7 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
 {
-    if ((oldVersionCode >= versionCode_) || oldNativeLibraryPath.empty()) {
+    if (((oldVersionCode >= versionCode_) && !otaInstall_) || oldNativeLibraryPath.empty()) {
         return;
     }
     for (const auto &item : newInfos) {
@@ -3718,9 +3718,9 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
         // 2. move so files to real lib dir
-        bool isLibIsolated = info.second.IsLibIsolated(info.second.GetCurModuleName());
-        if (isLibIsolated) {
-            APP_LOGI("so files are isolated and no necessary to move so files");
+        if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
+            !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
+            APP_LOGI("so files are isolated or decompressed and no necessary to move so files");
             return ERR_OK;
         }
         if (installedModules_[info.second.GetCurrentModulePackage()] && !nativeLibraryPath_.empty()) {
