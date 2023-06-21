@@ -16,13 +16,19 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_EXT_INCLUDE_BUNDLE_MGR_EX_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INNERKITS_APPEXECFWK_CORE_EXT_INCLUDE_BUNDLE_MGR_EX_H
 
+#include "appexecfwk_errors.h"
 #include "bundle_info.h"
+#include "interfaces/hap_verify.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrExt {
 public:
     virtual bool CheckApiInfo(const BundleInfo& bundleInfo) = 0;
+    virtual ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
+    {
+        return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
+    }
     virtual ~BundleMgrExt() = default;
 };
 
