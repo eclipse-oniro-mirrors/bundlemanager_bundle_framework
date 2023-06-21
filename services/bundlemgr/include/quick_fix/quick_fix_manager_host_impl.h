@@ -42,6 +42,8 @@ public:
 private:
     bool GetQuickFixMgr();
     bool IsFileNameValid(const std::string &fileName) const;
+    ErrCode CopyHqfToSecurityDir(const std::vector<std::string> &bundleFilePaths,
+        std::vector<std::string> &securityFilePaths) const;
 
     std::shared_ptr<QuickFixMgr> quickFixMgr_ = nullptr;
     std::atomic<uint32_t> id_ = 0;

@@ -664,7 +664,7 @@ ErrCode QuickFixDeployer::ProcessBundleFilePaths(const std::vector<std::string> 
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
         if (path.find(Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
-            Constants::QUICK_FIX_PATH + Constants::PATH_SEPARATOR) != 0) {
+            Constants::SECURITY_QUICK_FIX_PATH + Constants::PATH_SEPARATOR) != 0) {
             APP_LOGE("ProcessBundleFilePaths path is illegal.");
             return ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR;
         }
