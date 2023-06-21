@@ -21,7 +21,6 @@
 #include "aot/aot_loop_task.h"
 #include "singleton.h"
 #include "system_ability.h"
-#include "thread_pool.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
@@ -126,8 +125,6 @@ public:
 
     void RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl);
 
-    ThreadPool &GetThreadPool();
-
     const std::shared_ptr<BmsParam> GetBmsParam() const;
 
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -143,7 +140,6 @@ private:
     bool Init();
     void SelfClean();
 
-    void InitThreadPool();
     void InitBmsParam();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
@@ -161,7 +157,6 @@ private:
     bool ready_ = false;
     bool registerToService_ = false;
     bool notifyBundleScanStatus = false;
-    std::shared_ptr<EventRunner> runner_;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
@@ -175,9 +170,6 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<BmsParam> bmsParam_;
-    // Thread pool used to start installation or quick fix in parallel.
-    ThreadPool bmsThreadPool_ = ThreadPool(Constants::BMS_SERVICE_NAME);
-    const int THREAD_NUMBER = std::thread::hardware_concurrency();
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;

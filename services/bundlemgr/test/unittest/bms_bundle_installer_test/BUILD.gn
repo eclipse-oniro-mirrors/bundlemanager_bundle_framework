@@ -83,6 +83,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {
@@ -242,6 +243,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {
@@ -355,6 +357,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {
@@ -456,6 +459,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {
@@ -563,6 +567,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {
@@ -672,6 +677,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
     external_deps += [ "multimedia_image_framework:image_native" ]
   }

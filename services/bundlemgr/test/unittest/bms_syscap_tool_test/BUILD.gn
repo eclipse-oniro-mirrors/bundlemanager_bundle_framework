@@ -61,6 +61,7 @@ ohos_unittest("BmsSyscapToolTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
   if (configpolicy_enable) {

@@ -51,6 +51,7 @@
                 "device_usage_statistics",
                 "display_manager",
                 "eventhandler",
+                "ffrt",
                 "hisysevent",
                 "hitrace",
                 "hilog",

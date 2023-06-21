@@ -305,7 +305,6 @@ constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
 constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 
 // thread pool
-constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
 
 // app detail ability

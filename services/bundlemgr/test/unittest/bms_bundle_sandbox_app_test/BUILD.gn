@@ -68,6 +68,7 @@ ohos_unittest("BmsSandboxAppTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
 
@@ -183,6 +184,7 @@ ohos_unittest("BmsSandboxRdbTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
 

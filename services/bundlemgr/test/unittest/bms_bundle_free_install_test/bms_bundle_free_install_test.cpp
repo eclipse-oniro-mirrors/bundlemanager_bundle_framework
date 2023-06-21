@@ -782,28 +782,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0024, Function | Sma
 }
 
 /**
- * @tc.number: BmsBundleFreeInstallTest_0025
- * Function: OnServiceCenterCall
- * @tc.name: test OnServiceCenterCall
- * @tc.desc: test OnServiceCenterCall failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0025, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    FreeInstallParams freeInstallParams;
-    connectAbilityMgr->handler_ = nullptr;
-    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
-    std::string installResult = "{\"version\":\"1.0.0\", \"result\":{\"transactId\":\"1\","
-        "\"resultMsg\":\"free install success\", \"retCode\":0}}";
-    connectAbilityMgr->OnServiceCenterCall(installResult);
-    EXPECT_NE(installResult, "");
-    connectAbilityMgr->Init();
-    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
-        connectAbilityMgr->freeInstallParamsMap_.erase("1");
-    }
-}
-
-/**
  * @tc.number: BmsBundleFreeInstallTest_0026
  * Function: OnServiceCenterCall
  * @tc.name: test OnServiceCenterCall
@@ -912,22 +890,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0030, Function | Sma
     if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
         connectAbilityMgr->freeInstallParamsMap_.erase("1");
     }
-}
-
-/**
- * @tc.number: BmsBundleFreeInstallTest_0031
- * Function: BundleConnectAbilityMgr
- * @tc.name: test ProcessPreloadCheck
- * @tc.desc: test ProcessPreloadCheck failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0031, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    TargetAbilityInfo targetAbilityInfo;
-    connectAbilityMgr->handler_ = nullptr;
-    bool installResult = connectAbilityMgr->ProcessPreloadCheck(targetAbilityInfo);
-    EXPECT_EQ(installResult, false);
-    connectAbilityMgr->Init();
 }
 
 /**
@@ -1260,31 +1222,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0009, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0010
- * Function: SilentInstall
- * @tc.name: test SilentInstall
- * @tc.desc: test SilentInstall failed
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0010, Function | SmallTest | Level0)
-{
-    AddInnerBundleInfo(BUNDLE_NAME, 0);
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-
-    Want want;
-    ElementName name;
-    name.SetAbilityName(ABILITY_NAME_TEST);
-    name.SetBundleName(BUNDLE_NAME);
-    want.SetElement(name);
-    TargetAbilityInfo targetAbilityInfo;
-    FreeInstallParams freeInstallParams;
-    connectAbilityMgr->handler_ = nullptr;
-    bool res = connectAbilityMgr->SilentInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_FALSE(res);
-    connectAbilityMgr->Init();
-    UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
  * @tc.number: BundleConnectAbilityMgr_0011
  * Function: CheckIsModuleNeedUpdate
  * @tc.name: test CheckIsModuleNeedUpdate
@@ -1311,59 +1248,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0011, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0012
- * Function: UpgradeCheck
- * @tc.name: test UpgradeCheck
- * @tc.desc: test UpgradeCheck
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0012, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    connectAbilityMgr->handler_ = nullptr;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    bool res = connectAbilityMgr->UpgradeCheck(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_FALSE(res);
-    connectAbilityMgr->Init();
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0013
- * Function: UpgradeInstall
- * @tc.name: test UpgradeInstall
- * @tc.desc: test UpgradeInstall
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0013, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    connectAbilityMgr->handler_ = nullptr;
-    TargetAbilityInfo targetAbilityInfo;
-    Want want;
-    FreeInstallParams freeInstallParams;
-    connectAbilityMgr->DisconnectDelay();
-    bool res = connectAbilityMgr->UpgradeInstall(targetAbilityInfo, want, freeInstallParams, USERID);
-    EXPECT_FALSE(res);
-    connectAbilityMgr->Init();
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0014
- * Function: OutTimeMonitor
- * @tc.name: test OutTimeMonitor
- * @tc.desc: test OutTimeMonitor
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0014, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    connectAbilityMgr->handler_ = nullptr;
-    std::string transactId;
-    connectAbilityMgr->OutTimeMonitor(transactId);
-    EXPECT_EQ(transactId, "");
-    connectAbilityMgr->Init();
-}
-
-/**
  * @tc.number: BundleConnectAbilityMgr_0015
  * Function: OutTimeMonitor
  * @tc.name: test OutTimeMonitor
@@ -1380,27 +1264,6 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0015, Function | Smal
     if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
         connectAbilityMgr->freeInstallParamsMap_.erase("1");
     }
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0016
- * Function: OutTimeMonitor
- * @tc.name: test OutTimeMonitor
- * @tc.desc: test OutTimeMonitor
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0016, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    connectAbilityMgr->handler_ = nullptr;
-    FreeInstallParams freeInstallParams;
-    connectAbilityMgr->freeInstallParamsMap_.insert(pair<std::string, FreeInstallParams>("1", freeInstallParams));
-    std::string transactId = "1";
-    connectAbilityMgr->OutTimeMonitor(transactId);
-    EXPECT_EQ(transactId, "1");
-    if (connectAbilityMgr->freeInstallParamsMap_.find("1") != connectAbilityMgr->freeInstallParamsMap_.end()) {
-        connectAbilityMgr->freeInstallParamsMap_.erase("1");
-    }
-    connectAbilityMgr->Init();
 }
 
 /**

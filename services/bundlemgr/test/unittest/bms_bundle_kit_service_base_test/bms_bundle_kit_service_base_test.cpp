@@ -464,19 +464,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0400, Function |
 }
 
 /**
- * @tc.number: BundleDistributedManager_0100
- * @tc.name: Test Init
- * @tc.desc: Verify the Init.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0100, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.Init();
-    EXPECT_TRUE(mgr.handler_ != nullptr);
-    sleep(1);
-}
-
-/**
  * @tc.number: BundleDistributedManager_0200
  * @tc.name: Test ConvertTargetAbilityInfo
  * @tc.desc: Verify the ConvertTargetAbilityInfo return true.
@@ -895,66 +882,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
     TargetAbilityInfo targetAbilityInfo;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     EXPECT_FALSE(ret);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2200
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2200, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
-    std::string transactId = TRANSACT_ID;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ == nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2300
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2300, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = nullptr;
-    std::string transactId = TRANSACT_ID;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ != nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2400
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2400, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
-    std::string transactId = EMPTY_STRING;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ == nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2500
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2500, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = nullptr;
-    std::string transactId = EMPTY_STRING;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ != nullptr);
     sleep(1);
 }
 

@@ -22,12 +22,11 @@
 
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
-#include "event_handler.h"
-#include "event_runner.h"
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
 #include "iremote_broker.h"
+#include "serial_queue.h"
 #include "want.h"
 
 namespace OHOS {
@@ -97,7 +96,6 @@ public:
 
     bool SendRequest(int32_t code, MessageParcel &data, MessageParcel &reply);
 private:
-    void Init();
     /**
      * @brief Notify the service center center to start the installation free process.
      * @param targetAbilityInfo Indicates the information which will be send to service center.
@@ -269,11 +267,10 @@ private:
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
-    std::shared_ptr<AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<EventRunner> runner_;
     sptr<IEcologicalRuleManager> iErMgr_ = nullptr;
     // should remove when AG SA online
     int32_t ECOLOGICAL_RULE_SA_ID = 9999;
+    std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
