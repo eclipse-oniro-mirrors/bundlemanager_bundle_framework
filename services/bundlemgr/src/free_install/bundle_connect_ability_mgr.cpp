@@ -17,10 +17,10 @@
 
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
-#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
+#include "ffrt.h"
 #include "free_install_params.h"
 #include "hitrace_meter.h"
 #include "json_util.h"
@@ -41,7 +41,7 @@ const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.calli
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
 const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
-const std::string CONNECT_ABILITY_THREAD = "ConnectAbilityThread";
+const std::string CONNECT_ABILITY_QUEUE = "ConnectAbilityQueue";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
@@ -77,50 +77,25 @@ void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 }
 }
 
-void BundleConnectAbilityMgr::Init()
-{
-    runner_ = EventRunner::Create(CONNECT_ABILITY_THREAD);
-    if (runner_ == nullptr) {
-        APP_LOGE("Create runner failed");
-        return;
-    }
-
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    if (handler_ == nullptr) {
-        APP_LOGE("Create handler failed");
-        return;
-    }
-    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
-}
-
 BundleConnectAbilityMgr::BundleConnectAbilityMgr()
 {
-    Init();
+    APP_LOGD("create BundleConnectAbilityMgr");
+    serialQueue_ = std::make_shared<SerialQueue>(CONNECT_ABILITY_QUEUE);
 }
 
 BundleConnectAbilityMgr::~BundleConnectAbilityMgr()
 {
-    if (handler_ != nullptr) {
-        handler_.reset();
-    }
-    if (runner_ != nullptr) {
-        runner_.reset();
-    }
+    APP_LOGD("destroy BundleConnectAbilityMgr");
 }
 
 bool BundleConnectAbilityMgr::ProcessPreloadCheck(const TargetAbilityInfo &targetAbilityInfo)
 {
     APP_LOGD("ProcessPreloadCheck");
-    if (handler_ == nullptr) {
-        APP_LOGE("handler is null");
-        return false;
-    }
-    auto PreloadCheckFunc = [this, targetAbilityInfo]() {
+    auto preloadCheckFunc = [this, targetAbilityInfo]() {
         int32_t flag = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
         this->ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
     };
-    handler_->PostTask(PreloadCheckFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(preloadCheckFunc);
     return true;
 }
 
@@ -286,13 +261,6 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("SilentInstall");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
-    }
-
     ErmsCallerInfo callerInfo;
     GetEcologicalCallerInfo(want, callerInfo, userId);
     ExperienceRule rule;
@@ -312,7 +280,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(silentInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(silentInstallFunc);
     return true;
 }
 
@@ -320,17 +288,11 @@ bool BundleConnectAbilityMgr::UpgradeCheck(const TargetAbilityInfo &targetAbilit
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
     APP_LOGI("UpgradeCheck");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
-    }
     auto upgradeCheckFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(upgradeCheckFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(upgradeCheckFunc);
     return true;
 }
 
@@ -338,17 +300,11 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
     APP_LOGI("UpgradeInstall");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
-    }
     auto upgradeInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(upgradeInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(upgradeInstallFunc);
     return true;
 }
 
@@ -411,9 +367,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
 {
     APP_LOGI("ConnectAbility start target bundle = %{public}s", want.GetBundle().c_str());
     std::unique_lock<std::mutex> lock(mutex_);
-    if (handler_ != nullptr) {
-        handler_->RemoveTask(DISCONNECT_DELAY_TASK);
-    }
+    serialQueue_->CancelDelayTask(DISCONNECT_DELAY_TASK);
     if (connectState_ == ServiceCenterConnectState::CONNECTING) {
         WaitFromConnecting(lock);
     } else if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
@@ -450,17 +404,13 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
 
 void BundleConnectAbilityMgr::DisconnectDelay()
 {
-    if (handler_ == nullptr) {
-        APP_LOGE("DisconnectDelay, handler is nullptr");
-        return;
-    }
     auto disconnectFunc = [connect = shared_from_this()]() {
         APP_LOGI("disconnectFunc Disconnect Ability");
         if (connect) {
             connect->DisconnectAbility();
         }
     };
-    handler_->PostTask(disconnectFunc, DISCONNECT_DELAY_TASK, DISCONNECT_DELAY);
+    serialQueue_->ScheduleDelayTask(DISCONNECT_DELAY_TASK, DISCONNECT_DELAY, disconnectFunc);
 }
 
 void BundleConnectAbilityMgr::SendCallBack(
@@ -580,11 +530,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
-    if (handler_ == nullptr) {
-        APP_LOGE("OnServiceCenterCall, handler is nullptr");
-        return;
-    }
-    handler_->RemoveTask(installResult.result.transactId);
+    serialQueue_->CancelDelayTask(installResult.result.transactId);
     freeInstallParams = node->second;
     lock.unlock();
     if (installResult.result.retCode == ServiceCenterResultCode::FREE_INSTALL_DOWNLOADING) {
@@ -615,16 +561,12 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     }
     freeInstallParams = node->second;
     lock.unlock();
-    if (handler_ == nullptr) {
-        APP_LOGE("OutTimeMonitor, handler is nullptr");
-        return;
-    }
     auto RegisterEventListenerFunc = [this, freeInstallParams, transactId]() {
         APP_LOGI("RegisterEventListenerFunc");
         this->SendCallBack(FreeInstallErrorCode::SERVICE_CENTER_TIMEOUT,
             freeInstallParams.want, freeInstallParams.userId, transactId);
     };
-    handler_->PostTask(RegisterEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, RegisterEventListenerFunc);
 }
 
 void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,

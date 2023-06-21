@@ -86,6 +86,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -209,6 +210,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -335,6 +337,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -476,6 +479,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_START_FULL_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -599,6 +603,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -736,6 +741,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -853,6 +859,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [
     "BUNDLE_PERMISSION_START_FULL_FALSE",
     "BUNDLE_PERMISSION_DEF_LIST",

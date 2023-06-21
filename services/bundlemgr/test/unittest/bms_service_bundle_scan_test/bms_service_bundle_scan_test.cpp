@@ -291,10 +291,7 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0200, Function | SmallTest |
  */
 HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0400, Function | SmallTest | Level1)
 {
-    std::shared_ptr<EventRunner> runner_;
-    runner_ = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    std::shared_ptr<BMSEventHandler> handler_;
-    handler_ = std::make_shared<BMSEventHandler>(runner_);
+    std::shared_ptr<BMSEventHandler> handler_ = std::make_shared<BMSEventHandler>();
     std::unordered_map<std::string, InnerBundleInfo> infos;
     const std::string PATH = TEST_ERROR_DIR + "/" + PHOTOS_HAP;
     auto result = handler_->CheckAndParseHapFiles(PATH, true, infos);

@@ -7449,10 +7449,10 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Lev
  */
 HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
 {
-    BundleAgingMgr bundleAgingMgr;
-    bundleAgingMgr.Start(
+    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
+    bundleAgingMgr->Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr.running_);
+    EXPECT_FALSE(bundleAgingMgr->running_);
 }
 
 /**
@@ -7462,10 +7462,10 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
 {
-    BundleAgingMgr bundleAgingMgr;
-    bundleAgingMgr.Start(
+    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
+    bundleAgingMgr->Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr.running_);
+    EXPECT_FALSE(bundleAgingMgr->running_);
 }
 
 /**
@@ -7475,10 +7475,10 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
 {
-    BundleAgingMgr bundleAgingMgr;
-    bundleAgingMgr.Start(
+    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
+    bundleAgingMgr->Start(
         OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr.running_);
+    EXPECT_FALSE(bundleAgingMgr->running_);
 }
 
 /**
@@ -7488,9 +7488,9 @@ HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsBundleKitServiceTest, AginTest_0004, Function | SmallTest | Level0)
 {
-    BundleAgingMgr bundleAgingMgr;
-    bundleAgingMgr.InitAgingtTimer();
-    EXPECT_FALSE(bundleAgingMgr.running_);
+    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
+    bundleAgingMgr->InitAgingtTimer();
+    EXPECT_FALSE(bundleAgingMgr->running_);
 }
 
 /**
@@ -8222,8 +8222,7 @@ HWTEST_F(BmsBundleKitServiceTest, Hidump_0009, Function | SmallTest | Level0)
  */
 HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    BMSEventHandler handler(runner);
+    BMSEventHandler handler;
     bool res = handler.LoadInstallInfosFromDb();
     EXPECT_TRUE(res);
 }
@@ -8235,8 +8234,7 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallT
  */
 HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    BMSEventHandler handler(runner);
+    BMSEventHandler handler;
     InnerBundleInfo info;
     ClearDataMgr();
     handler.LoadInstallInfosFromDb();
@@ -8282,8 +8280,7 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallT
  */
 HWTEST_F(BmsBundleKitServiceTest, AnalyzeUserData_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    BMSEventHandler handler(runner);
+    BMSEventHandler handler;
     int32_t userId = 0;
     std::string userDataDir = "";
     std::string userDataBundleName = "";
@@ -8299,8 +8296,7 @@ HWTEST_F(BmsBundleKitServiceTest, AnalyzeUserData_0001, Function | SmallTest | L
  */
 HWTEST_F(BmsBundleKitServiceTest, AnalyzeUserData_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    BMSEventHandler handler(runner);
+    BMSEventHandler handler;
     int32_t userId = 0;
     std::string userDataDir = "/data/app/el2/100/base/";
     std::string userDataBundleName = BUNDLE_NAME_TEST;

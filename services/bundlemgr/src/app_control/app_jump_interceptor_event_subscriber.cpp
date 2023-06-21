@@ -17,14 +17,14 @@
 #include "app_jump_interceptor_manager_rdb.h"
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
+#include "ffrt.h"
 #include "want.h"
 namespace OHOS {
 namespace AppExecFwk {
 const std::string WANT_PARAM_USER_ID = "userId";
-AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(const std::shared_ptr<EventHandler> &eventHandler,
+AppJumpInterceptorEventSubscriber::AppJumpInterceptorEventSubscriber(
     const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb)
 {
-    eventHandler_ = eventHandler;
     appJumpDb_ = appJumpDb;
 }
 
@@ -39,8 +39,8 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
     std::string bundleName = want.GetElement().GetBundleName();
     int32_t userId = want.GetIntParam(WANT_PARAM_USER_ID, -1);
     std::shared_ptr<IAppJumpInterceptorlManagerDb> db = appJumpDb_;
-    if (action.empty() || eventHandler_ == nullptr || userId < 0 || db == nullptr) {
-        APP_LOGE("%{public}s failed, empty action: %{public}s, or invalid event handler, userId:%d",
+    if (action.empty() || userId < 0 || db == nullptr) {
+        APP_LOGE("%{public}s failed, empty action: %{public}s, userId:%d",
             __func__, action.c_str(), userId);
         return;
     }
@@ -66,7 +66,7 @@ void AppJumpInterceptorEventSubscriber::OnReceiveEvent(const EventFwk::CommonEve
                 db->DeleteRuleByTargetBundleName(bundleName, userId);
             }
         };
-        eventHandler_->PostTask(task);
+        ffrt::submit(task);
     } else {
         APP_LOGW("%{public}s warnning, invalid action.", __func__);
     }

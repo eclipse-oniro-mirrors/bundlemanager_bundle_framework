@@ -60,6 +60,7 @@ ohos_unittest("BmsDataMgrTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -154,6 +155,7 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
