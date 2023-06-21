@@ -112,6 +112,11 @@ bool BundleMgrHostImpl::GetApplicationInfos(
         return false;
     }
     APP_LOGD("verify permission success, begin to GetApplicationInfos");
+    if (!BundlePermissionMgr::IsNativeTokenType() &&
+        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        APP_LOGD("GetApplicationInfos return empty, not support target level greater than or equal to api9");
+        return true;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -128,8 +133,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -309,6 +313,11 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     APP_LOGD("verify permission success, begin to GetBundleInfos");
+    if (!BundlePermissionMgr::IsNativeTokenType() &&
+        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        APP_LOGD("GetBundleInfos return empty, not support target level greater than or equal to api9");
+        return true;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -324,8 +333,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
