@@ -47,7 +47,7 @@ ohos_shared_library("bundlemgr_graphics") {
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",

@@ -77,8 +77,8 @@ ohos_unittest("BmsBundleInstallerTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -141,7 +141,7 @@ ohos_unittest("BmsBundleInstallerTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -236,8 +236,8 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -287,7 +287,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -349,8 +349,8 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -400,7 +400,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -450,8 +450,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -501,7 +501,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -557,8 +557,8 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -608,7 +608,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -666,8 +666,8 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -719,7 +719,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 

@@ -62,8 +62,8 @@ ohos_shared_library("zlib") {
   external_deps = [
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "hilog_native:libhilog_base",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hilog:libhilog_base",
     "napi:ace_napi",
   ]
 

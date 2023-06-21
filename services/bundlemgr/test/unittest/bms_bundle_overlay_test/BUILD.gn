@@ -61,8 +61,8 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -122,7 +122,7 @@ ohos_unittest("BmsBundleOverlayInfoTest") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
 
@@ -203,8 +203,8 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -234,7 +234,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -296,8 +296,8 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -327,7 +327,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -390,8 +390,8 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -421,7 +421,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -484,8 +484,8 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -515,7 +515,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {

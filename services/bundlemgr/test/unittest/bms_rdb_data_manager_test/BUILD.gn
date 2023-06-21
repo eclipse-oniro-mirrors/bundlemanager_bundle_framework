@@ -63,8 +63,8 @@ ohos_unittest("BmsRdbDataManagerTest") {
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "kv_store:distributeddata_inner",
@@ -120,7 +120,7 @@ ohos_unittest("BmsRdbDataManagerTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
