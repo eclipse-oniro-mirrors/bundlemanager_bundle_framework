@@ -67,6 +67,8 @@ const std::string GET_SHARED_BUNDLE_INFO = "GetSharedBundleInfo";
 const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
+const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
+const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3421,6 +3423,93 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAppProvisionInfo done.");
     return promise;
+}
+
+napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetSpecifiedDistributionType napi called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    std::string specifiedDistributionType;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nSpecifiedDistributionType;
+    napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
+    APP_LOGD("call GetSpecifiedDistributionType done.");
+    return nSpecifiedDistributionType;
+}
+
+napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetAdditionalInfo napi called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("bundleName invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    std::string additionalInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nAdditionalInfo;
+    napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
+    APP_LOGD("call GetAdditionalInfo done.");
+    return nAdditionalInfo;
 }
 }
 }
