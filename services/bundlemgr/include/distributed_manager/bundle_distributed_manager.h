@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,11 +18,10 @@
 
 #include <shared_mutex>
 
-#include "event_handler.h"
-#include "event_runner.h"
 #include "iremote_broker.h"
 #include "query_rpc_id_params.h"
 #include "rpc_id_result.h"
+#include "serial_queue.h"
 #include "target_ability_info.h"
 #include "want.h"
 
@@ -39,7 +38,6 @@ public:
 
     void OnQueryRpcIdFinished(const std::string &queryRpcIdResult);
 private:
-    void Init();
     bool ConvertTargetAbilityInfo(const Want &want, TargetAbilityInfo &targetAbilityInfo);
     bool QueryRpcIdByAbilityToServiceCenter(const TargetAbilityInfo &targetInfo);
     void SendCallbackRequest(int32_t resultCode, const std::string &transactId);
@@ -54,9 +52,8 @@ private:
     std::shared_mutex mutex_;
 
     mutable std::atomic<int> transactId_ = 0;
-    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler_;
-    std::shared_ptr<EventRunner> runner_;
     std::map<std::string, QueryRpcIdParams> queryAbilityParamsMap_;
+    std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,9 +21,7 @@
 #endif
 #include "bundle_common_event_mgr.h"
 #include "bundle_data_mgr.h"
-#include "bundle_memory_guard.h"
 #include "bundle_mgr_host.h"
-#include "bundle_mgr_service_event_handler.h"
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
 #include "distributed_bms_interface.h"
 #endif
@@ -33,14 +31,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrHostImpl : public BundleMgrHost {
 public:
-    BundleMgrHostImpl()
-    {
-        auto myRunner = EventRunner::Create(BUNDLE_MGR_THREAD);
-        handler_ = std::make_shared<BMSEventHandler>(myRunner);
-        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-            AppExecFwk::EventQueue::Priority::IMMEDIATE);
-    }
-    virtual ~BundleMgrHostImpl() {}
+    BundleMgrHostImpl() = default;
+    virtual ~BundleMgrHostImpl() = default;
     /**
      * @brief Obtains the ApplicationInfo based on a given bundle name.
      * @param appName Indicates the application bundle name to be queried.
@@ -830,10 +822,6 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
-
-private:
-    std::shared_ptr<BMSEventHandler> handler_;
-    const std::string BUNDLE_MGR_THREAD = "BundleMgrThread";
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

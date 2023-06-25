@@ -18,6 +18,7 @@
 #include <map>
 
 #include "app_log_wrapper.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "interfaces/hap_verify.h"
 #include "ipc_skeleton.h"
@@ -48,12 +49,17 @@ const std::map<int32_t, ErrCode> HAP_VERIFY_ERR_MAP = {
 
 ErrCode BundleVerifyMgr::HapVerify(const std::string &filePath, HapVerifyResult &hapVerifyResult)
 {
-    auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult);
-    APP_LOGI("HapVerify result %{public}d", ret);
-    if (HAP_VERIFY_ERR_MAP.find(ret) == HAP_VERIFY_ERR_MAP.end()) {
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
+    if (res == ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED) {
+        auto ret = Security::Verify::HapVerify(filePath, hapVerifyResult);
+        APP_LOGI("HapVerify result %{public}d", ret);
+        if (HAP_VERIFY_ERR_MAP.find(ret) == HAP_VERIFY_ERR_MAP.end()) {
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        return HAP_VERIFY_ERR_MAP.at(ret);
     }
-    return HAP_VERIFY_ERR_MAP.at(ret);
+    return res;
 }
 
 bool BundleVerifyMgr::isDebug_ = false;

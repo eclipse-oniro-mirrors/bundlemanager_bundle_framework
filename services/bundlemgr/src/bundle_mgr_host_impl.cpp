@@ -33,6 +33,7 @@
 #include "distributed_bms_proxy.h"
 #endif
 #include "element_name.h"
+#include "ffrt.h"
 #include "if_system_ability_manager.h"
 #include "installd_client.h"
 #include "ipc_skeleton.h"
@@ -1053,7 +1054,7 @@ void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
         };
         NotifyBundleStatus(installRes);
     };
-    handler_->PostTask(cleanCache);
+    ffrt::submit(cleanCache);
 }
 
 bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, const int userId)

@@ -67,6 +67,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
@@ -209,6 +210,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
@@ -302,6 +304,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
@@ -396,6 +399,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps
@@ -490,6 +494,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps

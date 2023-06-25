@@ -143,7 +143,7 @@ private:
 };
 }
 
-BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
+BMSEventHandler::BMSEventHandler()
 {
     APP_LOGD("instance is created");
 }
@@ -151,19 +151,6 @@ BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : E
 BMSEventHandler::~BMSEventHandler()
 {
     APP_LOGD("instance is destroyed");
-}
-
-void BMSEventHandler::ProcessEvent(const InnerEvent::Pointer &event)
-{
-    switch (event->GetInnerEventId()) {
-        case BMS_START: {
-            BmsStartEvent();
-            break;
-        }
-        default:
-            APP_LOGE("the eventId is not supported");
-            break;
-    }
 }
 
 void BMSEventHandler::BmsStartEvent()
@@ -1774,6 +1761,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {

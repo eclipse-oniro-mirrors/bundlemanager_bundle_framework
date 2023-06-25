@@ -20,22 +20,19 @@
 #include "bundle_event_callback_host.h"
 #include "common_event_subscriber.h"
 #include "common_event_support.h"
-#include "event_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class AppJumpInterceptorEventSubscriber : public BundleEventCallbackHost,
     public std::enable_shared_from_this<AppJumpInterceptorEventSubscriber> {
 public:
-    AppJumpInterceptorEventSubscriber(const std::shared_ptr<EventHandler> &eventHandler,
-        const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb);
+    AppJumpInterceptorEventSubscriber(const std::shared_ptr<IAppJumpInterceptorlManagerDb> &appJumpDb);
 
     ~AppJumpInterceptorEventSubscriber();
 
     void OnReceiveEvent(const EventFwk::CommonEventData eventData) override;
 
 private:
-    std::shared_ptr<EventHandler> eventHandler_ = nullptr;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpDb_ = nullptr;
 };
 } // AppExecFwk

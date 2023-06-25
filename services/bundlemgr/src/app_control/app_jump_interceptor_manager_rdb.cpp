@@ -24,7 +24,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string APP_JUMP_INTERCEPTOR_RDB_TABLE_NAME = "app_jump_interceptor";
-    const std::string NAME_APP_JUMP_INTERCEPTOR_MANAGER_RDB = "AppJumpInterceptorManagerRdb";
 
     const int32_t CALLER_PKG_INDEX = 1;
     const int32_t TARGET_PKG_INDEX = 2;
@@ -50,27 +49,10 @@ AppJumpInterceptorManagerRdb::AppJumpInterceptorManagerRdb()
         + "USER_ID INTEGER, MODIFIED_TIME INTEGER);");
     rdbDataManager_ = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager_->CreateTable();
-    InitEventRunnerAndHandler();
 }
 
 AppJumpInterceptorManagerRdb::~AppJumpInterceptorManagerRdb()
 {
-}
-
-bool AppJumpInterceptorManagerRdb::InitEventRunnerAndHandler()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    runner_ = EventRunner::Create(NAME_APP_JUMP_INTERCEPTOR_MANAGER_RDB);
-    if (runner_ == nullptr) {
-        APP_LOGE("%{public}s fail, Failed to init due to create runner error", __func__);
-        return false;
-    }
-    handler_ = std::make_shared<EventHandler>(runner_);
-    if (handler_ == nullptr) {
-        APP_LOGE("%{public}s fail, Failed to init due to create handler error", __func__);
-        return false;
-    }
-    return true;
 }
 
 bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
@@ -79,7 +61,7 @@ bool AppJumpInterceptorManagerRdb::SubscribeCommonEvent()
         APP_LOGI("subscribeCommonEvent already subscribed.");
         return true;
     }
-    eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(handler_, shared_from_this());
+    eventSubscriber_ = new (std::nothrow) AppJumpInterceptorEventSubscriber(shared_from_this());
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (!dataMgr->RegisterBundleEventCallback(eventSubscriber_)) {
         APP_LOGE("subscribeCommonEvent subscribed failure.");
