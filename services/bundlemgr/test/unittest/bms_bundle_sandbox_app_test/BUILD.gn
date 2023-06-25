@@ -62,12 +62,13 @@ ohos_unittest("BmsSandboxAppTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
 
@@ -114,7 +115,7 @@ ohos_unittest("BmsSandboxAppTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -177,12 +178,13 @@ ohos_unittest("BmsSandboxRdbTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   defines = []
 
@@ -229,7 +231,7 @@ ohos_unittest("BmsSandboxRdbTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
   if (storage_service_enable) {

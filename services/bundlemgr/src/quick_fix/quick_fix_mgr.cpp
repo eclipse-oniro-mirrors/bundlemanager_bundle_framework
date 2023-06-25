@@ -19,8 +19,8 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
-#include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "ffrt.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -49,8 +49,7 @@ ErrCode QuickFixMgr::DeployQuickFix(const std::vector<std::string> &bundleFilePa
         quickFixer->DeployQuickFix(bundleFilePaths);
     };
 
-    ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
-    installersPool.AddTask(task);
+    ffrt::submit(task);
     return ERR_OK;
 }
 
@@ -69,8 +68,7 @@ ErrCode QuickFixMgr::SwitchQuickFix(const std::string &bundleName, bool enable,
         quickFixer->SwitchQuickFix(bundleName, enable);
     };
 
-    ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
-    installersPool.AddTask(task);
+    ffrt::submit(task);
     return ERR_OK;
 }
 
@@ -89,8 +87,7 @@ ErrCode QuickFixMgr::DeleteQuickFix(const std::string &bundleName,
         quickFixer->DeleteQuickFix(bundleName);
     };
 
-    ThreadPool &installersPool = DelayedSingleton<BundleMgrService>::GetInstance()->GetThreadPool();
-    installersPool.AddTask(task);
+    ffrt::submit(task);
     return ERR_OK;
 }
 

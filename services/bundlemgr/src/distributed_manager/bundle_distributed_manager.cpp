@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -18,7 +18,6 @@
 #include "app_log_wrapper.h"
 #include "ability_manager_client.h"
 #include "bundle_manager_callback.h"
-#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "distributed_device_profile_client.h"
 #include "free_install_params.h"
@@ -28,44 +27,24 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using namespace ffrt;
 namespace {
 const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
 const uint32_t OUT_TIME = 3000;
-const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
+const std::string DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 }
 
-void BundleDistributedManager::Init()
-{
-    runner_ = EventRunner::Create(DISTRIBUTED_MANAGER_THREAD);
-    if (runner_ == nullptr) {
-        APP_LOGE("Create runner failed");
-        return;
-    }
-
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    if (handler_ == nullptr) {
-        APP_LOGE("Create handler failed");
-        return;
-    }
-    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
-}
-
 BundleDistributedManager::BundleDistributedManager()
 {
-    Init();
+    APP_LOGD("create BundleDistributedManager");
+    serialQueue_ = std::make_shared<SerialQueue>(DISTRIBUTED_MANAGER_QUEUE);
 }
 
 BundleDistributedManager::~BundleDistributedManager()
 {
-    if (handler_ != nullptr) {
-        handler_.reset();
-    }
-    if (runner_ != nullptr) {
-        runner_.reset();
-    }
+    APP_LOGD("destroy BundleDistributedManager");
 }
 
 bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, TargetAbilityInfo &targetAbilityInfo)
@@ -131,10 +110,6 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGI("BundleDistributedManager::CheckAbilityEnableInstall");
-    if (handler_ == nullptr) {
-        APP_LOGE("handler_ is nullptr");
-        return false;
-    }
     AppExecFwk::TargetAbilityInfo targetAbilityInfo;
     if (!ConvertTargetAbilityInfo(want, targetAbilityInfo)) {
         return false;
@@ -170,7 +145,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
         this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     };
-    handler_->PostTask(queryRpcIdByAbilityFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(queryRpcIdByAbilityFunc);
     return true;
 }
 
@@ -237,15 +212,11 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
 void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
 {
     APP_LOGI("BundleDistributedManager::OutTimeMonitor");
-    if (handler_ == nullptr) {
-        APP_LOGE("OutTimeMonitor, handler is nullptr");
-        return;
-    }
     auto registerEventListenerFunc = [this, transactId]() {
         APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };
-    handler_->PostTask(registerEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, registerEventListenerFunc);
 }
 
 void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
@@ -266,10 +237,7 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         }
         want = queryAbilityParams->second.want;
     }
-
-    if (handler_ != nullptr) {
-        handler_->RemoveTask(rpcIdResult.transactId);
-    }
+    serialQueue_->CancelDelayTask(rpcIdResult.transactId);
     if (rpcIdResult.retCode != 0) {
         APP_LOGE("query RpcId fail%{public}d", rpcIdResult.retCode);
         SendCallbackRequest(rpcIdResult.retCode, rpcIdResult.transactId);

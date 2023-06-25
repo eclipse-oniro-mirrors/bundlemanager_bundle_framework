@@ -79,13 +79,14 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -120,13 +121,13 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -203,12 +204,13 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = []
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -243,13 +245,13 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -329,12 +331,13 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -383,13 +386,13 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -469,13 +472,14 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_START_FULL_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -510,13 +514,13 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -593,12 +597,13 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -647,13 +652,13 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -730,12 +735,13 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
@@ -771,7 +777,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     external_deps += [ "resource_management:global_resmgr" ]
   }
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
@@ -853,6 +859,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
   defines = [
     "BUNDLE_PERMISSION_START_FULL_FALSE",
     "BUNDLE_PERMISSION_DEF_LIST",
@@ -900,7 +907,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {

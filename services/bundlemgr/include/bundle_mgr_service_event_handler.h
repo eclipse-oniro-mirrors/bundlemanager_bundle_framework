@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,11 +16,11 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_SERVICE_EVENT_HANDLER_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_BUNDLE_MGR_SERVICE_EVENT_HANDLER_H
 
+#include <list>
 #include <unordered_set>
 
 #include "bundle_constants.h"
 #include "bundle_data_mgr.h"
-#include "event_handler.h"
 #include "pre_scan_info.h"
 
 namespace OHOS {
@@ -42,17 +42,10 @@ enum class ScanResultCode {
     SCAN_NO_DATA,
 };
 
-class BMSEventHandler : public EventHandler {
+class BMSEventHandler {
 public:
-    explicit BMSEventHandler(const std::shared_ptr<EventRunner> &runner);
-    virtual ~BMSEventHandler() override;
-    /**
-     * @brief Process the event of install system bundles.
-     * @param event Indicates the event to be processed.
-     * @return
-     */
-    virtual void ProcessEvent(const InnerEvent::Pointer &event) override;
-
+    BMSEventHandler();
+    ~BMSEventHandler();
     /**
      * @brief Get preInstall root dir list,
      *        which the catalog of production has higher priority.
@@ -81,17 +74,12 @@ public:
      * @return Returns result.
      */
     static bool HasPreInstallProfile();
-
-    enum {
-        BMS_START = 0,
-    };
-
-private:
     /**
      * @brief Bms start event.
      * @return
      */
     void BmsStartEvent();
+private:
     /**
      * @brief Before Bms start.
      * @return

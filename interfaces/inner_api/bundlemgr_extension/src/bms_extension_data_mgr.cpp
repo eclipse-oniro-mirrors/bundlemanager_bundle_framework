@@ -96,5 +96,20 @@ bool BmsExtensionDataMgr::CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkV
     uint32_t compatibleVersionOHOS = compatibleVersion % API_VERSION_BASE;
     return compatibleVersionOHOS <= sdkVersion;
 }
+
+ErrCode BmsExtensionDataMgr::HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
+{
+    if ((Init() == ERR_OK) && handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr == nullptr) {
+            APP_LOGW("bundleMgrExtPtr is nullptr.");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        return bundleMgrExtPtr->HapVerify(filePath, hapVerifyResult);
+    }
+    APP_LOGW("access bms-extension failed.");
+    return ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED;
+}
 } // AppExecFwk
 } // OHOS

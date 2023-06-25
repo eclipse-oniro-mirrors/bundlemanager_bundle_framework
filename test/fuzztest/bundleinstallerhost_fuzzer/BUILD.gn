@@ -65,13 +65,14 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+  external_deps += bundle_install_external_deps
 
   if (bundle_framework_power_mgr_enable) {
     external_deps += aot_external_deps

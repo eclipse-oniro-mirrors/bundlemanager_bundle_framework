@@ -5014,7 +5014,7 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
     return false;
 }
 
-bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &abilityName) const
+bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &abilityName)
 {
     APP_LOGD("QueryHagAbilityName called");
     AbilityInfo abilityInfo;

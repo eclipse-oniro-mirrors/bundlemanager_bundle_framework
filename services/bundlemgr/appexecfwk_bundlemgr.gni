@@ -137,6 +137,8 @@ bundle_install_deps = [
   "${services_path}/bundlemgr:parser_common",
 ]
 
+bundle_install_external_deps = [ "ffrt:libffrt" ]
+
 if (bundle_framework_power_mgr_enable) {
   aot_external_deps = [
     "battery_manager:batterysrv_client",
@@ -162,6 +164,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
   "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
   "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
+  "${services_path}/bundlemgr/src/common/serial_queue.cpp",
   "${services_path}/bundlemgr/src/hidump_helper.cpp",
   "${services_path}/bundlemgr/src/mime_type_mgr.cpp",
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",

@@ -70,6 +70,7 @@ constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
+constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
@@ -304,7 +305,6 @@ constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
 constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 
 // thread pool
-constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
 
 // app detail ability

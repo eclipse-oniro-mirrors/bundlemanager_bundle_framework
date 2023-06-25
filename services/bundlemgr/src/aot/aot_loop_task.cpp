@@ -20,6 +20,7 @@
 #include <thread>
 
 #include "aot/aot_handler.h"
+#include "ffrt.h"
 #include "parameters.h"
 
 namespace OHOS {
@@ -53,8 +54,7 @@ void AOTLoopTask::ScheduleLoopTask() const
             AOTHandler::GetInstance().HandleIdle();
         }
     };
-    std::thread t(task);
-    t.detach();
+    ffrt::submit(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

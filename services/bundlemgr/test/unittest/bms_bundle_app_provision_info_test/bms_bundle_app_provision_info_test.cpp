@@ -945,8 +945,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Fun
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, InnerProcessStockBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -965,8 +964,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerProcessStockBundleProvisionInfo_000
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -993,8 +991,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0001, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1030,8 +1027,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0002, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1064,8 +1060,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0003, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0004, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1103,8 +1098,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0004, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1131,8 +1125,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0001, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1173,8 +1166,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0002, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1212,8 +1204,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0003, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1257,8 +1248,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     std::vector<std::string> bundlePath;
     InstallParam installParam;
@@ -1285,8 +1275,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ParseHapFiles_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     std::vector<std::string> bundlePath;
     InstallParam installParam;
