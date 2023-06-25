@@ -47,6 +47,16 @@ AppControlManager::AppControlManager()
     } else {
         APP_LOGI("App jump intercetor disabled");
     }
+    std::vector<std::string> appIds;
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId == Constants::INVALID_USERID) {
+        currentUserId = Constants::START_USERID;
+    }
+    ErrCode ret = appControlManagerDb_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
+        AppControlConstants::APP_DISALLOWED_UNINSTALL, currentUserId, appIds);
+    if (ret == ERR_OK && !appIds.empty()) {
+        isAppInstallControlEnabled_ = true;
+    }
 }
 
 AppControlManager::~AppControlManager()
@@ -57,7 +67,11 @@ ErrCode AppControlManager::AddAppInstallControlRule(const std::string &callingNa
     const std::vector<std::string> &appIds, const std::string &controlRuleType, int32_t userId)
 {
     APP_LOGD("AddAppInstallControlRule");
-    return appControlManagerDb_->AddAppInstallControlRule(callingName, appIds, controlRuleType, userId);
+    auto ret = appControlManagerDb_->AddAppInstallControlRule(callingName, appIds, controlRuleType, userId);
+    if ((ret == ERR_OK) && !isAppInstallControlEnabled_) {
+        isAppInstallControlEnabled_ = true;
+    }
+    return ret;
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
@@ -225,6 +239,11 @@ void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> 
         }
         AbilityManagerHelper::UninstallApplicationProcesses(bundleName, bundleInfo.uid);
     });
+}
+
+bool AppControlManager::IsAppInstallControlEnabled() const
+{
+    return isAppInstallControlEnabled_;
 }
 }
 }
