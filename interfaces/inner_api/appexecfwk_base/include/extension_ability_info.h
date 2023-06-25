@@ -58,6 +58,7 @@ enum class ExtensionAbilityType {
     PUSH = 17,
     DRIVER = 18,
     APP_ACCOUNT_AUTHORIZATION = 19,
+    SYSPICKER_MEDIACONTROL = 20,
     UNSPECIFIED = 255
 };
 
