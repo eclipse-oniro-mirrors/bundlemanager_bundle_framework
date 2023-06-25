@@ -1001,8 +1001,34 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
+    int32_t realityUserId = GetResponseUserIdByBundleName(bundleName, userId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, realityUserId);
     return ERR_OK;
+}
+
+int32_t BundleMgrHostImpl::GetResponseUserIdByBundleName(
+    const std::string &appName, int32_t userId)
+{
+    int32_t realityUserId = userId;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEvent(appName, userId, true, true);
+        return Constants::INVALID_USERID;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->GetInnerBundleInfo(appName, innerBundleInfo)) {
+        APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
+        return Constants::INVALID_USERID;
+    }
+    dataMgr->EnableBundle(appName);
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    if (responseUserId != Constants::INVALID_USERID) {
+        APP_LOGD("get reality userId : %{public}d from bundleName : %{public}s and userId : %{public}d",
+            responseUserId, appName.c_str(), userId);
+        realityUserId = responseUserId;
+    }
+    return realityUserId;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
