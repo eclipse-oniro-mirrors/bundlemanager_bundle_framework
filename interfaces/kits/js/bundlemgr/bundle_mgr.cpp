@@ -904,7 +904,8 @@ static void ConvertBundleInfo(napi_env env, napi_value objBundleInfo, const Bund
         nReqPermissionStates));
 
     napi_value nIsCompressNativeLibs;
-    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, true, &nIsCompressNativeLibs));
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, bundleInfo.applicationInfo.isCompressNativeLibs,
+        &nIsCompressNativeLibs));
     NAPI_CALL_RETURN_VOID(
         env, napi_set_named_property(env, objBundleInfo, "isCompressNativeLibs", nIsCompressNativeLibs));
 
@@ -3556,7 +3557,7 @@ NativeValue* JsBundleMgr::CreateBundleInfo(NativeEngine &engine, const BundleInf
     object->SetProperty("hapModuleInfos", CreateHapModuleInfos(engine, bundleInfo.hapModuleInfos));
     object->SetProperty("reqPermissions", CreateNativeArray(engine, bundleInfo.reqPermissions));
     object->SetProperty("reqPermissionStates", CreateNativeArray(engine, bundleInfo.reqPermissionStates));
-    object->SetProperty("isCompressNativeLibs", CreateJsValue(engine, true));
+    object->SetProperty("isCompressNativeLibs", CreateJsValue(engine, bundleInfo.applicationInfo.isCompressNativeLibs));
     object->SetProperty("isSilentInstallation", CreateJsValue(engine, std::string("")));
     auto typeValue = CreateJsValue(engine, "");
     if (typeValue->TypeOf() == NativeValueType::NATIVE_UNDEFINED) {
