@@ -79,7 +79,8 @@ const std::vector<std::string> EXTENSION_TYPE_SET = {
     "ui",
     "push",
     "driver",
-    "appAccountAuthorization"
+    "appAccountAuthorization",
+    "sysPicker/MediaControl"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
