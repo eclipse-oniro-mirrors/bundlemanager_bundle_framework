@@ -116,6 +116,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAllSharedBundleInfo", GetAllSharedBundleInfo),
         DECLARE_NAPI_FUNCTION("getSharedBundleInfo", GetSharedBundleInfo),
         DECLARE_NAPI_FUNCTION("getAppProvisionInfo", GetAppProvisionInfo),
+        DECLARE_NAPI_FUNCTION("getSpecifiedDistributionType", GetSpecifiedDistributionType),
+        DECLARE_NAPI_FUNCTION("getAdditionalInfo", GetAdditionalInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

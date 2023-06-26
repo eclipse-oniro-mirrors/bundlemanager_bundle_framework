@@ -241,6 +241,8 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info);
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
+napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
+napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
