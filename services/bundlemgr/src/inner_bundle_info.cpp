@@ -2950,6 +2950,11 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
 bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
 {
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (!(DelayedSingleton<AppControlManager>::GetInstance()->IsAppInstallControlEnabled())) {
+        APP_LOGD("app install control feature is disabled");
+        return true;
+    }
+
     std::vector<std::string> appIds;
     ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
         AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
