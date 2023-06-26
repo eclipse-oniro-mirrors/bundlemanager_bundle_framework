@@ -5013,5 +5013,35 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
     }
     return false;
 }
+
+bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &abilityName)
+{
+    APP_LOGD("QueryHagAbilityName called");
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    Want want;
+    want.SetAction(Constants::FREE_INSTALL_ACTION);
+    if (!ImplicitQueryInfoByPriority(
+        want, 0, Constants::ANY_USERID, abilityInfo, extensionInfo)) {
+        APP_LOGE("ImplicitQueryInfoByPriority for action %{public}s failed", Constants::FREE_INSTALL_ACTION);
+        return false;
+    }
+    if (!abilityInfo.name.empty()) {
+        bundleName = abilityInfo.bundleName;
+        abilityName = abilityInfo.name;
+    } else {
+        bundleName = extensionInfo.bundleName;
+        abilityName = extensionInfo.name;
+    }
+
+    if (bundleName.empty() || abilityName.empty()) {
+        APP_LOGE("bundleName: %{public}s or abilityName: %{public}s is empty()",
+            bundleName.c_str(), abilityName.c_str());
+        return false;
+    }
+    APP_LOGD("QueryHagAbilityName bundleName: %{public}s, abilityName: %{public}s",
+        bundleName.c_str(), abilityName.c_str());
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

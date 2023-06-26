@@ -825,6 +825,7 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
+    bool QueryHagAbilityName(std::string &bundleName, std::string &abilityName);
 
 private:
     /**
