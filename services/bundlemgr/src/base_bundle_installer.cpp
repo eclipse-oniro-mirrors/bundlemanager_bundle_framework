@@ -3551,24 +3551,17 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     }
     if (isCompressNativeLibrary) {
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
-        if (result != ERR_OK) {
-            APP_LOGE("fail to extract module dir, error is %{public}d", result);
-            return result;
-        }
+        CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
         result = InstalldClient::GetInstance()->VerifyCodeSignature(modulePath_, cpuAbi, targetSoPath,
             signatureFileDir);
-        if (result != ERR_OK) {
-            APP_LOGE("fail to VerifyCodeSignature, error is %{public}d", result);
-            return result;
-        }
+        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
     } else {
+        auto result = InstalldClient::GetInstance()->CreateBundleDir(modulePath);
+        CHECK_RESULT(result, "fail to create temp bundle dir, error is %{public}d");
         std::vector<std::string> fileNames;
-        auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
-        if (result != ERR_OK) {
-            APP_LOGE("fail to GetNativeLibraryFileNames, error is %{public}d", result);
-            return result;
-        }
+        result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
+        CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
     return ERR_OK;
@@ -3695,6 +3688,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     if (installedModules_[info.GetCurrentModulePackage()]) {
         tempDir += Constants::TMP_SUFFIX;
     }
+
     return tempDir.append(hapPath.substr(posOfPathSep));
 }
 
