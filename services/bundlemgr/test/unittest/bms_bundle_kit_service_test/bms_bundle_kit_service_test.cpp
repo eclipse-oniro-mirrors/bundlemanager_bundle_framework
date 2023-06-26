@@ -10800,7 +10800,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0600, Function | SmallTest
     EXPECT_NE(dataMgr, nullptr);
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
-    dataMgr->bundleInfos_.clear();
     dataMgr->bundleInfos_.insert(
         pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
     std::vector<ApplicationInfo> appInfos;
