@@ -10648,6 +10648,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0006, Function 
     ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
         want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
 }
 
 /**
@@ -10677,6 +10678,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0007, Function 
     EXPECT_EQ(res, ERR_OK);
     res = dataMgr->UpdateBundleInstallState(LAUNCHER_BUNDLE_NAME, InstallState::UNINSTALL_START);
     EXPECT_EQ(res, ERR_OK);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
 }
 
 /**
