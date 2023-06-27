@@ -52,9 +52,11 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = BundleUtil::CheckFilePath({sharedBundlePath_}, inBundlePaths);
     CHECK_RESULT(result, "hsp files check failed %{public}d");
 
-    // copy the haps to the dir which cannot be accessed from caller
-    result = CopyHspToSecurityDir(inBundlePaths);
-    CHECK_RESULT(result, "copy file failed %{public}d");
+    if (!checkParam.isPreInstallApp) {
+        // copy the haps to the dir which cannot be accessed from caller
+        result = CopyHspToSecurityDir(inBundlePaths);
+        CHECK_RESULT(result, "copy file failed %{public}d");
+    }
 
     // check number and type of the hsp and sig files
     std::vector<std::string> bundlePaths;
