@@ -2106,6 +2106,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
@@ -4068,6 +4069,11 @@ void InnerBundleInfo::UpdateIsCompressNativeLibs()
         baseApplicationInfo_->isCompressNativeLibs =
             (baseApplicationInfo_->isCompressNativeLibs || info.second.compressNativeLibs) ? true : false;
     }
+}
+
+void InnerBundleInfo::SetResourcesApply(const std::vector<int32_t> &resourcesApply)
+{
+    baseApplicationInfo_->resourcesApply = resourcesApply;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

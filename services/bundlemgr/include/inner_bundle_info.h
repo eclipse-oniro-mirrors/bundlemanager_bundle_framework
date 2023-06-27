@@ -1978,6 +1978,7 @@ public:
     ErrCode SetMimeType(const std::string &moduleName, const std::string &abilityName, const std::string mimeType);
     ErrCode DelExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
     ErrCode DelMimeType(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
 
 private:
     bool IsExistLauncherAbility() const;
