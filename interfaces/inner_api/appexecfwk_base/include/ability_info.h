@@ -31,6 +31,7 @@ enum AbilityInfoFlag {
     GET_ABILITY_INFO_WITH_METADATA = 0x00000020,
     GET_ABILITY_INFO_SYSTEMAPP_ONLY = 0x00000080,
     GET_ABILITY_INFO_WITH_DISABLE = 0x00000100,
+    GET_ABILITY_INFO_WITH_SKILL_URI = 0x00000200,
 };
 
 enum class GetAbilityInfoFlag {
@@ -207,6 +208,9 @@ struct AbilityInfo : public Parcelable {
     int32_t defaultFormWidth = 0;
     MetaData metaData;
     uint32_t backgroundModes = 0;
+
+    // for Check flags, add to abilityInfo and extensionAbilityInfo
+    std::vector<SkillUriForAbilityAndExtension> skillUri;
 
     // set when install
     std::string package;  // the "module.package" in config.json

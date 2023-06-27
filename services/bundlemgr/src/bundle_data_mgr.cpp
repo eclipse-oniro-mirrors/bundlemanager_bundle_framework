@@ -1035,6 +1035,20 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (isPrivateType || skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
+                if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+                    std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+                    for (const SkillUri & uri : skill.uris) {
+                        SkillUriForAbilityAndExtension skillinfo;
+                        skillinfo.scheme = uri.scheme;
+                        skillinfo.host = uri.host;
+                        skillinfo.path = uri.path;
+                        skillinfo.pathStartWith = uri.pathStartWith;
+                        skillinfo.pathRegex = uri.pathRegex;
+                        skillinfo.type = uri.type;
+                        skillUriTmp.emplace_back(skillinfo);
+                    }
+                    abilityinfo.skillUri = skillUriTmp;
+                }
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
                 }
@@ -3857,6 +3871,20 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
                 break;
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+                std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+                for (const SkillUri & uri : skill.uris) {
+                    SkillUriForAbilityAndExtension skillinfo;
+                    skillinfo.scheme = uri.scheme;
+                    skillinfo.host = uri.host;
+                    skillinfo.path = uri.path;
+                    skillinfo.pathStartWith = uri.pathStartWith;
+                    skillinfo.pathRegex = uri.pathRegex;
+                    skillinfo.type = uri.type;
+                    skillUriTmp.emplace_back(skillinfo);
+                }
+                extensionInfo.skillUri = skillUriTmp;
+            }
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                 GET_ABILITY_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(

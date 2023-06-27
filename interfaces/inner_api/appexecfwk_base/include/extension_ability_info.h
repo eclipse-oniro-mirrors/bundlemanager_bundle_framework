@@ -67,6 +67,16 @@ enum class CompileMode {
     ES_MODULE,
 };
 
+struct SkillUriForAbilityAndExtension {
+    std::string scheme;
+    std::string host;
+    std::string port;
+    std::string path;
+    std::string pathStartWith;
+    std::string pathRegex;
+    std::string type;
+};
+
 struct ExtensionAbilityInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
@@ -95,6 +105,9 @@ struct ExtensionAbilityInfo : public Parcelable {
     CompileMode compileMode = CompileMode::JS_BUNDLE;
     // for NAPI, save self query cache
     int32_t uid = -1;
+
+    // for Check flags, add to abilityInfo and extensionAbilityInfo
+    std::vector<SkillUriForAbilityAndExtension> skillUri;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
