@@ -20,13 +20,23 @@
 
 #include "installd/installd_host_impl.h"
 #include "ipc/installd_host.h"
+#include "system_ability.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class InstalldService {
+class InstalldService : public SystemAbility {
+
+DECLARE_SYSTEM_ABILITY(InstalldService);
+
 public:
+    InstalldService(int32_t saId, bool runOnCreate);
     InstalldService();
     virtual ~InstalldService();
+
+    void OnStart() override;
+
+    void OnStop() override;
+
     /**
      * @brief Start the installd service.
      * @return

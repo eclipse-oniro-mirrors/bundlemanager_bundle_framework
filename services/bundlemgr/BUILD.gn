@@ -364,11 +364,16 @@ ohos_shared_library("libbms") {
   part_name = "bundle_framework"
 }
 
-ohos_executable("installs") {
+ohos_shared_library("installs") {
   sources = [
     "src/bundle_extractor.cpp",
-    "src/installd/installd_main.cpp",
     "src/system_ability_helper.cpp",
+  ]
+
+  use_exceptions = true
+  visibility = [
+    "//base/*",
+    "//foundation/*",
   ]
 
   sources += install_daemon_sources
@@ -389,6 +394,7 @@ ohos_executable("installs") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 

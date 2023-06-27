@@ -23,6 +23,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "installd/installd_operator.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
@@ -30,7 +31,18 @@ using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
-InstalldService::InstalldService()
+namespace {
+const int32_t INSTALLD_ID = 511;
+}
+
+REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_ID, true);
+
+InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
+{
+    APP_LOGI("installd service instance is created");
+}
+
+InstalldService::InstalldService() : SystemAbility(INSTALLD_ID, true)
 {
     APP_LOGI("installd service instance is created");
 }
@@ -38,6 +50,21 @@ InstalldService::InstalldService()
 InstalldService::~InstalldService()
 {
     APP_LOGI("installd service instance is destroyed");
+}
+
+void InstalldService::OnStart()
+{
+    APP_LOGI("installd OnStart");
+    Start();
+    if (!Publish(hostImpl_)) {
+        APP_LOGI("Publish failed");
+    }
+}
+
+void InstalldService::OnStop()
+{
+    Stop();
+    APP_LOGI("installd OnStop");
 }
 
 bool InstalldService::Init()

@@ -22,7 +22,6 @@ ohos_unittest("BmsInstallDaemonTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
-    "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
@@ -55,6 +54,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
   defines = []
@@ -105,6 +105,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
   defines = []
@@ -158,6 +159,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
