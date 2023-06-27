@@ -615,16 +615,5 @@ BundlePackInfo *BundlePackInfo::Unmarshalling(Parcel &parcel)
     }
     return info;
 }
-
-BundlePackInfo &BundlePackInfo::operator=(const BundlePackInfo &info)
-{
-    if (this == &info) {
-        return *this;
-    }
-    this->summary = info.summary;
-    this->packages = info.packages;
-    this->isValid_ = info.isValid_;
-    return *this;
-}
 } // AppExecFwk
 } // OHOS
