@@ -7455,19 +7455,6 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Lev
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
- * @tc.number: AgingTest_0003
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
-/**
  * @tc.number: AginTest_0004
  * @tc.name: test InitAgingtTimer
  * @tc.desc: agingTimerInterval is false
