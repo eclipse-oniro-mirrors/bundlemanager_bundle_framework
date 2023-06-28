@@ -35,14 +35,14 @@ namespace {
 const int32_t INSTALLD_ID = 511;
 }
 
-REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_ID, true);
+REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_ID, false);
 
 InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
 {
     APP_LOGI("installd service instance is created");
 }
 
-InstalldService::InstalldService() : SystemAbility(INSTALLD_ID, true)
+InstalldService::InstalldService() : SystemAbility(INSTALLD_ID, false)
 {
     APP_LOGI("installd service instance is created");
 }

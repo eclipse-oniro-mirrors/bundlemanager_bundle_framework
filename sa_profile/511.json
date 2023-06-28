@@ -4,7 +4,7 @@
         {
             "name": 511,
             "libpath": "libinstalls.z.so",
-            "run-on-create": true,
+            "run-on-create": false,
             "depend_time_out": 60000,
             "distributed": false,
             "bootphase": "CoreStartPhase",

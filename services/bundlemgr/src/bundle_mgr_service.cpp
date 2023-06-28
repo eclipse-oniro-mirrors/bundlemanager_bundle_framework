@@ -15,6 +15,8 @@
 
 #include "bundle_mgr_service.h"
 
+#include <sys/stat.h>
+
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event.h"
@@ -26,6 +28,7 @@
 #include "common_event_support.h"
 #include "datetime_ex.h"
 #include "ffrt.h"
+#include "installd_client.h"
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
 #endif
@@ -99,6 +102,7 @@ bool BundleMgrService::Init()
     }
 
     APP_LOGI("Init begin");
+    CreateBmsServiceDir();
     InitBmsParam();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
@@ -254,6 +258,16 @@ bool BundleMgrService::InitOverlayManager()
     }
 #endif
     return true;
+}
+
+void BundleMgrService::CreateBmsServiceDir()
+{
+    auto ret = InstalldClient::GetInstance()->Mkdir(
+        Constants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
+        Constants::FOUNDATION_UID, Constants::BMS_GID);
+    if (!ret) {
+        APP_LOGW("create dir failed");
+    }
 }
 
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const

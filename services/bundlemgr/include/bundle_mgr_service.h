@@ -152,6 +152,7 @@ private:
     bool InitAppControl();
     bool InitQuickFixManager();
     bool InitOverlayManager();
+    void CreateBmsServiceDir();
 
 private:
     bool ready_ = false;
