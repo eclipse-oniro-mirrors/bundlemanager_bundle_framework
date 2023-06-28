@@ -433,7 +433,7 @@ void GetApplicationInfosComplete(napi_env env, napi_status status, void *data)
         ProcessApplicationInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->appInfos);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_APPLICATION_INFOS, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+            GET_APPLICATION_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
@@ -2659,7 +2659,7 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
         ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos, asyncCallbackInfo->flags);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
-            GET_BUNDLE_INFOS, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
+            GET_BUNDLE_INFOS, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
