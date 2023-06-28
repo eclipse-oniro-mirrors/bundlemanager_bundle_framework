@@ -191,7 +191,8 @@ bool QuickFixBootScanner::ReprocessQuickFix(const std::string &quickFixPath, con
 {
     APP_LOGD("start to ReprocessQuickFix with bundleName %{public}s", bundleName.c_str());
     std::string destinationDir = Constants::HAP_COPY_PATH;
-    destinationDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH + Constants::TMP_SUFFIX;
+    destinationDir += Constants::PATH_SEPARATOR + Constants::SECURITY_QUICK_FIX_PATH +
+        Constants::PATH_SEPARATOR + bundleName + Constants::PATH_SEPARATOR;
     if (!BundleUtil::CreateDir(destinationDir)) {
         APP_LOGE("create dir failed");
         return false;
