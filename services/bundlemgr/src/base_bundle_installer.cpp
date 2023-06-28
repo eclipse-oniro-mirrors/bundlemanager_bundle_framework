@@ -3726,8 +3726,8 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
                 .append(nativeLibraryPath_);
             std::string realSoDir;
             realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                     .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                     .append(nativeLibraryPath_);
+                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath_);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
             auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
             if (result != ERR_OK) {
