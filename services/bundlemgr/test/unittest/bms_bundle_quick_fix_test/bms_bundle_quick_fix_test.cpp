@@ -4255,7 +4255,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0430, Function | SmallTest
     const std::vector<std::string> sourceFiles {path};
     std::vector<std::string> realFilePaths;
     auto ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
-    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
     deployer->DeployQuickFix();
     DeleteFiles(sourceFiles);
 }
