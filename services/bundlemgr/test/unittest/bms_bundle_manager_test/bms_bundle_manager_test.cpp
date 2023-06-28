@@ -4320,7 +4320,7 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0100, Function | SmallTest | L
     ret = dataMgr->GetProvisionId(BUNDLE_NAME, provisionId);
     EXPECT_EQ(ret, false);
 
-    std::string appFeature = "ohos_system_app";
+    std::string appFeature = "hos_system_app";
     ret = dataMgr->GetAppFeature(BUNDLE_NAME, appFeature);
     EXPECT_EQ(ret, false);
 
