@@ -26,6 +26,7 @@ const std::string INNER_BUNDLE_USER_INFO_BUNDLE_NAME = "bundleName";
 const std::string INNER_BUNDLE_USER_INFO_INSTALL_TIME = "installTime";
 const std::string INNER_BUNDLE_USER_INFO_UPDATE_TIME = "updateTime";
 const std::string INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO = "bundleUserInfo";
+const std::string INNER_BUNDLE_USER_INFO_IS_REMOVABLE = "isRemovable";
 } // namespace
 
 void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleUserInfo)
@@ -39,6 +40,7 @@ void to_json(nlohmann::json& jsonObject, const InnerBundleUserInfo& innerBundleU
         {INNER_BUNDLE_USER_INFO_INSTALL_TIME, innerBundleUserInfo.installTime},
         {INNER_BUNDLE_USER_INFO_UPDATE_TIME, innerBundleUserInfo.updateTime},
         {INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO, innerBundleUserInfo.bundleUserInfo},
+        {INNER_BUNDLE_USER_INFO_IS_REMOVABLE, innerBundleUserInfo.isRemovable},
     };
 }
 
@@ -107,6 +109,14 @@ void from_json(const nlohmann::json& jsonObject, InnerBundleUserInfo& innerBundl
         INNER_BUNDLE_USER_INFO_BUNDLE_USER_INFO,
         innerBundleUserInfo.bundleUserInfo,
         JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        INNER_BUNDLE_USER_INFO_IS_REMOVABLE,
+        innerBundleUserInfo.isRemovable,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

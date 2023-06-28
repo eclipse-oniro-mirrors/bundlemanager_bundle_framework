@@ -1378,18 +1378,4 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4300, Function | Sma
     auto res = appControlProxy->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
-
-/**
- * @tc.number: CheckAppInstallControl
- * @tc.name: test CheckAppInstallControl by InnerBundleInfo
- * @tc.desc: 1.CheckAppInstallControl test
- */
-HWTEST_F(BmsBundleAppControlTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    seteuid(1000);
-
-    bool res = info.CheckAppInstallControl(APPID, USERID);
-    EXPECT_EQ(res, true);
-}
 } // OHOS

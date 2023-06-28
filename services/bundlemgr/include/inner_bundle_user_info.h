@@ -37,6 +37,9 @@ struct InnerBundleUserInfo {
     // if the application is uninstalled after being installed.
     int64_t updateTime = 0;
 
+    // app install control
+    bool isRemovable = true;
+
     bool operator() (const InnerBundleUserInfo& info) const
     {
         if (bundleName == info.bundleName) {

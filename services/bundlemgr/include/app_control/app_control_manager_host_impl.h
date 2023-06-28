@@ -18,6 +18,7 @@
 
 #include "app_control_host.h"
 #include "app_control_manager.h"
+#include "bundle_data_mgr.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -68,9 +69,12 @@ private:
     int32_t GetCallingUserId();
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
+    void UpdateAppControlledInfo(int32_t userId) const;
+
     std::unordered_map<int32_t, std::string> callingNameMap_;
     std::unordered_map<AppInstallControlRuleType, std::string> ruleTypeMap_;
     std::shared_ptr<AppControlManager> appControlManager_ = nullptr;
+    std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
 };
 }
 }

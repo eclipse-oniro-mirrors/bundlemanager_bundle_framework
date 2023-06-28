@@ -139,6 +139,18 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionGrantTest") {
@@ -266,6 +278,18 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionFalseTest") {
@@ -532,6 +556,18 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
@@ -798,6 +834,18 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionGetRequestTest") {
@@ -922,6 +970,18 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 group("unittest") {
