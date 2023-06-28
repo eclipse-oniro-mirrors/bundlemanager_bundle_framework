@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "app_control_constants.h"
+#include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 #include "ipc_skeleton.h"
 
@@ -29,6 +30,7 @@ namespace {
 AppControlManagerHostImpl::AppControlManagerHostImpl()
 {
     appControlManager_ = DelayedSingleton<AppControlManager>::GetInstance();
+    dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     callingNameMap_ = {
         {AppControlConstants::EDM_UID, AppControlConstants::EDM_CALLING}
     };
@@ -57,7 +59,15 @@ ErrCode AppControlManagerHostImpl::AddAppInstallControlRule(const std::vector<st
         APP_LOGE("controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
-    return appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
+    auto ret = appControlManager_->AddAppInstallControlRule(callingName, appIds, ruleType, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("AddAppInstallControlRule failed due to error %{public}d", ret);
+        return ret;
+    }
+    if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
+        UpdateAppControlledInfo(userId);
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
@@ -74,7 +84,15 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         APP_LOGE("callingName is invalid");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, appIds, userId);
+    auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, appIds, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteAppInstallControlRule failed due to error %{public}d", ret);
+        return ret;
+    }
+    if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
+        UpdateAppControlledInfo(userId);
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallControlRuleType controlRuleType,
@@ -91,7 +109,15 @@ ErrCode AppControlManagerHostImpl::DeleteAppInstallControlRule(const AppInstallC
         APP_LOGE("controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
-    return appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
+    auto ret = appControlManager_->DeleteAppInstallControlRule(callingName, ruleType, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("CleanAppInstallControlRule failed due to error %{public}d", ret);
+        return ret;
+    }
+    if (ruleType == AppControlConstants::APP_DISALLOWED_UNINSTALL) {
+        UpdateAppControlledInfo(userId);
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
@@ -108,6 +134,7 @@ ErrCode AppControlManagerHostImpl::GetAppInstallControlRule(
         APP_LOGE("controlRuleType is invalid");
         return ERR_BUNDLE_MANAGER_APP_CONTROL_RULE_TYPE_INVALID;
     }
+
     return appControlManager_->GetAppInstallControlRule(callingName, ruleType, userId, appIds);
 }
 
@@ -307,5 +334,29 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
     }
     return ret;
 }
+
+void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
+{
+    APP_LOGD("start to UpdateAppControlledInfo under userId %{public}d", userId);
+    std::vector<std::string> appIds;
+    ErrCode ret = appControlManager_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
+        AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if (ret != ERR_OK) {
+        APP_LOGW("no need to update app controlled info due to GetAppInstallControlRule failed code:%{public}d", ret);
+        return;
+    }
+    auto bundleInfos = dataMgr_->GetAllInnerbundleInfos();
+    for (const auto &info : bundleInfos) {
+        InnerBundleUserInfo userInfo;
+        if (!info.second.GetInnerBundleUserInfo(userId, userInfo)) {
+            APP_LOGW("current bundle (%{public}s) is not installed at current userId (%{public}d)",
+                info.first.c_str(), userId);
+            continue;
+        }
+        auto iterator = std::find(appIds.begin(), appIds.end(), info.second.GetAppId());
+        userInfo.isRemovable = (iterator != appIds.end()) ? false : true;
+        dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
+    }
 }
-}
+} // AppExecFwk
+} // OHOS

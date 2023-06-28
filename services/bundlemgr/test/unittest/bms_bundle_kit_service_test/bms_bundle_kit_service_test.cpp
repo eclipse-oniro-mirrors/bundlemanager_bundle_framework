@@ -7368,20 +7368,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: CheckAppInstallControl_0100
- * @tc.name: test CheckAppInstallControl
- * @tc.desc: 1.explicit check app install control success
- */
-HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
-{
-    APP_LOGI("begin of CheckAppInstallControl_0100");
-    InnerBundleInfo info;
-    bool ret = info.CheckAppInstallControl("", 0);
-    EXPECT_TRUE(ret);
-    APP_LOGI("CheckAppInstallControl_0100 finish");
-}
-
-/**
  * @tc.number: Hidump_001
  * @tc.name: Hidump
  * @tc.desc: 1.Returns whether the interface is called successfully

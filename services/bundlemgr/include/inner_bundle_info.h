@@ -1186,8 +1186,6 @@ public:
 
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
 
-    bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
-
     const std::map<std::string, InnerModuleInfo> &GetInnerModuleInfos() const
     {
         return innerModuleInfos_;

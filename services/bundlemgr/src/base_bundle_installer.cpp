@@ -932,6 +932,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
     ProcessAOT(installParam.isOTA, newInfos);
+    UpdateAppInstallControlled(userId_);
     return result;
 }
 
@@ -3737,6 +3738,46 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
         }
     }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (!DelayedSingleton<AppControlManager>::GetInstance()->IsAppInstallControlEnabled()) {
+        APP_LOGD("app control feature is disabled");
+        return;
+    }
+
+    if (bundleName_.empty() || dataMgr_ == nullptr) {
+        APP_LOGW("invalid bundleName_ or dataMgr is nullptr");
+        return;
+    }
+    InnerBundleInfo info;
+    bool isAppExisted = dataMgr_->QueryInnerBundleInfo(bundleName_, info);
+    if (!isAppExisted) {
+        APP_LOGW("bundle %{public}s is not existed", bundleName_.c_str());
+        return;
+    }
+
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGW("current bundle (%{public}s) is not installed at current userId (%{public}d)",
+            bundleName_.c_str(), userId);
+        return;
+    }
+
+    std::string currentAppId = info.GetAppId();
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if ((ret == ERR_OK) && (std::find(appIds.begin(), appIds.end(), currentAppId) != appIds.end())) {
+        APP_LOGW("bundle %{public}s cannot be removed", bundleName_.c_str());
+        userInfo.isRemovable = false;
+        dataMgr_->AddInnerBundleUserInfo(bundleName_, userInfo);
+    }
+#else
+    APP_LOGW("app control is disable");
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
