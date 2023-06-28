@@ -2228,7 +2228,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0500, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::vector<std::u16string> args;
-    int fd = 8;
+    int fd = 2;
     int res = hostImpl->Dump(fd, args);
     EXPECT_EQ(res, ERR_OK);
 }
