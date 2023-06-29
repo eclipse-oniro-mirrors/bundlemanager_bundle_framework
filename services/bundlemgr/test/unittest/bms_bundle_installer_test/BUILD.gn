@@ -27,7 +27,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -178,7 +178,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -331,7 +331,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += bundle_install_sources

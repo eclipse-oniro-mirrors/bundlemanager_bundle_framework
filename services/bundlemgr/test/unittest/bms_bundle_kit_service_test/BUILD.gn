@@ -27,7 +27,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -155,7 +155,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -283,7 +283,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [

@@ -33,12 +33,12 @@ ohos_unittest("BmsBundleAppControlTest") {
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_clean_cache.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
@@ -159,7 +159,7 @@ ohos_unittest("BmsBundleMockAppControlTest") {
     "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
