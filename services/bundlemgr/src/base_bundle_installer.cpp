@@ -3727,7 +3727,7 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
                 .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
                 .append(nativeLibraryPath_);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
-            auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
             if (result != ERR_OK) {
                 APP_LOGE("move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
