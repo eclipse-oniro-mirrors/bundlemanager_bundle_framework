@@ -203,30 +203,26 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
         APP_LOGD("Entities does not match");
         return false;
     }
-    const std::string strTypesKey = "types";
     std::vector<std::string> vecTypes;
     auto deviceType = OHOS::system::GetDeviceType();
     APP_LOGD("DeviceType %{public}s", deviceType.c_str());
     if (deviceType == STR_PHONE || STR_DEFAULT == deviceType) {
-        vecTypes = want.GetStringArrayParam(strTypesKey);
+        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_TYPES);
     }
-    std::vector<std::string>::size_type size = vecTypes.size();
-    APP_LOGD("Types size is %{public}d", size);
-    if (size > 0) {
-        for (std::vector<std::string>::size_type i = 0; i < size; i++)
-        {
-            APP_LOGD("Loop i = %{public}d", i);
-            APP_LOGD("Types -> type : %{public}s, GetUriString : %{public}s, GetAction : %{public}s, GetBundleName : %{public}s ", vecTypes[i].c_str(), want.GetUriString().c_str(), want.GetAction().c_str(), want.GetElement().GetBundleName().c_str());
-            if (MatchUriAndType(want.GetUriString(), vecTypes[i]))
+    if (vecTypes.size() > 0) {
+        for (std::string strType : vecTypes) {
+            APP_LOGD("Types -> type : %{public}s ", strType.c_str());
+            APP_LOGD("GetUriString : %{public}s ", want.GetUriString().c_str());
+            APP_LOGD("GetAction : %{public}s ", want.GetAction().c_str());
+            APP_LOGD("GetBundleName : %{public}s ", want.GetElement().GetBundleName().c_str());
+            if (MatchUriAndType(want.GetUriString(), strType))
             {
-                APP_LOGD("Loop i = %{public}d, Is Matched", i);
+                APP_LOGD("type %{public}s, Is Matched", strType.c_str());
                 return true;
             }
         }
         return false;
     }
-
-
     bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType());
     if (!matchUriAndType) {
         APP_LOGD("Uri or Type does not match");
