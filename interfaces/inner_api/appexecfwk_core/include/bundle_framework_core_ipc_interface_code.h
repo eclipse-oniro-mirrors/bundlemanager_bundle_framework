@@ -142,6 +142,8 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_ALL_PROXY_DATA_INFOS,
     SET_EXT_NAME_OR_MIME_TO_APP,
     DEL_EXT_NAME_OR_MIME_TO_APP,
+    QUERY_DATA_GROUP_INFOS,
+    GET_PREFERENCE_DIR_BY_GROUP_ID
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

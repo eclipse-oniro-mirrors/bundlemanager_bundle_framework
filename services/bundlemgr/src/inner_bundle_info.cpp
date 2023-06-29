@@ -135,6 +135,7 @@ const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
+const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -510,6 +511,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
     this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
+    this->dataGroupInfos_ = info.dataGroupInfos_;
     return *this;
 }
 
@@ -678,6 +680,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
     jsonObject[HAS_ATOMIC_SERVICE_CONFIG] = hasAtomicServiceConfig_;
     jsonObject[MAIN_ATOMIC_MODULE_NAME] = mainAtomicModuleName_;
+    jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1708,6 +1711,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         MAIN_ATOMIC_MODULE_NAME,
         mainAtomicModuleName_,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
+        jsonObjectEnd,
+        DATA_GROUP_INFOS,
+        dataGroupInfos_,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
