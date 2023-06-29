@@ -69,6 +69,7 @@ const std::string INVALID_WANT_ERROR =
 const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
+const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3515,6 +3516,58 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
     APP_LOGD("call GetAdditionalInfo done.");
     return nAdditionalInfo;
+}
+
+napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetBundleInfoForSelfSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    int32_t flags = 0;
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], flags)) {
+        APP_LOGE("parseInt invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_FLAGS, TYPE_NUMBER);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("BundleMgr is null");
+        return nullptr;
+    }
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    auto uid = IPCSkeleton::GetCallingUid();
+    bundleName = std::to_string(uid);
+    userId = uid / Constants::BASE_USER_RANGE;
+    napi_value nBundleInfo = nullptr;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(bundleName, GET_BUNDLE_INFO, flags, userId, env));
+        if (item != cache.end()) {
+            APP_LOGD("GetBundleInfo param from cache");
+            NAPI_CALL(env,
+                napi_get_reference_value(env, item->second, &nBundleInfo));
+            return nBundleInfo;
+        }
+    }
+    BundleInfo bundleInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(flags, bundleInfo));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetBundleInfoForSelfSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_BUNDLE_INFO_FOR_SELF_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
+    CommonFunc::ConvertBundleInfo(env, bundleInfo, nBundleInfo, flags);
+    Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
+    CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
+    return nBundleInfo;
 }
 }
 }
