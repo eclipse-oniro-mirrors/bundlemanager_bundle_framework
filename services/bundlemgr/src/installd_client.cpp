@@ -202,7 +202,7 @@ bool InstalldClient::LoadInstalldService()
     return true;
 }
 
-bool InstalldClient::GetInstalldProxy()
+bool InstalldClient::CheckInstalldProxy()
 {
     if (installdProxy_ != nullptr) {
         APP_LOGD("installd ready");
@@ -226,6 +226,15 @@ bool InstalldClient::GetInstalldProxy()
     }
     installdProxy_->AsObject()->AddDeathRecipient(recipient_);
     return true;
+}
+
+sptr<IInstalld> InstalldClient::GetInstalldProxy()
+{
+    if (!CheckInstalldProxy()) {
+        APP_LOGE("GetInstalldProxy failed");
+        return nullptr;
+    }
+    return installdProxy_;
 }
 
 ErrCode InstalldClient::ScanDir(
