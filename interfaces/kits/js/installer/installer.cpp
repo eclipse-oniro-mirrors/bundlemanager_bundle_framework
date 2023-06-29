@@ -63,7 +63,8 @@ const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
 const std::string ADDITIONAL_INFO = "additionalInfo";
 const std::string VERIFY_CODE_PARAM = "verifyCodeParams";
 const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
-
+const std::string HAPS_FILE_NEEDED =
+    "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -910,6 +911,10 @@ napi_value Install(napi_env env, napi_callback_info info)
         }
     }
     if (!CheckInstallParam(env, callbackPtr->installParam)) {
+        return nullptr;
+    }
+    if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,

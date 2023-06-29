@@ -129,4 +129,10 @@
     <option name="push" value="permissionBundle/permissionGrantBundle5.hap -> /data/test/bms_bundle/" src="res" />
     </preparer>
   </target>
+  <target name="BundleMgrCodeSignatureSystemTest">
+    <preparer>
+    <option name="push" value="CodeSignature/CodeSignatureWithoutLibs.hap -> /data/test/code_signature/" src="res" />
+    <option name="push" value="CodeSignature/CodeSignatureWithoutLibs2.hap -> /data/test/code_signature/" src="res" />
+    </preparer>
+  </target>
 </configuration>
