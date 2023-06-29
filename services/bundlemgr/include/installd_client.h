@@ -162,10 +162,7 @@ public:
 
     ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
 
-    sptr<IInstalld> GetInstalldProxy();
-
     void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
-
     void OnLoadSystemAbilityFail();
 
 private:
@@ -173,14 +170,13 @@ private:
      * @brief Get the installd proxy object.
      * @return Returns true if the installd proxy object got successfully; returns false otherwise.
      */
-    bool CheckInstalldProxy();
-
+    bool GetInstalldProxy();
     bool LoadInstalldService();
 
     template<typename F, typename... Args>
     ErrCode CallService(F func, Args&&... args)
     {
-        if (!CheckInstalldProxy()) {
+        if (!GetInstalldProxy()) {
             return ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR;
         }
         return (installdProxy_->*func)(std::forward<Args>(args)...);

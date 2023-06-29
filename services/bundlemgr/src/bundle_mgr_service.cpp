@@ -54,6 +54,7 @@ BundleMgrService::BundleMgrService() : SystemAbility(BUNDLE_MGR_SERVICE_SYS_ABIL
 BundleMgrService::~BundleMgrService()
 {
     host_ = nullptr;
+    installer_ = nullptr;
     if (handler_) {
         handler_.reset();
     }
@@ -131,6 +132,19 @@ bool BundleMgrService::InitBundleMgrHost()
     }
 
     return host_ != nullptr;
+}
+
+bool BundleMgrService::InitBundleInstaller()
+{
+    if (installer_ == nullptr) {
+        installer_ = new (std::nothrow) BundleInstallerHost();
+        if (installer_ == nullptr || !installer_->Init()) {
+            APP_LOGE("init installer fail");
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void BundleMgrService::InitBundleDataMgr()
@@ -258,7 +272,7 @@ void BundleMgrService::CreateBmsServiceDir()
 
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
-    return InstalldClient::GetInstance()->GetInstalldProxy();
+    return installer_;
 }
 
 void BundleMgrService::RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl)

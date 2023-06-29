@@ -168,6 +168,7 @@ private:
     std::shared_ptr<BundleDistributedManager> bundleDistributedManager_;
 #endif
     sptr<BundleMgrHostImpl> host_;
+    sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<BmsParam> bmsParam_;
 

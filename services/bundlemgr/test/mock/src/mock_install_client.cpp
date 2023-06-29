@@ -96,7 +96,7 @@ void InstalldClient::ResetInstalldProxy()
     return;
 }
 
-bool InstalldClient::CheckInstalldProxy()
+bool InstalldClient::GetInstalldProxy()
 {
     return true;
 }
