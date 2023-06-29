@@ -20,14 +20,27 @@
 #include "bundle_constants.h"
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "ffrt.h"
+#include "if_system_ability_manager.h"
+#include "iservice_registry.h"
 #include "parcel_macro.h"
+#include "serial_queue.h"
 #include "string_ex.h"
+#include "system_ability.h"
+#include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
+const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+}
+
 InstalldHost::InstalldHost()
 {
     init();
+    serialQueue_ = std::make_shared<SerialQueue>(UNLOAD_QUEUE_NAME);
     APP_LOGI("installd host instance is created");
 }
 
@@ -102,6 +115,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("installd host finish to process message from client");
+    DelayUnloadTask();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
 
@@ -424,6 +438,28 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
     ErrCode result = MoveFiles(srcDir, desDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
+}
+
+void InstalldHost::DelayUnloadTask()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    serialQueue_->CancelDelayTask(UNLOAD_TASK_NAME);
+    auto task = [] {
+        sptr<ISystemAbilityManager> saManager =
+            OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (saManager == nullptr) {
+            APP_LOGE("saManager is nullptr");
+            return;
+        }
+        int32_t ret = saManager->UnloadSystemAbility(OHOS::INSTALLD_SERVICE_ID);
+        if (ret != ERR_OK) {
+            APP_LOGE("unload SA failed, ret is %{public}d", ret);
+            return;
+        }
+        APP_LOGI("unload Installd succeeded");
+    };
+    serialQueue_->ScheduleDelayTask(UNLOAD_TASK_NAME, UNLOAD_TIME, task);
+    APP_LOGD("send unload task successfully");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

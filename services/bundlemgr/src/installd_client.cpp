@@ -22,7 +22,6 @@
 #include "installd_death_recipient.h"
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
-#include "system_ability_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
