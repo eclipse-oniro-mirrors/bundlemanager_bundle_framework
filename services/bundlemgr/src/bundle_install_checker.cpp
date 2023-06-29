@@ -251,7 +251,7 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("install enterprise bundle permission denied");
+                APP_LOGE("bm install enterprise bundle permission denied");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
