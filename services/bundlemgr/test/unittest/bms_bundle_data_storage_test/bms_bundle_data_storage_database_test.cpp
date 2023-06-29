@@ -745,7 +745,7 @@ protected:
     nlohmann::json innerBundleInfoJson_ = R"(
         {
             "allowedAcls": [],
-            "appFeature": "ohos_system_app",
+            "appFeature": "hos_system_app",
             "appType": 0,
             "baseAbilityInfos": {
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {

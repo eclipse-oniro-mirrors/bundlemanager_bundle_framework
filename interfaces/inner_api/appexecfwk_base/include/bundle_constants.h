@@ -245,7 +245,6 @@ constexpr int MAX_DEVICETYPE_SIZE = 50;
 // appFeature
 constexpr const char* HOS_NORMAL_APP = "hos_normal_app";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
-constexpr const char* OHOS_SYSTEM_APP = "ohos_system_app";
 
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
