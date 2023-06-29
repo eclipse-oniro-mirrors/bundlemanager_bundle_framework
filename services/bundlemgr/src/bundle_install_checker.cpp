@@ -582,6 +582,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
+    newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
