@@ -93,7 +93,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -229,7 +229,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -368,7 +368,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -510,7 +510,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -646,7 +646,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -784,7 +784,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -920,7 +920,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
