@@ -478,9 +478,9 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
+
     ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
 
-private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
@@ -584,6 +584,7 @@ private:
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void UpdateAppInstallControlled(int32_t userId);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

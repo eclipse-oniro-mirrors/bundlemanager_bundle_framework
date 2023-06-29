@@ -70,6 +70,8 @@ public:
 
     bool IsAppInstallControlEnabled() const;
 
+    void SetAppInstallControlStatus();
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
 

@@ -2409,7 +2409,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2470,7 +2470,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
 
@@ -2945,32 +2945,6 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         moduleNames.emplace_back(innerModuleInfo.second.moduleName);
     }
-}
-
-bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
-{
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    if (!(DelayedSingleton<AppControlManager>::GetInstance()->IsAppInstallControlEnabled())) {
-        APP_LOGD("app install control feature is disabled");
-        return true;
-    }
-
-    std::vector<std::string> appIds;
-    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return true;
-    }
-    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        return true;
-    }
-    APP_LOGW("appId is not removable");
-    return false;
-#else
-    APP_LOGW("app control is disable");
-    return true;
-#endif
 }
 
 void InnerBundleInfo::ResetBundleState(int32_t userId)

@@ -131,6 +131,18 @@ ohos_unittest("BmsBundleQuickFixDeleterTest") {
   ]
   sources -=
       [ "${services_path}/bundlemgr/src/quick_fix/quick_fix_manager_rdb.cpp" ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 group("unittest") {

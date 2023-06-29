@@ -112,6 +112,11 @@ bool BundleMgrHostImpl::GetApplicationInfos(
         return false;
     }
     APP_LOGD("verify permission success, begin to GetApplicationInfos");
+    if (!BundlePermissionMgr::IsNativeTokenType() &&
+        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        APP_LOGD("GetApplicationInfos return empty, not support target level greater than or equal to api9");
+        return true;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -128,8 +133,7 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -309,6 +313,11 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     APP_LOGD("verify permission success, begin to GetBundleInfos");
+    if (!BundlePermissionMgr::IsNativeTokenType() &&
+        (BundlePermissionMgr::GetHapApiVersion() >= Constants::API_VERSION_NINE)) {
+        APP_LOGD("GetBundleInfos return empty, not support target level greater than or equal to api9");
+        return true;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -324,8 +333,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -1001,8 +1009,34 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
+    int32_t realityUserId = GetResponseUserIdByBundleName(bundleName, userId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, realityUserId);
     return ERR_OK;
+}
+
+int32_t BundleMgrHostImpl::GetResponseUserIdByBundleName(
+    const std::string &appName, int32_t userId)
+{
+    int32_t realityUserId = userId;
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        EventReport::SendCleanCacheSysEvent(appName, userId, true, true);
+        return Constants::INVALID_USERID;
+    }
+    InnerBundleInfo innerBundleInfo;
+    if (!dataMgr->GetInnerBundleInfo(appName, innerBundleInfo)) {
+        APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
+        return Constants::INVALID_USERID;
+    }
+    dataMgr->EnableBundle(appName);
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    if (responseUserId != Constants::INVALID_USERID) {
+        APP_LOGD("get reality userId : %{public}d from bundleName : %{public}s and userId : %{public}d",
+            responseUserId, appName.c_str(), userId);
+        realityUserId = responseUserId;
+    }
+    return realityUserId;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
