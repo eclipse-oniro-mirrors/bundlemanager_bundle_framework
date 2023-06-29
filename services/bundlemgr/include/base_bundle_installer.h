@@ -585,6 +585,7 @@ private:
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void UpdateAppInstallControlled(int32_t userId);
+    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
