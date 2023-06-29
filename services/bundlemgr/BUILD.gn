@@ -367,7 +367,6 @@ ohos_shared_library("libbms") {
 ohos_shared_library("installs") {
   sources = [
     "src/bundle_extractor.cpp",
-    "src/common/serial_queue.cpp",
     "src/system_ability_helper.cpp",
   ]
 
@@ -392,8 +391,8 @@ ohos_shared_library("installs") {
   ]
 
   external_deps = [
-    "hilog:libhilog",
     "ffrt:libffrt",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",

@@ -31,6 +31,14 @@ using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
+REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
+
+InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
+{
+    APP_LOGI("installd service instance is created");
+}
+
+
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
     APP_LOGI("installd service instance is created");
@@ -97,8 +105,9 @@ void InstalldService::Start()
     // add installd service to system ability manager.
     // need to retry some times due to installd start faster than system ability manager.
     if (!SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
-        APP_LOGE("installd service fail to register into system ability manager");
-        return;
+            APP_LOGE("installd service fail to register into system ability manager");
+            return;
+        }
     }
     isReady_ = true;
     APP_LOGI("installd service start successfully");

@@ -42,6 +42,8 @@ ohos_unittest("BmsBundleHspTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_hsp_test.cpp" ]
 
@@ -166,6 +168,8 @@ ohos_unittest("BmsBundleSharedLibraryInstallTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_shared_library_install_test.cpp" ]
 
@@ -292,6 +296,8 @@ ohos_unittest("BmsBundleSharedLibraryUninstallTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_shared_library_uninstall_test.cpp" ]
 

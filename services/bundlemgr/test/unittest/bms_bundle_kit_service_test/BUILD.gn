@@ -39,6 +39,8 @@ ohos_unittest("BmsBundleDataMgrTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_data_mgr_test.cpp" ]
 
@@ -167,6 +169,8 @@ ohos_unittest("BmsBundleKitServiceTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_kit_service_test.cpp" ]
 
@@ -294,6 +298,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
 

@@ -48,6 +48,9 @@ ohos_unittest("BmsInstalldClientTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]

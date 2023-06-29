@@ -35,6 +35,8 @@ ohos_unittest("BmsAOTMgrTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
+  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
 
   sources += [ "bms_data_aot_test.cpp" ]
 

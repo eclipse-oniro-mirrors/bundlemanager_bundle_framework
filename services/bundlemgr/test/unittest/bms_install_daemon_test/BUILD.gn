@@ -57,6 +57,9 @@ ohos_unittest("BmsInstallDaemonTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (build_selinux) {
     external_deps += [ "selinux:libhap_restorecon" ]
@@ -79,6 +82,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
@@ -108,6 +112,9 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (build_selinux) {
     external_deps += [ "selinux:libhap_restorecon" ]
@@ -130,6 +137,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
@@ -162,6 +170,9 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
     external_deps += [ "selinux:libhap_restorecon" ]
