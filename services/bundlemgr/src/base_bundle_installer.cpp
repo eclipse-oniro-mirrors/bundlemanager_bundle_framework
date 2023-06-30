@@ -3523,18 +3523,18 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     std::string cpuAbi;
     std::string nativeLibraryPath;
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
-    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath) &&
-        isCompressNativeLibrary) {
+    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath) && isCompressNativeLibrary) {
         nativeLibraryPath_ = nativeLibraryPath;
         bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-        bool isEndWith = BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX);
-        if (isEndWith && isLibIsolated) {
-            nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
-        } else if(isEndWith) {
-            nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
-                Constants::PATH_SEPARATOR + nativeLibraryPath;
+        if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+            if (isLibIsolated) {
+                nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            } else {
+                nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
+                    Constants::PATH_SEPARATOR + nativeLibraryPath;
+            }
+            APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
         }
-        APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
         targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
             .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
             .append(Constants::PATH_SEPARATOR);
