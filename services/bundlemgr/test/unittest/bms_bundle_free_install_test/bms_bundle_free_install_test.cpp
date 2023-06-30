@@ -1332,7 +1332,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0019, Function | Smal
  * @tc.name: test GetBundleConnectAbilityMgr
  * @tc.desc: test GetCallingInfo
  */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0020, Function | SmallTest | Level0)
 {
     AddInnerBundleInfo(BUNDLE_NAME, FLAG_ONE);
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
@@ -1370,12 +1370,12 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0021, Function | Smal
 }
 
 /**
- * @tc.number: BundleConnectAbilityMgr_0027
+ * @tc.number: BundleConnectAbilityMgr_0022
  * Function: BundleConnectAbilityMgr
  * @tc.name: test CheckDependencies
  * @tc.desc: test CheckDependencies failed
  */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0022, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
     InnerBundleInfo innerBundleInfo;
@@ -1387,6 +1387,29 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | Smal
     innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
     bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
     EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BundleConnectAbilityMgr_0023
+ * @tc.name: CheckIsModuleNeedUpdate
+ * @tc.desc: Check Is Module Need Update
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    std::string key = "key";
+    AbilityInfo abilityInfo;
+    abilityInfo.name = "abilityName";
+    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
+
+    Want want;
+    ElementName name;
+    name.SetAbilityName("abilityName");
+    want.SetElement(name);
+    sptr<IRemoteObject> callBack = nullptr;
+    bool ret = connectAbilityMgr->CheckIsModuleNeedUpdate(innerBundleInfo, want, OTHER_USERID, callBack);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1457,6 +1480,25 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
     ResetDataMgr();
 }
 
+/**
+ * @tc.number: BundleConnectAbilityMgr_0027
+ * Function: BundleConnectAbilityMgr
+ * @tc.name: test CheckDependencies
+ * @tc.desc: test CheckDependencies failed
+ */
+HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0027, Function | SmallTest | Level0)
+{
+    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+    InnerBundleInfo innerBundleInfo;
+    Dependency dependency;
+    dependency.moduleName = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.dependencies.push_back(dependency);
+    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    bool ret = connectAbilityMgr->CheckDependencies(MODULE_NAME_TEST, innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
 
 /**
  * @tc.number: OnAbilityConnectDone_0001
@@ -1739,30 +1781,6 @@ HWTEST_F(BmsBundleFreeInstallTest, OnInstallFinished_0003, Function | SmallTest 
     std::string installResult = "ok";
     auto result = callbackStub.OnInstallFinished(installResult);
     EXPECT_EQ(result, ERR_INVALID_VALUE);
-}
-
-/**
- * @tc.number: BundleConnectAbilityMgr_0023
- * @tc.name: CheckIsModuleNeedUpdate
- * @tc.desc: Check Is Module Need Update
- */
-HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0023, Function | SmallTest | Level0)
-{
-    auto connectAbilityMgr = GetBundleConnectAbilityMgr();
-    InnerBundleInfo innerBundleInfo;
-    std::string key = "key";
-    AbilityInfo abilityInfo;
-    abilityInfo.name = "abilityName";
-    innerBundleInfo.InsertAbilitiesInfo(key, abilityInfo);
-
-    Want want;
-    ElementName name;
-    name.SetAbilityName("abilityName");
-    want.SetElement(name);
-    int32_t userId = 1;
-    sptr<IRemoteObject> callBack = nullptr;
-    bool ret = connectAbilityMgr->CheckIsModuleNeedUpdate(innerBundleInfo, want, userId, callBack);
-    EXPECT_FALSE(ret);
 }
 
 /*

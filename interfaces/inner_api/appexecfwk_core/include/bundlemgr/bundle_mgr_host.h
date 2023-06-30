@@ -651,6 +651,10 @@ private:
 
     ErrCode HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

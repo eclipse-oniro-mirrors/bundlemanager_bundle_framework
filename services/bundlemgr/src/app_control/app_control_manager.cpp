@@ -47,16 +47,6 @@ AppControlManager::AppControlManager()
     } else {
         APP_LOGI("App jump intercetor disabled");
     }
-    std::vector<std::string> appIds;
-    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-    if (currentUserId == Constants::INVALID_USERID) {
-        currentUserId = Constants::START_USERID;
-    }
-    ErrCode ret = appControlManagerDb_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
-        AppControlConstants::APP_DISALLOWED_UNINSTALL, currentUserId, appIds);
-    if (ret == ERR_OK && !appIds.empty()) {
-        isAppInstallControlEnabled_ = true;
-    }
 }
 
 AppControlManager::~AppControlManager()
@@ -78,14 +68,22 @@ ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callin
     const std::string &controlRuleType, const std::vector<std::string> &appIds, int32_t userId)
 {
     APP_LOGD("DeleteAppInstallControlRule");
-    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
+    auto ret = appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, appIds, userId);
+    if ((ret == ERR_OK) && isAppInstallControlEnabled_) {
+        SetAppInstallControlStatus();
+    }
+    return ret;
 }
 
 ErrCode AppControlManager::DeleteAppInstallControlRule(const std::string &callingName,
     const std::string &controlRuleType, int32_t userId)
 {
     APP_LOGD("CleanInstallControlRule");
-    return appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, userId);
+    auto ret = appControlManagerDb_->DeleteAppInstallControlRule(callingName, controlRuleType, userId);
+    if ((ret == ERR_OK) && isAppInstallControlEnabled_) {
+        SetAppInstallControlStatus();
+    }
+    return ret;
 }
 
 ErrCode AppControlManager::GetAppInstallControlRule(const std::string &callingName,
@@ -244,6 +242,21 @@ void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> 
 bool AppControlManager::IsAppInstallControlEnabled() const
 {
     return isAppInstallControlEnabled_;
+}
+
+void AppControlManager::SetAppInstallControlStatus()
+{
+    isAppInstallControlEnabled_ = false;
+    std::vector<std::string> appIds;
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    if (currentUserId == Constants::INVALID_USERID) {
+        currentUserId = Constants::START_USERID;
+    }
+    ErrCode ret = appControlManagerDb_->GetAppInstallControlRule(AppControlConstants::EDM_CALLING,
+        AppControlConstants::APP_DISALLOWED_UNINSTALL, currentUserId, appIds);
+    if ((ret == ERR_OK) && !appIds.empty()) {
+        isAppInstallControlEnabled_ = true;
+    }
 }
 }
 }

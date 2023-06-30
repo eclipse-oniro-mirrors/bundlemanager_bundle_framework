@@ -3551,6 +3551,65 @@ ErrCode BundleMgrProxy::DelExtNameOrMIMEToApp(const std::string &bundleName, con
     return ret;
 }
 
+bool BundleMgrProxy::QueryDataGroupInfos(const std::string &bundleName,
+    int32_t userId, std::vector<DataGroupInfo> &infos)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return false;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryDataGroupInfos due to write InterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to QueryDataGroupInfos due to write dataGroupId fail");
+        return false;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to QueryDataGroupInfos due to write userId fail");
+        return false;
+    }
+
+    if (!GetParcelableInfos<DataGroupInfo>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS, data, infos)) {
+        APP_LOGE("failed to QueryDataGroupInfos from server");
+        return false;
+    }
+    return true;
+}
+
+bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &dir)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    if (dataGroupId.empty()) {
+        APP_LOGE("dataGroupId is empty.");
+        return false;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetGroupDir due to write InterfaceToken failed.");
+        return false;
+    }
+    if (!data.WriteString(dataGroupId)) {
+        APP_LOGE("fail to GetGroupDir due to write dataGroupId fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID, data, reply)) {
+        APP_LOGE("fail to GetGroupDir from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    dir = reply.ReadString();
+    return true;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {

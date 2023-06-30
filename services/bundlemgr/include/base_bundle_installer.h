@@ -478,9 +478,9 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
+
     ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
 
-private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
@@ -584,6 +584,18 @@ private:
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void UpdateAppInstallControlled(int32_t userId);
+    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
+        std::unordered_map<std::string, InnerBundleInfo> &infos,
+        int32_t userId, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+    ErrCode GetGroupDirsChange(const InnerBundleInfo &info, const InnerBundleInfo &oldInfo, bool oldInfoExisted);
+    ErrCode GetRemoveDataGroupDirs(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    ErrCode RemoveOldGroupDirs() const;
+    ErrCode CreateGroupDirs() const;
+    ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
+    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
+    void DeleteGroupDirsForException() const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -621,6 +633,8 @@ private:
     // value is the signature file path
     std::map<std::string, std::string> signatureFileMap_;
     std::string nativeLibraryPath_;
+    std::vector<DataGroupInfo> createGroupDirs_;
+    std::vector<std::string> removeGroupDirs_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

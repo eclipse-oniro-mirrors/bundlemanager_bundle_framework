@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
+#include <uuid.h>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -457,6 +458,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
+        oldInfo.UpdateDataGroupInfos(newInfo.GetDataGroupInfos());
         if (!needAppDetail && oldInfo.GetBaseApplicationInfo().needAppDetail) {
             AddAppDetailAbilityInfo(oldInfo);
         }
@@ -5042,6 +5044,170 @@ bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &ab
     APP_LOGD("QueryHagAbilityName bundleName: %{public}s, abilityName: %{public}s",
         bundleName.c_str(), abilityName.c_str());
     return true;
+}
+
+bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<DataGroupInfo> &infos) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s is not existed", bundleName.c_str());
+        return false;
+    }
+    auto dataGroupInfos = infoItem->second.GetDataGroupInfos();
+    for (const auto &item : dataGroupInfos) {
+        auto dataGroupIter = std::find_if(std::begin(item.second), std::end(item.second),
+            [userId](const DataGroupInfo &info) {
+            return info.userId == userId;
+        });
+        if (dataGroupIter != std::end(item.second)) {
+            infos.push_back(*dataGroupIter);
+        }
+    }
+    if (infos.empty()) {
+        APP_LOGE("userId: %{public}d is incorrect", userId);
+        return false;
+    }
+    return true;
+}
+
+bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir) const
+{
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (bundleInfos_.empty()) {
+        APP_LOGE("bundleInfos_ data is empty");
+        return false;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    for (const auto &info : bundleInfos_) {
+        for (auto infoItem : info.second.GetDataGroupInfos()) {
+            auto dataGroupIter = std::find_if(std::begin(infoItem.second), std::end(infoItem.second),
+                [userId, dataGroupId](const DataGroupInfo &info) {
+                return info.dataGroupId == dataGroupId && info.userId == userId;
+            });
+            if (dataGroupIter != std::end(infoItem.second)) {
+                dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
+                        + Constants::DATA_GROUP_PATH + dataGroupIter->uuid;
+                return true;
+            }
+        }
+    }
+    APP_LOGE("dataGroupId: %{public}s is incorrect", dataGroupId.c_str());
+    return false;
+}
+
+void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
+    std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
+{
+    std::set<int32_t> indexList;
+    for (auto iter = dataGroupIndexMap.begin(); iter != dataGroupIndexMap.end(); iter++) {
+        indexList.emplace(iter->second.first);
+    }
+    int32_t index = 1;
+    for (int32_t i = 1; i < Constants::DATA_GROUP_UID_OFFSET; i++) {
+        if (indexList.find(i) == indexList.end()) {
+            index = i;
+            break;
+        }
+    }
+
+    int32_t uid = userId * Constants::BASE_USER_RANGE + index + Constants::DATA_GROUP_UID_OFFSET;
+    dataGroupInfo.uid = uid;
+    dataGroupInfo.gid = uid;
+
+    uuid_t uuidGenerate;
+    uuid_generate(uuidGenerate);
+    char str[36];
+    uuid_unparse(uuidGenerate, str);
+    dataGroupInfo.uuid = str;
+    dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
+    return;
+}
+
+void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
+    const std::vector<std::string> &dataGroupIdList, int32_t userId) const
+{
+    APP_LOGD("GenerateDataGroupInfos called for user: %{public}d", userId);
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    if (dataGroupIdList.empty() || bundleInfos_.empty()) {
+        APP_LOGE("dataGroupIdList or bundleInfos_ data is empty");
+        return;
+    }
+    std::map<std::string, std::pair<int32_t, std::string>> dataGroupIndexMap;
+    GetDataGroupIndexMap(dataGroupIndexMap);
+    for (const std::string &groupId : dataGroupIdList) {
+        DataGroupInfo dataGroupInfo;
+        dataGroupInfo.dataGroupId = groupId;
+        dataGroupInfo.userId = userId;
+        auto iter = dataGroupIndexMap.find(groupId);
+        if (iter != dataGroupIndexMap.end()) {
+            dataGroupInfo.uuid = iter->second.second;
+            int32_t uid = iter->second.first + userId * Constants::BASE_USER_RANGE + Constants::DATA_GROUP_UID_OFFSET;
+            dataGroupInfo.uid = uid;
+            dataGroupInfo.gid = uid;
+            innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
+            continue;
+        }
+        GenerateDataGroupUuidAndUid(dataGroupInfo, userId, dataGroupIndexMap);
+        innerBundleInfo.AddDataGroupInfo(groupId, dataGroupInfo);
+    }
+}
+
+void BundleDataMgr::GetDataGroupIndexMap(
+    std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
+{
+    for (const auto &info : bundleInfos_) {
+        for (auto infoItem : info.second.GetDataGroupInfos()) {
+            for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &info) {
+                int32_t index = info.uid - info.userId * Constants::BASE_USER_RANGE
+                    - Constants::DATA_GROUP_UID_OFFSET;
+                dataGroupIndexMap[info.dataGroupId] = std::pair<int32_t, std::string>(index, info.uuid);
+            });
+        }
+    }
+}
+
+bool BundleDataMgr::IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const
+{
+    APP_LOGD("IsExistDataGroupId, dataGroupId: %{public}s", dataGroupId.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    for (const auto &info : bundleInfos_) {
+        auto dataGroupInfos = info.second.GetDataGroupInfos();
+        auto iter = dataGroupInfos.find(dataGroupId);
+        if (iter == dataGroupInfos.end()) {
+            continue;
+        }
+        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+            [userId](DataGroupInfo info) {return info.userId == userId; });
+        if (dataGroupIter != std::end(iter->second)) {
+            APP_LOGD("dataGroupId: %{public}s is existed in bundle: %{public}s.",
+                dataGroupId.c_str(), info.second.GetBundleName().c_str());
+            return true;
+        }
+    }
+    APP_LOGD("dataGroupId: %{public}s is not existed.", dataGroupId.c_str());
+    return false;
+}
+
+bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const
+{
+    APP_LOGD("IsShareDataGroupId, dataGroupId is %{public}s", dataGroupId.c_str());
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    int32_t count = 0;
+    for (const auto &info : bundleInfos_) {
+        auto dataGroupInfos = info.second.GetDataGroupInfos();
+        auto iter = dataGroupInfos.find(dataGroupId);
+        if (iter == dataGroupInfos.end()) {
+            continue;
+        }
+        for (auto info : iter->second) {
+            if (info.userId == userId && ++count > 1) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

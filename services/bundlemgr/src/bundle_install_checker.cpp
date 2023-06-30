@@ -279,8 +279,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         BundlePackInfo packInfo;
         newInfo.SetAppType(checkParam.appType);
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
-            provisionInfo.bundleInfo.appFeature == Constants::OHOS_SYSTEM_APP) ||
+        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP) ||
             (bundlePaths[i].find(Constants::SYSTEM_APP_SCAN_PATH) == 0);
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
@@ -582,6 +581,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
+    newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,

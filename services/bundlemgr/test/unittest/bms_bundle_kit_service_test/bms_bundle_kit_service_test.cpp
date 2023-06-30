@@ -7368,20 +7368,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: CheckAppInstallControl_0100
- * @tc.name: test CheckAppInstallControl
- * @tc.desc: 1.explicit check app install control success
- */
-HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
-{
-    APP_LOGI("begin of CheckAppInstallControl_0100");
-    InnerBundleInfo info;
-    bool ret = info.CheckAppInstallControl("", 0);
-    EXPECT_TRUE(ret);
-    APP_LOGI("CheckAppInstallControl_0100 finish");
-}
-
-/**
  * @tc.number: Hidump_001
  * @tc.name: Hidump
  * @tc.desc: 1.Returns whether the interface is called successfully
@@ -7454,45 +7440,6 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Lev
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-/**
- * @tc.number: AgingTest_0001
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
-/**
- * @tc.number: AgingTest_0002
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
-/**
- * @tc.number: AgingTest_0003
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
 /**
  * @tc.number: AginTest_0004
  * @tc.name: test InitAgingtTimer

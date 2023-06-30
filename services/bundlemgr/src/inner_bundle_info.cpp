@@ -135,6 +135,7 @@ const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
+const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -510,6 +511,7 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
     this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
+    this->dataGroupInfos_ = info.dataGroupInfos_;
     return *this;
 }
 
@@ -678,6 +680,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
     jsonObject[HAS_ATOMIC_SERVICE_CONFIG] = hasAtomicServiceConfig_;
     jsonObject[MAIN_ATOMIC_MODULE_NAME] = mainAtomicModuleName_;
+    jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1711,6 +1714,14 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
+        jsonObjectEnd,
+        DATA_GROUP_INFOS,
+        dataGroupInfos_,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read InnerBundleInfo from database error, error code : %{public}d", parseResult);
     }
@@ -2106,6 +2117,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
@@ -2409,7 +2421,7 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
     if (!GetHasAtomicServiceConfig()) {
@@ -2470,7 +2482,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
 
@@ -2945,32 +2957,6 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         moduleNames.emplace_back(innerModuleInfo.second.moduleName);
     }
-}
-
-bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
-{
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    if (!(DelayedSingleton<AppControlManager>::GetInstance()->IsAppInstallControlEnabled())) {
-        APP_LOGD("app install control feature is disabled");
-        return true;
-    }
-
-    std::vector<std::string> appIds;
-    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return true;
-    }
-    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        return true;
-    }
-    APP_LOGW("appId is not removable");
-    return false;
-#else
-    APP_LOGW("app control is disable");
-    return true;
-#endif
 }
 
 void InnerBundleInfo::ResetBundleState(int32_t userId)
@@ -4068,6 +4054,11 @@ void InnerBundleInfo::UpdateIsCompressNativeLibs()
         baseApplicationInfo_->isCompressNativeLibs =
             (baseApplicationInfo_->isCompressNativeLibs || info.second.compressNativeLibs) ? true : false;
     }
+}
+
+void InnerBundleInfo::SetResourcesApply(const std::vector<int32_t> &resourcesApply)
+{
+    baseApplicationInfo_->resourcesApply = resourcesApply;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

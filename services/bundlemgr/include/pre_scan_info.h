@@ -44,6 +44,7 @@ struct PreBundleConfigInfo {
     std::vector<std::string> allowCommonEvent;
     std::vector<std::string> appSignature;
     std::vector<std::string> existInJsonFile;
+    std::vector<int32_t> resourcesApply;
 
     bool operator <(const PreBundleConfigInfo &preBundleConfigInfo) const
     {
@@ -69,6 +70,7 @@ struct PreBundleConfigInfo {
         allowCommonEvent.clear();
         appSignature.clear();
         existInJsonFile.clear();
+        resourcesApply.clear();
     }
 
     std::string ToString() const

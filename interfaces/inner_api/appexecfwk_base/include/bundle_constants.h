@@ -67,6 +67,7 @@ constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
 constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
+constexpr const char* DATA_GROUP_PATH = "/group/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
@@ -153,6 +154,7 @@ constexpr int32_t BASE_SYS_VEN_UID = 5000;
 constexpr int32_t MAX_SYS_VEN_UID = 5999;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
+constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t U_VALUE = 100000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
@@ -245,7 +247,6 @@ constexpr int MAX_DEVICETYPE_SIZE = 50;
 // appFeature
 constexpr const char* HOS_NORMAL_APP = "hos_normal_app";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
-constexpr const char* OHOS_SYSTEM_APP = "ohos_system_app";
 
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";

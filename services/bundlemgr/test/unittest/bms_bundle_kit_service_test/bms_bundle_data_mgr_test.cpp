@@ -188,7 +188,8 @@ const nlohmann::json INSTALL_LIST3 = R"(
             "allowMissionNotCleared":true,
             "allowAppUsePrivilegeExtension":true,
             "allowFormVisibleNotify":true,
-            "allowAppShareLibrary":true
+            "allowAppShareLibrary":true,
+            "resourceApply":[0, 1]
         }]
 }
 )"_json;
