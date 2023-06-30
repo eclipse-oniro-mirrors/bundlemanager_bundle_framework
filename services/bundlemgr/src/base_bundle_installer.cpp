@@ -891,6 +891,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
     }
 
+    // move so file to real installation dir
+    result = MoveSoFileToRealInstallationDir(newInfos);
+    CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
+
     // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
     // when someone failure occurs in the installation flow
     result = RenameAllTempDir(newInfos);
@@ -3858,11 +3862,19 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
             APP_LOGE("move file to real path failed %{public}d", result);
             return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
         }
-        // 2. move so files to real lib dir
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGD("start to move so file to real installation dir");
+    for (const auto &info : infos) {
         if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
             !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
             APP_LOGI("so files are isolated or decompressed and no necessary to move so files");
-            return ERR_OK;
+            continue;
         }
         if (installedModules_[info.second.GetCurrentModulePackage()] && !nativeLibraryPath_.empty()) {
             std::string tempSoDir;
@@ -3873,10 +3885,19 @@ ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
                 .append(nativeLibraryPath_);
             std::string realSoDir;
             realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                     .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                     .append(nativeLibraryPath_);
+                    .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                    .append(nativeLibraryPath_);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
-            auto result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            bool isDirExisted = false;
+            auto result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
+            if (result != ERR_OK) {
+                APP_LOGE("check if dir existed failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
+            if (!isDirExisted) {
+                InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
+            }
+            result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
             if (result != ERR_OK) {
                 APP_LOGE("move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;

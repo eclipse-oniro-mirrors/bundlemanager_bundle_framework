@@ -585,6 +585,7 @@ private:
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void UpdateAppInstallControlled(int32_t userId);
+    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
         std::unordered_map<std::string, InnerBundleInfo> &infos,
         int32_t userId, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
