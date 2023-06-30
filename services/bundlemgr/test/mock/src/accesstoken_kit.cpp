@@ -18,7 +18,7 @@
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
-static constexpr int GRANT_STATUS = 100;
+static const int GRANT_STATUS = 100;
 
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
 {
