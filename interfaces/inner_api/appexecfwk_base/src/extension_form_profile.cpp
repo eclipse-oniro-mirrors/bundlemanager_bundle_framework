@@ -412,7 +412,7 @@ ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::v
         std::lock_guard<std::mutex> lock(g_mutex);
         g_parseResult = ERR_OK;
         forms = jsonObject.get<ExtensionFormProfileInfoVec>();
-        if(g_parseResult != ERR_OK) {
+        if (g_parseResult != ERR_OK) {
             APP_LOGE("g_parseResult is %{public}d", g_parseResult);
             int32_t ret = g_parseResult;
             // need recover parse result to ERR_OK
