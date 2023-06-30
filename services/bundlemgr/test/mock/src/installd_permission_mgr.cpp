@@ -23,13 +23,11 @@ namespace AppExecFwk {
 #ifdef BUNDLE_FRAMEWORK_RETURN_FALSE
 bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
 {
-    APP_LOGI("xsz mock installd permission mgr, true false");
     return false;
 }
 #else
 bool InstalldPermissionMgr::VerifyCallingPermission(int32_t uid)
 {
-    APP_LOGI("xsz mock installd permission mgr, true false");
     return true;
 }
 #endif

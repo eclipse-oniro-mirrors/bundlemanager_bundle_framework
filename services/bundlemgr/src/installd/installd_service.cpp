@@ -103,11 +103,9 @@ void InstalldService::Start()
         return;
     }
     // add installd service to system ability manager.
-    // need to retry some times due to installd start faster than system ability manager.
     if (!SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
-            APP_LOGE("installd service fail to register into system ability manager");
-            return;
-        }
+        APP_LOGE("installd service fail to register into system ability manager");
+        return;
     }
     isReady_ = true;
     APP_LOGI("installd service start successfully");

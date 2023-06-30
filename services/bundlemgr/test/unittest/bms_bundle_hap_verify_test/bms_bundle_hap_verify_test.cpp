@@ -189,4 +189,17 @@ HWTEST_F(BmsBundleHapVerifyTest, ParseHapProfile_0100, Function | SmallTest | Le
     auto res = BundleVerifyMgr::ParseHapProfile(INSTALL_PATH, result);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: HapVerify_0100
+ * Function: HapVerify
+ * @tc.name: test HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0100, Function | SmallTest | Level0)
+{
+    Security::Verify::HapVerifyResult result;
+    auto res = BundleVerifyMgr::HapVerify(INSTALL_PATH, result);
+    EXPECT_EQ(res, ERR_OK);
+}
 } // OHOS

@@ -40,8 +40,8 @@ ohos_unittest("BmsBundleQuickFixSwitcherTest") {
 
   defines = []
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   if (bundle_framework_quick_fix) {
     include_dirs += [ "${services_path}/bundlemgr/src/include/quick_fix" ]
     sources += quick_fix

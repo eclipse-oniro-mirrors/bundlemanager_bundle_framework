@@ -24,6 +24,7 @@
 #include "bundle_info.h"
 #include "common_event_info.h"
 #include "common_profile.h"
+#include "data_group_info.h"
 #include "distributed_bundle_info.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
@@ -1903,6 +1904,39 @@ public:
         return true;
     }
 
+    const std::map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
+    {
+        return dataGroupInfos_;
+    }
+
+    void AddDataGroupInfo(const std::string &dataGroupId, DataGroupInfo info)
+    {
+        auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
+        if (dataGroupInfosItem == dataGroupInfos_.end()) {
+            dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
+            return;
+        }
+        for (auto iter = dataGroupInfosItem->second.begin(); iter != dataGroupInfosItem->second.end(); iter++) {
+            if (iter->userId == info.userId) {
+                *iter = info;
+                return;
+            }
+        }
+        dataGroupInfosItem->second.emplace_back(info);
+    }
+
+    void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
+    {
+        dataGroupInfos_.clear();
+        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+            std::string dataGroupId = item->first;
+            for (const DataGroupInfo &info : item->second) {
+                AddDataGroupInfo(dataGroupId, info);
+            }
+        }
+        return;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
@@ -1976,6 +2010,7 @@ public:
     ErrCode SetMimeType(const std::string &moduleName, const std::string &abilityName, const std::string mimeType);
     ErrCode DelExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
     ErrCode DelMimeType(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
 
 private:
     bool IsExistLauncherAbility() const;
@@ -2048,6 +2083,9 @@ private:
 
     // shared module info
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
+
+    // data group info
+    std::map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

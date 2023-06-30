@@ -46,8 +46,8 @@ ohos_unittest("BmsBundleAppControlTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_app_control_test.cpp" ]
 
@@ -174,8 +174,8 @@ ohos_unittest("BmsBundleMockAppControlTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_mock_app_control.cpp" ]
 

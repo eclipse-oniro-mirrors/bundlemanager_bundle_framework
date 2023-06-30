@@ -38,8 +38,8 @@ ohos_unittest("BmsBundleInstallerTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_installer_test.cpp" ]
 
@@ -191,8 +191,8 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_multiple_installer_test.cpp" ]
 
@@ -339,8 +339,8 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -459,8 +459,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -578,8 +578,8 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -700,8 +700,8 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",

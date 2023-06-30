@@ -38,8 +38,8 @@ ohos_unittest("BmsBundleManagerTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_manager_test.cpp" ]
 

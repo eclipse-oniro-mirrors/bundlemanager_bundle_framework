@@ -1734,10 +1734,8 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.singleton = preBundleConfigInfo.singleton;
     appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
-    for (const auto &event : preBundleConfigInfo.allowCommonEvent) {
-        appInfo.allowCommonEvent.emplace_back(event);
-    }
-
+    appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
+    appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif

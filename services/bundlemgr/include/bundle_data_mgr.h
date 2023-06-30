@@ -826,6 +826,15 @@ public:
     ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     bool QueryHagAbilityName(std::string &bundleName, std::string &abilityName);
+    bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
+    bool GetGroupDir(const std::string &dataGroupId, std::string &dir) const;
+    void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
+        std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
+    void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
+        const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
+    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
+    bool IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const;
+    bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
 
 private:
     /**

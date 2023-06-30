@@ -3742,6 +3742,77 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5700, Function | SmallTest 
     EXPECT_EQ(ret, true);
 }
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+
+/**
+ * @tc.number: baseBundleInstaller_5800
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
+    AppqfInfo appQfInfo;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5900
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = false;
+    AppqfInfo appQfInfo;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_6000
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
+    AppqfInfo appQfInfo;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo info;
+    info.moduleName = MODULE_NAME;
+    hqfInfos.emplace_back(info);
+    info.moduleName = MODULE_NAME_TEST;
+    info.nativeLibraryPath = BUNDLE_LIBRARY_PATH_DIR;
+    info.cpuAbi = TEST_CPU_ABI;
+    hqfInfos.emplace_back(info);
+    appQfInfo.hqfInfos = hqfInfos;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+#endif
+
 /**
  * @tc.number: ParseFiles_0100
  * @tc.name: test the start function of ParseFiles

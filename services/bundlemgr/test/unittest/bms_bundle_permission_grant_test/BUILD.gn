@@ -43,8 +43,8 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_permission_def_list_test.cpp" ]
 
@@ -182,8 +182,8 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_permission_grant_test.cpp" ]
 
@@ -318,8 +318,8 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
@@ -466,8 +466,8 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_permission_start_full_test.cpp" ]
 
@@ -600,8 +600,8 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
@@ -740,8 +740,8 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
@@ -876,8 +876,8 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
   ]
 
   sources += bundle_install_sources
-  sources -= "${services_path}/bundlemgr/src/installd_client.cpp",
-  sources += "${services_path}/bundlemgr/test/mock/src/installd_client.cpp",
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
