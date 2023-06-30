@@ -305,6 +305,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleSetExtNameOrMIMEToApp);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::DEL_EXT_NAME_OR_MIME_TO_APP),
         &BundleMgrHost::HandleDelExtNameOrMIMEToApp);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_DATA_GROUP_INFOS),
+        &BundleMgrHost::HandleQueryDataGroupInfos);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID),
+        &BundleMgrHost::HandleGetPreferenceDirByGroupId);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -325,7 +329,7 @@ int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePa
         APP_LOGW("bundleMgr host receives unknown code, code = %{public}u", code);
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-    APP_LOGD("bundleMgr host finish to process message");
+    APP_LOGD("bundleMgr host finish to process message, errCode: %{public}d", errCode);
     return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;
 }
 
@@ -2736,6 +2740,44 @@ ErrCode BundleMgrHost::HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageP
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("HandleDelExtNameOrMIMEToApp write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+
+    std::vector<DataGroupInfo> infos;
+    bool ret = QueryDataGroupInfos(bundleName, userId, infos);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write dataGroupInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string dataGroupId = data.ReadString();
+    std::string dir;
+    bool ret = GetGroupDir(dataGroupId, dir);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!reply.WriteString(dir)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
     return ERR_OK;
 }

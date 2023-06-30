@@ -48,6 +48,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#include "data_group_info.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
 #include "parameter.h"
@@ -901,6 +902,13 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         UninstallLowerVersionFeature(uninstallModuleVec_);
     }
 
+    for (auto iter = newInfos.begin(); iter != newInfos.end(); iter++) {
+        result = GetGroupDirsChange(iter->second, oldInfo, isAppExist_);
+        CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    }
+    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(); });
+    result = CreateGroupDirs();
+
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
@@ -933,6 +941,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     sync();
     ProcessAOT(installParam.isOTA, newInfos);
     UpdateAppInstallControlled(userId_);
+    groupDirGuard.Dismiss();
+    RemoveOldGroupDirs();
     return result;
 }
 
@@ -1289,6 +1299,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
                 return result;
             }
+            result = RemoveDataGroupDirs(bundleName, userId_);
+            CHECK_RESULT(result, "DeleteDateGroupDirs failed %{public}d");
             if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
                 APP_LOGE("fail to remove asan log path, error is %{public}d", result);
                 return result;
@@ -2219,6 +2231,117 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::GetGroupDirsChange(const InnerBundleInfo &info,
+    const InnerBundleInfo &oldInfo, bool oldInfoExisted)
+{
+    if (oldInfoExisted) {
+        auto result = GetRemoveDataGroupDirs(oldInfo, info);
+        CHECK_RESULT(result, "RemoveDataGroupDirs failed %{public}d");
+    }
+    auto result = GetDataGroupCreateInfos(info);
+    CHECK_RESULT(result, "CreateDataGroupDirs failed %{public}d");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
+{
+    auto oldDataGroupInfos = oldInfo.GetDataGroupInfos();
+    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    for (auto &item : oldDataGroupInfos) {
+        if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
+            !(dataMgr_->IsShareDataGroupId(item.first, userId_))) {
+            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                + Constants::DATA_GROUP_PATH + item.second[0].uuid;
+            removeGroupDirs_.emplace_back(dir);
+        }
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::RemoveOldGroupDirs() const
+{
+    for (const std::string &dir : removeGroupDirs_) {
+        APP_LOGD("RemoveOldGroupDirs %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        CHECK_RESULT(result, "RemoveDir failed %{public}d");
+    }
+    APP_LOGD("RemoveOldGroupDirs success");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CreateGroupDirs() const
+{
+    for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        APP_LOGD("CreateGroupDirs %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->Mkdir(dir, S_IRWXU, dataGroupInfo.uid, dataGroupInfo.gid);
+        CHECK_RESULT(result, "make groupDir failed %{public}d");
+    }
+    APP_LOGD("CreateGroupDirs success");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newInfo)
+{
+    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
+    for (auto &item : newDataGroupInfos) {
+        const std::string &dataGroupId = item.first;
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + item.second[0].uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        CHECK_RESULT(result, "check IsExistDir failed %{public}d");
+        if (!dirExist) {
+            APP_LOGD("dir: %{public}s need to be created.", dir.c_str());
+            createGroupDirs_.emplace_back(item.second[0]);
+        }
+    }
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::DeleteGroupDirsForException() const
+{
+    for (const DataGroupInfo &info : createGroupDirs_) {
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + info.uuid;
+        InstalldClient::GetInstance()->RemoveDir(dir);
+    }
+}
+
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const
+{
+    std::vector<DataGroupInfo> infos;
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    if (!(dataMgr_->QueryDataGroupInfos(bundleName, userId, infos))) {
+        return ERR_OK;
+    }
+    std::vector<std::string> removeDirs;
+    for (auto iter = infos.begin(); iter != infos.end(); iter++) {
+        std::string dir;
+        if (!(dataMgr_->IsShareDataGroupId(iter->dataGroupId, userId)) &&
+            dataMgr_->GetGroupDir(iter->dataGroupId, dir)) {
+            APP_LOGD("dir: %{public}s need to be deleted.", dir.c_str());
+            removeDirs.emplace_back(dir);
+        }
+    }
+    for (const std::string &dir : removeDirs) {
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        CHECK_RESULT(result, "RemoveDir failed %{public}d");
+    }
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::CreateArkProfile(
     const std::string &bundleName, int32_t userId, int32_t uid, int32_t gid) const
 {
@@ -2407,6 +2530,8 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info) co
         APP_LOGE("fail to remove bundleName: %{public}s, error is %{public}d",
             info.GetBundleName().c_str(), result);
     }
+    result = RemoveDataGroupDirs(info.GetBundleName(), userId_);
+    CHECK_RESULT(result, "RemoveDataGroupDirs failed %{public}d");
     return result;
 }
 
@@ -2558,6 +2683,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     ret = bundleInstallChecker_->CheckDeviceType(infos);
     if (ret != ERR_OK) {
@@ -2577,6 +2703,26 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         ret = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     return ret;
+}
+
+void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    int32_t userId, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+        if (dataGroupGids.empty()) {
+            APP_LOGE("has no data-group-id in provisionInfo");
+            return;
+        }
+        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            APP_LOGE("Get dataMgr shared_ptr nullptr");
+            return;
+        }
+        dataMgr->GenerateDataGroupInfos(infos[bundlePaths[i]], dataGroupGids, userId);
+    }
 }
 
 ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,

@@ -2767,5 +2767,32 @@ ErrCode BundleMgrHostImpl::DelExtNameOrMIMEToApp(const std::string &bundleName, 
     }
     return dataMgr->DelExtNameOrMIMEToApp(bundleName, moduleName, abilityName, extName, mimeType);
 }
+
+bool BundleMgrHostImpl::QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
+    std::vector<DataGroupInfo> &infos)
+{
+    APP_LOGD("QueryDataGroupInfos bundleName: %{public}s, userId: %{public}d", bundleName.c_str(), userId);
+    if (!BundlePermissionMgr::IsNativeTokenType()) {
+        APP_LOGE("verify token type failed");
+        return false;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->QueryDataGroupInfos(bundleName, userId, infos);
+}
+
+bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string &dir)
+{
+    APP_LOGD("GetGroupDir dataGroupId: %{public}s", dataGroupId.c_str());
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->GetGroupDir(dataGroupId, dir);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
