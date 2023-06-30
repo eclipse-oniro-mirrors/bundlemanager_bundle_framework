@@ -211,12 +211,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
     }
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
-            APP_LOGD("Types -> type : %{public}s ", strType.c_str());
-            APP_LOGD("GetUriString : %{public}s ", want.GetUriString().c_str());
-            APP_LOGD("GetAction : %{public}s ", want.GetAction().c_str());
-            APP_LOGD("GetBundleName : %{public}s ", want.GetElement().GetBundleName().c_str());
-            if (MatchUriAndType(want.GetUriString(), strType))
-            {
+            if (MatchUriAndType(want.GetUriString(), strType)) {
                 APP_LOGD("type %{public}s, Is Matched", strType.c_str());
                 return true;
             }

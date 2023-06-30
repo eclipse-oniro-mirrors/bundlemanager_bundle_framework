@@ -3901,7 +3901,7 @@ void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
 {
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
         std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
-        for (const SkillUri & uri : skill.uris) {
+        for (const SkillUri &uri : skill.uris) {
             SkillUriForAbilityAndExtension skillinfo;
             skillinfo.scheme = uri.scheme;
             skillinfo.host = uri.host;
