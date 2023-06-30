@@ -3897,7 +3897,8 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
     }
 }
 
-void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill, ExtensionAbilityInfo &extensionAbilityInfo) const
+void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill, 
+    ExtensionAbilityInfo &extensionAbilityInfo) const
 {
     if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
         std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
