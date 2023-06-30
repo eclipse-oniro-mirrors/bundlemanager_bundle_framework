@@ -3523,6 +3523,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     std::string cpuAbi;
     std::string nativeLibraryPath;
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
+    nativeLibraryPath_ = nativeLibraryPath;
     if (isCompressNativeLibrary) {
         bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
         if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
