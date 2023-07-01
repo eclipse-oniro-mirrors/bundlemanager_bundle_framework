@@ -207,7 +207,7 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
     auto deviceType = OHOS::system::GetDeviceType();
     APP_LOGD("DeviceType %{public}s", deviceType.c_str());
     if (STR_PHONE == deviceType || STR_DEFAULT == deviceType) {
-        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_TYPES);
+        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
     }
     if (vecTypes.size() > 0) {
         for (std::string strType : vecTypes) {
