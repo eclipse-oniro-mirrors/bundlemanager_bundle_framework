@@ -1074,6 +1074,7 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, A
             SkillUriForAbilityAndExtension skillinfo;
             skillinfo.scheme = uri.scheme;
             skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
             skillinfo.path = uri.path;
             skillinfo.pathStartWith = uri.pathStartWith;
             skillinfo.pathRegex = uri.pathRegex;
@@ -3906,6 +3907,7 @@ void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
             SkillUriForAbilityAndExtension skillinfo;
             skillinfo.scheme = uri.scheme;
             skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
             skillinfo.path = uri.path;
             skillinfo.pathStartWith = uri.pathStartWith;
             skillinfo.pathRegex = uri.pathRegex;
