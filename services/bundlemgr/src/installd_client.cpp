@@ -21,12 +21,15 @@
 #include "installd/installd_load_callback.h"
 #include "installd_death_recipient.h"
 #include "iservice_registry.h"
+#include "system_ability.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int LOAD_SA_TIMEOUT_MS = 4 * 1000;
+const int32_t LOAD_SA_TIMEOUT_MS = 10 * 1000; // 10 sec limit on loading installd
+const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
 } // namespace
 
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
@@ -224,6 +227,7 @@ bool InstalldClient::GetInstalldProxy()
         return false;
     }
     installdProxy_->AsObject()->AddDeathRecipient(recipient_);
+    DelayUnload();
     return true;
 }
 
@@ -373,6 +377,37 @@ void InstalldClient::OnLoadSystemAbilityFail()
         loadSaFinished_ = true;
         loadSaCondition_.notify_one();
     }
+}
+
+void InstalldClient::StartInstalldService()
+{
+    if (GetInstalldProxy()) {
+        APP_LOGI("start installd service successfully");
+    } else {
+        APP_LOGE("start installd service failed");
+    }
+}
+
+void InstalldClient::DelayUnload()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    serialQueue_->CancelDelayTask(UNLOAD_TASK_NAME);
+    auto task = [] {
+        sptr<ISystemAbilityManager> saManager =
+            OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (saManager == nullptr) {
+            APP_LOGE("saManager is nullptr");
+            return;
+        }
+        int32_t ret = saManager->UnloadSystemAbility(OHOS::INSTALLD_SERVICE_ID);
+        if (ret != ERR_OK) {
+            APP_LOGE("unload SA failed, ret is %{public}d", ret);
+            return;
+        }
+        APP_LOGI("unload Installd succeeded");
+    };
+    serialQueue_->ScheduleDelayTask(UNLOAD_TASK_NAME, UNLOAD_TIME, task);
+    APP_LOGD("send unload task successfully");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

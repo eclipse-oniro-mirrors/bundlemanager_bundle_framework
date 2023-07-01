@@ -26,9 +26,13 @@
 
 #include "appexecfwk_errors.h"
 #include "ipc/installd_interface.h"
+#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+} // namespace
 class InstalldClient : public DelayedSingleton<InstalldClient> {
 public:
     /**
@@ -163,7 +167,10 @@ public:
     ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
 
     void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
+
     void OnLoadSystemAbilityFail();
+
+    void StartInstalldService();
 
 private:
     /**
@@ -172,6 +179,7 @@ private:
      */
     bool GetInstalldProxy();
     bool LoadInstalldService();
+    void DelayUnload();
 
     template<typename F, typename... Args>
     ErrCode CallService(F func, Args&&... args)
@@ -186,9 +194,11 @@ private:
     bool loadSaFinished_;
     std::mutex mutex_;
     std::mutex loadSaMutex_;
+    std::mutex unloadTaskMutex_;
     std::condition_variable loadSaCondition_;
     sptr<IInstalld> installdProxy_;
     sptr<IRemoteObject::DeathRecipient> recipient_;
+    std::shared_ptr<SerialQueue> serialQueue_ = std::make_shared<SerialQueue>(UNLOAD_QUEUE_NAME);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

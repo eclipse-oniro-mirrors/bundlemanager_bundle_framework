@@ -91,7 +91,9 @@ void BmsInstallDaemonTest::TearDownTestCase()
 {}
 
 void BmsInstallDaemonTest::SetUp()
-{}
+{
+    setuid(Constants::FOUNDATION_UID);
+}
 
 void BmsInstallDaemonTest::TearDown()
 {

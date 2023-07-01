@@ -16,12 +16,10 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_HOST_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_HOST_H
 
-#include <mutex>
 #include <string>
 
 #include "iremote_stub.h"
 #include "ipc/installd_interface.h"
-#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -157,12 +155,8 @@ private:
 
     bool HandMoveFiles(MessageParcel &data, MessageParcel &reply);
 
-    void DelayUnloadTask();
-
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;
-    std::mutex unloadTaskMutex_;
-    std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
