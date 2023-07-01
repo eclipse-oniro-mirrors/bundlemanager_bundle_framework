@@ -1909,20 +1909,25 @@ public:
         return dataGroupInfos_;
     }
 
-    void AddDataGroupInfo(const std::string &dataGroupId, DataGroupInfo info)
+    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
     {
+        APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
+            dataGroupId.c_str(), info.ToString().c_str());
         auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
         if (dataGroupInfosItem == dataGroupInfos_.end()) {
+            APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
             dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
             return;
         }
-        for (auto iter = dataGroupInfosItem->second.begin(); iter != dataGroupInfosItem->second.end(); iter++) {
-            if (iter->userId == info.userId) {
-                *iter = info;
-                return;
-            }
+        std::vector<DataGroupInfo> &dataGroupInfoList = dataGroupInfos_[dataGroupId];
+        auto iter = std::find_if(std::begin(dataGroupInfoList), std::end(dataGroupInfoList),
+            [&info](DataGroupInfo infoFind) { return info.userId == infoFind.userId; });
+        if (iter == std::end(dataGroupInfoList)) {
+            *iter = info;
+            return;
         }
-        dataGroupInfosItem->second.emplace_back(info);
+        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
+        dataGroupInfoList.emplace_back(info);
     }
 
     void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
@@ -1934,7 +1939,6 @@ public:
                 AddDataGroupInfo(dataGroupId, info);
             }
         }
-        return;
     }
 
     void SetAppDistributionType(const std::string &appDistributionType);

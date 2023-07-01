@@ -902,12 +902,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         UninstallLowerVersionFeature(uninstallModuleVec_);
     }
 
-    for (auto iter = newInfos.begin(); iter != newInfos.end(); iter++) {
-        result = GetGroupDirsChange(iter->second, oldInfo, isAppExist_);
-        CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
-    }
+    // create data group dir
     ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(); });
-    result = CreateGroupDirs();
+    result = CreateDataGroupDirs(newInfos, oldInfo);
+    CHECK_RESULT_WITH_ROLLBACK(result, "create data group dirs failed with result %{public}d", newInfos, oldInfo);
 
     // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
@@ -2231,15 +2229,27 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
     return ERR_OK;
 }
 
+ErrCode BaseBundleInstaller::CreateDataGroupDirs(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    for (auto iter = newInfos.begin(); iter != newInfos.end(); iter++) {
+        auto result = GetGroupDirsChange(iter->second, oldInfo, isAppExist_);
+        CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    }
+    auto result = CreateGroupDirs();
+    CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    return ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::GetGroupDirsChange(const InnerBundleInfo &info,
     const InnerBundleInfo &oldInfo, bool oldInfoExisted)
 {
     if (oldInfoExisted) {
         auto result = GetRemoveDataGroupDirs(oldInfo, info);
-        CHECK_RESULT(result, "RemoveDataGroupDirs failed %{public}d");
+        CHECK_RESULT(result, "GetRemoveDataGroupDirs failed %{public}d");
     }
     auto result = GetDataGroupCreateInfos(info);
-    CHECK_RESULT(result, "CreateDataGroupDirs failed %{public}d");
+    CHECK_RESULT(result, "GetDataGroupCreateInfos failed %{public}d");
     return ERR_OK;
 }
 
@@ -2255,13 +2265,13 @@ ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
 
     for (auto &item : oldDataGroupInfos) {
         if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
-            !(dataMgr_->IsShareDataGroupId(item.first, userId_))) {
+            !(dataMgr_->IsShareDataGroupId(item.first, userId_)) && !item.second.empty()) {
             std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
                 + Constants::DATA_GROUP_PATH + item.second[0].uuid;
+            APP_LOGD("remove dir: %{public}s", dir.c_str());
             removeGroupDirs_.emplace_back(dir);
         }
     }
-
     return ERR_OK;
 }
 
@@ -2281,8 +2291,9 @@ ErrCode BaseBundleInstaller::CreateGroupDirs() const
     for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
         std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
             + Constants::DATA_GROUP_PATH + dataGroupInfo.uuid;
-        APP_LOGD("CreateGroupDirs %{public}s", dir.c_str());
-        auto result = InstalldClient::GetInstance()->Mkdir(dir, S_IRWXU, dataGroupInfo.uid, dataGroupInfo.gid);
+        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->Mkdir(dir,
+            S_IRWXU | S_IRWXG, dataGroupInfo.uid, dataGroupInfo.gid);
         CHECK_RESULT(result, "make groupDir failed %{public}d");
     }
     APP_LOGD("CreateGroupDirs success");
@@ -2526,10 +2537,7 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info) co
 {
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to remove bundleName: %{public}s, error is %{public}d",
-            info.GetBundleName().c_str(), result);
-    }
+    CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
     result = RemoveDataGroupDirs(info.GetBundleName(), userId_);
     CHECK_RESULT(result, "RemoveDataGroupDirs failed %{public}d");
     return result;
@@ -2707,13 +2715,17 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
 
 void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
     std::unordered_map<std::string, InnerBundleInfo> &infos,
-    int32_t userId, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+    int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
+    if (hapVerifyRes.size() < bundlePaths.size()) {
+        APP_LOGE("hapVerifyRes size less than bundlePaths size");
+        return;
+    }
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
         if (dataGroupGids.empty()) {
-            APP_LOGE("has no data-group-id in provisionInfo");
+            APP_LOGD("has no data-group-id in provisionInfo");
             return;
         }
         std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
