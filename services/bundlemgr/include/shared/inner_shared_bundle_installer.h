@@ -97,7 +97,6 @@ private:
         const std::string &moduleName, const std::string &realHspPath, const std::string &versionDir);
     std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
 
-
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;

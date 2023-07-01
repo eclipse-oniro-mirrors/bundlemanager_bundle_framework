@@ -3885,8 +3885,8 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 .append(nativeLibraryPath_);
             std::string realSoDir;
             realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                    .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                    .append(nativeLibraryPath_);
+                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath_);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
             bool isDirExisted = false;
             auto result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);

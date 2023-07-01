@@ -240,10 +240,10 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
-    PermissionStatus installBundlestatus = installParam.installBundlePermissionStatus;
+    PermissionStatus installBundleStatus = installParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
     bool isCallByShell = installParam.isCallByShell;
-    if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+    if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
@@ -251,14 +251,14 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("install enterprise bundle permission denied");
+                APP_LOGE("bm install enterprise bundle permission denied");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 APP_LOGE("install enterprise bundle permission denied");
                 return false;
             }
-        } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
             APP_LOGE("install permission denied");
             return false;
         }
@@ -356,10 +356,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
-    PermissionStatus installBundlestatus = checkParam.installBundlePermissionStatus;
+    PermissionStatus installBundleStatus = checkParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = checkParam.installEnterpriseBundlePermissionStatus;
     bool isCallByShell = checkParam.isCallByShell;
-    if (!isCallByShell && installBundlestatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+    if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
         installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
@@ -367,14 +367,14 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("install enterprise bundle permission denied");
+                APP_LOGE("bm install enterprise bundle permission denied");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 APP_LOGE("install enterprise bundle permission denied");
                 return false;
             }
-        } else if (installBundlestatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
             APP_LOGE("install permission denied");
             return false;
         }
