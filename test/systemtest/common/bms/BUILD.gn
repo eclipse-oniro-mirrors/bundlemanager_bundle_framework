@@ -76,6 +76,7 @@ group("systemtest_bms") {
     "acts_bms_kit_system_test:systemtest",
     "bms_clean_cache_callback_host_test:systemtest",
     "bms_client_system_test:systemtest",
+    "bms_code_signature_test:systemtest",
     "bms_compatible_system_test:systemtest",
     "bms_install_system_test:systemtest",
     "bms_launcher_service_system_test:systemtest",
