@@ -30,6 +30,7 @@
 #include "distributed_ability_info.h"
 #include "free_install_params.h"
 #include "mime_type_mgr.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -144,6 +145,9 @@ const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
 };
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 
+const std::string STR_PHONE = "phone";
+const std::string STR_DEFAULT = "default";
+
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
     if (compileMode == Profile::COMPILE_MODE_ES_MODULE) {
@@ -198,6 +202,21 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
     bool matchEntities = MatchEntities(want.GetEntities());
     if (!matchEntities) {
         APP_LOGD("Entities does not match");
+        return false;
+    }
+    std::vector<std::string> vecTypes;
+    auto deviceType = OHOS::system::GetDeviceType();
+    APP_LOGD("DeviceType %{public}s", deviceType.c_str());
+    if (STR_PHONE == deviceType || STR_DEFAULT == deviceType) {
+        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+    }
+    if (vecTypes.size() > 0) {
+        for (std::string strType : vecTypes) {
+            if (MatchUriAndType(want.GetUriString(), strType)) {
+                APP_LOGD("type %{public}s, Is Matched", strType.c_str());
+                return true;
+            }
+        }
         return false;
     }
     bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType());

@@ -1037,6 +1037,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (isPrivateType || skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
+                AddAbilitySkillUrisInfo(flags, skill, abilityinfo);
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
                 }
@@ -1064,6 +1065,25 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
                 break;
             }
         }
+    }
+}
+
+void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, AbilityInfo &abilityInfo) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+        std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+        for (const SkillUri &uri : skill.uris) {
+            SkillUriForAbilityAndExtension skillinfo;
+            skillinfo.scheme = uri.scheme;
+            skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
+            skillinfo.path = uri.path;
+            skillinfo.pathStartWith = uri.pathStartWith;
+            skillinfo.pathRegex = uri.pathRegex;
+            skillinfo.type = uri.type;
+            skillUriTmp.emplace_back(skillinfo);
+        }
+        abilityInfo.skillUri = skillUriTmp;
     }
 }
 
@@ -3860,6 +3880,7 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
                 break;
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            AddExtensionSkillUrisInfo(flags, skill, extensionInfo);
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                 GET_ABILITY_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
@@ -3877,6 +3898,26 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             infos.emplace_back(extensionInfo);
             break;
         }
+    }
+}
+
+void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
+    ExtensionAbilityInfo &extensionAbilityInfo) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+        std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+        for (const SkillUri &uri : skill.uris) {
+            SkillUriForAbilityAndExtension skillinfo;
+            skillinfo.scheme = uri.scheme;
+            skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
+            skillinfo.path = uri.path;
+            skillinfo.pathStartWith = uri.pathStartWith;
+            skillinfo.pathRegex = uri.pathRegex;
+            skillinfo.type = uri.type;
+            skillUriTmp.emplace_back(skillinfo);
+        }
+        extensionAbilityInfo.skillUri = skillUriTmp;
     }
 }
 

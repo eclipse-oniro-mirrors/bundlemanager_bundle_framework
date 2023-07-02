@@ -882,6 +882,7 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    void AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, AbilityInfo &abilityInfo) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -899,6 +900,7 @@ private:
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    void AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill, ExtensionAbilityInfo &extensionAbilityInfo) const;
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,

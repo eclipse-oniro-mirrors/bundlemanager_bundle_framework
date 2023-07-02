@@ -29,6 +29,8 @@ T GetIntParameter(const std::string& key, T def)
 }
 
 std::string GetParameter(const std::string& key, const std::string& def);
+
+std::string GetDeviceType();
 } // namespace system
 } // namespace OHOS
 #endif // FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_TEST_PARAMETERS_H

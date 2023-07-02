@@ -26,5 +26,10 @@ std::string GetParameter(const std::string& key, const std::string& def)
 {
     return "";
 }
+
+std::string GetDeviceType()
+{
+    return "default";
+}
 } // system
 } // OHOS
