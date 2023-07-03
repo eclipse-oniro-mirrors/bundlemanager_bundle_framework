@@ -3324,6 +3324,7 @@ void BaseBundleInstaller::SaveHapPathToRecords(
                 APP_LOGW("get temp hap path failed");
                 continue;
             }
+            APP_LOGD("tempDir is %{public}s", tempDir.c_str());
             hapPathRecords_.emplace(item.first, tempDir);
         }
 
@@ -3389,6 +3390,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     verifyCodeParams_.clear();
     otaInstall_ = false;
     signatureFileMap_.clear();
+    hapPathRecords_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
