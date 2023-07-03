@@ -5115,10 +5115,10 @@ bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t u
 
 bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir) const
 {
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
     std::string uuid;
     if (BundlePermissionMgr::VerifyCallingUid()) {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         for (const auto &item : bundleInfos_) {
             const auto &dataGroupInfos = item.second.GetDataGroupInfos();
             auto dataGroupInfosIter = dataGroupInfos.find(dataGroupId);
