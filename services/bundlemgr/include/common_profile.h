@@ -363,6 +363,7 @@ constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 constexpr const char* MODULE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* MODULE_PROXY_DATAS = "proxyDatas";
+constexpr const char* MODULE_PROXY_DATA = "proxyData";
 constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";

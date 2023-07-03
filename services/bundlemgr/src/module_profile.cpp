@@ -254,6 +254,7 @@ struct Module {
     std::string targetModule;
     int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
+    std::vector<ProxyData> proxyData;
     std::string buildHash;
     std::string isolationMode;
     bool compressNativeLibs = true;
@@ -1340,6 +1341,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATA,
+        module.proxyData,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_BUILD_HASH,
@@ -2056,7 +2065,11 @@ bool ToInnerModuleInfo(
     } else {
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
-    innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    if (moduleJson.module.proxyDatas.empty()) {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyData;
+    } else {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    }
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
