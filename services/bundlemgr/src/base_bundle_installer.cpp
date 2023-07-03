@@ -2309,6 +2309,10 @@ ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newI
     auto newDataGroupInfos = newInfo.GetDataGroupInfos();
     for (auto &item : newDataGroupInfos) {
         const std::string &dataGroupId = item.first;
+        if (item.second.empty()) {
+            APP_LOGE("dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
         std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
             + Constants::DATA_GROUP_PATH + item.second[0].uuid;
         bool dirExist = false;
