@@ -108,7 +108,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -252,7 +252,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -378,7 +378,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -492,7 +492,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -612,7 +612,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -736,7 +736,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 

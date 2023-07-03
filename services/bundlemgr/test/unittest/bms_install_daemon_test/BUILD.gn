@@ -59,7 +59,7 @@ ohos_unittest("BmsInstallDaemonTest") {
   ]
   defines = []
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -109,7 +109,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   ]
   defines = []
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -162,7 +162,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -211,7 +211,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
