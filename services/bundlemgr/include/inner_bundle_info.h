@@ -1919,20 +1919,25 @@ public:
             dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
             return;
         }
-        std::vector<DataGroupInfo> &dataGroupInfoList = dataGroupInfos_[dataGroupId];
-        auto iter = std::find_if(std::begin(dataGroupInfoList), std::end(dataGroupInfoList),
-            [&info](DataGroupInfo infoFind) { return info.userId == infoFind.userId; });
-        if (iter == std::end(dataGroupInfoList)) {
-            *iter = info;
-            return;
+
+        for (int32_t i = 0; i < dataGroupInfos_[dataGroupId].size(); i++) {
+            if (dataGroupInfos_[dataGroupId][i].userId == info.userId) {
+                return;
+            }
         }
+
         APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
-        dataGroupInfoList.emplace_back(info);
+        dataGroupInfos_[dataGroupId].emplace_back(info);
     }
 
     void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
     {
-        dataGroupInfos_.clear();
+        for (const auto &item : dataGroupInfos_) {
+            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
+                APP_LOGD("dataGroupInfo: %{public}s need to be deleted", item.first.c_str());
+                dataGroupInfos_.erase(item.first);
+            }
+        }
         for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
             std::string dataGroupId = item->first;
             for (const DataGroupInfo &info : item->second) {

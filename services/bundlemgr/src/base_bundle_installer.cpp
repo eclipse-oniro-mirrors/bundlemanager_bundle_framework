@@ -75,6 +75,7 @@ const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -1134,6 +1135,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         }
     }
 
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
+    CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
+
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -1301,8 +1305,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
                 return result;
             }
-            result = RemoveDataGroupDirs(bundleName, userId_);
-            CHECK_RESULT(result, "DeleteDateGroupDirs failed %{public}d");
+
             if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
                 APP_LOGE("fail to remove asan log path, error is %{public}d", result);
                 return result;
@@ -2297,7 +2300,7 @@ ErrCode BaseBundleInstaller::CreateGroupDirs() const
             + Constants::DATA_GROUP_PATH + dataGroupInfo.uuid;
         APP_LOGD("create group dir: %{public}s", dir.c_str());
         auto result = InstalldClient::GetInstance()->Mkdir(dir,
-            S_IRWXU | S_IRWXG, dataGroupInfo.uid, dataGroupInfo.gid);
+            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
         CHECK_RESULT(result, "make groupDir failed %{public}d");
     }
     APP_LOGD("CreateGroupDirs success");
@@ -2349,7 +2352,7 @@ ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, 
     for (auto iter = infos.begin(); iter != infos.end(); iter++) {
         std::string dir;
         if (!(dataMgr_->IsShareDataGroupId(iter->dataGroupId, userId)) &&
-            dataMgr_->GetGroupDir(iter->dataGroupId, dir)) {
+            dataMgr_->GetGroupDir(iter->dataGroupId, dir, userId)) {
             APP_LOGD("dir: %{public}s need to be deleted.", dir.c_str());
             removeDirs.emplace_back(dir);
         }
@@ -2546,8 +2549,6 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info) co
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_);
     CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
-    result = RemoveDataGroupDirs(info.GetBundleName(), userId_);
-    CHECK_RESULT(result, "RemoveDataGroupDirs failed %{public}d");
     return result;
 }
 
