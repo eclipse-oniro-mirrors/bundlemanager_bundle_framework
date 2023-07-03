@@ -23,8 +23,6 @@ namespace OHOS {
 namespace AppExecFwk {
 class InstalldLoadCallback : public SystemAbilityLoadCallbackStub {
 public:
-    InstalldLoadCallback() = default;
-
     void OnLoadSystemAbilitySuccess(int32_t systemAbilityId, const sptr<IRemoteObject> &remoteObject) override;
     void OnLoadSystemAbilityFail(int32_t systemAbilityId) override;
 };

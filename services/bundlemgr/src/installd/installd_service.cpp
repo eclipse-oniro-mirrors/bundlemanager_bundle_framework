@@ -74,7 +74,7 @@ bool InstalldService::Init()
     umask(Constants::INSTALLD_UMASK);
     hostImpl_ = new (std::nothrow) InstalldHostImpl();
     if (hostImpl_ == nullptr) {
-        APP_LOGI("InstalldHostImpl Init failed");
+        APP_LOGE("InstalldHostImpl Init failed");
         return false;
     }
     if (!InitDir(Constants::HAP_COPY_PATH)) {
@@ -98,13 +98,8 @@ bool InstalldService::InitDir(const std::string &path)
 
 void InstalldService::Start()
 {
-    if (!(Init())) {
+    if (!Init()) {
         APP_LOGE("init fail");
-        return;
-    }
-    // add installd service to system ability manager.
-    if (!SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
-        APP_LOGE("installd service fail to register into system ability manager");
         return;
     }
     isReady_ = true;
@@ -119,7 +114,7 @@ void InstalldService::Stop()
     }
     // remove installd service from system ability manager.
     // since we can't handle the fail case, just ignore the result.
-    SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
+    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
 }

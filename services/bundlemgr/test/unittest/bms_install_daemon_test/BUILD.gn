@@ -22,9 +22,9 @@ ohos_unittest("BmsInstallDaemonTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
   sources += install_daemon_sources
@@ -88,6 +88,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_installd_host_impl.cpp",
   ]
 
@@ -145,6 +146,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
   ]
 
