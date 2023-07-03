@@ -18,6 +18,11 @@
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
+#ifdef BUNDLE_PERMISSION_DEF_LIST
+#ifdef BUNDLE_PERMISSION_DEF_TRUE
+static constexpr int GRANT_STATUS = 100;
+#endif
+#endif
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
 {
     AccessTokenIDEx token;
@@ -66,7 +71,7 @@ int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<Permiss
     PermissionStateFull permissionStateFull;
     permissionStateFull.permissionName = "testName";
     permissionStateFull.resDeviceID.push_back("100");
-    permissionStateFull.grantStatus.push_back(100);
+    permissionStateFull.grantStatus.push_back(GRANT_STATUS);
     reqPermList.push_back(permissionStateFull);
     return 0;
     #else
