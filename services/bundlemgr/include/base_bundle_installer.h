@@ -588,7 +588,7 @@ private:
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
         std::unordered_map<std::string, InnerBundleInfo> &infos,
-        int32_t userId, std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+        int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     ErrCode GetGroupDirsChange(const InnerBundleInfo &info, const InnerBundleInfo &oldInfo, bool oldInfoExisted);
     ErrCode GetRemoveDataGroupDirs(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
     ErrCode RemoveOldGroupDirs() const;
@@ -596,6 +596,8 @@ private:
     ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
     ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
     void DeleteGroupDirsForException() const;
+    ErrCode CreateDataGroupDirs(
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
