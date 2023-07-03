@@ -5113,9 +5113,11 @@ bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t u
     return true;
 }
 
-bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir) const
+bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir, int32_t userId) const
 {
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = AccountHelper::GetCurrentActiveUserId();
+    }
     std::string uuid;
     if (BundlePermissionMgr::VerifyCallingUid()) {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -5160,6 +5162,7 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
     }
     dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
         + Constants::DATA_GROUP_PATH + uuid;
+    APP_LOGD("groupDir: %{public}s", dir.c_str());
     return true;
 }
 
@@ -5269,6 +5272,7 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         }
         for (auto info : iter->second) {
             if (info.userId == userId && ++count > 1) {
+                APP_LOGD("dataGroupId: %{public}s is shared", dataGroupId.c_str());
                 return true;
             }
         }
