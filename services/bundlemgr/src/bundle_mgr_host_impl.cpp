@@ -1009,8 +1009,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    int32_t realityUserId = GetResponseUserIdByBundleName(bundleName, userId);
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, realityUserId);
+    // int32_t realityUserId = GetResponseUserIdByBundleName(bundleName, userId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
     return ERR_OK;
 }
 
