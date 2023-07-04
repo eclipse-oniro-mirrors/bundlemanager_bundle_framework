@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -17,19 +17,12 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#include "if_system_ability_manager.h"
-#include "installd/installd_load_callback.h"
 #include "installd_death_recipient.h"
-#include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const int LOAD_SA_TIMEOUT_MS = 4 * 1000;
-} // namespace
-
 ErrCode InstalldClient::CreateBundleDir(const std::string &bundleDir)
 {
     if (bundleDir.empty()) {
@@ -163,69 +156,30 @@ void InstalldClient::ResetInstalldProxy()
     if ((installdProxy_ != nullptr) && (installdProxy_->AsObject() != nullptr)) {
         installdProxy_->AsObject()->RemoveDeathRecipient(recipient_);
     }
-    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     installdProxy_ = nullptr;
-}
-
-bool InstalldClient::LoadInstalldService()
-{
-    {
-        std::unique_lock<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = false;
-    }
-    auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    if (systemAbilityMgr == nullptr) {
-        APP_LOGE("Failed to get SystemAbilityManager.");
-        return false;
-    }
-    sptr<InstalldLoadCallback> loadCallback = new (std::nothrow) InstalldLoadCallback();
-    if (loadCallback == nullptr) {
-        APP_LOGE("Create load callback failed.");
-        return false;
-    }
-    auto ret = systemAbilityMgr->LoadSystemAbility(INSTALLD_SERVICE_ID, loadCallback);
-    if (ret != 0) {
-        APP_LOGE("Load system ability %{public}d failed with %{public}d.", INSTALLD_SERVICE_ID, ret);
-        return false;
-    }
-
-    {
-        std::unique_lock<std::mutex> lock(loadSaMutex_);
-        auto waitStatus = loadSaCondition_.wait_for(lock, std::chrono::milliseconds(LOAD_SA_TIMEOUT_MS),
-            [this]() {
-                return loadSaFinished_;
-            });
-        if (!waitStatus) {
-            APP_LOGE("Wait for load sa timeout.");
-            return false;
-        }
-    }
-    return true;
 }
 
 bool InstalldClient::GetInstalldProxy()
 {
-    if (installdProxy_ != nullptr) {
-        APP_LOGD("installd ready");
-        return true;
+    if (installdProxy_ == nullptr) {
+        APP_LOGD("try to get installd proxy");
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (installdProxy_ == nullptr) {
+            sptr<IInstalld> tempProxy =
+                iface_cast<IInstalld>(SystemAbilityHelper::GetSystemAbility(INSTALLD_SERVICE_ID));
+            if ((tempProxy == nullptr) || (tempProxy->AsObject() == nullptr)) {
+                APP_LOGE("the installd proxy or remote object is null");
+                return false;
+            }
+            recipient_ = new (std::nothrow) InstalldDeathRecipient();
+            if (recipient_ == nullptr) {
+                APP_LOGE("the death recipient is nullptr");
+                return false;
+            }
+            tempProxy->AsObject()->AddDeathRecipient(recipient_);
+            installdProxy_ = tempProxy;
+        }
     }
-
-    APP_LOGD("try to get installd proxy");
-    if (!LoadInstalldService()) {
-        APP_LOGE("load installd service failed");
-        return false;
-    }
-    if ((installdProxy_ == nullptr) || (installdProxy_->AsObject() == nullptr)) {
-        APP_LOGE("the installd proxy or remote object is null");
-        return false;
-    }
-
-    recipient_ = new (std::nothrow) InstalldDeathRecipient();
-    if (recipient_ == nullptr) {
-        APP_LOGE("the death recipient is nullptr");
-        return false;
-    }
-    installdProxy_->AsObject()->AddDeathRecipient(recipient_);
     return true;
 }
 
@@ -347,34 +301,6 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::MoveFiles, srcDir, desDir);
-}
-
-void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
-{
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        installdProxy_ = iface_cast<IInstalld>(remoteObject);
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = true;
-        loadSaCondition_.notify_one();
-    }
-}
-
-void InstalldClient::OnLoadSystemAbilityFail()
-{
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        installdProxy_ = nullptr;
-    }
-
-    {
-        std::lock_guard<std::mutex> lock(loadSaMutex_);
-        loadSaFinished_ = true;
-        loadSaCondition_.notify_one();
-    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -27,7 +27,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -39,6 +39,8 @@ ohos_unittest("BmsBundleDataMgrTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_data_mgr_test.cpp" ]
 
@@ -155,7 +157,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -167,6 +169,8 @@ ohos_unittest("BmsBundleKitServiceTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_kit_service_test.cpp" ]
 
@@ -283,7 +287,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -294,6 +298,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_get_window_properties_test.cpp" ]
 

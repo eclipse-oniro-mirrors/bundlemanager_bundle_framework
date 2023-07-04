@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -31,14 +31,6 @@ using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
-REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
-
-InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
-{
-    APP_LOGI("installd service instance is created");
-}
-
-
 InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
     APP_LOGI("installd service instance is created");
@@ -98,8 +90,14 @@ bool InstalldService::InitDir(const std::string &path)
 
 void InstalldService::Start()
 {
-    if (!Init()) {
+    if (!(Init())) {
         APP_LOGE("init fail");
+        return;
+    }
+    // add installd service to system ability manager.
+    // need to retry some times due to installd start faster than system ability manager.
+    if (!SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
+        APP_LOGE("installd service fail to register into system ability manager");
         return;
     }
     isReady_ = true;
@@ -114,7 +112,7 @@ void InstalldService::Stop()
     }
     // remove installd service from system ability manager.
     // since we can't handle the fail case, just ignore the result.
-    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
+    SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
 }
