@@ -33,6 +33,7 @@
 #include "preinstall_data_storage_rdb.h"
 #include "bundle_event_callback_death_recipient.h"
 #include "bundle_mgr_service.h"
+#include "bundle_permission_mgr.h"
 #include "bundle_status_callback_death_recipient.h"
 #include "bundle_util.h"
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -57,6 +58,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
+constexpr int32_t DATA_GROUP_INDEX_START = 1;
+constexpr int32_t UUID_LENGTH = 36;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 }
 BundleDataMgr::BundleDataMgr()
@@ -1037,6 +1040,7 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
         for (const Skill &skill : skillsPair->second) {
             if (isPrivateType || skill.Match(want)) {
                 AbilityInfo abilityinfo = abilityInfoPair.second;
+                AddAbilitySkillUrisInfo(flags, skill, abilityinfo);
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
                 }
@@ -1064,6 +1068,25 @@ void BundleDataMgr::GetMatchAbilityInfos(const Want &want, int32_t flags,
                 break;
             }
         }
+    }
+}
+
+void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, AbilityInfo &abilityInfo) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+        std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+        for (const SkillUri &uri : skill.uris) {
+            SkillUriForAbilityAndExtension skillinfo;
+            skillinfo.scheme = uri.scheme;
+            skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
+            skillinfo.path = uri.path;
+            skillinfo.pathStartWith = uri.pathStartWith;
+            skillinfo.pathRegex = uri.pathRegex;
+            skillinfo.type = uri.type;
+            skillUriTmp.emplace_back(skillinfo);
+        }
+        abilityInfo.skillUri = skillUriTmp;
     }
 }
 
@@ -2329,6 +2352,7 @@ void BundleDataMgr::InitStateTransferMap()
     transferStates_.emplace(InstallState::UPDATING_START, InstallState::UPDATING_SUCCESS);
     transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_START);
     transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_SUCCESS);
     transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::ROLL_BACK);
     transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::USER_CHANGE);
     transferStates_.emplace(InstallState::UPDATING_START, InstallState::USER_CHANGE);
@@ -3859,6 +3883,7 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
                 break;
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            AddExtensionSkillUrisInfo(flags, skill, extensionInfo);
             if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_APPLICATION) ==
                 GET_ABILITY_INFO_WITH_APPLICATION) {
                 info.GetApplicationInfo(
@@ -3876,6 +3901,26 @@ void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, cons
             infos.emplace_back(extensionInfo);
             break;
         }
+    }
+}
+
+void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
+    ExtensionAbilityInfo &extensionAbilityInfo) const
+{
+    if ((static_cast<uint32_t>(flags) & GET_ABILITY_INFO_WITH_SKILL_URI) == GET_ABILITY_INFO_WITH_SKILL_URI) {
+        std::vector<SkillUriForAbilityAndExtension> skillUriTmp;
+        for (const SkillUri &uri : skill.uris) {
+            SkillUriForAbilityAndExtension skillinfo;
+            skillinfo.scheme = uri.scheme;
+            skillinfo.host = uri.host;
+            skillinfo.port = uri.port;
+            skillinfo.path = uri.path;
+            skillinfo.pathStartWith = uri.pathStartWith;
+            skillinfo.pathRegex = uri.pathRegex;
+            skillinfo.type = uri.type;
+            skillUriTmp.emplace_back(skillinfo);
+        }
+        extensionAbilityInfo.skillUri = skillUriTmp;
     }
 }
 
@@ -5065,36 +5110,60 @@ bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t u
             infos.push_back(*dataGroupIter);
         }
     }
-    if (infos.empty()) {
-        APP_LOGE("userId: %{public}d is incorrect", userId);
-        return false;
-    }
     return true;
 }
 
-bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir) const
+bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir, int32_t userId) const
 {
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGE("bundleInfos_ data is empty");
-        return false;
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = AccountHelper::GetCurrentActiveUserId();
     }
-    int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    for (const auto &info : bundleInfos_) {
-        for (auto infoItem : info.second.GetDataGroupInfos()) {
-            auto dataGroupIter = std::find_if(std::begin(infoItem.second), std::end(infoItem.second),
-                [userId, dataGroupId](const DataGroupInfo &info) {
-                return info.dataGroupId == dataGroupId && info.userId == userId;
-            });
-            if (dataGroupIter != std::end(infoItem.second)) {
-                dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
-                        + Constants::DATA_GROUP_PATH + dataGroupIter->uuid;
-                return true;
+    std::string uuid;
+    if (BundlePermissionMgr::VerifyCallingUid()) {
+        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        for (const auto &item : bundleInfos_) {
+            const auto &dataGroupInfos = item.second.GetDataGroupInfos();
+            auto dataGroupInfosIter = dataGroupInfos.find(dataGroupId);
+            if (dataGroupInfosIter == dataGroupInfos.end()) {
+                continue;
+            }
+            auto dataInUserIter = std::find_if(std::begin(dataGroupInfosIter->second),
+                std::end(dataGroupInfosIter->second),
+                [userId](const DataGroupInfo &info) { return info.userId == userId; });
+            if (dataInUserIter != std::end(dataGroupInfosIter->second)) {
+                uuid = dataInUserIter->uuid;
+                break;
             }
         }
+    } else {
+        int32_t callingUid = IPCSkeleton::GetCallingUid();
+        InnerBundleInfo innerBundleInfo;
+        if (GetInnerBundleInfoByUid(callingUid, innerBundleInfo) != ERR_OK) {
+            APP_LOGE("verify uid failed, callingUid is %{public}d", callingUid);
+            return false;
+        }
+        const auto &dataGroupInfos = innerBundleInfo.GetDataGroupInfos();
+        auto dataGroupInfosIter = dataGroupInfos.find(dataGroupId);
+        if (dataGroupInfosIter == dataGroupInfos.end()) {
+            APP_LOGE("calling bundle do not have dataGroupId: %{public}s", dataGroupId.c_str());
+            return false;
+        }
+        auto dataGroupIter = std::find_if(std::begin(dataGroupInfosIter->second), std::end(dataGroupInfosIter->second),
+            [userId](const DataGroupInfo &info) {
+            return info.userId == userId;
+        });
+        if (dataGroupIter != std::end(dataGroupInfosIter->second)) {
+            uuid = dataGroupIter->uuid;
+        }
     }
-    APP_LOGE("dataGroupId: %{public}s is incorrect", dataGroupId.c_str());
-    return false;
+    if (uuid.empty()) {
+        APP_LOGE("get uuid by data group id failed");
+        return false;
+    }
+    dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
+        + Constants::DATA_GROUP_PATH + uuid;
+    APP_LOGD("groupDir: %{public}s", dir.c_str());
+    return true;
 }
 
 void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
@@ -5104,8 +5173,8 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     for (auto iter = dataGroupIndexMap.begin(); iter != dataGroupIndexMap.end(); iter++) {
         indexList.emplace(iter->second.first);
     }
-    int32_t index = 1;
-    for (int32_t i = 1; i < Constants::DATA_GROUP_UID_OFFSET; i++) {
+    int32_t index = DATA_GROUP_INDEX_START;
+    for (int32_t i = DATA_GROUP_INDEX_START; i < Constants::DATA_GROUP_UID_OFFSET; i++) {
         if (indexList.find(i) == indexList.end()) {
             index = i;
             break;
@@ -5118,11 +5187,10 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
 
     uuid_t uuidGenerate;
     uuid_generate(uuidGenerate);
-    char str[36];
+    char str[UUID_LENGTH];
     uuid_unparse(uuidGenerate, str);
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
-    return;
 }
 
 void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
@@ -5157,12 +5225,13 @@ void BundleDataMgr::GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
 void BundleDataMgr::GetDataGroupIndexMap(
     std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const
 {
-    for (const auto &info : bundleInfos_) {
-        for (auto infoItem : info.second.GetDataGroupInfos()) {
-            for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &info) {
-                int32_t index = info.uid - info.userId * Constants::BASE_USER_RANGE
+    for (const auto &bundleInfo : bundleInfos_) {
+        for (const auto &infoItem : bundleInfo.second.GetDataGroupInfos()) {
+            for_each(std::begin(infoItem.second), std::end(infoItem.second), [&](const DataGroupInfo &dataGroupInfo) {
+                int32_t index = dataGroupInfo.uid - dataGroupInfo.userId * Constants::BASE_USER_RANGE
                     - Constants::DATA_GROUP_UID_OFFSET;
-                dataGroupIndexMap[info.dataGroupId] = std::pair<int32_t, std::string>(index, info.uuid);
+                dataGroupIndexMap[dataGroupInfo.dataGroupId] =
+                    std::pair<int32_t, std::string>(index, dataGroupInfo.uuid);
             });
         }
     }
@@ -5203,6 +5272,7 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         }
         for (auto info : iter->second) {
             if (info.userId == userId && ++count > 1) {
+                APP_LOGD("dataGroupId: %{public}s is shared", dataGroupId.c_str());
                 return true;
             }
         }

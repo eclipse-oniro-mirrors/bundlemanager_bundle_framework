@@ -79,7 +79,7 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {

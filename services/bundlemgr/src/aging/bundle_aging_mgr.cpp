@@ -20,6 +20,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "display_power_mgr_client.h"
+#include "ffrt.h"
 #include "parameter.h"
 
 namespace OHOS {
@@ -121,7 +122,7 @@ void BundleAgingMgr::ScheduleLoopTask()
             }
             APP_LOGD("begin to run aging task");
             sharedPtr->Start(AgingTriggertype::PREIOD);
-            std::this_thread::sleep_for(std::chrono::milliseconds(sharedPtr->agingTimerInterval_));
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(sharedPtr->agingTimerInterval_));
         }
         APP_LOGD("aging task done");
     };

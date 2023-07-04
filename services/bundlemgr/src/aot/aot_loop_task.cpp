@@ -28,6 +28,7 @@ namespace AppExecFwk {
 namespace {
 const std::string AOT_INTERVAL = "bms.aot.idle.interval";
 constexpr uint32_t EIGHT_HOURS_MS = 8 * 60 * 60 * 1000;
+const std::string AOT_TASK = "AOTTask";
 }
 
 uint32_t AOTLoopTask::GetAOTIdleInterval()
@@ -45,16 +46,23 @@ uint32_t AOTLoopTask::GetAOTIdleInterval()
     return interval;
 }
 
-void AOTLoopTask::ScheduleLoopTask() const
+void AOTLoopTask::ScheduleLoopTask()
 {
     APP_LOGI("ScheduleLoopTask begin");
-    auto task = []() {
+    std::weak_ptr<AOTLoopTask> weakPtr = shared_from_this();
+    auto task = [weakPtr]() {
         while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(AOTLoopTask::GetAOTIdleInterval()));
+            auto sharedPtr = weakPtr.lock();
+            if (sharedPtr == nullptr) {
+                APP_LOGD("stop AOT task");
+                break;
+            }
             AOTHandler::GetInstance().HandleIdle();
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(AOTLoopTask::GetAOTIdleInterval()));
         }
+        APP_LOGD("AOT task done");
     };
-    ffrt::submit(task);
+    serialQueue_->ScheduleDelayTask(AOT_TASK, AOTLoopTask::GetAOTIdleInterval(), task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

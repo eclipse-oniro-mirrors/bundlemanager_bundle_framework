@@ -54,7 +54,7 @@ void InstalldService::OnStart()
     APP_LOGI("installd OnStart");
     Start();
     if (!Publish(hostImpl_)) {
-        APP_LOGI("Publish failed");
+        APP_LOGE("Publish failed");
     }
 }
 

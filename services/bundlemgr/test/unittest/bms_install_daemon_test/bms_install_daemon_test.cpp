@@ -320,7 +320,7 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0200, Function | SmallTest | Level0
     EXPECT_EQ(false, ready);
     InstalldClient::GetInstance()->ResetInstalldProxy();
     int result = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_DIR);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, 0);
 }
 
 /**

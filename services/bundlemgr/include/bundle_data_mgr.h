@@ -827,7 +827,8 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     bool QueryHagAbilityName(std::string &bundleName, std::string &abilityName);
     bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
-    bool GetGroupDir(const std::string &dataGroupId, std::string &dir) const;
+    bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
     void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
         std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
     void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
@@ -882,6 +883,7 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    void AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, AbilityInfo &abilityInfo) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -899,6 +901,7 @@ private:
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    void AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill, ExtensionAbilityInfo &extensionAbilityInfo) const;
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,

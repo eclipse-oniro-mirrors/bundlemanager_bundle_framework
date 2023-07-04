@@ -102,6 +102,20 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     process = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     uid = parcel.ReadInt32();
+    int32_t skillUriSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUriSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillUriSize, &skillUri);
+    for (auto i = 0; i < skillUriSize; i++) {
+        SkillUriForAbilityAndExtension stctUri;
+        stctUri.scheme = Str16ToStr8(parcel.ReadString16());
+        stctUri.host = Str16ToStr8(parcel.ReadString16());
+        stctUri.port = Str16ToStr8(parcel.ReadString16());
+        stctUri.path = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathStartWith = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathRegex = Str16ToStr8(parcel.ReadString16());
+        stctUri.type = Str16ToStr8(parcel.ReadString16());
+        skillUri.emplace_back(stctUri);
+    }
     return true;
 }
 
@@ -150,6 +164,16 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUri.size());
+    for (auto &uri : skillUri) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.scheme));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.host));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.port));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.path));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathStartWith));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
+    }
     return true;
 }
 

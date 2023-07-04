@@ -95,7 +95,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -233,7 +233,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -374,7 +374,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -518,7 +518,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -656,7 +656,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -796,7 +796,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -831,7 +831,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
 
   if (hisysevent_enable) {
     sources += [ "${services_path}/bundlemgr/src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
   if (storage_service_enable) {
@@ -915,8 +915,8 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -934,7 +934,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {

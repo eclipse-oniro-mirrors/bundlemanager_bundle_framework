@@ -1909,32 +1909,70 @@ public:
         return dataGroupInfos_;
     }
 
-    void AddDataGroupInfo(const std::string &dataGroupId, DataGroupInfo info)
+    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
     {
+        APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
+            dataGroupId.c_str(), info.ToString().c_str());
         auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
         if (dataGroupInfosItem == dataGroupInfos_.end()) {
+            APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
             dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
             return;
         }
-        for (auto iter = dataGroupInfosItem->second.begin(); iter != dataGroupInfosItem->second.end(); iter++) {
-            if (iter->userId == info.userId) {
-                *iter = info;
+
+        for (int32_t i = 0; i < dataGroupInfos_[dataGroupId].size(); i++) {
+            if (dataGroupInfos_[dataGroupId][i].userId == info.userId) {
                 return;
             }
         }
-        dataGroupInfosItem->second.emplace_back(info);
+
+        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
+        dataGroupInfos_[dataGroupId].emplace_back(info);
+    }
+
+    void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
+    {
+        auto iter = dataGroupInfos_.find(dataGroupId);
+        if (iter == dataGroupInfos_.end()) {
+            return;
+        }
+        for (auto dataGroupIter = iter->second.begin(); dataGroupIter != iter->second.end(); dataGroupIter++) {
+            if (dataGroupIter->userId == userId) {
+                iter->second.erase(dataGroupIter);
+                return;
+            }
+        }
     }
 
     void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
     {
-        dataGroupInfos_.clear();
+        std::set<int32_t> userIdList;
+        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+            for (const DataGroupInfo &info : item->second) {
+                userIdList.insert(info.userId);
+            }
+        }
+
+        std::vector<std::string> deletedGroupIds;
+        for (auto &item : dataGroupInfos_) {
+            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
+                for (int32_t userId : userIdList) {
+                    RemoveGroupInfos(userId, item.first);
+                }
+            }
+            if (item.second.empty()) {
+                deletedGroupIds.emplace_back(item.first);
+            }
+        }
+        for (std::string groupId : deletedGroupIds) {
+            dataGroupInfos_.erase(groupId);
+        }
         for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
             std::string dataGroupId = item->first;
             for (const DataGroupInfo &info : item->second) {
                 AddDataGroupInfo(dataGroupId, info);
             }
         }
-        return;
     }
 
     void SetAppDistributionType(const std::string &appDistributionType);
