@@ -65,9 +65,9 @@ const int32_t TIMEOUT = 10; // 10s
 class StatusReceiverImpl : public StatusReceiverHost {
 public:
     StatusReceiverImpl();
-    virtual ~StatusReceiverImpl() override;
-    virtual void OnStatusNotify(const int32_t progress) override;
-    virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override;
+    ~StatusReceiverImpl() override;
+    void OnStatusNotify(const int32_t progress) override;
+    void OnFinished(const int32_t resultCode, const std::string &resultMsg) override;
     int32_t GetResultCode() const;
 
 private:
