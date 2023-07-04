@@ -3544,10 +3544,9 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string bundleName;
-    int32_t userId = Constants::UNSPECIFIED_USERID;
     auto uid = IPCSkeleton::GetCallingUid();
     bundleName = std::to_string(uid);
-    userId = uid / Constants::BASE_USER_RANGE;
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
     napi_value nBundleInfo = nullptr;
     {
         std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
