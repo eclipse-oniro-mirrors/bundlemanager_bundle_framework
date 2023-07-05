@@ -71,6 +71,7 @@ const std::string BUNDLE_TEST3 = "bundleName3";
 const std::string BUNDLE_TEST4 = "bundleName4";
 const std::string BUNDLE_TEST5 = "bundleName5";
 const std::string MODULE_TEST = "moduleNameTest";
+const std::string ABILITY_NAME_TEST1 = ".Reading1";
 const int32_t BASE_TEST_UID = 65535;
 const int32_t TEST_UID = 20065535;
 const std::string BUNDLE_LABEL = "Hello, OHOS";
@@ -3409,7 +3410,6 @@ HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfo_0001, Function | SmallTe
     int32_t flags = 0;
     AbilityInfo abilityInfo;
     int32_t appIndex = 0;
-    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST5);
     bool res = GetBundleDataMgr()->ExplicitQueryAbilityInfo(
         want, flags, USERID, abilityInfo, appIndex);
     EXPECT_EQ(res, false);
@@ -3427,11 +3427,10 @@ HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfoV9_0300, Function | Small
     AbilityInfo abilityInfo;
     int32_t appIndex = -1;
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
-    want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST);
+    want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST1);
     ErrCode testRet = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
-    GetBundleDataMgr()->multiUserIdsSet_.clear();
 }
 
 /**

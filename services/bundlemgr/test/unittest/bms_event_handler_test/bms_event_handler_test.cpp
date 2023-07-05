@@ -779,7 +779,8 @@ HWTEST_F(BmsEventHandlerTest, ProcessSystemSharedBundleInstall_0100, Function | 
     std::string bundleDir = CALL_MOCK_BUNDLE_DIR_FAILED;
     Constants::AppType appType = Constants::AppType::SYSTEM_APP;
     handler->ProcessSystemSharedBundleInstall(bundleDir, appType);
-    EXPECT_TRUE(bundleDir.compare(CALL_MOCK_BUNDLE_DIR_FAILED) == 0);
+    auto res = bundleDir.compare(CALL_MOCK_BUNDLE_DIR_FAILED) == 0;
+    EXPECT_TRUE(res);
 }
 
 /**
