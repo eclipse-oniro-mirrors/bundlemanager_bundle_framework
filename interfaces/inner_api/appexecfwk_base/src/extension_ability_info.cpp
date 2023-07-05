@@ -50,6 +50,31 @@ const std::string PROCESS = "process";
 const std::string COMPILE_MODE = "compileMode";
 const std::string UID = "uid";
 const size_t ABILITY_CAPACITY = 10240; // 10K
+
+const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
+    { "form", ExtensionAbilityType::FORM },
+    { "workScheduler", ExtensionAbilityType::WORK_SCHEDULER },
+    { "inputMethod", ExtensionAbilityType::INPUTMETHOD },
+    { "service", ExtensionAbilityType::SERVICE },
+    { "accessibility", ExtensionAbilityType::ACCESSIBILITY },
+    { "dataShare", ExtensionAbilityType::DATASHARE },
+    { "fileShare", ExtensionAbilityType::FILESHARE },
+    { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
+    { "wallpaper", ExtensionAbilityType::WALLPAPER },
+    { "backup", ExtensionAbilityType::BACKUP },
+    { "window", ExtensionAbilityType::WINDOW },
+    { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
+    { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
+    { "thumbnail", ExtensionAbilityType::THUMBNAIL },
+    { "preview", ExtensionAbilityType::PREVIEW },
+    { "print", ExtensionAbilityType::PRINT },
+    { "ui", ExtensionAbilityType::UI },
+    { "push", ExtensionAbilityType::PUSH },
+    { "driver", ExtensionAbilityType::DRIVER },
+    { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
+    { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
+    { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH }
+};
 }; // namespace
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -408,6 +433,26 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
     }
+}
+
+ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
+{
+    if (EXTENSION_TYPE_MAP.find(type) != EXTENSION_TYPE_MAP.end()) {
+        return EXTENSION_TYPE_MAP.at(type);
+    }
+
+    return ExtensionAbilityType::UNSPECIFIED;
+}
+
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
+{
+    for (const auto &[key, val] : EXTENSION_TYPE_MAP) {
+        if (val == type) {
+            return key;
+        }
+    }
+
+    return "Unspecified";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

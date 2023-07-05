@@ -114,6 +114,9 @@ struct ExtensionAbilityInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
 };
+
+ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H
