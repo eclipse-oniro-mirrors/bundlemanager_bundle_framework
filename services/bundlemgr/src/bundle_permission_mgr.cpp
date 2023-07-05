@@ -170,40 +170,19 @@ bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(Security::AccessToke
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName)
 {
     APP_LOGD("UpdateDefineAndRequestPermissions bundleName = %{public}s", newInfo.GetBundleName().c_str());
-    std::vector<AccessToken::PermissionDef> defPermList = GetPermissionDefList(newInfo);
     std::vector<AccessToken::PermissionDef> newDefPermList;
-    if (!GetNewPermissionDefList(tokenIdEx.tokenIdExStruct.tokenID, defPermList, newDefPermList)) {
+    if (!InnerUpdateDefinePermission(tokenIdEx.tokenIdExStruct.tokenID, oldInfo, newInfo, newDefPermList)) {
+        APP_LOGE("UpdateDefineAndRequestPermissions InnerUpdateDefinePermission failed");
         return false;
     }
-    std::vector<AccessToken::PermissionStateFull> reqPermissionStateList = GetPermissionStateFullList(newInfo);
+
     std::vector<AccessToken::PermissionStateFull> newPermissionStateList;
-    if (!GetNewPermissionStateFull(tokenIdEx.tokenIdExStruct.tokenID, reqPermissionStateList,
+    if (!InnerUpdateRequestPermission(tokenIdEx.tokenIdExStruct.tokenID, oldInfo, newInfo,
         newPermissionStateList, newRequestPermName)) {
+        APP_LOGE("UpdateDefineAndRequestPermissions InnerUpdateRequestPermission failed");
         return false;
     }
-    // delete old definePermission
-    std::vector<std::string> needDeleteDefinePermission = GetNeedDeleteDefinePermissionName(oldInfo, newInfo);
-    for (const auto &name : needDeleteDefinePermission) {
-        auto iter = std::find_if(newDefPermList.begin(), newDefPermList.end(), [&name](const auto &defPerm) {
-            return defPerm.permissionName == name;
-        });
-        if (iter != newDefPermList.end()) {
-            APP_LOGD("delete definePermission %{public}s", name.c_str());
-            newDefPermList.erase(iter);
-        }
-    }
-    // delete old requestPermission
-    std::vector<std::string> needDeleteRequestPermission = GetNeedDeleteRequestPermissionName(oldInfo, newInfo);
-    for (const auto &name : needDeleteRequestPermission) {
-        auto iter = std::find_if(newPermissionStateList.begin(), newPermissionStateList.end(),
-            [&name](const auto &defPerm) {
-            return defPerm.permissionName == name;
-        });
-        if (iter != newPermissionStateList.end()) {
-            APP_LOGD("delete requestPermission %{public}s", name.c_str());
-            newPermissionStateList.erase(iter);
-        }
-    }
+
     AccessToken::HapPolicyParams hapPolicy;
     std::string apl = newInfo.GetAppPrivilegeLevel();
     APP_LOGD("newDefPermList size:%{public}zu, newPermissionStateList size:%{public}zu, isSystemApp: %{public}d",
@@ -291,6 +270,16 @@ bool BundlePermissionMgr::GetNewPermissionStateFull(Security::AccessToken::Acces
         APP_LOGE("BundlePermissionMgr::GetNewPermissionStateFull failed");
         return false;
     }
+    // add old permission which need grant again
+    for (const auto &state : newPermissionState) {
+        if ((state.grantStatus[0] == AccessToken::PermissionState::PERMISSION_DENIED) &&
+            (state.grantFlags[0] == AccessToken::PermissionFlag::PERMISSION_DEFAULT_FLAG)) {
+            APP_LOGD("BundlePermissionMgr::GetNewPermissionStateFull add old permission:%{public}s",
+                state.permissionName.c_str());
+            newRequestPermName.emplace_back(state.permissionName);
+        }
+    }
+
     for (const auto &perm : permissionState) {
         if (std::find_if(newPermissionState.begin(), newPermissionState.end(), [&perm](const auto &newPerm) {
             return newPerm.permissionName == perm.permissionName;
@@ -790,6 +779,63 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
     }
     std::string bundleName = want.GetElement().GetBundleName();
     return bundleName == callingBundleName;
+}
+
+bool BundlePermissionMgr::InnerUpdateDefinePermission(
+    const Security::AccessToken::AccessTokenID tokenId,
+    const InnerBundleInfo &oldInfo,
+    const InnerBundleInfo &newInfo,
+    std::vector<Security::AccessToken::PermissionDef> &newDefPermList)
+{
+    std::vector<AccessToken::PermissionDef> defPermList = GetPermissionDefList(newInfo);
+    if (!GetNewPermissionDefList(tokenId, defPermList, newDefPermList)) {
+        return false;
+    }
+
+    // delete old definePermission
+    std::vector<std::string> needDeleteDefinePermission = GetNeedDeleteDefinePermissionName(oldInfo, newInfo);
+    for (const auto &name : needDeleteDefinePermission) {
+        auto iter = std::find_if(newDefPermList.begin(), newDefPermList.end(), [&name](const auto &defPerm) {
+            return defPerm.permissionName == name;
+        });
+        if (iter != newDefPermList.end()) {
+            APP_LOGD("delete definePermission %{public}s", name.c_str());
+            newDefPermList.erase(iter);
+        }
+    }
+    return true;
+}
+
+bool BundlePermissionMgr::InnerUpdateRequestPermission(
+    const Security::AccessToken::AccessTokenID tokenId,
+    const InnerBundleInfo &oldInfo,
+    const InnerBundleInfo &newInfo,
+    std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
+    std::vector<std::string> &newRequestPermName)
+{
+    // get access token permission
+    std::vector<AccessToken::PermissionStateFull> reqPermissionStateList = GetPermissionStateFullList(newInfo);
+    if (!GetNewPermissionStateFull(tokenId, reqPermissionStateList,
+        newPermissionStateList, newRequestPermName)) {
+        return false;
+    }
+    // delete old requestPermission
+    std::vector<std::string> needDeleteRequestPermission = GetNeedDeleteRequestPermissionName(oldInfo, newInfo);
+    for (const auto &name : needDeleteRequestPermission) {
+        auto iter = std::find_if(newPermissionStateList.begin(), newPermissionStateList.end(),
+            [&name](const auto &defPerm) {
+            return defPerm.permissionName == name;
+        });
+        if (iter != newPermissionStateList.end()) {
+            APP_LOGD("delete requestPermission %{public}s", name.c_str());
+            newPermissionStateList.erase(iter);
+        }
+        auto deleteIter = std::find(newRequestPermName.begin(), newRequestPermName.end(), name);
+        if (deleteIter != newRequestPermName.begin()) {
+            newRequestPermName.erase(deleteIter);
+        }
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
