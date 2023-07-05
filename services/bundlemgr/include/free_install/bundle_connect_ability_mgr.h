@@ -258,6 +258,7 @@ private:
     sptr<AppExecFwk::IEcologicalRuleManager> CheckEcologicalRuleMgr();
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
+    bool CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const;
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
