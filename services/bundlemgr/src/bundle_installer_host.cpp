@@ -23,6 +23,8 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
+#include "ffrt.h"
+#include "installd_client.h"
 #include "ipc_skeleton.h"
 #include "ipc_types.h"
 #include "string_ex.h"
@@ -59,6 +61,15 @@ int BundleInstallerHost::OnRemoteRequest(
 {
     BundleMemoryGuard memoryGuard;
     APP_LOGD("bundle installer host onReceived message, the message code is %{public}u", code);
+    if (!InstalldClient::GetInstance()->IsInstalldReady()) {
+        APP_LOGI("start installd service in advance");
+        auto task = [] {
+            BundleMemoryGuard memoryGuard;
+            InstalldClient::GetInstance()->StartInstalldService();
+        };
+        ffrt::submit(task);
+    }
+
     std::u16string descripter = GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {

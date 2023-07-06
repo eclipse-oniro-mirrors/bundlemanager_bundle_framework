@@ -163,7 +163,12 @@ public:
     ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
 
     void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
+
     void OnLoadSystemAbilityFail();
+
+    bool IsInstalldReady();
+
+    bool StartInstalldService();
 
 private:
     /**

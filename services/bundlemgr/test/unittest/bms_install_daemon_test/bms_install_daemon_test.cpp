@@ -665,7 +665,7 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0700, Function | SmallTest | Level
     FileStat fileStat;
     ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->GetFileStat("data/test", fileStat);
+    ret = InstalldClient::GetInstance()->GetFileStat("data/test/wrongpath", fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 
