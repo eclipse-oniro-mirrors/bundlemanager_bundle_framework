@@ -5237,28 +5237,6 @@ void BundleDataMgr::GetDataGroupIndexMap(
     }
 }
 
-bool BundleDataMgr::IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const
-{
-    APP_LOGD("IsExistDataGroupId, dataGroupId: %{public}s", dataGroupId.c_str());
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    for (const auto &info : bundleInfos_) {
-        auto dataGroupInfos = info.second.GetDataGroupInfos();
-        auto iter = dataGroupInfos.find(dataGroupId);
-        if (iter == dataGroupInfos.end()) {
-            continue;
-        }
-        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
-            [userId](DataGroupInfo info) {return info.userId == userId; });
-        if (dataGroupIter != std::end(iter->second)) {
-            APP_LOGD("dataGroupId: %{public}s is existed in bundle: %{public}s.",
-                dataGroupId.c_str(), info.second.GetBundleName().c_str());
-            return true;
-        }
-    }
-    APP_LOGD("dataGroupId: %{public}s is not existed.", dataGroupId.c_str());
-    return false;
-}
-
 bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const
 {
     APP_LOGD("IsShareDataGroupId, dataGroupId is %{public}s", dataGroupId.c_str());

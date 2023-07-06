@@ -1920,10 +1920,11 @@ public:
             return;
         }
 
-        for (int32_t i = 0; i < dataGroupInfos_[dataGroupId].size(); i++) {
-            if (dataGroupInfos_[dataGroupId][i].userId == info.userId) {
-                return;
-            }
+        int32_t userId = info.userId;
+        auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
+            [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
+        if (iter != std::end(dataGroupInfos_[dataGroupId])) {
+            return;
         }
 
         APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
