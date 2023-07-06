@@ -140,6 +140,7 @@ const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
 const std::string EXT_NAME = "extName";
 const std::string MIME_TYPE = "application/x-maker";
 const std::string EMPTY_STRING = "";
+const std::string TEST_DATA_GROUP_ID = "1";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -3361,5 +3362,72 @@ HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0200, TestSize.Level1)
 
     ret = BundleUtil::DeleteDir(moduleDir);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0001
+ * @tc.name: QueryDataGroupInfos
+ * @tc.desc: 1. QueryDataGroupInfos
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<DataGroupInfo> infos;
+    auto res = bundleMgrProxy->QueryDataGroupInfos(
+        EMPTY_STRING, USERID, infos);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0002
+ * @tc.name: QueryDataGroupInfos
+ * @tc.desc: 1. QueryDataGroupInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0002, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<DataGroupInfo> infos;
+    auto res = bundleMgrProxy->QueryDataGroupInfos(
+        BUNDLE_NAME_TEST, USERID, infos);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(infos.size(), 0);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetGroupDir_0001
+ * @tc.name: GetGroupDir
+ * @tc.desc: 1. GetGroupDir
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string dir;
+    auto res = bundleMgrProxy->GetGroupDir(
+        EMPTY_STRING, dir);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(dir, EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetGroupDir_0002
+ * @tc.name: GetGroupDir
+ * @tc.desc: 1. GetGroupDir
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0002, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string dir;
+    auto res = bundleMgrProxy->GetGroupDir(
+        TEST_DATA_GROUP_ID, dir);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(dir, EMPTY_STRING);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }
