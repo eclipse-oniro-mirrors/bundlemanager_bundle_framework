@@ -94,8 +94,12 @@ private:
     ErrCode ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
         std::vector<std::string> &bundlePaths, std::string &signatureFilePath);
     ErrCode SaveHspToRealInstallationDir(const std::string &bundlePath, const std::string &moduleDir,
-        const std::string &moduleName, const std::string &realHspPath, const std::string &versionDir);
+        const std::string &moduleName, const std::string &realHspPath);
     std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
+    ErrCode MoveSoToRealPath(const std::string &moduleName, const std::string &versionDir);
+    ErrCode ProcessNativeLibrary(const std::string &bundlePath,
+        const std::string &moduleDir, const std::string &moduleName, const std::string &versionDir,
+        InnerBundleInfo &newInfo);
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
