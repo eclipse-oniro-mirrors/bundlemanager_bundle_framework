@@ -158,6 +158,10 @@ ohos_unittest("BmsExtensionDataMgrTest") {
   deps = []
   deps += bundle_install_deps
 
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
+
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",

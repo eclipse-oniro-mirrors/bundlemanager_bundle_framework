@@ -65,6 +65,10 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
   ]
   deps += bundle_install_deps
 
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_ACCESSTOKENID" ]
+  }
+
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
