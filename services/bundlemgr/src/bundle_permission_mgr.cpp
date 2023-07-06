@@ -831,7 +831,7 @@ bool BundlePermissionMgr::InnerUpdateRequestPermission(
             newPermissionStateList.erase(iter);
         }
         auto deleteIter = std::find(newRequestPermName.begin(), newRequestPermName.end(), name);
-        if (deleteIter != newRequestPermName.begin()) {
+        if (deleteIter != newRequestPermName.end()) {
             newRequestPermName.erase(deleteIter);
         }
     }
