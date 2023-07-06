@@ -420,6 +420,50 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0800, Function | Sm
 }
 
 /**
+ * @tc.number: CreateSharedBundleStream_0900
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSignatureFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0900, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreateSignatureFileStream(HSPNAME, HSPNAME);
+    EXPECT_EQ(id, fd);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_1000
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSignatureFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1000, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreateSignatureFileStream("", HSPNAME);
+    EXPECT_EQ(id, fd);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_1100
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreateSignatureFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1100, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreateSignatureFileStream(HSPNAME, "");
+    EXPECT_EQ(id, fd);
+}
+/**
  * @tc.number: OnRemoteRequestTest_0100
  * @tc.name: test true function of OnRemoteRequest
  * @tc.desc: 1. Obtain installerProxy

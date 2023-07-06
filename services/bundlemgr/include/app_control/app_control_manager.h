@@ -67,9 +67,15 @@ public:
     ErrCode DeleteDisposedStatus(const std::string &appId, int32_t userId);
 
     ErrCode GetDisposedStatus(const std::string &appId, Want& want, int32_t userId);
+
+    bool IsAppInstallControlEnabled() const;
+
+    void SetAppInstallControlStatus();
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
 
+    bool isAppInstallControlEnabled_ = false;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
 };

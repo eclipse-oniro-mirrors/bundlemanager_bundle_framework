@@ -188,7 +188,8 @@ const nlohmann::json INSTALL_LIST3 = R"(
             "allowMissionNotCleared":true,
             "allowAppUsePrivilegeExtension":true,
             "allowFormVisibleNotify":true,
-            "allowAppShareLibrary":true
+            "allowAppShareLibrary":true,
+            "resourceApply":[0, 1]
         }]
 }
 )"_json;
@@ -3314,26 +3315,6 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
-}
-
-/**
- * @tc.number: BundleUserMgrHostImpl_0002
- * Function: BundleUserMgrHostImpl
- * @tc.name: test BundleUserMgrHostImpl
- * @tc.desc: test OnCreateNewUser and RemoveUser
- */
-HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest | Level0)
-{
-    auto multiUserIdsSet = GetBundleDataMgr()->multiUserIdsSet_;
-    auto iterator = GetBundleDataMgr()->multiUserIdsSet_.find(999);
-    if (iterator != GetBundleDataMgr()->multiUserIdsSet_.end()) {
-        GetBundleDataMgr()->multiUserIdsSet_.erase(iterator);
-    }
-    bundleUserMgrHostImpl_->OnCreateNewUser(999);
-    bundleUserMgrHostImpl_->RemoveUser(999);
-    bool res = GetBundleDataMgr()->HasUserId(999);
-    EXPECT_EQ(res, false);
-    GetBundleDataMgr()->multiUserIdsSet_ = multiUserIdsSet;
 }
 
 /**

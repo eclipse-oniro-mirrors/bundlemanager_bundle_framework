@@ -29,6 +29,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "data_group_info.h"
 #include "../app_control/app_control_interface.h"
 #include "../default_app/default_app_interface.h"
 #include "../overlay/overlay_manager_interface.h"
@@ -1188,6 +1189,16 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos)
+    {
+        return false;
+    }
+
+    virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir)
+    {
+        return false;
     }
 };
 }  // namespace AppExecFwk

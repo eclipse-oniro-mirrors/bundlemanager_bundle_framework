@@ -58,6 +58,7 @@ config("bundlemgr_parse_config") {
     "//third_party/json/include",
     "//third_party/zlib/contrib/minizip",
     "//third_party/zlib",
+    "//third_party/e2fsprogs/e2fsprogs/lib/uuid",
   ]
 }
 
@@ -78,6 +79,7 @@ ohos_source_set("parser_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${extension_path}:bundlemgr_extension",
+    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/zlib:shared_libz",
   ]
 
@@ -215,6 +217,7 @@ ohos_shared_library("libbms") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${extension_path}:bundlemgr_extension",
+    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/zlib:shared_libz",
   ]
 
@@ -364,11 +367,16 @@ ohos_shared_library("libbms") {
   part_name = "bundle_framework"
 }
 
-ohos_executable("installs") {
+ohos_shared_library("installs") {
   sources = [
     "src/bundle_extractor.cpp",
-    "src/installd/installd_main.cpp",
     "src/system_ability_helper.cpp",
+  ]
+
+  use_exceptions = true
+  visibility = [
+    "//base/*",
+    "//foundation/*",
   ]
 
   sources += install_daemon_sources
@@ -386,9 +394,11 @@ ohos_executable("installs") {
   ]
 
   external_deps = [
+    "ffrt:libffrt",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
@@ -398,7 +408,7 @@ ohos_executable("installs") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 

@@ -29,7 +29,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -43,6 +43,8 @@ ohos_unittest("BmsBundleQuickFixTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   configs = [ "${services_path}/bundlemgr/test:bundlemgr_test_config" ]
   cflags = []
   if (target_cpu == "arm") {
@@ -75,7 +77,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
     defines += [ "CONFIG_POLOCY_ENABLE" ]
   }
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -133,6 +135,18 @@ ohos_unittest("BmsBundleQuickFixTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
     "${services_path}/bundlemgr/test/mock/src/quick_fix_manager_rdb.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 group("unittest") {

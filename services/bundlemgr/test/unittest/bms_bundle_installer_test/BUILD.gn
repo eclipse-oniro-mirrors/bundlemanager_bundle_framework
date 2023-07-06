@@ -27,7 +27,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -38,6 +38,8 @@ ohos_unittest("BmsBundleInstallerTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_bundle_installer_test.cpp" ]
 
@@ -108,7 +110,7 @@ ohos_unittest("BmsBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (account_enable) {
@@ -178,7 +180,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -189,6 +191,8 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_multiple_installer_test.cpp" ]
 
@@ -252,7 +256,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -307,6 +311,18 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
@@ -319,10 +335,12 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -366,7 +384,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -420,6 +438,18 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallCheckerTest") {
@@ -429,6 +459,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -468,7 +500,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -522,6 +554,18 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {
@@ -534,6 +578,8 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -576,7 +622,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -630,6 +676,18 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 ohos_unittest("BmsSystemBundleInstallerTest") {
@@ -642,6 +700,8 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -688,7 +748,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
   }
 
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 
@@ -742,6 +802,18 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (bundle_framework_app_control) {
+    defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
+    sources += [
+      "${services_path}/bundlemgr/src/app_control/app_control_manager.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_host_impl.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_control_manager_rdb.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_event_subscriber.cpp",
+      "${services_path}/bundlemgr/src/app_control/app_jump_interceptor_manager_rdb.cpp",
+    ]
+    include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
+    external_deps += [ "c_utils:utils" ]
+  }
 }
 
 group("unittest") {

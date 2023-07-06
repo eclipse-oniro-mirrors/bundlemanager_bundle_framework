@@ -59,29 +59,6 @@ const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_SCREEN_FETCH, ProfileReader::VALUE_SCREEN_FETCH}
 };
 
-const std::vector<std::string> EXTENSION_TYPE_SET = {
-    "form",
-    "workScheduler",
-    "inputMethod",
-    "service",
-    "accessibility",
-    "dataShare",
-    "fileShare",
-    "staticSubscriber",
-    "wallpaper",
-    "backup",
-    "window",
-    "enterpriseAdmin",
-    "fileAccess",
-    "thumbnail",
-    "preview",
-    "print",
-    "",
-    "push",
-    "driver",
-    "appAccountAuthorization"
-};
-
 const std::set<std::string> GRANT_MODE_SET = {
     "system_grant",
     "user_grant"
@@ -252,6 +229,7 @@ struct Module {
     std::string targetModule;
     int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
+    std::vector<ProxyData> proxyData;
     std::string buildHash;
     std::string isolationMode;
     bool compressNativeLibs = true;
@@ -1338,6 +1316,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATA,
+        module.proxyData,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_BUILD_HASH,
@@ -1914,32 +1900,6 @@ bool ToAbilityInfo(
     return true;
 }
 
-ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
-{
-    if (type == "ui") {
-        return ExtensionAbilityType::UI;
-    }
-
-    for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (Profile::EXTENSION_TYPE_SET[index] == type) {
-            return static_cast<ExtensionAbilityType>(index);
-        }
-    }
-
-    return ExtensionAbilityType::UNSPECIFIED;
-}
-
-std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
-{
-    for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (index == static_cast<size_t>(type)) {
-            return Profile::EXTENSION_TYPE_SET[index];
-        }
-    }
-
-    return "Unspecified";
-}
-
 bool ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
@@ -2058,7 +2018,11 @@ bool ToInnerModuleInfo(
     } else {
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
-    innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    if (moduleJson.module.proxyDatas.empty()) {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyData;
+    } else {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    }
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;

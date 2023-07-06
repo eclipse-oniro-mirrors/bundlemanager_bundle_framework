@@ -50,6 +50,31 @@ const std::string PROCESS = "process";
 const std::string COMPILE_MODE = "compileMode";
 const std::string UID = "uid";
 const size_t ABILITY_CAPACITY = 10240; // 10K
+
+const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP = {
+    { "form", ExtensionAbilityType::FORM },
+    { "workScheduler", ExtensionAbilityType::WORK_SCHEDULER },
+    { "inputMethod", ExtensionAbilityType::INPUTMETHOD },
+    { "service", ExtensionAbilityType::SERVICE },
+    { "accessibility", ExtensionAbilityType::ACCESSIBILITY },
+    { "dataShare", ExtensionAbilityType::DATASHARE },
+    { "fileShare", ExtensionAbilityType::FILESHARE },
+    { "staticSubscriber", ExtensionAbilityType::STATICSUBSCRIBER },
+    { "wallpaper", ExtensionAbilityType::WALLPAPER },
+    { "backup", ExtensionAbilityType::BACKUP },
+    { "window", ExtensionAbilityType::WINDOW },
+    { "enterpriseAdmin", ExtensionAbilityType::ENTERPRISE_ADMIN },
+    { "fileAccess", ExtensionAbilityType::FILEACCESS_EXTENSION },
+    { "thumbnail", ExtensionAbilityType::THUMBNAIL },
+    { "preview", ExtensionAbilityType::PREVIEW },
+    { "print", ExtensionAbilityType::PRINT },
+    { "push", ExtensionAbilityType::PUSH },
+    { "driver", ExtensionAbilityType::DRIVER },
+    { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
+    { "ui", ExtensionAbilityType::UI },
+    { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
+    { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH }
+};
 }; // namespace
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -102,6 +127,20 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     process = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     uid = parcel.ReadInt32();
+    int32_t skillUriSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUriSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillUriSize, &skillUri);
+    for (auto i = 0; i < skillUriSize; i++) {
+        SkillUriForAbilityAndExtension stctUri;
+        stctUri.scheme = Str16ToStr8(parcel.ReadString16());
+        stctUri.host = Str16ToStr8(parcel.ReadString16());
+        stctUri.port = Str16ToStr8(parcel.ReadString16());
+        stctUri.path = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathStartWith = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathRegex = Str16ToStr8(parcel.ReadString16());
+        stctUri.type = Str16ToStr8(parcel.ReadString16());
+        skillUri.emplace_back(stctUri);
+    }
     return true;
 }
 
@@ -150,6 +189,16 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(compileMode));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUri.size());
+    for (auto &uri : skillUri) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.scheme));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.host));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.port));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.path));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathStartWith));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
+    }
     return true;
 }
 
@@ -384,6 +433,26 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
     if (parseResult != ERR_OK) {
         APP_LOGE("ExtensionAbilityInfo from_json error, error code : %{public}d", parseResult);
     }
+}
+
+ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
+{
+    if (EXTENSION_TYPE_MAP.find(type) != EXTENSION_TYPE_MAP.end()) {
+        return EXTENSION_TYPE_MAP.at(type);
+    }
+
+    return ExtensionAbilityType::UNSPECIFIED;
+}
+
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
+{
+    for (const auto &[key, val] : EXTENSION_TYPE_MAP) {
+        if (val == type) {
+            return key;
+        }
+    }
+
+    return "Unspecified";
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

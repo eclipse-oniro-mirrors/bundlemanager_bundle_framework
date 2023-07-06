@@ -75,5 +75,15 @@ int SystemAbilityHelper::UninstallApp(const std::string &bundleName, int32_t uid
     return 0;
 #endif
 }
+
+bool SystemAbilityHelper::UnloadSystemAbility(const int32_t systemAbilityId)
+{
+    sptr<ISystemAbilityManager> systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityMgr != nullptr && (systemAbilityMgr->UnloadSystemAbility(systemAbilityId) == 0)) {
+        return true;
+    }
+    APP_LOGE("fail to unload %{public}d from system ability manager", systemAbilityId);
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

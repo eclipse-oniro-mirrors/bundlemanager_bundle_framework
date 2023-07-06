@@ -488,18 +488,4 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0090, Function |
     auto res = impl.GetDisposedStatus("", want);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
-
-/**
- * @tc.number: AppControlManagerHostImpl_0100
- * @tc.name: test CheckAppInstallControl by InnerBundleInfo
- * @tc.desc: 1.CheckAppInstallControl test
- */
-HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0100, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    seteuid(1000);
-
-    bool res = info.CheckAppInstallControl(APPID, USERID);
-    EXPECT_EQ(res, true);
-}
 } // OHOS

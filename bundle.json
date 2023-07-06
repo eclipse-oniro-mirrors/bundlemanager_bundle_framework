@@ -65,7 +65,7 @@
                 "safwk",
                 "resource_management",
                 "samgr",
-                "selinux",
+                "selinux_adapter",
                 "syscap_codec",
                 "storage_service",
                 "window_manager",
@@ -77,7 +77,8 @@
                 "libuv",
                 "node",
                 "zlib",
-                "jsoncpp"
+                "jsoncpp",
+                "e2fsprogs"
             ]
         },
         "build": {

@@ -34,8 +34,6 @@ namespace AppExecFwk {
 using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
 using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
 namespace {
-const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
@@ -103,8 +101,20 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
     const TargetAbilityInfo &targetAbilityInfo)
 {
     APP_LOGD("ProcessPreloadRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
@@ -261,21 +271,25 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("SilentInstall");
-    ErmsCallerInfo callerInfo;
-    GetEcologicalCallerInfo(want, callerInfo, userId);
-    ExperienceRule rule;
-    bool ret = CheckEcologicalRule(want, callerInfo, rule);
-    if (!ret) {
-        APP_LOGE("check ecological rule failed, skip.");
-    } else if (rule.isAllow) {
-        APP_LOGI("ecological rule is allow, keep going.");
-    } else if (rule.replaceWant != nullptr) {
-        APP_LOGI("ecological rule is replace want.");
-        targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
-    } else {
-        APP_LOGW("ecological rule is not allowed, return.");
-        return false;
+    if (!CheckIsOnDemandLoad(targetAbilityInfo)) {
+        ErmsCallerInfo callerInfo;
+        GetEcologicalCallerInfo(want, callerInfo, userId);
+        ExperienceRule rule;
+        bool ret = CheckEcologicalRule(want, callerInfo, rule);
+        if (!ret) {
+            APP_LOGE("check ecological rule failed, skip.");
+        } else if (rule.isAllow) {
+            APP_LOGI("ecological rule is allow, keep going.");
+        } else if (rule.replaceWant != nullptr) {
+            APP_LOGI("ecological rule is replace want.");
+            targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT,
+                rule.replaceWant->ToUri());
+        } else {
+            APP_LOGW("ecological rule is not allowed, return.");
+            return false;
+        }
     }
+
     auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
@@ -312,8 +326,20 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     const Want &want, int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     APP_LOGI("SendRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return false;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         if (freeInstallParams.serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL) {
@@ -1116,6 +1142,34 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
             APP_LOGD("the caller type is invalid type");
             break;
     }
+}
+
+bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const
+{
+    if (targetAbilityInfo.targetInfo.callingBundleNames.empty()) {
+        APP_LOGD("callingBundleNames in targetAbilityInfo is empty.");
+        return false;
+    }
+    if (targetAbilityInfo.targetInfo.callingBundleNames[0] != targetAbilityInfo.targetInfo.bundleName) {
+        APP_LOGD("callingBundleName is different with target bundleName.");
+        return false;
+    }
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bms == nullptr) {
+        APP_LOGE("BundleMgrService GetInstance failed");
+        return false;
+    }
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    if (bundleDataMgr_->GetBundleInfo(
+        targetAbilityInfo.targetInfo.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::ANY_USERID)) {
+        return bundleInfo.applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

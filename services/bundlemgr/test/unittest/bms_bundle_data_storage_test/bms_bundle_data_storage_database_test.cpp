@@ -388,7 +388,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
         "userDataClearable":true,
         "vendor":"example",
         "versionCode":1000000,
-        "versionName":"1.0.0"
+        "versionName":"1.0.0",
+        "resourcesApply":[]
     },
     "baseBundleInfo":{
         "abilityInfos":[],
@@ -501,7 +502,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "userDataClearable":true,
             "vendor":"",
             "versionCode":0,
-            "versionName":""
+            "versionName":"",
+            "resourcesApply":[]
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -743,7 +745,7 @@ protected:
     nlohmann::json innerBundleInfoJson_ = R"(
         {
             "allowedAcls": [],
-            "appFeature": "ohos_system_app",
+            "appFeature": "hos_system_app",
             "appType": 0,
             "baseAbilityInfos": {
                 "com.ohos.launcher.com.ohos.launcher.com.ohos.launcher.MainAbility": {
@@ -1104,7 +1106,8 @@ protected:
                 "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0,
-                "overlayState": 0
+                "overlayState": 0,
+                "resourcesApply":[]
             },
             "baseBundleInfo": {
                 "abilityInfos": [

@@ -49,6 +49,9 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
 const std::string HSP_BUNDLE_NAME = "com.example.liba";
 const std::string HSP_FILE_PATH1 = "/data/test/resource/bms/sharelibrary/libA_v10000.hsp";
+const std::string TEST_MODULE_NAME = "testModuleName";
+const std::string TEST_MODULE_NAME_TMP = "testModuleName_tmp/";
+const std::string PATH_SEPARATOR = "/";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -936,6 +939,44 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Fun
     inBundlePaths[0] = "test.sig";
     ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0900
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0900, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    auto ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, "");
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1000
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1000, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string nativeLibPath = HAP_FILE_PATH1;
+    std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
+    EXPECT_EQ(ret, TEST_MODULE_NAME_TMP + HAP_FILE_PATH1 + PATH_SEPARATOR);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1100
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1100, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string nativeLibPath = "path/testModuleName";
+    std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
+    EXPECT_EQ(ret, nativeLibPath + "_tmp/");
 }
 
 /**

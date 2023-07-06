@@ -793,6 +793,9 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType) override;
     virtual ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType) override;
+    virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
+        std::vector<DataGroupInfo> &infos) override;
+    virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
@@ -822,6 +825,7 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
+    int32_t GetResponseUserIdByBundleName(const std::string &appName, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -23,6 +23,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "installd/installd_operator.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
 
@@ -30,7 +31,15 @@ using namespace std::chrono_literals;
 
 namespace OHOS {
 namespace AppExecFwk {
-InstalldService::InstalldService()
+REGISTER_SYSTEM_ABILITY_BY_ID(InstalldService, INSTALLD_SERVICE_ID, true);
+
+InstalldService::InstalldService(int32_t saId, bool runOnCreate) : SystemAbility(saId, runOnCreate)
+{
+    APP_LOGI("installd service instance is created");
+}
+
+
+InstalldService::InstalldService() : SystemAbility(INSTALLD_SERVICE_ID, true)
 {
     APP_LOGI("installd service instance is created");
 }
@@ -38,6 +47,21 @@ InstalldService::InstalldService()
 InstalldService::~InstalldService()
 {
     APP_LOGI("installd service instance is destroyed");
+}
+
+void InstalldService::OnStart()
+{
+    APP_LOGI("installd OnStart");
+    Start();
+    if (!Publish(hostImpl_)) {
+        APP_LOGE("Publish failed");
+    }
+}
+
+void InstalldService::OnStop()
+{
+    Stop();
+    APP_LOGI("installd OnStop");
 }
 
 bool InstalldService::Init()
@@ -50,7 +74,7 @@ bool InstalldService::Init()
     umask(Constants::INSTALLD_UMASK);
     hostImpl_ = new (std::nothrow) InstalldHostImpl();
     if (hostImpl_ == nullptr) {
-        APP_LOGI("InstalldHostImpl Init failed");
+        APP_LOGE("InstalldHostImpl Init failed");
         return false;
     }
     if (!InitDir(Constants::HAP_COPY_PATH)) {
@@ -74,27 +98,9 @@ bool InstalldService::InitDir(const std::string &path)
 
 void InstalldService::Start()
 {
-    if (!(Init())) {
+    if (!Init()) {
         APP_LOGE("init fail");
         return;
-    }
-    // add installd service to system ability manager.
-    // need to retry some times due to installd start faster than system ability manager.
-    if (!SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
-        APP_LOGW("installd service fail to register into system ability manager, retry it");
-        int32_t tryTimes = 3;
-        bool isSuccess = false;
-        for (int32_t i = 0; i < tryTimes; i++) {
-            std::this_thread::sleep_for(100ms);
-            if (SystemAbilityHelper::AddSystemAbility(INSTALLD_SERVICE_ID, hostImpl_)) {
-                isSuccess = true;
-                break;
-            }
-        }
-        if (!isSuccess) {
-            APP_LOGE("installd service fail to register into system ability manager");
-            return;
-        }
     }
     isReady_ = true;
     APP_LOGI("installd service start successfully");
@@ -108,7 +114,7 @@ void InstalldService::Stop()
     }
     // remove installd service from system ability manager.
     // since we can't handle the fail case, just ignore the result.
-    SystemAbilityHelper::RemoveSystemAbility(INSTALLD_SERVICE_ID);
+    SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID);
     isReady_ = false;
     APP_LOGI("installd service stop successfully");
 }

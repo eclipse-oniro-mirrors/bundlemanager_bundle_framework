@@ -59,7 +59,9 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME_TEST = "com.example.bundlekit.test";
+const std::string BUNDLE_NAME_TEST_CLEAR = "com.example.bundlekit.test.clear";
 const std::string MODULE_NAME_TEST = "com.example.bundlekit.test.entry";
+const std::string MODULE_NAME_TEST_CLEAR = "com.example.bundlekit.test.entry.clear";
 const std::string MODULE_NAME_TEST_1 = "com.example.bundlekit.test.entry_A";
 const std::string MODULE_NAME_TEST_2 = "com.example.bundlekit.test.entry_B";
 const std::string MODULE_NAME_TEST_3 = "com.example.bundlekit.test.entry_C";
@@ -127,6 +129,7 @@ const uint32_t MODULE_NAMES_SIZE_THREE = 3;
 const std::string EMPTY_STRING = "";
 const int INVALID_UID = -1;
 const std::string ABILITY_URI = "dataability:///com.example.hiworld.himusic.UserADataAbility/person/10";
+const std::string ABILITY_TEST_URI = "dataability:///com.example.hiworld.himusic.UserADataAbility";
 const std::string URI = "dataability://com.example.hiworld.himusic.UserADataAbility";
 const std::string ERROR_URI = "dataability://";
 const std::string HAP_FILE_PATH = "/data/test/resource/bms/bundle_kit/test.hap";
@@ -297,6 +300,7 @@ public:
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
     void ClearDataMgr();
     void ResetDataMgr();
+    void ClearBundleInfo(const std::string &bundleName);
 
 public:
     std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
@@ -1163,6 +1167,14 @@ void BmsBundleKitServiceTest::ShortcutWantToJson(nlohmann::json &jsonObject, con
         {MODULE_NAME, shortcutWant.moduleName},
         {ABILITY_NAME, shortcutWant.abilityName},
     };
+}
+
+void BmsBundleKitServiceTest::ClearBundleInfo(const std::string &bundleName)
+{
+    auto iterator = GetBundleDataMgr()->bundleInfos_.find(bundleName);
+    if (iterator != GetBundleDataMgr()->bundleInfos_.end()) {
+        GetBundleDataMgr()->bundleInfos_.erase(iterator);
+    }
 }
 
 /**
@@ -7356,20 +7368,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetMediaData_0300, Function | SmallTest | Leve
 }
 
 /**
- * @tc.number: CheckAppInstallControl_0100
- * @tc.name: test CheckAppInstallControl
- * @tc.desc: 1.explicit check app install control success
- */
-HWTEST_F(BmsBundleKitServiceTest, CheckAppInstallControl_0100, Function | SmallTest | Level1)
-{
-    APP_LOGI("begin of CheckAppInstallControl_0100");
-    InnerBundleInfo info;
-    bool ret = info.CheckAppInstallControl("", 0);
-    EXPECT_TRUE(ret);
-    APP_LOGI("CheckAppInstallControl_0100 finish");
-}
-
-/**
  * @tc.number: Hidump_001
  * @tc.name: Hidump
  * @tc.desc: 1.Returns whether the interface is called successfully
@@ -7442,45 +7440,6 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Lev
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
-/**
- * @tc.number: AgingTest_0001
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0001, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::PREIOD);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
-/**
- * @tc.number: AgingTest_0002
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0002, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::FREE_INSTALL);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
-/**
- * @tc.number: AgingTest_0003
- * @tc.name: test Aging Start
- * @tc.desc: running is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AgingTest_0003, Function | SmallTest | Level0)
-{
-    auto bundleAgingMgr = std::make_shared<BundleAgingMgr>();
-    bundleAgingMgr->Start(
-        OHOS::AppExecFwk::BundleAgingMgr::AgingTriggertype::UPDATE_REMOVABLE_FLAG);
-    EXPECT_FALSE(bundleAgingMgr->running_);
-}
-
 /**
  * @tc.number: AginTest_0004
  * @tc.name: test InitAgingtTimer
@@ -7765,20 +7724,46 @@ HWTEST_F(BmsBundleKitServiceTest, DumpShortcutInfo_0100, Function | MediumTest |
  * @tc.number: SetModuleRemovable_0100
  * @tc.name: Test SetModuleRemovable
  * @tc.desc: 1.Test the SetModuleRemovable by BundleMgrHostImpl
+ * @tc.require: issueI7FMPK
  */
 HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0100, Function | MediumTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool isRemovable = true;
+    bool isRemovable;
     auto ret1 = hostImpl->SetModuleRemovable(
-        BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, true);
     EXPECT_EQ(ret1, true);
 
     ErrCode ret2 = hostImpl->IsModuleRemovable(
         BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
     EXPECT_EQ(ret2, ERR_OK);
+    EXPECT_TRUE(isRemovable);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: SetModuleRemovable_0200
+ * @tc.name: Test SetModuleRemovable
+ * @tc.desc: 1.Test the SetModuleRemovable by BundleMgrHostImpl
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0200, Function | MediumTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    bool isRemovable;
+    auto ret1 = hostImpl->SetModuleRemovable(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, false);
+    EXPECT_EQ(ret1, true);
+
+    ErrCode ret2 = hostImpl->IsModuleRemovable(
+        BUNDLE_NAME_TEST, MODULE_NAME_TEST, isRemovable);
+    EXPECT_EQ(ret2, ERR_OK);
+    EXPECT_FALSE(isRemovable);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -10605,5 +10590,218 @@ HWTEST_F(BmsBundleKitServiceTest, UpdateSharedModuleInfo_001, Function | SmallTe
     innerBundleInfo.UpdateSharedModuleInfo();
     EXPECT_TRUE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][0].cpuAbi.empty());
     EXPECT_FALSE(innerBundleInfo.innerSharedModuleInfos_[MODULE_NAME_TEST_1][1].cpuAbi.empty());
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0006
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0006, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    ClearBundleInfo(LAUNCHER_BUNDLE_NAME);
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetLauncherAbilityByBundleName_0007
+ * @tc.name: test get launcherAbility
+ * @tc.desc: 1.system run normally
+ *           2.get GetLauncherAbilityByBundleName hideDesktopIcon return ERR_OK
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetLauncherAbilityByBundleName_0007, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetElementName(LAUNCHER_BUNDLE_NAME, ABILITY_NAME_TEST);
+    ApplicationInfo applicationInfo;
+    applicationInfo.name = LAUNCHER_BUNDLE_NAME;
+    applicationInfo.bundleName = LAUNCHER_BUNDLE_NAME;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::ENABLED;
+    innerBundleInfo.SetHideDesktopIcon(false);
+    ClearBundleInfo(LAUNCHER_BUNDLE_NAME);
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = dataMgr->GetLauncherAbilityByBundleName(
+        want, abilityInfos, DEFAULT_USER_ID_TEST, DEFAULT_USER_ID_TEST);
+    EXPECT_EQ(res, ERR_OK);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QueryInnerBundleInfo_0001
+ * @tc.name: test QueryInnerBundleInfo
+ * @tc.desc: 1.test QueryInnerBundleInfo failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryInnerBundleInfo_0001, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo queryInnerBundleInfo;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    bool res = dataMgr->QueryInnerBundleInfo(LAUNCHER_BUNDLE_NAME, queryInnerBundleInfo);
+    EXPECT_EQ(res, true);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QueryInnerBundleInfo_0002
+ * @tc.name: test QueryInnerBundleInfo
+ * @tc.desc: 1.test QueryInnerBundleInfo failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryInnerBundleInfo_0002, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleInfo queryInnerBundleInfo;
+    ClearBundleInfo(LAUNCHER_BUNDLE_NAME);
+    bool res = dataMgr->QueryInnerBundleInfo(LAUNCHER_BUNDLE_NAME, queryInnerBundleInfo);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoByUri_1000
+ * @tc.name: test can not get the ability info by bundleStatus_ = BundleStatus::DISABLED
+ * @tc.desc: 1.system run normally
+ *           2.get ability info failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfoByUri_1000, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    AbilityInfo result;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    bool ret = dataMgr->QueryAbilityInfoByUri(
+        ABILITY_TEST_URI, DEFAULT_USERID, result);
+    EXPECT_EQ(ret, false);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosByUri_0300
+ * @tc.name: test can not get the ability infos by bundleStatus_ = BundleStatus::DISABLED
+ * @tc.desc: 1.system run normally
+ *           2.get ability infos failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0300, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<AbilityInfo> abilityInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    bool ret = dataMgr->QueryAbilityInfosByUri(ABILITY_TEST_URI, abilityInfos);
+    EXPECT_EQ(ret, false);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosByUri_0400
+ * @tc.name: test can not get the ability infos
+ * @tc.desc: 1.system run normally
+ *           2.get ability infos failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, QueryAbilityInfosByUri_0400, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::vector<AbilityInfo> abilityInfos;
+    bool ret = dataMgr->QueryAbilityInfosByUri(ABILITY_URI, abilityInfos);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0500
+ * @tc.name: test can get the installed bundles's application info with basic info flag
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0500, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = dataMgr->GetApplicationInfos(
+        ApplicationFlag::GET_BASIC_APPLICATION_INFO, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, true);
+    EXPECT_GT(appInfos.size(), 0);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetApplicationInfos_0600
+ * @tc.name: test can get the installed bundles's application info with basic info flag
+ * @tc.desc: 1.system run normally
+ *           2.get all installed application info successfully
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, GetApplicationInfos_0600, Function | SmallTest | Level1)
+{
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.bundleStatus_ = InnerBundleInfo::BundleStatus::DISABLED;
+    dataMgr->bundleInfos_.insert(
+        pair<std::string, InnerBundleInfo>(LAUNCHER_BUNDLE_NAME, innerBundleInfo));
+    std::vector<ApplicationInfo> appInfos;
+    bool ret = dataMgr->GetApplicationInfosV9(0, DEFAULT_USER_ID_TEST, appInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_GT(appInfos.size(), 0);
+    dataMgr->bundleInfos_.erase(LAUNCHER_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: SetModuleRemovable_0300
+ * @tc.name: test can check module removable is able by not find bundleName in bundleInfos_
+ * @tc.desc: 1.system run normally
+ *           2.check the module removable failed
+ * @tc.require: issueI7FMPK
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0300, Function | SmallTest | Level1)
+{
+    ClearBundleInfo(BUNDLE_NAME_TEST_CLEAR);
+    bool testRet = GetBundleDataMgr()->SetModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, true);
+    EXPECT_FALSE(testRet);
+    bool isRemovable = false;
+    auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable);
+    EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_FALSE(isRemovable);
 }
 }

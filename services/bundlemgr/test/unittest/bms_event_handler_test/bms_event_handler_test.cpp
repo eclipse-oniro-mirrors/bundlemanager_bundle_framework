@@ -163,6 +163,21 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallDirFromLoadProFile_0100, Function | S
 }
 
 /**
+ * @tc.number: AgingHandlerTest_0001
+ * @tc.name: test ProcessBundle of RecentlyUnuseBundleAgingHandler
+ * @tc.desc: Process is false
+ */
+HWTEST_F(BmsEventHandlerTest, AgingHandlerTest_0001, Function | SmallTest | Level0)
+{
+    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
+    AgingRequest request;
+    request.SetAgingCleanType(AgingCleanType::CLEAN_CACHE);
+    AgingBundleInfo agingBundleInfo;
+    bool res = bundleAgingMgr.AgingClean(agingBundleInfo, request);
+    EXPECT_FALSE(res);
+}
+
+/**
  * @tc.number: GetPreInstallCapability_0100
  * @tc.name: GetPreInstallCapability
  * @tc.desc: test GetPreInstallCapability with null bundleName

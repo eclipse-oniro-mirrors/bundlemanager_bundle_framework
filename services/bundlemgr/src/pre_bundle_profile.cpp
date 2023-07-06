@@ -48,6 +48,7 @@ const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const std::string RESOURCES_APPLY = "resourcesApply";
 }
 
 ErrCode PreBundleProfile::TransformTo(
@@ -325,6 +326,14 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<std::vector<int32_t>>(array,
+            jsonObjectEnd,
+            RESOURCES_APPLY,
+            preBundleConfigInfo.resourcesApply,
+            JsonType::ARRAY,
+            false,
+            parseResult,
+            ArrayType::NUMBER);
         if (array.find(ALLOW_APP_DATA_NOT_CLEARED) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_DATA_NOT_CLEARED);
             preBundleConfigInfo.userDataClearable = !preBundleConfigInfo.userDataClearable;

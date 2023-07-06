@@ -166,6 +166,7 @@ struct ApplicationInfo : public Parcelable {
     bool hideDesktopIcon = false;
     bool formVisibleNotify = false;
     std::vector<std::string> allowCommonEvent;
+    std::vector<int32_t> resourcesApply;
 
     bool isSystemApp = false;
     bool isLauncherApp = false;
