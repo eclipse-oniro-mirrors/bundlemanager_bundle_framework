@@ -47,6 +47,8 @@ namespace {
     const std::string UNEXIST_SHARED_LIBRARY = "/unexistpath/unexist.hsp";
     const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
     const std::string BUNDLE_PATH = "/data/app/el1/bundle/public/";
+    const std::string BUNDLE_TEST_NAME = "bundleTestName";
+    const std::string BUNDLE_TEST_PATH = "/data/app/el1/bundle/public/test/";
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -741,4 +743,70 @@ HWTEST_F(BmsEventHandlerTest, HasModuleSavedInPreInstalledDbTest_0200, Function 
     handler->loadExistData_[BUNDLE_NAME] = info;
     bool ret = handler->HasModuleSavedInPreInstalledDb(BUNDLE_NAME, BUNDLE_PATH);
     EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CombineBundleInfoAndUserInfo_0300
+ * @tc.name: CombineBundleInfoAndUserInfo
+ * @tc.desc: test userInfoMaps not find bundleName
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, CombineBundleInfoAndUserInfo_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    DelayedSingleton<BundleMgrService>::GetInstance()->InitBundleDataMgr();
+    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
+    std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
+    InnerBundleInfo innerBundleInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::vector<InnerBundleInfo> info1 {innerBundleInfo};
+    std::vector<InnerBundleUserInfo> info2 {innerBundleUserInfo};
+    installInfos.emplace(BUNDLE_NAME, info1);
+    innerBundleUserInfoMaps.emplace(TEST_BUNDLE_NAME, info2);
+    bool res = handler->CombineBundleInfoAndUserInfo(installInfos, innerBundleUserInfoMaps);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: ProcessSystemSharedBundleInstall_0100
+ * @tc.name: ProcessSystemSharedBundleInstall
+ * @tc.desc: test ProcessSystemSharedBundleInstall failed
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, ProcessSystemSharedBundleInstall_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    std::string bundleDir = CALL_MOCK_BUNDLE_DIR_FAILED;
+    Constants::AppType appType = Constants::AppType::SYSTEM_APP;
+    handler->ProcessSystemSharedBundleInstall(bundleDir, appType);
+    auto res = bundleDir.compare(CALL_MOCK_BUNDLE_DIR_FAILED) == 0;
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: HasModuleSavedInPreInstalledDb_0100
+ * @tc.name: HasModuleSavedInPreInstalledDb
+ * @tc.desc: test HasModuleSavedInPreInstalledDb failed
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, HasModuleSavedInPreInstalledDb_0100, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    auto ret = handler->HasModuleSavedInPreInstalledDb(BUNDLE_TEST_NAME, BUNDLE_TEST_PATH);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetPreInstallCapability_0300
+ * @tc.name: GetPreInstallCapability
+ * @tc.desc: test GetPreInstallCapability.
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0300, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = BUNDLE_NAME;
+    EXPECT_TRUE(handler->LoadPreInstallProFile());
+    EXPECT_FALSE(handler->GetPreInstallCapability(preBundleConfigInfo));
 }
