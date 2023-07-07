@@ -376,5 +376,15 @@ void InstalldClient::OnLoadSystemAbilityFail()
         loadSaCondition_.notify_one();
     }
 }
+
+bool InstalldClient::IsInstalldReady()
+{
+    return installdProxy_ != nullptr;
+}
+
+bool InstalldClient::StartInstalldService()
+{
+    return GetInstalldProxy();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
