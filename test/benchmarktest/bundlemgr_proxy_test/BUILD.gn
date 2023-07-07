@@ -42,7 +42,7 @@ ohos_benchmarktest("BenchmarkTestBundleMgrProxy") {
 
   if (bundle_framework_graphics) {
     defines = [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
 }
 
