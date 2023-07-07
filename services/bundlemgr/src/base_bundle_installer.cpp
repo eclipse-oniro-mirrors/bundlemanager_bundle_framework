@@ -3694,7 +3694,6 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     std::string nativeLibraryPath;
     bool isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
-        nativeLibraryPath_ = nativeLibraryPath;
         if (isCompressNativeLibrary) {
             bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
             if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
@@ -3895,20 +3894,34 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
             APP_LOGI("so files are isolated or decompressed and no necessary to move so files");
             continue;
         }
-        if (installedModules_[info.second.GetCurrentModulePackage()] && !nativeLibraryPath_.empty()) {
+        std::string cpuAbi = "";
+        std::string nativeLibraryPath = "";
+        bool isSoExisted = info.second.FetchNativeSoAttrs(info.second.GetCurrentModulePackage(), cpuAbi,
+            nativeLibraryPath);
+        if (installedModules_[info.second.GetCurrentModulePackage()] && isSoExisted) {
             std::string tempSoDir;
             tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
                 .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
                 .append(info.second.GetCurrentModulePackage())
                 .append(Constants::TMP_SUFFIX).append(Constants::PATH_SEPARATOR)
-                .append(nativeLibraryPath_);
+                .append(nativeLibraryPath);
+            bool isDirExisted = false;
+            auto result = InstalldClient::GetInstance()->IsExistDir(tempSoDir, isDirExisted);
+            if (result != ERR_OK) {
+                APP_LOGE("check if dir existed failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
+            if (!isDirExisted) {
+                APP_LOGW("temp so dir %{public}s is not existed and dose not need to be moved", tempSoDir.c_str());
+                continue;
+            }
             std::string realSoDir;
             realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
                 .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                .append(nativeLibraryPath_);
+                .append(nativeLibraryPath);
             APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
-            bool isDirExisted = false;
-            auto result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
+            isDirExisted = false;
+            result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
             if (result != ERR_OK) {
                 APP_LOGE("check if dir existed failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
