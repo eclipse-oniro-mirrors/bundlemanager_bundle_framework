@@ -54,12 +54,12 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
-    UI = 16,
     PUSH = 17,
     DRIVER = 18,
     APP_ACCOUNT_AUTHORIZATION = 19,
     SYSPICKER_MEDIACONTROL = 20,
     UNSPECIFIED = 255,
+    UI = 256,
     SYSDIALOG_USERAUTH = 300
 };
 

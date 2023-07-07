@@ -68,10 +68,10 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "thumbnail", ExtensionAbilityType::THUMBNAIL },
     { "preview", ExtensionAbilityType::PREVIEW },
     { "print", ExtensionAbilityType::PRINT },
-    { "ui", ExtensionAbilityType::UI },
     { "push", ExtensionAbilityType::PUSH },
     { "driver", ExtensionAbilityType::DRIVER },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
+    { "ui", ExtensionAbilityType::UI },
     { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH }
 };
