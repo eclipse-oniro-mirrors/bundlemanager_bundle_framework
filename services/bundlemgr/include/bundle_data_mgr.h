@@ -834,7 +834,6 @@ public:
     void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
         const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    bool IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const;
     bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
 
 private:
