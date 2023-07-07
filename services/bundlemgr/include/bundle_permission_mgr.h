@@ -155,6 +155,19 @@ private:
         const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
         const std::string &bundleName);
 
+    static bool InnerUpdateDefinePermission(
+        const Security::AccessToken::AccessTokenID tokenId,
+        const InnerBundleInfo &oldInfo,
+        const InnerBundleInfo &newInfo,
+        std::vector<Security::AccessToken::PermissionDef> &newDefPermList);
+
+    static bool InnerUpdateRequestPermission(
+        const Security::AccessToken::AccessTokenID tokenId,
+        const InnerBundleInfo &oldInfo,
+        const InnerBundleInfo &newInfo,
+        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
+        std::vector<std::string> &newRequestPermName);
+
     static std::map<std::string, DefaultPermission> defaultPermissions_;
 };
 }  // namespace AppExecFwk
