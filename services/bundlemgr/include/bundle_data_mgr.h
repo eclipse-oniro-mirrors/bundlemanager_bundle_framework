@@ -37,7 +37,6 @@
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
-#include "ffrt.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "preinstall_data_storage_interface.h"
@@ -956,7 +955,7 @@ private:
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
-    mutable ffrt::mutex eventCallbackMutex_;
+    mutable std::shared_mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;
