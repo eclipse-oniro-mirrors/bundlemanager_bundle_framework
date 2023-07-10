@@ -69,6 +69,7 @@
         "description": "$string:entry_desc",
         "descriptionId": 16777220,
         "deviceTypes": [
+            "2in1",
             "default",
             "phone",
             "tablet"

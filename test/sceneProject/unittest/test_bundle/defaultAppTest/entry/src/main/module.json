@@ -6,6 +6,7 @@
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "description": "$string:entry_desc",
         "deviceTypes": [
+            "2in1",
             "tablet",
             "default",
             "phone"
