@@ -33,7 +33,7 @@ config("appexecfwk_core_config") {
 }
 
 ohos_shared_library("appexecfwk_core") {
-  include_dirs = [ "${service_path}/bundlemgr/include" ]
+  include_dirs = [ "${services_path}/bundlemgr/include" ]
   sources = [
     "src/bundlemgr/bundle_event_callback_host.cpp",
     "src/bundlemgr/bundle_event_callback_proxy.cpp",

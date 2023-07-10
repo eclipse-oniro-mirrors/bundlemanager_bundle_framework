@@ -157,7 +157,9 @@ private:
 
     bool HandMoveFiles(MessageParcel &data, MessageParcel &reply);
 
-    void DelayCloseInstalldProcess();
+    void AddCloseInstalldTask();
+
+    void RemoveCloseInstalldTask();
 
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;

@@ -554,9 +554,10 @@ bool BundleInstallerProxy::SendInstallRequest(
     }
 
     auto task = [] {
+        BundleMemoryGuard memoryGuard;
         APP_LOGD("start installd service in advance");
         InstalldClient::GetInstance()->StartInstalldService();
-    }
+    };
     ffrt::submit(task);
 
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);

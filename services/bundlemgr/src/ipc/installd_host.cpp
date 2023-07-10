@@ -97,6 +97,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
     BundleMemoryGuard memoryGuard;
     APP_LOGD(
         "installd host receives message from client, code = %{public}d, flags = %{public}d", code, option.GetFlags());
+    RemoveCloseInstalldTask();
     std::u16string descripter = InstalldHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
@@ -112,7 +113,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("installd host finish to process message from client");
-    DelayCloseInstalldProcess();
+    AddCloseInstalldTask();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
 }
 
@@ -437,10 +438,15 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
     return true;
 }
 
-void InstalldHost::DelayCloseInstalldProcess()
+void InstalldHost::RemoveCloseInstalldTask()
 {
     std::lock_guard<std::mutex> lock(unloadTaskMutex_);
     serialQueue_->CancelDelayTask(UNLOAD_TASK_NAME);
+}
+
+void InstalldHost::AddCloseInstalldTask()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
     auto task = [] {
         if (!SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID)) {
             APP_LOGE("fail to unload to system ability manager");
