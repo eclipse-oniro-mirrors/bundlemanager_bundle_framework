@@ -377,11 +377,6 @@ void InstalldClient::OnLoadSystemAbilityFail()
     }
 }
 
-bool InstalldClient::IsInstalldReady()
-{
-    return installdProxy_ != nullptr;
-}
-
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
