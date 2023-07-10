@@ -4069,6 +4069,11 @@ ErrCode InnerBundleInfo::DelMimeType(
 
 void InnerBundleInfo::UpdateIsCompressNativeLibs()
 {
+    if (innerModuleInfos_.empty()) {
+        baseApplicationInfo_->isCompressNativeLibs = true;
+        return;
+    }
+    baseApplicationInfo_->isCompressNativeLibs = false;
     for (const auto &info : innerModuleInfos_) {
         baseApplicationInfo_->isCompressNativeLibs =
             (baseApplicationInfo_->isCompressNativeLibs || info.second.compressNativeLibs) ? true : false;
