@@ -29,6 +29,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+const int32_t THRESHOLD_VAL_LEN = 40;
+bool IsSupportCompressNativeLibs()
+{
+    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        return false;
+    }
+    if (std::strcmp(compressNativeLibs, "true") == 0) {
+        return true;
+    }
+    return false;
+}
+}
 
 namespace Profile {
 int32_t g_parseResult = ERR_OK;
@@ -1340,14 +1357,16 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        MODULE_COMPRESS_NATIVE_LIBS,
-        module.compressNativeLibs,
-        JsonType::BOOLEAN,
-        false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+    if (IsSupportCompressNativeLibs()) {
+        GetValueIfFindKey<bool>(jsonObject,
+            jsonObjectEnd,
+            MODULE_COMPRESS_NATIVE_LIBS,
+            module.compressNativeLibs,
+            JsonType::BOOLEAN,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
