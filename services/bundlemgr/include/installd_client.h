@@ -166,8 +166,6 @@ public:
 
     void OnLoadSystemAbilityFail();
 
-    bool IsInstalldReady();
-
     bool StartInstalldService();
 
 private:
