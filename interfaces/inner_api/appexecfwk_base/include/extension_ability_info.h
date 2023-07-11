@@ -60,7 +60,8 @@ enum class ExtensionAbilityType {
     SYSPICKER_MEDIACONTROL = 20,
     UNSPECIFIED = 255,
     UI = 256,
-    SYSDIALOG_USERAUTH = 300
+    SYSDIALOG_USERAUTH = 300,
+    SYSDIALOG_COMMON = 301
 };
 
 enum class CompileMode {

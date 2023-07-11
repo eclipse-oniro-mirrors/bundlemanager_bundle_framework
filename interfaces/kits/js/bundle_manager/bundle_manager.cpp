@@ -2234,6 +2234,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_USERAUTH), &nSysDialogUserAuth));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_USERAUTH", nSysDialogUserAuth));
+
+    napi_value nSysDialogCommon;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_COMMON), &nSysDialogCommon));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_COMMON", nSysDialogCommon));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
