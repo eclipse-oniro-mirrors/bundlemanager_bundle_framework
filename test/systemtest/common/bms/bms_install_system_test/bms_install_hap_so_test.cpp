@@ -33,8 +33,12 @@ const std::string THIRD_BUNDLE_PATH = "/data/test/testHapSo/";
 const std::string CODE_ROOT_PATH = "/data/app/el1/bundle/public/";
 const std::string BUNDLE_NAME1 = "com.example.testhapso1";
 const std::string BUNDLE_NAME2 = "com.example.testhapso2";
+const std::string BUNDLE_NAME3 = "com.example.testhapso3";
+const std::string BUNDLE_NAME4 = "com.example.testhapso4";
 const std::string HAP_INCLUDE_SO1 = "hapIncludeso1.hap";
 const std::string HAP_INCLUDE_SO2 = "hapIncludeso2.hap";
+const std::string HAP_INCLUDE_SO3 = "hapIncludeso3.hap";
+const std::string HAP_INCLUDE_SO4 = "hapIncludeso4.hap";
 const std::string MSG_SUCCESS = "[SUCCESS]";
 const std::string OPERATION_FAILURE = "Failure";
 const std::string OPERATION_SUCCESS = "Success";
@@ -243,5 +247,46 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0200, Function | MediumTes
     std::cout << "END BMS_Install_Hap_With_SO_0200" << std::endl;
 }
 
+/**
+ * @tc.number: BMS_Install_Hap_With_SO_0300
+ * @tc.name:  test the installation of a hap incluede so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap bundle
+ *           2.install the bundle
+ *           3.check the file path
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_Hap_With_SO_0300" << std::endl;
+    auto res = InstallBundle(HAP_INCLUDE_SO3);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME3 + LIBS);
+    EXPECT_EQ(ret, false);
+    res = UninstallBundle(BUNDLE_NAME3);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Install_Hap_With_SO_0300" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_Hap_With_SO_0400
+ * @tc.name:  test the installation of a hap incluede so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap bundle
+ *           2.install the bundle
+ *           3.check the file path
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_Hap_With_SO_0400" << std::endl;
+    auto res = InstallBundle(HAP_INCLUDE_SO4);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + LIBS);
+    EXPECT_EQ(ret, false);
+    res = UninstallBundle(BUNDLE_NAME4);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Install_Hap_With_SO_0400" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOScd
