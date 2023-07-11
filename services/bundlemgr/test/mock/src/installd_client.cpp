@@ -303,11 +303,6 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
     return CallService(&IInstalld::MoveFiles, srcDir, desDir);
 }
 
-bool InstalldClient::IsInstalldReady()
-{
-    return installdProxy_ != nullptr;
-}
-
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();

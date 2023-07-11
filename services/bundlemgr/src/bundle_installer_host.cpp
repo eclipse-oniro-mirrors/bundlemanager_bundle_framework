@@ -61,14 +61,6 @@ int BundleInstallerHost::OnRemoteRequest(
 {
     BundleMemoryGuard memoryGuard;
     APP_LOGD("bundle installer host onReceived message, the message code is %{public}u", code);
-    if (!InstalldClient::GetInstance()->IsInstalldReady()) {
-        APP_LOGI("start installd service in advance");
-        auto task = [] {
-            BundleMemoryGuard memoryGuard;
-            InstalldClient::GetInstance()->StartInstalldService();
-        };
-        ffrt::submit(task);
-    }
 
     std::u16string descripter = GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
