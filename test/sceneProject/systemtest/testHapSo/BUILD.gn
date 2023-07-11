@@ -19,5 +19,9 @@ group("testHapSo") {
     # deps file
     "hapIncludeso1:hapIncludeso1",
     "hapIncludeso2:hapIncludeso2",
+    "hapIncludeso3:hapIncludeso3",
+    "hapIncludeso4:hapIncludeso4",
+    "hapIncludeso5:hapIncludeso5",
+    "hapIncludeso6:hapIncludeso6",
   ]
 }
