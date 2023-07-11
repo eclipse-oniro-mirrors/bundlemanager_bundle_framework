@@ -11,4 +11,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-persist.bms.supportIsolationMode = bms:bms:775
+persist.bms.supportIsolationMode = foundation:foundation:775
