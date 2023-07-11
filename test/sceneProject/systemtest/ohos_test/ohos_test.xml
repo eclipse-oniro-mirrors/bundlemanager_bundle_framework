@@ -135,4 +135,12 @@
     <option name="push" value="CodeSignature/CodeSignatureWithoutLibs2.hap -> /data/test/code_signature/" src="res" />
     </preparer>
   </target>
+  <target name="BmsInstallHapSoTest">
+    <preparer>
+    <option name="push" value="testHapSo/hapIncludeso1.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso2.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso3.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso4.hap -> /data/test/testHapSo/" src="res" />
+    </preparer>
+  </target>
 </configuration>
