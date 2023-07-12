@@ -115,10 +115,6 @@ public:
     {
         return;
     }
-    virtual int TerminateAbilityResult(const sptr<IRemoteObject> &token, int startId) override
-    {
-        return 0;
-    }
     virtual int StopServiceAbility(const Want &want, int32_t userId = DEFAULT_INVAL_VALUE,
         const sptr<IRemoteObject> &token = nullptr) override
     {
@@ -156,10 +152,6 @@ public:
         return 0;
     }
     virtual int UninstallApp(const std::string &bundleName, int32_t uid) override
-    {
-        return 0;
-    }
-    virtual int TerminateAbilityByCaller(const sptr<IRemoteObject> &callerToken, int requestCode) override
     {
         return 0;
     }

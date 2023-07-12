@@ -147,10 +147,6 @@ public:
     {
         return;
     }
-    virtual int TerminateAbilityResult(const sptr<IRemoteObject> &token, int startId) override
-    {
-        return 0;
-    }
     virtual int StopServiceAbility(const Want &want, int32_t userId = DEFAULT_INVAL_VALUE,
         const sptr<IRemoteObject> &token = nullptr) override
     {
@@ -166,10 +162,6 @@ public:
         return 0;
     }
     virtual int TerminateAbilityByRecordId(const int64_t recordId = -1)
-    {
-        return 0;
-    }
-    virtual int TerminateAbilityByCaller(const sptr<IRemoteObject> &callerToken, int requestCode) override
     {
         return 0;
     }
