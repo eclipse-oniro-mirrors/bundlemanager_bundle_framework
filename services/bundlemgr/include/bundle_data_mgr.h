@@ -948,6 +948,8 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
