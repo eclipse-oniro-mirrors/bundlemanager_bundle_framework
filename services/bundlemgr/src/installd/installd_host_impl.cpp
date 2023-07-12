@@ -740,7 +740,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, con
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
 
-    if (modulePath.empty() || cpuAbi.empty()) {
+    if (modulePath.empty()) {
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
