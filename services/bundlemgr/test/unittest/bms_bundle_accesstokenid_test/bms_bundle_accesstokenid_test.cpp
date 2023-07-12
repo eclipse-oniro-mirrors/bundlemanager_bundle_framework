@@ -969,7 +969,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function |
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -993,7 +993,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -1017,7 +1017,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
 

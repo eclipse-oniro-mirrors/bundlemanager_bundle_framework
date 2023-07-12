@@ -23,5 +23,7 @@ group("testHapSo") {
     "hapIncludeso4:hapIncludeso4",
     "hapIncludeso5:hapIncludeso5",
     "hapIncludeso6:hapIncludeso6",
+    "hapIncludeso7:hapIncludeso7",
+    "hapIncludeso8:hapIncludeso8",
   ]
 }
