@@ -54,6 +54,7 @@
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #endif
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
@@ -1346,7 +1347,6 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-    ErrCode ret = ERR_OK;
 
     if (bundleName.empty()) {
         // query all launcher ability
@@ -1355,7 +1355,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
         return ERR_OK;
     }
     // query definite abilities by bundle name
-    ret = GetLauncherAbilityByBundleName(want, abilityInfos, userId, requestUserId);
+    ErrCode ret = GetLauncherAbilityByBundleName(want, abilityInfos, userId, requestUserId);
     if (ret == ERR_OK) {
         APP_LOGD("ability infos have been found");
         return ret;
