@@ -282,7 +282,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0300, Function | MediumTes
  * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
  *           2.install the bundle
  *           3.the compressNativeLibs is false and the libIsolation is false
- *           4.check the libs path is exist
+ *           4.check the libs path is not existed
  */
 HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0400, Function | MediumTest | Level1)
 {
@@ -291,7 +291,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0400, Function | MediumTes
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     res = UninstallBundle(BUNDLE_NAME4);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Install_Hap_With_SO_0400" << std::endl;
