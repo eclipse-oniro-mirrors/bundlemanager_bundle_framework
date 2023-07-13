@@ -1855,6 +1855,7 @@ bool BundleDataMgr::GetBundleInfos(
         bundleInfos.emplace_back(bundleInfo);
         find = true;
     }
+
     APP_LOGD("get bundleInfos result(%{public}d) in user(%{public}d).", find, userId);
     return find;
 }
@@ -5286,6 +5287,74 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(true, info);
     });
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos) const
+{
+    APP_LOGD("start to query abilityInfos from bms extension");
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
+    if (res != ERR_OK) {
+        APP_LOGE("query ability infos failed due to error code %{public}d", res);
+        return res;
+    }
+    if (abilityInfos.empty()) {
+        APP_LOGE("no ability info can be found from bms extension");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+    AbilityInfo &abilityInfo) const
+{
+    APP_LOGD("start to query abilityInfo from bms extension");
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    if (res != ERR_OK) {
+        APP_LOGE("query ability info failed due to error code %{public}d", res);
+        return res;
+    }
+    if (abilityInfos.empty()) {
+        APP_LOGE("no ability info can be found from bms extension");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+
+    abilityInfo = abilityInfos[0];
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetBundleInfosFromBmsExtension(
+    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const
+{
+    APP_LOGD("start to query bundle infos from bms extension");
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
+    if (res != ERR_OK) {
+        APP_LOGE("query bundle infos failed due to error code %{public}d", res);
+        return res;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags,
+    BundleInfo &bundleInfo, int32_t userId) const
+{
+    APP_LOGD("start to query bundle info from bms extension");
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("query bundle info failed due to error code %{public}d", res);
+        return res;
+    }
+    if (res != ERR_OK) {
+        APP_LOGE("query bundle info failed due to error code %{public}d", res);
+        return res;
+    }
+
     return ERR_OK;
 }
 }  // namespace AppExecFwk

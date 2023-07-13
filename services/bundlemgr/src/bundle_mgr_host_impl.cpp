@@ -171,7 +171,10 @@ bool BundleMgrHostImpl::GetBundleInfo(
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
+    if (!dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
+        return dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId) == ERR_OK;
+    }
+    return true;
 }
 
 ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -323,7 +326,9 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->GetBundleInfos(flags, bundleInfos, userId);
+    auto res = dataMgr->GetBundleInfos(flags, bundleInfos, userId);
+    dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
@@ -544,7 +549,10 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
+    if (!dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo)) {
+        return (dataMgr->QueryAbilityInfoFromBmsExtension(want, flags, userId, abilityInfo) == ERR_OK);
+    }
+    return true;
 }
 
 bool BundleMgrHostImpl::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo> &abilityInfos)
@@ -571,7 +579,10 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+
+    return !abilityInfos.empty();
 }
 
 ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
