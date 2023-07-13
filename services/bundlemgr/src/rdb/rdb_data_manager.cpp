@@ -40,15 +40,20 @@ void RdbDataManager::ClearCache()
 
 std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
 {
+    std::lock_guard<std::mutex> lock(rdbMutex_);
+    if (rdbStore_ != nullptr) {
+        return rdbStore_;
+    }
     NativeRdb::RdbStoreConfig rdbStoreConfig(bmsRdbConfig_.dbPath + bmsRdbConfig_.dbName);
     rdbStoreConfig.SetSecurityLevel(NativeRdb::SecurityLevel::S1);
     int32_t errCode = NativeRdb::E_OK;
     BmsRdbOpenCallback bmsRdbOpenCallback(bmsRdbConfig_);
-    return NativeRdb::RdbHelper::GetRdbStore(
+    rdbStore_ = NativeRdb::RdbHelper::GetRdbStore(
         rdbStoreConfig,
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
+    return rdbStore_;
 }
 
 bool RdbDataManager::InsertData(const std::string &key, const std::string &value)
