@@ -26,6 +26,7 @@ if (vendor_config_exist) {
 }
 
 bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
+ecological_rule_mgr_path = "//foundation/bundlemanager/ecological_rule_mgr/interfaces/innerkits/include"
 common_path = "${bundle_framework_path}/common"
 services_path = "${bundle_framework_path}/services"
 kits_path = "${bundle_framework_path}/interfaces/kits"
@@ -60,6 +61,7 @@ declare_args() {
   window_enable = true
   dlp_permission_enable = true
   code_signature_enable = true
+  ecologic_rule_mgr_enabled = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -135,6 +137,11 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.security_code_signature)) {
     code_signature_enable = false
+  }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.bundlemanager_ecological_rule_mgr)) {
+    ecologic_rule_mgr_enabled = false
   }
 }
 

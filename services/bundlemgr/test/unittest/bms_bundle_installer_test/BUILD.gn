@@ -133,6 +133,11 @@ ohos_unittest("BmsBundleInstallerTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -281,7 +286,11 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
-
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
@@ -409,6 +418,11 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
 
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
@@ -524,6 +538,11 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
 
   if (hicollie_enable) {
@@ -646,6 +665,11 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
 
   if (hicollie_enable) {
@@ -772,6 +796,11 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
 
   if (hicollie_enable) {

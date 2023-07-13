@@ -118,6 +118,11 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -255,6 +260,11 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
@@ -396,6 +406,11 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
   if (bundle_framework_default_app) {
     sources += default_app
@@ -541,6 +556,11 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -678,6 +698,11 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
   if (bundle_framework_default_app) {
     sources += default_app
@@ -819,6 +844,11 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
 
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
@@ -956,6 +986,11 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
 
   if (global_resmgr_enable) {

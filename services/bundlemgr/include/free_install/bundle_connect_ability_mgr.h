@@ -20,8 +20,12 @@
 #include <mutex>
 #include <string>
 
+#ifdef SUPPORT_ERMS
+#include "ecological_rule_mgr_service_client.h"
+#else
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
+#endif
 #include "free_install_params.h"
 #include "inner_bundle_info.h"
 #include "install_result.h"
@@ -32,8 +36,14 @@
 namespace OHOS {
 namespace AppExecFwk {
 using namespace OHOS::AAFwk;
+#ifdef SUPPORT_ERMS
+using namespace OHOS::EcologicalRuleMgrService;
+using ErmsCallerInfo = OHOS::EcologicalRuleMgrService::CallerInfo;
+using ExperienceRule = OHOS::EcologicalRuleMgrService::ExperienceRule;
+#else
 using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
 using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
+#endif
 class ServiceCenterConnection;
 class BundleConnectAbilityMgr : public std::enable_shared_from_this<BundleConnectAbilityMgr> {
 public:
@@ -255,7 +265,9 @@ private:
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
     bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
 
+#ifndef SUPPORT_ERMS
     sptr<AppExecFwk::IEcologicalRuleManager> CheckEcologicalRuleMgr();
+#endif
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
     bool CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const;
@@ -268,9 +280,11 @@ private:
     std::map<std::string, FreeInstallParams> freeInstallParamsMap_;
     sptr<IRemoteObject> serviceCenterRemoteObject_;
     int32_t connectState_ = ServiceCenterConnectState::DISCONNECTED;
+#ifndef SUPPORT_ERMS
     sptr<IEcologicalRuleManager> iErMgr_ = nullptr;
     // should remove when AG SA online
     int32_t ECOLOGICAL_RULE_SA_ID = 9999;
+#endif
     std::shared_ptr<SerialQueue> serialQueue_;
 };
 }  // namespace AppExecFwk
