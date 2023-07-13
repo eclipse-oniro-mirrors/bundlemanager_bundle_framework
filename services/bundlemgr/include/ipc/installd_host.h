@@ -19,9 +19,10 @@
 #include <mutex>
 #include <string>
 
+#include "event_handler.h"
+#include "event_runner.h"
 #include "iremote_stub.h"
 #include "ipc/installd_interface.h"
-#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -110,7 +111,7 @@ private:
     /**
      * @brief Init private hash map funcMap_.
      */
-    void init();
+    void Init();
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -161,10 +162,13 @@ private:
 
     void RemoveCloseInstalldTask();
 
+    void InitEventHandler();
+
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;
     std::mutex unloadTaskMutex_;
-    std::shared_ptr<SerialQueue> serialQueue_;
+    std::shared_ptr<EventHandler> handler_ = nullptr;
+    std::shared_ptr<EventRunner> runner_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

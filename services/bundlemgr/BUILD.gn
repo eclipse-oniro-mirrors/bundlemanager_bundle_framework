@@ -394,7 +394,7 @@ ohos_shared_library("installs") {
   ]
 
   external_deps = [
-    "ffrt:libffrt",
+    "eventhandler:libeventhandler",
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
