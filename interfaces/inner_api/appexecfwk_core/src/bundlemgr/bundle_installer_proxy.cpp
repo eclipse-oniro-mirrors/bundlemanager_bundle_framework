@@ -21,8 +21,11 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_file_util.h"
+#include "bundle_memory_guard.h"
 #include "directory_ex.h"
+#include "ffrt.h"
 #include "hitrace_meter.h"
+#include "installd_client.h"
 #include "ipc_types.h"
 #include "parcel.h"
 #include "string_ex.h"
@@ -549,6 +552,13 @@ bool BundleInstallerProxy::SendInstallRequest(
         APP_LOGE("fail to uninstall, for Remote() is nullptr");
         return false;
     }
+
+    auto task = [] {
+        BundleMemoryGuard memoryGuard;
+        APP_LOGD("start installd service in advance");
+        InstalldClient::GetInstance()->StartInstalldService();
+    };
+    ffrt::submit(task);
 
     int32_t ret = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (ret != NO_ERROR) {

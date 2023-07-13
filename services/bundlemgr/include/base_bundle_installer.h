@@ -634,7 +634,6 @@ private:
     // key is the temp path of hap or hsp
     // value is the signature file path
     std::map<std::string, std::string> signatureFileMap_;
-    std::string nativeLibraryPath_;
     std::vector<DataGroupInfo> createGroupDirs_;
     std::vector<std::string> removeGroupDirs_;
 

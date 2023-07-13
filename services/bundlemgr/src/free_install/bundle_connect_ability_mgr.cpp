@@ -271,21 +271,25 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("SilentInstall");
-    ErmsCallerInfo callerInfo;
-    GetEcologicalCallerInfo(want, callerInfo, userId);
-    ExperienceRule rule;
-    bool ret = CheckEcologicalRule(want, callerInfo, rule);
-    if (!ret) {
-        APP_LOGE("check ecological rule failed, skip.");
-    } else if (rule.isAllow) {
-        APP_LOGI("ecological rule is allow, keep going.");
-    } else if (rule.replaceWant != nullptr) {
-        APP_LOGI("ecological rule is replace want.");
-        targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
-    } else {
-        APP_LOGW("ecological rule is not allowed, return.");
-        return false;
+    if (!CheckIsOnDemandLoad(targetAbilityInfo)) {
+        ErmsCallerInfo callerInfo;
+        GetEcologicalCallerInfo(want, callerInfo, userId);
+        ExperienceRule rule;
+        bool ret = CheckEcologicalRule(want, callerInfo, rule);
+        if (!ret) {
+            APP_LOGE("check ecological rule failed, skip.");
+        } else if (rule.isAllow) {
+            APP_LOGI("ecological rule is allow, keep going.");
+        } else if (rule.replaceWant != nullptr) {
+            APP_LOGI("ecological rule is replace want.");
+            targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT,
+                rule.replaceWant->ToUri());
+        } else {
+            APP_LOGW("ecological rule is not allowed, return.");
+            return false;
+        }
     }
+
     auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
@@ -1138,6 +1142,34 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
             APP_LOGD("the caller type is invalid type");
             break;
     }
+}
+
+bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const
+{
+    if (targetAbilityInfo.targetInfo.callingBundleNames.empty()) {
+        APP_LOGD("callingBundleNames in targetAbilityInfo is empty.");
+        return false;
+    }
+    if (targetAbilityInfo.targetInfo.callingBundleNames[0] != targetAbilityInfo.targetInfo.bundleName) {
+        APP_LOGD("callingBundleName is different with target bundleName.");
+        return false;
+    }
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bms == nullptr) {
+        APP_LOGE("BundleMgrService GetInstance failed");
+        return false;
+    }
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    if (bundleDataMgr_->GetBundleInfo(
+        targetAbilityInfo.targetInfo.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::ANY_USERID)) {
+        return bundleInfo.applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

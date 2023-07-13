@@ -553,7 +553,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JOSN_KEY_UNCLEARABLE_MISSION, abilityInfo.unclearableMission},
         {JSON_KEY_RECOVERABLE, abilityInfo.recoverable},
         {JSON_KEY_SUPPORT_EXT_NAMES, abilityInfo.supportExtNames},
-        {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes}
+        {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0

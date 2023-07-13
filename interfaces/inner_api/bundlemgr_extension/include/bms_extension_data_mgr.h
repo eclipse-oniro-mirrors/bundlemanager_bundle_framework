@@ -18,19 +18,24 @@
 #include <mutex>
 #include <string>
 
+#include "ability_info.h"
 #include "appexecfwk_errors.h"
 #include "bms_extension.h"
 #include "bundle_info.h"
 #include "interfaces/hap_verify.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 class BmsExtensionDataMgr {
 public:
+    using Want = OHOS::AAFwk::Want;
+
     BmsExtensionDataMgr();
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
+    ErrCode QueryAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
     ErrCode Init();
 private:
     bool OpenHandler();

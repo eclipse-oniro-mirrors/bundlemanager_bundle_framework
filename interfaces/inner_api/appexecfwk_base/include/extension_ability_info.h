@@ -54,13 +54,14 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
-    UI = 16,
     PUSH = 17,
     DRIVER = 18,
     APP_ACCOUNT_AUTHORIZATION = 19,
     SYSPICKER_MEDIACONTROL = 20,
     UNSPECIFIED = 255,
-    SYSDIALOG_USERAUTH = 300
+    UI = 256,
+    SYSDIALOG_USERAUTH = 300,
+    SYSDIALOG_COMMON = 301
 };
 
 enum class CompileMode {
@@ -114,6 +115,9 @@ struct ExtensionAbilityInfo : public Parcelable {
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
 };
+
+ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H

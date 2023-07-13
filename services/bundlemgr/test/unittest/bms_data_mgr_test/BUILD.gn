@@ -34,6 +34,8 @@ ohos_unittest("BmsDataMgrTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_data_mgr_test.cpp" ]
 
@@ -140,6 +142,8 @@ ohos_unittest("BmsExtensionDataMgrTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [ "bms_extension_data_mgr_test.cpp" ]
 
@@ -169,6 +173,9 @@ ohos_unittest("BmsExtensionDataMgrTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_EXTENSION_DATA" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

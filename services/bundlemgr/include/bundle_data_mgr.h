@@ -834,7 +834,6 @@ public:
     void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
         const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
-    bool IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const;
     bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
 
 private:
@@ -949,13 +948,15 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
-    mutable std::mutex eventCallbackMutex_;
+    mutable std::shared_mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     mutable std::mutex preInstallInfoMutex_;

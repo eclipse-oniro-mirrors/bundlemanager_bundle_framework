@@ -26,7 +26,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -39,6 +39,8 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
 
   defines = []
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   if (bundle_framework_overlay_install) {
     include_dirs += [ "${services_path}/bundlemgr/include/overlay" ]
     sources += overlay_installation
@@ -174,6 +176,8 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   sources += bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
@@ -288,6 +292,8 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
@@ -393,6 +399,8 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [
@@ -500,6 +508,8 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
 
   sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
   sources += [

@@ -944,6 +944,11 @@ bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const 
         return false;
     }
 
+    if (soEntryFiles.empty()) {
+        APP_LOGD("no so file in installation file %{public}s", modulePath.c_str());
+        return true;
+    }
+
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
     if (!targetSoPath.empty()) {

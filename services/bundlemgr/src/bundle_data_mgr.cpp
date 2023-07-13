@@ -28,6 +28,7 @@
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_data_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_data_storage_rdb.h"
 #include "preinstall_data_storage_rdb.h"
@@ -1204,7 +1205,7 @@ void BundleDataMgr::GetMatchLauncherAbilityInfos(const Want& want,
         std::string moduleName = "";
         auto ability = info.FindAbilityInfo(moduleName, Constants::APP_DETAIL_ABILITY, responseUserId);
         if (!ability) {
-            APP_LOGE("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
+            APP_LOGD("bundleName: %{public}s can not find app detail ability.", info.GetBundleName().c_str());
             return;
         }
         if (!info.GetIsNewVersion()) {
@@ -1346,14 +1347,27 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
+
     if (bundleName.empty()) {
         // query all launcher ability
         GetAllLauncherAbility(want, abilityInfos, userId, requestUserId);
+        QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos);
         return ERR_OK;
-    } else {
-        // query definite abilitys by bundle name
-        return GetLauncherAbilityByBundleName(want, abilityInfos, userId, requestUserId);
     }
+    // query definite abilities by bundle name
+    ErrCode ret = GetLauncherAbilityByBundleName(want, abilityInfos, userId, requestUserId);
+    if (ret == ERR_OK) {
+        APP_LOGD("ability infos have been found");
+        return ret;
+    }
+
+    if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
+        if (QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos) == ERR_OK) {
+            APP_LOGD("query launcher abilities from bms extension successfully");
+            return ERR_OK;
+        }
+    }
+    return ret;
 }
 
 bool BundleDataMgr::QueryAbilityInfoByUri(
@@ -2795,7 +2809,7 @@ bool BundleDataMgr::RegisterBundleEventCallback(const sptr<IBundleEventCallback>
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    std::unique_lock<std::shared_mutex> lock(eventCallbackMutex_);
     if (eventCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
         APP_LOGE("eventCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
         return false;
@@ -2820,7 +2834,7 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    std::unique_lock<std::shared_mutex> lock(eventCallbackMutex_);
     eventCallbackList_.erase(std::remove_if(eventCallbackList_.begin(), eventCallbackList_.end(),
         [&bundleEventCallback](const sptr<IBundleEventCallback> &callback) {
             return callback->AsObject() == bundleEventCallback->AsObject();
@@ -2831,7 +2845,7 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
 void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const
 {
     APP_LOGD("begin to NotifyBundleEventCallback");
-    std::lock_guard<std::mutex> lock(eventCallbackMutex_);
+    std::shared_lock<std::shared_mutex> lock(eventCallbackMutex_);
     for (const auto &callback : eventCallbackList_) {
         callback->OnReceiveEvent(eventData);
     }
@@ -5237,28 +5251,6 @@ void BundleDataMgr::GetDataGroupIndexMap(
     }
 }
 
-bool BundleDataMgr::IsExistDataGroupId(const std::string &dataGroupId, int32_t userId) const
-{
-    APP_LOGD("IsExistDataGroupId, dataGroupId: %{public}s", dataGroupId.c_str());
-    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    for (const auto &info : bundleInfos_) {
-        auto dataGroupInfos = info.second.GetDataGroupInfos();
-        auto iter = dataGroupInfos.find(dataGroupId);
-        if (iter == dataGroupInfos.end()) {
-            continue;
-        }
-        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
-            [userId](DataGroupInfo info) {return info.userId == userId; });
-        if (dataGroupIter != std::end(iter->second)) {
-            APP_LOGD("dataGroupId: %{public}s is existed in bundle: %{public}s.",
-                dataGroupId.c_str(), info.second.GetBundleName().c_str());
-            return true;
-        }
-    }
-    APP_LOGD("dataGroupId: %{public}s is not existed.", dataGroupId.c_str());
-    return false;
-}
-
 bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const
 {
     APP_LOGD("IsShareDataGroupId, dataGroupId is %{public}s", dataGroupId.c_str());
@@ -5270,14 +5262,31 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         if (iter == dataGroupInfos.end()) {
             continue;
         }
-        for (auto info : iter->second) {
-            if (info.userId == userId && ++count > 1) {
+        for (auto dataGroupInfo : iter->second) {
+            if (dataGroupInfo.userId == userId && ++count > 1) {
                 APP_LOGD("dataGroupId: %{public}s is shared", dataGroupId.c_str());
                 return true;
             }
         }
     }
     return false;
+}
+
+ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos) const
+{
+    APP_LOGD("start to query launcher abilities from bms extension");
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
+    if (res != ERR_OK) {
+        APP_LOGE("query ability infos failed due to error code %{public}d", res);
+        return res;
+    }
+    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info){
+        // fix labelId or iconId is equal 0
+        ModifyLauncherAbilityInfo(true, info);
+    });
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

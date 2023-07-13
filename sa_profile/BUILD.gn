@@ -15,7 +15,10 @@ import("//build/ohos.gni")
 import("//build/ohos/sa_profile/sa_profile.gni")
 
 ohos_sa_profile("appexecfwk_sa_profile") {
-  sources = [ "401.json" ]
+  sources = [
+    "401.json",
+    "511.json",
+  ]
 
   part_name = "bundle_framework"
 }

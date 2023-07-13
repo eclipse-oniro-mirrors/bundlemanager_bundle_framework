@@ -6,6 +6,7 @@
         "srcEntrance": "./ets/Application/AbilityStage.ts",
         "description": "$string:entry_desc",
         "deviceTypes": [
+            "2in1",
             "default"
         ],
         "deliveryWithInstall": true,

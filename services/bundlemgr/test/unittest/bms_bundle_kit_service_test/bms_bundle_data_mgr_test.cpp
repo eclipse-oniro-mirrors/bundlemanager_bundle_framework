@@ -68,6 +68,10 @@ const std::string ABILITY_NAME_TEST = ".Reading";
 const std::string BUNDLE_TEST1 = "bundleName1";
 const std::string BUNDLE_TEST2 = "bundleName2";
 const std::string BUNDLE_TEST3 = "bundleName3";
+const std::string BUNDLE_TEST4 = "bundleName4";
+const std::string BUNDLE_TEST5 = "bundleName5";
+const std::string MODULE_TEST = "moduleNameTest";
+const std::string ABILITY_NAME_TEST1 = ".Reading1";
 const int32_t BASE_TEST_UID = 65535;
 const int32_t TEST_UID = 20065535;
 const std::string BUNDLE_LABEL = "Hello, OHOS";
@@ -140,6 +144,7 @@ const std::string COMMON_EVENT_EVENT = "usual.event.PACKAGE_ADDED";
 const std::string EXT_NAME = "extName";
 const std::string MIME_TYPE = "application/x-maker";
 const std::string EMPTY_STRING = "";
+const std::string TEST_DATA_GROUP_ID = "1";
 const nlohmann::json INSTALL_LIST = R"(
 {
     "install_list": [
@@ -194,6 +199,8 @@ const nlohmann::json INSTALL_LIST3 = R"(
 }
 )"_json;
 const int FORMINFO_DESCRIPTIONID = 123;
+const int ABILITYINFOS_SIZE_1 = 1;
+const int ABILITYINFOS_SIZE_2 = 2;
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
@@ -3361,5 +3368,175 @@ HWTEST_F(BmsBundleDataMgrTest, BundleExceptionHandler_0200, TestSize.Level1)
 
     ret = BundleUtil::DeleteDir(moduleDir);
     EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: AddInnerBundleInfo_0200
+ * @tc.name: test AddInnerBundleInfo
+ * @tc.desc: 1.test AddInnerBundleInfo
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, AddInnerBundleInfo_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST4, innerBundleInfo);
+    bool testRet = GetBundleDataMgr()->AddInnerBundleInfo(BUNDLE_TEST4, innerBundleInfo);
+    EXPECT_EQ(testRet, false);
+    GetBundleDataMgr()->bundleInfos_.erase(BUNDLE_TEST4);
+}
+
+/**
+ * @tc.number: AddInnerBundleInfo_0300
+ * @tc.name: test AddInnerBundleInfo
+ * @tc.desc: 1.test AddInnerBundleInfo
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, AddInnerBundleInfo_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    bool testRet = GetBundleDataMgr()->AddInnerBundleInfo(BUNDLE_TEST4, innerBundleInfo);
+    EXPECT_EQ(testRet, false);
+}
+
+/**
+ * @tc.number: ExplicitQueryAbilityInfo_0001
+ * @tc.name: test ExplicitQueryAbilityInfo
+ * @tc.desc: 1.test ExplicitQueryAbilityInfo
+ * @tc.require: issueI7HXM5
+*/
+HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfo_0001, Function | SmallTest | Level1)
+{
+    AAFwk::Want want;
+    want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST);
+    int32_t flags = 0;
+    AbilityInfo abilityInfo;
+    int32_t appIndex = 0;
+    bool res = GetBundleDataMgr()->ExplicitQueryAbilityInfo(
+        want, flags, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: ExplicitQueryAbilityInfoV9_0300
+ * @tc.name: test ExplicitQueryAbilityInfoV9
+ * @tc.desc: 1.test ExplicitQueryAbilityInfoV9
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfoV9_0300, Function | SmallTest | Level1)
+{
+    Want want;
+    AbilityInfo abilityInfo;
+    int32_t appIndex = -1;
+    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
+    want.SetElementName(BUNDLE_TEST5, ABILITY_NAME_TEST1);
+    ErrCode testRet = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
+        want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
+    EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByModuleName_0100
+ * @tc.name: test FilterAbilityInfosByModuleName
+ * @tc.desc: 1.test FilterAbilityInfosByModuleName
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByModuleName_0100, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo1;
+    AbilityInfo abilityInfo2;
+    std::vector<AbilityInfo> abilityInfos;
+    abilityInfo1.moduleName = MODULE_TEST;
+    abilityInfos.emplace_back(abilityInfo1);
+    abilityInfos.emplace_back(abilityInfo2);
+    GetBundleDataMgr()->FilterAbilityInfosByModuleName(
+        "", abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), ABILITYINFOS_SIZE_2);
+}
+
+/**
+ * @tc.number: FilterAbilityInfosByModuleName_0200
+ * @tc.name: test FilterAbilityInfosByModuleName
+ * @tc.desc: 1.test FilterAbilityInfosByModuleName
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, FilterAbilityInfosByModuleName_0200, Function | SmallTest | Level1)
+{
+    AbilityInfo abilityInfo1;
+    AbilityInfo abilityInfo2;
+    std::vector<AbilityInfo> abilityInfos;
+    abilityInfo1.moduleName = MODULE_TEST;
+    abilityInfos.emplace_back(abilityInfo1);
+    abilityInfos.emplace_back(abilityInfo2);
+    GetBundleDataMgr()->FilterAbilityInfosByModuleName(
+        MODULE_TEST, abilityInfos);
+    EXPECT_EQ(abilityInfos.size(), ABILITYINFOS_SIZE_1);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0001
+ * @tc.name: QueryDataGroupInfos
+ * @tc.desc: 1. QueryDataGroupInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<DataGroupInfo> infos;
+    auto res = bundleMgrProxy->QueryDataGroupInfos(
+        EMPTY_STRING, USERID, infos);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(infos.size(), 0);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0002
+ * @tc.name: QueryDataGroupInfos
+ * @tc.desc: 1. QueryDataGroupInfos
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0002, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::vector<DataGroupInfo> infos;
+    auto res = bundleMgrProxy->QueryDataGroupInfos(
+        BUNDLE_NAME_TEST, USERID, infos);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(infos.size(), 0);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetGroupDir_0001
+ * @tc.name: GetGroupDir
+ * @tc.desc: 1. GetGroupDir
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0001, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string dir;
+    auto res = bundleMgrProxy->GetGroupDir(
+        EMPTY_STRING, dir);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(dir, EMPTY_STRING);
+}
+
+/**
+ * @tc.number: GetGroupDir_0002
+ * @tc.name: GetGroupDir
+ * @tc.desc: 1. GetGroupDir
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0002, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    std::string dir;
+    auto res = bundleMgrProxy->GetGroupDir(
+        TEST_DATA_GROUP_ID, dir);
+    EXPECT_EQ(res, false);
+    EXPECT_EQ(dir, EMPTY_STRING);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }

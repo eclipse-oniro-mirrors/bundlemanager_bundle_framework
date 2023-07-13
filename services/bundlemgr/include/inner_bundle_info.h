@@ -1920,23 +1920,53 @@ public:
             return;
         }
 
-        for (int32_t i = 0; i < dataGroupInfos_[dataGroupId].size(); i++) {
-            if (dataGroupInfos_[dataGroupId][i].userId == info.userId) {
-                return;
-            }
+        int32_t userId = info.userId;
+        auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
+            [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
+        if (iter != std::end(dataGroupInfos_[dataGroupId])) {
+            return;
         }
 
         APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
         dataGroupInfos_[dataGroupId].emplace_back(info);
     }
 
+    void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
+    {
+        auto iter = dataGroupInfos_.find(dataGroupId);
+        if (iter == dataGroupInfos_.end()) {
+            return;
+        }
+        for (auto dataGroupIter = iter->second.begin(); dataGroupIter != iter->second.end(); dataGroupIter++) {
+            if (dataGroupIter->userId == userId) {
+                iter->second.erase(dataGroupIter);
+                return;
+            }
+        }
+    }
+
     void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
     {
-        for (const auto &item : dataGroupInfos_) {
-            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
-                APP_LOGD("dataGroupInfo: %{public}s need to be deleted", item.first.c_str());
-                dataGroupInfos_.erase(item.first);
+        std::set<int32_t> userIdList;
+        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+            for (const DataGroupInfo &info : item->second) {
+                userIdList.insert(info.userId);
             }
+        }
+
+        std::vector<std::string> deletedGroupIds;
+        for (auto &item : dataGroupInfos_) {
+            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
+                for (int32_t userId : userIdList) {
+                    RemoveGroupInfos(userId, item.first);
+                }
+            }
+            if (item.second.empty()) {
+                deletedGroupIds.emplace_back(item.first);
+            }
+        }
+        for (std::string groupId : deletedGroupIds) {
+            dataGroupInfos_.erase(groupId);
         }
         for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
             std::string dataGroupId = item->first;

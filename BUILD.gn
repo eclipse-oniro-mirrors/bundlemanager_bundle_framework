@@ -36,6 +36,7 @@ group("test_target") {
   testonly = true
 
   deps = [
+    "common/test:unittest",
     "interfaces/kits/js/zip/test:unittest",
     "services/bundlemgr/test:unittest",
     "services/test/moduletest/common/bms:moduletest",

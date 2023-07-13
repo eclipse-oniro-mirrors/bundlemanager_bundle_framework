@@ -181,5 +181,10 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
 {
     return ERR_OK;
 }
+
+bool InstalldClient::StartInstalldService()
+{
+    return GetInstalldProxy();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

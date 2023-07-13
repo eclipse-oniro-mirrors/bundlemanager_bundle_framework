@@ -18,6 +18,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "bundle_constants.h"
 #include "directory_ex.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -84,14 +85,15 @@ BmsInstallDaemonTest::~BmsInstallDaemonTest()
 {}
 
 void BmsInstallDaemonTest::SetUpTestCase()
-{
-}
+{}
 
 void BmsInstallDaemonTest::TearDownTestCase()
 {}
 
 void BmsInstallDaemonTest::SetUp()
-{}
+{
+    setuid(Constants::FOUNDATION_UID);
+}
 
 void BmsInstallDaemonTest::TearDown()
 {
@@ -318,7 +320,7 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0200, Function | SmallTest | Level0
     EXPECT_EQ(false, ready);
     InstalldClient::GetInstance()->ResetInstalldProxy();
     int result = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_CODE_DIR);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
+    EXPECT_EQ(result, 0);
 }
 
 /**
@@ -331,23 +333,6 @@ HWTEST_F(BmsInstallDaemonTest, Communication_0300, Function | SmallTest | Level0
 {
     int result = CreateBundleDir(BUNDLE_DATA_DIR);
     EXPECT_EQ(result, 0);
-}
-
-/**
- * @tc.number: Communication_0400
- * @tc.name: test the communication of the installd service and installd client
- * @tc.desc: 1. the service is not initialized
- *           2. the installd client can't send msg to the service and receive the error result
-*/
-HWTEST_F(BmsInstallDaemonTest, Communication_0400, Function | SmallTest | Level0)
-{
-    std::shared_ptr<InstalldService> installdService = std::make_shared<InstalldService>();
-    EXPECT_NE(installdService, nullptr);
-    bool ready = installdService->IsServiceReady();
-    EXPECT_EQ(false, ready);
-    InstalldClient::GetInstance()->ResetInstalldProxy();
-    int result = InstalldClient::GetInstance()->CreateBundleDir(BUNDLE_DATA_DIR);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_GET_PROXY_ERROR);
 }
 
 /**
@@ -680,7 +665,7 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0700, Function | SmallTest | Level
     FileStat fileStat;
     ErrCode ret = InstalldClient::GetInstance()->GetFileStat("", fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->GetFileStat("data/test", fileStat);
+    ret = InstalldClient::GetInstance()->GetFileStat("data/test/wrongpath", fileStat);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 }
 

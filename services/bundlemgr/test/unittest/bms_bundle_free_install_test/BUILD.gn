@@ -29,7 +29,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -49,6 +49,8 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   ]
 
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   sources += aging
   sources += free_install
   sources += distributed_manager
@@ -165,7 +167,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
-    "${services_path}/bundlemgr/src/installd/installd_service.cpp",
+    "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
   ]
 
   sources += [
@@ -184,6 +186,8 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "${inner_api_path}/appexecfwk_base/src/free_install/target_ability_info.cpp",
   ]
   sources += bundle_install_sources
+  sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
   sources += aging
   sources += free_install
   sources += distributed_manager
