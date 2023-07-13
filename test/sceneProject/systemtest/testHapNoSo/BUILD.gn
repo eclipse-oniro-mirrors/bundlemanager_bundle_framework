@@ -19,5 +19,7 @@ group("testHapNoSo") {
     # deps file
     "hapNotIncludeso1:hapNotIncludeso1",
     "hapNotIncludeso2:hapNotIncludeso2",
+    "hapNotIncludeso3:hapNotIncludeso3",
+    "hapNotIncludeso4:hapNotIncludeso4",
   ]
 }
