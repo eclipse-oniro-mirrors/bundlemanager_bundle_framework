@@ -41,7 +41,7 @@ private:
 };
 
 std::shared_ptr<BundleMgrService> BmsAbilityManagerHelperTest::bundleMgrService_ =
-    DelayedSingleton<BundleMgrService>::GetInstance();
+    OHOS::DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsAbilityManagerHelperTest::BmsAbilityManagerHelperTest()
 {}
