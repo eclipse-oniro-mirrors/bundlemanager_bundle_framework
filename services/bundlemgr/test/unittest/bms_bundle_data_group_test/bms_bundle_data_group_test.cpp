@@ -44,12 +44,14 @@ const std::string TEST_HAP_PATH = "/data/test/test.hap";
 const std::string TEST_USER_KEY = "com.example.demo.testDataGroup_100";
 constexpr int32_t BMS_UID = 1000;
 constexpr int32_t USERID = 100;
+constexpr int32_t USERID_TWO = 101;
 constexpr int32_t TEST_UID = 20019999;
 constexpr int32_t TEST_UID_INVALID = 20019998;
 constexpr int32_t TEST_GROUP_INDEX_ONE = 1;
 constexpr int32_t TEST_GROUP_INDEX_TWO = 2;
 constexpr int32_t TEST_GROUP_INDEX_THREE = 3;
 constexpr int32_t TEST_GROUP_INDEX_FORE = 4;
+const int32_t WAIT_TIME = 5;
 }  // namespace
 
 class BmsBundleDataGroupTest : public testing::Test {
@@ -63,7 +65,7 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
-    std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
+    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
 };
 
 BmsBundleDataGroupTest::BmsBundleDataGroupTest()
@@ -80,7 +82,10 @@ void BmsBundleDataGroupTest::TearDownTestCase()
 
 void BmsBundleDataGroupTest::SetUp()
 {
-    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
 }
 
 void BmsBundleDataGroupTest::TearDown()
@@ -88,7 +93,7 @@ void BmsBundleDataGroupTest::TearDown()
 
 const std::shared_ptr<BundleDataMgr> BmsBundleDataGroupTest::GetBundleDataMgr() const
 {
-    return dataMgr_;
+    return bundleMgrService_->GetDataMgr();
 }
 
 /**
@@ -329,7 +334,7 @@ HWTEST_F(BmsBundleDataGroupTest, ProcessDataGroupInfo_0030, Function | SmallTest
     infos.emplace(TEST_HAP_PATH, info);
     installer.ProcessDataGroupInfo(bundlePaths, infos, USERID, hapVerifyRes);
     const auto &dataGroupInfos = infos[TEST_HAP_PATH].GetDataGroupInfos();
-    EXPECT_TRUE(dataGroupInfos.empty());
+    EXPECT_FALSE(dataGroupInfos.empty());
 }
 
 /**
@@ -558,6 +563,30 @@ HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0020, Function | SmallTe
     InnerBundleInfo info;
     dataMgr->GenerateDataGroupInfos(info, dataGroupIdList, USERID);
     const auto &dataGroupInfos = info.GetDataGroupInfos();
-    EXPECT_TRUE(dataGroupInfos.empty());
+    EXPECT_FALSE(dataGroupInfos.empty());
+}
+
+/**
+ * @tc.number: GenerateDataGroupInfos_0030
+ * @tc.name: test GenerateDataGroupInfos
+ * @tc.desc: 1.GenerateDataGroupInfos
+ */
+HWTEST_F(BmsBundleDataGroupTest, GenerateDataGroupInfos_0030, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetBundleDataMgr();
+    ASSERT_NE(dataMgr, nullptr);
+
+    std::vector<std::string> dataGroupIdList;
+    dataGroupIdList.emplace_back(DATA_GROUP_ID_TEST_ONE);
+    InnerBundleInfo info;
+    dataMgr->GenerateDataGroupInfos(info, dataGroupIdList, USERID);
+    auto dataGroupInfos = info.GetDataGroupInfos();
+    EXPECT_FALSE(dataGroupInfos.empty());
+
+    dataMgr->GenerateDataGroupInfos(info, dataGroupIdList, USERID_TWO);
+    dataGroupInfos = info.GetDataGroupInfos();
+    auto iter = dataGroupInfos.find(DATA_GROUP_ID_TEST_ONE);
+    ASSERT_NE(iter, dataGroupInfos.end());
+    EXPECT_EQ(iter->second.size(), 2);
 }
 } // OHOS
