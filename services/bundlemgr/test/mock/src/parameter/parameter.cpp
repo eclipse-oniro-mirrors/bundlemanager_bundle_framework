@@ -58,4 +58,9 @@ const char *GetAbiList(void)
 {
     return "arm64-v8a";
 }
+
+int SetParameter(const char *key, const char *value)
+{
+    return 0;
+}
 } // OHOS

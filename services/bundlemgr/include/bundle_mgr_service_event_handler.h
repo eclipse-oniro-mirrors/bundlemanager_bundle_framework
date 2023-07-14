@@ -459,6 +459,7 @@ private:
 #endif
     void ListeningUserUnlocked() const;
     void RemoveUnreservedSandbox() const;
+    void StartBmsExtensionService() const;
     void HandleSceneBoard() const;
     void InnerProcessStockBundleProvisionInfo();
     void ProcessBundleProvisionInfo(const std::unordered_set<std::string> &allBundleNames);

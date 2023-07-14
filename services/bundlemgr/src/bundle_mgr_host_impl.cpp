@@ -171,10 +171,13 @@ bool BundleMgrHostImpl::GetBundleInfo(
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    if (!dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId)) {
-        return dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId) == ERR_OK;
+    bool res = dataMgr->GetBundleInfo(bundleName, flags, bundleInfo, userId);
+    if (!res) {
+        if (isBrokerServiceExisted_) {
+            return dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId) == ERR_OK;
+        }
     }
-    return true;
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetBaseSharedBundleInfos(const std::string &bundleName,
@@ -326,9 +329,7 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    auto res = dataMgr->GetBundleInfos(flags, bundleInfos, userId);
-    dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
-    return res;
+    return dataMgr->GetBundleInfos(flags, bundleInfos, userId);
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
@@ -549,10 +550,13 @@ bool BundleMgrHostImpl::QueryAbilityInfo(const Want &want, int32_t flags, int32_
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    if (!dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo)) {
-        return (dataMgr->QueryAbilityInfoFromBmsExtension(want, flags, userId, abilityInfo) == ERR_OK);
+    bool res = dataMgr->QueryAbilityInfo(want, flags, userId, abilityInfo);
+    if (!res) {
+        if (isBrokerServiceExisted_) {
+            return (dataMgr->QueryAbilityInfoFromBmsExtension(want, flags, userId, abilityInfo) == ERR_OK);
+        }
     }
-    return true;
+    return res;
 }
 
 bool BundleMgrHostImpl::QueryAbilityInfos(const Want &want, std::vector<AbilityInfo> &abilityInfos)
@@ -579,10 +583,7 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
-
-    return !abilityInfos.empty();
+    return dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
 }
 
 ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
@@ -2804,6 +2805,12 @@ bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string 
         return false;
     }
     return dataMgr->GetGroupDir(dataGroupId, dir);
+}
+
+void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
+{
+    APP_LOGD("broker service status is %{public}d", isServiceExisted);
+    isBrokerServiceExisted_ = isServiceExisted;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
