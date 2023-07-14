@@ -38,6 +38,21 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
+    virtual ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos)
+    {
+        return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+    }
+    virtual ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
+        BundleInfo &bundleInfo)
+    {
+        return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+    }
+    virtual ErrCode GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+    }
+
     virtual ~BundleMgrExt() = default;
 };
 
