@@ -46,8 +46,11 @@ public:
     void SetUp();
     void TearDown();
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionGetRequestTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundlePermissionGetRequestTest::BmsBundlePermissionGetRequestTest()
 {}
@@ -59,7 +62,9 @@ void BmsBundlePermissionGetRequestTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionGetRequestTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionGetRequestTest::SetUp()
 {}

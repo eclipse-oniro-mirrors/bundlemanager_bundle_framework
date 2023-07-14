@@ -65,8 +65,11 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixBootScannerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleDataGroupTest::BmsBundleDataGroupTest()
 {}
@@ -78,7 +81,9 @@ void BmsBundleDataGroupTest::SetUpTestCase()
 {}
 
 void BmsBundleDataGroupTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleDataGroupTest::SetUp()
 {

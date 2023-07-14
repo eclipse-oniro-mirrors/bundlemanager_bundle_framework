@@ -313,6 +313,12 @@ void BundleMgrService::SelfClean()
             registerToService_ = false;
         }
     }
+    aotLoopTask_.reset();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    agingMgr_.reset();
+    connectAbilityMgr_.reset();
+    bundleDistributedManager_.reset();
+#endif
 }
 
 sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const

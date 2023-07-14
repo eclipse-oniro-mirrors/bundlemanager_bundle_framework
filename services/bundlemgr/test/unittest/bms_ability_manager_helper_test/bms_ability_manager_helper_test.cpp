@@ -17,10 +17,12 @@
 #define private public
 #define protected public
 #include "ability_manager_helper.h"
+#include "bundle_mgr_service.h"
 #undef private
 #undef protected
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
+using OHOS::Parcel;
 namespace AppExecFwk {
 namespace {
     const std::string BUNDLE_NAME = "bundleName";
@@ -34,7 +36,12 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<AbilityManagerHelper> abilityManagerHelper_ = nullptr;
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsAbilityManagerHelperTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsAbilityManagerHelperTest::BmsAbilityManagerHelperTest()
 {}
@@ -46,7 +53,9 @@ void BmsAbilityManagerHelperTest::SetUpTestCase()
 {}
 
 void BmsAbilityManagerHelperTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsAbilityManagerHelperTest::SetUp()
 {}

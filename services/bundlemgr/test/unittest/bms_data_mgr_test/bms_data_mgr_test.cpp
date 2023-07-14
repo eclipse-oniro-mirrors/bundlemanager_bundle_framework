@@ -23,6 +23,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "parcel.h"
@@ -71,7 +72,11 @@ public:
 
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsDataMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsDataMgrTest::BmsDataMgrTest()
 {}
@@ -83,7 +88,10 @@ void BmsDataMgrTest::SetUpTestCase()
 {}
 
 void BmsDataMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
+
 
 void BmsDataMgrTest::SetUp()
 {}

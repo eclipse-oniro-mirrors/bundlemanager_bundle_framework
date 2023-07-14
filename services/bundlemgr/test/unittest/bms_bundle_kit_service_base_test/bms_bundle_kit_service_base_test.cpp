@@ -121,23 +121,29 @@ public:
     void AddApplicationInfo(const std::string &bundleName, ApplicationInfo &appInfo,
         bool userDataClearable = true, bool isSystemApp = false) const;
 public:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     NotifyBundleEvents installRes_;
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleKitServiceBaseTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleKitServiceBaseTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleKitServiceBaseTest::SetUpTestCase()
 {}
 
 void BmsBundleKitServiceBaseTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleKitServiceBaseTest::SetUp()
 {
-    if (!service_->IsServiceReady()) {
-        service_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();

@@ -60,7 +60,12 @@ public:
     void DeleteFiles(const std::vector<std::string>& destFiles);
     static std::vector<std::string> sourceFiles;
     AppQuickFix CreateAppQuickFix();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixManagerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleQuickFixManagerTest::BmsBundleQuickFixManagerTest()
 {}
@@ -72,7 +77,9 @@ void BmsBundleQuickFixManagerTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixManagerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixManagerTest::SetUp()
 {}

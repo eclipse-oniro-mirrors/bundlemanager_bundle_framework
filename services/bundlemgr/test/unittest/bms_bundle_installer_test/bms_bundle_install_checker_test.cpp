@@ -25,6 +25,7 @@
 #include "bundle_install_checker.h"
 #include "bundle_verify_mgr.h"
 #include "bundle_util.h"
+#include "bundle_mgr_service.h"
 #include "directory_ex.h"
 
 using namespace testing::ext;
@@ -61,7 +62,12 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallCheckerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleInstallCheckerTest::BmsBundleInstallCheckerTest()
 {}
@@ -74,7 +80,9 @@ void BmsBundleInstallCheckerTest::SetUpTestCase()
 }
 
 void BmsBundleInstallCheckerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleInstallCheckerTest::SetUp()
 {}

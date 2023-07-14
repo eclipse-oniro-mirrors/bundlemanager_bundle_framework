@@ -25,6 +25,7 @@
 #include "bundle_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
+#include "bundle_mgr_service.h"
 #include "bundle_mgr_ext_register.h"
 #include "json_constants.h"
 #include "json_serializer.h"
@@ -91,7 +92,11 @@ public:
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     std::ostringstream pathStream_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsExtensionDataMgrTest::BmsExtensionDataMgrTest()
 {}
@@ -103,7 +108,9 @@ void BmsExtensionDataMgrTest::SetUpTestCase()
 {}
 
 void BmsExtensionDataMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsExtensionDataMgrTest::SetUp()
 {}
