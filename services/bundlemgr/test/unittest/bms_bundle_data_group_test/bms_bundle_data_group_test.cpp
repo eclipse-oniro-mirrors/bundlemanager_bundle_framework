@@ -68,7 +68,7 @@ private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
-std::shared_ptr<BundleMgrService> BmsBundleQuickFixBootScannerTest::bundleMgrService_ =
+std::shared_ptr<BundleMgrService> BmsBundleDataGroupTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleDataGroupTest::BmsBundleDataGroupTest()
