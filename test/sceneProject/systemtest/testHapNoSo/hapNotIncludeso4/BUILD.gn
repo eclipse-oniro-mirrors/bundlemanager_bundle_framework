@@ -14,9 +14,9 @@
 import("//build/ohos.gni")
 import("../../../../../appexecfwk.gni")
 
-ohos_hap("hapNotIncludeso2") {
+ohos_hap("hapNotIncludeso4") {
   hap_profile = "entry/src/main/module.json"
-  hap_name = "hapNotIncludeso2"
+  hap_name = "hapNotIncludeso4"
   subsystem_name = "bundlemanager"
   final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testHapNoSo/${hap_name}.hap"
   testonly = true
@@ -24,7 +24,7 @@ ohos_hap("hapNotIncludeso2") {
     ":hjs_demo_js_assets",
     ":hjs_demo_resources",
   ]
-  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.hapNotIncludeso2.p7b"
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.hapNotIncludeso4.p7b"
 }
 
 ohos_app_scope("bmsstagedemoone_app_profile") {
