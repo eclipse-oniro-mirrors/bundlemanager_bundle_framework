@@ -854,8 +854,7 @@ bool BundlePermissionMgr::InnerUpdateRequestPermission(
 bool BundlePermissionMgr::IsSelfCalling()
 {
     int32_t callingUid = IPCSkeleton::GetCallingUid();
-    APP_LOGD("wtt calling uid: %{public}d", callingUid);
-    if (callingUid == Constants::FOUNDATION_UID || callingUid == Constants::ROOT_UID) {
+    if (callingUid == Constants::FOUNDATION_UID) {
         return true;
     }
     return false;

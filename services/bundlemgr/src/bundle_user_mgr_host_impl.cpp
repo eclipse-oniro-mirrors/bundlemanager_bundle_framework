@@ -174,25 +174,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         return;
     }
 
-    g_installedHapNum = 0;
-    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
-    int32_t totalHapNum = static_cast<int32_t>(bundleInfos.size());
-    std::string identity = IPCSkeleton::ResetCallingIdentity();
-    for (const auto &info : bundleInfos) {
-        InstallParam installParam;
-        installParam.userId = userId;
-        installParam.forceExecuted = true;
-        installParam.isPreInstallApp = info.isPreInstallApp;
-        installParam.installFlag = InstallFlag::NORMAL;
-        sptr<UserReceiverImpl> userReceiverImpl(new UserReceiverImpl());
-        userReceiverImpl->SetBundlePromise(bundlePromise);
-        userReceiverImpl->SetTotalHapNum(totalHapNum);
-        installer->Uninstall(info.name, installParam, userReceiverImpl);
-    }
-    if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
-        bundlePromise->WaitForAllTasksExecute();
-    }
-    IPCSkeleton::SetCallingIdentity(identity);
+    InnerUninstallBundle(userId, bundleInfos);
 
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);
@@ -245,6 +227,38 @@ const std::shared_ptr<BundleDataMgr> BundleUserMgrHostImpl::GetDataMgrFromServic
 const sptr<IBundleInstaller> BundleUserMgrHostImpl::GetBundleInstaller()
 {
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+}
+
+void BundleUserMgrHostImpl::InnerUninstallBundle(
+    int32_t userId,
+    const std::vector<BundleInfo> &bundleInfos)
+{
+    APP_LOGD("InnerUninstallBundle for userId: %{public}d start", userId);
+    auto installer = GetBundleInstaller();
+    if (installer == nullptr) {
+        APP_LOGE("InnerUninstallBundle installer is nullptr");
+        return;
+    }
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
+    g_installedHapNum = 0;
+    std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
+    int32_t totalHapNum = static_cast<int32_t>(bundleInfos.size());
+    for (const auto &info : bundleInfos) {
+        InstallParam installParam;
+        installParam.userId = userId;
+        installParam.forceExecuted = true;
+        installParam.isPreInstallApp = info.isPreInstallApp;
+        installParam.installFlag = InstallFlag::NORMAL;
+        sptr<UserReceiverImpl> userReceiverImpl(new UserReceiverImpl());
+        userReceiverImpl->SetBundlePromise(bundlePromise);
+        userReceiverImpl->SetTotalHapNum(totalHapNum);
+        installer->Uninstall(info.name, installParam, userReceiverImpl);
+    }
+    if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
+        bundlePromise->WaitForAllTasksExecute();
+    }
+    IPCSkeleton::SetCallingIdentity(identity);
+    APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
