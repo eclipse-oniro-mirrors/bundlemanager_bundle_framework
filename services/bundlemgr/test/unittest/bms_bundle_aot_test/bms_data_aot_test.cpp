@@ -61,6 +61,7 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
+    std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
