@@ -28,6 +28,7 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -110,7 +111,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
-
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     // Read apps installed by other users that are visible to all users
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
@@ -122,10 +123,10 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->InstallByBundleName(info.GetBundleName(), installParam, userReceiverImpl);
     }
-
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();
     }
+    IPCSkeleton::SetCallingIdentity(identity);
 }
 
 void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
@@ -176,6 +177,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(bundleInfos.size());
+    std::string identity = IPCSkeleton::ResetCallingIdentity();
     for (const auto &info : bundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
@@ -187,10 +189,10 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(info.name, installParam, userReceiverImpl);
     }
-
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();
     }
+    IPCSkeleton::SetCallingIdentity(identity);
 
     RemoveArkProfile(userId);
     RemoveAsanLogDirectory(userId);

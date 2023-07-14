@@ -47,6 +47,16 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
 {
     return false;
 }
+
+bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
+{
+    return false;
+}
+
+bool BundlePermissionMgr::IsSelfCalling()
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
 {
@@ -72,6 +82,16 @@ bool BundlePermissionMgr::VerifyCallingUid()
 }
 
 bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
+{
+    return true;
+}
+
+bool BundlePermissionMgr::IsSelfCalling()
 {
     return true;
 }
