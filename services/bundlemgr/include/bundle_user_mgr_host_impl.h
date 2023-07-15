@@ -40,6 +40,7 @@ public:
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
+    void InnerUninstallBundle(int32_t userId, const std::vector<BundleInfo> &bundleInfos);
     void CheckInitialUser();
     void BeforeCreateNewUser(int32_t userId);
     void OnCreateNewUser(int32_t userId);

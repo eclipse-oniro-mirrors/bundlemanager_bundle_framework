@@ -597,6 +597,19 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
     return true;
 }
 
+bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permissionName)
+{
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    APP_LOGD("VerifyCallingPermission permission %{public}s, callerToken : %{private}u",
+        permissionName.c_str(), callerToken);
+    if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
+        AccessToken::PermissionState::PERMISSION_DENIED) {
+        APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        return false;
+    }
+    return true;
+}
+
 int32_t BundlePermissionMgr::VerifyPermission(
     const std::string &bundleName, const std::string &permissionName, const int32_t userId)
 {
@@ -836,6 +849,15 @@ bool BundlePermissionMgr::InnerUpdateRequestPermission(
         }
     }
     return true;
+}
+
+bool BundlePermissionMgr::IsSelfCalling()
+{
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid == Constants::FOUNDATION_UID) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
