@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <deque>
 #include <regex>
+#include <unistd.h>
+#include "string_ex.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
@@ -2920,20 +2922,9 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
             ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
             for (const Shortcut &item : shortcutJson.shortcuts) {
                 ShortcutInfo shortcutInfo;
-                shortcutInfo.id = item.shortcutId;
                 shortcutInfo.bundleName = abilityInfo.bundleName;
                 shortcutInfo.moduleName = abilityInfo.moduleName;
-                shortcutInfo.icon = item.icon;
-                shortcutInfo.label = item.label;
-                shortcutInfo.iconId = item.iconId;
-                shortcutInfo.labelId = item.labelId;
-                for (const ShortcutWant &shortcutWant : item.wants) {
-                    ShortcutIntent shortcutIntent;
-                    shortcutIntent.targetBundle = shortcutWant.bundleName;
-                    shortcutIntent.targetModule = shortcutWant.moduleName;
-                    shortcutIntent.targetClass = shortcutWant.abilityName;
-                    shortcutInfo.intents.emplace_back(shortcutIntent);
-                }
+                InnerProcessShortcut(item, shortcutInfo);
                 shortcutInfos.emplace_back(shortcutInfo);
             }
         }
@@ -4083,6 +4074,34 @@ void InnerBundleInfo::UpdateIsCompressNativeLibs()
 void InnerBundleInfo::SetResourcesApply(const std::vector<int32_t> &resourcesApply)
 {
     baseApplicationInfo_->resourcesApply = resourcesApply;
+}
+
+void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo)
+{
+    shortcutInfo.id = oldShortcut.shortcutId;
+    shortcutInfo.icon = oldShortcut.icon;
+    shortcutInfo.label = oldShortcut.label;
+    shortcutInfo.iconId = oldShortcut.iconId;
+    if (shortcutInfo.iconId == 0) {
+        auto iter = oldShortcut.icon.find(PORT_SEPARATOR);
+        if (iter != std::string::npos) {
+            shortcutInfo.iconId = atoi(oldShortcut.icon.substr(iter + 1).c_str());
+        }
+    }
+    shortcutInfo.labelId = oldShortcut.labelId;
+    if (shortcutInfo.labelId == 0) {
+        auto iter = oldShortcut.label.find(PORT_SEPARATOR);
+        if (iter != std::string::npos) {
+            shortcutInfo.labelId = atoi(oldShortcut.label.substr(iter + 1).c_str());
+        }
+    }
+    for (const ShortcutWant &shortcutWant : oldShortcut.wants) {
+        ShortcutIntent shortcutIntent;
+        shortcutIntent.targetBundle = shortcutWant.bundleName;
+        shortcutIntent.targetModule = shortcutWant.moduleName;
+        shortcutIntent.targetClass = shortcutWant.abilityName;
+        shortcutInfo.intents.emplace_back(shortcutIntent);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

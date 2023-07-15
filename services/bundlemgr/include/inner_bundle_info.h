@@ -2066,6 +2066,7 @@ private:
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
     void UpdateIsCompressNativeLibs();
+    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo);
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
