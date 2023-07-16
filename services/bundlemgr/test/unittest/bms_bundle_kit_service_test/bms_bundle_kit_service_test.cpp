@@ -48,6 +48,7 @@
 #include "nlohmann/json.hpp"
 #include "perf_profile.h"
 #include "service_control.h"
+#include "shortcut_info.h"
 #include "system_ability_helper.h"
 #include "want.h"
 
@@ -10803,5 +10804,93 @@ HWTEST_F(BmsBundleKitServiceTest, SetModuleRemovable_0300, Function | SmallTest 
     auto testRet1 = GetBundleDataMgr()->IsModuleRemovable(BUNDLE_NAME_TEST_CLEAR, MODULE_NAME_TEST_CLEAR, isRemovable);
     EXPECT_EQ(testRet1, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
     EXPECT_FALSE(isRemovable);
+}
+
+/**
+ * @tc.number: InnerProcessShortcut_0001
+ * @tc.name: test InnerProcessShortcut
+ * @tc.desc: 1.system run normally
+ *           2.test InnerProcessShortcut.
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0001, Function | SmallTest | Level1)
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = "shortcut_id";
+    shortcut.icon = "$media:16777226";
+    int32_t iconId = 16777226;
+    shortcut.label = "$string:16777222";
+    int32_t labelId = 16777222;
+    ShortcutWant want;
+    want.bundleName = "bundleName";
+    want.abilityName = "ability";
+    shortcut.wants.emplace_back(want);
+
+    ShortcutInfo shortcutInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InnerProcessShortcut(shortcut, shortcutInfo);
+
+    EXPECT_EQ(shortcutInfo.id, shortcut.shortcutId);
+    EXPECT_EQ(shortcutInfo.label, shortcut.label);
+    EXPECT_EQ(shortcutInfo.labelId, labelId);
+    EXPECT_EQ(shortcutInfo.icon, shortcut.icon);
+    EXPECT_EQ(shortcutInfo.iconId, iconId);
+}
+
+/**
+ * @tc.number: InnerProcessShortcut_0002
+ * @tc.name: test InnerProcessShortcut
+ * @tc.desc: 1.system run normally
+ *           2.test InnerProcessShortcut.
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0002, Function | SmallTest | Level1)
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = "shortcut_id";
+    shortcut.icon = "$media:icon";
+    shortcut.label = "$string:label";
+    ShortcutWant want;
+    want.bundleName = "bundleName";
+    want.abilityName = "ability";
+    shortcut.wants.emplace_back(want);
+
+    ShortcutInfo shortcutInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InnerProcessShortcut(shortcut, shortcutInfo);
+
+    EXPECT_EQ(shortcutInfo.id, shortcut.shortcutId);
+    EXPECT_EQ(shortcutInfo.label, shortcut.label);
+    EXPECT_EQ(shortcutInfo.labelId, 0);
+    EXPECT_EQ(shortcutInfo.icon, shortcut.icon);
+    EXPECT_EQ(shortcutInfo.iconId, 0);
+}
+
+/**
+ * @tc.number: InnerProcessShortcut_0003
+ * @tc.name: test InnerProcessShortcut
+ * @tc.desc: 1.system run normally
+ *           2.test InnerProcessShortcut.
+ */
+HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0003, Function | SmallTest | Level1)
+{
+    Shortcut shortcut;
+    shortcut.shortcutId = "shortcut_id";
+    shortcut.icon = "$media:icon";
+    shortcut.iconId = 16777226;
+    shortcut.label = "$string:name";
+    shortcut.labelId = 16777222;
+    ShortcutWant want;
+    want.bundleName = "bundleName";
+    want.abilityName = "ability";
+    shortcut.wants.emplace_back(want);
+
+    ShortcutInfo shortcutInfo;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.InnerProcessShortcut(shortcut, shortcutInfo);
+
+    EXPECT_EQ(shortcutInfo.id, shortcut.shortcutId);
+    EXPECT_EQ(shortcutInfo.label, shortcut.label);
+    EXPECT_EQ(shortcutInfo.labelId, shortcut.labelId);
+    EXPECT_EQ(shortcutInfo.icon, shortcut.icon);
+    EXPECT_EQ(shortcutInfo.iconId, shortcut.iconId);
 }
 }
