@@ -4076,7 +4076,7 @@ void InnerBundleInfo::SetResourcesApply(const std::vector<int32_t> &resourcesApp
     baseApplicationInfo_->resourcesApply = resourcesApply;
 }
 
-void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo)
+void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const
 {
     shortcutInfo.id = oldShortcut.shortcutId;
     shortcutInfo.icon = oldShortcut.icon;
