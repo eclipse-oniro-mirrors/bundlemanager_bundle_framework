@@ -37,6 +37,10 @@ struct InstallCheckParam {
     PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // status of install enterprise bundle permission
     PermissionStatus installEnterpriseBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install enterprise normal bundle permission
+    PermissionStatus installEtpNormalBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install enterprise mdm bundle permission
+    PermissionStatus installEtpMdmBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
     // is shell token
     bool isCallByShell = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
@@ -126,8 +130,14 @@ public:
     bool VaildInstallPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
+    bool VaildEnterpriseInstallPermission(const InstallParam &installParam,
+        const Security::Verify::ProvisionInfo &provisionInfo);
+
     bool VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    bool VaildEnterpriseInstallPermissionForShare(const InstallCheckParam &checkParam,
+        const Security::Verify::ProvisionInfo &provisionInfo);
 
     ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
@@ -144,6 +154,8 @@ public:
     ErrCode CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
+
+    ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
 private:
 
