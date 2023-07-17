@@ -3612,7 +3612,7 @@ bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &di
 
 bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
 {
-    APP_LOGI("QueryAppGalleryBundleName in bundle proxy start");
+    APP_LOGD("QueryAppGalleryBundleName in bundle proxy start");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

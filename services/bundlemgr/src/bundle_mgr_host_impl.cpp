@@ -2815,7 +2815,7 @@ void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
 =======
 bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
 {
-    APP_LOGI("QueryAppGalleryBundleName in bundle host impl start");
+    APP_LOGD("QueryAppGalleryBundleName in bundle host impl start");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
