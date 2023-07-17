@@ -21,6 +21,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
+#include <random>
+#include <set>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <thread>
@@ -37,6 +39,12 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
+const std::string DEC_TO_HEX = "0123456789abcdef";
+const std::string::size_type DATA_GROUP_DIR_SIZE = 36;
+const char DATA_GROUP_DIR_SEPARATOR = '-';
+const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
+const int32_t RANDOM_NUM_START = 0;
+const int32_t RANDOM_NUM_END = 15;
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
@@ -658,6 +666,21 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
         APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
         BundleUtil::DeleteDir(tempDir);
     }
+}
+
+std::string BundleUtil::GenerateDataGroupDirName()
+{
+    std::string res(DATA_GROUP_DIR_SIZE, DATA_GROUP_DIR_SEPARATOR);
+    for (auto i = 0; i < DATA_GROUP_DIR_SIZE; i++) {
+        if (SEPARATOR_POSITIONS.find(i) == SEPARATOR_POSITIONS.end()) {
+            std::random_device seed;
+            std::ranlux48 engine(seed());
+            std::uniform_int_distribution<> distrib(RANDOM_NUM_START, RANDOM_NUM_END);
+            int32_t random = distrib(engine);
+            res[i] = DEC_TO_HEX[random];
+        }
+    }
+    return res;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
