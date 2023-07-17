@@ -17,6 +17,7 @@
 
 #include <dirent.h>
 #include <future>
+#include <mutex>
 #include <set>
 #include <string>
 
@@ -1006,7 +1007,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    auto ret = dataMgr->GetApplicationInfoV9(bundleName,
+    auto ret = dataMgr->GetApplicationInfoV9WithResponseId(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());
@@ -1020,34 +1021,8 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
     }
 
-    int32_t realityUserId = GetResponseUserIdByBundleName(bundleName, userId);
-    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, realityUserId);
+    CleanBundleCacheTask(bundleName, cleanCacheCallback, dataMgr, userId);
     return ERR_OK;
-}
-
-int32_t BundleMgrHostImpl::GetResponseUserIdByBundleName(
-    const std::string &appName, int32_t userId)
-{
-    int32_t realityUserId = userId;
-    auto dataMgr = GetDataMgrFromService();
-    if (dataMgr == nullptr) {
-        APP_LOGE("DataMgr is nullptr");
-        EventReport::SendCleanCacheSysEvent(appName, userId, true, true);
-        return Constants::INVALID_USERID;
-    }
-    InnerBundleInfo innerBundleInfo;
-    if (!dataMgr->GetInnerBundleInfo(appName, innerBundleInfo)) {
-        APP_LOGE("cannot obtain the innerbundleInfo from data mgr");
-        return Constants::INVALID_USERID;
-    }
-    dataMgr->EnableBundle(appName);
-    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
-    if (responseUserId != Constants::INVALID_USERID) {
-        APP_LOGD("get reality userId : %{public}d from bundleName : %{public}s and userId : %{public}d",
-            responseUserId, appName.c_str(), userId);
-        realityUserId = responseUserId;
-    }
-    return realityUserId;
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,

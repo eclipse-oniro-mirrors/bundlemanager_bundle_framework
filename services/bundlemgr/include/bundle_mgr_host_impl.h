@@ -825,7 +825,6 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
-    int32_t GetResponseUserIdByBundleName(const std::string &appName, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
