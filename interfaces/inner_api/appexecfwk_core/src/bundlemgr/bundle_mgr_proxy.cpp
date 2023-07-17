@@ -3630,7 +3630,7 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
         return false;
     }
     bundleName = reply.ReadString();
-    if(bundleName.length() > Constants::MAX_BUNDLE_NAME) {
+    if (bundleName.length() > Constants::MAX_BUNDLE_NAME) {
         APP_LOGE("reply result false");
         return false;
     }
