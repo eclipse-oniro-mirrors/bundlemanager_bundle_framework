@@ -2786,7 +2786,7 @@ ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, Mess
 
 ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply)
 {
-    APP_LOGI("QueryAppGalleryBundleName in bundle mgr hoxt start");
+    APP_LOGD("QueryAppGalleryBundleName in bundle mgr hoxt start");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName;
     bool ret = QueryAppGalleryBundleName(bundleName);

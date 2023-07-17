@@ -3631,7 +3631,7 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     }
     bundleName = reply.ReadString();
     if(bundleName.length() > Constants::MAX_BUNDLE_NAME) {
-        APP_LOGE("fail to QueryAppGalleryBundleName from server");
+        APP_LOGE("reply result false");
         return false;
     }
     APP_LOGD("bundleName is %{public}s", bundleName.c_str());
