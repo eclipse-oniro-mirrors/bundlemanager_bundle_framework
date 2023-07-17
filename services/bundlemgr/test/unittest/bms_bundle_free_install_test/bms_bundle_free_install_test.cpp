@@ -28,7 +28,9 @@
 #include "bundle_mgr_service.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_pack_info.h"
+#ifndef SUPPORT_ERMS
 #include "mock_ecological_rule_manager.h"
+#endif
 #include "inner_bundle_info.h"
 #include "install_result.h"
 #include "installd/installd_service.h"
@@ -696,7 +698,9 @@ HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0018, Function | Sma
 HWTEST_F(BmsBundleFreeInstallTest, BmsBundleFreeInstallTest_0019, Function | SmallTest | Level0)
 {
     auto connectAbilityMgr = GetBundleConnectAbilityMgr();
+#ifndef SUPPORT_ERMS
     connectAbilityMgr->iErMgr_ = nullptr;
+#endif
     TargetAbilityInfo targetAbilityInfo;
     Want want;
     FreeInstallParams freeInstallParams;
@@ -1461,6 +1465,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0025, Function | Smal
     EXPECT_EQ(ret, true);
 }
 
+#ifndef SUPPORT_ERMS
 /**
  * @tc.number: BundleConnectAbilityMgr_0026
  * Function: BundleConnectAbilityMgr
@@ -1481,6 +1486,7 @@ HWTEST_F(BmsBundleFreeInstallTest, BundleConnectAbilityMgr_0026, Function | Smal
     EXPECT_EQ(callerInfo.uid, 0);
     ResetDataMgr();
 }
+#endif
 
 /**
  * @tc.number: BundleConnectAbilityMgr_0027
@@ -1944,6 +1950,7 @@ HWTEST_F(BmsBundleFreeInstallTest, OnAbilityDisconnectDone_0400, Function | Smal
     EXPECT_TRUE(connection.serviceCenterRemoteObject_ == nullptr);
 }
 
+#ifndef SUPPORT_ERMS
 /**
  * @tc.number: CheckEcologicalRule_0001
  * Function: CheckEcologicalRule
@@ -2002,4 +2009,5 @@ HWTEST_F(BmsBundleFreeInstallTest, GetEcologicalCallerInfo_0002, Function | Smal
     ASSERT_NE(bundleDataMgr_, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = bundleDataMgr_;
 }
+#endif
 } // OHOS

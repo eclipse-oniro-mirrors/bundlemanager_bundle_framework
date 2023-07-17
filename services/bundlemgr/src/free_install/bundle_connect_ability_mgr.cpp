@@ -18,8 +18,10 @@
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
+#ifndef SUPPORT_ERMS
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
+#endif
 #include "ffrt.h"
 #include "free_install_params.h"
 #include "hitrace_meter.h"
@@ -31,8 +33,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+#ifndef SUPPORT_ERMS
 using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
 using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
+#endif
 namespace {
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
@@ -60,6 +64,11 @@ constexpr uint32_t OUT_TIME = 30000;
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 constexpr uint32_t FREE_INSTALL_DONE = 0;
+#ifdef SUPPORT_ERMS
+constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
+constexpr uint32_t TYPE_HARMONEY_APP = 1;
+constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
+#endif
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -1069,6 +1078,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
 }
 
+#ifndef SUPPORT_ERMS
 sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologicalRuleMgr()
 {
     if (iErMgr_ != nullptr) {
@@ -1088,15 +1098,20 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologica
     iErMgr_ = iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
     return iErMgr_;
 }
+#endif
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
 {
+#ifndef SUPPORT_ERMS
     sptr<AppExecFwk::IEcologicalRuleManager> erms = CheckEcologicalRuleMgr();
     if (!erms) {
         APP_LOGE("CheckEcologicalRuleMgr failed.");
         return false;
     }
     int ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);
+#else
+    int ret = EcologicalRuleMgrServiceClient::GetInstance()->QueryFreeInstallExperience(want, callerInfo, rule);
+#endif
     if (ret != ERR_OK) {
         APP_LOGE("Failed to query free install experience from erms.");
         return false;
@@ -1109,14 +1124,16 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
     callerInfo.uid = want.GetIntParam(Want::PARAM_RESV_CALLER_UID, IPCSkeleton::GetCallingUid());
     callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
-
+#ifdef SUPPORT_ERMS
+    callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
+    callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
+#endif
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
         APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
         return;
     }
-
     std::string callerBundleName;
     ErrCode err = bundleDataMgr_->GetNameForUid(callerInfo.uid, callerBundleName);
     if (err != ERR_OK) {
@@ -1130,7 +1147,7 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
         APP_LOGE("Get callerAppInfo failed.");
         return;
     }
-
+#ifndef SUPPORT_ERMS
     switch (callerAppInfo.bundleType) {
         case AppExecFwk::BundleType::ATOMIC_SERVICE:
             APP_LOGD("the caller type is atomic service");
@@ -1142,6 +1159,17 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
             APP_LOGD("the caller type is invalid type");
             break;
     }
+#else
+    if (callerAppInfo.bundleType == AppExecFwk::BundleType::ATOMIC_SERVICE) {
+        APP_LOGD("the caller type is atomic service");
+        callerInfo.callerAppType = TYPE_HARMONEY_SERVICE;
+    } else if (callerAppInfo.bundleType == AppExecFwk::BundleType::APP) {
+        APP_LOGD("the caller type is app");
+        callerInfo.callerAppType = TYPE_HARMONEY_APP;
+    } else {
+        APP_LOGD("the caller type is invalid type");
+    }
+#endif
 }
 
 bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const

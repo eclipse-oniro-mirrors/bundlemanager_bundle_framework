@@ -90,6 +90,11 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -227,6 +232,11 @@ ohos_unittest("BmsBundleFreeInstallTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

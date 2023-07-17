@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef OHOS_FORM_FWK_MOCK_ECOLOGICAL_RULE_MANAGER_H
 #define OHOS_FORM_FWK_MOCK_ECOLOGICAL_RULE_MANAGER_H
 
@@ -26,6 +25,7 @@
 #include "iremote_stub.h"
 #include "want.h"
 
+#ifndef SUPPORT_ERMS
 namespace OHOS {
 namespace AppExecFwk {
 using Want = OHOS::AAFwk::Want;
@@ -126,4 +126,6 @@ public:
 } // namespace AppExecFwk
 } // namespace OHOS
 
+#endif // SUPPORT_ERMS
 #endif // OHOS_FORM_FWK_MOCK_ECOLOGICAL_RULE_MANAGER_H
+
