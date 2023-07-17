@@ -344,15 +344,16 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
         appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
     ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
-    // if hap has no SO files then return ERR_OK
-    if (!ExtractSoFiles(bundleInfo, oldSoPath)) {
-        APP_LOGD("bundleName: %{public}s has no so files.", bundleInfo.name.c_str());
-        return ERR_OK;
-    }
 
     auto &appQfInfo = appQuickFix.deployingAppqfInfo;
     for (const auto &hqf : appQfInfo.hqfInfos) {
-        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, oldSoPath, patchPath);
+        // if hap has no so file then continue
+        std::string tmpSoPath = oldSoPath;
+        if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
+            APP_LOGW("module:{public}s has no so file", hqf.moduleName.c_str());
+            continue;
+        }
+        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath);
         if (result != ERR_OK) {
             APP_LOGE("bundleName: %{public}s ProcessApplyDiffPatch failed.", appQuickFix.bundleName.c_str());
             return result;
@@ -697,31 +698,41 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
     EventReport::SendBundleSystemEvent(BundleEventType::QUICK_FIX, sysEventInfo);
 }
 
-bool QuickFixDeployer::ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath)
+bool QuickFixDeployer::ExtractSoFiles(
+    const BundleInfo &bundleInfo,
+    const std::string &moduleName,
+    std::string &tmpSoPath)
 {
-    bool isExistSoFile = false;
-    for (const auto &hapInfo : bundleInfo.hapModuleInfos) {
-        std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
-        std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
-        if (!hapInfo.nativeLibraryPath.empty()) {
-            cpuAbi = hapInfo.cpuAbi;
-            nativeLibraryPath = hapInfo.nativeLibraryPath;
-        }
-        if (nativeLibraryPath.empty()) {
-            continue;
-        }
-        ExtractParam extractParam;
-        extractParam.extractFileType = ExtractFileType::SO;
-        extractParam.srcPath = hapInfo.hapPath;
-        extractParam.targetPath = tmpSoPath;
-        extractParam.cpuAbi = cpuAbi;
-        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
-            APP_LOGW("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
-                bundleInfo.name.c_str(), hapInfo.moduleName.c_str());
-        }
-        isExistSoFile = true;
+    auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
+        [&moduleName](const HapModuleInfo &info) {
+            return info.moduleName == moduleName;
+        })
+    if (iter == bundleInfo.hapModuleInfos.end()) {
+        return false;
     }
-    return isExistSoFile;
+    std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
+    std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
+    if (!iter->nativeLibraryPath.empty()) {
+        cpuAbi = iter->cpuAbi;
+        nativeLibraryPath = iter->nativeLibraryPath;
+    }
+    if (nativeLibraryPath.empty()) {
+        return false;
+    }
+
+    tmpSoPath = (tmpSoPath.back() == Constants::PATH_SEPARATOR[0]) ? (tmpSoPath + moduleName) :
+        (tmpSoPath + Constants::PATH_SEPARATOR + moduleName);
+    ExtractParam extractParam;
+    extractParam.extractFileType = ExtractFileType::SO;
+    extractParam.srcPath = iter->hapPath;
+    extractParam.targetPath = tmpSoPath;
+    extractParam.cpuAbi = cpuAbi;
+    if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+        APP_LOGW("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
+            bundleInfo.name.c_str(), hapInfo.moduleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
