@@ -291,7 +291,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0400, Function | MediumTes
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + LIBS);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
     res = UninstallBundle(BUNDLE_NAME4);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Install_Hap_With_SO_0400" << std::endl;

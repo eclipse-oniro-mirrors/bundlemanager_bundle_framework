@@ -36,6 +36,7 @@ const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string RESULT_CODE = "resultCode";
 const std::string RESULT_BUNDLE_NAME = "bundleName";
 const int32_t USERID = 100;
+const int32_t WAIT_TIME = 5; // init mocked bms
 }
 
 class BmsBundleQuickFixDeleterTest : public testing::Test {
@@ -52,10 +53,19 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixDeleterTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleQuickFixDeleterTest::installdService_ =
+    std::make_shared<InstalldService>();
+
+std::shared_ptr<QuickFixDataMgr> BmsBundleQuickFixDeleterTest::quickFixDataMgr_ =
+    DelayedSingleton<QuickFixDataMgr>::GetInstance();
 
 BmsBundleQuickFixDeleterTest::BmsBundleQuickFixDeleterTest()
 {}
@@ -67,7 +77,9 @@ void BmsBundleQuickFixDeleterTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixDeleterTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixDeleterTest::SetUp()
 {
@@ -76,16 +88,12 @@ void BmsBundleQuickFixDeleterTest::SetUp()
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
-    }
-    auto dataMgr = GetBundleDataMgr();
-    if (dataMgr != nullptr) {
-        dataMgr->AddUserId(USERID);
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
 
 void BmsBundleQuickFixDeleterTest::TearDown()
 {}
-
 
 void BmsBundleQuickFixDeleterTest::AddInnerAppQuickFix(const InnerAppQuickFix &appQuickFixInfo) const
 {
@@ -96,6 +104,7 @@ void BmsBundleQuickFixDeleterTest::AddInnerAppQuickFix(const InnerAppQuickFix &a
 
 const std::shared_ptr<BundleDataMgr> BmsBundleQuickFixDeleterTest::GetBundleDataMgr() const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     return bundleMgrService_->GetDataMgr();
 }
 
@@ -134,11 +143,10 @@ void BmsBundleQuickFixDeleterTest::CheckResult(const sptr<MockQuickFixCallback> 
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0100, Function | SmallTest | Level0)
 {
-    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
-    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    QuickFixManagerHostImpl quickFixHost;
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost->DeleteQuickFix("", callback);
+    ErrCode result = quickFixHost.DeleteQuickFix("", callback);
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
@@ -151,9 +159,8 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0100, Functi
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0200, Function | SmallTest | Level0)
 {
-    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
-    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
-    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, nullptr);
+    QuickFixManagerHostImpl quickFixHost;
+    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, nullptr);
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
@@ -166,11 +173,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0200, Functi
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0300, Function | SmallTest | Level0)
 {
-    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
-    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    QuickFixManagerHostImpl quickFixHost;
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }
@@ -187,11 +193,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0400, Functi
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
-    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    QuickFixManagerHostImpl quickFixHost;
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }
@@ -208,11 +213,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0500, Functi
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    auto quickFixHost = DelayedSingleton<BundleMgrService>::GetInstance()->GetQuickFixManagerProxy();
-    EXPECT_NE(quickFixHost, nullptr) << "the quickFixHost is nullptr";
+    QuickFixManagerHostImpl quickFixHost;
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }

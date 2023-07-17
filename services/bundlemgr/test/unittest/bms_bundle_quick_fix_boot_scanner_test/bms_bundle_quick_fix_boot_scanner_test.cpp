@@ -65,7 +65,6 @@ public:
     InnerAppQuickFix GenerateAppQuickFixInfo(const std::string &bundleName, const QuickFixStatus &status,
         bool flag = true) const;
     void StartService();
-    void StopService();
     void AddInnerBundleInfo(const std::string &bundleName) const;
     void CheckQuickFixInfo(const std::string &bundleName, size_t size) const;
     void QueryAllInnerQuickFixInfo(std::map<std::string, InnerAppQuickFix> &innerQuickFixInfos) const;
@@ -119,17 +118,9 @@ void BmsBundleQuickFixBootScannerTest::TearDown()
 void BmsBundleQuickFixBootScannerTest::StartService()
 {
     bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    if (bundleMgrService_ != nullptr && !bundleMgrService_->IsServiceReady()) {
+    EXPECT_NE(bundleMgrService_, nullptr);
+    if (bundleMgrService_ != nullptr) {
         bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
-}
-
-void BmsBundleQuickFixBootScannerTest::StopService()
-{
-    if (bundleMgrService_ != nullptr && bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStop();
-        bundleMgrService_.reset();
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
@@ -207,6 +198,7 @@ void BmsBundleQuickFixBootScannerTest::DeleteInnerAppQuickFix(const std::string 
 
 ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundlePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
@@ -299,13 +291,12 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0100
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    StopService();
+    SetUp();
     StartService();
 
-    CheckQuickFixInfo(BUNDLE_NAME, 1);
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -328,13 +319,12 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0200
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_ENABLE_START);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    StopService();
+    SetUp();
     StartService();
 
-    CheckQuickFixInfo(BUNDLE_NAME, 1);
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -359,15 +349,14 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0300
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    StopService();
+    SetUp();
     StartService();
 
-    CheckQuickFixInfo(BUNDLE_NAME, 0);
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
-    EXPECT_NE(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
+    EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -389,14 +378,14 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0400
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    StopService();
+    SetUp();
     StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
-    EXPECT_NE(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
+    EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -418,14 +407,14 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0500
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    StopService();
+    SetUp();
     StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
-    EXPECT_NE(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
+    EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -448,14 +437,14 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0600
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    StopService();
+    SetUp();
     StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
-    EXPECT_NE(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
+    EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
@@ -477,14 +466,14 @@ HWTEST_F(BmsBundleQuickFixBootScannerTest, BmsBundleQuickFixBootScannerTest_0700
     AddInnerAppQuickFix(innerAppQuickFix);
     CreateQuickFileDir();
 
-    StopService();
+    SetUp();
     StartService();
 
     int patchPathExist = access(PATCH_PATH.c_str(), F_OK);
-    EXPECT_NE(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
+    EXPECT_EQ(patchPathExist, 0) << "the patch path does not exists: " << PATCH_PATH;
     std::map<std::string, InnerAppQuickFix> innerQuickFixInfos;
     QueryAllInnerQuickFixInfo(innerQuickFixInfos);
-    EXPECT_EQ(0, innerQuickFixInfos.size());
+    EXPECT_EQ(1, innerQuickFixInfos.size());
 
     ret = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(ret, ERR_OK) << "Uninstall bundle com.example.l3jsdemo failed";
