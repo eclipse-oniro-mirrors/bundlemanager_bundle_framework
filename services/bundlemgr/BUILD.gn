@@ -58,7 +58,6 @@ config("bundlemgr_parse_config") {
     "//third_party/json/include",
     "//third_party/zlib/contrib/minizip",
     "//third_party/zlib",
-    "//third_party/e2fsprogs/e2fsprogs/lib/uuid",
   ]
 }
 
@@ -79,7 +78,6 @@ ohos_source_set("parser_common") {
     "${base_path}:appexecfwk_base",
     "${common_path}:libappexecfwk_common",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/zlib:shared_libz",
   ]
 
@@ -217,7 +215,6 @@ ohos_shared_library("libbms") {
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${extension_path}:bundlemgr_extension",
-    "//third_party/e2fsprogs:libext2_uuid",
     "//third_party/zlib:shared_libz",
   ]
 

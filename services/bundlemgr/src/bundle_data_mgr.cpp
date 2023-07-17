@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
-#include <uuid.h>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -5200,10 +5199,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    uuid_t uuidGenerate;
-    uuid_generate(uuidGenerate);
-    char str[UUID_LENGTH];
-    uuid_unparse(uuidGenerate, str);
+    std::string str = BundleUtil::GenerateDataGroupDirName();
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }
