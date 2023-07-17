@@ -13,4 +13,8 @@
  * limitations under the License.
  */
 
+namespace OHOS {
+namespace AppExecFwk {
 void Fun() {}
+}  // namespace AppExecFwk
+}  // namespace OHOS
