@@ -350,7 +350,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
         // if hap has no so file then continue
         std::string tmpSoPath = oldSoPath;
         if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
-            APP_LOGW("module:{public}s has no so file", hqf.moduleName.c_str());
+            APP_LOGW("module:%{public}s has no so file", hqf.moduleName.c_str());
             continue;
         }
         auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath);
@@ -706,7 +706,7 @@ bool QuickFixDeployer::ExtractSoFiles(
     auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
         [&moduleName](const HapModuleInfo &info) {
             return info.moduleName == moduleName;
-        })
+        });
     if (iter == bundleInfo.hapModuleInfos.end()) {
         return false;
     }
@@ -729,7 +729,7 @@ bool QuickFixDeployer::ExtractSoFiles(
     extractParam.cpuAbi = cpuAbi;
     if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
         APP_LOGW("bundleName: %{public}s moduleName: %{public}s extract so failed, ",
-            bundleInfo.name.c_str(), hapInfo.moduleName.c_str());
+            bundleInfo.name.c_str(), moduleName.c_str());
         return false;
     }
     return true;
