@@ -61,7 +61,12 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleFreeInstallBaseTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleFreeInstallBaseTest::BmsBundleFreeInstallBaseTest()
 {}
@@ -73,7 +78,9 @@ void BmsBundleFreeInstallBaseTest::SetUpTestCase()
 {}
 
 void BmsBundleFreeInstallBaseTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleFreeInstallBaseTest::SetUp()
 {}

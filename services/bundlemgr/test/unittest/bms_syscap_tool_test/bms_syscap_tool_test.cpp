@@ -57,7 +57,12 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsSyscapToolTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsSyscapToolTest::BmsSyscapToolTest()
 {}
@@ -69,7 +74,9 @@ void BmsSyscapToolTest::SetUpTestCase()
 {}
 
 void BmsSyscapToolTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsSyscapToolTest::SetUp()
 {}

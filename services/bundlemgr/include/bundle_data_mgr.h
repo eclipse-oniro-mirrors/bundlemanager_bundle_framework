@@ -835,6 +835,13 @@ public:
         const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
     bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
+    ErrCode GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
+        int32_t userId) const;
+    ErrCode GetBundleInfosFromBmsExtension(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const;
+    ErrCode QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
+    ErrCode QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+        AbilityInfo &abilityInfo) const;
 
 private:
     /**
@@ -948,6 +955,8 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

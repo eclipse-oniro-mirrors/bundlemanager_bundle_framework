@@ -57,9 +57,15 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionGrantTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionGrantTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionGrantTest::BmsBundlePermissionGrantTest()
 {}
@@ -71,7 +77,9 @@ void BmsBundlePermissionGrantTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionGrantTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionGrantTest::SetUp()
 {
@@ -165,7 +173,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0100, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: Install
  * @tc.name: test install a hap with system_bacic/system_core permission and normal apl
  * @tc.desc: 1. system running normally
@@ -181,7 +189,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0300, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: Install
  * @tc.name: test install a hap with system_basic/normal permission and system_basic apl
  * @tc.desc: 1. system running normally
@@ -197,7 +205,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0400, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: Install
  * @tc.name: test install a hap with system_core permission and system_basic apl
  * @tc.desc: 1. system running normally
@@ -213,7 +221,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0600, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: Install
  * @tc.name: test install a hap with normal/system_basic/system_core permission and system_core apl
  * @tc.desc: 1. system running normally
@@ -229,7 +237,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0700, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: ProcessPreload
  * @tc.name: test ProcessPreload verify success
  * @tc.desc: 1. system running normally
@@ -243,7 +251,7 @@ HWTEST_F(BmsBundlePermissionGrantTest, BmsBundlePermissionGrantTest_0800, Functi
 }
 
 /**
- * @tc.number: BmsBundleAccessTokenIdTest
+ * @tc.number: BmsBundlePermissionGrantTest
  * Function: GetBundleInfoForSelf
  * @tc.name: test ProcessPreload verify success
  * @tc.desc: 1. system running normally

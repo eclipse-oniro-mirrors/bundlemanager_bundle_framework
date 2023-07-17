@@ -61,9 +61,15 @@ public:
     ErrCode UnInstallBundle(const std::string &bundleName) const;
     ErrCode UninstallShred(const UninstallParam &uninstallParam) const;
 private:
-    std::shared_ptr<InstalldService> installdService_;
-    std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleSharedLibraryUninstallTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleSharedLibraryUninstallTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleSharedLibraryUninstallTest::BmsBundleSharedLibraryUninstallTest()
 {
@@ -78,12 +84,14 @@ void BmsBundleSharedLibraryUninstallTest::SetUpTestCase()
 {}
 
 void BmsBundleSharedLibraryUninstallTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleSharedLibraryUninstallTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
+    StartBundleService();
 }
 
 void BmsBundleSharedLibraryUninstallTest::TearDown()

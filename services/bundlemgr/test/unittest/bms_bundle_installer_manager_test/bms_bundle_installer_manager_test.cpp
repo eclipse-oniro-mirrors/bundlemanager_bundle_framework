@@ -50,7 +50,12 @@ public:
     void SetUp();
     void TearDown();
     std::shared_ptr<BundleInstallerManager> bundleInstallerManager = nullptr;
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BundleInstallerManagerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BundleInstallerManagerTest::BundleInstallerManagerTest()
 {}
@@ -62,7 +67,9 @@ void BundleInstallerManagerTest::SetUpTestCase()
 {}
 
 void BundleInstallerManagerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BundleInstallerManagerTest::SetUp()
 {}

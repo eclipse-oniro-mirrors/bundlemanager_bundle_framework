@@ -69,7 +69,11 @@ public:
 
 private:
     std::list<std::string> bundleList_{};
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsServiceBundleScanTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsServiceBundleScanTest::BmsServiceBundleScanTest()
 {}
@@ -81,7 +85,9 @@ void BmsServiceBundleScanTest::SetUpTestCase()
 {}
 
 void BmsServiceBundleScanTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsServiceBundleScanTest::SetUp()
 {

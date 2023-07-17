@@ -117,11 +117,15 @@ public:
     void ClearDataMgr();
     void ResetDataMgr();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleDefaultAppTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleDefaultAppTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 std::set<std::string> BmsBundleDefaultAppTest::invalidTypeSet = {INVALID_TYPE1, INVALID_TYPE2,
     INVALID_TYPE3, INVALID_TYPE4, INVALID_TYPE5, INVALID_TYPE6};
@@ -136,7 +140,9 @@ void BmsBundleDefaultAppTest::SetUpTestCase()
 {}
 
 void BmsBundleDefaultAppTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleDefaultAppTest::SetUp()
 {
@@ -157,8 +163,7 @@ void BmsBundleDefaultAppTest::ClearDataMgr()
 
 void BmsBundleDefaultAppTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 

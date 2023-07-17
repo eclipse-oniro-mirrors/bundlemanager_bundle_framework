@@ -108,18 +108,22 @@ public:
     void CreateFiles(const std::vector<std::string>& sourceFiles);
     void DeleteFiles(const std::vector<std::string>& destFiles);
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<QuickFixDeployer> deployer_ = nullptr;
     std::shared_ptr<QuickFixDeleter> deleter_ = nullptr;
     std::shared_ptr<QuickFixSwitcher> switcher_ = nullptr;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleQuickFixTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleQuickFixTest::BmsBundleQuickFixTest()
 {}
@@ -131,7 +135,9 @@ void BmsBundleQuickFixTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixTest::SetUp()
 {
@@ -151,10 +157,9 @@ void BmsBundleQuickFixTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleQuickFixTest::SetDataMgr()
+void BmsBundleQuickFixTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -3375,7 +3380,7 @@ HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0003, Function | SmallTest | Level0)
         InnerAppQuickFix newInnerAppQuickFix;
         res = deployer->SaveToInnerBundleInfo(newInnerAppQuickFix);
         EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
-        SetDataMgr();
+        ResetDataMgr();
     }
 }
 

@@ -62,7 +62,11 @@ public:
 
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsAOTMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsAOTMgrTest::BmsAOTMgrTest()
 {}
@@ -74,7 +78,9 @@ void BmsAOTMgrTest::SetUpTestCase()
 {}
 
 void BmsAOTMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsAOTMgrTest::SetUp()
 {

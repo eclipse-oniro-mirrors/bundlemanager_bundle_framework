@@ -77,10 +77,19 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = nullptr;
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixBootScannerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleQuickFixBootScannerTest::installdService_ =
+    std::make_shared<InstalldService>();
+
+std::shared_ptr<QuickFixDataMgr> BmsBundleQuickFixBootScannerTest::quickFixDataMgr_ =
+    DelayedSingleton<QuickFixDataMgr>::GetInstance();
 
 BmsBundleQuickFixBootScannerTest::BmsBundleQuickFixBootScannerTest()
 {}
@@ -92,18 +101,16 @@ void BmsBundleQuickFixBootScannerTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixBootScannerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixBootScannerTest::SetUp()
 {
-    if (installdService_ != nullptr && !installdService_->IsServiceReady()) {
+    if (!installdService_->IsServiceReady()) {
         installdService_->Start();
     }
     StartService();
-    auto dataMgr = GetBundleDataMgr();
-    if (dataMgr != nullptr) {
-        dataMgr->AddUserId(USERID);
-    }
 }
 
 void BmsBundleQuickFixBootScannerTest::TearDown()
@@ -140,6 +147,7 @@ void BmsBundleQuickFixBootScannerTest::AddInnerAppQuickFix(const InnerAppQuickFi
 
 const std::shared_ptr<BundleDataMgr> BmsBundleQuickFixBootScannerTest::GetBundleDataMgr() const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     return bundleMgrService_->GetDataMgr();
 }
 
@@ -199,7 +207,7 @@ void BmsBundleQuickFixBootScannerTest::DeleteInnerAppQuickFix(const std::string 
 
 ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundlePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -219,7 +227,7 @@ ErrCode BmsBundleQuickFixBootScannerTest::InstallBundle(const std::string &bundl
 
 ErrCode BmsBundleQuickFixBootScannerTest::UninstallBundle(const std::string &bundleName) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;

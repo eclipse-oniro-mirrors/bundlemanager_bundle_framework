@@ -1,4 +1,4 @@
-# Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+# Copyright (c) 2021-2023 Huawei Device Co., Ltd.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -14,6 +14,42 @@
 import("//build/test.gni")
 import("../../../../../appexecfwk.gni")
 module_output_path = "bundle_framework/bundlemgrsst"
+
+ohos_systemtest("BmsInstallHapSoTest") {
+  module_out_path = module_output_path
+
+  sources = [ "bms_install_hap_so_test.cpp" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso1:hapNotIncludeso1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso2:hapNotIncludeso2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso3:hapNotIncludeso3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso4:hapNotIncludeso4",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso1:hapIncludeso1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso2:hapIncludeso2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso3:hapIncludeso3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso4:hapIncludeso4",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
 
 ohos_systemtest("BmsInstallSystemTest") {
   module_out_path = module_output_path
@@ -76,5 +112,8 @@ ohos_systemtest("BmsInstallSystemTest") {
 group("systemtest") {
   testonly = true
 
-  deps = [ ":BmsInstallSystemTest" ]
+  deps = [
+    ":BmsInstallHapSoTest",
+    ":BmsInstallSystemTest",
+  ]
 }

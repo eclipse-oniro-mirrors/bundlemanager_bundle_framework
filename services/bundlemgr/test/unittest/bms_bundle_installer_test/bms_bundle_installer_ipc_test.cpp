@@ -21,6 +21,7 @@
 #include "bundle_stream_installer_proxy.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_installer_host.h"
+#include "bundle_mgr_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -63,7 +64,11 @@ private:
     sptr<BundleStreamInstallerProxy> streamInstallerProxy_ = nullptr;
     sptr<BundleInstallerHost> installerHost_ = nullptr;
     sptr<BundleInstallerProxy> installerProxy_ = nullptr;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallerIPCTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleInstallerIPCTest::BmsBundleInstallerIPCTest()
 {}
@@ -76,8 +81,9 @@ void BmsBundleInstallerIPCTest::SetUpTestCase()
 }
 
 void BmsBundleInstallerIPCTest::TearDownTestCase()
-{}
-
+{
+    bundleMgrService_->OnStop();
+}
 void BmsBundleInstallerIPCTest::SetUp()
 {}
 

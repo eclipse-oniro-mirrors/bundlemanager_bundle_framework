@@ -45,17 +45,19 @@ public:
     bool OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data);
 
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
+std::shared_ptr<BundleMgrService> BmsEventHandlerUnLockedTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsEventHandlerUnLockedTest::SetUpTestCase()
 {}
 
 void BmsEventHandlerUnLockedTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsEventHandlerUnLockedTest::SetUp()
 {}

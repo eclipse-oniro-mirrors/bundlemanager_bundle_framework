@@ -108,13 +108,15 @@ public:
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
-    const std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleManagerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleManagerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleManagerTest::BmsBundleManagerTest()
 {}
@@ -124,6 +126,7 @@ BmsBundleManagerTest::~BmsBundleManagerTest()
 
 bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     InstallParam installParam;
     installParam.userId = USERID;
@@ -137,7 +140,8 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
 
 ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -157,7 +161,8 @@ ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePat
 
 ErrCode BmsBundleManagerTest::UpdateThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -201,6 +206,7 @@ void BmsBundleManagerTest::SetUpTestCase()
 
 void BmsBundleManagerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsBundleManagerTest::SetUp()
@@ -256,8 +262,7 @@ void BmsBundleManagerTest::ClearDataMgr()
 
 void BmsBundleManagerTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -268,8 +273,7 @@ void BmsBundleManagerTest::ClearConnectAbilityMgr()
 
 void BmsBundleManagerTest::ResetConnectAbilityMgr()
 {
-    EXPECT_NE(connectAbilityMgrInfo_, nullptr);
-    bundleMgrService_->connectAbilityMgr_ = connectAbilityMgrInfo_;
+    bundleMgrService_->connectAbilityMgr_ = std::make_shared<BundleConnectAbilityMgr>();
     EXPECT_NE(bundleMgrService_->connectAbilityMgr_, nullptr);
 }
 

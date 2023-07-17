@@ -53,13 +53,20 @@ public:
     int64_t installerId_ = 1;
     sptr<MockStatusReceiver> receiver_ = new (std::nothrow) MockStatusReceiver();
     std::shared_ptr<BundleInstaller> bundleInstaller_ = nullptr;
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallersTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsBundleInstallersTest::SetUpTestCase()
 {}
 
 void BmsBundleInstallersTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleInstallersTest::SetUp()
 {

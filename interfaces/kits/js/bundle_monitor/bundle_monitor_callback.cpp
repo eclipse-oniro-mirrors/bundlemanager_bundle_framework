@@ -14,6 +14,7 @@
  */
 
 #include <uv.h>
+#include <shared_mutex>
 
 #include "bundle_monitor_callback.h"
 
@@ -27,6 +28,9 @@ namespace {
     const std::string ADD = "add";
     const std::string UPDATE = "update";
     const std::string REMOVE = "remove";
+    static std::shared_mutex g_addListenersMutex;
+    static std::shared_mutex g_updateListenersMutex;
+    static std::shared_mutex g_removeListenersMutex;
 }
 
 BundleMonitorCallback::BundleMonitorCallback(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -42,10 +46,13 @@ void BundleMonitorCallback::BundleMonitorOn(napi_env env, napi_value handler, co
         return;
     }
     if (type == ADD) {
+        std::unique_lock<std::shared_mutex> lock(g_addListenersMutex);
         EventListenerAdd(env, handler, addListeners, type);
     } else if (type == UPDATE) {
+        std::unique_lock<std::shared_mutex> lock(g_updateListenersMutex);
         EventListenerAdd(env, handler, updateListeners, type);
     } else {
+        std::unique_lock<std::shared_mutex> lock(g_removeListenersMutex);
         EventListenerAdd(env, handler, removeListeners, type);
     }
 }
@@ -72,10 +79,13 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, napi_value handler, c
         return;
     }
     if (type == ADD) {
+        std::unique_lock<std::shared_mutex> lock(g_addListenersMutex);
         EventListenerDelete(env, handler, addListeners);
     } else if (type == UPDATE) {
+        std::unique_lock<std::shared_mutex> lock(g_updateListenersMutex);
         EventListenerDelete(env, handler, updateListeners);
     } else {
+        std::unique_lock<std::shared_mutex> lock(g_removeListenersMutex);
         EventListenerDelete(env, handler, removeListeners);
     }
 }
@@ -88,10 +98,13 @@ void BundleMonitorCallback::BundleMonitorOff(napi_env env, const std::string &ty
         return;
     }
     if (type == ADD) {
+        std::unique_lock<std::shared_mutex> lock(g_addListenersMutex);
         EventListenerDeleteAll(env, addListeners);
     } else if (type == UPDATE) {
+        std::unique_lock<std::shared_mutex> lock(g_updateListenersMutex);
         EventListenerDeleteAll(env, updateListeners);
     } else {
+        std::unique_lock<std::shared_mutex> lock(g_removeListenersMutex);
         EventListenerDeleteAll(env, removeListeners);
     }
 }
@@ -128,10 +141,13 @@ void BundleMonitorCallback::BundleMonitorEmit(const std::string &type, std::stri
         return;
     }
     if (type == ADD) {
+        std::unique_lock<std::shared_mutex> lock(g_addListenersMutex);
         EventListenerEmit(bundleName, userId, addListeners);
     } else if (type == UPDATE) {
+        std::unique_lock<std::shared_mutex> lock(g_updateListenersMutex);
         EventListenerEmit(bundleName, userId, updateListeners);
     } else {
+        std::unique_lock<std::shared_mutex> lock(g_removeListenersMutex);
         EventListenerEmit(bundleName, userId, removeListeners);
     }
 }

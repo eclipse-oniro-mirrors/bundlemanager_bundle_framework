@@ -15,6 +15,8 @@ import("../../../../../appexecfwk.gni")
 import("../../../../../services/bundlemgr/appexecfwk_bundlemgr.gni")
 
 module_output_path = "bundle_framework/bundlemgrservice"
+bundle_so_test_path =
+    "${bundle_framework_path}/test/sceneProject/unittest/bundle_so"
 
 ohos_unittest("BmsBundleAccessTokenIdTest") {
   use_exceptions = true
@@ -61,13 +63,13 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest:thumbnailTest",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/thumbnailTest2:thumbnailTest2",
+    "${bundle_so_test_path}/compressNativeLibsFalse:compressNativeLibsFalse01",
+    "${bundle_so_test_path}/compressNativeLibsFalse/feature:compressNativeLibsFalse02",
+    "${bundle_so_test_path}/compressNativeLibsTrue:compressNativeLibsTrue01",
+    "${bundle_so_test_path}/compressNativeLibsTrue/feature:compressNativeLibsTrue02",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
-
-  if (current_cpu == "arm64") {
-    defines += [ "USE_BUNDLE_ACCESSTOKENID" ]
-  }
 
   external_deps = [
     "ability_base:want",
@@ -83,6 +85,10 @@ ohos_unittest("BmsBundleAccessTokenIdTest") {
   ]
   external_deps += bundle_install_external_deps
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_BUNDLE_ACCESSTOKENID" ]
+  }
+
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]

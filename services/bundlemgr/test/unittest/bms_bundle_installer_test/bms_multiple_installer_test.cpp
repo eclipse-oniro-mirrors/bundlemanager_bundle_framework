@@ -116,9 +116,15 @@ public:
     void IsContainModuleInfo(const BundleInfo &info, const std::string &packageName1) const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsMultipleInstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsMultipleInstallerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsMultipleInstallerTest::BmsMultipleInstallerTest()
 {}
@@ -193,6 +199,7 @@ void BmsMultipleInstallerTest::SetUpTestCase()
 
 void BmsMultipleInstallerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsMultipleInstallerTest::SetUp()

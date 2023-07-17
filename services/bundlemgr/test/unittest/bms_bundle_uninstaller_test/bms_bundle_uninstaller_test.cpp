@@ -83,9 +83,15 @@ public:
     void ClearBundleInfo(const std::string &bundleName) const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_unique<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleUninstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleUninstallerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleUninstallerTest::BmsBundleUninstallerTest()
 {}
@@ -98,7 +104,9 @@ void BmsBundleUninstallerTest::SetUpTestCase()
 }
 
 void BmsBundleUninstallerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleUninstallerTest::SetUp()
 {
