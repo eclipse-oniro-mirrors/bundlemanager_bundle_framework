@@ -1347,7 +1347,6 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-
     if (bundleName.empty()) {
         // query all launcher ability
         GetAllLauncherAbility(want, abilityInfos, userId, requestUserId);
@@ -5283,7 +5282,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
         APP_LOGE("query ability infos failed due to error code %{public}d", res);
         return res;
     }
-    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info){
+    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(true, info);
     });

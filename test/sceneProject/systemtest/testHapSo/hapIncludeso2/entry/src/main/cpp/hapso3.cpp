@@ -13,4 +13,8 @@
  * limitations under the License.
  */
 
+namespace OHOS {
+namespace AppExecFwk {
 void HapSo3() {}
+}  // namespace AppExecFwk
+}  // namespace OHOS
