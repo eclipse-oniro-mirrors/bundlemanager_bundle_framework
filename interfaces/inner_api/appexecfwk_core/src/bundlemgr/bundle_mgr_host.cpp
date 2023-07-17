@@ -309,6 +309,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryDataGroupInfos);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_PREFERENCE_DIR_BY_GROUP_ID),
         &BundleMgrHost::HandleGetPreferenceDirByGroupId);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME),
+        &BundleMgrHost::HandleQueryAppGalleryBundleName);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2779,6 +2781,26 @@ ErrCode BundleMgrHost::HandleGetPreferenceDirByGroupId(MessageParcel &data, Mess
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply)
+{
+    APP_LOGI("QueryAppGalleryBundleName in bundle mgr hoxt start");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName;
+    bool ret = QueryAppGalleryBundleName(bundleName);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret) {
+        if (!reply.WriteString(bundleName)) {
+            APP_LOGE("write failed");   
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    APP_LOGE("BundleName is %{public}s",bundleName.c_str());
     return ERR_OK;
 }
 

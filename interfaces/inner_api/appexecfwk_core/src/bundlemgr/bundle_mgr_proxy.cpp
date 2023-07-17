@@ -3610,6 +3610,34 @@ bool BundleMgrProxy::GetGroupDir(const std::string &dataGroupId, std::string &di
     return true;
 }
 
+bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
+{
+    APP_LOGI("QueryAppGalleryBundleName in bundle proxy start");
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to QueryAppGalleryBundleName due to write InterfaceToken failed.");
+        return false;
+    }
+    
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME, data, reply)) {
+        APP_LOGE("fail to QueryAppGalleryBundleName from server");
+        return false;
+    }
+    if (!reply.ReadBool()) {
+        APP_LOGE("reply result false");
+        return false;
+    }
+    bundleName = reply.ReadString();
+    if(bundleName.length() > Constants::MAX_BUNDLE_NAME) {
+        APP_LOGE("fail to QueryAppGalleryBundleName from server");
+        return false;
+    }
+    APP_LOGD("bundleName is %{public}s", bundleName.c_str());
+    return true;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {

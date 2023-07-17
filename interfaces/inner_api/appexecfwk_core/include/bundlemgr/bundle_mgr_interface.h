@@ -1200,6 +1200,11 @@ public:
     {
         return false;
     }
+
+    virtual bool QueryAppGalleryBundleName(std::string &bundleName)
+    {
+        return false;
+    }
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -2807,10 +2807,29 @@ bool BundleMgrHostImpl::GetGroupDir(const std::string &dataGroupId, std::string 
     return dataMgr->GetGroupDir(dataGroupId, dir);
 }
 
+<<<<<<< HEAD
 void BundleMgrHostImpl::SetBrokerServiceStatus(bool isServiceExisted)
 {
     APP_LOGD("broker service status is %{public}d", isServiceExisted);
     isBrokerServiceExisted_ = isServiceExisted;
+=======
+bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
+{
+    APP_LOGI("QueryAppGalleryBundleName in bundle host impl start");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return false;
+    }
+    std::string abilityName;
+    bool ret = dataMgr->QueryAppGalleryAbilityName(bundleName, abilityName);
+    if (!ret) {
+        APP_LOGE("get bundleName failed");
+        return false;
+    }
+    APP_LOGD("bundleName is %{public}s",bundleName.c_str());
+    return  true;
+>>>>>>> add inner interface of QueryHagBundleName
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
