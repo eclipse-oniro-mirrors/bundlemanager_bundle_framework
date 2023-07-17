@@ -2796,11 +2796,11 @@ ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, Mess
     }
     if (ret) {
         if (!reply.WriteString(bundleName)) {
-            APP_LOGE("write failed");   
+            APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
-    APP_LOGD("BundleName is %{public}s",bundleName.c_str());
+    APP_LOGD("BundleName is %{public}s", bundleName.c_str());
     return ERR_OK;
 }
 
