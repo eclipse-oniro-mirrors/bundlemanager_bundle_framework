@@ -22,6 +22,7 @@
 #include "overlay_manager_host.h"
 #undef private
 #include "bundle_overlay_manager_host_impl.h"
+#include "bundle_mgr_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -180,7 +181,11 @@ public:
 private:
     sptr<IOverlayManager> overlayProxy_ = nullptr;
     sptr<OverlayManagerHostMock> overlayHost_ = nullptr;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleOverlayIpcTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleOverlayIpcTest::BmsBundleOverlayIpcTest()
 {}
@@ -192,7 +197,9 @@ void BmsBundleOverlayIpcTest::SetUpTestCase()
 {}
 
 void BmsBundleOverlayIpcTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleOverlayIpcTest::SetUp()
 {

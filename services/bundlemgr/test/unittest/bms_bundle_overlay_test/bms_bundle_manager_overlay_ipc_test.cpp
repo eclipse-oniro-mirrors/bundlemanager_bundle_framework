@@ -51,8 +51,11 @@ public:
     void SetUp();
     void TearDown();
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleManagerIpcTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleManagerIpcTest::BmsBundleManagerIpcTest()
 {}
@@ -64,7 +67,9 @@ void BmsBundleManagerIpcTest::SetUpTestCase()
 {}
 
 void BmsBundleManagerIpcTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleManagerIpcTest::SetUp()
 {

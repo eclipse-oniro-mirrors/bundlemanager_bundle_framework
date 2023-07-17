@@ -64,9 +64,15 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionTokenTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionTokenTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionTokenTest::BmsBundlePermissionTokenTest()
 {}
@@ -78,7 +84,9 @@ void BmsBundlePermissionTokenTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionTokenTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionTokenTest::SetUp()
 {

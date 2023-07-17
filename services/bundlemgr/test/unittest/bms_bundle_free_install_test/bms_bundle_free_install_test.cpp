@@ -94,10 +94,11 @@ public:
     void ResetDataMgr();
 
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleFreeInstallTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleFreeInstallTest::BmsBundleFreeInstallTest()
 {}
@@ -109,7 +110,9 @@ void BmsBundleFreeInstallTest::SetUpTestCase()
 {}
 
 void BmsBundleFreeInstallTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleFreeInstallTest::SetUp()
 {
@@ -130,8 +133,7 @@ void BmsBundleFreeInstallTest::ClearDataMgr()
 
 void BmsBundleFreeInstallTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 

@@ -59,8 +59,11 @@ public:
 
 private:
     std::shared_ptr<OverlayManagerHostImpl> overlayHostImpl_ = std::make_shared<OverlayManagerHostImpl>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleSetOverlayEnabledTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleSetOverlayEnabledTest::BmsBundleSetOverlayEnabledTest()
 {}
@@ -72,7 +75,9 @@ void BmsBundleSetOverlayEnabledTest::SetUpTestCase()
 {}
 
 void BmsBundleSetOverlayEnabledTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleSetOverlayEnabledTest::SetUp()
 {

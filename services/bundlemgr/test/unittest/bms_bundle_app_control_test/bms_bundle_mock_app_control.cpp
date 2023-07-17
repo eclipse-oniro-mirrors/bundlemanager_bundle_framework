@@ -56,8 +56,11 @@ public:
     void ResetDataMgr();
 
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleMockAppControlTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleMockAppControlTest::BmsBundleMockAppControlTest()
 {}
@@ -69,7 +72,9 @@ void BmsBundleMockAppControlTest::SetUpTestCase()
 {}
 
 void BmsBundleMockAppControlTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleMockAppControlTest::SetUp()
 {

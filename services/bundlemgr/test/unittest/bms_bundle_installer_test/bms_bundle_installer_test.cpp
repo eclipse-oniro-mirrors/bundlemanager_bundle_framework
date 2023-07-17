@@ -127,11 +127,15 @@ public:
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleInstallerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleInstallerTest::BmsBundleInstallerTest()
 {}
@@ -141,6 +145,7 @@ BmsBundleInstallerTest::~BmsBundleInstallerTest()
 
 bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     InstallParam installParam;
     installParam.userId = USERID;
@@ -154,6 +159,7 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
 
 bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     std::vector<std::string> filePaths;
     filePaths.push_back(filePath);
@@ -169,7 +175,8 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -189,7 +196,8 @@ ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &fileP
 
 ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -209,7 +217,8 @@ ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePa
 
 ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -233,6 +242,7 @@ void BmsBundleInstallerTest::SetUpTestCase()
 
 void BmsBundleInstallerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsBundleInstallerTest::SetUp()
@@ -288,8 +298,7 @@ void BmsBundleInstallerTest::ClearDataMgr()
 
 void BmsBundleInstallerTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 

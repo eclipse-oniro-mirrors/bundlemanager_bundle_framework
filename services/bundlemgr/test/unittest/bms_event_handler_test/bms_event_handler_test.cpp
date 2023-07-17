@@ -57,13 +57,21 @@ public:
     void SetUp();
     void TearDown();
     bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
+
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsEventHandlerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsEventHandlerTest::SetUpTestCase()
 {}
 
 void BmsEventHandlerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsEventHandlerTest::SetUp()
 {}

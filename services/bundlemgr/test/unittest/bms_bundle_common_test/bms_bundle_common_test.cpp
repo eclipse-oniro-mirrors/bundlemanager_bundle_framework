@@ -20,6 +20,7 @@
 #include <sstream>
 #include <string>
 
+#include "bundle_mgr_service.h"
 #include "serial_queue.h"
 
 using namespace testing::ext;
@@ -43,7 +44,11 @@ public:
     void TearDown();
 
 private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleCommonTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleCommonTest::BmsBundleCommonTest()
 {}
@@ -55,7 +60,9 @@ void BmsBundleCommonTest::SetUpTestCase()
 {}
 
 void BmsBundleCommonTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleCommonTest::SetUp()
 {}

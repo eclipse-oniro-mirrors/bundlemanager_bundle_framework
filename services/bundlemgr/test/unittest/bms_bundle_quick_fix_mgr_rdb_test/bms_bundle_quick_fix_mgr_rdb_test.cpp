@@ -87,9 +87,15 @@ public:
     void StartService();
     AppQuickFix CreateAppQuickFix();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = nullptr;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixMgrRdbTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleQuickFixMgrRdbTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 const std::shared_ptr<BundleDataMgr> BmsBundleQuickFixMgrRdbTest::GetBundleDataMgr() const
 {
@@ -207,7 +213,9 @@ void BmsBundleQuickFixMgrRdbTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixMgrRdbTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixMgrRdbTest::SetUp()
 {

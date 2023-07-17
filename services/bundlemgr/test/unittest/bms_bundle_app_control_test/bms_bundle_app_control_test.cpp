@@ -79,9 +79,15 @@ public:
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_ = std::make_shared<AppControlManagerRdb>();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleAppControlTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleAppControlTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleAppControlTest::BmsBundleAppControlTest()
 {}
@@ -93,7 +99,9 @@ void BmsBundleAppControlTest::SetUpTestCase()
 {}
 
 void BmsBundleAppControlTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleAppControlTest::SetUp()
 {
@@ -102,8 +110,7 @@ void BmsBundleAppControlTest::SetUp()
 }
 
 void BmsBundleAppControlTest::TearDown()
-{
-}
+{}
 
 sptr<BundleMgrProxy> BmsBundleAppControlTest::GetBundleMgrProxy()
 {

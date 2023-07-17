@@ -83,10 +83,11 @@ public:
 
 private:
     std::shared_ptr<BundleOverlayInstallChecker> overlayChecker_ = std::make_shared<BundleOverlayInstallChecker>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleOverlayCheckerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleOverlayCheckerTest::BmsBundleOverlayCheckerTest()
 {}
@@ -98,7 +99,9 @@ void BmsBundleOverlayCheckerTest::SetUpTestCase()
 {}
 
 void BmsBundleOverlayCheckerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleOverlayCheckerTest::SetUp()
 {
@@ -162,8 +165,7 @@ void BmsBundleOverlayCheckerTest::ClearDataMgr()
 
 void BmsBundleOverlayCheckerTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 

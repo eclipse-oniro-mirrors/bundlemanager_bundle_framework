@@ -78,16 +78,24 @@ public:
     bool CheckBundleInfo(const uint32_t versionCode, const bool needCheckVersion) const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_unique<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleUpdaterTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleUpdaterTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleUpdaterTest::SetUpTestCase()
 {
 }
 
 void BmsBundleUpdaterTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleUpdaterTest::SetUp()
 {

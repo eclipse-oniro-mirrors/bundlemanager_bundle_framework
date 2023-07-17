@@ -21,7 +21,6 @@
 #include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "parcel_macro.h"
-#include "serial_queue.h"
 #include "string_ex.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
@@ -36,8 +35,8 @@ const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
 
 InstalldHost::InstalldHost()
 {
-    init();
-    serialQueue_ = std::make_shared<SerialQueue>(UNLOAD_QUEUE_NAME);
+    Init();
+    InitEventHandler();
     APP_LOGI("installd host instance is created");
 }
 
@@ -46,7 +45,7 @@ InstalldHost::~InstalldHost()
     APP_LOGI("installd host instance is destroyed");
 }
 
-void InstalldHost::init()
+void InstalldHost::Init()
 {
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR),
         &InstalldHost::HandleCreateBundleDir);
@@ -115,6 +114,17 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
     APP_LOGD("installd host finish to process message from client");
     AddCloseInstalldTask();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
+}
+
+void InstalldHost::InitEventHandler()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    runner_ = EventRunner::Create(UNLOAD_QUEUE_NAME);
+    if (runner_ == nullptr) {
+        APP_LOGE("init event runner failed");
+        return;
+    }
+    handler_ = std::make_shared<EventHandler>(runner_);
 }
 
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
@@ -441,7 +451,7 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
 void InstalldHost::RemoveCloseInstalldTask()
 {
     std::lock_guard<std::mutex> lock(unloadTaskMutex_);
-    serialQueue_->CancelDelayTask(UNLOAD_TASK_NAME);
+    handler_->RemoveTask(UNLOAD_TASK_NAME);
 }
 
 void InstalldHost::AddCloseInstalldTask()
@@ -454,7 +464,7 @@ void InstalldHost::AddCloseInstalldTask()
         }
         APP_LOGI("unload Installd successfully");
     };
-    serialQueue_->ScheduleDelayTask(UNLOAD_TASK_NAME, UNLOAD_TIME, task);
+    handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
     APP_LOGD("send unload task successfully");
 }
 }  // namespace AppExecFwk

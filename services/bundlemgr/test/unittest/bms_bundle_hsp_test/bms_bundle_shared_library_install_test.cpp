@@ -74,9 +74,15 @@ public:
     ErrCode UninstallSharedBundle(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 private:
-    std::shared_ptr<InstalldService> installdService_;
-    std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleSharedLibraryInstallTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleSharedLibraryInstallTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleSharedLibraryInstallTest::BmsBundleSharedLibraryInstallTest()
 {
@@ -91,17 +97,18 @@ void BmsBundleSharedLibraryInstallTest::SetUpTestCase()
 {}
 
 void BmsBundleSharedLibraryInstallTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleSharedLibraryInstallTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
+    StartBundleService();
 }
 
 void BmsBundleSharedLibraryInstallTest::TearDown()
 {}
-
 void BmsBundleSharedLibraryInstallTest::StartInstalldService() const
 {
     if (!installdService_->IsServiceReady()) {

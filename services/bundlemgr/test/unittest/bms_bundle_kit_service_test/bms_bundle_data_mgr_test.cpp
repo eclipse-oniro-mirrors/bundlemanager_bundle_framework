@@ -258,22 +258,28 @@ public:
     void RemoveBundleinfo(const std::string &bundleName);
 
 public:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
-    std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<LauncherService> launcherService_ = std::make_shared<LauncherService>();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleDataMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleDataMgrTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleDataMgrTest::SetUpTestCase()
 {}
 
 void BmsBundleDataMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleDataMgrTest::SetUp()
 {
@@ -285,8 +291,8 @@ void BmsBundleDataMgrTest::SetUp()
         .type = NotifyType::INSTALL,
         .uid = Constants::INVALID_UID,
     };
-    if (!service_->IsServiceReady()) {
-        service_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
@@ -304,8 +310,7 @@ void BmsBundleDataMgrTest::ClearDataMgr()
 
 void BmsBundleDataMgrTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 

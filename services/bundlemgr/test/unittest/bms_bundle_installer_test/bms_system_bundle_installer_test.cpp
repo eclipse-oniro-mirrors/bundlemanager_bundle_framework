@@ -48,8 +48,11 @@ public:
     bool UninstallSystemBundle(const std::string &bundleName, bool isKeepData) const;
     bool UninstallSystemBundle(const std::string &bundleName, const std::string &modulePackage) const;
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsSystemBundleInstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsSystemBundleInstallerTest::BmsSystemBundleInstallerTest()
 {}
@@ -80,7 +83,9 @@ void BmsSystemBundleInstallerTest::SetUpTestCase()
 {}
 
 void BmsSystemBundleInstallerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsSystemBundleInstallerTest::SetUp()
 {}

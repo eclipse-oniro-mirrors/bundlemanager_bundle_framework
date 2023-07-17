@@ -84,9 +84,15 @@ public:
     void StartBundleService();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleAccessTokenIdTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleAccessTokenIdTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleAccessTokenIdTest::BmsBundleAccessTokenIdTest()
 {}
@@ -98,7 +104,9 @@ void BmsBundleAccessTokenIdTest::SetUpTestCase()
 {}
 
 void BmsBundleAccessTokenIdTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleAccessTokenIdTest::SetUp()
 {

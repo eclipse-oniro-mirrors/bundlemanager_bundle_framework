@@ -95,16 +95,20 @@ private:
     bool GetDataMgr();
     bool GetSandboxDataMgr();
 
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> bundleSandboxAppHelper_ =
         DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsSandboxAppTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsSandboxAppTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsSandboxAppTest::BmsSandboxAppTest()
 {}
@@ -118,6 +122,7 @@ void BmsSandboxAppTest::SetUpTestCase()
 
 void BmsSandboxAppTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsSandboxAppTest::SetUp()
@@ -142,15 +147,14 @@ void BmsSandboxAppTest::ClearDataMgr()
 
 void BmsSandboxAppTest::SetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
     int32_t &appIndex) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -161,7 +165,7 @@ ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int3
 
 ErrCode BmsSandboxAppTest::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -247,7 +251,8 @@ bool BmsSandboxAppTest::GetDataMgr()
 ErrCode BmsSandboxAppTest::InstallBundles(const std::vector<std::string> &filePaths,
     bool &&flag) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;

@@ -65,9 +65,12 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixQueryTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleQuickFixQueryTest::BmsBundleQuickFixQueryTest()
 {}
@@ -79,7 +82,9 @@ void BmsBundleQuickFixQueryTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixQueryTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixQueryTest::SetUp()
 {

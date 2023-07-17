@@ -58,13 +58,20 @@ public:
     void TearDown();
     std::unique_ptr<RdbDataManager> OpenDbAndTable();
     void CloseDb();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsRdbDataManagerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsRdbDataManagerTest::SetUpTestCase()
 {}
 
 void BmsRdbDataManagerTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsRdbDataManagerTest::SetUp()
 {}

@@ -63,9 +63,15 @@ public:
     void StartBundleService();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleCrowdtestingTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleCrowdtestingTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleCrowdtestingTest::BmsBundleCrowdtestingTest()
 {}
@@ -77,12 +83,14 @@ void BmsBundleCrowdtestingTest::SetUpTestCase()
 {}
 
 void BmsBundleCrowdtestingTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleCrowdtestingTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
+    StartBundleService();
 }
 
 void BmsBundleCrowdtestingTest::TearDown()

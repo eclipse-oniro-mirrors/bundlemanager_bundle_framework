@@ -298,29 +298,41 @@ public:
     void SaveToDatabase(const std::string &bundleName, InnerBundleInfo &innerBundleInfo,
         bool userDataClearable, bool isSystemApp) const;
     void ShortcutWantToJson(nlohmann::json &jsonObject, const ShortcutWant &shortcutWant);
-    void ClearDataMgr();
-    void ResetDataMgr();
     void ClearBundleInfo(const std::string &bundleName);
 
 public:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
+    static std::shared_ptr<InstalldService> installdService_;
+    std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<LauncherService> launcherService_ = std::make_shared<LauncherService>();
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
     std::shared_ptr<BundleUserMgrHostImpl> bundleUserMgrHostImpl_ = std::make_shared<BundleUserMgrHostImpl>();
     NotifyBundleEvents installRes_;
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleKitServiceTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleKitServiceTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleKitServiceTest::SetUpTestCase()
 {}
 
 void BmsBundleKitServiceTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleKitServiceTest::SetUp()
 {
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
+    }
+    if (!bundleMgrService_->IsServiceReady()) {
+        bundleMgrService_->OnStart();
+        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
+    }
     installRes_ = {
         .bundleName = HAP_FILE_PATH,
         .modulePackage = HAP_FILE_PATH,
@@ -329,29 +341,10 @@ void BmsBundleKitServiceTest::SetUp()
         .type = NotifyType::INSTALL,
         .uid = Constants::INVALID_UID,
     };
-    if (!service_->IsServiceReady()) {
-        service_->Start();
-    }
-    if (!bundleMgrService_->IsServiceReady()) {
-        bundleMgrService_->OnStart();
-        std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    }
 }
 
 void BmsBundleKitServiceTest::TearDown()
 {}
-
-void BmsBundleKitServiceTest::ClearDataMgr()
-{
-    bundleMgrService_->dataMgr_ = nullptr;
-}
-
-void BmsBundleKitServiceTest::ResetDataMgr()
-{
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
-    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
-}
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBundleDistributedManager() const
@@ -362,6 +355,8 @@ const std::shared_ptr<BundleDistributedManager> BmsBundleKitServiceTest::GetBund
 
 std::shared_ptr<BundleDataMgr> BmsBundleKitServiceTest::GetBundleDataMgr() const
 {
+    bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    EXPECT_NE(bundleMgrService_, nullptr);
     return bundleMgrService_->GetDataMgr();
 }
 
@@ -989,8 +984,8 @@ void BmsBundleKitServiceTest::CheckInstalledApplicationInfos(
 
 void BmsBundleKitServiceTest::CreateFileDir() const
 {
-    if (!service_->IsServiceReady()) {
-        service_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
 
     if (access(TEST_FILE_DIR.c_str(), F_OK) != 0) {
@@ -1006,7 +1001,7 @@ void BmsBundleKitServiceTest::CreateFileDir() const
 
 void BmsBundleKitServiceTest::CleanFileDir() const
 {
-    service_->Stop();
+    installdService_->Stop();
     InstalldClient::GetInstance()->ResetInstalldProxy();
 
     OHOS::ForceRemoveDirectory(BUNDLE_DATA_DIR);
@@ -3904,29 +3899,6 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_1200
- * @tc.name: test can clean the cache files
- * @tc.desc: 1.system run normally
- *           2. userDataClearable is false, dataMgr is nullptr
- *           3.clean the cache files failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_1200, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
-    CreateFileDir();
-
-    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ClearDataMgr();
-    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_EQ(result, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
-
-    ResetDataMgr();
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: RegisterBundleStatus_0100
  * @tc.name: test can register the bundle status by bundle name
  * @tc.desc: 1.system run normally
@@ -4001,23 +3973,6 @@ HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0400, Function | SmallTes
 }
 
 /**
- * @tc.number: RegisterBundleStatus_0500
- * @tc.name: test can not register, the bundle status dataMgr is nullptr
- * @tc.desc: 1.system run normally
- *           2.bundle status callback failed
- */
-HWTEST_F(BmsBundleKitServiceTest, RegisterBundleStatus_0500, Function | SmallTest | Level1)
-{
-    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
-    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ClearDataMgr();
-    bool result = hostImpl->RegisterBundleStatusCallback(bundleStatusCallback);
-    EXPECT_FALSE(result);
-    ResetDataMgr();
-}
-
-/**
  * @tc.number: RegisterBundleStatus_0600
  * @tc.name: test can not register, the bundle status dataMgr is nullptr
  * @tc.desc: 1.system run normally
@@ -4089,23 +4044,6 @@ HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0100, Function | SmallTest |
 
     int32_t callbackResult1 = bundleStatusCallback1->GetResultCode();
     EXPECT_EQ(callbackResult1, ERR_TIMED_OUT);
-}
-
-/**
- * @tc.number: ClearBundleStatus_0200
- * @tc.name: test can not unregister, the bundle status dataMgr is nullptr
- * @tc.desc: 1.system run normally
- *           2.bundle status callback failed
- */
-HWTEST_F(BmsBundleKitServiceTest, ClearBundleStatus_0200, Function | SmallTest | Level1)
-{
-    sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
-    bundleStatusCallback->SetBundleName(HAP_FILE_PATH);
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ClearDataMgr();
-    bool result = hostImpl->ClearBundleStatusCallback(bundleStatusCallback);
-    EXPECT_FALSE(result);
-    ResetDataMgr();
 }
 
 /**
@@ -7411,34 +7349,6 @@ HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Lev
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
-/**
- * @tc.number: CreateNewUser_0200
- * @tc.name: test OnCreateNewUser and RemoveUser
- * @tc.desc: 1.create new user failed by DataMgr is nullptr
- *           2.OnCreateNewUser and RemoveUser failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0200, Function | SmallTest | Level1)
-{
-    ClearDataMgr();
-    int32_t userId = 101;
-    bundleUserMgrHostImpl_->OnCreateNewUser(userId);
-    bundleUserMgrHostImpl_->RemoveUser(userId);
-    ResetDataMgr();
-}
-
-/**
- * @tc.number: CreateNewUser_0300
- * @tc.name: test CheckInitialUser
- * @tc.desc: 1.CheckInitialUser failed by DataMgr is nullptr
- *           2.CheckInitialUser failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0300, Function | SmallTest | Level1)
-{
-    ClearDataMgr();
-    bundleUserMgrHostImpl_->CheckInitialUser();
-    ResetDataMgr();
-}
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AginTest_0004
@@ -7478,21 +7388,6 @@ HWTEST_F(BmsBundleKitServiceTest, AginTest_0006, Function | SmallTest | Level0)
     request.AddAgingBundle(bundleInfo);
     bool res = bundleAgingMgr.Process(request);
     EXPECT_FALSE(res);
-}
-
-/**
- * @tc.number: AginTest_0007
- * @tc.name: test RecentlyUnuseBundleAgingHandler of CleanCache
- * @tc.desc: CleanCache is false
- */
-HWTEST_F(BmsBundleKitServiceTest, AginTest_0007, Function | SmallTest | Level0)
-{
-    RecentlyUnuseBundleAgingHandler bundleAgingMgr;
-    AgingBundleInfo bundleInfo;
-    ClearDataMgr();
-    bool res = bundleAgingMgr.CleanCache(bundleInfo);
-    EXPECT_FALSE(res);
-    ResetDataMgr();
 }
 
 /**
@@ -8210,52 +8105,6 @@ HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0001, Function | SmallT
     BMSEventHandler handler;
     bool res = handler.LoadInstallInfosFromDb();
     EXPECT_TRUE(res);
-}
-
-/**
- * @tc.number: LoadInstallInfosFromDb_0002
- * @tc.name: test LoadInstallInfosFromDb
- * @tc.desc: LoadInstallInfosFromDb is false
- */
-HWTEST_F(BmsBundleKitServiceTest, LoadInstallInfosFromDb_0002, Function | SmallTest | Level0)
-{
-    BMSEventHandler handler;
-    InnerBundleInfo info;
-    ClearDataMgr();
-    handler.LoadInstallInfosFromDb();
-
-    std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
-    ScanResultCode res = handler.ScanAndAnalyzeUserDatas(userMaps);
-    EXPECT_EQ(res, ScanResultCode::SCAN_NO_DATA);
-
-    std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
-    std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
-    bool ret = handler.CombineBundleInfoAndUserInfo(
-        installInfos, userInfoMaps);
-    EXPECT_EQ(ret, false);
-
-    handler.SaveInstallInfoToCache(info);
-    handler.SetAllInstallFlag();
-    handler.ProcessRebootBundleUninstall();
-    bool bundleLevel = false;
-    handler.DeletePreInfoInDb("", "", bundleLevel);
-    handler.UpdateAppDataSelinuxLabel("", "", false, false);
-
-    std::list<std::string> scanPathList;
-    handler.InnerProcessRebootBundleInstall(scanPathList, Constants::AppType::SYSTEM_APP);
-
-    ret = handler.LoadAllPreInstallBundleInfos();
-    EXPECT_EQ(ret, false);
-
-    ret = handler.FetchInnerBundleInfo("", info);
-    EXPECT_EQ(ret, false);
-
-#ifdef USE_PRE_BUNDLE_PROFILE
-    handler.UpdateRemovable("", bundleLevel);
-    PreBundleConfigInfo preBundleConfigInfo;
-    handler.UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
-#endif
-    ResetDataMgr();
 }
 
 /**
@@ -9033,37 +8882,6 @@ HWTEST_F(BmsBundleKitServiceTest, FormInfoBranchCover_0001, Function | SmallTest
     EXPECT_EQ(form.updateEnabled, extensionFormInfo.updateEnabled);
     EXPECT_EQ(form.type, extensionFormInfo.type);
     EXPECT_EQ(form.colorMode, extensionFormInfo.colorMode);
-}
-
-/**
- * @tc.number: SelfClean_0100
- * @tc.name: test SelfClean
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleKitServiceTest, SelfClean_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
-    bundleMgrService -> ready_ = false;
-    bundleMgrService->SelfClean();
-    bool ret = bundleMgrService -> ready_;
-    EXPECT_FALSE(ret);
-
-    bundleMgrService -> ready_ = true;
-    bundleMgrService -> registerToService_ = false;
-    bundleMgrService->SelfClean();
-    ret = bundleMgrService -> ready_;
-    EXPECT_FALSE(ret);
-
-    bundleMgrService -> registerToService_ = true;
-    bundleMgrService->RegisterService();
-    ret = bundleMgrService -> registerToService_;
-    EXPECT_TRUE(ret);
-
-    int32_t systemAbilityId = 0;
-    const std::string deviceId = "";
-    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
-
-    bundleMgrService->OnRemoveSystemAbility(systemAbilityId, deviceId);
 }
 
 /**

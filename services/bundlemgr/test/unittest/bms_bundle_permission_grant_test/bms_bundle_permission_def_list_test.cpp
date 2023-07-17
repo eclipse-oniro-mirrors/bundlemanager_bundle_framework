@@ -56,9 +56,15 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionDefListTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionDefListTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionDefListTest::BmsBundlePermissionDefListTest()
 {}
@@ -70,7 +76,9 @@ void BmsBundlePermissionDefListTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionDefListTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionDefListTest::SetUp()
 {
@@ -80,7 +88,6 @@ void BmsBundlePermissionDefListTest::SetUp()
 
 void BmsBundlePermissionDefListTest::TearDown()
 {}
-
 ErrCode BmsBundlePermissionDefListTest::InstallBundle(const std::string &bundlePath) const
 {
     if (!bundleMgrService_) {
