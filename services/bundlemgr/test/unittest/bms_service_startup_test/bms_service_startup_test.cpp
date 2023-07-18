@@ -29,6 +29,7 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t TOKENID = 100;
@@ -766,3 +767,4 @@ HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTe
     auto ret = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDef, newPermissionDef);
     EXPECT_NE(ret, 0);
 }
+} // OHOS

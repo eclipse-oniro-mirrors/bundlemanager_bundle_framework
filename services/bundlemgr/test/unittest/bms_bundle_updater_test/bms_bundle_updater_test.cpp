@@ -35,6 +35,7 @@ using namespace std::chrono_literals;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 
+namespace OHOS {
 namespace {
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
@@ -464,3 +465,4 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);
 }
+} // OHOS

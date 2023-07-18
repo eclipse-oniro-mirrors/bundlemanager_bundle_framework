@@ -33,6 +33,8 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
+
+namespace OHOS {
 namespace {
     const std::string CALL_MOCK_BUNDLE_DIR_SUCCESS = "callMockBundleDirSuccess";
     const std::string CALL_MOCK_BUNDLE_DIR_FAILED = "callMockBundleDirFailed";
@@ -818,3 +820,4 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0300, Function | SmallTest
     EXPECT_TRUE(handler->LoadPreInstallProFile());
     EXPECT_FALSE(handler->GetPreInstallCapability(preBundleConfigInfo));
 }
+} // OHOS

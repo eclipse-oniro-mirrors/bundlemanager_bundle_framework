@@ -33,6 +33,7 @@ using namespace OHOS::EventFwk;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_NAME_INVALID = "";
@@ -2324,3 +2325,4 @@ HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_0100, Function | SmallTest | L
     bool ret = dataMgr.DeleteSandboxAppIndex(BUNDLE_NAME, INVALID_APP_INDEX);
     EXPECT_EQ(ret, false);
 }
+} // OHOS
