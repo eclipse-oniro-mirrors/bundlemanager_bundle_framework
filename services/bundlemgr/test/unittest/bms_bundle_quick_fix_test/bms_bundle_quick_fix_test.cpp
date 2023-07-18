@@ -2553,8 +2553,8 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest
         ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
         EXPECT_EQ(ret, ERR_OK);
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath); // hap has no so file
+        EXPECT_EQ(ret, ERR_OK);
     }
     UninstallBundleInfo(BUNDLE_NAME);
 }
@@ -4196,7 +4196,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0400, Function | SmallTest
 
         bundleInfo.applicationInfo.nativeLibraryPath = "";
         bundleInfo.hapModuleInfos[0].nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, moduleName ,tmpSoPath);
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
         EXPECT_FALSE(ret);
     }
 }
