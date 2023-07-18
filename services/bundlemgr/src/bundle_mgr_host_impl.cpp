@@ -1008,7 +1008,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    auto ret = dataMgr->GetApplicationInfoV9WithResponseId(bundleName,
+    auto ret = dataMgr->GetApplicationInfoWithResponseId(bundleName,
         static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE), userId, applicationInfo);
     if (ret != ERR_OK) {
         APP_LOGE("can not get application info of %{public}s", bundleName.c_str());

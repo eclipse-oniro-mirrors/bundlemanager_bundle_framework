@@ -1520,7 +1520,7 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     return ret;
 }
 
-ErrCode BundleDataMgr::GetApplicationInfoV9WithResponseId(
+ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
     const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const
 {
     int32_t requestUserId = GetUserId(userId);

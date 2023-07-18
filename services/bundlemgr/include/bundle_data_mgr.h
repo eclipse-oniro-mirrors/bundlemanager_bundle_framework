@@ -233,7 +233,7 @@ public:
      * @param appInfo Indicates the obtained ApplicationInfo object.
      * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
      */
-    ErrCode GetApplicationInfoV9WithResponseId(
+    ErrCode GetApplicationInfoWithResponseId(
         const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const;
     /**
      * @brief Obtains information about all installed applications of a specified user.
