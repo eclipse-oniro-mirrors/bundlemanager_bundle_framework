@@ -123,6 +123,11 @@ ohos_unittest("BmsBundleUpdaterTest") {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]

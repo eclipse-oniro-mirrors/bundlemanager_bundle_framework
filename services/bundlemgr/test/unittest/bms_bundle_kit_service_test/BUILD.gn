@@ -105,6 +105,11 @@ ohos_unittest("BmsBundleDataMgrTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -235,6 +240,11 @@ ohos_unittest("BmsBundleKitServiceTest") {
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
@@ -363,6 +373,11 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
       "syscap_codec:syscap_interface_shared",
     ]
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
+  }
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]

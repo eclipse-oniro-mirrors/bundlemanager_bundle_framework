@@ -164,7 +164,7 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
-        BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
         if (bundleMgrExtPtr == nullptr) {
             APP_LOGW("bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;

@@ -796,6 +796,8 @@ public:
     virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
         std::vector<DataGroupInfo> &infos) override;
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
+    virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
+    void SetBrokerServiceStatus(bool isServiceExisted);
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
@@ -825,6 +827,8 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
+
+    bool isBrokerServiceExisted_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

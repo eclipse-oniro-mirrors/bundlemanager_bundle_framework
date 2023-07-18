@@ -836,7 +836,7 @@ public:
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
     ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, const std::string &extName, const std::string &mimeType);
-    bool QueryHagAbilityName(std::string &bundleName, std::string &abilityName);
+    bool QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName);
     bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
     bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
         int32_t userId = Constants::UNSPECIFIED_USERID) const;

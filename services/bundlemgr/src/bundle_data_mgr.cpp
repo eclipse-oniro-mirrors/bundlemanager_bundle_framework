@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
-#include <uuid.h>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -1347,7 +1346,6 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
 
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
-
     if (bundleName.empty()) {
         // query all launcher ability
         GetAllLauncherAbility(want, abilityInfos, userId, requestUserId);
@@ -5107,9 +5105,9 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
     return false;
 }
 
-bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &abilityName)
+bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName)
 {
-    APP_LOGD("QueryHagAbilityName called");
+    APP_LOGD("QueryAppGalleryAbilityName called");
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     Want want;
@@ -5132,7 +5130,7 @@ bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &ab
             bundleName.c_str(), abilityName.c_str());
         return false;
     }
-    APP_LOGD("QueryHagAbilityName bundleName: %{public}s, abilityName: %{public}s",
+    APP_LOGD("QueryAppGalleryAbilityName bundleName: %{public}s, abilityName: %{public}s",
         bundleName.c_str(), abilityName.c_str());
     return true;
 }
@@ -5231,10 +5229,7 @@ void BundleDataMgr::GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, in
     dataGroupInfo.uid = uid;
     dataGroupInfo.gid = uid;
 
-    uuid_t uuidGenerate;
-    uuid_generate(uuidGenerate);
-    char str[UUID_LENGTH];
-    uuid_unparse(uuidGenerate, str);
+    std::string str = BundleUtil::GenerateDataGroupDirName();
     dataGroupInfo.uuid = str;
     dataGroupIndexMap[dataGroupInfo.dataGroupId] = std::pair<int32_t, std::string>(index, str);
 }
@@ -5314,7 +5309,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
         APP_LOGE("query ability infos failed due to error code %{public}d", res);
         return res;
     }
-    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info){
+    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
         // fix labelId or iconId is equal 0
         ModifyLauncherAbilityInfo(true, info);
     });
