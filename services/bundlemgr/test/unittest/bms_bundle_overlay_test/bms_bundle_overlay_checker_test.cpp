@@ -946,7 +946,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0800, Function | SmallTest 
     InnerBundleInfo oldInfo;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    auto bundleInfos = dataMgr->GetAllOverlayInnerbundleInfos();
+    auto bundleInfos = dataMgr->GetAllOverlayInnerBundleInfos();
     oldInfo.SetIsPreInstallApp(true);
     for (const auto &info : bundleInfos) {
         ApplicationInfo applicationInfo;
@@ -987,7 +987,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_1100, Function | SmallTest 
     InnerBundleInfo oldInfo;
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
-    auto bundleInfos = dataMgr->GetAllOverlayInnerbundleInfos();
+    auto bundleInfos = dataMgr->GetAllOverlayInnerBundleInfos();
     oldInfo.SetIsPreInstallApp(true);
     for (const auto &info : bundleInfos) {
         ApplicationInfo applicationInfo;
