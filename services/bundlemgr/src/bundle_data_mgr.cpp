@@ -1520,6 +1520,37 @@ ErrCode BundleDataMgr::GetApplicationInfoV9(
     return ret;
 }
 
+ErrCode BundleDataMgr::GetApplicationInfoWithResponseId(
+    const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    InnerBundleInfo innerBundleInfo;
+    int32_t flag = 0;
+    if ((static_cast<uint32_t>(flags) & static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
+        == static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE)) {
+        flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
+    }
+    auto ret = GetInnerBundleInfoWithBundleFlagsV9(appName, flag, innerBundleInfo, requestUserId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed");
+        return ret;
+    }
+
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    ret = innerBundleInfo.GetApplicationInfoV9(flags, responseUserId, appInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetApplicationInfoV9 failed");
+        return ret;
+    }
+    userId = responseUserId;
+    return ret;
+}
+
 bool BundleDataMgr::GetApplicationInfos(
     int32_t flags, const int userId, std::vector<ApplicationInfo> &appInfos) const
 {

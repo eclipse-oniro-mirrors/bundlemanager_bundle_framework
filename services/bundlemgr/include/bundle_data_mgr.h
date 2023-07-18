@@ -225,6 +225,17 @@ public:
     ErrCode GetApplicationInfoV9(
         const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfoWithResponseId(
+        const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flags Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
