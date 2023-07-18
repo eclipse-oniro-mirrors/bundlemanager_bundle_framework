@@ -39,6 +39,7 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string SERVICE_BUNDLE_NAME = "com.example.myapplication.hmservice";
@@ -2008,3 +2009,4 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2700, Function | Small
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_FAIL);
 }
+} // OHOS
