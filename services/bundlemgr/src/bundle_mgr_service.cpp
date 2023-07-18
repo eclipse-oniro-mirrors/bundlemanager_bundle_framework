@@ -42,6 +42,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
+} // namespace
+
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<BundleMgrService>::GetInstance().get());
 
@@ -81,6 +85,7 @@ void BundleMgrService::OnStart()
     }
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
 }
 
 void BundleMgrService::OnStop()
@@ -424,6 +429,11 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     APP_LOGD("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
+    }
+    if (BUNDLE_BROKER_SERVICE_ABILITY_ID == systemAbilityId) {
+        if (host_ != nullptr) {
+            host_->SetBrokerServiceStatus(true);
+        }
     }
 }
 
