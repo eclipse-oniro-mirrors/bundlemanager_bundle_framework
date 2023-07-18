@@ -2553,8 +2553,8 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest
         ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
         EXPECT_EQ(ret, ERR_OK);
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath); // hap has no so file
+        EXPECT_EQ(ret, ERR_OK);
     }
     UninstallBundleInfo(BUNDLE_NAME);
 }
@@ -4177,24 +4177,27 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0400, Function | SmallTest
     if (deployer != nullptr) {
         BundleInfo bundleInfo;
         bundleInfo.applicationInfo.nativeLibraryPath = "";
-
-        bool ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_FALSE(ret);
+        std::string tmpSoPath = "";
+        std::string moduleName = "entry";
 
         HapModuleInfo moduleInfo;
         moduleInfo.nativeLibraryPath = "";
+        moduleInfo.moduleName = moduleName;
         bundleInfo.hapModuleInfos.push_back(moduleInfo);
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
+        bool ret = deployer->ExtractSoFiles(bundleInfo, "feature", tmpSoPath);
+        EXPECT_FALSE(ret);
+
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
         EXPECT_FALSE(ret);
 
         bundleInfo.applicationInfo.nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_TRUE(ret);
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
+        EXPECT_FALSE(ret);
 
         bundleInfo.applicationInfo.nativeLibraryPath = "";
         bundleInfo.hapModuleInfos[0].nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_TRUE(ret);
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
+        EXPECT_FALSE(ret);
     }
 }
 
