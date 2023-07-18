@@ -5074,9 +5074,9 @@ bool BundleDataMgr::MatchPrivateType(const Want &want,
     return false;
 }
 
-bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &abilityName)
+bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName)
 {
-    APP_LOGD("QueryHagAbilityName called");
+    APP_LOGD("QueryAppGalleryAbilityName called");
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     Want want;
@@ -5099,7 +5099,7 @@ bool BundleDataMgr::QueryHagAbilityName(std::string &bundleName, std::string &ab
             bundleName.c_str(), abilityName.c_str());
         return false;
     }
-    APP_LOGD("QueryHagAbilityName bundleName: %{public}s, abilityName: %{public}s",
+    APP_LOGD("QueryAppGalleryAbilityName bundleName: %{public}s, abilityName: %{public}s",
         bundleName.c_str(), abilityName.c_str());
     return true;
 }

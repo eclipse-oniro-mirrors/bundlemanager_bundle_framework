@@ -831,6 +831,8 @@ public:
 
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
 
+    virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

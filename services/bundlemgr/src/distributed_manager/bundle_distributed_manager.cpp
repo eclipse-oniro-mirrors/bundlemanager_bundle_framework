@@ -165,7 +165,7 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
     }
     std::string bundleName;
     std::string abilityName;
-    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
         return false;
     }

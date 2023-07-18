@@ -796,6 +796,7 @@ public:
     virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId,
         std::vector<DataGroupInfo> &infos) override;
     virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir) override;
+    virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
     void SetBrokerServiceStatus(bool isServiceExisted);
 
 private:

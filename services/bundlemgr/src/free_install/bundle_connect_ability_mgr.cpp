@@ -118,7 +118,7 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
     }
     std::string bundleName;
     std::string abilityName;
-    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
         return;
     }
@@ -343,7 +343,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     }
     std::string bundleName;
     std::string abilityName;
-    if (!(bundleDataMgr_->QueryHagAbilityName(bundleName, abilityName))) {
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
         return false;
     }
