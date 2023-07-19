@@ -205,6 +205,7 @@ bool InstalldClient::LoadInstalldService()
 
 bool InstalldClient::GetInstalldProxy()
 {
+    std::lock_guard<std::mutex> lock(getProxyMutex_);
     if (installdProxy_ != nullptr) {
         APP_LOGD("installd ready");
         return true;
