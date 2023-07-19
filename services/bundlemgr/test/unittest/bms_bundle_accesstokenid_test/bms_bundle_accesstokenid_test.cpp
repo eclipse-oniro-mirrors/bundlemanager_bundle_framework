@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,6 +28,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameter.h"
 #include "permission_define.h"
 #include "remote_ability_info.h"
 
@@ -66,6 +67,7 @@ const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_01 =
     "/data/test/resource/bms/bundle_so/compressNativeLibsTrue01.hap";
 const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_02 =
     "/data/test/resource/bms/bundle_so/compressNativeLibsTrue02.hap";
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
 }  // namespace
 
 class BmsBundleAccessTokenIdTest : public testing::Test {
@@ -112,6 +114,8 @@ void BmsBundleAccessTokenIdTest::SetUp()
 {
     StartInstalldService();
     StartBundleService();
+    // set "persist.bms.supportCompressNativeLibs"
+    SetParameter(COMPRESS_NATIVE_LIBS.c_str(), "true");
 }
 
 void BmsBundleAccessTokenIdTest::TearDown()
@@ -977,7 +981,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function |
 
     result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -1001,7 +1005,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
@@ -1025,7 +1029,7 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function |
     ApplicationInfo applicationInfo;
     bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
     EXPECT_TRUE(result);
-    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
     EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
 
 
