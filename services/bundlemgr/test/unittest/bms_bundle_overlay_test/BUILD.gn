@@ -233,7 +233,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
   }
 
   if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
 
   if (configpolicy_enable) {
@@ -341,7 +341,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
   }
 
   if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
 
   if (configpolicy_enable) {
@@ -450,7 +450,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
   }
 
   if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
 
   if (configpolicy_enable) {
@@ -559,7 +559,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
   }
 
   if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
 
   if (configpolicy_enable) {

@@ -48,8 +48,8 @@ ohos_shared_library("bundlemgr_graphics") {
     "ability_base:want",
     "c_utils:utils",
     "hilog:libhilog",
+    "image_framework:image_native",
     "ipc:ipc_core",
-    "multimedia_image_framework:image_native",
     "samgr:samgr_proxy",
   ]
 
