@@ -195,8 +195,8 @@ bool BundleAgingMgr::InitAgingRequest()
         APP_LOGE("InitAgingRequest: can not get bundle active bundle record");
         return false;
     }
-
-    for (const auto &item : dataMgr->GetAllInnerbundleInfos()) {
+    auto bundleInfos = dataMgr->GetAllInnerBundleInfos();
+    for (const auto &item : bundleInfos) {
         if (!item.second.IsBundleRemovable()) {
             continue;
         }

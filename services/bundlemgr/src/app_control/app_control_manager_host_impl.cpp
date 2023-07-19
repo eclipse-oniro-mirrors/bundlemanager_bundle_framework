@@ -345,7 +345,7 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
         APP_LOGW("no need to update app controlled info due to GetAppInstallControlRule failed code:%{public}d", ret);
         return;
     }
-    auto bundleInfos = dataMgr_->GetAllInnerbundleInfos();
+    auto bundleInfos = dataMgr_->GetAllInnerBundleInfos();
     for (const auto &info : bundleInfos) {
         InnerBundleUserInfo userInfo;
         if (!info.second.GetInnerBundleUserInfo(userId, userInfo)) {

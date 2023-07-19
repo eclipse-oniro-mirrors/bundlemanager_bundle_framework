@@ -662,7 +662,7 @@ public:
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
      */
-    const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    const std::vector<PreInstallBundleInfo> GetAllPreInstallBundleInfos();
     /**
      * @brief Restore uid and gid .
      * @return Returns true if this function is successfully called; returns false otherwise.
@@ -772,7 +772,7 @@ public:
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
-    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
@@ -782,7 +782,7 @@ public:
 
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
-    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+    const std::map<std::string, InnerBundleInfo> GetAllOverlayInnerBundleInfos() const;
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 

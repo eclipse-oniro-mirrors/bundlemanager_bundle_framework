@@ -4197,7 +4197,7 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 }
 #endif
 
-const std::vector<PreInstallBundleInfo>& BundleDataMgr::GetAllPreInstallBundleInfos()
+const std::vector<PreInstallBundleInfo> BundleDataMgr::GetAllPreInstallBundleInfos()
 {
     std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     return preInstallBundleInfos_;
@@ -4625,7 +4625,7 @@ void BundleDataMgr::EnableOverlayBundle(const std::string &bundleName)
     APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
 }
 
-const std::map<std::string, InnerBundleInfo> &BundleDataMgr::GetAllOverlayInnerbundleInfos() const
+const std::map<std::string, InnerBundleInfo> BundleDataMgr::GetAllOverlayInnerBundleInfos() const
 {
     std::lock_guard<std::mutex> lock(overlayMutex_);
     return bundleInfos_;
