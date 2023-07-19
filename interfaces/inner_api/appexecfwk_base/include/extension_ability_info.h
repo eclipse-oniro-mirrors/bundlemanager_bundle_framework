@@ -61,7 +61,8 @@ enum class ExtensionAbilityType {
     UNSPECIFIED = 255,
     UI = 256,
     SYSDIALOG_USERAUTH = 300,
-    SYSDIALOG_COMMON = 301
+    SYSDIALOG_COMMON = 301,
+    SYSDIALOG_ATOMICSERVICEPANEL = 302
 };
 
 enum class CompileMode {
