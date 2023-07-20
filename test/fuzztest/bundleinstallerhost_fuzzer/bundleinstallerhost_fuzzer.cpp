@@ -42,8 +42,10 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    BundleInstallerHost installdHost;
-    installdHost.OnRemoteRequest(code, datas, reply, option);
+    BundleInstallerHost installerHost;
+#ifdef ON_64BIT_SYSTEM
+    installerHost.OnRemoteRequest(code, datas, reply, option);
+#endif
     return true;
 }
 }
