@@ -25,5 +25,9 @@ group("testHapSo") {
     "hapIncludeso6:hapIncludeso6",
     "hapIncludeso7:hapIncludeso7",
     "hapIncludeso8:hapIncludeso8",
+    "hapIncludeso5/feature:hapIncludesoFeature5",
+    "hapIncludeso6/feature:hapIncludesoFeature6",
+    "hapIncludeso7/feature:hapIncludesoFeature7",
+    "hapIncludeso8/feature:hapIncludesoFeature8",
   ]
 }

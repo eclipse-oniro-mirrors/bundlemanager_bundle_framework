@@ -141,18 +141,12 @@
     <option name="push" value="testHapSo/hapIncludeso2.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapSo/hapIncludeso3.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapSo/hapIncludeso4.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludeso5.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludeso6.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludeso7.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludeso8.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludesoFeature5.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludesoFeature6.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludesoFeature7.hap -> /data/test/testHapSo/" src="res" />
-    <option name="push" value="testHapSo/hapIncludesoFeature8.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso1.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso2.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso3.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso4.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso6.hap -> /data/test/testHapSo/" src="res" />
     </preparer>
   </target>
 </configuration>
