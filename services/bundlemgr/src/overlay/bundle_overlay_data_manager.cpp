@@ -207,7 +207,7 @@ void OverlayDataMgr::BuildExternalOverlayConnection(const std::string &moduleNam
         return;
     }
 
-    auto bundleInfos = dataMgr_->GetAllOverlayInnerbundleInfos();
+    auto bundleInfos = dataMgr_->GetAllOverlayInnerBundleInfos();
     for (const auto &info : bundleInfos) {
         if (info.second.GetTargetBundleName() != oldInfo.GetBundleName()) {
             continue;
@@ -424,7 +424,7 @@ void OverlayDataMgr::ResetExternalOverlayModuleState(const std::string &bundleNa
     if (GetBundleDataMgr() != ERR_OK) {
         return;
     }
-    auto bundleInfos = dataMgr_->GetAllOverlayInnerbundleInfos();
+    auto bundleInfos = dataMgr_->GetAllOverlayInnerBundleInfos();
     for (const auto &info : bundleInfos) {
         if (info.second.GetTargetBundleName() != bundleName) {
             continue;
@@ -446,7 +446,7 @@ void OverlayDataMgr::ResetExternalOverlayModuleState(const std::string &bundleNa
     if (GetBundleDataMgr() != ERR_OK) {
         return;
     }
-    auto bundleInfos = dataMgr_->GetAllOverlayInnerbundleInfos();
+    auto bundleInfos = dataMgr_->GetAllOverlayInnerBundleInfos();
     for (const auto &info : bundleInfos) {
         if (info.second.GetTargetBundleName() != bundleName) {
             continue;

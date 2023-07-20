@@ -100,7 +100,7 @@ private:
 
     void SendQuickFixSystemEvent(const InnerBundleInfo &innerBundleInfo);
 
-    bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &tmpSoPath);
+    bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName, std::string &tmpSoPath);
 
     ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
         const std::string &oldSoPath, const std::string &patchPath);

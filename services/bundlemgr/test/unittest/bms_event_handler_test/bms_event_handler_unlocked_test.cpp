@@ -35,6 +35,7 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 class BmsEventHandlerUnLockedTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -141,3 +142,4 @@ HWTEST_F(BmsEventHandlerUnLockedTest, UserUnlockedEventSubscriber_0400, Function
     bool res = OnReceiveEvent(commonData);
     EXPECT_EQ(res, false);
 }
+} // OHOS

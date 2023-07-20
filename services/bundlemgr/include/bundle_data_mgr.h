@@ -225,6 +225,17 @@ public:
     ErrCode GetApplicationInfoV9(
         const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfoWithResponseId(
+        const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flags Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -651,7 +662,7 @@ public:
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
      */
-    const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    const std::vector<PreInstallBundleInfo> GetAllPreInstallBundleInfos();
     /**
      * @brief Restore uid and gid .
      * @return Returns true if this function is successfully called; returns false otherwise.
@@ -761,7 +772,7 @@ public:
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
-    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
@@ -771,7 +782,7 @@ public:
 
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
-    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+    const std::map<std::string, InnerBundleInfo> GetAllOverlayInnerBundleInfos() const;
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 

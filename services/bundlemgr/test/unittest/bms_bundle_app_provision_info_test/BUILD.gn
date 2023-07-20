@@ -87,7 +87,7 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     defines += [ "ACCOUNT_ENABLE" ]
   }
   if (bundle_framework_graphics) {
-    external_deps += [ "multimedia_image_framework:image_native" ]
+    external_deps += [ "image_framework:image_native" ]
   }
   if (bundle_framework_free_install) {
     sources += aging
