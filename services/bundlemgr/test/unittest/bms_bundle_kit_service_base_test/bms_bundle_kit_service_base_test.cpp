@@ -853,7 +853,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
     sleep(1);
 }
 
@@ -873,7 +877,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
     sleep(1);
 }
 
@@ -887,7 +895,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
     BundleDistributedManager mgr;
     TargetAbilityInfo targetAbilityInfo;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
     sleep(1);
 }
 
