@@ -34,6 +34,7 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 
 const std::string TEST_DIR = "/data/test/resource";
@@ -303,3 +304,4 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0400, Function | SmallTest |
     auto result = handler_->CheckAndParseHapFiles(PATH, true, infos);
     EXPECT_FALSE(result);
 }
+} // OHOS

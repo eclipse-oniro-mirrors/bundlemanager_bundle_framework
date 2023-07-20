@@ -43,7 +43,9 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     MessageParcel reply;
     MessageOption option;
     InstalldHost installdHost;
+#ifdef ON_64BIT_SYSTEM
     installdHost.OnRemoteRequest(code, datas, reply, option);
+#endif
     return true;
 }
 }

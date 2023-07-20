@@ -132,6 +132,9 @@ ohos_shared_library("appexecfwk_core") {
   }
 
   subsystem_name = "bundlemanager"
-  innerapi_tags = [ "platformsdk" ]
+  innerapi_tags = [
+    "platformsdk",
+    "sasdk",
+  ]
   part_name = "bundle_framework"
 }

@@ -87,6 +87,10 @@ ohos_fuzztest("BundleInstalldHostFuzzTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
 
+  if (current_cpu == "arm64") {
+    defines += [ "ON_64BIT_SYSTEM" ]
+  }
+
   if (bundle_framework_app_control) {
     defines = [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += [
