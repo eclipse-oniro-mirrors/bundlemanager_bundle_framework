@@ -45,8 +45,6 @@ const std::string NO_SO_BUNDLE_NAME3 = "com.example.hapNotIncludeso3";
 const std::string NO_SO_BUNDLE_NAME4 = "com.example.hapNotIncludeso4";
 const std::string NO_SO_BUNDLE_NAME5 = "com.example.hapNotIncludeso5";
 const std::string NO_SO_BUNDLE_NAME6 = "com.example.hapNotIncludeso6";
-const std::string NO_SO_BUNDLE_NAME7 = "com.example.hapNotIncludeso7";
-const std::string NO_SO_BUNDLE_NAME8 = "com.example.hapNotIncludeso8";
 const std::string HAP_INCLUDE_SO1 = "hapIncludeso1.hap";
 const std::string HAP_INCLUDE_SO2 = "hapIncludeso2.hap";
 const std::string HAP_INCLUDE_SO3 = "hapIncludeso3.hap";
@@ -415,7 +413,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_NO_SO_0400, Function | MediumTest 
 
 /**
  * @tc.number: BMS_Install_Multi_Hap_With_SO_0100
- * @tc.name:  test the installation of a hap not contains so
+ * @tc.name:  test the installation of haps contains so
  * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
  *           2.install the bundle
  *           3.the compressNativeLibs of hap1 is true and the libIsolation of hap1 is true
@@ -440,7 +438,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0100, Function | Med
 
 /**
  * @tc.number: BMS_Install_Multi_Hap_With_SO_0200
- * @tc.name:  test the installation of a hap not contains so
+ * @tc.name:  test the installation of haps contains so
  * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
  *           2.install the bundle
  *           3.the compressNativeLibs of hap1 is true and the libIsolation of hap1 is false
@@ -465,12 +463,12 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0200, Function | Med
 
 /**
  * @tc.number: BMS_Install_Multi_Hap_With_SO_0300
- * @tc.name:  test the installation of a hap not contains so
+ * @tc.name:  test the installation of haps contains so
  * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
  *           2.install the bundle
- *           3.the compressNativeLibs of hap1 is false and the libIsolation of hap1 is true
- *             the compressNativeLibs of hap2 is true and the libIsolation of hap2 is true
- *           4.check the libs path is not exist and the installation is successful
+ *           3.the compressNativeLibs of hap1 is true and the libIsolation of hap1 is true
+ *             the compressNativeLibs of hap2 is true and the libIsolation of hap2 is false
+ *           4.check the libs path is exist and the installation is successful
  */
 HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0300, Function | MediumTest | Level1)
 {
@@ -482,7 +480,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0300, Function | Med
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 + LIBS);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
     res = UninstallBundle(BUNDLE_NAME7);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Install_Multi_Hap_With_SO_0300" << std::endl;
@@ -490,11 +488,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0300, Function | Med
 
 /**
  * @tc.number: BMS_Install_Multi_Hap_With_SO_0400
- * @tc.name:  test the installation of a hap not contains so
+ * @tc.name:  test the installation of haps contains so
  * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
  *           2.install the bundle
- *           3.the compressNativeLibs of hap1 is false and the libIsolation of hap1 is false
- *             the compressNativeLibs of hap2 is true and the libIsolation of hap2 is true
+ *           3.the compressNativeLibs of hap1 is true and the libIsolation of hap1 is false
+ *             the compressNativeLibs of hap2 is true and the libIsolation of hap2 is false
  *           4.check the libs path is exist and the installation is successful
  */
 HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Hap_With_SO_0400, Function | MediumTest | Level1)
