@@ -830,29 +830,26 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
     ConvertInstallResult(callbackPtr->installResult);
     if (callbackPtr->installResult.resultCode != SUCCESS) {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
             GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
 
     if (callbackPtr->deferred) {
         if (callbackPtr->installResult.resultCode == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[SECOND_PARAM]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         }
     } else {
-        napi_value callback = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, callbackPtr->callback, &callback));
-
-        napi_value undefined = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-
-        napi_value callResult = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, CALLBACK_PARAM_SIZE,
-            &result[FIRST_PARAM], &callResult));
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
     }
 }
 

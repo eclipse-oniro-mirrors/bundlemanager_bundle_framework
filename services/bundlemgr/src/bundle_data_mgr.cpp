@@ -1614,9 +1614,8 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
             continue;
         }
         ApplicationInfo appInfo;
-        auto res = info.GetApplicationInfoV9(flags, responseUserId, appInfo);
-        if (res != ERR_OK) {
-            return res;
+        if (info.GetApplicationInfoV9(flags, responseUserId, appInfo) != ERR_OK) {
+            continue;
         }
         appInfos.emplace_back(appInfo);
     }

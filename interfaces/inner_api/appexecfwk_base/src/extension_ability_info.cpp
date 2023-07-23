@@ -72,9 +72,9 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "driver", ExtensionAbilityType::DRIVER },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
     { "ui", ExtensionAbilityType::UI },
-    { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
     { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
+    { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
     { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL }
 };
 }; // namespace
