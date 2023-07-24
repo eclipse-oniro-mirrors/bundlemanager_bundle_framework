@@ -77,8 +77,7 @@
                 "libuv",
                 "node",
                 "zlib",
-                "jsoncpp",
-                "e2fsprogs"
+                "jsoncpp"
             ]
         },
         "build": {
