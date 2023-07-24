@@ -8129,5 +8129,20 @@ HWTEST_F(ActsBmsKitSystemTest, GetOverlayManagerProxy_0100, Function | SmallTest
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
 }
+
+/**
+ * @tc.number: QueryAppGalleryBundleName_0100
+ * @tc.name: test BundleMgr proxy
+ * @tc.desc: 1.system run normally
+ *           2.return true
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAppGalleryBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName;
+    bool ret = bundleMgrProxy->QueryAppGalleryBundleName(bundleName);
+    EXPECT_FALSE(ret);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
