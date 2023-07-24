@@ -671,7 +671,8 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 std::string BundleUtil::GenerateDataGroupDirName()
 {
     std::string res(DATA_GROUP_DIR_SIZE, DATA_GROUP_DIR_SEPARATOR);
-    for (auto i = 0; i < DATA_GROUP_DIR_SIZE; i++) {
+    int32_t size = static_cast<int32_t>(DATA_GROUP_DIR_SIZE);
+    for (auto i = 0; i < size; i++) {
         if (SEPARATOR_POSITIONS.find(i) == SEPARATOR_POSITIONS.end()) {
             std::random_device seed;
             std::ranlux48 engine(seed());
