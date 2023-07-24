@@ -33,6 +33,8 @@ ohos_systemtest("BmsInstallHapSoTest") {
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso5:hapNotIncludeso5",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso6:hapNotIncludeso6",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso1:hapIncludeso1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso10:hapIncludeso10",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso10/feature:hapIncludesoFeature10",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso2:hapIncludeso2",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso3:hapIncludeso3",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapSo/hapIncludeso4:hapIncludeso4",
