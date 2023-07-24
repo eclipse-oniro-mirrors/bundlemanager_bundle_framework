@@ -5316,11 +5316,11 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
 }
 
 ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-    std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
+    std::vector<AbilityInfo> &abilityInfos) const
 {
     APP_LOGD("start to query abilityInfos from bms extension");
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
+    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
     if (res != ERR_OK) {
         APP_LOGE("query ability infos failed due to error code %{public}d", res);
         return res;
@@ -5333,11 +5333,11 @@ ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32
 }
 
 ErrCode BundleDataMgr::QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-    AbilityInfo &abilityInfo, bool isNewVersion) const
+    AbilityInfo &abilityInfo) const
 {
     APP_LOGD("start to query abilityInfo from bms extension");
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, isNewVersion);
+    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
     if (res != ERR_OK) {
         APP_LOGE("query ability info failed due to error code %{public}d", res);
         return res;
@@ -5352,11 +5352,11 @@ ErrCode BundleDataMgr::QueryAbilityInfoFromBmsExtension(const Want &want, int32_
 }
 
 ErrCode BundleDataMgr::GetBundleInfosFromBmsExtension(
-    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
+    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId) const
 {
     APP_LOGD("start to query bundle infos from bms extension");
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
     if (res != ERR_OK) {
         APP_LOGE("query bundle infos failed due to error code %{public}d", res);
         return res;
@@ -5366,11 +5366,15 @@ ErrCode BundleDataMgr::GetBundleInfosFromBmsExtension(
 }
 
 ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags,
-    BundleInfo &bundleInfo, int32_t userId, bool isNewVersion) const
+    BundleInfo &bundleInfo, int32_t userId) const
 {
     APP_LOGD("start to query bundle info from bms extension");
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("query bundle info failed due to error code %{public}d", res);
+        return res;
+    }
     if (res != ERR_OK) {
         APP_LOGE("query bundle info failed due to error code %{public}d", res);
         return res;
