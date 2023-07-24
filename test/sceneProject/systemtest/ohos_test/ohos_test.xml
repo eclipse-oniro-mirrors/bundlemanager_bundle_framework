@@ -161,6 +161,12 @@
     <option name="push" value="testHapNoSo/hapNotIncludeso4.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso5.hap -> /data/test/testHapSo/" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso6.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapNotIncludesoFeature5.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapNotIncludesoFeature6.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapSectionContainso1.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapSectionContainso2.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapSectionContainsoFeature1.hap -> /data/test/testHapSo/" src="res" />
+    <option name="push" value="testHapNoSo/hapSectionContainsoFeature2.hap -> /data/test/testHapSo/" src="res" />
     </preparer>
   </target>
 </configuration>

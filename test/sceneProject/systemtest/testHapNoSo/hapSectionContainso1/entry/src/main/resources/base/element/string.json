@@ -1,0 +1,40 @@
+{
+    "string":  [
+        {
+            "name": "entry_desc",
+            "value": "entry_desc"
+        },
+        {
+            "name": "phone_entry_main",
+            "value": "the phone entry ability"
+        },
+        {
+            "name": "entry_label",
+            "value": "entry_label"
+        },
+        {
+            "name": "form_description",
+            "value": "my form"
+        },
+        {
+            "name": "MainAbility_desc",
+            "value": "MainAbility_desc"
+        },
+        {
+            "name": "app_name",
+            "value": "Demo"
+        },
+        {
+            "name": "MainAbility_label",
+            "value": "form_label"
+        },
+        {
+            "name": "16777223",
+            "value": "form_label"
+        },
+        {
+            "name": "16777219",
+            "value": "form_label"
+        }
+    ]
+}

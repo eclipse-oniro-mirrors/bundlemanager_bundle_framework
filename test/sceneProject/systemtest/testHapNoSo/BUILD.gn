@@ -23,5 +23,7 @@ group("testHapNoSo") {
     "hapNotIncludeso4:hapNotIncludeso4",
     "hapNotIncludeso5:hapNotIncludeso5",
     "hapNotIncludeso6:hapNotIncludeso6",
+    "hapSectionContainso1:hapSectionContainso1",
+    "hapSectionContainso2:hapSectionContainso2",
   ]
 }
