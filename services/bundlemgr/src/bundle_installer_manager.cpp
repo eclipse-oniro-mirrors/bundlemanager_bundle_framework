@@ -154,7 +154,7 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task)
 {
     APP_LOGD("submit task");
-    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos::qos_user_initiated));
+    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(static_cast<int>(ffrt::qos_default::qos_user_initiated)));
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

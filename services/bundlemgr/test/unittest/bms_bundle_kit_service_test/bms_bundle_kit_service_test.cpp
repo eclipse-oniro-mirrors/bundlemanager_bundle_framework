@@ -7858,7 +7858,11 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | S
     auto bundleMgr = GetBundleDistributedManager();
     TargetAbilityInfo targetAbilityInfo;
     bool res = bundleMgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    EXPECT_EQ(res, false);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(res);
+    #else
+    EXPECT_FALSE(res);
+    #endif
 }
 
 /**

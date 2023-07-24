@@ -303,7 +303,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    ffrt::submit(silentInstallFunc);
+    ffrt::submit(silentInstallFunc, {}, {}, ffrt::task_attr().qos(ffrt::qos_deadline_request));
     return true;
 }
 

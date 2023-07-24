@@ -2205,11 +2205,6 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION), &nAuthorization));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "APP_ACCOUNT_AUTHORIZATION", nAuthorization));
 
-    napi_value nMediaControl;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
-        static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEDIACONTROL), &nMediaControl));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEDIACONTROL", nMediaControl));
-
     napi_value nUI;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::UI), &nUI));
@@ -2239,6 +2234,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_COMMON), &nSysDialogCommon));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_COMMON", nSysDialogCommon));
+
+    napi_value nMediaControl;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEDIACONTROL), &nMediaControl));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEDIACONTROL", nMediaControl));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
