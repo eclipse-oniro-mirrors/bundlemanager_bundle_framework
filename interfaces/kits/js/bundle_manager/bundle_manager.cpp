@@ -1334,6 +1334,7 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
+            napi_get_undefined(env, &result[0]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
@@ -1418,6 +1419,7 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
+            napi_get_undefined(env, &result[0]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
@@ -1690,6 +1692,7 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
     }
     if (asyncCallbackInfo->deferred) {
         if (asyncCallbackInfo->err == NO_ERROR) {
+            napi_get_undefined(env, &result[0]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
