@@ -37,10 +37,11 @@ public:
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
     ErrCode QueryAbilityInfos(const Want &want, int32_t userId, std::vector<AbilityInfo> &abilityInfos);
     ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos);
-    ErrCode GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId);
+        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false);
+    ErrCode GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId,
+        bool isNewVersion = false);
     ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
-        BundleInfo &bundleInfo);
+        BundleInfo &bundleInfo, bool isNewVersion = false);
     ErrCode Init();
 
 private:
