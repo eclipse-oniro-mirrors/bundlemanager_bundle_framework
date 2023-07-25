@@ -1512,6 +1512,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0003, Function | SmallTest
     innerModuleInfo.moduleName = ENTRY;
     ProxyData data;
     data.uri = "//2/";
+    data.requiredReadPermission = "wrong_permission";
     innerModuleInfo.proxyDatas.push_back(data);
     innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
     innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
@@ -1555,6 +1556,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyDatas_0005, Function | SmallTest
     InnerModuleInfo innerModuleInfo;
     ProxyData data;
     data.uri = TEST_PATH;
+    data.requiredReadPermission = "wrong_permission";
     innerModuleInfo.proxyDatas.emplace_back(data);
     innerModuleInfos.try_emplace(HAP, innerModuleInfo);
     innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
@@ -1679,5 +1681,41 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckSignatureFileDir_0003, Function | Sma
     BundleInstallChecker installChecker;
     auto ret = installChecker.CheckSignatureFileDir("test.sig");
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckCheckProxyPermissionLevel_0001
+ * @tc.name: test the start function of CheckProxyPermissionLevel
+ * @tc.desc: 1. test CheckProxyPermissionLevel
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyPermissionLevel_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckProxyPermissionLevel("");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CheckCheckProxyPermissionLevel_0002
+ * @tc.name: test the start function of CheckProxyPermissionLevel
+ * @tc.desc: 1. test CheckProxyPermissionLevel
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyPermissionLevel_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckProxyPermissionLevel("ohos.permission.GET_BUNDLE_INFO");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: CheckCheckProxyPermissionLevel_0003
+ * @tc.name: test the start function of CheckProxyPermissionLevel
+ * @tc.desc: 1. test CheckProxyPermissionLevel
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckProxyPermissionLevel_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckProxyPermissionLevel("wrong_permission_name");
+    EXPECT_EQ(ret, false);
 }
 } // OHOS
