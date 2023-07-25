@@ -28,12 +28,13 @@
         "descriptionId": 16777220,
         "deviceTypes": [
             "2in1",
-            "tablet",
-            "default"
+            "default",
+            "phone",
+            "tablet"
         ],
         "installationFree": false,
         "mainElement": "MainAbility",
-        "name": "entry_A",
+        "name": "feature1",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
