@@ -216,7 +216,13 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+    auto res = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
+    if (res != ERR_OK) {
+        if (dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+            return ERR_OK;
+        }
+    }
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundleInfo)
@@ -330,7 +336,9 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->GetBundleInfos(flags, bundleInfos, userId);
+    dataMgr->GetBundleInfos(flags, bundleInfos, userId);
+    dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    return !bundleInfos.empty();
 }
 
 ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
@@ -350,7 +358,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
+    if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
+        APP_LOGD("query bundle infos from bms extension successfully");
+        return ERR_OK;
+    }
+    return res;
 }
 
 bool BundleMgrHostImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
@@ -584,7 +597,9 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
+    dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    return !abilityInfos.empty();
 }
 
 ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
@@ -605,7 +620,12 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
+    auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
+    if (dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, true) == ERR_OK) {
+        APP_LOGD("query ability infos from bms extension successfully");
+        return ERR_OK;
+    }
+    return res;
 }
 
 ErrCode BundleMgrHostImpl::QueryLauncherAbilityInfos(
