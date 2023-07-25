@@ -34,6 +34,7 @@ uint32_t GetU32Data(const char* ptr)
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
+#ifdef ON_64BIT_SYSTEM
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
     std::u16string descriptor = BundleInstallerHost::GetDescriptor();
@@ -43,7 +44,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     MessageParcel reply;
     MessageOption option;
     BundleInstallerHost installerHost;
-#ifdef ON_64BIT_SYSTEM
     installerHost.OnRemoteRequest(code, datas, reply, option);
 #endif
     return true;
