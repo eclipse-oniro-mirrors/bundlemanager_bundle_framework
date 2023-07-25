@@ -840,6 +840,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
 
     if (callbackPtr->deferred) {
         if (callbackPtr->installResult.resultCode == SUCCESS) {
+            napi_get_undefined(env, &result[FIRST_PARAM]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
