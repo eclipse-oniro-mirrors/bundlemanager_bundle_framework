@@ -34,12 +34,12 @@
         ],
         "installationFree": false,
         "mainElement": "MainAbility",
-        "name": "feature",
+        "name": "feature1",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
         "virtualMachine": "ark",
         "compressNativeLibs": true,
-        "libIsolation": false
+        "libIsolation": true
     }
 }
