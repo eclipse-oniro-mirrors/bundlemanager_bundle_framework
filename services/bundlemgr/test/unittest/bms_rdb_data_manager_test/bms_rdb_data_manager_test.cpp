@@ -405,5 +405,19 @@ HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0600, Function | SmallTest | Level
     ret = defaultAppDb->DeleteDefaultApplicationInfos(TEST_USERID);
     EXPECT_TRUE(ret);
 }
+
+/**
+ * @tc.number: DefaultAppRdb_0700
+ * @tc.name: save get and delete
+ * @tc.desc: 1.SetDefaultApplicationInfos
+ * @tc.require: issueI56W8B
+ */
+HWTEST_F(BmsRdbDataManagerTest, DefaultAppRdb_0700, Function | SmallTest | Level1)
+{
+    DefaultAppRdb defaultAppRdb;
+    Element element;
+    bool ret = defaultAppRdb.SetDefaultApplicationInfo(100, TEST_DEFAULT_APP_TYPE, element);
+    EXPECT_TRUE(ret);
+}
 #endif
 }  // namespace
