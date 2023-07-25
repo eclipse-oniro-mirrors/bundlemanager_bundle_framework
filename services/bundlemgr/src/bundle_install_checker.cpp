@@ -1220,8 +1220,12 @@ std::string GetBundleNameFromUri(const std::string &uri)
     return bundleName;
 }
 
-bool CheckPermissionLevel(const std::string &permissionName)
+bool BundleInstallChecker::CheckProxyPermissionLevel(const std::string &permissionName) const
 {
+    // no permission name, only for self usage
+    if (permissionName.empty()) {
+        return true;
+    }
     PermissionDef permissionDef;
     ErrCode ret = BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
     if (ret != ERR_OK) {
@@ -1253,8 +1257,8 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
             if (innerBundleInfo.IsSystemApp()) {
                 continue;
             }
-            if (!CheckPermissionLevel(proxyData.requiredReadPermission)
-                    || !CheckPermissionLevel(proxyData.requiredWritePermission)) {
+            if (!CheckProxyPermissionLevel(proxyData.requiredReadPermission)
+                    || !CheckProxyPermissionLevel(proxyData.requiredWritePermission)) {
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED;
             }
         }
