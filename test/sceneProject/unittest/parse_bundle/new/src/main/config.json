@@ -1,0 +1,113 @@
+{
+    "app": {
+        "bundleName": "com.example.hiworld.himusic",
+        "vendor": "example",
+        "version": {
+            "code": 2, 
+            "name": "2.0"
+        },
+        "apiVersion": {
+            "compatible": 3, 
+            "target": 3,
+            "releaseType": "Beta1"
+        }
+    },
+    "deviceConfig": {
+        "default": {
+        }
+    },
+    "module": {
+        "package": "com.example.hiworld.himusic.entry",
+        "name": ".MainApplication",
+        "supportedModes": [
+            "drive"
+        ],
+        "distro": {
+            "moduleType": "entry",
+            "deliveryWithInstall": true,
+            "moduleName": "hap-car"
+        },
+        "deviceType": [
+            "tablet",
+            "default"
+        ],
+        "abilities": [
+            {
+                "name": ".MainAbility",
+                "description": "himusic main ability",
+                "icon": "$media:icon",
+                "label": "HiMusic",
+                "launchType": "standard",
+                "orientation": "unspecified",
+                "visible": true,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "type": "page",
+                "formEnabled": false
+            },
+            {
+                "name": ".PlayService",
+                "description": "himusic play ability",
+                "icon": "$media:icon",
+                "label": "HiMusic",
+                "launchType": "standard",
+                "orientation": "unspecified",
+                "visible": false,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.play.music",
+                            "action.stop.music"
+                        ],
+                        "entities": [
+                            "entity.audio"
+                        ]
+                    }
+                ],
+                "type": "service",
+                "backgroundModes": [
+                    "audioPlayback"
+                ]
+            },
+            {
+                "name": ".UserADataAbility",
+                "type": "data",
+                "uri": "dataability://com.example.hiworld.himusic.UserADataAbility",
+                "visible": true
+            }
+        ],
+        "js": [
+            {
+                "name": ".MainAbility",
+                "pages": [
+                    "pages/index/index"
+                ],
+                "window": {
+                    "autoDesignWidth": false,
+                    "designWidth": 720
+                }
+            }
+        ],
+        "reqPermissions": [
+            {
+                "name": "ohos.permission.DISTRIBUTED_DATASYNC",
+                "reason": "",
+                "usedScene": {
+                    "ability": [
+                        "com.example.hiworld.himusic.entry.MainAbility",
+                        "com.example.hiworld.himusic.entry.PlayService"
+                    ],
+                    "when": "inuse"
+                }
+            }
+        ]
+    }
+}
