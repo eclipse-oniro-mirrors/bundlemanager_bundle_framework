@@ -39,16 +39,17 @@ public:
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
     virtual ErrCode QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos)
+        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false)
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
     virtual ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
-        BundleInfo &bundleInfo)
+        BundleInfo &bundleInfo, bool isNewVersion = false)
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
-    virtual ErrCode GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+    virtual ErrCode GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId,
+        bool isNewVersion = false)
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
