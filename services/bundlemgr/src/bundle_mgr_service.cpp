@@ -432,6 +432,7 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     }
     if (BUNDLE_BROKER_SERVICE_ABILITY_ID == systemAbilityId) {
         if (host_ != nullptr) {
+            isBrokerServiceStarted_ = true;
             host_->SetBrokerServiceStatus(true);
         }
     }
@@ -445,6 +446,11 @@ bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string&
 
     APP_LOGD("HidumpHelper failed");
     return false;
+}
+
+bool BundleMgrService::IsBrokerServiceStarted() const
+{
+    return isBrokerServiceStarted_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

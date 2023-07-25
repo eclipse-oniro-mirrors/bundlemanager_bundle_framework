@@ -851,6 +851,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
+    // check if bundle exists in extension
+    result = CheckBundleInBmsExtension(bundleName_, userId_);
+    CHECK_RESULT(result, "bundle is already existed in bms extension %{public}d");
+
     // check native file
     result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
@@ -1096,8 +1100,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
-        APP_LOGE("uninstall bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        APP_LOGW("uninstall bundle info missing");
+        return UninstallBundleFromBmsExtension(bundleName);
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1222,8 +1226,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
-        APP_LOGE("uninstall bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        APP_LOGW("uninstall bundle info missing");
+        return UninstallBundleFromBmsExtension(bundleName);
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -3976,6 +3980,47 @@ void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
 #else
     APP_LOGW("app control is disable");
 #endif
+}
+
+ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &bundleName)
+{
+    APP_LOGD("start to uninstall bundle from bms extension");
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGW("broker is not started");
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto ret = bmsExtensionDataMgr.Uninstall(bundleName);
+    if (ret == ERR_OK) {
+        APP_LOGD("uninstall bundle(%{public}s) from bms extension successfully", bundleName.c_str());
+        return ERR_OK;
+    }
+    if ((ret == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) ||
+        (ret == ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED)) {
+        APP_LOGE("uninstall failed due to bundle(%{public}s is not existed)", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    APP_LOGE("uninstall bundle(%{public}s) from bms extension faile due to errcode %{public}d",
+        bundleName.c_str(), ret);
+    return ERR_BUNDLE_MANAGER_UNINSTALL_FROM_BMS_EXTENSION_FAILED;
+}
+
+ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId)
+{
+    APP_LOGD("start to check bundle(%{public}s) from bms extension", bundleName.c_str());
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGW("broker is not started");
+        return ERR_OK;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    BundleInfo extensionBundleInfo;
+    auto ret = bmsExtensionDataMgr.GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, userId,
+        extensionBundleInfo);
+    if (ret == ERR_OK) {
+        APP_LOGE("the bundle(%{public}s) is already existed in the bms extension", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
