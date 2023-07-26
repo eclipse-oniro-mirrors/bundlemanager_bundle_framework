@@ -17,6 +17,7 @@
 
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #ifndef SUPPORT_ERMS
 #include "erms_mgr_interface.h"
@@ -99,6 +100,7 @@ bool BundleConnectAbilityMgr::ProcessPreloadCheck(const TargetAbilityInfo &targe
 {
     APP_LOGD("ProcessPreloadCheck");
     auto preloadCheckFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
         this->ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
     };
@@ -300,6 +302,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
     }
 
     auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -312,6 +315,7 @@ bool BundleConnectAbilityMgr::UpgradeCheck(const TargetAbilityInfo &targetAbilit
 {
     APP_LOGI("UpgradeCheck");
     auto upgradeCheckFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -324,6 +328,7 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
 {
     APP_LOGI("UpgradeInstall");
     auto upgradeInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -441,6 +446,7 @@ void BundleConnectAbilityMgr::DisconnectDelay()
 {
     auto disconnectFunc = [connect = shared_from_this()]() {
         APP_LOGI("disconnectFunc Disconnect Ability");
+        BundleMemoryGuard memoryGuard;
         if (connect) {
             connect->DisconnectAbility();
         }
@@ -598,6 +604,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     lock.unlock();
     auto RegisterEventListenerFunc = [this, freeInstallParams, transactId]() {
         APP_LOGI("RegisterEventListenerFunc");
+        BundleMemoryGuard memoryGuard;
         this->SendCallBack(FreeInstallErrorCode::SERVICE_CENTER_TIMEOUT,
             freeInstallParams.want, freeInstallParams.userId, transactId);
     };
