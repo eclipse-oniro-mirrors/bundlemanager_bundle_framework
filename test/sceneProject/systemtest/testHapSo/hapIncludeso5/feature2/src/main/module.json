@@ -34,7 +34,7 @@
         ],
         "installationFree": false,
         "mainElement": "MainAbility",
-        "name": "feature",
+        "name": "feature2",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
