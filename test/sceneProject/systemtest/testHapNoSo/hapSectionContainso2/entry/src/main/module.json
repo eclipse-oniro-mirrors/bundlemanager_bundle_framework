@@ -39,6 +39,6 @@
         "type": "feature",
         "virtualMachine": "ark",
         "compressNativeLibs": false,
-        "libIsolation": true
+        "libIsolation": false
     }
 }
