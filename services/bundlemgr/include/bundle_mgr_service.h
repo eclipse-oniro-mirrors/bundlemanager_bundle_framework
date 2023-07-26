@@ -132,6 +132,7 @@ public:
 #endif
 
     std::shared_ptr<AOTLoopTask> GetAOTLoopTask() const;
+    bool IsBrokerServiceStarted() const;
 
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -158,6 +159,7 @@ private:
     bool ready_ = false;
     bool registerToService_ = false;
     bool notifyBundleScanStatus = false;
+    bool isBrokerServiceStarted_ = false;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
