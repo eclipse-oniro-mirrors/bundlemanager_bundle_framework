@@ -1904,7 +1904,7 @@ public:
         return true;
     }
 
-    const std::map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
+    const std::unordered_map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
     {
         return dataGroupInfos_;
     }
@@ -1945,7 +1945,7 @@ public:
         }
     }
 
-    void UpdateDataGroupInfos(const std::map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
+    void UpdateDataGroupInfos(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
     {
         std::set<int32_t> userIdList;
         for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
@@ -2125,7 +2125,7 @@ private:
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
 
     // data group info
-    std::map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);
