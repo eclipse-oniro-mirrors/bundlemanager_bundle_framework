@@ -2248,6 +2248,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL), &nSysDialogAtomicServicePanel));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "SYSDIALOG_ATOMICSERVICEPANEL", nSysDialogAtomicServicePanel));
+
+    napi_value nShare;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SHARE), &nShare));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARE", nShare));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
