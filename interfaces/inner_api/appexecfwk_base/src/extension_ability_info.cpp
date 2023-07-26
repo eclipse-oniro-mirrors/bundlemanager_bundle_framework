@@ -75,7 +75,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
     { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
     { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
-    { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL }
+    { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL },
+    { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE }
 };
 }; // namespace
 
