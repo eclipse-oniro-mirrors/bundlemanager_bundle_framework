@@ -42,6 +42,13 @@ public:
      * @return Returns true if the data is successfully deleted; returns false otherwise.
      */
     virtual bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) = 0;
+    /**
+     * @brief Obtains the PreInstallBundleInfo objects provided by bundleName.
+     * @param preInstallBundleInfos Indicates information about the PreInstallBundleInfo.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual bool LoadPreInstallBundleInfo(const std::string &bundleName,
+        PreInstallBundleInfo &preInstallBundleInfo) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

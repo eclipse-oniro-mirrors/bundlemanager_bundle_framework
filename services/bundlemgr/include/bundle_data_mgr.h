@@ -978,7 +978,6 @@ private:
     mutable std::shared_mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
-    mutable std::mutex preInstallInfoMutex_;
     mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
@@ -1005,7 +1004,6 @@ private:
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
-    std::vector<PreInstallBundleInfo> preInstallBundleInfos_;
     std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
 };
