@@ -306,24 +306,22 @@ bool CommonFunc::ParseAbilityInfo(napi_env env, napi_value param, AbilityInfo& a
 
 sptr<IBundleMgr> CommonFunc::GetBundleMgr()
 {
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
     if (bundleMgr_ == nullptr) {
-        std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+        auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+        if (systemAbilityManager == nullptr) {
+            APP_LOGE("systemAbilityManager is null.");
+            return nullptr;
+        }
+        auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+        if (bundleMgrSa == nullptr) {
+            APP_LOGE("bundleMgrSa is null.");
+            return nullptr;
+        }
+        bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
         if (bundleMgr_ == nullptr) {
-            auto systemAbilityManager = OHOS::SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-            if (systemAbilityManager == nullptr) {
-                APP_LOGE("systemAbilityManager is null.");
-                return nullptr;
-            }
-            auto bundleMgrSa = systemAbilityManager->GetSystemAbility(OHOS::BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
-            if (bundleMgrSa == nullptr) {
-                APP_LOGE("bundleMgrSa is null.");
-                return nullptr;
-            }
-            bundleMgr_ = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
-            if (bundleMgr_ == nullptr) {
-                APP_LOGE("iface_cast failed.");
-                return nullptr;
-            }
+            APP_LOGE("iface_cast failed.");
+            return nullptr;
         }
     }
     return bundleMgr_;
