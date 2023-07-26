@@ -148,6 +148,11 @@
     <option name="push" value="testHapSo/hapIncludeso5Feature1.hap -> /data/test/testHapSo/hapIncludeso5Feature1" src="res" />
     <option name="push" value="testHapSo/hapIncludeso5Feature2.hap -> /data/test/testHapSo/hapIncludeso5Feature2" src="res" />
     <option name="push" value="testHapSo/hapIncludeso5Feature3.hap -> /data/test/testHapSo/hapIncludeso5Feature3" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature4.hap -> /data/test/testHapSo/hapIncludeso5Feature4" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature5.hap -> /data/test/testHapSo/hapIncludeso5Feature5" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature6.hap -> /data/test/testHapSo/hapIncludeso5Feature6" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature7.hap -> /data/test/testHapSo/hapIncludeso5Feature7" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature8.hap -> /data/test/testHapSo/hapIncludeso5Feature8" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature1.hap -> /data/test/testHapSo/hapIncludeso6Feature1" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature2.hap -> /data/test/testHapSo/hapIncludeso6Feature2" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature3.hap -> /data/test/testHapSo/hapIncludeso6Feature3" src="res" />
