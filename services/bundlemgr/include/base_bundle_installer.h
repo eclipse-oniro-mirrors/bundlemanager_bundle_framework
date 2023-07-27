@@ -598,6 +598,8 @@ private:
     void DeleteGroupDirsForException() const;
     ErrCode CreateDataGroupDirs(
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    ErrCode UninstallBundleFromBmsExtension(const std::string &bundleName);
+    ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

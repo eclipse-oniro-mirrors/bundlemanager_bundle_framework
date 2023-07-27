@@ -1354,6 +1354,23 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6300, Function | SmallTest
     defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
     EXPECT_NE(defaultAppData.infos.size(), 0);
 }
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6400
+ * @tc.name: test ResetDefaultApplication, param type is empty
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6400, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    Element element;
+    defaultAppData.infos.insert(std::pair<std::string, Element>("1", element));
+    nlohmann::json jsonObject;
+    defaultAppData.ToJson(jsonObject);
+    defaultAppData.ParseDefaultApplicationConfig(jsonObject);
+    EXPECT_EQ(0, ERR_OK);
+}
+
 /**
  * @tc.number: AOT_EXECUTOR_0100
  * @tc.name: test AOTExecutor

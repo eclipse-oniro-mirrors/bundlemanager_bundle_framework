@@ -988,6 +988,48 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1100, Fun
 }
 
 /**
+ * @tc.number: InnerSharedBundleInstallerTest_1200
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1200, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1300
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1300, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    installer.nativeLibraryPath_ = "path/testModuleName";
+    std::string versionDir = "data/test";
+    auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1400
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1400, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    InnerBundleInfo newInfo;
+    auto ret = installer.ProcessNativeLibrary(
+        HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InnerProcessStockBundleProvisionInfo_0001
  * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
  * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos

@@ -1735,7 +1735,7 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
+    GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
         jsonObjectEnd,
         DATA_GROUP_INFOS,
         dataGroupInfos_,

@@ -282,6 +282,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
+        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -458,6 +459,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
+        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();

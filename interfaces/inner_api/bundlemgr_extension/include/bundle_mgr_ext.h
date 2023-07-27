@@ -53,7 +53,10 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
-
+    virtual ErrCode Uninstall(const std::string &bundleName)
+    {
+        return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+    }
     virtual ~BundleMgrExt() = default;
 };
 

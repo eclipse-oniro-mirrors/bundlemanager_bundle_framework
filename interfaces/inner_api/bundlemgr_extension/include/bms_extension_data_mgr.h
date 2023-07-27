@@ -42,6 +42,7 @@ public:
         bool isNewVersion = false);
     ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
         BundleInfo &bundleInfo, bool isNewVersion = false);
+    ErrCode Uninstall(const std::string &bundleName);
     ErrCode Init();
 
 private:

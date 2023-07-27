@@ -175,5 +175,20 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
     APP_LOGW("access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
+
+ErrCode BmsExtensionDataMgr::Uninstall(const std::string &bundleName)
+{
+    if ((Init() == ERR_OK) && handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr == nullptr) {
+            APP_LOGW("bundleMgrExtPtr is nullptr.");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        return bundleMgrExtPtr->Uninstall(bundleName);
+    }
+    APP_LOGW("access bms-extension failed.");
+    return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+}
 } // AppExecFwk
 } // OHOS
