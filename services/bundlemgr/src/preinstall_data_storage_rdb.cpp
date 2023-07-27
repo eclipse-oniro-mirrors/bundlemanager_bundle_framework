@@ -135,5 +135,26 @@ bool PreInstallDataStorageRdb::DeletePreInstallStorageBundleInfo(
     APP_LOGD("DeletePreInstallStorageBundleInfo %{public}d", ret);
     return ret;
 }
+
+bool PreInstallDataStorageRdb::LoadPreInstallBundleInfo(const std::string &bundleName,
+    PreInstallBundleInfo &preInstallBundleInfo)
+{
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+    std::string value;
+    bool ret = rdbDataManager_->QueryData(bundleName, value);
+    if (!ret) {
+        APP_LOGE("LoadPreInstallBundleInfo QueryData failed.");
+        return ret;
+    }
+    nlohmann::json jsonObject = nlohmann::json::parse(value, nullptr, false);
+    if (jsonObject.is_discarded() || (preInstallBundleInfo.FromJson(jsonObject) != ERR_OK)) {
+        APP_LOGE("error key : %{public}s", bundleName.c_str());
+        return false;
+    }
+    return ret;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -87,7 +87,6 @@ BundleDataMgr::~BundleDataMgr()
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    LoadAllPreInstallBundleInfos(preInstallBundleInfos_);
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -3256,19 +3255,11 @@ bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
 bool BundleDataMgr::SavePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (preInstallDataStorage_ == nullptr) {
         return false;
     }
 
     if (preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInstallBundleInfo)) {
-        auto info = std::find_if(
-            preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-        if (info != preInstallBundleInfos_.end()) {
-            *info = preInstallBundleInfo;
-        } else {
-            preInstallBundleInfos_.emplace_back(preInstallBundleInfo);
-        }
         APP_LOGD("write storage success bundle:%{public}s", bundleName.c_str());
         return true;
     }
@@ -3279,18 +3270,12 @@ bool BundleDataMgr::SavePreInstallBundleInfo(
 bool BundleDataMgr::DeletePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (preInstallDataStorage_ == nullptr) {
         return false;
     }
 
     if (preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInstallBundleInfo)) {
-        auto info = std::find_if(
-            preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-        if (info != preInstallBundleInfos_.end()) {
-            preInstallBundleInfos_.erase(info);
-        }
-        APP_LOGI("Delete PreInstall Storage success bundle:%{public}s", bundleName.c_str());
+        APP_LOGD("Delete PreInstall Storage success bundle:%{public}s", bundleName.c_str());
         return true;
     }
 
@@ -3300,22 +3285,18 @@ bool BundleDataMgr::DeletePreInstallBundleInfo(
 bool BundleDataMgr::GetPreInstallBundleInfo(
     const std::string &bundleName, PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
     }
-
-    preInstallBundleInfo.SetBundleName(bundleName);
-    auto info = std::find_if(
-        preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-    if (info != preInstallBundleInfos_.end()) {
-        preInstallBundleInfo = *info;
-        return true;
+    if (preInstallDataStorage_ == nullptr) {
+        return false;
     }
-
-    APP_LOGE("get preInstall bundleInfo failed by bundle(%{public}s).", bundleName.c_str());
-    return false;
+    if (!preInstallDataStorage_->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("get preInstall bundleInfo failed by bundle(%{public}s).", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 bool BundleDataMgr::LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
@@ -4200,8 +4181,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 
 const std::vector<PreInstallBundleInfo> BundleDataMgr::GetAllPreInstallBundleInfos()
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
-    return preInstallBundleInfos_;
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    return preInstallBundleInfos;
 }
 
 bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
