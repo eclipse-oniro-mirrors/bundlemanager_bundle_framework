@@ -860,7 +860,7 @@ private:
      * @brief Init transferStates.
      * @return
      */
-    void InitStateTransferMap();
+    std::multimap<InstallState, InstallState> InitStateTransferMap();
     /**
      * @brief Determine whether to delete the data status.
      * @param state Indicates the InstallState object.
@@ -1000,7 +1000,6 @@ private:
     // key:bundle name
     std::map<std::string, InstallState> installStates_;
     // current-status:previous-statue pair
-    std::multimap<InstallState, InstallState> transferStates_;
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;

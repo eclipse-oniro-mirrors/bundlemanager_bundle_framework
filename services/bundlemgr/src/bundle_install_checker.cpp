@@ -660,17 +660,17 @@ ErrCode BundleInstallChecker::CheckSystemSize(
     const Constants::AppType appType) const
 {
     if ((appType == Constants::AppType::SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, Constants::APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, Constants::APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_PARTY_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_PARTY_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, Constants::APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
