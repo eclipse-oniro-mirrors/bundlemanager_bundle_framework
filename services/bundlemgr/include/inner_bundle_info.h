@@ -1835,26 +1835,6 @@ public:
         return true;
     }
 
-    bool GetHasAtomicServiceConfig() const
-    {
-        return hasAtomicServiceConfig_;
-    }
-
-    void SetHasAtomicServiceConfig(bool hasConfig)
-    {
-        hasAtomicServiceConfig_ = hasConfig;
-    }
-
-    std::string GetAtomicMainModuleName() const
-    {
-        return mainAtomicModuleName_;
-    }
-
-    void SetAtomicMainModuleName(std::string main)
-    {
-        mainAtomicModuleName_ = main;
-    }
-
     void SetAppProvisionMetadata(const std::vector<Metadata> &metadatas)
     {
         provisionMetadatas_ = metadatas;
@@ -2113,10 +2093,6 @@ private:
     // overlay bundleInfo
     std::vector<OverlayBundleInfo> overlayBundleInfo_;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
-
-    // atomicService
-    bool hasAtomicServiceConfig_ = false;
-    std::string mainAtomicModuleName_;
 
     // provision metadata
     std::vector<Metadata> provisionMetadatas_;
