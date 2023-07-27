@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "ability_manager_client.h"
 #include "bundle_manager_callback.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "distributed_device_profile_client.h"
 #include "free_install_params.h"
@@ -143,6 +144,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
         }
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     };
     ffrt::submit(queryRpcIdByAbilityFunc);
@@ -213,6 +215,7 @@ void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
 {
     APP_LOGI("BundleDistributedManager::OutTimeMonitor");
     auto registerEventListenerFunc = [this, transactId]() {
+        BundleMemoryGuard memoryGuard;
         APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };

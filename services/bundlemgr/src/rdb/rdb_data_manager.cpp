@@ -16,6 +16,7 @@
 #include "rdb_data_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_util.h"
 #include "scope_guard.h"
 
@@ -26,10 +27,16 @@ const std::string BMS_KEY = "KEY";
 const std::string BMS_VALUE = "VALUE";
 const int32_t BMS_KEY_INDEX = 0;
 const int32_t BMS_VALUE_INDEX = 1;
+const std::string CLOSE_BMS_RDB_STORE_QUEUE_NAME = "closeBmsRdbStoreQueue";
+const std::string CLOSE_BMS_RDB_STORE_TASK_NAME = "closeBmsRdbStoreTask";
+const int32_t CLOSE_TIME = 20 * 1000; // delay 20s stop rdbStore
 }
 
 RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
-    : bmsRdbConfig_(bmsRdbConfig) {}
+    : bmsRdbConfig_(bmsRdbConfig)
+{
+    serialQueue_ = std::make_shared<SerialQueue>(CLOSE_BMS_RDB_STORE_QUEUE_NAME);
+}
 
 RdbDataManager::~RdbDataManager() {}
 
@@ -53,6 +60,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
+    DelayCloseRdbStore();
     return rdbStore_;
 }
 
@@ -299,6 +307,21 @@ bool RdbDataManager::CreateTable()
         }
     }
     return true;
+}
+
+void RdbDataManager::DelayCloseRdbStore()
+{
+    std::lock_guard<std::mutex> lock(taskMutex_);
+    if (serialQueue_ == nullptr) {
+        return;
+    }
+    serialQueue_->CancelDelayTask(CLOSE_BMS_RDB_STORE_TASK_NAME);
+    auto task = [this] {
+        BundleMemoryGuard memoryGuard;
+        std::lock_guard<std::mutex> lock(rdbMutex_);
+        rdbStore_ = nullptr;
+    };
+    serialQueue_->ScheduleDelayTask(CLOSE_BMS_RDB_STORE_TASK_NAME, CLOSE_TIME, task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
