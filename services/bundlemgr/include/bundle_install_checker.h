@@ -207,6 +207,8 @@ private:
 
     void SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
         InnerBundleInfo &newInfo);
+
+    bool CheckProxyPermissionLevel(const std::string &permissionName) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -129,7 +129,7 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfos(const Want &want, int32_t userId,
 }
 
 ErrCode BmsExtensionDataMgr::QueryAbilityInfosWithFlag(const Want &want, int32_t flags, int32_t userId,
-    std::vector<AbilityInfo> &abilityInfos)
+    std::vector<AbilityInfo> &abilityInfos, bool isNewVersion)
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
@@ -138,13 +138,14 @@ ErrCode BmsExtensionDataMgr::QueryAbilityInfosWithFlag(const Want &want, int32_t
             APP_LOGW("bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        return bundleMgrExtPtr->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
+        return bundleMgrExtPtr->QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     }
     APP_LOGW("access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
-ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId)
+ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId,
+    bool isNewVersion)
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
@@ -153,14 +154,14 @@ ErrCode BmsExtensionDataMgr::GetBundleInfos(int32_t flags, std::vector<BundleInf
             APP_LOGW("bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        return bundleMgrExtPtr->GetBundleInfos(flags, bundleInfos, userId);
+        return bundleMgrExtPtr->GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     }
     APP_LOGW("access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
 }
 
 ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
-    BundleInfo &bundleInfo)
+    BundleInfo &bundleInfo, bool isNewVersion)
 {
     if ((Init() == ERR_OK) && handler_) {
         auto bundleMgrExtPtr =
@@ -169,7 +170,22 @@ ErrCode BmsExtensionDataMgr::GetBundleInfo(const std::string &bundleName, int32_
             APP_LOGW("bundleMgrExtPtr is nullptr.");
             return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
         }
-        return bundleMgrExtPtr->GetBundleInfo(bundleName, flags, userId, bundleInfo);
+        return bundleMgrExtPtr->GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
+    }
+    APP_LOGW("access bms-extension failed.");
+    return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
+}
+
+ErrCode BmsExtensionDataMgr::Uninstall(const std::string &bundleName)
+{
+    if ((Init() == ERR_OK) && handler_) {
+        auto bundleMgrExtPtr =
+            BundleMgrExtRegister::GetInstance().GetBundleMgrExt(bmsExtension_.bmsExtensionBundleMgr.extensionName);
+        if (bundleMgrExtPtr == nullptr) {
+            APP_LOGW("bundleMgrExtPtr is nullptr.");
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        return bundleMgrExtPtr->Uninstall(bundleName);
     }
     APP_LOGW("access bms-extension failed.");
     return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;

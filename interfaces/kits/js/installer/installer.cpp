@@ -345,7 +345,8 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_ISOLATION_MODE_FAILED, ERROR_INSTALL_WRONG_MODE_ISOLATION },
         { IStatusReceiver::ERR_UNINSTALL_DISALLOWED, ERROR_DISALLOW_UNINSTALL },
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
-        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED}
+        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
+        { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST}
     };
 }
 
@@ -840,6 +841,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
 
     if (callbackPtr->deferred) {
         if (callbackPtr->installResult.resultCode == SUCCESS) {
+            napi_get_undefined(env, &result[FIRST_PARAM]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
