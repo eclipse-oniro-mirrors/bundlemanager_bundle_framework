@@ -726,6 +726,62 @@ void BmsBundleDataMgrTest::MockInnerBundleInfo(const std::string &bundleName, co
     innerBundleInfo.SetBaseApplicationInfo(appInfo);
 }
 
+class IBundleEventCallbackTest : public IBundleEventCallback {
+public:
+    void OnReceiveEvent(const EventFwk::CommonEventData eventData);
+    sptr<IRemoteObject> AsObject();
+};
+
+void IBundleEventCallbackTest::OnReceiveEvent(const EventFwk::CommonEventData eventData)
+{}
+
+sptr<IRemoteObject> IBundleEventCallbackTest::AsObject()
+{
+    return nullptr;
+}
+
+class ICleanCacheCallbackTest : public ICleanCacheCallback {
+public:
+    void OnCleanCacheFinished(bool succeeded);
+    sptr<IRemoteObject> AsObject();
+};
+
+void ICleanCacheCallbackTest::OnCleanCacheFinished(bool succeeded)
+{}
+
+sptr<IRemoteObject> ICleanCacheCallbackTest::AsObject()
+{
+    return nullptr;
+}
+
+class IBundleStatusCallbackTest : public IBundleStatusCallback {
+public:
+    void OnBundleStateChanged(const uint8_t installType, const int32_t resultCode, const std::string &resultMsg,
+        const std::string &bundleName);
+    void OnBundleAdded(const std::string &bundleName, const int userId);
+    void OnBundleUpdated(const std::string &bundleName, const int userId);
+    void OnBundleRemoved(const std::string &bundleName, const int userId);
+    sptr<IRemoteObject> AsObject();
+};
+
+void IBundleStatusCallbackTest::OnBundleStateChanged(const uint8_t installType,
+    const int32_t resultCode, const std::string &resultMsg, const std::string &bundleName)
+{}
+
+void IBundleStatusCallbackTest::OnBundleAdded(const std::string &bundleName, const int userId)
+{}
+
+void IBundleStatusCallbackTest::OnBundleUpdated(const std::string &bundleName, const int userId)
+{}
+
+void IBundleStatusCallbackTest::OnBundleRemoved(const std::string &bundleName, const int userId)
+{}
+
+sptr<IRemoteObject> IBundleStatusCallbackTest::AsObject()
+{
+    return nullptr;
+}
+
 /**
  * @tc.number: AddInnerBundleInfo_0100
  * @tc.name: test LoadDataFromPersistentStorage
@@ -3054,6 +3110,238 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0200, Function | MediumTest
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: CleanBundleCacheFiles_0001
+ * @tc.name: test BundleMgrHostImpl::CleanBundleCacheFiles
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFiles_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName = BUNDLE_NAME_DEMO;
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new ICleanCacheCallbackTest();
+    int32_t userId = USERID;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ErrCode ret = bundleMgrHostImpl_->CleanBundleCacheFiles(bundleName, cleanCacheCallback, userId);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR);
+}
+
+/**
+ * @tc.number: RegisterBundleStatusCallback_0001
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleStatusCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, RegisterBundleStatusCallback_0001, Function | MediumTest | Level1)
+{
+    sptr<IBundleStatusCallback> bundleStatusCallback = new IBundleStatusCallbackTest();
+    bundleStatusCallback->SetBundleName(BUNDLE_NAME_DEMO);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: RegisterBundleEventCallback_0001
+ * @tc.name: test BundleMgrHostImpl::RegisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, RegisterBundleEventCallback_0001, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: UnregisterBundleEventCallback_0001
+ * @tc.name: test BundleMgrHostImpl::UnregisterBundleEventCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleEventCallback_0001, Function | MediumTest | Level1)
+{
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new IBundleEventCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: ClearBundleStatusCallback_0001
+ * @tc.name: test BundleMgrHostImpl::ClearBundleStatusCallback
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, ClearBundleStatusCallback_0001, Function | MediumTest | Level1)
+{
+    sptr<IBundleStatusCallback> bundleStatusCallback = new IBundleStatusCallbackTest();
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(bundleStatusCallback);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: VerifyDependency_0002
+ * @tc.name: test BundleMgrHostImpl::VerifyDependency
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr) x
+ */
+HWTEST_F(BmsBundleDataMgrTest, VerifyDependency_0002, Function | MediumTest | Level1)
+{
+    std::string sharedBundleName;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->VerifyDependency(sharedBundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0003
+ * @tc.name: test BundleMgrHostImpl::QueryDataGroupInfos
+ * @tc.desc: 1. system run normally
+ *           2. enter ending
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0003, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t userId = USERID;
+    std::vector<DataGroupInfo> infos;
+    bool ret = bundleMgrHostImpl_->QueryDataGroupInfos(bundleName, userId, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryDataGroupInfos_0004
+ * @tc.name: test BundleMgrHostImpl::QueryDataGroupInfos
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryDataGroupInfos_0004, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t userId = USERID;
+    std::vector<DataGroupInfo> infos;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->QueryDataGroupInfos(bundleName, userId, infos);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: GetGroupDir_0003
+ * @tc.name: test BundleMgrHostImpl::GetGroupDir
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0003, Function | MediumTest | Level1)
+{
+    std::string dataGroupId;
+    std::string dir;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->GetGroupDir(dataGroupId, dir);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryAppGalleryBundleName_0001
+ * @tc.name: test BundleMgrHostImpl::QueryAppGalleryBundleName
+ * @tc.desc: 1. system run normally
+ *           2. enter if (dataMgr == nullptr)if (!ret)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryAppGalleryBundleName_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryAppGalleryBundleName_0002
+ * @tc.name: test BundleMgrHostImpl::QueryAppGalleryBundleName
+ * @tc.desc: 1. system run normally
+ *           2. enter if (!ret)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryAppGalleryBundleName_0002, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    bool ret = bundleMgrHostImpl_->QueryAppGalleryBundleName(bundleName);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: QueryAbilityInfosFromBmsExtension_0001
+ * @tc.name: test BundleDataMgr::QueryAbilityInfosFromBmsExtension
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosFromBmsExtension_0001, Function | MediumTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = USERID;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: QueryAbilityInfoFromBmsExtension_0001
+ * @tc.name: test BundleDataMgr::QueryAbilityInfoFromBmsExtension
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoFromBmsExtension_0001, Function | MediumTest | Level1)
+{
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = USERID;
+    AbilityInfo abilityInfo;
+    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoFromBmsExtension(want, flags, userId, abilityInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfosFromBmsExtension_0001
+ * @tc.name: test BundleDataMgr::GetBundleInfosFromBmsExtension
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosFromBmsExtension_0001, Function | MediumTest | Level1)
+{
+    int32_t flags = 0;
+    int32_t userId = USERID;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode ret = GetBundleDataMgr()->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: GetBundleInfoFromBmsExtension_0001
+ * @tc.name: test BundleDataMgr::GetBundleInfoFromBmsExtension
+ * @tc.desc: 1. system run normally
+ *           2. enter if (res != ERR_OK)
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfoFromBmsExtension_0001, Function | MediumTest | Level1)
+{
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    BundleInfo bundleInfo;
+    ErrCode ret = GetBundleDataMgr()->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId);
+    EXPECT_NE(ret, ERR_OK);
 }
 
 /**
