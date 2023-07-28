@@ -622,14 +622,12 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = Constants::SIGNATURE_FILE_PATH;
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
-
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
         auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
         if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
-            destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
-            destination = CreateTempDir(destination);
             toDeletePaths.emplace_back(destination);
             destination.append(filePath.substr(lastPathSeperator));
         }
@@ -643,10 +641,10 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
             return "";
         }
+        toDeletePaths.emplace_back(destination);
         std::string innerSubstr =
             filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
         destination = CreateTempDir(destination.append(innerSubstr));
-        toDeletePaths.emplace_back(destination);
         destination.append(filePath.substr(thirdLastPathSep + 1));
     }
     APP_LOGD("the destination dir is %{public}s", destination.c_str());
