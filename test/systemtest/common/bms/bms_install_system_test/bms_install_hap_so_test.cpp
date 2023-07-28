@@ -25,6 +25,7 @@
 #include "iservice_registry.h"
 #include "system_ability_definition.h"
 #include "status_receiver_host.h"
+#include "parameter.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -366,7 +367,12 @@ std::string BmsInstallHapSoTest::UpdateInstallPath(
 }
 
 void BmsInstallHapSoTest::SetUpTestCase()
-{}
+{
+    int32_t ret = SetParameter("persist.bms.supportCompressNativeLibs", "true");
+    if (ret <= 0) {
+        APP_LOGE("SetParameter failed!");
+    }
+}
 
 void BmsInstallHapSoTest::TearDownTestCase()
 {}
@@ -443,7 +449,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0300, Function | MediumTes
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME3 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME3 + MODULE_NAME + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 
     res = UninstallBundle(BUNDLE_NAME3);
     EXPECT_EQ(res, OPERATION_SUCCESS);
@@ -465,7 +471,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Hap_With_SO_0400, Function | MediumTes
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
 
@@ -769,7 +775,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Haps_With_SO_0700, Function | Me
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 +  MODULE_NAME + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, true);
 
@@ -831,7 +837,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Multi_Haps_With_SO_0900, Function | Me
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME8 +  MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME8 +  FEATURE_MODULE_NAME2 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 
     res = UninstallBundle(BUNDLE_NAME8);
     EXPECT_EQ(res, OPERATION_SUCCESS);
@@ -892,7 +898,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Without_SO_0100, Function 
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME5 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Without_SO_0100" << std::endl;
@@ -922,7 +928,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Without_SO_0200, Function 
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME6 +  FEATURE_MODULE_NAME4 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Without_SO_0200" << std::endl;
@@ -952,7 +958,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Without_SO_0300, Function 
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME5 +  FEATURE_MODULE_NAME2 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Without_SO_0300" << std::endl;
@@ -982,7 +988,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Without_SO_0400, Function 
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME6 +  FEATURE_MODULE_NAME6 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Without_SO_0400" << std::endl;
@@ -1012,7 +1018,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Section_With_SO_0100, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, true);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Section_With_SO_0100" << std::endl;
@@ -1037,12 +1043,12 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Section_With_SO_0200, Func
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Section_With_SO_0200" << std::endl;
@@ -1072,7 +1078,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Section_With_SO_0300, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME3 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Section_With_SO_0300" << std::endl;
@@ -1101,8 +1107,8 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Multi_Haps_Section_With_SO_0400, Func
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME5 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
-    EXPECT_EQ(ret, true);
-    
+    EXPECT_EQ(ret, false);
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Multi_Haps_Section_With_SO_0400" << std::endl;
@@ -1173,7 +1179,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Path_Hap_With_SO_0300, Function | Medi
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME3 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME3 + MODULE_NAME + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 
     res = UninstallBundle(BUNDLE_NAME3);
     EXPECT_EQ(res, OPERATION_SUCCESS);
@@ -1195,7 +1201,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Path_Hap_With_SO_0400, Function | Medi
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME4 + MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
 
@@ -1494,7 +1500,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Path_Multi_Haps_With_SO_0700, Function
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 +  MODULE_NAME + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME7 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, true);
 
@@ -1554,7 +1560,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Install_Path_Multi_Haps_With_SO_0900, Function
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME8 +  MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME8 +  FEATURE_MODULE_NAME2 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 
     res = UninstallBundle(BUNDLE_NAME8);
     EXPECT_EQ(res, OPERATION_SUCCESS);
@@ -1614,7 +1620,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Without_SO_0100, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME5 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Without_SO_0100" << std::endl;
@@ -1643,7 +1649,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Without_SO_0200, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME6 +  FEATURE_MODULE_NAME4 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Without_SO_0200" << std::endl;
@@ -1672,7 +1678,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Without_SO_0300, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME5 +  FEATURE_MODULE_NAME3 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Without_SO_0300" << std::endl;
@@ -1701,7 +1707,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Without_SO_0400, Func
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + NO_SO_BUNDLE_NAME6 +  FEATURE_MODULE_NAME6 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(NO_SO_BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Without_SO_0400" << std::endl;
@@ -1730,7 +1736,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Section_With_SO_0100,
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
     EXPECT_EQ(ret, true);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Section_With_SO_0100" << std::endl;
@@ -1754,12 +1760,12 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Section_With_SO_0200,
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME4 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Section_With_SO_0200" << std::endl;
@@ -1788,7 +1794,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Section_With_SO_0300,
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME3 + LIBS);
     EXPECT_EQ(ret, false);
-    
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Section_With_SO_0300" << std::endl;
@@ -1816,12 +1822,703 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Installs_Path_Multi_Haps_Section_With_SO_0400,
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME5 + LIBS);
     EXPECT_EQ(ret, false);
     ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
-    EXPECT_EQ(ret, true);
-    
+    EXPECT_EQ(ret, false);
+
     res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     std::cout << "END BMS_Installs_Path_Multi_Haps_Section_With_SO_0400" << std::endl;
 }
 
+
+//upgrade installation
+/**
+ * @tc.number: BMS_Update_Install_Hap_With_SO_0100
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is true and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_With_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_With_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE1 + HAP_SECTION_INCLUDE_SO_FEATURE1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_With_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_With_SO_0200
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is true and the libIsolation is false
+ *           4.check the libs path is exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_With_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_With_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE3 + HAP_SECTION_INCLUDE_SO_FEATURE3);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME3 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_With_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_With_SO_0300
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is false and the libIsolation is false
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_With_SO_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_With_SO_0300" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE4 + HAP_SECTION_INCLUDE_SO_FEATURE4);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME4 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_With_SO_0300" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_With_SO_0400
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is false and the libIsolation is false
+ *           4.check the libs path is existed
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_With_SO_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_With_SO_0400" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE6 + HAP_SECTION_INCLUDE_SO_FEATURE6);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_With_SO_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_NO_SO_0100
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is false and the libIsolation is false
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_NO_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_NO_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_NO_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_NO_SO_0200
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is true and the libIsolation is false
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_NO_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_NO_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE2 + HAP_SECTION_INCLUDE_SO_FEATURE2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_NO_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_NO_SO_0300
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is false and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_NO_SO_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_NO_SO_0300" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_NO_SO_0300" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Hap_NO_SO_0400
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs is true and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Hap_NO_SO_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Hap_NO_SO_0400" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE5 + HAP_SECTION_INCLUDE_SO_FEATURE5);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME5 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Hap_NO_SO_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Haps_Without_SO_0100
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, compressNativeLibs and libIsolation of hap1 is true and true
+ *             the compressNativeLibs and libIsolation of hap2 is true and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Haps_Without_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Haps_Without_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE2 + HAP_SECTION_INCLUDE_SO_FEATURE2);
+    res = UpdateInstalls(hapPaths);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Haps_Without_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Haps_Without_SO_0200
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is false and true
+ *             the compressNativeLibs and libIsolation of hap1 is false and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Haps_Without_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Haps_Without_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE5 + HAP_SECTION_INCLUDE_SO_FEATURE5);
+    res = UpdateInstalls(hapPaths);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME5 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Haps_Without_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Haps_With_SO_0100
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is true and true
+ *             the compressNativeLibs and libIsolation of hap2 is true and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Haps_With_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Haps_With_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1 + HAP_SECTION_INCLUDE_SO1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE1 + HAP_SECTION_INCLUDE_SO_FEATURE1);
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE3 + HAP_SECTION_INCLUDE_SO_FEATURE3);
+    res = UpdateInstalls(hapPaths);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME3 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Haps_With_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Haps_With_SO_0200
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is false and false
+ *             the compressNativeLibs and libIsolation of hap1 is false and true
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Haps_With_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Haps_With_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2 + HAP_SECTION_INCLUDE_SO2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::vector<std::string> hapPaths;
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE4 + HAP_SECTION_INCLUDE_SO_FEATURE4);
+    hapPaths.emplace_back(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE6 + HAP_SECTION_INCLUDE_SO_FEATURE6);
+    res = UpdateInstalls(hapPaths);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME4 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Haps_With_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_With_SO_0100
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is true and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_With_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_With_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_With_SO_0200
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is true and the libIsolation is false
+ *           4.check the libs path is exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_With_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE3);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME3 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_With_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_With_SO_0300
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is false and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_SO_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_With_SO_0300" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE4);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME4 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_With_SO_0300" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_With_SO_0400
+ * @tc.name:  test the installation of a hap contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is false and the libIsolation is false
+ *           4.check the libs path is existed
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_SO_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_With_SO_0400" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE6);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_With_SO_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_NO_SO_0100
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is false and the libIsolation is false
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_NO_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_NO_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_NO_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_NO_SO_0200
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is true and the libIsolation is false
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_NO_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_NO_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_NO_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_NO_SO_0300
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is false and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_NO_SO_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_NO_SO_0300" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_NO_SO_0300" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Install_Path_Hap_NO_SO_0400
+ * @tc.name:  test the installation of a hap not contains so
+ * @tc.desc: 1.under '/data/test/testHapSo',there is a hap not contains so
+ *           2.install the hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs is true and the libIsolation is true
+ *           4.check the libs path is not exist
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_NO_SO_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Install_Path_Hap_NO_SO_0400" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstall(HAP_SECTION_INCLUDE_SO_PATH_FEATURE5);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME5 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Install_Path_Hap_NO_SO_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Path_Haps_Without_SO_0100
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is true and true
+ *             the compressNativeLibs and libIsolation of hap2 is true and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Path_Haps_Without_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Path_Haps_Without_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Path_Haps_Without_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Path_Haps_Without_SO_0200
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is false and true
+ *             the compressNativeLibs and libIsolation of hap1 is false and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Path_Haps_Without_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Path_Haps_Without_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE5);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  MODULE_NAME + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME5 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Path_Haps_Without_SO_0200" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Path_Haps_With_SO_0100
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is true and true
+ *             the compressNativeLibs and libIsolation of hap2 is true and false
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Path_Haps_With_SO_0100, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Path_Haps_With_SO_0100" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE3);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME1 + LIBS);
+    EXPECT_EQ(ret, true);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME1 +  FEATURE_MODULE_NAME3 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME1);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Path_Haps_With_SO_0100" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Update_Installs_Multi_Path_Haps_With_SO_0200
+ * @tc.name:  test the installation of multiple haps without so
+ * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
+ *           2.install hap without so and compressNativeLibs is true and the libIsolation is true
+ *           3.update install the hap, the compressNativeLibs and libIsolation of hap1 is false and false
+ *             the compressNativeLibs and libIsolation of hap1 is false and true
+ *           4.check installation is successful
+ */
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Multi_Path_Haps_With_SO_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Update_Installs_Multi_Path_Haps_With_SO_0200" << std::endl;
+    auto res = InstallBundle(HAP_SECTION_INCLUDE_SO_PATH2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE4);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    res = UpdateInstallPath(THIRD_BUNDLE_PATH + HAP_SECTION_INCLUDE_SO_PATH_FEATURE6);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+
+    bool ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME4 + LIBS);
+    EXPECT_EQ(ret, false);
+    ret = CheckFilePath(CODE_ROOT_PATH + SECTION_SO_BUNDLE_NAME2 +  FEATURE_MODULE_NAME6 + LIBS);
+    EXPECT_EQ(ret, false);
+
+    res = UninstallBundle(SECTION_SO_BUNDLE_NAME2);
+    EXPECT_EQ(res, OPERATION_SUCCESS);
+    std::cout << "END BMS_Update_Installs_Multi_Path_Haps_With_SO_0200" << std::endl;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOScd
