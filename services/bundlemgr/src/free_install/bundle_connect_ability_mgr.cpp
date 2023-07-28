@@ -299,6 +299,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
                 rule.replaceWant->ToUri());
         } else {
             APP_LOGW("ecological rule is not allowed, return.");
+            CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
             return false;
         }
     }
@@ -346,12 +347,14 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
         APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return false;
     }
     std::string bundleName;
     std::string abilityName;
     if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return false;
     }
     Want serviceCenterWant;
