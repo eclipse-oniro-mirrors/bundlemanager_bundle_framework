@@ -763,6 +763,9 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string moduleName = element.GetModuleName();
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
+    }
     std::string abilityName = element.GetAbilityName();
     std::string deviceId = element.GetDeviceID();
     std::vector<std::string> callingBundleNames;
@@ -838,15 +841,8 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
 {
     APP_LOGI("CheckIsModuleNeedUpdate called");
     std::string moduleName = want.GetModuleName();
-    if (moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        ElementName element = want.GetElement();
-        std::string abilityName = element.GetAbilityName();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == abilityName) {
-                moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
     if (innerBundleInfo.GetModuleUpgradeFlag(moduleName) != 0) {
         sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
@@ -1068,14 +1064,10 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-    if (targetAbilityInfo->targetInfo.moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == targetAbilityInfo->targetInfo.abilityName) {
-                targetAbilityInfo->targetInfo.moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, targetAbilityInfo->targetInfo.moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
+
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1206,6 +1198,26 @@ bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targe
         targetAbilityInfo.targetInfo.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::ANY_USERID)) {
         return bundleInfo.applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
     }
+    return false;
+}
+
+bool BundleConnectAbilityMgr::GetModuleName(const InnerBundleInfo &innerBundleInfo,
+    const Want &want, std::string &moduleName) const
+{
+    if (!moduleName.empty()) {
+        return true;
+    }
+    auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
+    ElementName element = want.GetElement();
+    std::string abilityName = element.GetAbilityName();
+    for (const auto& info : baseAbilitiesInfo) {
+        if (info.second.name == abilityName) {
+            moduleName = info.second.moduleName;
+            return true;
+        }
+    }
+    APP_LOGE("GetModuleName failed, ability(%{public}s) is not existed in bundle(%{public}s)",
+        abilityName.c_str(), innerBundleInfo.GetBundleName().c_str());
     return false;
 }
 }  // namespace AppExecFwk

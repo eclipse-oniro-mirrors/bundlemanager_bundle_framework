@@ -271,6 +271,7 @@ private:
 
     bool CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule);
     bool CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const;
+    bool GetModuleName(const InnerBundleInfo &innerBundleInfo, const Want &want, std::string &moduleName) const;
 
     mutable std::atomic<int> transactId_ = 0;
     std::condition_variable cv_;
