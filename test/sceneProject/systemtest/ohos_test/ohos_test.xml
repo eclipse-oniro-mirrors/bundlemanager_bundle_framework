@@ -161,6 +161,10 @@
     <option name="push" value="testHapSo/hapIncludeso8Feature1.hap -> /data/test/testHapSo/hapIncludeso8Feature1" src="res" />
     <option name="push" value="testHapSo/hapIncludeso8Feature2.hap -> /data/test/testHapSo/hapIncludeso8Feature2" src="res" />
     <option name="push" value="testHapSo/hapIncludeso8Feature3.hap -> /data/test/testHapSo/hapIncludeso8Feature3" src="res" />
+    <option name="push" value="testHapSo/hapnoso1.hap -> /data/test/testHapSo/hapnoso1" src="res" />
+    <option name="push" value="testHapSo/hapnoso2.hap -> /data/test/testHapSo/hapnoso2" src="res" />
+    <option name="push" value="testHapSo/hapnoso3.hap -> /data/test/testHapSo/hapnoso3" src="res" />
+    <option name="push" value="testHapSo/hapnoso4.hap -> /data/test/testHapSo/hapnoso4" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso1.hap -> /data/test/testHapSo/hapNotIncludeso1" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso2.hap -> /data/test/testHapSo/hapNotIncludeso2" src="res" />
     <option name="push" value="testHapNoSo/hapNotIncludeso3.hap -> /data/test/testHapSo/hapNotIncludeso3" src="res" />
