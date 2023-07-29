@@ -25,6 +25,11 @@ ohos_systemtest("BmsInstallHapSoTest") {
   }
   deps = [
     "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A:hsp_A",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature1:hspASystemtestFeature1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature2:hspASystemtestFeature2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature3:hspASystemtestFeature3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature4:hspASystemtestFeature4",
     "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso1:hapNotIncludeso1",
     "${bundle_framework_path}/test/sceneProject/systemtest/testHapNoSo/hapNotIncludeso2:hapNotIncludeso2",
