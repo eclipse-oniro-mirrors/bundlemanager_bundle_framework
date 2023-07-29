@@ -458,7 +458,7 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     }
     for (const SkillUri &skillUri : uris) {
         for (const auto &mimeType : mimeTypes) {
-            if (skillUri.scheme.empty() && MatchType(mimeType, skillUri.type)) {
+            if (MatchUri(uriString, skillUri) && MatchType(mimeType, skillUri.type)) {
                 return true;
             }
         }
