@@ -87,12 +87,6 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 const std::string HSP_VERSION_PREFIX = "v";
-// pre bundle profile
-constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
-constexpr const char* PRODUCT_SUFFIX = "/etc/app";
-constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
-constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
-constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -548,9 +542,9 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
     }
 #endif
     bool ret = std::find(
-        rootDirList.begin(), rootDirList.end(), DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
+        rootDirList.begin(), rootDirList.end(), Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
     if (!ret) {
-        rootDirList.emplace_back(DEFAULT_PRE_BUNDLE_ROOT_DIR);
+        rootDirList.emplace_back(Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR);
     }
 }
 
@@ -580,7 +574,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
     }
 
     for (const auto &rootDir : rootDirList) {
-        ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + Constants::PRODUCT_SUFFIX);
     }
 
     hasLoadPreInstallProFile_ = true;
@@ -596,11 +590,11 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
-        dir + INSTALL_LIST_CONFIG, installList_);
+        dir + Constants::INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreUnInstallConfig(
-        dir + UNINSTALL_LIST_CONFIG, uninstallList_);
+        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
-        dir + INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+        dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
 }
 
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)

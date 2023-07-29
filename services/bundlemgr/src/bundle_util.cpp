@@ -49,8 +49,6 @@ const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
-// hmdfs and sharefs config
-constexpr const char* BUNDLE_ID_FILE = "appid";
 }
 
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
@@ -306,7 +304,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
         return;
     }
 
-    realBundleDir += (Constants::PATH_SEPARATOR + BUNDLE_ID_FILE);
+    realBundleDir += (Constants::PATH_SEPARATOR + Constants::BUNDLE_ID_FILE);
 
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
