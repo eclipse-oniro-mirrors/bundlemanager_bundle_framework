@@ -60,6 +60,7 @@ enum class ExtensionAbilityType {
     ACTION = 20,
     UNSPECIFIED = 255,
     UI = 256,
+    HMS_ACCOUNT = 257,
     SYSDIALOG_USERAUTH = 300,
     SYSDIALOG_COMMON = 301,
     SYSDIALOG_ATOMICSERVICEPANEL = 302,

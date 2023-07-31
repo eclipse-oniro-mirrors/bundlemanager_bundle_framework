@@ -49,6 +49,8 @@ const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
+// hmdfs and sharefs config
+constexpr const char* BUNDLE_ID_FILE = "appid";
 }
 
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
@@ -304,7 +306,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
         return;
     }
 
-    realBundleDir += (Constants::PATH_SEPARATOR + Constants::BUNDLE_ID_FILE);
+    realBundleDir += (Constants::PATH_SEPARATOR + BUNDLE_ID_FILE);
 
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
@@ -622,14 +624,12 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = Constants::SIGNATURE_FILE_PATH;
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
-
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
         auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
         if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
-            destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
-            destination = CreateTempDir(destination);
             toDeletePaths.emplace_back(destination);
             destination.append(filePath.substr(lastPathSeperator));
         }
@@ -643,10 +643,10 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
             return "";
         }
+        toDeletePaths.emplace_back(destination);
         std::string innerSubstr =
             filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
         destination = CreateTempDir(destination.append(innerSubstr));
-        toDeletePaths.emplace_back(destination);
         destination.append(filePath.substr(thirdLastPathSep + 1));
     }
     APP_LOGD("the destination dir is %{public}s", destination.c_str());

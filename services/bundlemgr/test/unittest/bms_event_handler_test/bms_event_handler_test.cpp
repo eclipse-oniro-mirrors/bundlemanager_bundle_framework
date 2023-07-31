@@ -51,6 +51,7 @@ namespace {
     const std::string BUNDLE_PATH = "/data/app/el1/bundle/public/";
     const std::string BUNDLE_TEST_NAME = "bundleTestName";
     const std::string BUNDLE_TEST_PATH = "/data/app/el1/bundle/public/test/";
+    constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
 }
 class BmsEventHandlerTest : public testing::Test {
 public:
@@ -670,7 +671,7 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
     std::list<std::string> bundleDirs;
     handler->GetBundleDirFromScan(bundleDirs);
     #ifdef USE_BUNDLE_EXTENSION
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_CAMERA_PATH);
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_CAMERA_PATH);
     #else
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
     #endif

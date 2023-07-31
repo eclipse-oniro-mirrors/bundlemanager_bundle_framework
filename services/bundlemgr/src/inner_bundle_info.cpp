@@ -126,8 +126,6 @@ const std::string OVERLAY_TYPE = "overlayType";
 const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
 const std::string MODULE_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string MODULE_PRELOADS = "preloads";
-const std::string HAS_ATOMIC_SERVICE_CONFIG = "hasAtomicServiceConfig";
-const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
@@ -460,7 +458,8 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     }
     for (const SkillUri &skillUri : uris) {
         for (const auto &mimeType : mimeTypes) {
-            if (skillUri.scheme.empty() && MatchType(mimeType, skillUri.type)) {
+            if ((MatchUri(uriString, skillUri) || skillUri.scheme.empty())
+                && MatchType(mimeType, skillUri.type)) {
                 return true;
             }
         }
@@ -529,8 +528,6 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->overlayBundleInfo_ = info.overlayBundleInfo_;
     this->overlayType_ = info.overlayType_;
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
-    this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
-    this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
     this->dataGroupInfos_ = info.dataGroupInfos_;
     return *this;
@@ -699,8 +696,6 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
-    jsonObject[HAS_ATOMIC_SERVICE_CONFIG] = hasAtomicServiceConfig_;
-    jsonObject[MAIN_ATOMIC_MODULE_NAME] = mainAtomicModuleName_;
     jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
 }
 
@@ -1719,22 +1714,6 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        HAS_ATOMIC_SERVICE_CONFIG,
-        hasAtomicServiceConfig_,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MAIN_ATOMIC_MODULE_NAME,
-        mainAtomicModuleName_,
-        JsonType::STRING,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
         jsonObjectEnd,
         DATA_GROUP_INFOS,
@@ -2445,11 +2424,6 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
-    if (!GetHasAtomicServiceConfig()) {
-        std::vector<std::string> moduleNames;
-        GetModuleNames(moduleNames);
-        appInfo.split = moduleNames.size() != 1;
-    }
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
@@ -2511,11 +2485,6 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
     appInfo.uid = innerBundleUserInfo.uid;
-    if (!GetHasAtomicServiceConfig()) {
-        std::vector<std::string> moduleNames;
-        GetModuleNames(moduleNames);
-        appInfo.split = moduleNames.size() != 1;
-    }
 
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();

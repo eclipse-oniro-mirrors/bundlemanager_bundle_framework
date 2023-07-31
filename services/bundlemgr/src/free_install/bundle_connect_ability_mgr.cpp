@@ -17,6 +17,7 @@
 
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #ifndef SUPPORT_ERMS
 #include "erms_mgr_interface.h"
@@ -69,6 +70,8 @@ constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
 constexpr uint32_t TYPE_HARMONEY_APP = 1;
 constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
 #endif
+// replace want int ecological rule
+constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -99,6 +102,7 @@ bool BundleConnectAbilityMgr::ProcessPreloadCheck(const TargetAbilityInfo &targe
 {
     APP_LOGD("ProcessPreloadCheck");
     auto preloadCheckFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
         this->ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
     };
@@ -291,15 +295,17 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
             APP_LOGI("ecological rule is allow, keep going.");
         } else if (rule.replaceWant != nullptr) {
             APP_LOGI("ecological rule is replace want.");
-            targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT,
+            targetAbilityInfo.targetExtSetting.extValues.emplace(PARAM_REPLACE_WANT,
                 rule.replaceWant->ToUri());
         } else {
             APP_LOGW("ecological rule is not allowed, return.");
+            CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
             return false;
         }
     }
 
     auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -312,6 +318,7 @@ bool BundleConnectAbilityMgr::UpgradeCheck(const TargetAbilityInfo &targetAbilit
 {
     APP_LOGI("UpgradeCheck");
     auto upgradeCheckFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -324,6 +331,7 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
 {
     APP_LOGI("UpgradeInstall");
     auto upgradeInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
@@ -339,12 +347,14 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
         APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return false;
     }
     std::string bundleName;
     std::string abilityName;
     if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
         return false;
     }
     Want serviceCenterWant;
@@ -441,6 +451,7 @@ void BundleConnectAbilityMgr::DisconnectDelay()
 {
     auto disconnectFunc = [connect = shared_from_this()]() {
         APP_LOGI("disconnectFunc Disconnect Ability");
+        BundleMemoryGuard memoryGuard;
         if (connect) {
             connect->DisconnectAbility();
         }
@@ -598,6 +609,7 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     lock.unlock();
     auto RegisterEventListenerFunc = [this, freeInstallParams, transactId]() {
         APP_LOGI("RegisterEventListenerFunc");
+        BundleMemoryGuard memoryGuard;
         this->SendCallBack(FreeInstallErrorCode::SERVICE_CENTER_TIMEOUT,
             freeInstallParams.want, freeInstallParams.userId, transactId);
     };
@@ -754,6 +766,9 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string moduleName = element.GetModuleName();
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
+    }
     std::string abilityName = element.GetAbilityName();
     std::string deviceId = element.GetDeviceID();
     std::vector<std::string> callingBundleNames;
@@ -829,15 +844,8 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
 {
     APP_LOGI("CheckIsModuleNeedUpdate called");
     std::string moduleName = want.GetModuleName();
-    if (moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        ElementName element = want.GetElement();
-        std::string abilityName = element.GetAbilityName();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == abilityName) {
-                moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
     if (innerBundleInfo.GetModuleUpgradeFlag(moduleName) != 0) {
         sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
@@ -1059,14 +1067,10 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-    if (targetAbilityInfo->targetInfo.moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == targetAbilityInfo->targetInfo.abilityName) {
-                targetAbilityInfo->targetInfo.moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, targetAbilityInfo->targetInfo.moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
+
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1197,6 +1201,26 @@ bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targe
         targetAbilityInfo.targetInfo.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::ANY_USERID)) {
         return bundleInfo.applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
     }
+    return false;
+}
+
+bool BundleConnectAbilityMgr::GetModuleName(const InnerBundleInfo &innerBundleInfo,
+    const Want &want, std::string &moduleName) const
+{
+    if (!moduleName.empty()) {
+        return true;
+    }
+    auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
+    ElementName element = want.GetElement();
+    std::string abilityName = element.GetAbilityName();
+    for (const auto& info : baseAbilitiesInfo) {
+        if (info.second.name == abilityName) {
+            moduleName = info.second.moduleName;
+            return true;
+        }
+    }
+    APP_LOGE("GetModuleName failed, ability(%{public}s) is not existed in bundle(%{public}s)",
+        abilityName.c_str(), innerBundleInfo.GetBundleName().c_str());
     return false;
 }
 }  // namespace AppExecFwk
