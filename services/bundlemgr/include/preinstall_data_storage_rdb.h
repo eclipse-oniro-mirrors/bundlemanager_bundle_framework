@@ -31,6 +31,8 @@ public:
     bool SavePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
     bool LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos) override;
     bool DeletePreInstallStorageBundleInfo(const PreInstallBundleInfo &preInstallBundleInfo) override;
+    bool LoadPreInstallBundleInfo(const std::string &bundleName,
+        PreInstallBundleInfo &preInstallBundleInfo) override;
 
 private:
     void TransformStrToInfo(

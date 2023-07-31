@@ -25,6 +25,7 @@ namespace AppExecFwk {
 BmsExtension BmsExtensionDataMgr::bmsExtension_;
 void *BmsExtensionDataMgr::handler_ = nullptr;
 namespace {
+static std::mutex stateMutex_;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const uint32_t API_VERSION_BASE = 1000;
 }

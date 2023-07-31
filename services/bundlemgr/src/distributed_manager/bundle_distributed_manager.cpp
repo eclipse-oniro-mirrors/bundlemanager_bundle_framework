@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #include "ability_manager_client.h"
 #include "bundle_manager_callback.h"
+#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "distributed_device_profile_client.h"
 #include "free_install_params.h"
@@ -34,6 +35,11 @@ const uint32_t OUT_TIME = 3000;
 const std::string DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
+// syscap
+constexpr const char* SYSCAP_SERVICE_ID = "syscap";
+constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
+constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
+constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }
 
 BundleDistributedManager::BundleDistributedManager()
@@ -67,10 +73,10 @@ bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, Target
 int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcIdResult &rpcIdResult)
 {
     DeviceProfile::ServiceCharacteristicProfile profile;
-    profile.SetServiceId(Constants::SYSCAP_SERVICE_ID);
-    profile.SetServiceType(Constants::SYSCAP_SERVICE_TYPE);
+    profile.SetServiceId(SYSCAP_SERVICE_ID);
+    profile.SetServiceType(SYSCAP_SERVICE_TYPE);
     int32_t result = DeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
-        want.GetElement().GetDeviceID(), Constants::SYSCAP_SERVICE_ID, profile);
+        want.GetElement().GetDeviceID(), SYSCAP_SERVICE_ID, profile);
     if (result != 0) {
         APP_LOGE("GetDeviceProfile failed result:%{public}d", result);
         return ErrorCode::GET_DEVICE_PROFILE_FAILED;
@@ -82,12 +88,12 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
-    std::vector<int> values = jsonObject[Constants::CHARACTER_OS_SYSCAP].get<std::vector<int>>();
+    std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
     std::string pcId;
     for (int value : values) {
         pcId = pcId + std::to_string(value) + ",";
     }
-    std::string capabilities = jsonObject[Constants::CHARACTER_PRIVATE_SYSCAP];
+    std::string capabilities = jsonObject[CHARACTER_PRIVATE_SYSCAP];
     if (capabilities.empty()) {
         pcId.resize(pcId.length() - 1);
     } else {
@@ -143,6 +149,7 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
         }
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     };
     ffrt::submit(queryRpcIdByAbilityFunc);
@@ -213,6 +220,7 @@ void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
 {
     APP_LOGI("BundleDistributedManager::OutTimeMonitor");
     auto registerEventListenerFunc = [this, transactId]() {
+        BundleMemoryGuard memoryGuard;
         APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };

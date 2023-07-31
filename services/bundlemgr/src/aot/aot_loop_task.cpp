@@ -20,6 +20,7 @@
 #include <thread>
 
 #include "aot/aot_handler.h"
+#include "bundle_memory_guard.h"
 #include "ffrt.h"
 #include "parameters.h"
 
@@ -51,6 +52,7 @@ void AOTLoopTask::ScheduleLoopTask()
     APP_LOGI("ScheduleLoopTask begin");
     std::weak_ptr<AOTLoopTask> weakPtr = shared_from_this();
     auto task = [weakPtr]() {
+        BundleMemoryGuard memoryGuard;
         while (true) {
             auto sharedPtr = weakPtr.lock();
             if (sharedPtr == nullptr) {

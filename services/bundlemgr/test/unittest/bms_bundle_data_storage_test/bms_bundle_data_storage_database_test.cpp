@@ -1103,7 +1103,6 @@ protected:
                 "needAppDetail": false,
                 "appDetailAbilityLibraryPath": "",
                 "bundleType": 0,
-                "split": true,
                 "targetBundleName": "",
                 "targetPriority": 0,
                 "overlayState": 0,

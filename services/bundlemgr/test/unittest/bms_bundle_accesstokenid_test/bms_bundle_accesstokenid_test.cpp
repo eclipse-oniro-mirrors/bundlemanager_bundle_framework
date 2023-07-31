@@ -69,7 +69,6 @@ const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_01 =
 const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_02 =
     "/data/test/resource/bms/bundle_so/compressNativeLibsTrue02.hap";
 const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
-const std::string TXT_FILE_PATH = "/data/test/abilityInfo.txt";
 }  // namespace
 
 class BmsBundleAccessTokenIdTest : public testing::Test {
@@ -545,33 +544,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0001, Function | SmallT
 }
 
 /**
- * @tc.number: DbmsServicesKitTest_0002
- * @tc.name: test DistributedAbilityInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test Dump
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0002, Function | SmallTest | Level0)
-{
-    DistributedAbilityInfo distributedAbilityInfo;
-    std::ofstream file(TXT_FILE_PATH);
-    file.close();
-    int fd = 2;
-    distributedAbilityInfo.Dump("[ability]", fd);
-    long length = lseek(fd, ZERO, SEEK_END);
-    setuid(Constants::FOUNDATION_UID);
-    ScopeGuard uidGrand([&] {setuid(Constants::ROOT_UID);});
-    bool isExist = false;
-    auto res = InstalldClient::GetInstance()->IsExistFile(TXT_FILE_PATH, isExist);
-    EXPECT_EQ(res, ERR_OK);
-    if (isExist) {
-        EXPECT_GT(length, ZERO);
-    } else {
-        EXPECT_LT(length, ZERO);
-    }
-}
-
-/**
  * @tc.number: DbmsServicesKitTest_0003
  * @tc.name: test DistributedBundleInfo
  * @tc.require: issueI5MZ8V
@@ -640,33 +612,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0005, Function | SmallT
     DistributedModuleInfo result;
     from_json(jsonObject, result);
     EXPECT_EQ(result.moduleName, "moduleName");
-}
-
-/**
- * @tc.number: DbmsServicesKitTest_0006
- * @tc.name: test DistributedModuleInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test Dump
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0006, Function | SmallTest | Level0)
-{
-    DistributedModuleInfo distributedModuleInfo;
-    std::ofstream file(TXT_FILE_PATH);
-    file.close();
-    int fd = 2;
-    distributedModuleInfo.Dump("[ability]", fd);
-    long length = lseek(fd, ZERO, SEEK_END);
-    setuid(Constants::FOUNDATION_UID);
-    ScopeGuard uidGrand([&] {setuid(Constants::ROOT_UID);});
-    bool isExist = false;
-    auto res = InstalldClient::GetInstance()->IsExistFile(TXT_FILE_PATH, isExist);
-    EXPECT_EQ(res, ERR_OK);
-    if (isExist) {
-        EXPECT_GT(length, ZERO);
-    } else {
-        EXPECT_LT(length, ZERO);
-    }
 }
 
 /**
