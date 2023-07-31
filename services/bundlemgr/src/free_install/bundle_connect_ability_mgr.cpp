@@ -23,7 +23,7 @@
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
 #endif
-#include "ffrt.h"
+#include "ffrt_inner.h"
 #include "free_install_params.h"
 #include "hitrace_meter.h"
 #include "json_util.h"
