@@ -51,6 +51,9 @@ ohos_systemtest("ActsBmsKitSystemTest") {
   ]
 
   defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+  if (current_cpu == "arm64") {
+    defines += [ "USE_KIT_STSTEM" ]
+  }
 
   external_deps = [
     "ability_base:want",
