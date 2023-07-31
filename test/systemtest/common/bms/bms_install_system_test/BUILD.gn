@@ -149,10 +149,49 @@ ohos_systemtest("BmsInstallSystemTest") {
   ]
 }
 
+ohos_systemtest("BmsInstallExternalHspSoTest") {
+  module_out_path = module_output_path
+
+  sources = [ "bms_install_external_hsp_so_test.cpp" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A:hsp_A",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature1:hspASystemtestFeature1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature2:hspASystemtestFeature2",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature3:hspASystemtestFeature3",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature4:hspASystemtestFeature4",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature5:hspASystemtestFeature5",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature6:hspASystemtestFeature6",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature7:hspASystemtestFeature7",
+    "${bundle_framework_path}/test/sceneProject/systemtest/bundle_hsp/hsp_A/feature8:hspASystemtestFeature8",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "init:libbegetutil",
+    "ipc:ipc_core",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("systemtest") {
   testonly = true
 
   deps = [
+    ":BmsInstallExternalHspSoTest",
     ":BmsInstallHapSoTest",
     ":BmsInstallSystemTest",
   ]

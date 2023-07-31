@@ -141,6 +141,18 @@
     <option name="push" value="CodeSignature/CodeSignatureWithoutLibs2.hap -> /data/test/code_signature/" src="res" />
     </preparer>
   </target>
+  <target name="BmsInstallExternalHspSoTest">
+    <preparer>
+    <option name="push" value="bundle_hsp/hspASystemtestFeature1.hsp -> /data/test/testHspSo/hspASystemtestFeature1/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature2.hsp -> /data/test/testHspSo/hspASystemtestFeature2/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature3.hsp -> /data/test/testHspSo/hspASystemtestFeature3/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature4.hsp -> /data/test/testHspSo/hspASystemtestFeature4/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature5.hsp -> /data/test/testHspNoSo/hspASystemtestFeature5/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature6.hsp -> /data/test/testHspNoSo/hspASystemtestFeature6/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature7.hsp -> /data/test/testHspNoSo/hspASystemtestFeature7/" src="res" />
+    <option name="push" value="bundle_hsp/hspASystemtestFeature8.hsp -> /data/test/testHspNoSo/hspASystemtestFeature8/" src="res" />
+    </preparer>
+  </target>
   <target name="BmsInstallHapSoTest">
     <preparer>
     <option name="push" value="testHapSo/hapIncludeso1.hap -> /data/test/testHapSo/hapIncludeso1" src="res" />
@@ -154,6 +166,11 @@
     <option name="push" value="testHapSo/hapIncludeso5Feature1.hap -> /data/test/testHapSo/hapIncludeso5Feature1" src="res" />
     <option name="push" value="testHapSo/hapIncludeso5Feature2.hap -> /data/test/testHapSo/hapIncludeso5Feature2" src="res" />
     <option name="push" value="testHapSo/hapIncludeso5Feature3.hap -> /data/test/testHapSo/hapIncludeso5Feature3" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature4.hap -> /data/test/testHapSo/hapIncludeso5Feature4" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature5.hap -> /data/test/testHapSo/hapIncludeso5Feature5" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature6.hap -> /data/test/testHapSo/hapIncludeso5Feature6" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature7.hap -> /data/test/testHapSo/hapIncludeso5Feature7" src="res" />
+    <option name="push" value="testHapSo/hapIncludeso5Feature8.hap -> /data/test/testHapSo/hapIncludeso5Feature8" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature1.hap -> /data/test/testHapSo/hapIncludeso6Feature1" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature2.hap -> /data/test/testHapSo/hapIncludeso6Feature2" src="res" />
     <option name="push" value="testHapSo/hapIncludeso6Feature3.hap -> /data/test/testHapSo/hapIncludeso6Feature3" src="res" />
