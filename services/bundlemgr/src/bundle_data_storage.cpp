@@ -25,15 +25,19 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
+}
+
 bool BundleDataStorage::LoadAllData(std::map<std::string, InnerBundleInfo> &infos)
 {
     APP_LOGI("load all installed bundle data to map");
-    std::fstream i(Constants::BUNDLE_DATA_BASE_FILE);
+    std::fstream i(BUNDLE_DATA_BASE_FILE);
     nlohmann::json jParse;
     if (!i.is_open()) {
         APP_LOGE("failed to open bundle database file");
         // if file not exist, should create file here
-        std::ofstream o(Constants::BUNDLE_DATA_BASE_FILE);
+        std::ofstream o(BUNDLE_DATA_BASE_FILE);
         o.close();
         return false;
     }
@@ -64,7 +68,7 @@ bool BundleDataStorage::SaveStorageBundleInfo(const InnerBundleInfo &innerBundle
     APP_LOGI("save bundle data");
     bool ret = true;
     std::string appName = innerBundleInfo.GetBundleName();
-    std::fstream f(Constants::BUNDLE_DATA_BASE_FILE);
+    std::fstream f(BUNDLE_DATA_BASE_FILE);
     bool isExist = f.good();
     if (isExist) {
         nlohmann::json innerInfo;
@@ -97,7 +101,7 @@ bool BundleDataStorage::DeleteStorageBundleInfo(const InnerBundleInfo &innerBund
     bool ret = false;
     bool isEmpty = false;
     std::string appName = innerBundleInfo.GetBundleName();
-    std::ifstream i(Constants::BUNDLE_DATA_BASE_FILE);
+    std::ifstream i(BUNDLE_DATA_BASE_FILE);
     nlohmann::json jParse;
     if (!i.is_open()) {
         APP_LOGE("failed to open bundle database file");
@@ -121,7 +125,7 @@ bool BundleDataStorage::DeleteStorageBundleInfo(const InnerBundleInfo &innerBund
     }
     i.close();
 
-    std::ofstream o(Constants::BUNDLE_DATA_BASE_FILE);
+    std::ofstream o(BUNDLE_DATA_BASE_FILE);
     if (!o.is_open()) {
         APP_LOGE("failed to open bundle database file");
         ret = false;

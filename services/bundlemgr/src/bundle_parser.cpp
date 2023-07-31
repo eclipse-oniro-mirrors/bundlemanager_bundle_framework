@@ -33,7 +33,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+namespace {
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
+constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
+constexpr const char* SYSCAP_NAME = "rpcid.sc";
+}
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {
@@ -151,7 +155,7 @@ ErrCode BundleParser::ParsePackInfo(const std::string &pathName, BundlePackInfo 
     }
 
     // to extract pack.info
-    if (!bundleExtractor.HasEntry(Constants::BUNDLE_PACKFILE_NAME)) {
+    if (!bundleExtractor.HasEntry(BUNDLE_PACKFILE_NAME)) {
         APP_LOGW("cannot find pack.info in the hap file");
         return ERR_OK;
     }
@@ -178,13 +182,13 @@ ErrCode BundleParser::ParseSysCap(const std::string &pathName, std::vector<std::
         return ERR_APPEXECFWK_PARSE_UNEXPECTED;
     }
 
-    if (!bundleExtractor.HasEntry(Constants::SYSCAP_NAME)) {
+    if (!bundleExtractor.HasEntry(SYSCAP_NAME)) {
         APP_LOGD("Rpcid.sc is not exist, and do not need verification sysCaps.");
         return ERR_OK;
     }
 
     std::stringstream rpcidStream;
-    if (!bundleExtractor.ExtractByName(Constants::SYSCAP_NAME, rpcidStream)) {
+    if (!bundleExtractor.ExtractByName(SYSCAP_NAME, rpcidStream)) {
         APP_LOGE("Extract rpcid file failed");
         return ERR_APPEXECFWK_PARSE_RPCID_FAILED;
     }

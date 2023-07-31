@@ -223,6 +223,8 @@ const std::string SHORTCUT_WANTS_KEY = "wants";
 const std::string SHORTCUTS_KEY = "shortcuts";
 const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
+constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }  // namespace
 
 class BmsBundleKitServiceTest : public testing::Test {
@@ -5794,7 +5796,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_UriWithParam_001, Function | SmallT
 /**
  * @tc.number: skill match rules
  * @tc.name: special type test.
- * @tc.desc: when want set type = Constants::TYPE_ONLY_MATCH_WILDCARD, only match wildcard.
+ * @tc.desc: when want set type = TYPE_ONLY_MATCH_WILDCARD, only match wildcard.
  */
 HWTEST_F(BmsBundleKitServiceTest, SkillMatch_TYPE_WILDCARD_001, Function | SmallTest | Level1)
 {
@@ -5805,7 +5807,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_TYPE_WILDCARD_001, Function | Small
     skill.uris.emplace_back(skillUri);
     // success testCase
     Want want;
-    want.SetType(Constants::TYPE_ONLY_MATCH_WILDCARD);
+    want.SetType(TYPE_ONLY_MATCH_WILDCARD);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
     // failed testCase
@@ -7770,7 +7772,7 @@ HWTEST_F(BmsBundleKitServiceTest, CreateStream_0400, Function | SmallTest | Leve
     uint32_t installerId = 1;
     int32_t installedUid = 0;
     BundleStreamInstallerHostImpl impl(installerId, installedUid);
-    std::string hapName = HAP_NAME + Constants::ILLEGAL_PATH_FIELD;
+    std::string hapName = HAP_NAME + ILLEGAL_PATH_FIELD;
     auto res = impl.CreateStream(hapName);
     EXPECT_GE(res, -1);
 }

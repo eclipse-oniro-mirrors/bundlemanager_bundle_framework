@@ -147,6 +147,7 @@ const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
 
 const std::string STR_PHONE = "phone";
 const std::string STR_DEFAULT = "default";
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -426,7 +427,7 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
         return false;
     }
     // only match */*
-    if (type == Constants::TYPE_ONLY_MATCH_WILDCARD) {
+    if (type == TYPE_ONLY_MATCH_WILDCARD) {
         return skillUriType == TYPE_WILDCARD;
     }
     if (type == TYPE_WILDCARD || skillUriType == TYPE_WILDCARD) {

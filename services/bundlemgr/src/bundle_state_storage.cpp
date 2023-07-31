@@ -29,6 +29,8 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
+constexpr const char* BUNDLE_USER_INFO_PATH =
+    "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
 
 void NameAndUserIdToKey(
     const std::string &bundleName, int32_t userId, std::string &key)
@@ -59,7 +61,7 @@ bool KeyToNameAndUserId(
 bool BundleStateStorage::HasBundleUserInfoJsonDb()
 {
     APP_LOGD("HasBundleUserInfoJsonDb start");
-    if (BundleUtil::IsExistFile(Constants::BUNDLE_USER_INFO_PATH)) {
+    if (BundleUtil::IsExistFile(BUNDLE_USER_INFO_PATH)) {
         APP_LOGD("Json db exist");
         return true;
     }
@@ -76,7 +78,7 @@ bool BundleStateStorage::HasBundleUserInfoJsonDb()
         }
     }
 
-    auto file = fopen(Constants::BUNDLE_USER_INFO_PATH, "at++");
+    auto file = fopen(BUNDLE_USER_INFO_PATH, "at++");
     if (file == nullptr) {
         APP_LOGE("create json db failed");
         return false;
@@ -95,7 +97,7 @@ bool BundleStateStorage::LoadAllBundleStateData(
 {
     APP_LOGD("load all bundle state data to map");
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
-    std::fstream i(Constants::BUNDLE_USER_INFO_PATH);
+    std::fstream i(BUNDLE_USER_INFO_PATH);
     nlohmann::json jParse;
     if (!i.is_open()) {
         APP_LOGE("failed to open bundle database file");
@@ -171,7 +173,7 @@ bool BundleStateStorage::SaveBundleStateStorage(
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::fstream f(Constants::BUNDLE_USER_INFO_PATH);
+    std::fstream f(BUNDLE_USER_INFO_PATH);
     if (!f.is_open()) {
         APP_LOGE("failed to open bundle database file");
         return false;
@@ -207,7 +209,7 @@ bool BundleStateStorage::GetBundleStateStorage(
     std::lock_guard<std::mutex> lock(bundleStateMutex_);
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::fstream f(Constants::BUNDLE_USER_INFO_PATH);
+    std::fstream f(BUNDLE_USER_INFO_PATH);
     if (!f.is_open()) {
         APP_LOGE("failed to open bundle database file");
         return false;
@@ -248,7 +250,7 @@ bool BundleStateStorage::DeleteBundleState(
     bool isEmpty = false;
     std::string appName;
     NameAndUserIdToKey(bundleName, userId, appName);
-    std::ifstream i(Constants::BUNDLE_USER_INFO_PATH);
+    std::ifstream i(BUNDLE_USER_INFO_PATH);
     nlohmann::json jParse;
     if (!i.is_open()) {
         APP_LOGE("failed to open bundle database file");
@@ -274,7 +276,7 @@ bool BundleStateStorage::DeleteBundleState(
     jParse.erase(appName);
     isEmpty = (jParse.size() == 0) ? true : false;
     i.close();
-    std::ofstream o(Constants::BUNDLE_USER_INFO_PATH);
+    std::ofstream o(BUNDLE_USER_INFO_PATH);
     if (!o.is_open()) {
         APP_LOGE("failed to open bundle database file");
         return false;

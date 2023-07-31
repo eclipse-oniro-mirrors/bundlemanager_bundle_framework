@@ -23,30 +23,15 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
-constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
-constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
-constexpr const char* MODULE_PROFILE_NAME = "module.json";
-constexpr const char* PATCH_PROFILE_NAME = "patch.json";
-constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
-constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";
-constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
-constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
-constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
-constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-constexpr const char* SYSTEM_RESOURCES_CAMERA_PATH = "/system/app/Camera";
-constexpr const char* SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-constexpr const char* THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
-constexpr const char* THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-constexpr const char* THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
@@ -59,12 +44,6 @@ constexpr const char* BASE = "/base/";
 constexpr const char* DATABASE = "/database/";
 constexpr const char* HAPS = "/haps/";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* BUNDLE_USER_INFO_PATH =
-    "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
-constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
-constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
-constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
-constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
 constexpr const char* DATA_GROUP_PATH = "/group/";
@@ -72,16 +51,8 @@ constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
-constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
-constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
-constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
-constexpr const char* INSTALLD_SERVICE_NAME = "installd";
-constexpr const char* SYSTEM_APP = "system";
-constexpr const char* THIRD_PARTY_APP = "third-party";
-constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
-constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -328,10 +299,6 @@ constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_PARTIAL = "partial";
 constexpr const char* COMPILE_FULL = "full";
-// ark compile option parameter key
-constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
-constexpr const char* COMPILE_OTA_PARAM_KEY = "persist.bm.ota.arkopt";
-constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
 
 constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
