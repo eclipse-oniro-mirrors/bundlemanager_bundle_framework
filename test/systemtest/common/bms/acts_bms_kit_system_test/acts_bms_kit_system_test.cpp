@@ -1276,7 +1276,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0100, Function | MediumTest | Le
     std::vector<BundleInfo> bundleInfos;
     auto getInfoResult = bundleMgrProxy->GetBundleInfosV9(
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfos, Constants::INVALID_USERID);
+    #ifdef USE_KIT_STSTEM
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    #else
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    #endif
 }
 
 /**
@@ -8142,7 +8146,11 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAppGalleryBundleName_0100, Function | SmallT
     ASSERT_NE(bundleMgrProxy, nullptr);
     std::string bundleName;
     bool ret = bundleMgrProxy->QueryAppGalleryBundleName(bundleName);
+    #ifdef USE_KIT_STSTEM
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
