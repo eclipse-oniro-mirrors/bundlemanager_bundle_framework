@@ -70,8 +70,6 @@ constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
 constexpr uint32_t TYPE_HARMONEY_APP = 1;
 constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
 #endif
-// replace want int ecological rule
-constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -295,7 +293,7 @@ bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo
             APP_LOGI("ecological rule is allow, keep going.");
         } else if (rule.replaceWant != nullptr) {
             APP_LOGI("ecological rule is replace want.");
-            targetAbilityInfo.targetExtSetting.extValues.emplace(PARAM_REPLACE_WANT,
+            targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT,
                 rule.replaceWant->ToUri());
         } else {
             APP_LOGW("ecological rule is not allowed, return.");
