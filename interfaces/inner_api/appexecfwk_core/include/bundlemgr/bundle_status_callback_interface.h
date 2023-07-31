@@ -20,9 +20,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::string INSTALL_SUCCESS = "install success !";
-const std::string UNINSTALL_SUCCESS = "uninstall success !";
-
 enum class InstallType { INSTALL_CALLBACK, UNINSTALL_CALLBACK };
 
 class IBundleStatusCallback : public IRemoteBroker {

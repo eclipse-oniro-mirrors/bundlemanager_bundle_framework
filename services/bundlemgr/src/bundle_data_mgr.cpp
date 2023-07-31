@@ -61,10 +61,17 @@ constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t UUID_LENGTH = 36;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+// freeInstall action
+constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
+// data share
+constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
+constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+// hmdfs and sharefs config
+constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
+constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 }
 BundleDataMgr::BundleDataMgr()
 {
-    InitStateTransferMap();
     dataStorage_ = std::make_shared<BundleDataStorageRdb>();
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorageRdb>();
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
@@ -80,14 +87,12 @@ BundleDataMgr::~BundleDataMgr()
 {
     APP_LOGI("BundleDataMgr instance is destroyed");
     installStates_.clear();
-    transferStates_.clear();
     bundleInfos_.clear();
 }
 
 bool BundleDataMgr::LoadDataFromPersistentStorage()
 {
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
-    LoadAllPreInstallBundleInfos(preInstallBundleInfos_);
     // Judge whether bundleState json db exists.
     // If it does not exist, create it and return the judgment result.
     bool bundleStateDbExist = bundleStateStorage_->HasBundleUserInfoJsonDb();
@@ -193,7 +198,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
         return false;
     }
 
-    auto stateRange = transferStates_.equal_range(state);
+    auto stateRange = InitStateTransferMap().equal_range(state);
     for (auto previousState = stateRange.first; previousState != stateRange.second; ++previousState) {
         if (item->second == previousState->second) {
             APP_LOGD("update result:success, current:%{public}d, state:%{public}d", previousState->second, state);
@@ -282,6 +287,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
+        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -458,6 +464,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
+        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
@@ -2375,35 +2382,37 @@ bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
     return innerBundleInfo.IsSystemApp();
 }
 
-void BundleDataMgr::InitStateTransferMap()
+std::multimap<InstallState, InstallState> BundleDataMgr::InitStateTransferMap()
 {
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::INSTALL_START);
-    transferStates_.emplace(InstallState::INSTALL_FAIL, InstallState::INSTALL_START);
-    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_SUCCESS);
-    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_START);
-    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::UNINSTALL_FAIL, InstallState::UNINSTALL_START);
-    transferStates_.emplace(InstallState::UNINSTALL_SUCCESS, InstallState::UNINSTALL_START);
-    transferStates_.emplace(InstallState::UPDATING_START, InstallState::INSTALL_SUCCESS);
-    transferStates_.emplace(InstallState::UPDATING_SUCCESS, InstallState::UPDATING_START);
-    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_START);
-    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::INSTALL_START);
-    transferStates_.emplace(InstallState::UPDATING_START, InstallState::INSTALL_START);
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_START);
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UNINSTALL_START);
-    transferStates_.emplace(InstallState::UPDATING_START, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_START);
-    transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::ROLL_BACK);
-    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::USER_CHANGE);
-    transferStates_.emplace(InstallState::UPDATING_START, InstallState::USER_CHANGE);
-    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::USER_CHANGE);
-    transferStates_.emplace(InstallState::UPDATING_SUCCESS, InstallState::USER_CHANGE);
-    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::INSTALL_SUCCESS);
-    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_SUCCESS);
-    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_START);
+    std::multimap<InstallState, InstallState> transferStates;
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::INSTALL_START);
+    transferStates.emplace(InstallState::INSTALL_FAIL, InstallState::INSTALL_START);
+    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_SUCCESS);
+    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_START);
+    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::UNINSTALL_FAIL, InstallState::UNINSTALL_START);
+    transferStates.emplace(InstallState::UNINSTALL_SUCCESS, InstallState::UNINSTALL_START);
+    transferStates.emplace(InstallState::UPDATING_START, InstallState::INSTALL_SUCCESS);
+    transferStates.emplace(InstallState::UPDATING_SUCCESS, InstallState::UPDATING_START);
+    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_START);
+    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::INSTALL_START);
+    transferStates.emplace(InstallState::UPDATING_START, InstallState::INSTALL_START);
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_START);
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UNINSTALL_START);
+    transferStates.emplace(InstallState::UPDATING_START, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_START);
+    transferStates.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::ROLL_BACK);
+    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::USER_CHANGE);
+    transferStates.emplace(InstallState::UPDATING_START, InstallState::USER_CHANGE);
+    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::USER_CHANGE);
+    transferStates.emplace(InstallState::UPDATING_SUCCESS, InstallState::USER_CHANGE);
+    transferStates.emplace(InstallState::USER_CHANGE, InstallState::INSTALL_SUCCESS);
+    transferStates.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_SUCCESS);
+    transferStates.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_START);
+    return transferStates;
 }
 
 bool BundleDataMgr::IsDeleteDataState(const InstallState state) const
@@ -2942,8 +2951,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGI("the %{public}d app install", i);
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -2955,8 +2964,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -3019,8 +3028,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -3041,8 +3050,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, SHAREFS_CONFIG_PATH);
             }
         }
     }
@@ -3254,19 +3263,11 @@ bool BundleDataMgr::GetAllCommonEventInfo(const std::string &eventKey,
 bool BundleDataMgr::SavePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (preInstallDataStorage_ == nullptr) {
         return false;
     }
 
     if (preInstallDataStorage_->SavePreInstallStorageBundleInfo(preInstallBundleInfo)) {
-        auto info = std::find_if(
-            preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-        if (info != preInstallBundleInfos_.end()) {
-            *info = preInstallBundleInfo;
-        } else {
-            preInstallBundleInfos_.emplace_back(preInstallBundleInfo);
-        }
         APP_LOGD("write storage success bundle:%{public}s", bundleName.c_str());
         return true;
     }
@@ -3277,18 +3278,12 @@ bool BundleDataMgr::SavePreInstallBundleInfo(
 bool BundleDataMgr::DeletePreInstallBundleInfo(
     const std::string &bundleName, const PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (preInstallDataStorage_ == nullptr) {
         return false;
     }
 
     if (preInstallDataStorage_->DeletePreInstallStorageBundleInfo(preInstallBundleInfo)) {
-        auto info = std::find_if(
-            preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-        if (info != preInstallBundleInfos_.end()) {
-            preInstallBundleInfos_.erase(info);
-        }
-        APP_LOGI("Delete PreInstall Storage success bundle:%{public}s", bundleName.c_str());
+        APP_LOGD("Delete PreInstall Storage success bundle:%{public}s", bundleName.c_str());
         return true;
     }
 
@@ -3298,22 +3293,18 @@ bool BundleDataMgr::DeletePreInstallBundleInfo(
 bool BundleDataMgr::GetPreInstallBundleInfo(
     const std::string &bundleName, PreInstallBundleInfo &preInstallBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
     }
-
-    preInstallBundleInfo.SetBundleName(bundleName);
-    auto info = std::find_if(
-        preInstallBundleInfos_.begin(), preInstallBundleInfos_.end(), preInstallBundleInfo);
-    if (info != preInstallBundleInfos_.end()) {
-        preInstallBundleInfo = *info;
-        return true;
+    if (preInstallDataStorage_ == nullptr) {
+        return false;
     }
-
-    APP_LOGE("get preInstall bundleInfo failed by bundle(%{public}s).", bundleName.c_str());
-    return false;
+    if (!preInstallDataStorage_->LoadPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("get preInstall bundleInfo failed by bundle(%{public}s).", bundleName.c_str());
+        return false;
+    }
+    return true;
 }
 
 bool BundleDataMgr::LoadAllPreInstallBundleInfos(std::vector<PreInstallBundleInfo> &preInstallBundleInfos)
@@ -4057,7 +4048,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         // 2. replace :/// with ://
         convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN, Constants::URI_SEPARATOR);
     } else {
-        if (convertUri.compare(0, Constants::DATA_PROXY_URI_PREFIX_LEN, Constants::DATA_PROXY_URI_PREFIX) != 0) {
+        if (convertUri.compare(0, DATA_PROXY_URI_PREFIX_LEN, DATA_PROXY_URI_PREFIX) != 0) {
             APP_LOGE("invalid uri : %{private}s", uri.c_str());
             return false;
         }
@@ -4198,8 +4189,9 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
 
 const std::vector<PreInstallBundleInfo> BundleDataMgr::GetAllPreInstallBundleInfos()
 {
-    std::lock_guard<std::mutex> lock(preInstallInfoMutex_);
-    return preInstallBundleInfos_;
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos;
+    LoadAllPreInstallBundleInfos(preInstallBundleInfos);
+    return preInstallBundleInfos;
 }
 
 bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
@@ -5110,10 +5102,10 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     Want want;
-    want.SetAction(Constants::FREE_INSTALL_ACTION);
+    want.SetAction(FREE_INSTALL_ACTION);
     if (!ImplicitQueryInfoByPriority(
         want, 0, Constants::ANY_USERID, abilityInfo, extensionInfo)) {
-        APP_LOGE("ImplicitQueryInfoByPriority for action %{public}s failed", Constants::FREE_INSTALL_ACTION);
+        APP_LOGE("ImplicitQueryInfoByPriority for action %{public}s failed", FREE_INSTALL_ACTION);
         return false;
     }
     if (!abilityInfo.name.empty()) {

@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "ipc/installd_host.h"
+#include "bundle_mgr_service.h"
 #include "message_parcel.h"
 #include "securec.h"
 
@@ -35,6 +36,7 @@ uint32_t GetU32Data(const char* ptr)
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
 #ifdef ON_64BIT_SYSTEM
+    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();

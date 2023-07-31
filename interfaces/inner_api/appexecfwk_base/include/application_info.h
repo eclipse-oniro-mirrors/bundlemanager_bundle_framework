@@ -239,7 +239,6 @@ struct ApplicationInfo : public Parcelable {
     int32_t targetPriority;
     int32_t overlayState;
 
-    bool split = true;
     BundleType bundleType = BundleType::APP;
 
     std::string compileSdkVersion;

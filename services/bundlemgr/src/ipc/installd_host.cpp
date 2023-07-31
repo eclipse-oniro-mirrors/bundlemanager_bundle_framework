@@ -125,6 +125,8 @@ void InstalldHost::InitEventHandler()
         return;
     }
     handler_ = std::make_shared<EventHandler>(runner_);
+    handler_->PostTask([]() { BundleMemoryGuard memoryGuard; },
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
@@ -458,6 +460,7 @@ void InstalldHost::AddCloseInstalldTask()
 {
     std::lock_guard<std::mutex> lock(unloadTaskMutex_);
     auto task = [] {
+        BundleMemoryGuard memoryGuard;
         if (!SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID)) {
             APP_LOGE("fail to unload to system ability manager");
             return;

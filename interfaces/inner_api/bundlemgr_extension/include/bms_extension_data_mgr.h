@@ -49,7 +49,6 @@ private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;
     static void *handler_;
-    mutable std::mutex stateMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

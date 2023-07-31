@@ -620,6 +620,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         userId_);
     if (installParam.needSavePreInstallInfo) {
         PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName_);
         dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
         preInstallBundleInfo.SetAppType(newInfos.begin()->second.GetAppType());
         preInstallBundleInfo.SetVersionCode(newInfos.begin()->second.GetVersionCode());
