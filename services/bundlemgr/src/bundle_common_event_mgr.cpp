@@ -26,6 +26,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
+constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
+}
+
 BundleCommonEventMgr::BundleCommonEventMgr()
 {
     APP_LOGI("enter BundleCommonEventMgr");
@@ -67,8 +72,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetParam(Constants::UID, installResult.uid);
     want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
-    want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
-    want.SetParam(Constants::IS_AGING_UNINSTALL, installResult.isAgingUninstall);
+    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
+    want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
@@ -119,7 +124,7 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     want.SetParam(Constants::USER_ID, userId);
     want.SetParam(Constants::ABILITY_NAME, info.GetMainAbility());
     want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
-    want.SetParam(Constants::ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
+    want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };

@@ -47,6 +47,7 @@ enum BundleInstallerInterfaceCode : uint32_t {
     CREATE_STREAM_INSTALLER,
     DESTORY_STREAM_INSTALLER,
 };
+constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }; // namespace
 class BmsBundleInstallerIPCTest : public testing::Test {
 public:
@@ -405,7 +406,7 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_0700, Function | Sm
 {
     BundleStreamInstallerHostImpl impl(TEST_INSTALLER_ID, TEST_INSTALLER_UID);
 
-    auto id = impl.CreateSharedBundleStream(HSPNAME + Constants::ILLEGAL_PATH_FIELD, DEFAULT_INSTALLER_ID);
+    auto id = impl.CreateSharedBundleStream(HSPNAME + ILLEGAL_PATH_FIELD, DEFAULT_INSTALLER_ID);
     EXPECT_EQ(id, INVAILD_ID);
 }
 
