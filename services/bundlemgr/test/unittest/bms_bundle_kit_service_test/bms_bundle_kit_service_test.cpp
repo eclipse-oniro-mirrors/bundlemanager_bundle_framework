@@ -223,7 +223,6 @@ const std::string SHORTCUT_WANTS_KEY = "wants";
 const std::string SHORTCUTS_KEY = "shortcuts";
 const std::string HAP_NAME = "test.hap";
 const size_t ZERO = 0;
-constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 constexpr const char* ILLEGAL_PATH_FIELD = "../";
 }  // namespace
 
@@ -5807,7 +5806,7 @@ HWTEST_F(BmsBundleKitServiceTest, SkillMatch_TYPE_WILDCARD_001, Function | Small
     skill.uris.emplace_back(skillUri);
     // success testCase
     Want want;
-    want.SetType(TYPE_ONLY_MATCH_WILDCARD);
+    want.SetType(Constants::TYPE_ONLY_MATCH_WILDCARD);
     bool ret = skill.Match(want);
     EXPECT_EQ(true, ret);
     // failed testCase

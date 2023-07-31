@@ -24,6 +24,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+// pre bundle profile
+constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_permissions.json";
+}
+
 using namespace OHOS::Security;
 std::map<std::string, DefaultPermission> BundlePermissionMgr::defaultPermissions_;
 
@@ -38,8 +43,7 @@ bool BundlePermissionMgr::Init()
         return false;
     }
     for (const auto &item : rootDirList) {
-        permissionFileList.push_back(item + Constants::PRODUCT_SUFFIX
-            + Constants::INSTALL_LIST_PERMISSIONS_CONFIG);
+        permissionFileList.push_back(item + INSTALL_LIST_PERMISSIONS_CONFIG);
     }
 #else
     permissionFileList.emplace_back(Constants::INSTALL_LIST_PERMISSIONS_FILE_PATH);

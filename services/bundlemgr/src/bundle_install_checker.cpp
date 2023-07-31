@@ -66,6 +66,7 @@ const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
 constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
 constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -663,17 +664,17 @@ ErrCode BundleInstallChecker::CheckSystemSize(
     const Constants::AppType appType) const
 {
     if ((appType == Constants::AppType::SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_PARTY_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_PARTY_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 

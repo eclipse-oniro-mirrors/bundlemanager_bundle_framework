@@ -53,6 +53,7 @@ namespace {
     const std::string EXCEL = "EXCEL";
     const std::string PPT = "PPT";
 }
+
 std::set<std::string> DefaultAppMgr::supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT};
 
 DefaultAppMgr& DefaultAppMgr::GetInstance()

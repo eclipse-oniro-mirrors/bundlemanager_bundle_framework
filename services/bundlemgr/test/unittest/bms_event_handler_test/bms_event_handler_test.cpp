@@ -672,7 +672,7 @@ HWTEST_F(BmsEventHandlerTest, GetBundleDirFromScan_0100, Function | SmallTest | 
     std::list<std::string> bundleDirs;
     handler->GetBundleDirFromScan(bundleDirs);
     #ifdef USE_BUNDLE_EXTENSION
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_CAMERA_PATH);
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_CAMERA_PATH);
     #else
     auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
     #endif

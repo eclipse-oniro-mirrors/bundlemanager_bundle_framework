@@ -61,7 +61,16 @@ constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t UUID_LENGTH = 36;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+// freeInstall action
+constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
+// data share
+constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
+constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+// hmdfs and sharefs config
+constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
+constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 }
+
 BundleDataMgr::BundleDataMgr()
 {
     InitStateTransferMap();
@@ -2943,8 +2952,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGI("the %{public}d app install", i);
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -2956,8 +2965,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -3020,8 +3029,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -3042,8 +3051,8 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, SHAREFS_CONFIG_PATH);
             }
         }
     }
@@ -4040,7 +4049,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
         // 2. replace :/// with ://
         convertUri.replace(schemePos, Constants::PARAM_URI_SEPARATOR_LEN, Constants::URI_SEPARATOR);
     } else {
-        if (convertUri.compare(0, Constants::DATA_PROXY_URI_PREFIX_LEN, Constants::DATA_PROXY_URI_PREFIX) != 0) {
+        if (convertUri.compare(0, DATA_PROXY_URI_PREFIX_LEN, DATA_PROXY_URI_PREFIX) != 0) {
             APP_LOGE("invalid uri : %{private}s", uri.c_str());
             return false;
         }
@@ -5094,10 +5103,10 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
     Want want;
-    want.SetAction(Constants::FREE_INSTALL_ACTION);
+    want.SetAction(FREE_INSTALL_ACTION);
     if (!ImplicitQueryInfoByPriority(
         want, 0, Constants::ANY_USERID, abilityInfo, extensionInfo)) {
-        APP_LOGE("ImplicitQueryInfoByPriority for action %{public}s failed", Constants::FREE_INSTALL_ACTION);
+        APP_LOGE("ImplicitQueryInfoByPriority for action %{public}s failed", FREE_INSTALL_ACTION);
         return false;
     }
     if (!abilityInfo.name.empty()) {

@@ -549,9 +549,9 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
     }
 #endif
     bool ret = std::find(
-        rootDirList.begin(), rootDirList.end(), Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
+        rootDirList.begin(), rootDirList.end(), DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
     if (!ret) {
-        rootDirList.emplace_back(Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR);
+        rootDirList.emplace_back(DEFAULT_PRE_BUNDLE_ROOT_DIR);
     }
 }
 
@@ -581,7 +581,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
     }
 
     for (const auto &rootDir : rootDirList) {
-        ParsePreBundleProFile(rootDir + Constants::PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
     }
 
     hasLoadPreInstallProFile_ = true;
@@ -597,11 +597,11 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
-        dir + Constants::INSTALL_LIST_CONFIG, installList_);
+        dir + INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreUnInstallConfig(
-        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_);
+        dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
-        dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+        dir + INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
 }
 
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)

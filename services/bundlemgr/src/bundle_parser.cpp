@@ -33,11 +33,9 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-namespace {
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
 constexpr const char* SYSCAP_NAME = "rpcid.sc";
-}
 
 bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std::string> &sysCaps)
 {

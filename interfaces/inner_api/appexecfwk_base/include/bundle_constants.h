@@ -23,6 +23,7 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace Constants {
+constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
@@ -31,7 +32,6 @@ const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
-constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
@@ -183,14 +183,6 @@ constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 5120;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
 
-// distributed database
-constexpr const char* APP_ID = "bundle_manager_service";
-constexpr const char* STORE_ID = "installed_bundle_datas";
-constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
-constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
-constexpr const char* DISTRIBUTE_DATA_STORE_ID = "distribute_bundle_datas";
-constexpr const char* DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
-
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
 constexpr int64_t MAX_HAP_SIZE = ONE_GB * 4;  // 4GB
@@ -239,19 +231,6 @@ constexpr int32_t INVALID_FILE_SIZE = -1;
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
 
-// hmdfs and sharefs config
-constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
-constexpr const char* SHAREFS_CONFIG_PATH {"/config/sharefs/"};
-constexpr const char* BUNDLE_ID_FILE = { "appid" };
-
-// pre bundle profile
-constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
-constexpr const char* PRODUCT_SUFFIX = "/etc/app";
-constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
-constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
-constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
-constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissions.json";
-
 // sandbox application
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
@@ -270,12 +249,6 @@ constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 
-// syscap
-constexpr const char* SYSCAP_SERVICE_ID = "syscap";
-constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
-constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
-constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
-
 // thread pool
 constexpr const char* RELATIVE_PATH = "../";
 
@@ -290,11 +263,6 @@ constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 
-// replace want int ecological rule
-constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
-
-constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
-constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // ark compile mode
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_PARTIAL = "partial";
@@ -308,9 +276,6 @@ constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";
 constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
 constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
-
-//freeInstall action
-constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
