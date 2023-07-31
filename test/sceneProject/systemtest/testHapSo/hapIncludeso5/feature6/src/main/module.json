@@ -26,7 +26,7 @@
         "deliveryWithInstall": true,
         "description": "$string:entry_desc",
         "descriptionId": 16777220,
-        "deviceTypes": [
+                "deviceTypes": [
             "2in1",
             "default",
             "phone",
@@ -34,12 +34,12 @@
         ],
         "installationFree": false,
         "mainElement": "MainAbility",
-        "name": "feature2",
+        "name": "feature6",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",
         "virtualMachine": "ark",
-        "compressNativeLibs": false,
-        "libIsolation": true
+        "compressNativeLibs": true,
+        "libIsolation": false
     }
 }
