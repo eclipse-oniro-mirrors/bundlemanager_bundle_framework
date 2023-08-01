@@ -5580,7 +5580,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_Standalone_SO_080
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0100
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0100
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5588,9 +5588,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Hap_With_Standalone_SO_080
  *             the compressNativeLibs and libIsolation of hap2 is true and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0100, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0100" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0100" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5);
@@ -5607,11 +5607,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0100" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0100" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0200
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0200
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5619,9 +5619,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is true and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0200, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0200" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0200" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5);
@@ -5638,11 +5638,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0200" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0200" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0300
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0300
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5650,9 +5650,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is true and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0300, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0300, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0300" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0300" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH6_FEATURE1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH6);
@@ -5669,11 +5669,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0300" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0300" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0400
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0400
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5681,9 +5681,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is true and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0400, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0400" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0400" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH6_FEATURE1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH6);
@@ -5702,11 +5702,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0400" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0400" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0500
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0500
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is false and the libIsolation is true
@@ -5714,9 +5714,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is false and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0500, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0500, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0500" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0500" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH7);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH7_FEATURE1);
@@ -5733,11 +5733,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME7);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0500" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0500" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0600
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0600
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5745,9 +5745,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is false and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0600, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0600, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0600" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0600" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH6_FEATURE1);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH6);
@@ -5766,11 +5766,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME6);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0600" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0600" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0700
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0700
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is false and the libIsolation is true
@@ -5778,9 +5778,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is true and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0700, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0700, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0700" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0700" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5_FEATURE2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE4);
@@ -5799,11 +5799,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0700" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0700" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0800
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0800
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is false and the libIsolation is true
@@ -5811,9 +5811,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is true and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0800, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0800, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0800" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0800" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH8_FEATURE2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH8);
@@ -5832,11 +5832,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME8);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0800" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0800" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0900
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0900
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is false and the libIsolation is true
@@ -5844,9 +5844,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is false and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0900, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0900, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0900" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0900" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH8_FEATURE2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH8);
@@ -5863,11 +5863,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME8);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_0900" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_0900" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_1000
+ * @tc.number: BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_1000
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps with so
  *           2.install hap with so and compressNativeLibs is false and the libIsolation is true
@@ -5875,9 +5875,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 is false and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_1000, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_1000, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_1000" << std::endl;
+    std::cout << "START BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_1000" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH8_FEATURE2);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH8);
@@ -5896,12 +5896,12 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
     
     res = UninstallBundle(BUNDLE_NAME8);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_With_Standalone_SO_1000" << std::endl;
+    std::cout << "END BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_1000" << std::endl;
 }
 
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0100
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0100
  * @tc.name:  test the installation of haps without so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5909,9 +5909,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_With_Standalon
  *             the compressNativeLibs and libIsolation of hap2 without so is true and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0100, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0100, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0100" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0100" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE1);
@@ -5930,11 +5930,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0100" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0100" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0200
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0200
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5942,9 +5942,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 without so is true and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0200, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0200, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0200" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0200" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE3);
@@ -5963,11 +5963,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0200" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0200" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0300
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0300
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -5975,9 +5975,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 without so is false and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0300, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0300, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0300" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0300" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE2);
@@ -5996,11 +5996,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0300" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0300" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0400
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0400
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -6008,9 +6008,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 without so is false and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0400, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0400" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0400" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE4);
@@ -6029,11 +6029,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0400" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0400" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0500
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0500
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -6041,9 +6041,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 is true and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0500, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0500, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0500" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0500" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE5);
@@ -6062,11 +6062,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0500" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0500" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0600
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0600
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -6074,9 +6074,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 is false and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0600, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0600, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0600" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0600" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE5);
@@ -6095,11 +6095,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0600" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0600" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0700
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0700
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -6107,9 +6107,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 is false and false
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0700, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0700, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0700" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0700" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE5);
@@ -6128,11 +6128,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0700" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0700" << std::endl;
 }
 
 /**
- * @tc.number: BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0800
+ * @tc.number: BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0800
  * @tc.name:  test the installation of haps with so
  * @tc.desc: 1.under '/data/test/testHapSo',there are two haps without so
  *           2.install hap with so and compressNativeLibs is true and the libIsolation is true
@@ -6140,9 +6140,9 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
  *             the compressNativeLibs and libIsolation of hap2 is false and true
  *           4.check installation is successful
  */
-HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0800, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0800, Function | MediumTest | Level1)
 {
-    std::cout << "START BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0800" << std::endl;
+    std::cout << "START BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0800" << std::endl;
     auto res = InstallBundle(HAP_INCLUDE_SO_PATH5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
     res = UpdateInstall(HAP_INCLUDE_SO_PATH5_FEATURE6);
@@ -6161,7 +6161,7 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Install_Path_Multi_Haps_With_Standalone
     
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
-    std::cout << "END BMS_Update_Install_Path_Multi_Haps_With_Standalone_SO_0800" << std::endl;
+    std::cout << "END BMS_Update_Install_Path_Multi_Haps_Standalone_SO_0800" << std::endl;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOScd

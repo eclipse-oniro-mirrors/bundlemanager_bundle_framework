@@ -93,6 +93,7 @@ constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -819,10 +820,10 @@ void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
         ProcessScanDir(rootDir + APP_SUFFIX, bundleDirs);
     }
 
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
     if (iter != bundleDirs.end()) {
         bundleDirs.erase(iter);
-        bundleDirs.insert(bundleDirs.begin(), Constants::SYSTEM_RESOURCES_APP_PATH);
+        bundleDirs.insert(bundleDirs.begin(), SYSTEM_RESOURCES_APP_PATH);
     }
 }
 

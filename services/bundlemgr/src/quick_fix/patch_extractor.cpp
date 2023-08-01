@@ -16,17 +16,19 @@
 #include "quick_fix/patch_extractor.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* PATCH_PROFILE_NAME = "patch.json";
+}
+
 PatchExtractor::PatchExtractor(const std::string &source) : BaseExtractor(source) {}
 
 bool PatchExtractor::ExtractPatchProfile(std::ostream &dest) const
 {
     APP_LOGD("start to extract patch.json");
-    
-    return ExtractByName(Constants::PATCH_PROFILE_NAME, dest);
+    return ExtractByName(PATCH_PROFILE_NAME, dest);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

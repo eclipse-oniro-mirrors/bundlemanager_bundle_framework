@@ -70,8 +70,10 @@ constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 }
+
 BundleDataMgr::BundleDataMgr()
 {
+    InitStateTransferMap();
     dataStorage_ = std::make_shared<BundleDataStorageRdb>();
     preInstallDataStorage_ = std::make_shared<PreInstallDataStorageRdb>();
     sandboxAppHelper_ = DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
@@ -87,6 +89,7 @@ BundleDataMgr::~BundleDataMgr()
 {
     APP_LOGI("BundleDataMgr instance is destroyed");
     installStates_.clear();
+    transferStates_.clear();
     bundleInfos_.clear();
 }
 
@@ -198,7 +201,7 @@ bool BundleDataMgr::UpdateBundleInstallState(const std::string &bundleName, cons
         return false;
     }
 
-    auto stateRange = InitStateTransferMap().equal_range(state);
+    auto stateRange = transferStates_.equal_range(state);
     for (auto previousState = stateRange.first; previousState != stateRange.second; ++previousState) {
         if (item->second == previousState->second) {
             APP_LOGD("update result:success, current:%{public}d, state:%{public}d", previousState->second, state);
@@ -2382,37 +2385,35 @@ bool BundleDataMgr::CheckIsSystemAppByUid(const int uid) const
     return innerBundleInfo.IsSystemApp();
 }
 
-std::multimap<InstallState, InstallState> BundleDataMgr::InitStateTransferMap()
+void BundleDataMgr::InitStateTransferMap()
 {
-    std::multimap<InstallState, InstallState> transferStates;
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::INSTALL_START);
-    transferStates.emplace(InstallState::INSTALL_FAIL, InstallState::INSTALL_START);
-    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_SUCCESS);
-    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_START);
-    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::UNINSTALL_FAIL, InstallState::UNINSTALL_START);
-    transferStates.emplace(InstallState::UNINSTALL_SUCCESS, InstallState::UNINSTALL_START);
-    transferStates.emplace(InstallState::UPDATING_START, InstallState::INSTALL_SUCCESS);
-    transferStates.emplace(InstallState::UPDATING_SUCCESS, InstallState::UPDATING_START);
-    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_START);
-    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::INSTALL_START);
-    transferStates.emplace(InstallState::UPDATING_START, InstallState::INSTALL_START);
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_START);
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::UNINSTALL_START);
-    transferStates.emplace(InstallState::UPDATING_START, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_START);
-    transferStates.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::ROLL_BACK);
-    transferStates.emplace(InstallState::UNINSTALL_START, InstallState::USER_CHANGE);
-    transferStates.emplace(InstallState::UPDATING_START, InstallState::USER_CHANGE);
-    transferStates.emplace(InstallState::INSTALL_SUCCESS, InstallState::USER_CHANGE);
-    transferStates.emplace(InstallState::UPDATING_SUCCESS, InstallState::USER_CHANGE);
-    transferStates.emplace(InstallState::USER_CHANGE, InstallState::INSTALL_SUCCESS);
-    transferStates.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_SUCCESS);
-    transferStates.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_START);
-    return transferStates;
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::INSTALL_START);
+    transferStates_.emplace(InstallState::INSTALL_FAIL, InstallState::INSTALL_START);
+    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_SUCCESS);
+    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_START);
+    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::UNINSTALL_FAIL, InstallState::UNINSTALL_START);
+    transferStates_.emplace(InstallState::UNINSTALL_SUCCESS, InstallState::UNINSTALL_START);
+    transferStates_.emplace(InstallState::UPDATING_START, InstallState::INSTALL_SUCCESS);
+    transferStates_.emplace(InstallState::UPDATING_SUCCESS, InstallState::UPDATING_START);
+    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_START);
+    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::INSTALL_START);
+    transferStates_.emplace(InstallState::UPDATING_START, InstallState::INSTALL_START);
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_START);
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::UNINSTALL_START);
+    transferStates_.emplace(InstallState::UPDATING_START, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_START);
+    transferStates_.emplace(InstallState::ROLL_BACK, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::UPDATING_FAIL, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::ROLL_BACK);
+    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::USER_CHANGE);
+    transferStates_.emplace(InstallState::UPDATING_START, InstallState::USER_CHANGE);
+    transferStates_.emplace(InstallState::INSTALL_SUCCESS, InstallState::USER_CHANGE);
+    transferStates_.emplace(InstallState::UPDATING_SUCCESS, InstallState::USER_CHANGE);
+    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::INSTALL_SUCCESS);
+    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_SUCCESS);
+    transferStates_.emplace(InstallState::USER_CHANGE, InstallState::UPDATING_START);
 }
 
 bool BundleDataMgr::IsDeleteDataState(const InstallState state) const

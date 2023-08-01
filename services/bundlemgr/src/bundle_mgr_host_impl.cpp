@@ -44,6 +44,11 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* SYSTEM_APP = "system";
+constexpr const char* THIRD_PARTY_APP = "third-party";
+}
+
 bool BundleMgrHostImpl::GetApplicationInfo(
     const std::string &appName, const ApplicationFlag flag, const int userId, ApplicationInfo &appInfo)
 {
@@ -2088,7 +2093,7 @@ std::string BundleMgrHostImpl::GetAppType(const std::string &bundleName)
         return Constants::EMPTY_STRING;
     }
     bool isSystemApp = bundleInfo.applicationInfo.isSystemApp;
-    std::string appType = isSystemApp ? Constants::SYSTEM_APP : Constants::THIRD_PARTY_APP;
+    std::string appType = isSystemApp ? SYSTEM_APP : THIRD_PARTY_APP;
     APP_LOGD("appType is %{public}s", appType.c_str());
     return appType;
 }
