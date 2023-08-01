@@ -398,7 +398,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     for (auto &moduleName : moduleNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     }
-
+    CHECK_PARCEL_CAPACITY(parcel, BUNDLE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, modulePublicDirs.size());
     for (auto &modulePublicDir : modulePublicDirs) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(modulePublicDir));
