@@ -246,15 +246,21 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if (info.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
             InnerBundleInfo newInfo = info;
-            OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(newInfo, info);
+            std::string targetBundleName = newInfo.GetTargetBundleName();
+            auto targetInfoItem = bundleInfos_.find(targetBundleName);
+            if (targetInfoItem != bundleInfos_.end()) {
+                OverlayDataMgr::GetInstance()->UpdateExternalOverlayInfo(newInfo, info, targetInfoItem->second);
+                // storage target bundle info
+                dataStorage_->SaveStorageBundleInfo(targetInfoItem->second);
+            }
         }
         if (info.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
             info.SetOverlayModuleState(info.GetCurrentModulePackage(), OverlayState::OVERLAY_INVALID,
                 info.GetUserId());
         }
         if (info.GetOverlayType() == NON_OVERLAY_TYPE) {
-            OverlayDataMgr::GetInstance()->BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info,
-                info.GetUserId());
+            // build overlay connection for external overlay
+            BuildExternalOverlayConnection(info.GetCurrentModulePackage(), info, info.GetUserId());
         }
 #endif
         if (dataStorage_->SaveStorageBundleInfo(info)) {
@@ -306,7 +312,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
         }
-        if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+
+        if (!UpdateOverlayInfo(newInfo, oldInfo)) {
             APP_LOGE("update overlay info failed");
             return false;
         }
@@ -339,7 +346,24 @@ bool BundleDataMgr::RemoveModuleInfo(
     if (statusItem->second == InstallState::UNINSTALL_START || statusItem->second == InstallState::ROLL_BACK) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-        OverlayDataMgr::GetInstance()->RemoveOverlayModuleInfo(bundleName, modulePackage, oldInfo);
+        std::string targetBundleName = oldInfo.GetTargetBundleName();
+        InnerBundleInfo targetInnerBundleInfo;
+        if (bundleInfos_.find(targetBundleName) != bundleInfos_.end()) {
+            targetInnerBundleInfo = bundleInfos_.at(targetBundleName);
+        }
+        OverlayDataMgr::GetInstance()->RemoveOverlayModuleInfo(bundleName, modulePackage, oldInfo,
+            targetInnerBundleInfo);
+        if ((oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) && !targetInnerBundleInfo.GetBundleName().empty()) {
+            // save target innerBundleInfo
+            if (dataStorage_->SaveStorageBundleInfo(targetInnerBundleInfo)) {
+                APP_LOGI("update storage success bundle:%{public}s", targetBundleName.c_str());
+                bundleInfos_.at(targetBundleName) = targetInnerBundleInfo;
+            }
+        }
+        // remove target module and overlay module state will change to OVERLAY_INVALID
+        if (oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+            ResetExternalOverlayModuleState(bundleName, modulePackage);
+        }
 #endif
         oldInfo.RemoveModuleInfo(modulePackage);
         oldInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
@@ -488,14 +512,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         oldInfo.SetAppProvisionMetadata(newInfo.GetAppProvisionMetadata());
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
         if (newInfo.GetIsNewVersion() && newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
-            if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK) {
+            if (!UpdateOverlayInfo(newInfo, oldInfo)) {
                 APP_LOGE("update overlay info failed");
                 return false;
             }
         }
 
-        if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) &&
-            (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo) != ERR_OK)) {
+        if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!UpdateOverlayInfo(newInfo, oldInfo))) {
             APP_LOGE("update overlay info failed");
             return false;
         }
@@ -2443,13 +2466,8 @@ void BundleDataMgr::DeleteBundleInfo(const std::string &bundleName, const Instal
         return;
     }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    if (infoItem->second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
-        OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(infoItem->second.GetTargetBundleName(), bundleName);
-    }
-
-    if (infoItem->second.GetOverlayType() == NON_OVERLAY_TYPE) {
-        OverlayDataMgr::GetInstance()->ResetExternalOverlayModuleState(bundleName);
-    }
+    // remove external overlay bundle info and connection
+    RemoveOverlayInfoAndConnection(infoItem->second, bundleName);
 #endif
     APP_LOGD("del bundle name:%{public}s", bundleName.c_str());
     const InnerBundleInfo &innerBundleInfo = infoItem->second;
@@ -4569,24 +4587,10 @@ bool BundleDataMgr::UpdateInnerBundleInfo(const InnerBundleInfo &innerBundleInfo
     return false;
 }
 
-bool BundleDataMgr::GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
-{
-    APP_LOGI("start to get overlay innerBundleInfo");
-    std::lock_guard<std::mutex> lock(overlayMutex_);
-    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
-        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::DISABLED);
-        info = bundleInfos_.at(bundleName);
-        return true;
-    }
-
-    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-    return false;
-}
-
 bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
     APP_LOGI("start to query overlay innerBundleInfo");
-    std::lock_guard<std::mutex> lock(overlayMutex_);
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
         info = bundleInfos_.at(bundleName);
         return true;
@@ -4598,29 +4602,13 @@ bool BundleDataMgr::QueryOverlayInnerBundleInfo(const std::string &bundleName, I
 
 void BundleDataMgr::SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo)
 {
-    std::lock_guard<std::mutex> lock(overlayMutex_);
+    std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     innerBundleInfo.SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
     if (!dataStorage_->SaveStorageBundleInfo(innerBundleInfo)) {
         APP_LOGE("update storage failed bundle:%{public}s", bundleName.c_str());
         return;
     }
     bundleInfos_.at(bundleName) = innerBundleInfo;
-}
-
-void BundleDataMgr::EnableOverlayBundle(const std::string &bundleName)
-{
-    std::lock_guard<std::mutex> lock(overlayMutex_);
-    if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
-        bundleInfos_.at(bundleName).SetBundleStatus(InnerBundleInfo::BundleStatus::ENABLED);
-        return;
-    }
-    APP_LOGE("can not find bundle %{public}s", bundleName.c_str());
-}
-
-const std::map<std::string, InnerBundleInfo> BundleDataMgr::GetAllOverlayInnerBundleInfos() const
-{
-    std::lock_guard<std::mutex> lock(overlayMutex_);
-    return bundleInfos_;
 }
 
 ErrCode BundleDataMgr::GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
@@ -5371,5 +5359,154 @@ ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleNa
 
     return ERR_OK;
 }
+
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+bool BundleDataMgr::UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+    InnerBundleInfo targetInnerBundleInfo;
+    std::string targetBundleName = newInfo.GetTargetBundleName();
+    auto targetInfoItem = bundleInfos_.find(targetBundleName);
+    if (targetInfoItem != bundleInfos_.end()) {
+        targetInnerBundleInfo = targetInfoItem->second;
+    }
+
+    if (OverlayDataMgr::GetInstance()->UpdateOverlayInfo(newInfo, oldInfo, targetInnerBundleInfo) != ERR_OK) {
+        APP_LOGE("update overlay info failed");
+        return false;
+    }
+    // storage target bundle info
+    if (!targetInnerBundleInfo.GetBundleName().empty() &&
+        dataStorage_->SaveStorageBundleInfo(targetInnerBundleInfo)) {
+        bundleInfos_.at(targetInnerBundleInfo.GetBundleName()) = targetInnerBundleInfo;
+    }
+    // build overlay connection for external overlay
+    if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+        const auto &moduleInfos = newInfo.GetInnerModuleInfos();
+        std::string moduleName = (moduleInfos.begin()->second).moduleName;
+        BuildExternalOverlayConnection(moduleName, oldInfo, newInfo.GetUserId());
+    }
+    return true;
+}
+
+void BundleDataMgr::ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage)
+{
+    for (auto &info : bundleInfos_) {
+        if (info.second.GetTargetBundleName() != bundleName) {
+            continue;
+        }
+        const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
+        for (const auto &moduleInfo : innerModuleInfos) {
+            if (moduleInfo.second.targetModuleName == modulePackage) {
+                info.second.SetOverlayModuleState(moduleInfo.second.moduleName, OverlayState::OVERLAY_INVALID);
+                break;
+            }
+        }
+        if (!dataStorage_->SaveStorageBundleInfo(info.second)) {
+            APP_LOGW("update storage success bundle:%{public}s", info.second.GetBundleName().c_str());
+        }
+    }
+}
+
+void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo,
+    int32_t userId)
+{
+    APP_LOGD("start to update external overlay connection of module %{public}s under user %{public}d",
+        moduleName.c_str(), userId);
+    for (auto &info : bundleInfos_) {
+        if (info.second.GetTargetBundleName() != oldInfo.GetBundleName()) {
+            continue;
+        }
+        // check target bundle is preInstall application
+        if (!oldInfo.IsPreInstallApp()) {
+            APP_LOGW("target bundle is not preInstall application");
+            return;
+        }
+
+        // check fingerprint of current bundle with target bundle
+        if (oldInfo.GetCertificateFingerprint() != info.second.GetCertificateFingerprint()) {
+            APP_LOGW("target bundle has different fingerprint with current bundle");
+            return;
+        }
+        // external overlay does not support FA model
+        if (!oldInfo.GetIsNewVersion()) {
+            APP_LOGW("target bundle is not stage model");
+            return;
+        }
+        // external overlay does not support service
+        if (oldInfo.GetEntryInstallationFree()) {
+            APP_LOGW("target bundle is service");
+            return;
+        }
+
+        const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
+        std::vector<std::string> overlayModuleVec;
+        for (const auto &moduleInfo : innerModuleInfos) {
+            if (moduleInfo.second.targetModuleName != moduleName) {
+                continue;
+            }
+            OverlayModuleInfo overlayModuleInfo;
+            overlayModuleInfo.bundleName = info.second.GetBundleName();
+            overlayModuleInfo.moduleName = moduleInfo.second.moduleName;
+            overlayModuleInfo.targetModuleName = moduleInfo.second.targetModuleName;
+            overlayModuleInfo.hapPath = info.second.GetModuleHapPath(moduleInfo.second.moduleName);
+            overlayModuleInfo.priority = moduleInfo.second.targetPriority;
+            oldInfo.AddOverlayModuleInfo(overlayModuleInfo);
+            overlayModuleVec.emplace_back(moduleInfo.second.moduleName);
+        }
+        std::string bundleDir;
+        const std::string &moduleHapPath =
+            info.second.GetModuleHapPath((innerModuleInfos.begin()->second).moduleName);
+        OverlayDataMgr::GetInstance()->GetBundleDir(moduleHapPath, bundleDir);
+        OverlayBundleInfo overlayBundleInfo;
+        overlayBundleInfo.bundleName = info.second.GetBundleName();
+        overlayBundleInfo.bundleDir = bundleDir;
+        overlayBundleInfo.state = info.second.GetOverlayState();
+        overlayBundleInfo.priority = info.second.GetTargetPriority();
+        oldInfo.AddOverlayBundleInfo(overlayBundleInfo);
+        auto userSet = GetAllUser();
+        for (const auto &innerUserId : userSet) {
+            for (const auto &overlayModule : overlayModuleVec) {
+                int32_t state = OverlayState::OVERLAY_INVALID;
+                info.second.GetOverlayModuleState(overlayModule, innerUserId, state);
+                if (state == OverlayState::OVERLAY_INVALID) {
+                    info.second.SetOverlayModuleState(overlayModule, OVERLAY_ENABLE, innerUserId);
+                }
+            }
+            dataStorage_->SaveStorageBundleInfo(info.second);
+        }
+    }
+}
+
+void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName)
+{
+    if (innerBundleInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+        std::string targetBundleName = innerBundleInfo.GetTargetBundleName();
+        auto targetInfoItem = bundleInfos_.find(targetBundleName);
+        if (targetInfoItem == bundleInfos_.end()) {
+            APP_LOGW("target bundle is not installed");
+        } else {
+            InnerBundleInfo targetInnerBundleInfo = bundleInfos_.at(targetBundleName);
+            OverlayDataMgr::GetInstance()->RemoveOverlayBundleInfo(bundleName, targetInnerBundleInfo);
+            if (dataStorage_->SaveStorageBundleInfo(targetInnerBundleInfo)) {
+                APP_LOGI("update storage success bundle:%{public}s", bundleName.c_str());
+                bundleInfos_.at(targetBundleName) = targetInnerBundleInfo;
+            }
+        }
+    }
+
+    if (innerBundleInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
+        for (auto &info : bundleInfos_) {
+            if (info.second.GetTargetBundleName() != bundleName) {
+                continue;
+            }
+            const auto &innerModuleInfos = info.second.GetInnerModuleInfos();
+            for (const auto &moduleInfo : innerModuleInfos) {
+                info.second.SetOverlayModuleState(moduleInfo.second.moduleName, OverlayState::OVERLAY_INVALID);
+            }
+            dataStorage_->SaveStorageBundleInfo(info.second);
+        }
+    }
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS
