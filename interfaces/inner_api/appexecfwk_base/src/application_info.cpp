@@ -424,7 +424,7 @@ ApplicationInfo *ApplicationInfo::Unmarshalling(Parcel &parcel)
 
 bool ApplicationInfo::Marshalling(Parcel &parcel) const
 {
-    APP_LOGD("ApplicationInfo::Marshalling called");
+    APP_LOGD("ApplicationInfo::Marshalling called, bundleName: %{public}s", bundleName.c_str());
     CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));

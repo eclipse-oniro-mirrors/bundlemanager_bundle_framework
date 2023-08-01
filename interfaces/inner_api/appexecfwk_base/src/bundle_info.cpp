@@ -76,7 +76,7 @@ const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
-const size_t BUNDLE_CAPACITY = 10240; // 10K
+const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
