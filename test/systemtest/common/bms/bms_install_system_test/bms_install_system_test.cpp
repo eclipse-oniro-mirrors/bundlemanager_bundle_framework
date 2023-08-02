@@ -43,6 +43,7 @@ const std::string OPERATION_SUCCESS = "Success";
 const int TIMEOUT = 10;
 const int32_t USERID = 100;
 const int32_t USERID_ERROR = 10000;
+constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
 }  // namespace
 
 namespace OHOS {
@@ -351,7 +352,7 @@ void BmsInstallSystemTest::CheckFileNonExist(const std::string &bundleName) cons
 
 void BmsInstallSystemTest::ClearJsonFile() const
 {
-    std::string fileName = Constants::BUNDLE_DATA_BASE_FILE;
+    std::string fileName = BUNDLE_DATA_BASE_FILE;
     std::ofstream o(fileName);
     if (!o.is_open()) {
         std::cout << "failed to open as out" << fileName << std::endl;

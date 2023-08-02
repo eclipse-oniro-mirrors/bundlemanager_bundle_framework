@@ -76,7 +76,7 @@ const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
-const size_t BUNDLE_CAPACITY = 10240; // 10K
+const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
 bool RequestPermissionUsedScene::ReadFromParcel(Parcel &parcel)
@@ -398,7 +398,7 @@ bool BundleInfo::Marshalling(Parcel &parcel) const
     for (auto &moduleName : moduleNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
     }
-
+    CHECK_PARCEL_CAPACITY(parcel, BUNDLE_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, modulePublicDirs.size());
     for (auto &modulePublicDir : modulePublicDirs) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(modulePublicDir));

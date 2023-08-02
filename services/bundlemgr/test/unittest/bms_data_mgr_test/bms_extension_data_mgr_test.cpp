@@ -76,7 +76,10 @@ const nlohmann::json EXTENSIONS_JSON_5 = R"(
     }
 }
 )"_json;
-
+enum {
+    BMS_BROKER_ERR_INVALID_PARAM = 8585220,
+    BMS_BROKER_ERR_PARCEL_FAILED = 8585221,
+};
 }  // namespace
 
 class BmsExtensionDataMgrTest : public testing::Test {
@@ -191,7 +194,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0004, Function | SmallTest
     int32_t userId = 0;
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -207,7 +214,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0005, Function | SmallTest
     int32_t userId = 0;
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -222,7 +233,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0006, Function | SmallTest
     int32_t userId = 0;
     std::vector<BundleInfo> bundleInfos;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -238,7 +253,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0007, Function | SmallTest
     int32_t userId = 0;
     BundleInfo bundleInfo;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_INVALID_PARAM);
+    #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -252,7 +271,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest
     std::string filePath;
     Security::Verify::HapVerifyResult hapVerifyResult;
     ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    #else
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**

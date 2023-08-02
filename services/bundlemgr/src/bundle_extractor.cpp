@@ -16,10 +16,14 @@
 #include "bundle_extractor.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_constants.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
+constexpr const char* MODULE_PROFILE_NAME = "module.json";
+constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
+}
 BundleExtractor::BundleExtractor(const std::string &source) : BaseExtractor(source)
 {
     APP_LOGI("BundleExtractor is created");
@@ -34,16 +38,16 @@ bool BundleExtractor::ExtractProfile(std::ostream &dest) const
 {
     if (IsNewVersion()) {
         APP_LOGD("profile is module.json");
-        return ExtractByName(Constants::MODULE_PROFILE_NAME, dest);
+        return ExtractByName(MODULE_PROFILE_NAME, dest);
     }
     APP_LOGD("profile is config.json");
-    return ExtractByName(Constants::BUNDLE_PROFILE_NAME, dest);
+    return ExtractByName(BUNDLE_PROFILE_NAME, dest);
 }
 
 bool BundleExtractor::ExtractPackFile(std::ostream &dest) const
 {
     APP_LOGD("start to parse pack.info");
-    return ExtractByName(Constants::BUNDLE_PACKFILE_NAME, dest);
+    return ExtractByName(BUNDLE_PACKFILE_NAME, dest);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

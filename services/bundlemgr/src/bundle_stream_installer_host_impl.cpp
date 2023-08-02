@@ -22,6 +22,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* ILLEGAL_PATH_FIELD = "../";
+}
+
 BundleStreamInstallerHostImpl::BundleStreamInstallerHostImpl(uint32_t installerId, int32_t installedUid)
 {
     APP_LOGD("create bundle stream installer host impl instance");
@@ -95,7 +99,7 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
         return -1;
     }
     // to prevent the hap copied to relevant path
-    if (fileName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+    if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
         return -1;
     }
@@ -139,7 +143,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
     }
 
     // to prevent the sig copied to relevant path
-    if (fileName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+    if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
         return -1;
     }
@@ -179,7 +183,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
     }
 
     // to prevent the hsp copied to relevant path
-    if (hspName.find(Constants::ILLEGAL_PATH_FIELD) != std::string::npos) {
+    if (hspName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateSharedBundleStream failed due to invalid hapName");
         return -1;
     }

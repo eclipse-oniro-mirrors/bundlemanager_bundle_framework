@@ -128,7 +128,7 @@
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "entry",
         "virtualMachine": "ark",
-        "compressNativeLibs": true,
+        "compressNativeLibs": false,
         "libIsolation": false
     }
 }
