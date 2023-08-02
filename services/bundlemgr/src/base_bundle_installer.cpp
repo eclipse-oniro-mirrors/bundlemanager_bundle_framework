@@ -909,7 +909,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     // delete low-version hap or hsp when higher-version hap or hsp installed
     if (!uninstallModuleVec_.empty()) {
-        UninstallLowerVersionFeature(uninstallModuleVec_);
+        UninstallLowerVersionFeature(uninstallModuleVec_, installParam.noSkipsKill);
     }
 
     // create data group dir
@@ -2900,7 +2900,7 @@ ErrCode BaseBundleInstaller::CheckVersionCompatibilityForHmService(const InnerBu
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec)
+ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill)
 {
     APP_LOGD("start to uninstall lower version feature hap");
     InnerBundleInfo info;
@@ -2912,6 +2912,12 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START)) {
         APP_LOGE("uninstall already start");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
+    }
+
+    if (noSkipsKill) {
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
+            APP_LOGW("can not kill process");
+        }
     }
 
     // kill the bundle process during uninstall.
