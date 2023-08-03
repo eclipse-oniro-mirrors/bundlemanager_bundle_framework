@@ -36,12 +36,7 @@ bool BundleOverlayManager::GetInnerBundleInfo(const std::string &bundleName, Inn
         return false;
     }
 
-    bool result = OverlayDataMgr::GetInstance()->GetOverlayInnerBundleInfo(bundleName, info);
-    if (result) {
-        OverlayDataMgr::GetInstance()->EnableOverlayBundle(bundleName);
-    }
-
-    return result;
+    return OverlayDataMgr::GetInstance()->QueryOverlayInnerBundleInfo(bundleName, info);
 }
 
 ErrCode BundleOverlayManager::GetAllOverlayModuleInfo(const std::string &bundleName,
