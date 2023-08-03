@@ -971,6 +971,8 @@ private:
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
     void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
+    ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
+        const std::string &abilityName, AbilityInfo &abilityInfo) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;

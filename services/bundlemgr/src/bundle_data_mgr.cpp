@@ -2305,28 +2305,26 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
 {
 #ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    int32_t requestUserId = GetUserId();
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     InnerBundleInfo innerBundleInfo;
     ErrCode ret =
-        GetInnerBundleInfoWithFlagsV9(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId());
+        GetInnerBundleInfoWithFlagsV9(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
     if (ret != ERR_OK) {
         return ret;
     }
     AbilityInfo abilityInfo;
-    if (moduleName.empty()) {
-        auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
-        if (!ability) {
-            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-        }
-        abilityInfo = *ability;
-    } else {
-        ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
-        if (ret != ERR_OK) {
-            APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), ret);
-            return ret;
-        }
+    ret = FindAbilityInfoInBundleInfo(innerBundleInfo, moduleName, abilityName, abilityInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("Find ability failed. bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s",
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
+        return ret;
     }
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     bool isEnable = false;
-    ret = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, GetUserId(), isEnable);
+    ret = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, responseUserId, isEnable);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -2339,7 +2337,7 @@ ErrCode BundleDataMgr::GetAbilityLabel(const std::string &bundleName, const std:
         return ERR_OK;
     }
     std::shared_ptr<OHOS::Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, abilityInfo.moduleName, GetUserId());
+        GetResourceManager(bundleName, abilityInfo.moduleName, responseUserId);
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -4520,27 +4518,24 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     APP_LOGI("begin to GetMediaData.");
 #ifdef GLOBAL_RESMGR_ENABLE
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     InnerBundleInfo innerBundleInfo;
     ErrCode errCode = GetInnerBundleInfoWithFlagsV9(
-        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, GetUserId(userId));
+        bundleName, BundleFlag::GET_BUNDLE_DEFAULT, innerBundleInfo, requestUserId);
     if (errCode != ERR_OK) {
         return errCode;
     }
     AbilityInfo abilityInfo;
-    if (moduleName.empty()) {
-        auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
-        if (!ability) {
-            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-        }
-        abilityInfo = *ability;
-    } else {
-        errCode = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
-        if (errCode != ERR_OK) {
-            return errCode;
-        }
+    errCode = FindAbilityInfoInBundleInfo(innerBundleInfo, moduleName, abilityName, abilityInfo);
+    if (errCode != ERR_OK) {
+        return errCode;
     }
     bool isEnable;
-    errCode = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, GetUserId(userId), isEnable);
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
+    errCode = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, responseUserId, isEnable);
     if (errCode != ERR_OK) {
         return errCode;
     }
@@ -4549,7 +4544,7 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
         return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager =
-        GetResourceManager(bundleName, abilityInfo.moduleName, GetUserId(userId));
+        GetResourceManager(bundleName, abilityInfo.moduleName, responseUserId);
     if (resourceManager == nullptr) {
         APP_LOGE("InitResourceManager failed, bundleName:%{public}s", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -5397,6 +5392,25 @@ ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleNa
     }
 
     return ERR_OK;
+}
+
+ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo,
+    const std::string &moduleName, const std::string &abilityName, AbilityInfo &abilityInfo) const
+{
+    if (moduleName.empty()) {
+        auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
+        if (!ability) {
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        abilityInfo = *ability;
+        return ERR_OK;
+    }
+    
+    ErrCode ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", innerBundleInfo.GetBundleName().c_str(), ret);
+    }
+    return ret;
 }
 
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
