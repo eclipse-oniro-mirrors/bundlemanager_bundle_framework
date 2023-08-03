@@ -333,7 +333,9 @@ bool BundleInstallerHost::Install(
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -357,7 +359,9 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -381,7 +385,9 @@ bool BundleInstallerHost::Recover(
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -471,7 +477,9 @@ bool BundleInstallerHost::InstallByBundleName(const std::string &bundleName,
     }
     if (!BundlePermissionMgr::IsSelfCalling() &&
         !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
@@ -556,8 +564,8 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
     }
-    InstallParam installParam2 = installParam;
-    if (!IsPermissionVaild(installParam, installParam2)) {
+    InstallParam verifiedInstallParam = installParam;
+    if (!IsPermissionVaild(installParam, verifiedInstallParam)) {
         APP_LOGE("install permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return nullptr;
@@ -570,7 +578,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }
-    bool res = streamInstaller->Init(installParam2, statusReceiver);
+    bool res = streamInstaller->Init(verifiedInstallParam, statusReceiver);
     if (!res) {
         APP_LOGE("stream installer init failed");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
@@ -579,26 +587,25 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
     return streamInstaller;
 }
 
-bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2)
+bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, InstallParam &verifiedInstallParam)
 {
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
-        installParam2.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
-    } else {
-        installParam2.installBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
-    }
-    if (BundlePermissionMgr::IsNativeTokenType()) {
-        installParam2.isCallByShell = true;
-    }
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
-        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
-    } else {
-        installParam2.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
-    }
-    if (installParam2.installBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS &&
-        installParam2.installEnterpriseBundlePermissionStatus == PermissionStatus::NON_HAVE_PERMISSION_STATUS) {
-        return false;
-    }
-    return true;
+    verifiedInstallParam.isCallByShell = BundlePermissionMgr::IsNativeTokenType();
+    verifiedInstallParam.installBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) ?
+        PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installEnterpriseBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) ?
+        PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installEtpNormalBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) ?
+        PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    verifiedInstallParam.installEtpMdmBundlePermissionStatus =
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) ?
+        PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    return (verifiedInstallParam.installBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        verifiedInstallParam.installEnterpriseBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        verifiedInstallParam.installEtpNormalBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
+        verifiedInstallParam.installEtpMdmBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS);
 }
 
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
@@ -608,7 +615,9 @@ bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerI
         return false;
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("install permission denied");
         return false;
     }

@@ -47,6 +47,8 @@ ErrCode SharedBundleInstaller::ParseFiles()
     checkParam.removable = installParam_.removable;
     checkParam.installBundlePermissionStatus = installParam_.installBundlePermissionStatus;
     checkParam.installEnterpriseBundlePermissionStatus = installParam_.installEnterpriseBundlePermissionStatus;
+    checkParam.installEtpNormalBundlePermissionStatus = installParam_.installEtpNormalBundlePermissionStatus;
+    checkParam.installEtpMdmBundlePermissionStatus = installParam_.installEtpMdmBundlePermissionStatus;
     checkParam.isCallByShell = installParam_.isCallByShell;
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
