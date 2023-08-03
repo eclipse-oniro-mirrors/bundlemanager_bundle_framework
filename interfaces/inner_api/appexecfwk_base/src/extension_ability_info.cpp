@@ -71,12 +71,12 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "push", ExtensionAbilityType::PUSH },
     { "driver", ExtensionAbilityType::DRIVER },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
+    { "action", ExtensionAbilityType::ACTION },
     { "ui", ExtensionAbilityType::UI },
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
     { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
     { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
     { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL },
-    { "action", ExtensionAbilityType::ACTION },
     { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE },
     { "hms/account", ExtensionAbilityType::HMS_ACCOUNT }
 };
