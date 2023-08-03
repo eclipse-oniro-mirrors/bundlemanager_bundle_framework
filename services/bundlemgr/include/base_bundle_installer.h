@@ -451,7 +451,7 @@ private:
      * @param packageVec Indicates the array of package names of the high version entry or feature hap.
      * @return Returns ERR_OK if uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill = false);
+    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec);
     /**
      * @brief To get userId.
      * @param installParam Indicates the installParam of the bundle.
