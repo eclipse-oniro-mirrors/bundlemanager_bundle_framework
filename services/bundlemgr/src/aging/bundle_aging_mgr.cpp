@@ -17,7 +17,6 @@
 #include "account_helper.h"
 #include "battery_srv_client.h"
 #include "bundle_active_period_stats.h"
-#include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "display_power_mgr_client.h"
@@ -115,7 +114,6 @@ void BundleAgingMgr::ScheduleLoopTask()
 {
     std::weak_ptr<BundleAgingMgr> weakPtr = shared_from_this();
     auto task = [weakPtr]() {
-        BundleMemoryGuard memoryGuard;
         while (true) {
             auto sharedPtr = weakPtr.lock();
             if (sharedPtr == nullptr) {
@@ -264,10 +262,7 @@ void BundleAgingMgr::Start(AgingTriggertype type)
         running_ = true;
     }
 
-    auto task = [&, dataMgr]() {
-        BundleMemoryGuard memoryGuard;
-        Process(dataMgr);
-    };
+    auto task = [&, dataMgr]() { Process(dataMgr); };
     ffrt::task_handle task_handle = ffrt::submit_h(task);
     if (task_handle == nullptr) {
         APP_LOGE("submit_h return null, execute Process failed");

@@ -22,7 +22,6 @@
 #include "bundle_common_event.h"
 #include "bundle_constants.h"
 #include "bundle_distributed_manager.h"
-#include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
@@ -177,7 +176,6 @@ bool BundleMgrService::InitBundleEventHandler()
         handler_ = std::make_shared<BMSEventHandler>();
     }
     auto task = [this]() {
-        BundleMemoryGuard memoryGuard;
         handler_->BmsStartEvent();
     };
     ffrt::submit(task);

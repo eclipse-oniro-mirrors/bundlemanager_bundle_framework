@@ -16,7 +16,6 @@
 #ifndef FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 #define FOUNDATION_BUNDLE_FRAMEWORK_SERVICE_INCLUDE_APP_CONTROL_MANAGER_H
 
-#include <mutex>
 #include <unordered_map>
 
 #include "app_control_manager_db_interface.h"
@@ -79,8 +78,6 @@ private:
     bool isAppInstallControlEnabled_ = false;
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
-    std::unordered_map<std::string, AppRunningControlRuleResult> appRunningControlRuleResult_;
-    std::mutex appRunningControlMutex_;
 };
 } // AppExecFwk
 } // OHOS

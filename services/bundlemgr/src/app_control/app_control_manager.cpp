@@ -32,7 +32,6 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
     const std::string APP_MARKET_CALLING = "app market";
-    const std::string INVALID_MESSAGE = "INVALID_MESSAGE";
 }
 
 AppControlManager::AppControlManager()
@@ -98,16 +97,8 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
     APP_LOGD("AddAppRunningControlRule");
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
     ErrCode ret = appControlManagerDb_->AddAppRunningControlRule(callingName, controlRules, userId);
     if (ret == ERR_OK) {
-        for (const auto &rule : controlRules) {
-            std::string key = rule.appId + std::string("_") + std::to_string(userId);
-            auto iter = appRunningControlRuleResult_.find(key);
-            if (iter != appRunningControlRuleResult_.end()) {
-                appRunningControlRuleResult_.erase(iter);
-            }
-        }
         KillRunningApp(controlRules, userId);
     }
     return ret;
@@ -116,18 +107,7 @@ ErrCode AppControlManager::AddAppRunningControlRule(const std::string &callingNa
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName,
     const std::vector<AppRunningControlRule> &controlRules, int32_t userId)
 {
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    auto ret = appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
-    if (ret == ERR_OK) {
-        for (const auto &rule : controlRules) {
-            std::string key = rule.appId + std::string("_") + std::to_string(userId);
-            auto iter = appRunningControlRuleResult_.find(key);
-            if (iter != appRunningControlRuleResult_.end()) {
-                appRunningControlRuleResult_.erase(iter);
-            }
-        }
-    }
-    return ret;
+    return appControlManagerDb_->DeleteAppRunningControlRule(callingName, controlRules, userId);
 }
 
 ErrCode AppControlManager::DeleteAppRunningControlRule(const std::string &callingName, int32_t userId)
@@ -232,22 +212,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
         APP_LOGE("DataMgr GetBundleInfoV9 failed");
         return ret;
     }
-    std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);
-    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
-    if (appRunningControlRuleResult_.find(key) != appRunningControlRuleResult_.end()) {
-        controlRuleResult = appRunningControlRuleResult_[key];
-        if (controlRuleResult.controlMessage == INVALID_MESSAGE) {
-            controlRuleResult.controlMessage = std::string();
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
-        }
-        return ERR_OK;
-    }
-    ret = appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRuleResult);
-    if (ret != ERR_OK) {
-        controlRuleResult.controlMessage = INVALID_MESSAGE;
-    }
-    appRunningControlRuleResult_.emplace(key, controlRuleResult);
-    return ret;
+    return appControlManagerDb_->GetAppRunningControlRule(bundleInfo.appId, userId, controlRuleResult);
 }
 
 void AppControlManager::KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const
