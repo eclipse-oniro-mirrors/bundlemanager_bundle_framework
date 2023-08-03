@@ -192,4 +192,10 @@
     <option name="push" value="testHapNoSo/hapSectionContainsoFeature6.hap -> /data/test/testHapSo/hapSectionContainsoFeature6" src="res" />
     </preparer>
   </target>
+  <target name="BmsOverlayInternalInstallTest">
+    <preparer>
+    <option name="push" value="testOverlay/internalOverlayTest1.hap -> /data/test/internalOverlayTest/" src="res" />
+    </preparer>
+  </target>
+
 </configuration>

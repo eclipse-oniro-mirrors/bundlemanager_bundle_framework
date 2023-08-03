@@ -85,5 +85,6 @@ group("systemtest_bms") {
     "bms_search_system_test:systemtest",
     "bms_stream_installer_host_test:systemtest",
     "bms_uninstall_system_test:systemtest",
+    "bms_overlay_install_test:systemtest",
   ]
 }

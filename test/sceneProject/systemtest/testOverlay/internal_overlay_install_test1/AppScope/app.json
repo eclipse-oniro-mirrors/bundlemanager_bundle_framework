@@ -1,7 +1,7 @@
 {
     "app": {
         "apiReleaseType": "Canary1",
-        "bundleName": "com.example.hsptest",
+        "bundleName": "com.example.internalOverlayTest1",
         "debug": true,
         "icon": "$media:app_icon",
         "iconId": 16777217,
@@ -12,6 +12,6 @@
         "vendor": "example",
         "versionCode": 1000000,
         "versionName": "1.0.0",
-        "bundleType":"shared"
+        "asanEnabled": true
     }
 }

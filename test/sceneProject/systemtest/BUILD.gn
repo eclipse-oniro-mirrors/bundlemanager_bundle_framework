@@ -25,5 +25,6 @@ group("systemtest_hap") {
     "stVendorBundle:stVendorBundle",
     "testHapNoSo:testHapNoSo",
     "testHapSo:testHapSo",
+    "testOverlay:testOverlay",
   ]
 }
