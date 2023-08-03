@@ -18,15 +18,25 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
+#include "system_ability_definition.h"
+#include "system_ability_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t UNLOAD_TIME = 3 * 60 * 1000; // 3 min for installd to unload
+const std::string UNLOAD_TASK_NAME = "UnloadInstalldTask";
+const std::string UNLOAD_QUEUE_NAME = "UnloadInstalldQueue";
+}
+
 InstalldHost::InstalldHost()
 {
-    init();
+    Init();
+    InitEventHandler();
     APP_LOGI("installd host instance is created");
 }
 
@@ -35,34 +45,50 @@ InstalldHost::~InstalldHost()
     APP_LOGI("installd host instance is destroyed");
 }
 
-void InstalldHost::init()
+void InstalldHost::Init()
 {
-    funcMap_.emplace(IInstalld::Message::CREATE_BUNDLE_DIR, &InstalldHost::HandleCreateBundleDir);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_MODULE_FILES, &InstalldHost::HandleExtractModuleFiles);
-    funcMap_.emplace(IInstalld::Message::RENAME_MODULE_DIR, &InstalldHost::HandleRenameModuleDir);
-    funcMap_.emplace(IInstalld::Message::CREATE_BUNDLE_DATA_DIR, &InstalldHost::HandleCreateBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::REMOVE_BUNDLE_DATA_DIR, &InstalldHost::HandleRemoveBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::REMOVE_MODULE_DATA_DIR, &InstalldHost::HandleRemoveModuleDataDir);
-    funcMap_.emplace(IInstalld::Message::CLEAN_BUNDLE_DATA_DIR, &InstalldHost::HandleCleanBundleDataDir);
-    funcMap_.emplace(IInstalld::Message::SET_DIR_APL, &InstalldHost::HandleSetDirApl);
-    funcMap_.emplace(IInstalld::Message::REMOVE_DIR, &InstalldHost::HandleRemoveDir);
-    funcMap_.emplace(IInstalld::Message::GET_BUNDLE_STATS, &InstalldHost::HandleGetBundleStats);
-    funcMap_.emplace(IInstalld::Message::GET_BUNDLE_CACHE_PATH, &InstalldHost::HandleGetBundleCachePath);
-    funcMap_.emplace(IInstalld::Message::SCAN_DIR, &InstalldHost::HandleScanDir);
-    funcMap_.emplace(IInstalld::Message::MOVE_FILE, &InstalldHost::HandleMoveFile);
-    funcMap_.emplace(IInstalld::Message::COPY_FILE, &InstalldHost::HandleCopyFile);
-    funcMap_.emplace(IInstalld::Message::MKDIR, &InstalldHost::HandleMkdir);
-    funcMap_.emplace(IInstalld::Message::GET_FILE_STAT, &InstalldHost::HandleGetFileStat);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_DIFF_FILES, &InstalldHost::HandleExtractDiffFiles);
-    funcMap_.emplace(IInstalld::Message::APPLY_DIFF_PATCH, &InstalldHost::HandleApplyDiffPatch);
-    funcMap_.emplace(IInstalld::Message::IS_EXIST_DIR, &InstalldHost::HandleIsExistDir);
-    funcMap_.emplace(IInstalld::Message::IS_DIR_EMPTY, &InstalldHost::HandleIsDirEmpty);
-    funcMap_.emplace(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, &InstalldHost::HandObtainQuickFixFileDir);
-    funcMap_.emplace(IInstalld::Message::COPY_FILES, &InstalldHost::HandCopyFiles);
-    funcMap_.emplace(IInstalld::Message::EXTRACT_FILES, &InstalldHost::HandleExtractFiles);
-    funcMap_.emplace(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, &InstalldHost::HandGetNativeLibraryFileNames);
-    funcMap_.emplace(IInstalld::Message::EXECUTE_AOT, &InstalldHost::HandleExecuteAOT);
-    funcMap_.emplace(IInstalld::Message::IS_EXIST_FILE, &InstalldHost::HandleIsExistFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DIR),
+        &InstalldHost::HandleCreateBundleDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_MODULE_FILES),
+        &InstalldHost::HandleExtractModuleFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::RENAME_MODULE_DIR),
+        &InstalldHost::HandleRenameModuleDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleCreateBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleRemoveBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR),
+        &InstalldHost::HandleRemoveModuleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR),
+        &InstalldHost::HandleCleanBundleDataDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SET_DIR_APL), &InstalldHost::HandleSetDirApl);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_DIR), &InstalldHost::HandleRemoveDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_STATS),
+        &InstalldHost::HandleGetBundleStats);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH),
+        &InstalldHost::HandleGetBundleCachePath);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::SCAN_DIR), &InstalldHost::HandleScanDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILE), &InstalldHost::HandleMoveFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILE), &InstalldHost::HandleCopyFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MKDIR), &InstalldHost::HandleMkdir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_FILE_STAT), &InstalldHost::HandleGetFileStat);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DIFF_FILES),
+        &InstalldHost::HandleExtractDiffFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::APPLY_DIFF_PATCH),
+        &InstalldHost::HandleApplyDiffPatch);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_DIR), &InstalldHost::HandleIsExistDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_DIR_EMPTY), &InstalldHost::HandleIsDirEmpty);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR),
+        &InstalldHost::HandObtainQuickFixFileDir);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::COPY_FILES), &InstalldHost::HandCopyFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_FILES), &InstalldHost::HandleExtractFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES),
+        &InstalldHost::HandGetNativeLibraryFileNames);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
+        &InstalldHost::HandVerifyCodeSignature);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -70,6 +96,7 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
     BundleMemoryGuard memoryGuard;
     APP_LOGD(
         "installd host receives message from client, code = %{public}d, flags = %{public}d", code, option.GetFlags());
+    RemoveCloseInstalldTask();
     std::u16string descripter = InstalldHost::GetDescriptor();
     std::u16string remoteDescripter = data.ReadInterfaceToken();
     if (descripter != remoteDescripter) {
@@ -85,7 +112,21 @@ int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessagePar
         return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
     APP_LOGD("installd host finish to process message from client");
+    AddCloseInstalldTask();
     return result ? NO_ERROR : OHOS::ERR_APPEXECFWK_PARCEL_ERROR;
+}
+
+void InstalldHost::InitEventHandler()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    runner_ = EventRunner::Create(UNLOAD_QUEUE_NAME);
+    if (runner_ == nullptr) {
+        APP_LOGE("init event runner failed");
+        return;
+    }
+    handler_ = std::make_shared<EventHandler>(runner_);
+    handler_->PostTask([]() { BundleMemoryGuard memoryGuard; },
+        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 bool InstalldHost::HandleCreateBundleDir(MessageParcel &data, MessageParcel &reply)
@@ -259,7 +300,9 @@ bool InstalldHost::HandleCopyFile(MessageParcel &data, MessageParcel &reply)
 {
     std::string oldPath = Str16ToStr8(data.ReadString16());
     std::string newPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = CopyFile(oldPath, newPath);
+    std::string signatureFilePath = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = CopyFile(oldPath, newPath, signatureFilePath);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -383,6 +426,49 @@ bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessagePar
         return false;
     }
     return true;
+}
+
+bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply)
+{
+    std::string modulePath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    std::string targetSoPath = Str16ToStr8(data.ReadString16());
+    std::string signatureFileDir = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcDir = Str16ToStr8(data.ReadString16());
+    std::string desDir = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = MoveFiles(srcDir, desDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+void InstalldHost::RemoveCloseInstalldTask()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    handler_->RemoveTask(UNLOAD_TASK_NAME);
+}
+
+void InstalldHost::AddCloseInstalldTask()
+{
+    std::lock_guard<std::mutex> lock(unloadTaskMutex_);
+    auto task = [] {
+        BundleMemoryGuard memoryGuard;
+        if (!SystemAbilityHelper::UnloadSystemAbility(INSTALLD_SERVICE_ID)) {
+            APP_LOGE("fail to unload to system ability manager");
+            return;
+        }
+        APP_LOGI("unload Installd successfully");
+    };
+    handler_->PostTask(task, UNLOAD_TASK_NAME, UNLOAD_TIME);
+    APP_LOGD("send unload task successfully");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

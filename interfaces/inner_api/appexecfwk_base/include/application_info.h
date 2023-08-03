@@ -30,6 +30,7 @@ namespace AppExecFwk {
 namespace {
     static const std::string AVAILABLELEVEL_NORMAL = "normal";
     static const std::string DEFAULT_ENTITY_TYPE = "unspecified";
+    static const std::string DEFAULT_COMPILE_SDK_TYPE = "OpenHarmony";
 }
 enum ApplicationFlag {
     GET_BASIC_APPLICATION_INFO = 0x00000000,
@@ -165,6 +166,7 @@ struct ApplicationInfo : public Parcelable {
     bool hideDesktopIcon = false;
     bool formVisibleNotify = false;
     std::vector<std::string> allowCommonEvent;
+    std::vector<int32_t> resourcesApply;
 
     bool isSystemApp = false;
     bool isLauncherApp = false;
@@ -237,11 +239,10 @@ struct ApplicationInfo : public Parcelable {
     int32_t targetPriority;
     int32_t overlayState;
 
-    bool split = true;
     BundleType bundleType = BundleType::APP;
 
     std::string compileSdkVersion;
-    std::string compileSdkType = "OpenHarmony";
+    std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

@@ -50,7 +50,13 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleHapVerifyTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleHapVerifyTest::BmsBundleHapVerifyTest()
 {}
@@ -69,7 +75,9 @@ void BmsBundleHapVerifyTest::SetUp()
 }
 
 void BmsBundleHapVerifyTest::TearDown()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 /**
  * @tc.number: BmsGetVersion_0100
@@ -187,6 +195,19 @@ HWTEST_F(BmsBundleHapVerifyTest, ParseHapProfile_0100, Function | SmallTest | Le
 {
     Security::Verify::HapVerifyResult result;
     auto res = BundleVerifyMgr::ParseHapProfile(INSTALL_PATH, result);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: HapVerify_0100
+ * Function: HapVerify
+ * @tc.name: test HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsBundleHapVerifyTest, HapVerify_0100, Function | SmallTest | Level0)
+{
+    Security::Verify::HapVerifyResult result;
+    auto res = BundleVerifyMgr::HapVerify(INSTALL_PATH, result);
     EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS

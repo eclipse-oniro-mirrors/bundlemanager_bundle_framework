@@ -18,6 +18,7 @@
 #include "app_control_constants.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
 
@@ -46,41 +47,41 @@ int AppControlHost::OnRemoteRequest(
     }
 
     switch (code) {
-        case IAppControlMgr::Message::ADD_APP_INSTALL_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_INSTALL_CONTROL_RULE):
             return HandleAddAppInstallControlRule(data, reply);
-        case IAppControlMgr::Message::DELETE_APP_INSTALL_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_INSTALL_CONTROL_RULE):
             return HandleDeleteAppInstallControlRule(data, reply);
-        case IAppControlMgr::Message::CLEAN_APP_INSTALL_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::CLEAN_APP_INSTALL_CONTROL_RULE):
             return HandleCleanAppInstallControlRule(data, reply);
-        case IAppControlMgr::Message::GET_APP_INSTALL_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_INSTALL_CONTROL_RULE):
             return HandleGetAppInstallControlRule(data, reply);
-        case IAppControlMgr::Message::ADD_APP_RUNNING_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_RUNNING_CONTROL_RULE):
             return HandleAddAppRunningControlRule(data, reply);
-        case IAppControlMgr::Message::DELETE_APP_RUNNING_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_RUNNING_CONTROL_RULE):
             return HandleDeleteAppRunningControlRule(data, reply);
-        case IAppControlMgr::Message::CLEAN_APP_RUNNING_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::CLEAN_APP_RUNNING_CONTROL_RULE):
             return HandleCleanAppRunningControlRule(data, reply);
-        case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE):
             return HandleGetAppRunningControlRule(data, reply);
-        case IAppControlMgr::Message::GET_APP_RUNNING_CONTROL_RULE_RESULT:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_RUNNING_CONTROL_RULE_RESULT):
             return HandleGetAppRunningControlRuleResult(data, reply);
-        case IAppControlMgr::Message::CONFIRM_APP_JUMP_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::CONFIRM_APP_JUMP_CONTROL_RULE):
             return HandleConfirmAppJumpControlRule(data, reply);
-        case IAppControlMgr::Message::ADD_APP_JUMP_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::ADD_APP_JUMP_CONTROL_RULE):
             return HandleAddAppJumpControlRule(data, reply);
-        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE):
             return HandleDeleteAppJumpControlRule(data, reply);
-        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER):
             return HandleDeleteRuleByCallerBundleName(data, reply);
-        case IAppControlMgr::Message::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET):
             return HandleDeleteRuleByTargetBundleName(data, reply);
-        case IAppControlMgr::Message::GET_APP_JUMP_CONTROL_RULE:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_APP_JUMP_CONTROL_RULE):
             return HandleGetAppJumpControlRule(data, reply);
-        case IAppControlMgr::Message::SET_DISPOSED_STATUS:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_STATUS):
             return HandleSetDisposedStatus(data, reply);
-        case IAppControlMgr::Message::GET_DISPOSED_STATUS:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_STATUS):
             return HandleGetDisposedStatus(data, reply);
-        case IAppControlMgr::Message::DELETE_DISPOSED_STATUS:
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS):
             return HandleDeleteDisposedStatus(data, reply);
         default:
             APP_LOGW("AppControlHost receive unknown code, code = %{public}d", code);

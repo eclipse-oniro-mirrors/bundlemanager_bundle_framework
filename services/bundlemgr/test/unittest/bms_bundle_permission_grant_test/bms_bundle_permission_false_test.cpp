@@ -68,9 +68,15 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionFalseTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionFalseTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionFalseTest::BmsBundlePermissionFalseTest()
 {}
@@ -82,7 +88,9 @@ void BmsBundlePermissionFalseTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionFalseTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionFalseTest::SetUp()
 {
@@ -1639,6 +1647,30 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_18000, Funct
     sptr<MockBundleStatus> bundleStatusCallback = new (std::nothrow) MockBundleStatus();
     bundleStatusCallback->SetBundleName(HAP_FILE_PATH1);
     bool result = bundleMgrHostImpl_->RegisterBundleStatusCallback(bundleStatusCallback);
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_19000
+ * @tc.name: test VerifyQueryPermission
+ * @tc.desc: 1.system run normally
+ *           2.VerifyQueryPermission failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_19000, Function | SmallTest | Level1)
+{
+    bool result = bundleMgrHostImpl_->VerifyQueryPermission("");
+    EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_20000
+ * @tc.name: test VerifyPrivilegedPermission
+ * @tc.desc: 1.system run normally
+ *           2.VerifyPrivilegedPermission failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_20000, Function | SmallTest | Level1)
+{
+    bool result = bundleMgrHostImpl_->VerifyPrivilegedPermission("");
     EXPECT_EQ(result, false);
 }
 } // OHOS

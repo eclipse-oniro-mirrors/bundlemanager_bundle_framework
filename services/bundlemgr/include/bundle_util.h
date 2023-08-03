@@ -27,6 +27,7 @@ namespace AppExecFwk {
 enum class DirType {
     STREAM_INSTALL_DIR = 0,
     QUICK_FIX_DIR = 1,
+    SIG_FILE_DIR = 2,
     UNKNOWN
 };
 
@@ -164,6 +165,10 @@ public:
     static bool EndWith(const std::string &source, const std::string &suffix);
     static int64_t GetFileSize(const std::string &filePath);
     static std::string CreateTempDir(const std::string &tempDir);
+    static std::string CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
+        std::vector<std::string> &toDeletePaths);
+    static void DeleteTempDirs(const std::vector<std::string> &tempDirs);
+    static std::string GenerateDataGroupDirName();
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

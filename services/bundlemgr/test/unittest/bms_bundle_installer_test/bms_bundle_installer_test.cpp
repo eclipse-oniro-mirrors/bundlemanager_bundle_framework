@@ -42,6 +42,7 @@
 #include "shared/shared_bundle_installer.h"
 #include "system_bundle_installer.h"
 #include "want.h"
+#include "file_ex.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -55,6 +56,8 @@ const std::string SYSTEMFIEID_BUNDLE = "system_module.hap";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string MODULE_NAME_TEST = "moduleName";
 const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/install_bundle/";
+const std::string TEST_CREATE_DIR_PATH = "/data/test/resource/bms/install_bundle/test_create_dir";
+const std::string TEST_CREATE_FILE_PATH = "/data/test/resource/bms/install_bundle/test_create_dir/test.hap";
 const std::string INVALID_PATH = "/install_bundle/";
 const std::string RIGHT_BUNDLE = "right.hap";
 const std::string TYPE_BUNDLE = "devicetype_error.hap";
@@ -77,6 +80,7 @@ const std::string EXTENSION_ABILITY_NAME = "extensionAbility_A";
 const std::string TEST_STRING = "test.string";
 const std::string TEST_PACK_AGE = "entry";
 const std::string NOEXIST = "noExist";
+const std::string CURRENT_PATH = "/data/service/el2/100/hmdfs/account/data/test_max";
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
@@ -92,7 +96,9 @@ const std::string FIRST_RIGHT_HAP = "first_right.hap";
 #endif
 const std::string BUNDLE_LIBRARY_PATH_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo/libs/arm";
 const std::string BUNDLE_NAME_TEST = "bundleNameTest";
+const std::string BUNDLE_NAME_TEST1 = "bundleNameTest1";
 const std::string DEVICE_ID = "PHONE-001";
+const std::string TEST_CPU_ABI = "arm64";
 }  // namespace
 
 class BmsBundleInstallerTest : public testing::Test {
@@ -117,15 +123,19 @@ public:
     void CreateInstallerManager();
     void ClearBundleInfo();
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleInstallerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleInstallerTest::BmsBundleInstallerTest()
 {}
@@ -135,6 +145,7 @@ BmsBundleInstallerTest::~BmsBundleInstallerTest()
 
 bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     InstallParam installParam;
     installParam.userId = USERID;
@@ -148,6 +159,7 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
 
 bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     std::vector<std::string> filePaths;
     filePaths.push_back(filePath);
@@ -163,7 +175,8 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -183,7 +196,8 @@ ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &fileP
 
 ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -203,7 +217,8 @@ ErrCode BmsBundleInstallerTest::UpdateThirdPartyBundle(const std::string &filePa
 
 ErrCode BmsBundleInstallerTest::UnInstallBundle(const std::string &bundleName) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -227,6 +242,7 @@ void BmsBundleInstallerTest::SetUpTestCase()
 
 void BmsBundleInstallerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsBundleInstallerTest::SetUp()
@@ -280,10 +296,9 @@ void BmsBundleInstallerTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleInstallerTest::SetDataMgr()
+void BmsBundleInstallerTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -520,6 +535,7 @@ HWTEST_F(BmsBundleInstallerTest, SystemUpdateData_0400, Function | SmallTest | L
     EXPECT_FALSE(installResult);
     // reset the install state
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_FAIL);
+    ClearBundleInfo();
 }
 
 /**
@@ -593,8 +609,8 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
     auto dataMgr = GetBundleDataMgr();
     EXPECT_NE(dataMgr, nullptr);
     std::string bundleFile = RESOURCE_ROOT_PATH + SYSTEMFIEID_BUNDLE;
-    bool installResult = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(installResult);
+    ErrCode installResult = InstallThirdPartyBundle(bundleFile);
+    EXPECT_EQ(installResult, ERR_OK);
     bool result =
         dataMgr->GetApplicationInfo(SYSTEMFIEID_NAME, ApplicationFlag::GET_BASIC_APPLICATION_INFO, USERID, info);
     EXPECT_TRUE(result);
@@ -611,10 +627,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
         EXPECT_EQ(info.apiCompatibleVersion, 8);
         EXPECT_EQ(info.apiTargetVersion, 8);
-        EXPECT_EQ(info.keepAlive, true);
-        EXPECT_EQ(info.removable, false);
-        EXPECT_EQ(info.userDataClearable, false);
-        EXPECT_EQ(info.accessible, true);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";
@@ -655,8 +667,6 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(extensionInfos.iconId, 16777229);
         EXPECT_EQ(extensionInfos.label, "$string:extension_name");
         EXPECT_EQ(extensionInfos.labelId, 16777220);
-        EXPECT_EQ(extensionInfos.readPermission, "readPermission---");
-        EXPECT_EQ(extensionInfos.writePermission, "writePermission---");
     }
     UnInstallBundle(SYSTEMFIEID_NAME);
 }
@@ -1410,6 +1420,7 @@ HWTEST_F(BmsBundleInstallerTest, GetBaseSharedBundleInfoTest, Function | SmallTe
     dataMgr->bundleInfos_[BUNDLE_NAME] = innerBundleInfo;
     ret = dataMgr->GetBaseSharedBundleInfo(dependency, info);
     EXPECT_EQ(ret, true);
+    dataMgr->bundleInfos_.clear();
 }
 
 /**
@@ -1470,7 +1481,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     BaseBundleInstaller installer;
     std::vector<std::string> inBundlePaths;
     InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
@@ -1478,12 +1489,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0300, Function | SmallTest 
     installer.dataMgr_ = GetBundleDataMgr();
 
     installParam.userId = Constants::INVALID_USERID;
-    ret = installer.ProcessBundleInstall(
-        inBundlePaths, installParam, appType, uid);
-    EXPECT_NE(ret, ERR_OK);
-
-    installParam.userId = Constants::DEFAULT_USERID;
-    installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
     ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
     EXPECT_NE(ret, ERR_OK);
@@ -1615,14 +1620,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1000, Function | SmallTest 
     InstallParam installParam;
     installParam.userId = Constants::INVALID_USERID;
     ErrCode ret = installer.InnerProcessInstallByPreInstallInfo(
-        BUNDLE_NAME, installParam, uid, recoverMode);
+        BUNDLE_NAME_TEST1, installParam, uid, recoverMode);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
-
-    installParam.userId = Constants::DEFAULT_USERID;
-    installer.dataMgr_->multiUserIdsSet_.insert(Constants::DEFAULT_USERID);
-    ret = installer.InnerProcessInstallByPreInstallInfo(
-        BUNDLE_NAME, installParam, uid, recoverMode);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON);
 }
 
 /**
@@ -1870,7 +1869,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
     ClearDataMgr();
     std::vector<std::string> inBundlePaths;
     InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     int32_t uid = 0;
     bool recoverMode = true;
     ErrCode ret = installer.ProcessBundleInstall(
@@ -1888,7 +1887,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2100, Function | SmallTest 
     InnerBundleInfo info;
     bool res = installer.GetInnerBundleInfo(info, recoverMode);
     EXPECT_EQ(res, false);
-    SetDataMgr();
+    ResetDataMgr();
 
     installParam.userId = Constants::INVALID_USERID;
     ret = installer.ProcessBundleUninstall(
@@ -2128,27 +2127,6 @@ HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: baseBundleInstaller_3400
- * @tc.name: test ProcessBundleInstall
- * @tc.desc: 1.Test the ProcessBundleInstall of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3400, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    std::vector<std::string> inBundlePaths;
-    InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
-    installer.dataMgr_ = GetBundleDataMgr();
-    int32_t uid = 0;
-    installParam.userId = Constants::DEFAULT_USERID;
-    installer.dataMgr_->multiUserIdsSet_.insert(installParam.userId);
-    installParam.installFlag = InstallFlag::FREE_INSTALL;
-    ErrCode ret = installer.ProcessBundleInstall(
-        inBundlePaths, installParam, appType, uid);
-    EXPECT_NE(ret, ERR_OK);
-}
-
-/**
  * @tc.number: baseBundleInstaller_3500
  * @tc.name: test ProcessBundleInstallStatus
  * @tc.desc: 1.Test the ProcessBundleInstallStatus
@@ -2233,18 +2211,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3900, Function | SmallTest 
     newInfo.currentPackage_ = MODULE_NAME_TEST;
     ErrCode ret = installer.SetDirApl(newInfo);
     EXPECT_EQ(ret, ERR_OK);
-
-    std::string bundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE;
-    bool installResult = InstallSystemBundle(bundleFile);
-    EXPECT_TRUE(installResult);
-
-    ApplicationInfo applicationInfo;
-    applicationInfo.bundleName = RIGHT_BUNDLE;
-    newInfo.SetBaseApplicationInfo(applicationInfo);
-    ret = installer.SetDirApl(newInfo);
-    EXPECT_EQ(ret, ERR_OK);
-    CheckFileExist();
-    ClearBundleInfo();
 }
 
 /**
@@ -2271,7 +2237,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_4100, Function | SmallTest 
     BaseBundleInstaller installer;
     InnerBundleInfo info;
     std::string modulePath;
-    info.SetArkNativeFilePath(RESOURCE_ROOT_PATH);
+    info.SetArkNativeFilePath("///");
     ErrCode ret = installer.ExtractArkNativeFile(info, modulePath);
     EXPECT_EQ(ret, ERR_OK);
 }
@@ -2340,6 +2306,12 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0200, Function | SmallTest | L
     auto ret = impl.ExtractModuleFiles("", "", TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    ret = impl.ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.ExtractModuleFiles(TEST_STRING, "", TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
     ret = impl.ExtractModuleFiles("wrong", TEST_STRING, "wrong", "wrong");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
 }
@@ -2355,7 +2327,16 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0300, Function | SmallTest | L
     auto ret = impl.RenameModuleDir("", "");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
+    ret = impl.RenameModuleDir("", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RenameModuleDir(TEST_STRING, " ");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
     ret = impl.RenameModuleDir("wrong", "wrong");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
+
+    ret = impl.RenameModuleDir(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_RNAME_DIR_FAILED);
 }
 
@@ -2395,7 +2376,14 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0400, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0500, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.RemoveBundleDataDir("", INVAILD_CODE);
+
+    auto ret = impl.RemoveBundleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveBundleDataDir(TEST_STRING, INVAILD_CODE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveBundleDataDir("", INVAILD_CODE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = impl.RemoveBundleDataDir(TEST_STRING, USERID);
@@ -2410,7 +2398,13 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0500, Function | SmallTest | L
 HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_0600, Function | SmallTest | Level0)
 {
     InstalldHostImpl impl;
-    auto ret = impl.RemoveModuleDataDir("", INVAILD_CODE);
+    auto ret = impl.RemoveModuleDataDir(TEST_STRING, INVAILD_CODE);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveModuleDataDir("", USERID);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.RemoveModuleDataDir("", INVAILD_CODE);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
 
     ret = impl.RemoveModuleDataDir(TEST_STRING, USERID);
@@ -2561,6 +2555,10 @@ HWTEST_F(BmsBundleInstallerTest, InstalldHostImpl_1600, Function | SmallTest | L
     ErrCode ret = impl.ScanDir(
         "", ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.ScanDir(
+        BUNDLE_DATA_DIR, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, paths);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -2630,6 +2628,36 @@ HWTEST_F(BmsBundleInstallerTest, ZipFile_0200, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: ZipFile_0300
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test CheckCoherencyLocalHeader
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0300, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntry zipEntry;
+    zipEntry.localHeaderOffset = -1;
+    uint16_t extraSize = 0;
+    bool ret = file.CheckCoherencyLocalHeader(zipEntry, extraSize);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: ZipFile_0400
+ * @tc.name: Test ZipFile
+ * @tc.desc: 1.Test SeekToEntryStart
+ */
+HWTEST_F(BmsBundleInstallerTest, ZipFile_0400, Function | SmallTest | Level1)
+{
+    ZipFile file("/test.zip");
+    ZipEntry zipEntry;
+    zipEntry.localHeaderOffset = 1;
+    uint16_t extraSize = 0;
+    bool ret = file.SeekToEntryStart(zipEntry, extraSize);
+    EXPECT_EQ(ret, false);
+}
+
+/**
  * @tc.number: BaseExtractor_0100
  * @tc.name: Test HasEntry
  * @tc.desc: 1.Test HasEntry of BaseExtractor
@@ -2643,6 +2671,47 @@ HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0100, Function | SmallTest | Leve
 
     extractor.initial_ = true;
     ret = extractor.HasEntry("");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0200
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0200, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("file.zip");
+    bool ret = extractor.ExtractFile("entry", "/data/test");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0300
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0300, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("file.zip");
+    uint32_t offset = 1;
+    uint32_t length = 10;
+    bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: BaseExtractor_0400
+ * @tc.name: Test HasEntry
+ * @tc.desc: 1.Test HasEntry of BaseExtractor
+ */
+HWTEST_F(BmsBundleInstallerTest, BaseExtractor_0400, Function | SmallTest | Level1)
+{
+    BaseExtractor extractor("/system/etc/graphic/bootpic.zip");
+    extractor.initial_ = true;
+    uint32_t offset = 1;
+    uint32_t length = 10;
+    bool ret = extractor.GetFileInfo("bootpic.zip", offset, length);
     EXPECT_EQ(ret, false);
 }
 
@@ -2853,6 +2922,172 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_0900, Function | SmallTest | Lev
     infos.clear();
     auto ret = installChecker.CheckDeviceType(infos);
     EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallChecker_1000
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1000, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName;
+    auto ret = installChecker.CheckBundleName("", "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1100
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName = BUNDLE_NAME;
+    auto ret = installChecker.CheckBundleName(provisionBundleName, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1200
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1200, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::string provisionBundleName = BUNDLE_NAME;
+    auto ret = installChecker.CheckBundleName(provisionBundleName, BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallChecker_1300
+ * @tc.name: test the start function of CheckBundleName
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1300, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    auto ret = installChecker.CheckBundleName("", BUNDLE_NAME);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_BUNDLE_SIGNATURE_VERIFICATION_FAILURE);
+}
+
+/**
+ * @tc.number: InstallChecker_1400
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1400, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1500
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1500, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+    installParam.installBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+    installParam.installEnterpriseBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1600
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1600, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::DEBUG;
+    result.SetProvisionInfo(info);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallChecker_1700
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1700, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    installParam.installEnterpriseBundlePermissionStatus = PermissionStatus::NON_HAVE_PERMISSION_STATUS;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallChecker_1800
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1800, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = true;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstallChecker_1900
+ * @tc.name: test the start function of VaildInstallPermission
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_1900, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam installParam;
+    installParam.isCallByShell = false;
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+    bool ret = installChecker.VaildInstallPermission(installParam, hapVerifyRes);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -3329,7 +3564,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5000, Function | SmallTest 
     inBundlePaths.emplace_back(bundleFile);
     InstallParam installParam;
     installParam.isPreInstallApp = false;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     int32_t uid = 0;
     ErrCode ret = installer.ProcessBundleInstall(
         inBundlePaths, installParam, appType, uid);
@@ -3348,8 +3583,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest 
     BaseBundleInstaller installer;
     installer.dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     installer.dataMgr_->AddUserId(100);
-    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_MODULEJSON_TEST;
-    InstallThirdPartyBundle(bundlePath);
     InstallParam installParam;
     installParam.isPreInstallApp = false;
     installParam.userId = 100;
@@ -3358,8 +3591,37 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5100, Function | SmallTest 
     bool recoverMode = true;
     auto ret = installer.InnerProcessInstallByPreInstallInfo(BUNDLE_MODULEJSON_TEST, installParam, uid, recoverMode);
     EXPECT_EQ(ret, ERR_APPEXECFWK_RECOVER_INVALID_BUNDLE_NAME);
-    UnInstallBundle(BUNDLE_MODULEJSON_NAME);
     ClearBundleInfo();
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5200
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = "";
+    auto ret = installer.UninstallBundleByUninstallParam(uninstallParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5300
+ * @tc.name: test InnerProcessInstallByPreInstallInfo
+ * @tc.desc: 1.Test the InnerProcessInstallByPreInstallInfo of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    UninstallParam uninstallParam;
+    uninstallParam.bundleName = BUNDLE_NAME;
+    ClearDataMgr();
+    auto ret = installer.UninstallBundleByUninstallParam(uninstallParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
 }
 
 /**
@@ -3388,11 +3650,11 @@ HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0200, Function | Smal
 #endif
 
 /**
- * @tc.number: baseBundleInstaller_5200
+ * @tc.number: baseBundleInstaller_5400
  * @tc.name: test checkAsanEnabled when asanEnabled is set to be ture
  * @tc.desc: 1.Test checkAsanEnabled
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3419,11 +3681,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5200, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5300
+ * @tc.number: baseBundleInstaller_5500
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest | Level0)
 {
     BaseBundleInstaller installer;
     InstallParam installParam;
@@ -3436,11 +3698,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5400
+ * @tc.number: baseBundleInstaller_5600
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5600, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3459,11 +3721,11 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_5500
+ * @tc.number: baseBundleInstaller_5700
  * @tc.name: test ProcessBundleUninstall
  * @tc.desc: 1.Test ProcessBundleUninstall
 */
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest | Level0)
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5700, Function | SmallTest | Level0)
 {
     std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
     ErrCode installResult = InstallThirdPartyBundle(bundlePath);
@@ -3489,6 +3751,77 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest 
     EXPECT_EQ(ret, true);
 }
 
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+
+/**
+ * @tc.number: baseBundleInstaller_5800
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5800, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
+    AppqfInfo appQfInfo;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MODULE_NAME_NOT_EXIST);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_5900
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5900, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = false;
+    AppqfInfo appQfInfo;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_6000
+ * @tc.name: test UpdateLibAttrs
+ * @tc.desc: 1.Test the UpdateLibAttrs of BaseBundleInstaller
+*/
+HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_6000, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    newInfo.SetCurrentModulePackage(MODULE_NAME_TEST);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerModuleInfo.isLibIsolated = true;
+    newInfo.innerModuleInfos_.insert(
+        std::pair<std::string, InnerModuleInfo>(MODULE_NAME_TEST, innerModuleInfo));
+    AppqfInfo appQfInfo;
+    std::vector<HqfInfo> hqfInfos;
+    HqfInfo info;
+    info.moduleName = MODULE_NAME;
+    hqfInfos.emplace_back(info);
+    info.moduleName = MODULE_NAME_TEST;
+    info.nativeLibraryPath = BUNDLE_LIBRARY_PATH_DIR;
+    info.cpuAbi = TEST_CPU_ABI;
+    hqfInfos.emplace_back(info);
+    appQfInfo.hqfInfos = hqfInfos;
+    auto ret = installer.UpdateLibAttrs(newInfo, TEST_CPU_ABI, BUNDLE_LIBRARY_PATH_DIR, appQfInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+#endif
+
 /**
  * @tc.number: ParseFiles_0100
  * @tc.name: test the start function of ParseFiles
@@ -3497,7 +3830,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5500, Function | SmallTest 
 HWTEST_F(BmsBundleInstallerTest, ParseFiles_0100, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     SharedBundleInstaller installer(installParam, appType);
     installer.installParam_.sharedBundleDirPaths.clear();
     auto res = installer.ParseFiles();
@@ -3512,7 +3845,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseFiles_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsBundleInstallerTest, CheckDependency_0100, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     SharedBundleInstaller installer(installParam, appType);
     Dependency dependency;
     dependency.bundleName = "";
@@ -3549,7 +3882,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckDependency_0100, Function | SmallTest | Le
 HWTEST_F(BmsBundleInstallerTest, CheckDependency_0200, Function | SmallTest | Level0)
 {
     InstallParam installParam;
-    auto appType = Constants::AppType::THIRD_SYSTEM_APP;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
     SharedBundleInstaller installer(installParam, appType);
     Dependency dependency;
     dependency.bundleName = BUNDLE_NAME;
@@ -3832,6 +4165,96 @@ HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0030, TestSize.Level1)
 }
 
 /**
+ * @tc.number: CheckEnableRemovable_0040
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0040, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo oldInfo;
+    int32_t userId = USERID;
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, true, true);
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, false);
+}
+
+/**
+ * @tc.number: CheckEnableRemovable_0050
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckEnableRemovable_0050, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    InnerBundleInfo newInfo;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    newInfos.emplace("", newInfo);
+    InnerBundleInfo oldInfo;
+    InnerBundleUserInfo innerBundleUserInfo;
+    std::string key = BUNDLE_NAME + "_100";
+    oldInfo.innerBundleUserInfos_.insert(pair<std::string, InnerBundleUserInfo>(key, innerBundleUserInfo));
+    int32_t userId = USERID;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = MODULE_NAME;
+    innerModuleInfo.modulePackage = MODULE_NAME;
+    newInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    oldInfo.InsertInnerModuleInfo(MODULE_NAME, innerModuleInfo);
+    installer.CheckEnableRemovable(newInfos, oldInfo, userId, true, true);
+
+    bool existModule = oldInfo.FindModule(MODULE_NAME);
+    EXPECT_EQ(existModule, true);
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0010
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0010, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(pair<std::string, InnerBundleInfo>());
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    int32_t uid = EDM_UID;
+    installer.isAppExist_ = true;
+    ClearDataMgr();
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    installer.RollBack(newInfos, oldInfo);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: InnerProcessBundleInstall_0020
+ * @tc.name: CheckEnableRemovable
+ * @tc.desc: test CheckEnableRemovable
+ */
+HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1)
+{
+    BaseBundleInstaller installer;
+    std::unordered_map<std::string, InnerBundleInfo> newInfos;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetSingleton(false);
+    newInfos.insert(std::pair<std::string, InnerBundleInfo>(BUNDLE_NAME_TEST, innerBundleInfo));
+    int32_t uid = EDM_UID;
+    InnerBundleInfo oldInfo;
+    InstallParam installParam;
+    installParam.needSavePreInstallInfo = false;
+    installer.isAppExist_ = true;
+    oldInfo.SetApplicationBundleType(BundleType::SHARED);
+    auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+}
+
+/**
  * @tc.number: ProcessModuleUpdate_0010
  * @tc.name: test ProcessBundleInstallStatus
  * @tc.desc: 1.Test the ProcessBundleInstallStatus
@@ -3939,7 +4362,7 @@ HWTEST_F(BmsBundleInstallerTest, ExtractModule_0010, Function | SmallTest | Leve
     moduleInfo.isLibIsolated = false;
     moduleInfo.compressNativeLibs = true;
     info.innerModuleInfos_[MODULE_NAME_TEST] = moduleInfo;
-    info.baseApplicationInfo_->cpuAbi = "";
+    info.baseApplicationInfo_->cpuAbi = TEST_CPU_ABI;
     info.baseApplicationInfo_->nativeLibraryPath = "";
 
     BaseBundleInstaller installer;
@@ -4006,6 +4429,28 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0020, Function | SmallTest | Level
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
+    innerBundleInfo.baseBundleInfo_->compatibleVersion = 40000 * 1000 + 10;
+    installer.OnSingletonChange(noSkipsKill);
+    info.try_emplace("OpenHarmony2", innerBundleInfo);
+
+    bool res = installer.CheckApiInfo(info);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: CheckApiInfo_0030
+ * @tc.name: test CheckApiInfo
+ * @tc.desc: 1.Test the CheckApiInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level0)
+{
+    BaseBundleInstaller installer;
+    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
+    bool noSkipsKill = false;
+    std::unordered_map<std::string, InnerBundleInfo> info;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
+    innerBundleInfo.baseBundleInfo_->compatibleVersion = 40000 * 1000 + 100;
     installer.OnSingletonChange(noSkipsKill);
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
@@ -4023,7 +4468,7 @@ HWTEST_F(BmsBundleInstallerTest, UninstallLowerVersionFeature_0010, Function | S
     BaseBundleInstaller installer;
     std::vector<std::string> packageVec;
     ClearDataMgr();
-    ScopeGuard stateGuard([&] { SetDataMgr(); });
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
     ErrCode res = installer.UninstallLowerVersionFeature(packageVec);
     EXPECT_EQ(res, ERR_APPEXECFWK_UNINSTALL_BUNDLE_MGR_SERVICE_ERROR);
 }
@@ -4127,5 +4572,321 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabel_0050, Function | SmallTest | Leve
     oldInfo.baseBundleInfo_->compatibleVersion = USERID;
     ErrCode res = installer.CheckAppLabel(oldInfo, newInfo);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_RELEASETYPE_COMPATIBLE_NOT_SAME);
+}
+
+/**
+ * @tc.number: ExecuteAOT_0100
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, ExecuteAOT_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    AOTArgs aotArgs;
+    auto ret = impl.ExecuteAOT(aotArgs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetDirApl_0100
+ * @tc.name: test CheckAppLabel
+ * @tc.desc: 1.Test the CheckAppLabel
+*/
+HWTEST_F(BmsBundleInstallerTest, SetDirApl_0100, Function | SmallTest | Level0)
+{
+    InstalldHostImpl impl;
+    bool isPreInstallApp = false;
+    bool debug = false;
+    auto ret = impl.SetDirApl("", BUNDLE_NAME, "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, "", "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl("", "", "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = impl.SetDirApl(BUNDLE_DATA_DIR, BUNDLE_NAME, "", isPreInstallApp, debug);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_SET_SELINUX_LABEL_FAILED);
+}
+
+/**
+ * @tc.number: GetHapFilesFromBundlePath_0100
+ * @tc.name: test GetHapFilesFromBundlePath, reach the max hap number 128, stop to add more
+ * @tc.desc: 1.test GetHapFilesFromBundlePath of BundleUtil
+ */
+HWTEST_F(BmsBundleInstallerTest, GetHapFilesFromBundlePath_0100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.CreateTempDir(CURRENT_PATH);
+    EXPECT_EQ(ret, CURRENT_PATH);
+    std::vector<std::string> fileList;
+    for (int i = 0; i < Constants::MAX_HAP_NUMBER + 1; i++) {
+        std::string tmpFile = CURRENT_PATH + Constants::PATH_SEPARATOR + "test" + std::to_string(i) + ".hap";
+        bool ret2 = SaveStringToFile(tmpFile, tmpFile);
+        EXPECT_EQ(ret2, true);
+        fileList.emplace_back(tmpFile);
+    }
+    bundleUtil.MakeFsConfig("testWrong.hap", 1, "/data/testWrong");
+    bool res = bundleUtil.GetHapFilesFromBundlePath(CURRENT_PATH, fileList);
+    EXPECT_EQ(res, false);
+    bundleUtil.DeleteTempDirs(fileList);
+}
+
+/**
+ * @tc.number: CreateInstallTempDir_1700
+ * @tc.name: test CreateInstallTempDir
+ * @tc.desc: 1.test type == DirType::SIG_FILE_DIR
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateInstallTempDir_1700, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    const int32_t installId = 2022;
+    std::string res = bundleUtil.CreateInstallTempDir(installId, DirType::SIG_FILE_DIR);
+    EXPECT_NE(res, "");
+    auto ret = bundleUtil.DeleteDir(res);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: CreateFileDescriptor_100
+ * @tc.name: test CreateFileDescriptor
+ * @tc.desc: 1.test the length of the bundlePath exceeds maximum limitation
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptor_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    bundlePath.append(std::string(256, '/'));
+    long long offset = 0;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptor_200
+ * @tc.name: test CreateFileDescriptor
+ * @tc.desc: 1.test offset > 0
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptor_200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptor(bundlePath, offset);
+    EXPECT_NE(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptorForReadOnly_100
+ * @tc.name: test CreateFileDescriptorForReadOnly
+ * @tc.desc: 1.file is not real path
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptorForReadOnly_100, Function | SmallTest | Level0)
+{
+    std::string bundlePath = "/testWrong/testWrong.hap";
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_EQ(ret, -1);
+}
+
+/**
+ * @tc.number: CreateFileDescriptorForReadOnly_200
+ * @tc.name: test CreateFileDescriptorForReadOnly
+ * @tc.desc: 1.test offset > 0
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateFileDescriptorForReadOnly_200, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    BundleUtil bundleUtil;
+    long long offset = 1;
+    auto ret = bundleUtil.CreateFileDescriptorForReadOnly(bundlePath, offset);
+    EXPECT_NE(ret, -1);
+}
+
+/**
+ * @tc.number: CreateDir_DeleteDir_100
+ * @tc.name: test CreateDir and DeleteDir
+ * @tc.desc: 1.file exist
+ */
+HWTEST_F(BmsBundleInstallerTest, CreateDir_DeleteDir_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    auto ret = bundleUtil.CreateDir(TEST_CREATE_FILE_PATH);
+    EXPECT_EQ(ret, true);
+    auto ret2 = bundleUtil.CreateDir(TEST_CREATE_FILE_PATH);
+    EXPECT_EQ(ret2, true);
+    auto ret3 = bundleUtil.DeleteDir(TEST_CREATE_FILE_PATH);
+    EXPECT_EQ(ret3, true);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_100
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_100, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    auto ret = bundleUtil.CopyFileToSecurityDir("", DirType::STREAM_INSTALL_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_200
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_200, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    bool res1 = bundleUtil.CreateDir(TEST_CREATE_DIR_PATH);
+    EXPECT_TRUE(res1);
+    bool res2 = SaveStringToFile(TEST_CREATE_FILE_PATH, TEST_CREATE_FILE_PATH);
+    EXPECT_TRUE(res2);
+    bundleUtil.CopyFileToSecurityDir(TEST_CREATE_FILE_PATH, DirType::SIG_FILE_DIR, toDeletePaths);
+    bool res3 = bundleUtil.DeleteDir(TEST_CREATE_DIR_PATH);
+    EXPECT_TRUE(res3);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_300
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_300, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
+    auto ret = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_400
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_400, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR +
+        Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
+    auto ret = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_500
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_500, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR +
+        Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR;
+    sourcePath.append("test");
+    auto ret1 = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret1, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
+    sourcePath.append(Constants::PATH_SEPARATOR);
+    auto ret2 = bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    EXPECT_EQ(ret2, "");
+    EXPECT_EQ(toDeletePaths.size(), 0);
+}
+
+/**
+ * @tc.number: CopyFileToSecurityDir_600
+ * @tc.name: test CopyFileToSecurityDir
+ * @tc.desc: 1.CopyFileToSecurityDir
+ */
+HWTEST_F(BmsBundleInstallerTest, CopyFileToSecurityDir_600, Function | SmallTest | Level0)
+{
+    BundleUtil bundleUtil;
+    std::vector<std::string> toDeletePaths;
+    std::string sourcePath = TEST_CREATE_DIR_PATH + Constants::PATH_SEPARATOR +
+        Constants::SIGNATURE_FILE_PATH + Constants::PATH_SEPARATOR + "test" +
+        Constants::PATH_SEPARATOR + "testSourcePath";
+    bool ret1 = bundleUtil.CreateDir(sourcePath);
+    EXPECT_TRUE(ret1);
+    std::string sourceFile = sourcePath.append(Constants::PATH_SEPARATOR).append("testSourceFile.hap");
+    bool ret2 = SaveStringToFile(sourceFile, sourceFile);
+    EXPECT_TRUE(ret2);
+    bundleUtil.CopyFileToSecurityDir(sourcePath, DirType::SIG_FILE_DIR, toDeletePaths);
+    bool ret3 = bundleUtil.DeleteDir(sourcePath);
+    EXPECT_TRUE(ret3);
+    ASSERT_GT(toDeletePaths.size(), 0);
+    bundleUtil.DeleteTempDirs(toDeletePaths);
+}
+
+/**
+ * @tc.number: CheckDependency_0010
+ * @tc.name: test CheckDependency
+ * @tc.desc: 1.CheckDependency
+ */
+HWTEST_F(BmsBundleInstallerTest, CheckDependency_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    Dependency dependency;
+    dependency.bundleName = BUNDLE_NAME;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.dependencies.push_back(dependency);
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>(BUNDLE_NAME, innerModuleInfo));
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleInstaller.CheckDependency(innerBundleInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: FindDependencyInInstalledBundles_0010
+ * @tc.name: test FindDependencyInInstalledBundles
+ * @tc.desc: 1.FindDependencyInInstalledBundles
+ */
+HWTEST_F(BmsBundleInstallerTest, FindDependencyInInstalledBundles_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    Dependency dependency;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = bundleInstaller.FindDependencyInInstalledBundles(dependency);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetCallingEventInfo_0010
+ * @tc.name: test GetCallingEventInfo
+ * @tc.desc: 1.GetCallingEventInfo
+ */
+HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0010, Function | SmallTest | Level0)
+{
+    InstallParam installParam;
+    auto appType = Constants::AppType::THIRD_PARTY_APP;
+    SharedBundleInstaller bundleInstaller(installParam, appType);
+
+    EventInfo eventInfo;
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    bundleInstaller.GetCallingEventInfo(eventInfo);
+    EXPECT_EQ(eventInfo.callingBundleName, EMPTY_STRING);
 }
 } // OHOS

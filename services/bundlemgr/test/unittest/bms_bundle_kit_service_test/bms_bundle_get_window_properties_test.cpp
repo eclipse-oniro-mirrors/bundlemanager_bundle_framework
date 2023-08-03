@@ -94,20 +94,29 @@ public:
     bool CheckWindowProperty1(const std::string &abilityName, double expectedValue, const std::string &option);
     void CheckWindowProperty2(const std::string &abilityName, std::vector<int32_t> modeVec);
 
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
+private:
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleGetWindowPropertiesTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleGetWindowPropertiesTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleGetWindowPropertiesTest::SetUpTestCase()
 {}
 
 void BmsBundleGetWindowPropertiesTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleGetWindowPropertiesTest::SetUp()
 {
-    if (!service_->IsServiceReady()) {
-        service_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();

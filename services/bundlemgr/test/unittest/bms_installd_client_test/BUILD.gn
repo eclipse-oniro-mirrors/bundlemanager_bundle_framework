@@ -24,10 +24,7 @@ ohos_unittest("BmsInstalldClientTest") {
     "//third_party/jsoncpp/include",
     "${services_path}/bundlemgr/include",
   ]
-  sources = [
-    "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
-    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
-  ]
+  sources = [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
 
   sources += install_daemon_sources
 
@@ -45,11 +42,16 @@ ohos_unittest("BmsInstalldClientTest") {
 
   external_deps = [
     "access_token:libaccesstoken_sdk",
-    "hiviewdfx_hilog_native:libhilog",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]

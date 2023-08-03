@@ -58,6 +58,8 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPATIBLE = "compatible";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGET = "target";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_RELEASE_TYPE = "releaseType";
 constexpr const char* APP_RELEASE_TYPE_VALUE_RELEASE = "Release";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_VERSION = "compileSdkVersion";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_TYPE = "compileSdkType";
 // sub  BUNDLE_PROFILE_KEY_DEVICE_CONFIG
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_DEFAULT = "default";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_PHONE = "phone";
@@ -361,6 +363,7 @@ constexpr const char* MODULE_COMPILE_MODE = "compileMode";
 constexpr const char* MODULE_IS_LIB_ISOLATED = "libIsolation";
 constexpr const char* MODULE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* MODULE_PROXY_DATAS = "proxyDatas";
+constexpr const char* MODULE_PROXY_DATA = "proxyData";
 constexpr const char* MODULE_BUILD_HASH = "buildHash";
 constexpr const char* MODULE_ISOLATION_MODE = "isolationMode";
 constexpr const char* MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";

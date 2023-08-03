@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -20,13 +20,23 @@
 
 #include "installd/installd_host_impl.h"
 #include "ipc/installd_host.h"
+#include "system_ability.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class InstalldService {
+class InstalldService : public SystemAbility {
+
+DECLARE_SYSTEM_ABILITY(InstalldService);
+
 public:
+    InstalldService(int32_t saId, bool runOnCreate);
     InstalldService();
     virtual ~InstalldService();
+
+    void OnStart() override;
+
+    void OnStop() override;
+
     /**
      * @brief Start the installd service.
      * @return

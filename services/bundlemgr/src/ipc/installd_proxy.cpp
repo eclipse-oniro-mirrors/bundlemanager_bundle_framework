@@ -46,7 +46,7 @@ ErrCode InstalldProxy::CreateBundleDir(const std::string &bundleDir)
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::CREATE_BUNDLE_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, const std::string &targetPath,
@@ -61,7 +61,7 @@ ErrCode InstalldProxy::ExtractModuleFiles(const std::string &srcModulePath, cons
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::EXTRACT_MODULE_FILES, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_MODULE_FILES, data, reply, option);
 }
 
 ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
@@ -75,7 +75,7 @@ ErrCode InstalldProxy::ExtractFiles(const ExtractParam &extractParam)
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::EXTRACT_FILES, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_FILES, data, reply, option);
 }
 
 ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
@@ -89,7 +89,7 @@ ErrCode InstalldProxy::ExecuteAOT(const AOTArgs &aotArgs)
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::EXECUTE_AOT, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::EXECUTE_AOT, data, reply, option);
 }
 
 ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::string &newPath)
@@ -101,7 +101,7 @@ ErrCode InstalldProxy::RenameModuleDir(const std::string &oldPath, const std::st
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::RENAME_MODULE_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::RENAME_MODULE_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
@@ -115,7 +115,7 @@ ErrCode InstalldProxy::CreateBundleDataDir(const CreateDirParam &createDirParam)
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::CREATE_BUNDLE_DATA_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::CREATE_BUNDLE_DATA_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::RemoveBundleDataDir(const std::string &bundleName, const int userid)
@@ -127,7 +127,7 @@ ErrCode InstalldProxy::RemoveBundleDataDir(const std::string &bundleName, const 
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::REMOVE_BUNDLE_DATA_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_BUNDLE_DATA_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::RemoveModuleDataDir(const std::string &ModuleName, const int userid)
@@ -139,7 +139,7 @@ ErrCode InstalldProxy::RemoveModuleDataDir(const std::string &ModuleName, const 
 
     MessageParcel reply;
     MessageOption option;
-    return TransactInstalldCmd(IInstalld::Message::REMOVE_MODULE_DATA_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_MODULE_DATA_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::RemoveDir(const std::string &dir)
@@ -150,7 +150,7 @@ ErrCode InstalldProxy::RemoveDir(const std::string &dir)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::REMOVE_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::REMOVE_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
@@ -161,7 +161,7 @@ ErrCode InstalldProxy::CleanBundleDataDir(const std::string &bundleDir)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC, WAIT_TIME);
-    return TransactInstalldCmd(IInstalld::Message::CLEAN_BUNDLE_DATA_DIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::CLEAN_BUNDLE_DATA_DIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetBundleStats(
@@ -173,7 +173,7 @@ ErrCode InstalldProxy::GetBundleStats(
     INSTALLD_PARCEL_WRITE(data, Int32, userId);
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::GET_BUNDLE_STATS, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_STATS, data, reply, option);
     if (ret == ERR_OK) {
         if (reply.ReadInt64Vector(&bundleStats)) {
             return ERR_OK;
@@ -197,7 +197,7 @@ ErrCode InstalldProxy::SetDirApl(const std::string &dir, const std::string &bund
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::SET_DIR_APL, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::SET_DIR_APL, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<std::string> &cachePath)
@@ -207,7 +207,7 @@ ErrCode InstalldProxy::GetBundleCachePath(const std::string &dir, std::vector<st
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(dir));
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::GET_BUNDLE_CACHE_PATH, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_BUNDLE_CACHE_PATH, data, reply, option);
     if (ret == ERR_OK) {
         if (reply.ReadStringVector(&cachePath)) {
             return ERR_OK;
@@ -229,7 +229,7 @@ ErrCode InstalldProxy::ScanDir(
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::SCAN_DIR, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::SCAN_DIR, data, reply, option);
     if (ret != ERR_OK) {
         return ret;
     }
@@ -250,19 +250,21 @@ ErrCode InstalldProxy::MoveFile(const std::string &oldPath, const std::string &n
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::MOVE_FILE, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILE, data, reply, option);
 }
 
-ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldProxy::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFilePath));
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::COPY_FILE, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::COPY_FILE, data, reply, option);
 }
 
 ErrCode InstalldProxy::Mkdir(
@@ -277,7 +279,7 @@ ErrCode InstalldProxy::Mkdir(
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::MKDIR, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::MKDIR, data, reply, option);
 }
 
 ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
@@ -288,7 +290,7 @@ ErrCode InstalldProxy::GetFileStat(const std::string &file, FileStat &fileStat)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::GET_FILE_STAT, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_FILE_STAT, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -315,7 +317,7 @@ ErrCode InstalldProxy::ExtractDiffFiles(const std::string &filePath, const std::
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::EXTRACT_DIFF_FILES, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_DIFF_FILES, data, reply, option);
 }
 
 ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
@@ -329,7 +331,7 @@ ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::s
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    return TransactInstalldCmd(IInstalld::Message::APPLY_DIFF_PATCH, data, reply, option);
+    return TransactInstalldCmd(InstalldInterfaceCode::APPLY_DIFF_PATCH, data, reply, option);
 }
 
 ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
@@ -340,7 +342,7 @@ ErrCode InstalldProxy::IsExistDir(const std::string &dir, bool &isExist)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_DIR, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_DIR, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -357,7 +359,7 @@ ErrCode InstalldProxy::IsExistFile(const std::string &path, bool &isExist)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::IS_EXIST_FILE, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_EXIST_FILE, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -374,7 +376,7 @@ ErrCode InstalldProxy::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::IS_DIR_EMPTY, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::IS_DIR_EMPTY, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -391,7 +393,7 @@ ErrCode InstalldProxy::ObtainQuickFixFileDir(const std::string &dir, std::vector
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::OBTAIN_QUICK_FIX_DIR, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::OBTAIN_QUICK_FIX_DIR, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -411,7 +413,7 @@ ErrCode InstalldProxy::CopyFiles(const std::string &sourceDir, const std::string
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::COPY_FILES, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::COPY_FILES, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -429,7 +431,7 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
-    auto ret = TransactInstalldCmd(IInstalld::Message::GET_NATIVE_LIBRARY_FILE_NAMES, data, reply, option);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::GET_NATIVE_LIBRARY_FILE_NAMES, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
@@ -441,7 +443,44 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
+ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(modulePath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFileDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(srcDir));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(desDir));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::MOVE_FILES, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
     MessageOption &option)
 {
     sptr<IRemoteObject> remote = Remote();
@@ -450,7 +489,7 @@ ErrCode InstalldProxy::TransactInstalldCmd(uint32_t code, MessageParcel &data, M
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }
 
-    if (remote->SendRequest(code, data, reply, option) != OHOS::NO_ERROR) {
+    if (remote->SendRequest(static_cast<uint32_t>(code), data, reply, option) != OHOS::NO_ERROR) {
         APP_LOGE("fail to send %{public}u request to service due to transact error", code);
         return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
     }

@@ -20,6 +20,7 @@ using namespace testing::ext;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 
+namespace OHOS {
 namespace {
 const string RESOURCE_ROOT_PATH = "/data/test/bms_bundle/";
 const string INVALID_BUNDLE_SUFFIX = ".rpk";
@@ -118,3 +119,4 @@ HWTEST_F(BmsBundleParserModuleTest, RepeatBundleParser_0400, Function | MediumTe
         CheckBundleParserResult(pathStream_);
     }
 }
+} // OHOS

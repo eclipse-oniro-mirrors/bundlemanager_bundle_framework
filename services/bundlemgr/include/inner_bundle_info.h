@@ -24,6 +24,7 @@
 #include "bundle_info.h"
 #include "common_event_info.h"
 #include "common_profile.h"
+#include "data_group_info.h"
 #include "distributed_bundle_info.h"
 #include "extension_ability_info.h"
 #include "form_info.h"
@@ -149,6 +150,7 @@ private:
     bool MatchUriAndType(const std::string &uriString, const std::string &type) const;
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
+    bool MatchMimeType(const std::string &uriString) const;
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 
@@ -1185,8 +1187,6 @@ public:
 
     void GetModuleNames(std::vector<std::string> &moduleNames) const;
 
-    bool CheckAppInstallControl(const std::string &appId, int32_t userId) const;
-
     const std::map<std::string, InnerModuleInfo> &GetInnerModuleInfos() const
     {
         return innerModuleInfos_;
@@ -1835,26 +1835,6 @@ public:
         return true;
     }
 
-    bool GetHasAtomicServiceConfig() const
-    {
-        return hasAtomicServiceConfig_;
-    }
-
-    void SetHasAtomicServiceConfig(bool hasConfig)
-    {
-        hasAtomicServiceConfig_ = hasConfig;
-    }
-
-    std::string GetAtomicMainModuleName() const
-    {
-        return mainAtomicModuleName_;
-    }
-
-    void SetAtomicMainModuleName(std::string main)
-    {
-        mainAtomicModuleName_ = main;
-    }
-
     void SetAppProvisionMetadata(const std::vector<Metadata> &metadatas)
     {
         provisionMetadatas_ = metadatas;
@@ -1902,6 +1882,78 @@ public:
         }
         buildHash = innerModuleInfos_.at(moduleName).buildHash;
         return true;
+    }
+
+    const std::unordered_map<std::string, std::vector<DataGroupInfo>> GetDataGroupInfos() const
+    {
+        return dataGroupInfos_;
+    }
+
+    void AddDataGroupInfo(const std::string &dataGroupId, const DataGroupInfo &info)
+    {
+        APP_LOGD("AddDataGroupInfo, dataGroupId: %{public}s, dataGroupInfo: %{public}s",
+            dataGroupId.c_str(), info.ToString().c_str());
+        auto dataGroupInfosItem = dataGroupInfos_.find(dataGroupId);
+        if (dataGroupInfosItem == dataGroupInfos_.end()) {
+            APP_LOGD("AddDataGroupInfo add new dataGroupInfo for dataGroupId: %{public}s", dataGroupId.c_str());
+            dataGroupInfos_[dataGroupId] = std::vector<DataGroupInfo> { info };
+            return;
+        }
+
+        int32_t userId = info.userId;
+        auto iter = std::find_if(std::begin(dataGroupInfos_[dataGroupId]), std::end(dataGroupInfos_[dataGroupId]),
+            [userId](const DataGroupInfo &dataGroupinfo) { return dataGroupinfo.userId == userId; });
+        if (iter != std::end(dataGroupInfos_[dataGroupId])) {
+            return;
+        }
+
+        APP_LOGD("AddDataGroupInfo add new dataGroupInfo for user: %{public}d", info.userId);
+        dataGroupInfos_[dataGroupId].emplace_back(info);
+    }
+
+    void RemoveGroupInfos(int32_t userId, const std::string &dataGroupId)
+    {
+        auto iter = dataGroupInfos_.find(dataGroupId);
+        if (iter == dataGroupInfos_.end()) {
+            return;
+        }
+        for (auto dataGroupIter = iter->second.begin(); dataGroupIter != iter->second.end(); dataGroupIter++) {
+            if (dataGroupIter->userId == userId) {
+                iter->second.erase(dataGroupIter);
+                return;
+            }
+        }
+    }
+
+    void UpdateDataGroupInfos(const std::unordered_map<std::string, std::vector<DataGroupInfo>> &dataGroupInfos)
+    {
+        std::set<int32_t> userIdList;
+        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+            for (const DataGroupInfo &info : item->second) {
+                userIdList.insert(info.userId);
+            }
+        }
+
+        std::vector<std::string> deletedGroupIds;
+        for (auto &item : dataGroupInfos_) {
+            if (dataGroupInfos.find(item.first) == dataGroupInfos.end()) {
+                for (int32_t userId : userIdList) {
+                    RemoveGroupInfos(userId, item.first);
+                }
+            }
+            if (item.second.empty()) {
+                deletedGroupIds.emplace_back(item.first);
+            }
+        }
+        for (std::string groupId : deletedGroupIds) {
+            dataGroupInfos_.erase(groupId);
+        }
+        for (auto item = dataGroupInfos.begin(); item != dataGroupInfos.end(); item++) {
+            std::string dataGroupId = item->first;
+            for (const DataGroupInfo &info : item->second) {
+                AddDataGroupInfo(dataGroupId, info);
+            }
+        }
     }
 
     void SetAppDistributionType(const std::string &appDistributionType);
@@ -1973,6 +2025,11 @@ public:
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
     void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     void ResetAOTFlags();
+    ErrCode SetExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    ErrCode SetMimeType(const std::string &moduleName, const std::string &abilityName, const std::string mimeType);
+    ErrCode DelExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    ErrCode DelMimeType(const std::string &moduleName, const std::string &abilityName, const std::string extName);
+    void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
 
 private:
     bool IsExistLauncherAbility() const;
@@ -1988,6 +2045,8 @@ private:
     void GetBundleWithAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo, int32_t userId) const;
     void GetBundleWithExtensionAbilitiesV9(int32_t flags, HapModuleInfo &hapModuleInfo) const;
     IsolationMode GetIsolationMode(const std::string &isolationMode) const;
+    void UpdateIsCompressNativeLibs();
+    void InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const;
 
     // using for get
     Constants::AppType appType_ = Constants::AppType::THIRD_PARTY_APP;
@@ -2035,15 +2094,14 @@ private:
     std::vector<OverlayBundleInfo> overlayBundleInfo_;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
 
-    // atomicService
-    bool hasAtomicServiceConfig_ = false;
-    std::string mainAtomicModuleName_;
-
     // provision metadata
     std::vector<Metadata> provisionMetadatas_;
 
     // shared module info
     std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos_ ;
+
+    // data group info
+    std::unordered_map<std::string, std::vector<DataGroupInfo>> dataGroupInfos_;
 };
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info);

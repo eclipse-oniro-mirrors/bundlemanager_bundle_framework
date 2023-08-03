@@ -25,6 +25,7 @@
 #include "parcel_macro.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "json_util.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -112,13 +113,67 @@ void to_json(nlohmann::json &jsonObject, const CommonEventInfo &commonEvent)
 
 void from_json(const nlohmann::json &jsonObject, CommonEventInfo &commonEvent)
 {
-    commonEvent.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
-    commonEvent.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
-    commonEvent.uid = jsonObject.at(JSON_KEY_UID).get<int>();
-    commonEvent.permission = jsonObject.at(JSON_KEY_PERMISSION).get<std::string>();
-    commonEvent.data = jsonObject.at(JSON_KEY_DATA).get<std::vector<std::string>>();
-    commonEvent.type = jsonObject.at(JSON_KEY_TYPE).get<std::vector<std::string>>();
-    commonEvent.events = jsonObject.at(JSON_KEY_EVENTS).get<std::vector<std::string>>();
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_NAME,
+        commonEvent.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::BUNDLE_NAME,
+        commonEvent.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_UID,
+        commonEvent.uid,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PERMISSION,
+        commonEvent.permission,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DATA,
+        commonEvent.data,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_TYPE,
+        commonEvent.type,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_EVENTS,
+        commonEvent.events,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module commonEvent from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

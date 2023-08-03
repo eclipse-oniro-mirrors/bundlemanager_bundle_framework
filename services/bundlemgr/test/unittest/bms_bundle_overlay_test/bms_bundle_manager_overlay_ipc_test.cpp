@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_mgr_host_impl.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
@@ -50,8 +51,11 @@ public:
     void SetUp();
     void TearDown();
 private:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleManagerIpcTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleManagerIpcTest::BmsBundleManagerIpcTest()
 {}
@@ -63,7 +67,9 @@ void BmsBundleManagerIpcTest::SetUpTestCase()
 {}
 
 void BmsBundleManagerIpcTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleManagerIpcTest::SetUp()
 {
@@ -149,8 +155,8 @@ HWTEST_F(BmsBundleManagerIpcTest, BundleManagerOverlayIpcTest_0400, Function | S
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
-    auto errCode = bundleManagerHostImplMock->OnRemoteRequest(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY,
-        data, reply, option);
+    auto errCode = bundleManagerHostImplMock->OnRemoteRequest(
+        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY), data, reply, option);
     EXPECT_EQ(errCode, UNKNOWN_ERROR);
 }
 
@@ -172,8 +178,8 @@ HWTEST_F(BmsBundleManagerIpcTest, BundleManagerOverlayIpcTest_0500, Function | S
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(TEST_HOST_DESCRIPTOR);
-    auto errCode = bundleManagerHostImplMock->OnRemoteRequest(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY,
-        data, reply, option);
+    auto errCode = bundleManagerHostImplMock->OnRemoteRequest(
+        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY), data, reply, option);
     EXPECT_EQ(errCode, OBJECT_NULL);
 }
 
@@ -194,8 +200,8 @@ HWTEST_F(BmsBundleManagerIpcTest, BundleManagerOverlayIpcTest_0600, Function | S
     MessageParcel reply;
     MessageOption option;
     data.WriteInterfaceToken(BundleMgrHost::GetDescriptor());
-    auto errCode = bundleManagerHostImpl->OnRemoteRequest(IBundleMgr::Message::GET_OVERLAY_MANAGER_PROXY,
-        data, reply, option);
+    auto errCode = bundleManagerHostImpl->OnRemoteRequest(
+        static_cast<uint32_t>(BundleMgrInterfaceCode::GET_OVERLAY_MANAGER_PROXY), data, reply, option);
     EXPECT_EQ(errCode, ERR_OK);
 }
 } // OHOS

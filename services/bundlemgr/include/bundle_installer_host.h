@@ -191,6 +191,7 @@ private:
 
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
+    bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);
     std::shared_ptr<BundleInstallerManager> manager_;
     std::vector<sptr<IBundleStreamInstaller>> streamInstallers_;
     std::atomic<uint32_t> streamInstallerIds_ = 0;

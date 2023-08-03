@@ -110,10 +110,10 @@ const std::string APPLICATION_APP_TARGET_PRIORITY = "targetPriority";
 const std::string APPLICATION_APP_OVERLAY_STATE = "overlayState";
 const std::string APPLICATION_ASAN_ENABLED = "asanEnabled";
 const std::string APPLICATION_ASAN_LOG_PATH = "asanLogPath";
-const std::string APPLICATION_SPLIT = "split";
 const std::string APPLICATION_APP_TYPE = "bundleType";
 const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
+const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -216,7 +216,7 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
         int32_t customizeDataSize = parcel.ReadInt32();
         std::vector<CustomizeData> customizeDatas;
         metaData[mouduleName] = customizeDatas;
-        CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &metaData);
+        CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &customizeDatas);
         for (int j = 0; j < customizeDataSize; j++) {
             std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
             if (!customizeData) {
@@ -399,10 +399,15 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     overlayState = parcel.ReadInt32();
     asanEnabled = parcel.ReadBool();
     asanLogPath = Str16ToStr8(parcel.ReadString16());
-    split = parcel.ReadBool();
     bundleType = static_cast<BundleType>(parcel.ReadInt32());
     compileSdkVersion = Str16ToStr8(parcel.ReadString16());
     compileSdkType = Str16ToStr8(parcel.ReadString16());
+    int32_t resourceApplySize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, resourceApplySize);
+    CONTAINER_SECURITY_VERIFY(parcel, resourceApplySize, &resourcesApply);
+    for (int32_t i = 0; i < resourceApplySize; ++i) {
+        resourcesApply.emplace_back(parcel.ReadInt32());
+    }
     return true;
 }
 
@@ -419,7 +424,7 @@ ApplicationInfo *ApplicationInfo::Unmarshalling(Parcel &parcel)
 
 bool ApplicationInfo::Marshalling(Parcel &parcel) const
 {
-    APP_LOGD("ApplicationInfo::Marshalling called");
+    APP_LOGD("ApplicationInfo::Marshalling called, bundleName: %{public}s", bundleName.c_str());
     CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
@@ -488,7 +493,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFilePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFileAbi));
-
+    CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));
@@ -543,10 +548,13 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, overlayState);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, asanEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(asanLogPath));
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, split);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(bundleType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(compileSdkVersion));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(compileSdkType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, resourcesApply.size());
+    for (auto &item : resourcesApply) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item);
+    }
     return true;
 }
 
@@ -727,10 +735,10 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_APP_OVERLAY_STATE, applicationInfo.overlayState},
         {APPLICATION_ASAN_ENABLED, applicationInfo.asanEnabled},
         {APPLICATION_ASAN_LOG_PATH, applicationInfo.asanLogPath},
-        {APPLICATION_SPLIT, applicationInfo.split},
         {APPLICATION_APP_TYPE, applicationInfo.bundleType},
         {APPLICATION_COMPILE_SDK_VERSION, applicationInfo.compileSdkVersion},
         {APPLICATION_COMPILE_SDK_TYPE, applicationInfo.compileSdkType},
+        {APPLICATION_RESOURCES_APPLY, applicationInfo.resourcesApply},
     };
 }
 
@@ -1338,14 +1346,6 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        APPLICATION_SPLIT,
-        applicationInfo.split,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<BundleType>(jsonObject,
         jsonObjectEnd,
         APPLICATION_APP_TYPE,
@@ -1370,6 +1370,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_RESOURCES_APPLY,
+        applicationInfo.resourcesApply,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }

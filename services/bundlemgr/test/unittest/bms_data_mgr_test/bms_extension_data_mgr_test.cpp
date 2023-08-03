@@ -25,6 +25,7 @@
 #include "bundle_data_mgr.h"
 #include "bms_extension_data_mgr.h"
 #include "bms_extension_profile.h"
+#include "bundle_mgr_service.h"
 #include "bundle_mgr_ext_register.h"
 #include "json_constants.h"
 #include "json_serializer.h"
@@ -37,6 +38,7 @@ using OHOS::AAFwk::Want;
 
 namespace OHOS {
 namespace {
+const uint32_t SDK_VERSION = 10;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
@@ -74,7 +76,10 @@ const nlohmann::json EXTENSIONS_JSON_5 = R"(
     }
 }
 )"_json;
-
+enum {
+    BMS_BROKER_ERR_INVALID_PARAM = 8585220,
+    BMS_BROKER_ERR_PARCEL_FAILED = 8585221,
+};
 }  // namespace
 
 class BmsExtensionDataMgrTest : public testing::Test {
@@ -90,7 +95,16 @@ public:
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     std::ostringstream pathStream_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+class BundleMgrExtTest : public BundleMgrExt {
+public:
+    bool CheckApiInfo(const BundleInfo& bundleInfo);
+};
+
+std::shared_ptr<BundleMgrService> BmsExtensionDataMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsExtensionDataMgrTest::BmsExtensionDataMgrTest()
 {}
@@ -102,7 +116,9 @@ void BmsExtensionDataMgrTest::SetUpTestCase()
 {}
 
 void BmsExtensionDataMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsExtensionDataMgrTest::SetUp()
 {}
@@ -117,6 +133,11 @@ const std::shared_ptr<BundleDataMgr> BmsExtensionDataMgrTest::GetDataMgr() const
     return dataMgr_;
 }
 
+bool BundleMgrExtTest::CheckApiInfo(const BundleInfo& bundleInfo)
+{
+    return true;
+}
+
 /**
  * @tc.number: BmsExtensionDataMgr_0001
  * @tc.name: CheckApiInfo
@@ -126,7 +147,8 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo bundleInfo;
-    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo);
+    bundleInfo.compatibleVersion = 40000 * 1000 + 100;
+    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
     EXPECT_EQ(res, false);
 }
 
@@ -139,7 +161,121 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     bool res = bmsExtensionDataMgr.OpenHandler();
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, true);
+    #else
     EXPECT_EQ(res, false);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0003
+ * @tc.name: CheckApiInfo
+ * @tc.desc: CheckApiInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0003, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    BundleInfo bundleInfo;
+    bundleInfo.compatibleVersion = 40000 * 1000 + 10;
+    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0004
+ * @tc.name: QueryAbilityInfosWithFlag
+ * @tc.desc: QueryAbilityInfosWithFlag
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0004, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    Want want;
+    int32_t userId = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0005
+ * @tc.name: QueryAbilityInfosWithFlag
+ * @tc.desc: QueryAbilityInfosWithFlag
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0005, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0006
+ * @tc.name: GetBundleInfos
+ * @tc.desc: GetBundleInfos
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0006, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_PARCEL_FAILED);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0007
+ * @tc.name: GetBundleInfo
+ * @tc.desc: GetBundleInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0007, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    BundleInfo bundleInfo;
+    ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_INVALID_PARAM);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0008
+ * @tc.name: HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    std::string filePath;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode res = bmsExtensionDataMgr.HapVerify(filePath, hapVerifyResult);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+    #endif
 }
 
 /**
@@ -204,7 +340,11 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionProfile_0006, Function | SmallTest
     BmsExtensionProfile bmsExtensionProfile;
     BmsExtension bmsExtension;
     ErrCode res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension);
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, ERR_OK);
+    #else
     EXPECT_EQ(res, ERR_APPEXECFWK_PARSE_FILE_FAILED);
+    #endif
 }
 
 /**
@@ -229,5 +369,81 @@ HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExtRegister_0001, Function | SmallTes
 {
     auto res = BundleMgrExtRegister::GetInstance().GetBundleMgrExt(BUNDLE_EXT_NAME);
     EXPECT_EQ(res, nullptr);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0001
+ * @tc.name: HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0001, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string filePath;
+    Security::Verify::HapVerifyResult hapVerifyResult;
+    ErrCode res = bundleMgrExtTest.HapVerify(filePath, hapVerifyResult);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0002
+ * @tc.name: QueryAbilityInfos
+ * @tc.desc: QueryAbilityInfos
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0002, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    Want want;
+    int32_t userId = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = bundleMgrExtTest.QueryAbilityInfos(want, userId, abilityInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0003
+ * @tc.name: QueryAbilityInfosWithFlag
+ * @tc.desc: QueryAbilityInfosWithFlag
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0003, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    Want want;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode res = bundleMgrExtTest.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0004
+ * @tc.name: GetBundleInfo
+ * @tc.desc: GetBundleInfo
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0004, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    BundleInfo bundleInfo;
+    ErrCode res = bundleMgrExtTest.GetBundleInfo(bundleName, flags, userId, bundleInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
+ * @tc.number: BundleMgrExt_0005
+ * @tc.name: GetBundleInfos
+ * @tc.desc: GetBundleInfos
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BundleMgrExt_0005, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    int32_t flags = 0;
+    int32_t userId = 0;
+    std::vector<BundleInfo> bundleInfos;
+    ErrCode res = bundleMgrExtTest.GetBundleInfos(flags, bundleInfos, userId);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
 }
 } // OHOS

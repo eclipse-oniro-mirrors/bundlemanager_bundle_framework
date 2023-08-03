@@ -18,6 +18,8 @@
 #include <algorithm>
 #include <deque>
 #include <regex>
+#include <unistd.h>
+#include "string_ex.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_constants.h"
@@ -29,6 +31,8 @@
 #include "distributed_module_info.h"
 #include "distributed_ability_info.h"
 #include "free_install_params.h"
+#include "mime_type_mgr.h"
+#include "parameters.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -122,8 +126,6 @@ const std::string OVERLAY_TYPE = "overlayType";
 const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
 const std::string MODULE_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string MODULE_PRELOADS = "preloads";
-const std::string HAS_ATOMIC_SERVICE_CONFIG = "hasAtomicServiceConfig";
-const std::string MAIN_ATOMIC_MODULE_NAME = "mainAtomicModuleName";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_BUNDLE_TYPE = "bundleType";
 const std::string MODULE_VERSION_CODE = "versionCode";
@@ -134,6 +136,7 @@ const std::string MODULE_ISOLATION_MODE = "isolationMode";
 const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
+const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -141,6 +144,9 @@ const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationFirst", IsolationMode::ISOLATION_FIRST},
 };
 const std::string NATIVE_LIBRARY_PATH_SYMBOL = "!/";
+
+const std::string STR_PHONE = "phone";
+const std::string STR_DEFAULT = "default";
 
 inline CompileMode ConvertCompileMode(const std::string& compileMode)
 {
@@ -196,6 +202,21 @@ bool Skill::Match(const OHOS::AAFwk::Want &want) const
     bool matchEntities = MatchEntities(want.GetEntities());
     if (!matchEntities) {
         APP_LOGD("Entities does not match");
+        return false;
+    }
+    std::vector<std::string> vecTypes;
+    auto deviceType = OHOS::system::GetDeviceType();
+    APP_LOGD("DeviceType %{public}s", deviceType.c_str());
+    if (STR_PHONE == deviceType || STR_DEFAULT == deviceType) {
+        vecTypes = want.GetStringArrayParam(OHOS::AAFwk::Want::PARAM_ABILITY_URITYPES);
+    }
+    if (vecTypes.size() > 0) {
+        for (std::string strType : vecTypes) {
+            if (MatchUriAndType(want.GetUriString(), strType)) {
+                APP_LOGD("type %{public}s, Is Matched", strType.c_str());
+                return true;
+            }
+        }
         return false;
     }
     bool matchUriAndType = MatchUriAndType(want.GetUriString(), want.GetType());
@@ -292,7 +313,8 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
                 return true;
             }
         }
-        return false;
+        // if uri is a file path, match type by the suffix
+        return MatchMimeType(uriString);
     } else if (uriString.empty() && !type.empty()) {
         // case3 : param uri empty, param type not empty
         for (const SkillUri &skillUri : uris) {
@@ -427,6 +449,24 @@ bool Skill::MatchType(const std::string &type, const std::string &skillUriType) 
     }
 }
 
+bool Skill::MatchMimeType(const std::string & uriString) const
+{
+    std::vector<std::string> mimeTypes;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(uriString, mimeTypes);
+    if (!ret) {
+        return false;
+    }
+    for (const SkillUri &skillUri : uris) {
+        for (const auto &mimeType : mimeTypes) {
+            if ((MatchUri(uriString, skillUri) || skillUri.scheme.empty())
+                && MatchType(mimeType, skillUri.type)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 InnerBundleInfo::InnerBundleInfo()
 {
     baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
@@ -488,9 +528,8 @@ InnerBundleInfo &InnerBundleInfo::operator=(const InnerBundleInfo &info)
     this->overlayBundleInfo_ = info.overlayBundleInfo_;
     this->overlayType_ = info.overlayType_;
     this->applyQuickFixFrequency_ = info.applyQuickFixFrequency_;
-    this->hasAtomicServiceConfig_ = info.hasAtomicServiceConfig_;
-    this->mainAtomicModuleName_ = info.mainAtomicModuleName_;
     this->provisionMetadatas_ = info.provisionMetadatas_;
+    this->dataGroupInfos_ = info.dataGroupInfos_;
     return *this;
 }
 
@@ -657,8 +696,7 @@ void InnerBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[OVERLAY_BUNDLE_INFO] = overlayBundleInfo_;
     jsonObject[OVERLAY_TYPE] = overlayType_;
     jsonObject[APPLY_QUICK_FIX_FREQUENCY] = applyQuickFixFrequency_;
-    jsonObject[HAS_ATOMIC_SERVICE_CONFIG] = hasAtomicServiceConfig_;
-    jsonObject[MAIN_ATOMIC_MODULE_NAME] = mainAtomicModuleName_;
+    jsonObject[DATA_GROUP_INFOS] = dataGroupInfos_;
 }
 
 void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
@@ -1676,19 +1714,11 @@ int32_t InnerBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
+    GetValueIfFindKey<std::unordered_map<std::string, std::vector<DataGroupInfo>>>(jsonObject,
         jsonObjectEnd,
-        HAS_ATOMIC_SERVICE_CONFIG,
-        hasAtomicServiceConfig_,
-        JsonType::BOOLEAN,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<std::string>(jsonObject,
-        jsonObjectEnd,
-        MAIN_ATOMIC_MODULE_NAME,
-        mainAtomicModuleName_,
-        JsonType::STRING,
+        DATA_GROUP_INFOS,
+        dataGroupInfos_,
+        JsonType::OBJECT,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -1935,6 +1965,7 @@ bool InnerBundleInfo::AddModuleInfo(const InnerBundleInfo &newInfo)
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
+    UpdateIsCompressNativeLibs();
     return true;
 }
 
@@ -2086,6 +2117,7 @@ void InnerBundleInfo::UpdatePrivilegeCapability(const ApplicationInfo &applicati
     baseApplicationInfo_->runningResourcesApply = applicationInfo.runningResourcesApply;
     baseApplicationInfo_->associatedWakeUp = applicationInfo.associatedWakeUp;
     SetAllowCommonEvent(applicationInfo.allowCommonEvent);
+    baseApplicationInfo_->resourcesApply = applicationInfo.resourcesApply;
 }
 
 void InnerBundleInfo::UpdateRemovable(bool isPreInstall, bool removable)
@@ -2115,6 +2147,7 @@ void InnerBundleInfo::UpdateModuleInfo(const InnerBundleInfo &newInfo)
     AddModuleFormInfo(newInfo.formInfos_);
     AddModuleShortcutInfo(newInfo.shortcutInfos_);
     AddModuleCommonEvent(newInfo.commonEvents_);
+    UpdateIsCompressNativeLibs();
 }
 
 bool InnerBundleInfo::GetMaxVerBaseSharedBundleInfo(const std::string &moduleName,
@@ -2388,13 +2421,8 @@ void InnerBundleInfo::GetApplicationInfo(int32_t flags, int32_t userId, Applicat
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
-    }
-    if (!GetHasAtomicServiceConfig()) {
-        std::vector<std::string> moduleNames;
-        GetModuleNames(moduleNames);
-        appInfo.split = moduleNames.size() != 1;
     }
 
     appInfo.accessTokenId = innerBundleUserInfo.accessTokenId;
@@ -2449,7 +2477,7 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     }
 
     appInfo = *baseApplicationInfo_;
-    if (appInfo.removable && !CheckAppInstallControl(GetAppId(), userId)) {
+    if (appInfo.removable && !innerBundleUserInfo.isRemovable) {
         appInfo.removable = false;
     }
 
@@ -2457,11 +2485,6 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
     appInfo.accessTokenIdEx = innerBundleUserInfo.accessTokenIdEx;
     appInfo.enabled = innerBundleUserInfo.bundleUserInfo.enabled;
     appInfo.uid = innerBundleUserInfo.uid;
-    if (!GetHasAtomicServiceConfig()) {
-        std::vector<std::string> moduleNames;
-        GetModuleNames(moduleNames);
-        appInfo.split = moduleNames.size() != 1;
-    }
 
     for (const auto &info : innerModuleInfos_) {
         bool deCompress = info.second.hapPath.empty();
@@ -2868,20 +2891,9 @@ void InnerBundleInfo::GetShortcutInfos(std::vector<ShortcutInfo> &shortcutInfos)
             ShortcutJson shortcutJson = jsonObject.get<ShortcutJson>();
             for (const Shortcut &item : shortcutJson.shortcuts) {
                 ShortcutInfo shortcutInfo;
-                shortcutInfo.id = item.shortcutId;
                 shortcutInfo.bundleName = abilityInfo.bundleName;
                 shortcutInfo.moduleName = abilityInfo.moduleName;
-                shortcutInfo.icon = item.icon;
-                shortcutInfo.label = item.label;
-                shortcutInfo.iconId = item.iconId;
-                shortcutInfo.labelId = item.labelId;
-                for (const ShortcutWant &shortcutWant : item.wants) {
-                    ShortcutIntent shortcutIntent;
-                    shortcutIntent.targetBundle = shortcutWant.bundleName;
-                    shortcutIntent.targetModule = shortcutWant.moduleName;
-                    shortcutIntent.targetClass = shortcutWant.abilityName;
-                    shortcutInfo.intents.emplace_back(shortcutIntent);
-                }
+                InnerProcessShortcut(item, shortcutInfo);
                 shortcutInfos.emplace_back(shortcutInfo);
             }
         }
@@ -2924,27 +2936,6 @@ void InnerBundleInfo::GetModuleNames(std::vector<std::string> &moduleNames) cons
     for (const auto &innerModuleInfo : innerModuleInfos_) {
         moduleNames.emplace_back(innerModuleInfo.second.moduleName);
     }
-}
-
-bool InnerBundleInfo::CheckAppInstallControl(const std::string &appId, int32_t userId) const
-{
-#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
-    std::vector<std::string> appIds;
-    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
-        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
-    if (ret != ERR_OK) {
-        APP_LOGE("GetAppInstallControlRule failed code:%{public}d", ret);
-        return true;
-    }
-    if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        return true;
-    }
-    APP_LOGW("appId is not removable");
-    return false;
-#else
-    APP_LOGW("app control is disable");
-    return true;
-#endif
 }
 
 void InnerBundleInfo::ResetBundleState(int32_t userId)
@@ -3288,13 +3279,17 @@ std::vector<RequestPermission> InnerBundleInfo::GetAllRequestPermissions() const
 {
     std::vector<RequestPermission> requestPermissions;
     for (const auto &info : innerModuleInfos_) {
-        for (const auto &item : info.second.requestPermissions) {
+        for (auto item : info.second.requestPermissions) {
+            item.moduleName = info.second.moduleName;
             requestPermissions.push_back(item);
         }
     }
     if (!requestPermissions.empty()) {
         std::sort(requestPermissions.begin(), requestPermissions.end(),
             [](RequestPermission reqPermA, RequestPermission reqPermB) {
+                if (reqPermA.name == reqPermB.name) {
+                    return reqPermA.reasonId > reqPermB.reasonId;
+                }
                 return reqPermA.name < reqPermB.name;
             });
         auto iter = std::unique(requestPermissions.begin(), requestPermissions.end(),
@@ -3946,6 +3941,135 @@ void InnerBundleInfo::UpdateSharedModuleInfo()
             iter->nativeLibraryFileNames = moduleInfoIter->second.nativeLibraryFileNames;
             return;
         }
+    }
+}
+
+ErrCode InnerBundleInfo::SetExtName(
+    const std::string &moduleName, const std::string &abilityName, const std::string extName)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportExtNames = abilityInfoPair->second.supportExtNames;
+    bool duplicated = std::any_of(supportExtNames.begin(), supportExtNames.end(), [&extName](const auto &name) {
+            return extName == name;
+    });
+    if (duplicated) {
+        APP_LOGW("extName %{public}s already exist in ability %{public}s", extName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE;
+    }
+    supportExtNames.emplace_back(extName);
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::SetMimeType(
+    const std::string &moduleName, const std::string &abilityName, const std::string mimeType)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportMimeTypes = abilityInfoPair->second.supportMimeTypes;
+    bool duplicated = std::any_of(supportMimeTypes.begin(), supportMimeTypes.end(), [&mimeType](const auto &type) {
+            return mimeType == type;
+    });
+    if (duplicated) {
+        APP_LOGW("MIME type %{public}s already exist in ability %{public}s", mimeType.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_DUPLICATED_EXT_OR_TYPE;
+    }
+    abilityInfoPair->second.supportMimeTypes.emplace_back(mimeType);
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::DelExtName(
+    const std::string &moduleName, const std::string &abilityName, const std::string extName)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportExtNames = abilityInfoPair->second.supportExtNames;
+    supportExtNames.erase(std::remove(supportExtNames.begin(), supportExtNames.end(), extName), supportExtNames.end());
+    return ERR_OK;
+}
+
+ErrCode InnerBundleInfo::DelMimeType(
+    const std::string &moduleName, const std::string &abilityName, const std::string mimeType)
+{
+    auto abilityInfoPair = baseAbilityInfos_.find(abilityName);
+    if (abilityInfoPair == baseAbilityInfos_.end()) {
+        APP_LOGE("ability %{public}s not exists", abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    if (moduleName != abilityInfoPair->second.moduleName) {
+        APP_LOGE("module %{public}s not exists", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    auto &supportMimeTypes = abilityInfoPair->second.supportMimeTypes;
+    supportMimeTypes.erase(
+        std::remove(supportMimeTypes.begin(), supportMimeTypes.end(), mimeType), supportMimeTypes.end());
+    return ERR_OK;
+}
+
+void InnerBundleInfo::UpdateIsCompressNativeLibs()
+{
+    if (innerModuleInfos_.empty()) {
+        baseApplicationInfo_->isCompressNativeLibs = true;
+        return;
+    }
+    baseApplicationInfo_->isCompressNativeLibs = false;
+    for (const auto &info : innerModuleInfos_) {
+        baseApplicationInfo_->isCompressNativeLibs =
+            (baseApplicationInfo_->isCompressNativeLibs || info.second.compressNativeLibs) ? true : false;
+    }
+}
+
+void InnerBundleInfo::SetResourcesApply(const std::vector<int32_t> &resourcesApply)
+{
+    baseApplicationInfo_->resourcesApply = resourcesApply;
+}
+
+void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, ShortcutInfo &shortcutInfo) const
+{
+    shortcutInfo.id = oldShortcut.shortcutId;
+    shortcutInfo.icon = oldShortcut.icon;
+    shortcutInfo.label = oldShortcut.label;
+    shortcutInfo.iconId = oldShortcut.iconId;
+    if (shortcutInfo.iconId == 0) {
+        auto iter = oldShortcut.icon.find(PORT_SEPARATOR);
+        if (iter != std::string::npos) {
+            shortcutInfo.iconId = atoi(oldShortcut.icon.substr(iter + 1).c_str());
+        }
+    }
+    shortcutInfo.labelId = oldShortcut.labelId;
+    if (shortcutInfo.labelId == 0) {
+        auto iter = oldShortcut.label.find(PORT_SEPARATOR);
+        if (iter != std::string::npos) {
+            shortcutInfo.labelId = atoi(oldShortcut.label.substr(iter + 1).c_str());
+        }
+    }
+    for (const ShortcutWant &shortcutWant : oldShortcut.wants) {
+        ShortcutIntent shortcutIntent;
+        shortcutIntent.targetBundle = shortcutWant.bundleName;
+        shortcutIntent.targetModule = shortcutWant.moduleName;
+        shortcutIntent.targetClass = shortcutWant.abilityName;
+        shortcutInfo.intents.emplace_back(shortcutIntent);
     }
 }
 }  // namespace AppExecFwk

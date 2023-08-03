@@ -18,6 +18,11 @@
 namespace OHOS {
 namespace Security {
 namespace AccessToken {
+#ifdef BUNDLE_PERMISSION_DEF_LIST
+#ifdef BUNDLE_PERMISSION_DEF_TRUE
+static constexpr int GRANT_STATUS = 100;
+#endif
+#endif
 AccessTokenIDEx AccessTokenKit::AllocHapToken(const HapInfoParams& info, const HapPolicyParams& policy)
 {
     AccessTokenIDEx token;
@@ -41,7 +46,14 @@ int AccessTokenKit::UpdateHapToken(AccessTokenIDEx &tokenIDEx, bool isSystemApp,
 #ifdef BUNDLE_PERMISSION_START_FULL_FALSE
 int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
 {
+#ifdef BUNDLE_PERMISSION_DEF_TRUE
+    PermissionDef PermissionDef;
+    PermissionDef.permissionName = "testName";
+    permList.push_back(PermissionDef);
+    return 0;
+#else
     return -1;
+#endif
 }
 #else
 int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<PermissionDef>& permList)
@@ -55,7 +67,16 @@ int AccessTokenKit::GetDefPermissions(AccessTokenID tokenID, std::vector<Permiss
 int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<PermissionStateFull>& reqPermList,
     bool isSystemGrant)
 {
+    #ifdef BUNDLE_PERMISSION_DEF_TRUE
+    PermissionStateFull permissionStateFull;
+    permissionStateFull.permissionName = "testName";
+    permissionStateFull.resDeviceID.push_back("100");
+    permissionStateFull.grantStatus.push_back(GRANT_STATUS);
+    reqPermList.push_back(permissionStateFull);
+    return 0;
+    #else
     return -1;
+    #endif
 }
 
 int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
@@ -65,7 +86,15 @@ int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& pe
 
 int AccessTokenKit::VerifyAccessToken(AccessTokenID tokenID, const std::string& permissionName)
 {
+#ifdef BUNDLE_PERMISSION_DEF_TRUE
+    if (permissionName == "testName") {
+        return 0;
+    } else {
+        return -1;
+    }
+#else
     return -1;
+#endif
 }
 
 int AccessTokenKit::GetDefPermission(const std::string& permissionName, PermissionDef& permissionDefResult)

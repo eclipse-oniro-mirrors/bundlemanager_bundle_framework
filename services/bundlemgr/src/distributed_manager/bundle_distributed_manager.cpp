@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,46 +28,29 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+using namespace ffrt;
 namespace {
 const int32_t CHECK_ABILITY_ENABLE_INSTALL = 1;
 const uint32_t OUT_TIME = 3000;
-const std::string DISTRIBUTED_MANAGER_THREAD = "DistributedManagerThread";
-const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
+const std::string DISTRIBUTED_MANAGER_QUEUE = "DistributedManagerQueue";
 const std::u16string DMS_BUNDLE_MANAGER_CALLBACK_TOKEN = u"ohos.DistributedSchedule.IDmsBundleManagerCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
-}
-
-void BundleDistributedManager::Init()
-{
-    runner_ = EventRunner::Create(DISTRIBUTED_MANAGER_THREAD);
-    if (runner_ == nullptr) {
-        APP_LOGE("Create runner failed");
-        return;
-    }
-
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    if (handler_ == nullptr) {
-        APP_LOGE("Create handler failed");
-        return;
-    }
-    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
+// syscap
+constexpr const char* SYSCAP_SERVICE_ID = "syscap";
+constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
+constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
+constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
 }
 
 BundleDistributedManager::BundleDistributedManager()
 {
-    Init();
+    APP_LOGD("create BundleDistributedManager");
+    serialQueue_ = std::make_shared<SerialQueue>(DISTRIBUTED_MANAGER_QUEUE);
 }
 
 BundleDistributedManager::~BundleDistributedManager()
 {
-    if (handler_ != nullptr) {
-        handler_.reset();
-    }
-    if (runner_ != nullptr) {
-        runner_.reset();
-    }
+    APP_LOGD("destroy BundleDistributedManager");
 }
 
 bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, TargetAbilityInfo &targetAbilityInfo)
@@ -90,10 +73,10 @@ bool BundleDistributedManager::ConvertTargetAbilityInfo(const Want &want, Target
 int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcIdResult &rpcIdResult)
 {
     DeviceProfile::ServiceCharacteristicProfile profile;
-    profile.SetServiceId(Constants::SYSCAP_SERVICE_ID);
-    profile.SetServiceType(Constants::SYSCAP_SERVICE_TYPE);
+    profile.SetServiceId(SYSCAP_SERVICE_ID);
+    profile.SetServiceType(SYSCAP_SERVICE_TYPE);
     int32_t result = DeviceProfile::DistributedDeviceProfileClient::GetInstance().GetDeviceProfile(
-        want.GetElement().GetDeviceID(), Constants::SYSCAP_SERVICE_ID, profile);
+        want.GetElement().GetDeviceID(), SYSCAP_SERVICE_ID, profile);
     if (result != 0) {
         APP_LOGE("GetDeviceProfile failed result:%{public}d", result);
         return ErrorCode::GET_DEVICE_PROFILE_FAILED;
@@ -105,12 +88,12 @@ int32_t BundleDistributedManager::ComparePcIdString(const Want &want, const RpcI
         APP_LOGE("jsonObject is_discarded");
         return ErrorCode::DECODE_SYS_CAP_FAILED;
     }
-    std::vector<int> values = jsonObject[Constants::CHARACTER_OS_SYSCAP].get<std::vector<int>>();
+    std::vector<int> values = jsonObject[CHARACTER_OS_SYSCAP].get<std::vector<int>>();
     std::string pcId;
     for (int value : values) {
         pcId = pcId + std::to_string(value) + ",";
     }
-    std::string capabilities = jsonObject[Constants::CHARACTER_PRIVATE_SYSCAP];
+    std::string capabilities = jsonObject[CHARACTER_PRIVATE_SYSCAP];
     if (capabilities.empty()) {
         pcId.resize(pcId.length() - 1);
     } else {
@@ -133,10 +116,6 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
     const Want &want, int32_t missionId, int32_t userId, const sptr<IRemoteObject> &callback)
 {
     APP_LOGI("BundleDistributedManager::CheckAbilityEnableInstall");
-    if (handler_ == nullptr) {
-        APP_LOGE("handler_ is nullptr");
-        return false;
-    }
     AppExecFwk::TargetAbilityInfo targetAbilityInfo;
     if (!ConvertTargetAbilityInfo(want, targetAbilityInfo)) {
         return false;
@@ -170,9 +149,10 @@ bool BundleDistributedManager::CheckAbilityEnableInstall(
         }
     }
     auto queryRpcIdByAbilityFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         this->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
     };
-    handler_->PostTask(queryRpcIdByAbilityFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(queryRpcIdByAbilityFunc);
     return true;
 }
 
@@ -184,8 +164,20 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
         APP_LOGE("fail to connect ServiceCenter");
         return false;
     }
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return false;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool ret = connectAbility->ConnectAbility(serviceCenterWant, nullptr);
     if (!ret) {
         APP_LOGE("fail to connect ServiceCenter");
@@ -227,15 +219,12 @@ bool BundleDistributedManager::QueryRpcIdByAbilityToServiceCenter(const TargetAb
 void BundleDistributedManager::OutTimeMonitor(const std::string transactId)
 {
     APP_LOGI("BundleDistributedManager::OutTimeMonitor");
-    if (handler_ == nullptr) {
-        APP_LOGE("OutTimeMonitor, handler is nullptr");
-        return;
-    }
     auto registerEventListenerFunc = [this, transactId]() {
+        BundleMemoryGuard memoryGuard;
         APP_LOGI("RegisterEventListenerFunc transactId:%{public}s", transactId.c_str());
         this->SendCallbackRequest(ErrorCode::WAITING_TIMEOUT, transactId);
     };
-    handler_->PostTask(registerEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, registerEventListenerFunc);
 }
 
 void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcIdResult)
@@ -256,10 +245,7 @@ void BundleDistributedManager::OnQueryRpcIdFinished(const std::string &queryRpcI
         }
         want = queryAbilityParams->second.want;
     }
-
-    if (handler_ != nullptr) {
-        handler_->RemoveTask(rpcIdResult.transactId);
-    }
+    serialQueue_->CancelDelayTask(rpcIdResult.transactId);
     if (rpcIdResult.retCode != 0) {
         APP_LOGE("query RpcId fail%{public}d", rpcIdResult.retCode);
         SendCallbackRequest(rpcIdResult.retCode, rpcIdResult.transactId);

@@ -26,12 +26,19 @@
 #include "bundle_pack_info.h"
 #include "bundle_verify_mgr.h"
 #include "inner_bundle_info.h"
+#include "install_param.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 struct InstallCheckParam {
     bool isPreInstallApp = false;
     bool removable = true;
+    // status of install bundle permission
+    PermissionStatus installBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // status of install enterprise bundle permission
+    PermissionStatus installEnterpriseBundlePermissionStatus = PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS;
+    // is shell token
+    bool isCallByShell = false;
     Constants::AppType appType = Constants::AppType::THIRD_PARTY_APP;
     int64_t crowdtestDeadline = Constants::INVALID_CROWDTEST_DEADLINE; // for crowdtesting type hap
 };
@@ -116,6 +123,12 @@ public:
         return isContainEntry_;
     }
 
+    bool VaildInstallPermission(const InstallParam &installParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    bool VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
     ErrCode CheckModuleNameForMulitHaps(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool IsExistedDistroModule(const InnerBundleInfo &newInfo, const InnerBundleInfo &info) const;
@@ -129,6 +142,9 @@ public:
     ErrCode CheckProxyDatas(const InnerBundleInfo &info) const;
 
     ErrCode CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
+
+    ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
+
 private:
 
     ErrCode ParseBundleInfo(
@@ -191,6 +207,8 @@ private:
 
     void SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
         InnerBundleInfo &newInfo);
+
+    bool CheckProxyPermissionLevel(const std::string &permissionName) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

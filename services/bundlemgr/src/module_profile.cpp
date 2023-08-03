@@ -29,6 +29,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+const int32_t THRESHOLD_VAL_LEN = 40;
+bool IsSupportCompressNativeLibs()
+{
+    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        return false;
+    }
+    if (std::strcmp(compressNativeLibs, "true") == 0) {
+        return true;
+    }
+    return false;
+}
+}
 
 namespace Profile {
 int32_t g_parseResult = ERR_OK;
@@ -57,29 +74,6 @@ const std::map<std::string, uint32_t> BACKGROUND_MODES_MAP = {
     {ProfileReader::KEY_TASK_KEEPING, ProfileReader::VALUE_TASK_KEEPING},
     {ProfileReader::KEY_PICTURE_IN_PICTURE, ProfileReader::VALUE_PICTURE_IN_PICTURE},
     {ProfileReader::KEY_SCREEN_FETCH, ProfileReader::VALUE_SCREEN_FETCH}
-};
-
-const std::vector<std::string> EXTENSION_TYPE_SET = {
-    "form",
-    "workScheduler",
-    "inputMethod",
-    "service",
-    "accessibility",
-    "dataShare",
-    "fileShare",
-    "staticSubscriber",
-    "wallpaper",
-    "backup",
-    "window",
-    "enterpriseAdmin",
-    "fileAccess",
-    "thumbnail",
-    "preview",
-    "print",
-    "ui",
-    "push",
-    "driver",
-    "appAccountAuthorization"
 };
 
 const std::set<std::string> GRANT_MODE_SET = {
@@ -252,6 +246,7 @@ struct Module {
     std::string targetModule;
     int32_t targetPriority = 0;
     std::vector<ProxyData> proxyDatas;
+    std::vector<ProxyData> proxyData;
     std::string buildHash;
     std::string isolationMode;
     bool compressNativeLibs = true;
@@ -1338,6 +1333,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<ProxyData>>(jsonObject,
+        jsonObjectEnd,
+        MODULE_PROXY_DATA,
+        module.proxyData,
+        JsonType::ARRAY,
+        false,
+        g_parseResult,
+        ArrayType::OBJECT);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_BUILD_HASH,
@@ -1354,14 +1357,16 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        MODULE_COMPRESS_NATIVE_LIBS,
-        module.compressNativeLibs,
-        JsonType::BOOLEAN,
-        false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+    if (IsSupportCompressNativeLibs()) {
+        GetValueIfFindKey<bool>(jsonObject,
+            jsonObjectEnd,
+            MODULE_COMPRESS_NATIVE_LIBS,
+            module.compressNativeLibs,
+            JsonType::BOOLEAN,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1914,28 +1919,6 @@ bool ToAbilityInfo(
     return true;
 }
 
-ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type)
-{
-    for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (Profile::EXTENSION_TYPE_SET[index] == type) {
-            return static_cast<ExtensionAbilityType>(index);
-        }
-    }
-
-    return ExtensionAbilityType::UNSPECIFIED;
-}
-
-std::string ConvertToExtensionTypeName(ExtensionAbilityType type)
-{
-    for (size_t index = 0; index < Profile::EXTENSION_TYPE_SET.size(); ++index) {
-        if (index == static_cast<size_t>(type)) {
-            return Profile::EXTENSION_TYPE_SET[index];
-        }
-    }
-
-    return "Unspecified";
-}
-
 bool ToExtensionInfo(
     const Profile::ModuleJson &moduleJson,
     const Profile::Extension &extension,
@@ -2054,7 +2037,11 @@ bool ToInnerModuleInfo(
     } else {
         innerModuleInfo.targetPriority = moduleJson.module.targetPriority;
     }
-    innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    if (moduleJson.module.proxyDatas.empty()) {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyData;
+    } else {
+        innerModuleInfo.proxyDatas = moduleJson.module.proxyDatas;
+    }
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
@@ -2100,6 +2087,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
+    applicationInfo.isCompressNativeLibs = moduleJson.module.compressNativeLibs;
     if (!ToApplicationInfo(moduleJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;

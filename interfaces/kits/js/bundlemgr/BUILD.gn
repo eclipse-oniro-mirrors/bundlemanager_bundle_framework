@@ -44,7 +44,7 @@ ohos_shared_library("bundle") {
     "ability_base:want",
     "ability_runtime:runtime",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
     "napi:ace_napi",
     "samgr:samgr_proxy",
@@ -53,7 +53,7 @@ ohos_shared_library("bundle") {
   if (bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
     deps += [ "${inner_api_path}/bundlemgr_graphics:bundlemgr_graphics" ]
-    external_deps += [ "multimedia_image_framework:image" ]
+    external_deps += [ "image_framework:image" ]
   }
 
   relative_install_dir = "module"

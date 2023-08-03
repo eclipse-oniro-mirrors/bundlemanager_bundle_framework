@@ -647,6 +647,15 @@ private:
 
     ErrCode HandleGetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleSetExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleDelExtNameOrMIMEToApp(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleQueryDataGroupInfos(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

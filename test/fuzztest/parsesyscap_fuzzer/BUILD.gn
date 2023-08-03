@@ -40,7 +40,7 @@ ohos_fuzztest("ParseSysCapFuzzTest") {
   external_deps = [
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
   defines = []

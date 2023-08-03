@@ -22,10 +22,9 @@ ohos_unittest("BmsInstallDaemonTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = [
-    "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
-    "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
   sources += install_daemon_sources
@@ -52,14 +51,19 @@ ohos_unittest("BmsInstallDaemonTest") {
     "ability_runtime:ability_manager",
     "access_token:libaccesstoken_sdk",
     "access_token:libtokenid_sdk",
-    "hiviewdfx_hilog_native:libhilog",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -79,11 +83,13 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_installd_host_impl.cpp",
   ]
 
@@ -103,13 +109,18 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = []
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -129,6 +140,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
@@ -136,6 +148,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
     "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
+    "${services_path}/bundlemgr/src/system_ability_helper.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
   ]
 
@@ -155,14 +168,19 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
+
+  external_deps += bundle_install_external_deps
+
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {
@@ -204,14 +222,14 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
   external_deps = [
     "access_token:libtokenid_sdk",
     "c_utils:utils",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
   ]
   defines = [ "BUNDLE_FRAMEWORK_RETURN_FALSE" ]
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
   if (global_resmgr_enable) {

@@ -24,12 +24,12 @@
 #include "aging/aging_request.h"
 #include "bundle_active_client.h"
 #include "bundle_data_mgr.h"
-#include "event_handler.h"
+#include "serial_queue.h"
 #include "singleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleAgingMgr : public EventHandler {
+class BundleAgingMgr : public std::enable_shared_from_this<BundleAgingMgr> {
 public:
     enum AgingTriggertype {
         PREIOD = 0,
@@ -44,12 +44,10 @@ public:
 public:
     void Start(AgingTriggertype type);
     void InitAgingtTimer();
-    void InitAgingRunner();
 
 private:
     void InitAgingHandlerChain();
     void Process(const std::shared_ptr<BundleDataMgr> &dataMgr);
-    void ProcessEvent(const InnerEvent::Pointer &event) override;
     bool CheckPrerequisite(AgingTriggertype type) const;
     void InitAgingTimerInterval();
     void InitAgingBatteryThresold();
@@ -57,6 +55,7 @@ private:
     bool ResetRequest();
     bool IsReachStartAgingThreshold();
     bool QueryBundleStatsInfoByInterval(std::vector<DeviceUsageStats::BundleActivePackageStats> &results);
+    void ScheduleLoopTask();
 
 private:
     std::mutex mutex_;
@@ -64,7 +63,8 @@ private:
     AgingHandlerChain chain_;
     AgingRequest request_;
     int64_t agingTimerInterval_ = AgingConstants::DEFAULT_AGING_TIMER_INTERVAL;
-    int64_t agingBatteryThresold_ = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;;
+    int64_t agingBatteryThresold_ = AgingConstants::DEFAULT_AGING_BATTERY_THRESHOLD;
+    std::shared_ptr<SerialQueue> serialQueue_;
 
 private:
     static const uint32_t EVENT_AGING_NOW = 1;

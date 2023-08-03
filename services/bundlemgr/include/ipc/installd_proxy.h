@@ -18,8 +18,9 @@
 
 #include <string>
 
-#include "iremote_proxy.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_services_ipc_interface_code.h"
+#include "iremote_proxy.h"
 #include "ipc/installd_interface.h"
 
 namespace OHOS {
@@ -124,7 +125,8 @@ public:
 
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
 
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) override;
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+        const std::string &signatureFilePath = "") override;
 
     virtual ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
@@ -150,8 +152,13 @@ public:
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
 
+    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir) override;
+
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
+
 private:
-    ErrCode TransactInstalldCmd(uint32_t code, MessageParcel &data, MessageParcel &reply,
+    ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option);
     static inline BrokerDelegator<InstalldProxy> delegator_;
 };

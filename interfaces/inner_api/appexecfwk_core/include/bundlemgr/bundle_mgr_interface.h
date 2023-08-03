@@ -29,6 +29,7 @@
 #include "bundle_user_mgr_interface.h"
 #include "clean_cache_callback_interface.h"
 #include "common_event_info.h"
+#include "data_group_info.h"
 #include "../app_control/app_control_interface.h"
 #include "../default_app/default_app_interface.h"
 #include "../overlay/overlay_manager_interface.h"
@@ -1178,125 +1179,32 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 
-    enum Message : uint32_t {
-        GET_APPLICATION_INFO = 0,
-        GET_APPLICATION_INFOS,
-        GET_BUNDLE_INFO,
-        GET_BUNDLE_PACK_INFO,
-        GET_BUNDLE_INFOS,
-        GET_UID_BY_BUNDLE_NAME,
-        GET_APPID_BY_BUNDLE_NAME,
-        GET_BUNDLE_NAME_FOR_UID,
-        GET_BUNDLES_FOR_UID,
-        GET_NAME_FOR_UID,
-        GET_BUNDLE_GIDS,
-        GET_BUNDLE_GIDS_BY_UID,
-        GET_APP_TYPE,
-        CHECK_IS_SYSTEM_APP_BY_UID,
-        GET_BUNDLE_INFOS_BY_METADATA,
-        QUERY_ABILITY_INFO,
-        QUERY_ABILITY_INFOS,
-        QUERY_ABILITY_INFO_BY_URI,
-        QUERY_ABILITY_INFOS_BY_URI,
-        QUERY_KEEPALIVE_BUNDLE_INFOS,
-        GET_ABILITY_LABEL,
-        GET_ABILITY_LABEL_WITH_MODULE_NAME,
-        GET_BUNDLE_ARCHIVE_INFO,
-        GET_HAP_MODULE_INFO,
-        GET_LAUNCH_WANT_FOR_BUNDLE,
-        GET_PERMISSION_DEF,
-        CLEAN_BUNDLE_CACHE_FILES,
-        CLEAN_BUNDLE_DATA_FILES,
-        REGISTER_BUNDLE_STATUS_CALLBACK,
-        CLEAR_BUNDLE_STATUS_CALLBACK,
-        UNREGISTER_BUNDLE_STATUS_CALLBACK,
-        DUMP_INFOS,
-        IS_APPLICATION_ENABLED,
-        SET_APPLICATION_ENABLED,
-        IS_ABILITY_ENABLED,
-        SET_ABILITY_ENABLED,
-        GET_ABILITY_INFO,
-        GET_ABILITY_INFO_WITH_MODULE_NAME,
-        GET_ALL_FORMS_INFO,
-        GET_FORMS_INFO_BY_APP,
-        GET_FORMS_INFO_BY_MODULE,
-        GET_SHORTCUT_INFO,
-        GET_ALL_COMMON_EVENT_INFO,
-        GET_BUNDLE_INSTALLER,
-        QUERY_ABILITY_INFO_MUTI_PARAM,
-        QUERY_ABILITY_INFOS_MUTI_PARAM,
-        QUERY_ALL_ABILITY_INFOS,
-        GET_APPLICATION_INFO_WITH_INT_FLAGS,
-        GET_APPLICATION_INFOS_WITH_INT_FLAGS,
-        GET_BUNDLE_INFO_WITH_INT_FLAGS,
-        GET_BUNDLE_PACK_INFO_WITH_INT_FLAGS,
-        GET_BUNDLE_INFOS_WITH_INT_FLAGS,
-        GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS,
-        GET_BUNDLE_USER_MGR,
-        GET_DISTRIBUTE_BUNDLE_INFO,
-        QUERY_ABILITY_INFO_BY_URI_FOR_USERID,
-        GET_APPLICATION_PRIVILEGE_LEVEL,
-        QUERY_EXTENSION_INFO_WITHOUT_TYPE,
-        QUERY_EXTENSION_INFO,
-        QUERY_EXTENSION_INFO_BY_TYPE,
-        VERIFY_CALLING_PERMISSION,
-        QUERY_EXTENSION_ABILITY_INFO_BY_URI,
-        IS_MODULE_REMOVABLE,
-        SET_MODULE_REMOVABLE,
-        QUERY_ABILITY_INFO_WITH_CALLBACK,
-        UPGRADE_ATOMIC_SERVICE,
-        IS_MODULE_NEED_UPDATE,
-        SET_MODULE_NEED_UPDATE,
-        GET_HAP_MODULE_INFO_WITH_USERID,
-        IMPLICIT_QUERY_INFO_BY_PRIORITY,
-        IMPLICIT_QUERY_INFOS,
-        GET_ALL_DEPENDENT_MODULE_NAMES,
-        GET_SANDBOX_APP_BUNDLE_INFO,
-        QUERY_CALLING_BUNDLE_NAME,
-        GET_DEFAULT_APP_PROXY,
-        GET_BUNDLE_STATS,
-        CHECK_ABILITY_ENABLE_INSTALL,
-        GET_SANDBOX_APP_ABILITY_INFO,
-        GET_SANDBOX_APP_EXTENSION_INFOS,
-        GET_SANDBOX_MODULE_INFO,
-        GET_MEDIA_DATA,
-        GET_QUICK_FIX_MANAGER_PROXY,
-        GET_STRING_BY_ID,
-        GET_ICON_BY_ID,
-        GET_UDID_BY_NETWORK_ID,
-        GET_APP_CONTROL_PROXY,
-        SET_DEBUG_MODE,
-        QUERY_ABILITY_INFOS_V9,
-        QUERY_EXTENSION_INFO_WITHOUT_TYPE_V9,
-        QUERY_EXTENSION_INFO_V9,
-        GET_APPLICATION_INFOS_WITH_INT_FLAGS_V9,
-        GET_APPLICATION_INFO_WITH_INT_FLAGS_V9,
-        GET_BUNDLE_ARCHIVE_INFO_WITH_INT_FLAGS_V9,
-        GET_BUNDLE_INFO_WITH_INT_FLAGS_V9,
-        GET_BUNDLE_INFOS_WITH_INT_FLAGS_V9,
-        GET_SHORTCUT_INFO_V9,
-        REGISTER_BUNDLE_EVENT_CALLBACK,
-        UNREGISTER_BUNDLE_EVENT_CALLBACK,
-        GET_BUNDLE_INFO_FOR_SELF,
-        VERIFY_SYSTEM_API,
-        GET_OVERLAY_MANAGER_PROXY,
-        SILENT_INSTALL,
-        PROCESS_PRELOAD,
-        GET_APP_PROVISION_INFO,
-        GET_PROVISION_METADATA,
-        GET_BASE_SHARED_BUNDLE_INFOS,
-        GET_ALL_SHARED_BUNDLE_INFO,
-        GET_SHARED_BUNDLE_INFO,
-        GET_SHARED_BUNDLE_INFO_BY_SELF,
-        GET_SHARED_DEPENDENCIES,
-        GET_DEPENDENT_BUNDLE_INFO,
-        GET_UID_BY_DEBUG_BUNDLE_NAME,
-        QUERY_LAUNCHER_ABILITY_INFO,
-        GET_SPECIFIED_DISTRIBUTED_TYPE,
-        GET_ADDITIONAL_INFO,
-        GET_PROXY_DATA_INFOS,
-        GET_ALL_PROXY_DATA_INFOS,
-    };
+    virtual ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos)
+    {
+        return false;
+    }
+
+    virtual bool GetGroupDir(const std::string &dataGroupId, std::string &dir)
+    {
+        return false;
+    }
+
+    virtual bool QueryAppGalleryBundleName(std::string &bundleName)
+    {
+        return false;
+    }
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

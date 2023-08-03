@@ -14,15 +14,18 @@
  */
 
 #include <map>
+#include <mutex>
 #include <set>
+
+#include"extension_form_profile.h"
 #include "json_util.h"
 #include "nlohmann/json.hpp"
-#include "extension_form_profile.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-thread_local int32_t parseResult;
+int32_t g_parseResult = ERR_OK;
+std::mutex g_mutex;
 
 const int32_t MAX_FORM_NAME = 127;
 const std::map<std::string, FormsColorMode> formColorModeMap = {
@@ -74,6 +77,8 @@ struct ExtensionFormProfileInfo {
     std::string defaultDimension;
     std::vector<std::string> supportDimensions {};
     std::vector<Metadata> metadata {};
+    bool dataProxyEnabled = false;
+    bool isDynamic = true;
 };
 
 struct ExtensionFormProfileInfoVec {
@@ -89,7 +94,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         metadata.name,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -97,7 +102,7 @@ void from_json(const nlohmann::json &jsonObject, Metadata &metadata)
         metadata.value,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -110,7 +115,7 @@ void from_json(const nlohmann::json &jsonObject, Window &window)
         window.designWidth,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -118,7 +123,7 @@ void from_json(const nlohmann::json &jsonObject, Window &window)
         window.autoDesignWidth,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
 }
 
@@ -131,7 +136,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.name,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -139,7 +144,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.description,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -147,7 +152,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.src,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Window>(jsonObject,
         jsonObjectEnd,
@@ -155,7 +160,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.window,
         JsonType::OBJECT,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -163,7 +168,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.colorMode,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -171,7 +176,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.formConfigAbility,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -179,7 +184,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.type,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -187,7 +192,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.uiSyntax,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -195,7 +200,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.formVisibleNotify,
         JsonType::BOOLEAN,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -203,7 +208,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.isDefault,
         JsonType::BOOLEAN,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
@@ -211,7 +216,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.updateEnabled,
         JsonType::BOOLEAN,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -219,7 +224,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.scheduledUpdateTime,
         JsonType::STRING,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<int32_t>(jsonObject,
         jsonObjectEnd,
@@ -227,7 +232,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.updateDuration,
         JsonType::NUMBER,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
@@ -235,7 +240,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.defaultDimension,
         JsonType::STRING,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
@@ -243,7 +248,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.supportDimensions,
         JsonType::ARRAY,
         true,
-        parseResult,
+        g_parseResult,
         ArrayType::STRING);
     GetValueIfFindKey<std::vector<Metadata>>(jsonObject,
         jsonObjectEnd,
@@ -251,8 +256,24 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         extensionFormProfileInfo.metadata,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::DATA_PROXY_ENABLED,
+        extensionFormProfileInfo.dataProxyEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::IS_DYNAMIC,
+        extensionFormProfileInfo.isDynamic,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoVec &infos)
@@ -264,7 +285,7 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoVec &in
         infos.forms,
         JsonType::ARRAY,
         false,
-        parseResult,
+        g_parseResult,
         ArrayType::OBJECT);
 }
 
@@ -357,6 +378,9 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
         customizeData.value = data.value;
         info.metadata.emplace_back(customizeData);
     }
+
+    info.dataProxyEnabled = form.dataProxyEnabled;
+    info.isDynamic = form.isDynamic;
     return true;
 }
 
@@ -383,13 +407,18 @@ ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::v
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
 
-    auto forms = jsonObject.get<ExtensionFormProfileInfoVec>();
-    if (parseResult != ERR_OK) {
-        APP_LOGE("parseResult is %{public}d", parseResult);
-        int32_t ret = parseResult;
-        // need recover parse result to ERR_OK
-        parseResult = ERR_OK;
-        return ret;
+    ExtensionFormProfileInfoVec forms;
+    {
+        std::lock_guard<std::mutex> lock(g_mutex);
+        g_parseResult = ERR_OK;
+        forms = jsonObject.get<ExtensionFormProfileInfoVec>();
+        if (g_parseResult != ERR_OK) {
+            APP_LOGE("g_parseResult is %{public}d", g_parseResult);
+            int32_t ret = g_parseResult;
+            // need recover parse result to ERR_OK
+            g_parseResult = ERR_OK;
+            return ret;
+        }
     }
 
     if (!TransformToInfos(forms, infos)) {

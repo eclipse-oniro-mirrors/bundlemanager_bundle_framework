@@ -17,6 +17,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "ipc_types.h"
 
@@ -50,8 +51,28 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
 
 ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, MessageParcel &reply)
 {
-    std::string hapName = data.ReadString();
-    int32_t fd = CreateStream(hapName);
+    std::string fileName = data.ReadString();
+    if (fileName.empty()) {
+        APP_LOGE("HandleCreateStream param fileName is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t fd = CreateStream(fileName);
+    if (!reply.WriteFileDescriptor(fd)) {
+        APP_LOGE("write fd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleStreamInstallerHost::HandleCreateSignatureFileStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string moduleName = data.ReadString();
+    std::string fileName = data.ReadString();
+    if (moduleName.empty() || fileName.empty()) {
+        APP_LOGE("HandleCreateSignatureFileStream params are invalid");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+    int32_t fd = CreateSignatureFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -84,15 +105,21 @@ ErrCode BundleStreamInstallerHost::HandleInstall(MessageParcel &data, MessagePar
 
 void BundleStreamInstallerHost::init()
 {
-    funcMap_.emplace(StreamMessage::CREATE_STREAM, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
-        return this->HandleCreateStream(data, reply);
-    });
-    funcMap_.emplace(StreamMessage::CREATE_SHARED_BUNDLE_STREAM,
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateStream(data, reply);
+        });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_SHARED_BUNDLE_STREAM),
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
             return this->HandleCreateSharedBundleStream(data, reply);
         });
-    funcMap_.emplace(StreamMessage::STREAM_INSTALL, [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
-        return this->HandleInstall(data, reply);
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleInstall(data, reply);
+        });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_SIGNATURE_FILE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreateSignatureFileStream(data, reply);
     });
 }
 } // AppExecFwk

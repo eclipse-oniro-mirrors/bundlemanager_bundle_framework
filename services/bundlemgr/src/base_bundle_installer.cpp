@@ -48,6 +48,7 @@
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
 #include "hitrace_meter.h"
+#include "data_group_info.h"
 #include "datetime_ex.h"
 #include "installd_client.h"
 #include "parameter.h"
@@ -74,6 +75,7 @@ const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
 #ifdef QUOTA_PARAM_SET_ENABLE
@@ -618,6 +620,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         userId_);
     if (installParam.needSavePreInstallInfo) {
         PreInstallBundleInfo preInstallBundleInfo;
+        preInstallBundleInfo.SetBundleName(bundleName_);
         dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
         preInstallBundleInfo.SetAppType(newInfos.begin()->second.GetAppType());
         preInstallBundleInfo.SetVersionCode(newInfos.begin()->second.GetVersionCode());
@@ -807,10 +810,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
     // copy the haps to the dir which cannot be accessed from caller
-    ScopeGuard securityTempHapPathsGuard([this] { DeleteTempHapPaths(); });
-    if (installParam.withCopyHaps) {
-        CopyHapsToSecurityDir(bundlePaths);
-    }
+    ScopeGuard securityTempHapPathsGuard([this] { BundleUtil::DeleteTempDirs(toDeleteTempHapPath_); });
+    result = CopyHapsToSecurityDir(installParam, bundlePaths);
+    CHECK_RESULT(result, "copy file failed %{public}d");
 
     // check syscap
     result = CheckSysCap(bundlePaths);
@@ -850,6 +852,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     CHECK_RESULT(result, "verisoncode or bundleName is different in all haps %{public}d");
     UpdateInstallerState(InstallerState::INSTALL_VERSION_AND_BUNDLENAME_CHECKED);  // ---- 35%
 
+    // check if bundle exists in extension
+    result = CheckBundleInBmsExtension(bundleName_, userId_);
+    CHECK_RESULT(result, "bundle is already existed in bms extension %{public}d");
+
     // check native file
     result = CheckMultiNativeFile(newInfos);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
@@ -878,32 +884,43 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     });
 
     InnerBundleInfo oldInfo;
+    verifyCodeParams_ = installParam.verifyCodeParams;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
 
-    // rename for all temp dirs
+    // copy hap or hsp to real install dir
+    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
+    if (installParam.copyHapToInstallPath) {
+        APP_LOGD("begin to copy hap to install path");
+        result = SaveHapToInstallPath(newInfos);
+        CHECK_RESULT_WITH_ROLLBACK(result, "copy hap to install path failed %{public}d", newInfos, oldInfo);
+    }
+
+    // move so file to real installation dir
+    result = MoveSoFileToRealInstallationDir(newInfos);
+    CHECK_RESULT_WITH_ROLLBACK(result, "move so file to install path failed %{public}d", newInfos, oldInfo);
+
+    // attention pls, rename operation shoule be almost the last operation to guarantee the rollback operation
+    // when someone failure occurs in the installation flow
     result = RenameAllTempDir(newInfos);
     CHECK_RESULT_WITH_ROLLBACK(result, "rename temp dirs failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_RENAMED);                         // ---- 90%
 
+    // delete low-version hap or hsp when higher-version hap or hsp installed
     if (!uninstallModuleVec_.empty()) {
-        UninstallLowerVersionFeature(uninstallModuleVec_);
+        UninstallLowerVersionFeature(uninstallModuleVec_, installParam.noSkipsKill);
     }
 
+    // create data group dir
+    ScopeGuard groupDirGuard([&] { DeleteGroupDirsForException(); });
+    result = CreateDataGroupDirs(newInfos, oldInfo);
+    CHECK_RESULT_WITH_ROLLBACK(result, "create data group dirs failed with result %{public}d", newInfos, oldInfo);
+
+    // install cross-app hsp which has rollback operation in sharedBundleInstaller when some one failure occurs
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
 
-    SaveHapPathToRecords(installParam.isPreInstallApp, newInfos);
-    RemoveEmptyDirs(newInfos);
-    if (installParam.copyHapToInstallPath) {
-        APP_LOGD("begin to copy hap to install path");
-        if (!SaveHapToInstallPath()) {
-            APP_LOGE("copy hap to install path failed.");
-            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
-        }
-        APP_LOGD("copy hap to install path success");
-    }
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
@@ -931,6 +948,9 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
     ProcessAOT(installParam.isOTA, newInfos);
+    UpdateAppInstallControlled(userId_);
+    groupDirGuard.Dismiss();
+    RemoveOldGroupDirs();
     return result;
 }
 
@@ -1081,8 +1101,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
-        APP_LOGE("uninstall bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        APP_LOGW("uninstall bundle info missing");
+        return UninstallBundleFromBmsExtension(bundleName);
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1119,6 +1139,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
+
+    auto res = RemoveDataGroupDirs(oldInfo.GetBundleName(), userId_);
+    CHECK_RESULT(res, "RemoveDataGroupDirs failed %{public}d");
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
@@ -1204,8 +1227,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     std::lock_guard lock {mtx};
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
-        APP_LOGE("uninstall bundle info missing");
-        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+        APP_LOGW("uninstall bundle info missing");
+        return UninstallBundleFromBmsExtension(bundleName);
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1287,6 +1310,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 APP_LOGE("fail to removeArkProfile, error is %{public}d", result);
                 return result;
             }
+
             if ((result = CleanAsanDirectory(oldInfo)) != ERR_OK) {
                 APP_LOGE("fail to remove asan log path, error is %{public}d", result);
                 return result;
@@ -1595,7 +1619,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
 
-    if (newInfo.HasEntry() && oldInfo.HasEntry()) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         APP_LOGE("install more than one entry module");
         return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
     }
@@ -1607,7 +1631,7 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 
     // same version need to check app label
     ErrCode result = ERR_OK;
-    if (oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
+    if (!otaInstall_ && (oldInfo.GetVersionCode() == newInfo.GetVersionCode())) {
         result = CheckAppLabel(oldInfo, newInfo);
         if (result != ERR_OK) {
             APP_LOGE("CheckAppLabel failed %{public}d", result);
@@ -1692,7 +1716,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
     }
     // update module type is forbidden
-    if (newInfo.HasEntry() && oldInfo.HasEntry()) {
+    if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         if (!oldInfo.IsEntryModule(modulePackage_)) {
             APP_LOGE("install more than one entry module");
             return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
@@ -1769,10 +1793,7 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
-    if (result != ERR_OK) {
-        APP_LOGE("extract module and rename failed");
-        return result;
-    }
+    CHECK_RESULT(result, "extract module and rename failed %{public}d");
 
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_SUCCESS)) {
         APP_LOGE("old module update state failed");
@@ -2190,7 +2211,7 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         APP_LOGE("fail to create bundle data dir, error is %{public}d", result);
         return result;
     }
-    if (info.GetEntryInstallationFree()) {
+    if (info.GetApplicationBundleType() == BundleType::ATOMIC_SERVICE) {
         std::string bundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
             Constants::PATH_SEPARATOR + std::to_string(userId_) + Constants::BASE + info.GetBundleName();
         PrepareBundleDirQuota(info.GetBundleName(), newInnerBundleUserInfo.uid, bundleDataDir);
@@ -2217,6 +2238,134 @@ ErrCode BaseBundleInstaller::CreateBundleDataDir(InnerBundleInfo &info) const
         Constants::DATABASE + info.GetBundleName();
     info.SetAppDataBaseDir(dataBaseDir);
     info.AddInnerBundleUserInfo(newInnerBundleUserInfo);
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CreateDataGroupDirs(
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo)
+{
+    for (auto iter = newInfos.begin(); iter != newInfos.end(); iter++) {
+        auto result = GetGroupDirsChange(iter->second, oldInfo, isAppExist_);
+        CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    }
+    auto result = CreateGroupDirs();
+    CHECK_RESULT(result, "GetGroupDirsChange failed %{public}d");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::GetGroupDirsChange(const InnerBundleInfo &info,
+    const InnerBundleInfo &oldInfo, bool oldInfoExisted)
+{
+    if (oldInfoExisted) {
+        auto result = GetRemoveDataGroupDirs(oldInfo, info);
+        CHECK_RESULT(result, "GetRemoveDataGroupDirs failed %{public}d");
+    }
+    auto result = GetDataGroupCreateInfos(info);
+    CHECK_RESULT(result, "GetDataGroupCreateInfos failed %{public}d");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::GetRemoveDataGroupDirs(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo)
+{
+    auto oldDataGroupInfos = oldInfo.GetDataGroupInfos();
+    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    for (auto &item : oldDataGroupInfos) {
+        if (newDataGroupInfos.find(item.first) == newDataGroupInfos.end() &&
+            !(dataMgr_->IsShareDataGroupId(item.first, userId_)) && !item.second.empty()) {
+            std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+                + Constants::DATA_GROUP_PATH + item.second[0].uuid;
+            APP_LOGD("remove dir: %{public}s", dir.c_str());
+            removeGroupDirs_.emplace_back(dir);
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::RemoveOldGroupDirs() const
+{
+    for (const std::string &dir : removeGroupDirs_) {
+        APP_LOGD("RemoveOldGroupDirs %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        CHECK_RESULT(result, "RemoveDir failed %{public}d");
+    }
+    APP_LOGD("RemoveOldGroupDirs success");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CreateGroupDirs() const
+{
+    for (const DataGroupInfo &dataGroupInfo : createGroupDirs_) {
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + dataGroupInfo.uuid;
+        APP_LOGD("create group dir: %{public}s", dir.c_str());
+        auto result = InstalldClient::GetInstance()->Mkdir(dir,
+            DATA_GROUP_DIR_MODE, dataGroupInfo.uid, dataGroupInfo.gid);
+        CHECK_RESULT(result, "make groupDir failed %{public}d");
+    }
+    APP_LOGD("CreateGroupDirs success");
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::GetDataGroupCreateInfos(const InnerBundleInfo &newInfo)
+{
+    auto newDataGroupInfos = newInfo.GetDataGroupInfos();
+    for (auto &item : newDataGroupInfos) {
+        const std::string &dataGroupId = item.first;
+        if (item.second.empty()) {
+            APP_LOGE("dataGroupInfos in bundle: %{public}s is empty", newInfo.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + item.second[0].uuid;
+        bool dirExist = false;
+        auto result = InstalldClient::GetInstance()->IsExistDir(dir, dirExist);
+        CHECK_RESULT(result, "check IsExistDir failed %{public}d");
+        if (!dirExist) {
+            APP_LOGD("dir: %{public}s need to be created.", dir.c_str());
+            createGroupDirs_.emplace_back(item.second[0]);
+        }
+    }
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::DeleteGroupDirsForException() const
+{
+    for (const DataGroupInfo &info : createGroupDirs_) {
+        std::string dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId_)
+            + Constants::DATA_GROUP_PATH + info.uuid;
+        InstalldClient::GetInstance()->RemoveDir(dir);
+    }
+}
+
+ErrCode BaseBundleInstaller::RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const
+{
+    std::vector<DataGroupInfo> infos;
+    if (dataMgr_ == nullptr) {
+        APP_LOGE("dataMgr_ is nullptr");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    if (!(dataMgr_->QueryDataGroupInfos(bundleName, userId, infos))) {
+        return ERR_OK;
+    }
+    std::vector<std::string> removeDirs;
+    for (auto iter = infos.begin(); iter != infos.end(); iter++) {
+        std::string dir;
+        if (!(dataMgr_->IsShareDataGroupId(iter->dataGroupId, userId)) &&
+            dataMgr_->GetGroupDir(iter->dataGroupId, dir, userId)) {
+            APP_LOGD("dir: %{public}s need to be deleted.", dir.c_str());
+            removeDirs.emplace_back(dir);
+        }
+    }
+    for (const std::string &dir : removeDirs) {
+        auto result = InstalldClient::GetInstance()->RemoveDir(dir);
+        CHECK_RESULT(result, "RemoveDir failed %{public}d");
+    }
     return ERR_OK;
 }
 
@@ -2404,10 +2553,7 @@ ErrCode BaseBundleInstaller::RemoveBundleDataDir(const InnerBundleInfo &info) co
 {
     ErrCode result =
         InstalldClient::GetInstance()->RemoveBundleDataDir(info.GetBundleName(), userId_);
-    if (result != ERR_OK) {
-        APP_LOGE("fail to remove bundleName: %{public}s, error is %{public}d",
-            info.GetBundleName().c_str(), result);
-    }
+    CHECK_RESULT(result, "RemoveBundleDataDir failed %{public}d");
     return result;
 }
 
@@ -2559,6 +2705,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("parse hap file failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     ret = bundleInstallChecker_->CheckDeviceType(infos);
     if (ret != ERR_OK) {
@@ -2568,8 +2715,40 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     ret = bundleInstallChecker_->CheckIsolationMode(infos);
     if (ret != ERR_OK) {
         APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        ret = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     return ret;
+}
+
+void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
+    std::unordered_map<std::string, InnerBundleInfo> &infos,
+    int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if (hapVerifyRes.size() < bundlePaths.size()) {
+        APP_LOGE("hapVerifyRes size less than bundlePaths size");
+        return;
+    }
+    for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        auto dataGroupGids = provisionInfo.bundleInfo.dataGroupIds;
+        if (dataGroupGids.empty()) {
+            APP_LOGD("has no data-group-id in provisionInfo");
+            return;
+        }
+        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        if (dataMgr == nullptr) {
+            APP_LOGE("Get dataMgr shared_ptr nullptr");
+            return;
+        }
+        dataMgr->GenerateDataGroupInfos(infos[bundlePaths[i]], dataGroupGids, userId);
+    }
 }
 
 ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -2624,7 +2803,8 @@ bool BaseBundleInstaller::CheckApiInfo(const std::unordered_map<std::string, Inn
         return bundleInfo.compatibleVersion <= static_cast<uint32_t>(GetSdkApiVersion());
     }
     BmsExtensionDataMgr bmsExtensionDataMgr;
-    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo());
+    return bmsExtensionDataMgr.CheckApiInfo(infos.begin()->second.GetBaseBundleInfo(),
+        static_cast<uint32_t>(GetSdkApiVersion()));
 }
 
 ErrCode BaseBundleInstaller::CheckMultiNativeFile(
@@ -2720,7 +2900,7 @@ ErrCode BaseBundleInstaller::CheckVersionCompatibilityForHmService(const InnerBu
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec)
+ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill)
 {
     APP_LOGD("start to uninstall lower version feature hap");
     InnerBundleInfo info;
@@ -2735,9 +2915,12 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     }
 
     // kill the bundle process during uninstall.
-    if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
-        APP_LOGW("can not kill process");
+    if (noSkipsKill) {
+        if (!AbilityManagerHelper::UninstallApplicationProcesses(info.GetApplicationName(), info.GetUid(userId_))) {
+            APP_LOGW("can not kill process");
+        }
     }
+
     std::vector<std::string> moduleVec = info.GetModuleNameVec();
     InnerBundleInfo oldInfo = info;
     for (const auto &package : moduleVec) {
@@ -3145,23 +3328,56 @@ void BaseBundleInstaller::SaveHapPathToRecords(
     for (const auto &item : infos) {
         auto hapPathIter = hapPathRecords_.find(item.first);
         if (hapPathIter == hapPathRecords_.end()) {
-            hapPathRecords_.emplace(item.first, GetHapPath(item.second));
+            std::string tempDir = GetTempHapPath(item.second);
+            if (tempDir.empty()) {
+                APP_LOGW("get temp hap path failed");
+                continue;
+            }
+            APP_LOGD("tempDir is %{public}s", tempDir.c_str());
+            hapPathRecords_.emplace(item.first, tempDir);
+        }
+
+        std::string signatureFileDir = "";
+        FindSignatureFileDir(item.second.GetCurModuleName(), signatureFileDir);
+        auto signatureFileIter = signatureFileMap_.find(item.first);
+        if (signatureFileIter == signatureFileMap_.end()) {
+            signatureFileMap_.emplace(item.first, signatureFileDir);
         }
     }
 }
 
-bool BaseBundleInstaller::SaveHapToInstallPath()
+ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    // size of code signature files should be same with the size of hap and hsp
+    if (!signatureFileMap_.empty() && (signatureFileMap_.size() != hapPathRecords_.size())) {
+        APP_LOGE("each hap or hsp needs to be verified code signature");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    // 1. copy hsp or hap file to temp installation dir
+    ErrCode result = ERR_OK;
     for (const auto &hapPathRecord : hapPathRecords_) {
-        APP_LOGD("Save from(%{public}s) to(%{public}s)",
-            hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
-        if (InstalldClient::GetInstance()->CopyFile(
-            hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
-            APP_LOGE("Copy hap to install path failed");
-            return false;
+        APP_LOGD("Save from(%{public}s) to(%{public}s)", hapPathRecord.first.c_str(), hapPathRecord.second.c_str());
+        if ((signatureFileMap_.find(hapPathRecord.first) != signatureFileMap_.end()) &&
+            (!signatureFileMap_.at(hapPathRecord.first).empty())) {
+            result = InstalldClient::GetInstance()->CopyFile(hapPathRecord.first, hapPathRecord.second,
+                signatureFileMap_.at(hapPathRecord.first));
+            CHECK_RESULT(result, "Copy hap to install path failed or code signature hap failed %{public}d");
+        } else {
+            if (InstalldClient::GetInstance()->CopyFile(
+                hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+                APP_LOGE("Copy hap to install path failed");
+                return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+            }
         }
     }
-    return true;
+    APP_LOGD("copy hap to install path success");
+
+    // 2. move file from temp dir to real installation dir
+    if ((result = MoveFileToRealInstallationDir(infos)) != ERR_OK) {
+        APP_LOGE("move file to real installation path failed %{public}d", result);
+        return result;
+    }
+    return ERR_OK;
 }
 
 void BaseBundleInstaller::ResetInstallProperties()
@@ -3180,6 +3396,10 @@ void BaseBundleInstaller::ResetInstallProperties()
     sysEventInfo_.Reset();
     moduleName_.clear();
     toDeleteTempHapPath_.clear();
+    verifyCodeParams_.clear();
+    otaInstall_ = false;
+    signatureFileMap_.clear();
+    hapPathRecords_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -3484,40 +3704,50 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
     if (info.FetchNativeSoAttrs(modulePackage_, cpuAbi, nativeLibraryPath)) {
         if (isCompressNativeLibrary) {
             bool isLibIsolated = info.IsLibIsolated(info.GetCurModuleName());
-            if (isLibIsolated && BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
-                nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+            if (BundleUtil::EndWith(modulePath, Constants::TMP_SUFFIX)) {
+                if (isLibIsolated) {
+                    nativeLibraryPath = BuildTempNativeLibraryPath(nativeLibraryPath);
+                } else {
+                    nativeLibraryPath = info.GetCurrentModulePackage() + Constants::TMP_SUFFIX +
+                        Constants::PATH_SEPARATOR + nativeLibraryPath;
+                }
                 APP_LOGD("Need extract to temp dir: %{public}s", nativeLibraryPath.c_str());
             }
             targetSoPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR)
-                .append(nativeLibraryPath).append(Constants::PATH_SEPARATOR);
+                .append(info.GetBundleName()).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
+                .append(Constants::PATH_SEPARATOR);
         }
     }
 
     APP_LOGD("begin to extract module files, modulePath : %{private}s, targetSoPath : %{private}s, cpuAbi : %{public}s",
         modulePath.c_str(), targetSoPath.c_str(), cpuAbi.c_str());
+    std::string signatureFileDir = "";
+    auto ret = FindSignatureFileDir(info.GetCurModuleName(), signatureFileDir);
+    if (ret != ERR_OK) {
+        return ret;
+    }
     if (isCompressNativeLibrary) {
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
-        if (result != ERR_OK) {
-            APP_LOGE("fail to extract module dir, error is %{public}d", result);
-            return result;
-        }
+        CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
+        // verify hap or hsp code signature for compressed so files
+        result = InstalldClient::GetInstance()->VerifyCodeSignature(modulePath_, cpuAbi, targetSoPath,
+            signatureFileDir);
+        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
     } else {
+        auto result = InstalldClient::GetInstance()->CreateBundleDir(modulePath);
+        CHECK_RESULT(result, "fail to create temp bundle dir, error is %{public}d");
         std::vector<std::string> fileNames;
-        auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
-        if (result != ERR_OK) {
-            APP_LOGE("fail to GetNativeLibraryFileNames, error is %{public}d", result);
-            return result;
-        }
+        result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
+        CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
     return ERR_OK;
 }
 
 void BaseBundleInstaller::ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-    int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
+    uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const
 {
-    if ((oldVersionCode >= versionCode_) || oldNativeLibraryPath.empty()) {
+    if (((oldVersionCode >= versionCode_) && !otaInstall_) || oldNativeLibraryPath.empty()) {
         return;
     }
     for (const auto &item : newInfos) {
@@ -3545,62 +3775,31 @@ void BaseBundleInstaller::ProcessAOT(bool isOTA, const std::unordered_map<std::s
     AOTHandler::GetInstance().HandleInstall(infos);
 }
 
-void BaseBundleInstaller::CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths)
+ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installParam,
+    std::vector<std::string> &bundlePaths)
 {
+    if (!installParam.withCopyHaps) {
+        APP_LOGD("no need to copy preInstallApp to secure dir");
+        return ERR_OK;
+    }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
-        APP_LOGD("the original dir is %{public}s", bundlePaths[index].c_str());
-        std::string destination = "";
-        std::string subStr = Constants::STREAM_INSTALL_PATH;
-        destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR)
-            .append(Constants::SECURITY_STREAM_INSTALL_PATH);
-        destination = BundleUtil::CreateTempDir(destination);
-
-        auto pos = bundlePaths[index].find(subStr);
-        if (pos == std::string::npos) { // this circumstance could not be considered laterly
-            auto lastPathSeperator = bundlePaths[index].rfind(Constants::PATH_SEPARATOR);
-            if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != bundlePaths[index].length() - 1)) {
-                destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
-                destination = BundleUtil::CreateTempDir(destination);
-                toDeleteTempHapPath_.emplace_back(destination);
-                destination.append(bundlePaths[index].substr(lastPathSeperator));
-            }
-        } else {
-            auto secondLastPathSep = bundlePaths[index].find(Constants::PATH_SEPARATOR, pos);
-            if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == bundlePaths[index].length() - 1)) {
-                continue;
-            }
-            auto thirdLastPathSep =
-                bundlePaths[index].find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
-            if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == bundlePaths[index].length() - 1)) {
-                continue;
-            }
-            std::string innerSubstr =
-                bundlePaths[index].substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
-            destination = BundleUtil::CreateTempDir(destination.append(innerSubstr));
-            toDeleteTempHapPath_.emplace_back(destination);
-            destination.append(bundlePaths[index].substr(thirdLastPathSep + 1));
-        }
-        APP_LOGD("the destination dir is %{public}s", destination.c_str());
+        auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
+            toDeleteTempHapPath_);
         if (destination.empty()) {
-            continue;
-        }
-        if (!BundleUtil::CopyFile(bundlePaths[index], destination)) {
-            APP_LOGW("copy file from %{public}s to %{public}s failed", bundlePaths[index].c_str(),
-                destination.c_str());
-            continue;
+            APP_LOGE("copy file %{public}s to security dir failed", bundlePaths[index].c_str());
+            return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
         bundlePaths[index] = destination;
     }
+    return ERR_OK;
 }
-
 
 ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const
 {
     APP_LOGD("begin to rename all temp dir");
     ErrCode ret = ERR_OK;
     for (const auto &info : newInfos) {
-        if (info.second.IsOnlyCreateBundleUser() ||
-            !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
+        if (info.second.IsOnlyCreateBundleUser()) {
             continue;
         }
         if ((ret = RenameModuleDir(info.second)) != ERR_OK) {
@@ -3608,16 +3807,224 @@ ErrCode BaseBundleInstaller::RenameAllTempDir(const std::unordered_map<std::stri
             break;
         }
     }
-
+    RemoveEmptyDirs(newInfos);
     return ret;
 }
 
-void BaseBundleInstaller::DeleteTempHapPaths() const
+ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir)
 {
-    for (const auto &tempDir : toDeleteTempHapPath_) {
-        APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
-        BundleUtil::DeleteDir(tempDir);
+    APP_LOGD("begin to find code signature file of moudle %{public}s", moduleName.c_str());
+    if (verifyCodeParams_.empty()) {
+        signatureFileDir = "";
+        APP_LOGD("verifyCodeParams_ is empty and no need to verify code signature of module %{public}s",
+            moduleName.c_str());
+        return ERR_OK;
     }
+
+    auto iterator = verifyCodeParams_.find(moduleName);
+    if (iterator == verifyCodeParams_.end()) {
+        APP_LOGE("no signature file dir exist of module %{public}s", moduleName.c_str());
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    signatureFileDir = verifyCodeParams_.at(moduleName);
+
+    // check signature file suffix
+    auto ret = bundleInstallChecker_->CheckSignatureFileDir(signatureFileDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("checkout signature file dir %{public}s failed", signatureFileDir.c_str());
+        return ret;
+    }
+
+    // copy code signature file to security dir
+    std::string destinationStr =
+        BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
+    if (destinationStr.empty()) {
+        APP_LOGE("copy file %{public}s to security dir failed", signatureFileDir.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
+    signatureFileDir = destinationStr;
+    APP_LOGD("signatureFileDir is %{public}s", signatureFileDir.c_str());
+    return ERR_OK;
+}
+
+std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
+{
+    std::string hapPath = GetHapPath(info);
+    if (hapPath.empty() || (!BundleUtil::EndWith(hapPath, Constants::INSTALL_FILE_SUFFIX) &&
+        !BundleUtil::EndWith(hapPath, Constants::INSTALL_SHARED_FILE_SUFFIX))) {
+        APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
+        return "";
+    }
+    auto posOfPathSep = hapPath.rfind(Constants::PATH_SEPARATOR);
+    if (posOfPathSep == std::string::npos) {
+        return "";
+    }
+
+    std::string tempDir = hapPath.substr(0, posOfPathSep + 1) + info.GetCurrentModulePackage();
+    if (installedModules_[info.GetCurrentModulePackage()]) {
+        tempDir += Constants::TMP_SUFFIX;
+    }
+
+    return tempDir.append(hapPath.substr(posOfPathSep));
+}
+
+ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGD("start to move file to real installation dir");
+    for (const auto &info : infos) {
+        if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
+            APP_LOGE("path %{public}s cannot be found in hapPathRecord", info.first.c_str());
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+
+        std::string realInstallationPath = GetHapPath(info.second);
+        APP_LOGD("move hsp or hsp file from path %{public}s to path %{public}s",
+            hapPathRecords_.at(info.first).c_str(), realInstallationPath.c_str());
+        // 1. move hap or hsp to real installation dir
+        auto result = InstalldClient::GetInstance()->MoveFile(hapPathRecords_.at(info.first), realInstallationPath);
+        if (result != ERR_OK) {
+            APP_LOGE("move file to real path failed %{public}d", result);
+            return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
+    const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    APP_LOGD("start to move so file to real installation dir");
+    for (const auto &info : infos) {
+        if (info.second.IsLibIsolated(info.second.GetCurModuleName()) ||
+            !info.second.IsCompressNativeLibs(info.second.GetCurModuleName())) {
+            APP_LOGI("so files are isolated or decompressed and no necessary to move so files");
+            continue;
+        }
+        std::string cpuAbi = "";
+        std::string nativeLibraryPath = "";
+        bool isSoExisted = info.second.FetchNativeSoAttrs(info.second.GetCurrentModulePackage(), cpuAbi,
+            nativeLibraryPath);
+        if (installedModules_[info.second.GetCurrentModulePackage()] && isSoExisted) {
+            std::string tempSoDir;
+            tempSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(info.second.GetCurrentModulePackage())
+                .append(Constants::TMP_SUFFIX).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath);
+            bool isDirExisted = false;
+            auto result = InstalldClient::GetInstance()->IsExistDir(tempSoDir, isDirExisted);
+            if (result != ERR_OK) {
+                APP_LOGE("check if dir existed failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
+            if (!isDirExisted) {
+                APP_LOGW("temp so dir %{public}s is not existed and dose not need to be moved", tempSoDir.c_str());
+                continue;
+            }
+            std::string realSoDir;
+            realSoDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+                .append(info.second.GetBundleName()).append(Constants::PATH_SEPARATOR)
+                .append(nativeLibraryPath);
+            APP_LOGD("move so file from path %{public}s to path %{public}s", tempSoDir.c_str(), realSoDir.c_str());
+            isDirExisted = false;
+            result = InstalldClient::GetInstance()->IsExistDir(realSoDir, isDirExisted);
+            if (result != ERR_OK) {
+                APP_LOGE("check if dir existed failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
+            if (!isDirExisted) {
+                InstalldClient::GetInstance()->CreateBundleDir(realSoDir);
+            }
+            result = InstalldClient::GetInstance()->MoveFiles(tempSoDir, realSoDir);
+            if (result != ERR_OK) {
+                APP_LOGE("move file to real path failed %{public}d", result);
+                return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+            }
+        }
+    }
+    return ERR_OK;
+}
+
+void BaseBundleInstaller::UpdateAppInstallControlled(int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    if (!DelayedSingleton<AppControlManager>::GetInstance()->IsAppInstallControlEnabled()) {
+        APP_LOGD("app control feature is disabled");
+        return;
+    }
+
+    if (bundleName_.empty() || dataMgr_ == nullptr) {
+        APP_LOGW("invalid bundleName_ or dataMgr is nullptr");
+        return;
+    }
+    InnerBundleInfo info;
+    bool isAppExisted = dataMgr_->QueryInnerBundleInfo(bundleName_, info);
+    if (!isAppExisted) {
+        APP_LOGW("bundle %{public}s is not existed", bundleName_.c_str());
+        return;
+    }
+
+    InnerBundleUserInfo userInfo;
+    if (!info.GetInnerBundleUserInfo(userId, userInfo)) {
+        APP_LOGW("current bundle (%{public}s) is not installed at current userId (%{public}d)",
+            bundleName_.c_str(), userId);
+        return;
+    }
+
+    std::string currentAppId = info.GetAppId();
+    std::vector<std::string> appIds;
+    ErrCode ret = DelayedSingleton<AppControlManager>::GetInstance()->GetAppInstallControlRule(
+        AppControlConstants::EDM_CALLING, AppControlConstants::APP_DISALLOWED_UNINSTALL, userId, appIds);
+    if ((ret == ERR_OK) && (std::find(appIds.begin(), appIds.end(), currentAppId) != appIds.end())) {
+        APP_LOGW("bundle %{public}s cannot be removed", bundleName_.c_str());
+        userInfo.isRemovable = false;
+        dataMgr_->AddInnerBundleUserInfo(bundleName_, userInfo);
+    }
+#else
+    APP_LOGW("app control is disable");
+#endif
+}
+
+ErrCode BaseBundleInstaller::UninstallBundleFromBmsExtension(const std::string &bundleName)
+{
+    APP_LOGD("start to uninstall bundle from bms extension");
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGW("broker is not started");
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    auto ret = bmsExtensionDataMgr.Uninstall(bundleName);
+    if (ret == ERR_OK) {
+        APP_LOGD("uninstall bundle(%{public}s) from bms extension successfully", bundleName.c_str());
+        return ERR_OK;
+    }
+    if ((ret == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) ||
+        (ret == ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED)) {
+        APP_LOGE("uninstall failed due to bundle(%{public}s is not existed)", bundleName.c_str());
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
+    }
+    APP_LOGE("uninstall bundle(%{public}s) from bms extension faile due to errcode %{public}d",
+        bundleName.c_str(), ret);
+    return ERR_BUNDLE_MANAGER_UNINSTALL_FROM_BMS_EXTENSION_FAILED;
+}
+
+ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId)
+{
+    APP_LOGD("start to check bundle(%{public}s) from bms extension", bundleName.c_str());
+    if (!DelayedSingleton<BundleMgrService>::GetInstance()->IsBrokerServiceStarted()) {
+        APP_LOGW("broker is not started");
+        return ERR_OK;
+    }
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    BundleInfo extensionBundleInfo;
+    auto ret = bmsExtensionDataMgr.GetBundleInfo(bundleName, BundleFlag::GET_BUNDLE_DEFAULT, userId,
+        extensionBundleInfo);
+    if (ret == ERR_OK) {
+        APP_LOGE("the bundle(%{public}s) is already existed in the bms extension", bundleName.c_str());
+        return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

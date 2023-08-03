@@ -23,6 +23,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_data_storage_interface.h"
 #include "bundle_data_mgr.h"
+#include "bundle_mgr_service.h"
 #include "json_constants.h"
 #include "json_serializer.h"
 #include "parcel.h"
@@ -39,7 +40,7 @@ const std::string APP_NAME = "com.example.l3jsdemo";
 const std::string ABILITY_NAME = "com.example.l3jsdemo.MainAbility";
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
 const std::string EMPTY_STRING = "";
-const std::string MODULE_NAEM = "entry";
+const std::string MODULE_NAME = "entry";
 const std::string DEVICE_ID = "PHONE-001";
 const std::string LABEL = "hello";
 const std::string DESCRIPTION = "mainEntry";
@@ -71,7 +72,11 @@ public:
 
 private:
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsDataMgrTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsDataMgrTest::BmsDataMgrTest()
 {}
@@ -83,7 +88,10 @@ void BmsDataMgrTest::SetUpTestCase()
 {}
 
 void BmsDataMgrTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
+
 
 void BmsDataMgrTest::SetUp()
 {}
@@ -1677,7 +1685,7 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0001, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
 
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerModuleInfo.moduleName = MODULE_NAME;
     innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
     std::vector<ProxyData> proxyDatas;
 
@@ -1708,7 +1716,7 @@ HWTEST_F(BmsDataMgrTest, GetProxyDataInfos_0003, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
 
     InnerModuleInfo innerModuleInfo;
-    innerModuleInfo.moduleName = MODULE_NAEM;
+    innerModuleInfo.moduleName = MODULE_NAME;
     innerBundleInfo.InsertInnerModuleInfo(BUNDLE_NAME, innerModuleInfo);
     std::vector<ProxyData> proxyDatas;
 
@@ -1738,5 +1746,75 @@ HWTEST_F(BmsDataMgrTest, GetIsolationMode_0002, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
     IsolationMode res = innerBundleInfo.GetIsolationMode(ISOLATION_ONLY);
     EXPECT_EQ(res, IsolationMode::ISOLATION_ONLY);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0001
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0001, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<std::string> supportExtNames;
+    supportExtNames.emplace_back("book");
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0002
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0002, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0003
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0003, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: MatchPrivateType_0004
+ * @tc.name: MatchPrivateType
+ * @tc.desc: 1. MatchPrivateType
+ */
+HWTEST_F(BmsDataMgrTest, MatchPrivateType_0004, Function | SmallTest | Level0)
+{
+    auto dataMgr = GetDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    Want want;
+    want.SetUri("/test/test.jpg");
+    std::vector<std::string> supportExtNames;
+    std::vector<std::string> supportMimeTypes;
+    supportMimeTypes.emplace_back("image/jpeg");
+    bool ret = dataMgr->MatchPrivateType(want, supportExtNames, supportMimeTypes);
+    EXPECT_TRUE(ret);
 }
 } // OHOS

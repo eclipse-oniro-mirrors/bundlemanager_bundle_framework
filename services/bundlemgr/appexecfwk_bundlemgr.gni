@@ -17,10 +17,12 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/aot/aot_args.cpp",
   "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
   "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
+  "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
   "${services_path}/bundlemgr/src/installd/installd_permission_mgr.cpp",
   "${services_path}/bundlemgr/src/installd/installd_service.cpp",
   "${services_path}/bundlemgr/src/installd_client.cpp",
+  "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
   "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
   "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
@@ -45,6 +47,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/event_report.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
+  "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd_client.cpp",
   "${services_path}/bundlemgr/src/installd_death_recipient.cpp",
   "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
@@ -137,6 +140,8 @@ bundle_install_deps = [
   "${services_path}/bundlemgr:parser_common",
 ]
 
+bundle_install_external_deps = [ "ffrt:libffrt" ]
+
 if (bundle_framework_power_mgr_enable) {
   aot_external_deps = [
     "battery_manager:batterysrv_client",
@@ -162,7 +167,9 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
   "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
   "${services_path}/bundlemgr/src/bundle_user_mgr_host_impl.cpp",
+  "${services_path}/bundlemgr/src/common/serial_queue.cpp",
   "${services_path}/bundlemgr/src/hidump_helper.cpp",
+  "${services_path}/bundlemgr/src/mime_type_mgr.cpp",
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
 ]

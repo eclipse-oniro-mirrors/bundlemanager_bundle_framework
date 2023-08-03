@@ -108,18 +108,22 @@ public:
     void CreateFiles(const std::vector<std::string>& sourceFiles);
     void DeleteFiles(const std::vector<std::string>& destFiles);
     void ClearDataMgr();
-    void SetDataMgr();
+    void ResetDataMgr();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<QuickFixDeployer> deployer_ = nullptr;
     std::shared_ptr<QuickFixDeleter> deleter_ = nullptr;
     std::shared_ptr<QuickFixSwitcher> switcher_ = nullptr;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleQuickFixTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleQuickFixTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleQuickFixTest::BmsBundleQuickFixTest()
 {}
@@ -131,7 +135,9 @@ void BmsBundleQuickFixTest::SetUpTestCase()
 {}
 
 void BmsBundleQuickFixTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleQuickFixTest::SetUp()
 {
@@ -151,10 +157,9 @@ void BmsBundleQuickFixTest::ClearDataMgr()
     bundleMgrService_->dataMgr_ = nullptr;
 }
 
-void BmsBundleQuickFixTest::SetDataMgr()
+void BmsBundleQuickFixTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -1104,14 +1109,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0028, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HAP_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    auto callbackRes = callback->GetResCode();
-    EXPECT_TRUE(callbackRes != nullptr);
-    if (callbackRes != nullptr) {
-        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
-        const int32_t resultCode = jsonObject[RESULT_CODE];
-        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
-    }
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
 
 /**
@@ -1129,13 +1127,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0029, Function | SmallTest
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
     std::vector<std::string> path {HQF_FILE_PATH1};
     ErrCode ret = quickFixProxy->DeployQuickFix(path, callback);
-    EXPECT_EQ(ret, ERR_OK);
-    auto callbackRes = callback->GetResCode();
-    if (callbackRes != nullptr) {
-        auto jsonObject = nlohmann::json::parse(callbackRes->ToString());
-        const int32_t resultCode = jsonObject[RESULT_CODE];
-        EXPECT_EQ(resultCode, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
-    }
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH);
 }
 
 /**
@@ -1588,10 +1580,14 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0049, Function | SmallTest
         auto res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
         EXPECT_EQ(res, ERR_OK);
         const std::vector<std::string> sourceFiles {path};
+        std::vector<std::string> secureDirs;
+        res = quickFixManagerHostImpl.CopyHqfToSecurityDir(sourceFiles, secureDirs);
+        EXPECT_EQ(res, ERR_OK);
         std::vector<std::string> realFilePaths;
-        auto ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+        auto ret = deployer->ProcessBundleFilePaths(secureDirs, realFilePaths);
         EXPECT_EQ(ret, ERR_OK);
         DeleteFiles(sourceFiles);
+        DeleteFiles(secureDirs);
     }
 }
 
@@ -2557,33 +2553,10 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0095, Function | SmallTest
         ErrCode ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
         EXPECT_EQ(ret, ERR_OK);
         appQuickFix.deployingAppqfInfo.nativeLibraryPath = QUICK_FIX_SO_PATH;
-        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath);
-        EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+        ret = deployer->ProcessPatchDeployEnd(appQuickFix, patchPath); // hap has no so file
+        EXPECT_EQ(ret, ERR_OK);
     }
     UninstallBundleInfo(BUNDLE_NAME);
-}
-
-/**
- * @tc.number: BmsBundleQuickFixTest_0096
- * Function: ProcessPatchDeployStart
- * @tc.name: test ProcessPatchDeployStart
- * @tc.require: issueI5MZ5D
- * @tc.desc: ProcessPatchDeployStart
- */
-HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0096, Function | SmallTest | Level0)
-{
-    auto deployer = GetQuickFixDeployer();
-    EXPECT_FALSE(deployer == nullptr);
-    if (deployer != nullptr) {
-        std::vector<std::string> bundleFilePaths;
-        bundleFilePaths.emplace_back("/data/app/el2/100/base/com.ohos.photos");
-        BundleInfo bundleInfo;
-        std::unordered_map<std::string, AppQuickFix> infos;
-        AppQuickFix appQuickFix;
-        infos.emplace("appQuickFix_1", appQuickFix);
-        ErrCode ret = deployer->ProcessPatchDeployStart(bundleFilePaths, bundleInfo, infos);
-        EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
-    }
 }
 
 /**
@@ -3192,6 +3165,7 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0340, Function | SmallTest
         ret = deployer->SaveAppQuickFix(innerAppQuickFix);
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_SAVE_APP_QUICK_FIX_FAILED);
     }
+    quickFixMgr->quickFixManagerDb_ = std::make_shared<QuickFixManagerRdb>();
 }
 
 /**
@@ -3406,7 +3380,7 @@ HWTEST_F(BmsBundleQuickFixTest, FixDeployer_0003, Function | SmallTest | Level0)
         InnerAppQuickFix newInnerAppQuickFix;
         res = deployer->SaveToInnerBundleInfo(newInnerAppQuickFix);
         EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
-        SetDataMgr();
+        ResetDataMgr();
     }
 }
 
@@ -3706,21 +3680,6 @@ HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0100, Function | SmallTest | 
     EXPECT_EQ(rdb.quickFixManagerDb_, nullptr);
     bool ret = rdb.DeleteInnerAppQuickFix("");
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: QuickFixManagerRdb_0200
- * @tc.name: Test QuickFixManagerRdb
- * @tc.desc: 1.Test the failed scene of QuickFixManagerRdb
- */
-HWTEST_F(BmsBundleQuickFixTest, QuickFixManagerRdb_0200, Function | SmallTest | Level0)
-{
-    QuickFixManagerRdb rdb;
-    rdb.rdbDataManager_.reset();
-    ASSERT_EQ(rdb.rdbDataManager_, nullptr);
-    InnerAppQuickFix innerAppQuickFix;
-    bool ret = rdb.GetDataFromDb(BUNDLE_NAME, innerAppQuickFix);
-    EXPECT_EQ(ret, true);
 }
 
 /**
@@ -4218,24 +4177,27 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0400, Function | SmallTest
     if (deployer != nullptr) {
         BundleInfo bundleInfo;
         bundleInfo.applicationInfo.nativeLibraryPath = "";
-
-        bool ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_FALSE(ret);
+        std::string tmpSoPath = "";
+        std::string moduleName = "entry";
 
         HapModuleInfo moduleInfo;
         moduleInfo.nativeLibraryPath = "";
+        moduleInfo.moduleName = moduleName;
         bundleInfo.hapModuleInfos.push_back(moduleInfo);
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
+        bool ret = deployer->ExtractSoFiles(bundleInfo, "feature", tmpSoPath);
+        EXPECT_FALSE(ret);
+
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
         EXPECT_FALSE(ret);
 
         bundleInfo.applicationInfo.nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_TRUE(ret);
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
+        EXPECT_FALSE(ret);
 
         bundleInfo.applicationInfo.nativeLibraryPath = "";
         bundleInfo.hapModuleInfos[0].nativeLibraryPath = "libs/arm";
-        ret = deployer->ExtractSoFiles(bundleInfo, "");
-        EXPECT_TRUE(ret);
+        ret = deployer->ExtractSoFiles(bundleInfo, moduleName, tmpSoPath);
+        EXPECT_FALSE(ret);
     }
 }
 
@@ -4280,5 +4242,147 @@ HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0420, Function | SmallTest
         EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
     }
     UninstallBundleInfo(BUNDLE_NAME_DEMO);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0430
+ * Function: ProcessBundleFilePaths
+ * @tc.name: test ProcessBundleFilePaths
+ * @tc.desc: ProcessBundleFilePaths
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0430, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    ASSERT_FALSE(deployer == nullptr);
+    QuickFixManagerHostImpl quickFixManagerHostImpl;
+    std::string fileName = "test.hqf";
+    int32_t fd = -1;
+    std::string path = "";
+    auto res = quickFixManagerHostImpl.CreateFd(fileName, fd, path);
+    EXPECT_EQ(res, ERR_OK);
+    const std::vector<std::string> sourceFiles {path};
+    std::vector<std::string> realFilePaths;
+    auto ret = deployer->ProcessBundleFilePaths(sourceFiles, realFilePaths);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
+    deployer->DeployQuickFix();
+    DeleteFiles(sourceFiles);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0440
+ * Function: MoveHqfFiles
+ * @tc.name: test MoveHqfFiles
+ * @tc.desc: MoveHqfFiles
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0440, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    ASSERT_FALSE(deployer == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    hqfInfo.hqfFilePath = "data/test";
+    appQuickFix.deployingAppqfInfo.hqfInfos.push_back(hqfInfo);
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    std::string targetPath = "data/test";
+    auto ret = deployer->MoveHqfFiles(innerAppQuickFix, targetPath);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_MOVE_PATCH_FILE_FAILED);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0460
+ * Function: ToDeletePatchDir
+ * @tc.name: test ToDeletePatchDir
+ * @tc.desc: ToDeletePatchDir
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0460, Function | SmallTest | Level0)
+{
+    auto deleter = GetQuickFixDeleter();
+    ASSERT_FALSE(deleter == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    appQuickFix.deployingAppqfInfo.hqfInfos.push_back(hqfInfo);
+    appQuickFix.deployedAppqfInfo.type = QuickFixType::UNKNOWN;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    ErrCode ret = deleter->ToDeletePatchDir(innerAppQuickFix);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0470
+ * Function: ToDeletePatchDir
+ * @tc.name: test ToDeletePatchDir
+ * @tc.desc: ToDeletePatchDir
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0470, Function | SmallTest | Level0)
+{
+    auto deleter = GetQuickFixDeleter();
+    ASSERT_FALSE(deleter == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+    AppQuickFix appQuickFix;
+    HqfInfo hqfInfo;
+    hqfInfo.moduleName = "entry";
+    appQuickFix.deployingAppqfInfo.hqfInfos.push_back(hqfInfo);
+    appQuickFix.deployingAppqfInfo.type = QuickFixType::UNKNOWN;
+    innerAppQuickFix.SetAppQuickFix(appQuickFix);
+    ErrCode ret = deleter->ToDeletePatchDir(innerAppQuickFix);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_UNKNOWN_QUICK_FIX_TYPE);
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0480
+ * Function: RemoveDeployingInfo
+ * @tc.name: test RemoveDeployingInfo
+ * @tc.desc: RemoveDeployingInfo with dataMgr_ is nullptr
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0480, Function | SmallTest | Level0)
+{
+    auto deleter = GetQuickFixDeleter();
+    ASSERT_FALSE(deleter == nullptr);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    ErrCode ret = deleter->RemoveDeployingInfo("");
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: BmsBundleQuickFixTest_0490
+ * Function: InnerSwitchQuickFix
+ * @tc.name: test InnerSwitchQuickFix
+ * @tc.desc: InnerSwitchQuickFix, dataMgr_ is nullptr
+ */
+HWTEST_F(BmsBundleQuickFixTest, BmsBundleQuickFixTest_0490, Function | SmallTest | Level0)
+{
+    auto switcher = GetQuickFixSwitcher();
+    ASSERT_FALSE(switcher == nullptr);
+    InnerAppQuickFix innerAppQuickFix;
+
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = nullptr;
+    ErrCode ret = switcher->InnerSwitchQuickFix(BUNDLE_NAME, innerAppQuickFix, true);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
+}
+
+/**
+ * @tc.number: DeployQuickFix_0001
+ * Function: DeployQuickFix
+ * @tc.name: test DeployQuickFix
+ * @tc.require: issueI5N7AD
+ * @tc.desc: DeployQuickFix
+ */
+HWTEST_F(BmsBundleQuickFixTest, DeployQuickFix_0001, Function | SmallTest | Level0)
+{
+    auto deployer = GetQuickFixDeployer();
+    EXPECT_FALSE(deployer == nullptr);
+    std::string path = VALID_FILE_PATH_3;
+    deployer->patchPaths_.push_back(path);
+    ErrCode ret = deployer->DeployQuickFix();
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 } // OHOS

@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_install_checker.h"
 #include "inner_bundle_info.h"
+#include "bundle_mgr_service.h"
 
 using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
@@ -43,7 +44,12 @@ public:
         const std::vector<std::string> &deviceTypes);
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleInstallDeviceTypeTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleInstallDeviceTypeTest::BmsBundleInstallDeviceTypeTest()
 {
@@ -59,6 +65,7 @@ void BmsBundleInstallDeviceTypeTest::SetUpTestCase()
 
 void BmsBundleInstallDeviceTypeTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsBundleInstallDeviceTypeTest::SetUp()

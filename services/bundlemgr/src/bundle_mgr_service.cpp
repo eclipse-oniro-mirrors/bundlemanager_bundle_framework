@@ -15,6 +15,8 @@
 
 #include "bundle_mgr_service.h"
 
+#include <sys/stat.h>
+
 #include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "bundle_common_event.h"
@@ -26,6 +28,8 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "datetime_ex.h"
+#include "ffrt.h"
+#include "installd_client.h"
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
 #endif
@@ -39,6 +43,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t BUNDLE_BROKER_SERVICE_ABILITY_ID = 0x00010500;
+} // namespace
+
 const bool REGISTER_RESULT =
     SystemAbility::MakeAndRegisterAbility(DelayedSingleton<BundleMgrService>::GetInstance().get());
 
@@ -55,9 +63,6 @@ BundleMgrService::~BundleMgrService()
     if (handler_) {
         handler_.reset();
     }
-    if (runner_) {
-        runner_.reset();
-    }
     if (dataMgr_) {
         dataMgr_.reset();
     }
@@ -69,9 +74,6 @@ BundleMgrService::~BundleMgrService()
     if (hidumpHelper_) {
         hidumpHelper_.reset();
     }
-
-    bmsThreadPool_.Stop();
-
     APP_LOGI("instance is destroyed");
 }
 
@@ -84,6 +86,7 @@ void BundleMgrService::OnStart()
     }
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
+    AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
 }
 
 void BundleMgrService::OnStop()
@@ -105,7 +108,7 @@ bool BundleMgrService::Init()
     }
 
     APP_LOGI("Init begin");
-    InitThreadPool();
+    CreateBmsServiceDir();
     InitBmsParam();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
@@ -121,12 +124,6 @@ bool BundleMgrService::Init()
     ready_ = true;
     APP_LOGI("Init success");
     return true;
-}
-
-void BundleMgrService::InitThreadPool()
-{
-    bmsThreadPool_.Start(THREAD_NUMBER);
-    bmsThreadPool_.SetMaxTaskNum(Constants::MAX_TASK_NUMBER);
 }
 
 void BundleMgrService::InitBmsParam()
@@ -176,27 +173,14 @@ bool BundleMgrService::InitBundleUserMgr()
 
 bool BundleMgrService::InitBundleEventHandler()
 {
-    if (runner_ == nullptr) {
-        runner_ = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-        if (runner_ == nullptr) {
-            APP_LOGE("create runner fail");
-            return false;
-        }
-    }
-
     if (handler_ == nullptr) {
-        handler_ = std::make_shared<BMSEventHandler>(runner_);
-        handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-            AppExecFwk::EventQueue::Priority::IMMEDIATE);
-#ifdef HICOLLIE_ENABLE
-        int32_t timeout = 10 * 60 * 1000; // 10min
-        if (HiviewDFX::Watchdog::GetInstance().AddThread(Constants::BMS_SERVICE_NAME, handler_, timeout) != 0) {
-            APP_LOGE("watchdog addThread failed");
-        }
-#endif
+        handler_ = std::make_shared<BMSEventHandler>();
     }
-
-    handler_->SendEvent(BMSEventHandler::BMS_START);
+    auto task = [this]() {
+        BundleMemoryGuard memoryGuard;
+        handler_->BmsStartEvent();
+    };
+    ffrt::submit(task);
     return true;
 }
 
@@ -213,11 +197,8 @@ void BundleMgrService::InitFreeInstall()
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     if (agingMgr_ == nullptr) {
         APP_LOGI("Create aging manager");
-        agingMgr_ = DelayedSingleton<BundleAgingMgr>::GetInstance();
-        if (agingMgr_ != nullptr) {
-            agingMgr_->InitAgingRunner();
-            agingMgr_->InitAgingtTimer();
-        }
+        agingMgr_ = std::make_shared<BundleAgingMgr>();
+        agingMgr_->InitAgingtTimer();
     }
     if (connectAbilityMgr_ == nullptr) {
         APP_LOGI("Create BundleConnectAbility");
@@ -286,6 +267,16 @@ bool BundleMgrService::InitOverlayManager()
     return true;
 }
 
+void BundleMgrService::CreateBmsServiceDir()
+{
+    auto ret = InstalldClient::GetInstance()->Mkdir(
+        Constants::HAP_COPY_PATH, S_IRWXU | S_IXGRP | S_IRGRP | S_IROTH | S_IXOTH,
+        Constants::FOUNDATION_UID, Constants::BMS_GID);
+    if (!ret) {
+        APP_LOGE("create dir failed");
+    }
+}
+
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -329,6 +320,12 @@ void BundleMgrService::SelfClean()
             registerToService_ = false;
         }
     }
+    aotLoopTask_.reset();
+#ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
+    agingMgr_.reset();
+    connectAbilityMgr_.reset();
+    bundleDistributedManager_.reset();
+#endif
 }
 
 sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
@@ -435,6 +432,12 @@ void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::st
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
     }
+    if (BUNDLE_BROKER_SERVICE_ABILITY_ID == systemAbilityId) {
+        if (host_ != nullptr) {
+            isBrokerServiceStarted_ = true;
+            host_->SetBrokerServiceStatus(true);
+        }
+    }
 }
 
 bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string& result) const
@@ -447,9 +450,9 @@ bool BundleMgrService::Hidump(const std::vector<std::string> &args, std::string&
     return false;
 }
 
-ThreadPool &BundleMgrService::GetThreadPool()
+bool BundleMgrService::IsBrokerServiceStarted() const
 {
-    return bmsThreadPool_;
+    return isBrokerServiceStarted_;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

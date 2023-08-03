@@ -60,7 +60,7 @@ ErrCode OverlayManagerProxy::GetAllOverlayModuleInfo(const std::string &bundleNa
     }
 
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
-        IOverlayManager::Message::GET_ALL_OVERLAY_MODULE_INFO, data, overlayModuleInfo);
+        OverlayManagerInterfaceCode::GET_ALL_OVERLAY_MODULE_INFO, data, overlayModuleInfo);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
@@ -92,7 +92,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &bundleName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfo(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_NAME, data, overlayModuleInfo);
+    return GetParcelableInfo(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_NAME, data, overlayModuleInfo);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &moduleName,
@@ -120,7 +120,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfo(const std::string &moduleName,
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    return GetParcelableInfo(IOverlayManager::Message::GET_OVERLAY_MODULE_INFO, data, overlayModuleInfo);
+    return GetParcelableInfo(OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO, data, overlayModuleInfo);
 }
 
 ErrCode OverlayManagerProxy::GetTargetOverlayModuleInfo(const std::string &targetModuleName,
@@ -150,7 +150,7 @@ ErrCode OverlayManagerProxy::GetTargetOverlayModuleInfo(const std::string &targe
     }
 
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
-        IOverlayManager::Message::GET_TARGET_OVERLAY_MODULE_INFOS, data, overlayModuleInfos);
+        OverlayManagerInterfaceCode::GET_TARGET_OVERLAY_MODULE_INFOS, data, overlayModuleInfos);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfoByBundleName(const std::string &bundleName,
@@ -183,7 +183,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoByBundleName(const std::string 
     }
 
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
-        IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data, overlayModuleInfos);
+        OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, data, overlayModuleInfos);
 }
 
 ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
@@ -217,7 +217,7 @@ ErrCode OverlayManagerProxy::GetOverlayModuleInfoForTarget(const std::string &ta
     }
 
     return GetParcelableInfosWithErrCode<OverlayModuleInfo>(
-        IOverlayManager::Message::GET_OVERLAY_MODULE_INFO_FOR_TARGET, data, overlayModuleInfo);
+        OverlayManagerInterfaceCode::GET_OVERLAY_MODULE_INFO_FOR_TARGET, data, overlayModuleInfo);
 }
 
 ErrCode OverlayManagerProxy::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
@@ -250,7 +250,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabledForSelf(const std::string &moduleN
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IOverlayManager::Message::SET_OVERLAY_ENABLED_FOR_SELF, data, reply)) {
+    if (!SendTransactCmd(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED_FOR_SELF, data, reply)) {
         APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -294,7 +294,7 @@ ErrCode OverlayManagerProxy::SetOverlayEnabled(const std::string &bundleName, co
     }
 
     MessageParcel reply;
-    if (!SendTransactCmd(IOverlayManager::Message::SET_OVERLAY_ENABLED, data, reply)) {
+    if (!SendTransactCmd(OverlayManagerInterfaceCode::SET_OVERLAY_ENABLED, data, reply)) {
         APP_LOGE("SendTransactCmd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -332,11 +332,12 @@ ErrCode OverlayManagerProxy::GetOverlayBundleInfoForTarget(const std::string &ta
     }
 
     return GetParcelableInfosWithErrCode<OverlayBundleInfo>(
-        IOverlayManager::Message::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET, data, overlayBundleInfo);
+        OverlayManagerInterfaceCode::GET_OVERLAY_BUNDLE_INFO_FOR_TARGET, data, overlayBundleInfo);
 }
 
 template<typename T>
-ErrCode OverlayManagerProxy::GetParcelableInfo(IOverlayManager::Message code, MessageParcel &data, T &parcelableInfo)
+ErrCode OverlayManagerProxy::GetParcelableInfo(
+    OverlayManagerInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -361,8 +362,8 @@ ErrCode OverlayManagerProxy::GetParcelableInfo(IOverlayManager::Message code, Me
 }
 
 template<typename T>
-ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(IOverlayManager::Message code, MessageParcel &data,
-    std::vector<T> &parcelableInfos)
+ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(
+    OverlayManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
 {
     MessageParcel reply;
     if (!SendTransactCmd(code, data, reply)) {
@@ -388,7 +389,7 @@ ErrCode OverlayManagerProxy::GetParcelableInfosWithErrCode(IOverlayManager::Mess
     return res;
 }
 
-bool OverlayManagerProxy::SendTransactCmd(IOverlayManager::Message code, MessageParcel &data, MessageParcel &reply)
+bool OverlayManagerProxy::SendTransactCmd(OverlayManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);
 
@@ -397,7 +398,7 @@ bool OverlayManagerProxy::SendTransactCmd(IOverlayManager::Message code, Message
         APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-    int32_t result = remote->SendRequest(code, data, reply, option);
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
     if (result != NO_ERROR) {
         APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;

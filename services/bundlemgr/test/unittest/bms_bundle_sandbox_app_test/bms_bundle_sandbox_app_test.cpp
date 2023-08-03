@@ -33,6 +33,7 @@ using namespace OHOS::EventFwk;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_NAME_INVALID = "";
@@ -47,7 +48,7 @@ const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3jsdemo";
 const std::string HAP_FILE_DIR = "/data/storage/el2/base";
-const std::string BUNDLE_NAME_TEST = "com.ohos.test";
+const std::string BUNDLE_NAME_TEST = "com.sandbox.test";
 int32_t INVALID_DLP_TYPE = 0;
 int32_t DLP_TYPE_1 = 1;
 int32_t DLP_TYPE_2 = 2;
@@ -95,16 +96,20 @@ private:
     bool GetDataMgr();
     bool GetSandboxDataMgr();
 
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxDataMgr> sandboxDataMgr_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> bundleSandboxAppHelper_ =
         DelayedSingleton<BundleSandboxAppHelper>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsSandboxAppTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsSandboxAppTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsSandboxAppTest::BmsSandboxAppTest()
 {}
@@ -118,6 +123,7 @@ void BmsSandboxAppTest::SetUpTestCase()
 
 void BmsSandboxAppTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsSandboxAppTest::SetUp()
@@ -142,15 +148,14 @@ void BmsSandboxAppTest::ClearDataMgr()
 
 void BmsSandboxAppTest::SetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int32_t dplType, int32_t userId,
     int32_t &appIndex) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -161,7 +166,7 @@ ErrCode BmsSandboxAppTest::InstallSandboxApp(const std::string &bundleName, int3
 
 ErrCode BmsSandboxAppTest::UninstallSandboxApp(const std::string &bundleName, int32_t appIndex, int32_t userId) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -247,7 +252,8 @@ bool BmsSandboxAppTest::GetDataMgr()
 ErrCode BmsSandboxAppTest::InstallBundles(const std::vector<std::string> &filePaths,
     bool &&flag) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -2152,10 +2158,12 @@ HWTEST_F(BmsSandboxAppTest, GetBundleInfoForSelf_0100, Function | SmallTest | Le
 
     setuid(TEST_UID);
     BundleInfo bundleInfo;
+    bundleMgrService_->GetDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, info);
     ErrCode res = bundleMgrHostImpl_->GetBundleInfoForSelf(APP_INDEX_1, bundleInfo);
-    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_EQ(res, ERR_OK);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
 }
 
 /**
@@ -2226,4 +2234,95 @@ HWTEST_F(BmsSandboxAppTest, VerifyDependency_0200, Function | SmallTest | Level1
     EXPECT_EQ(res, false);
 
     DeleteSandboxAppInfo(BUNDLE_NAME_TEST, APP_INDEX_1);
+    bundleMgrService_->GetDataMgr()->bundleInfos_.clear();
 }
+
+/**
+ * @tc.number: RestoreSandboxPersistentInnerBundleInfo_0100
+ * @tc.name: test RestoreSandboxPersistentInnerBundleInfo
+ * @tc.desc: 1. test RestoreSandboxPersistentInnerBundleInfo is false
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxPersistentInnerBundleInfo_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    sundleSandboxDataMgr.sandboxAppInfos_.emplace("", innerBundleInfo);
+    bool res = sundleSandboxDataMgr.RestoreSandboxPersistentInnerBundleInfo();
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: RestoreSandboxAppIndex_0100
+ * @tc.name: test RestoreSandboxAppIndex
+ * @tc.desc: 1. test RestoreSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxAppIndex_0100, Function | SmallTest | Level1)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    int32_t appIndex = 1;
+    bool res = sundleSandboxDataMgr.RestoreSandboxAppIndex("", appIndex);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: RestoreSandboxAppIndex_0200
+ * @tc.name: test RestoreSandboxAppIndex
+ * @tc.desc: 1. test RestoreSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, RestoreSandboxAppIndex_0200, Function | SmallTest | Level1)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    int32_t appIndex = 1;
+    std::set<int32_t> innerSet { appIndex };
+    sundleSandboxDataMgr.sandboxAppIndexMap_.emplace(BUNDLE_NAME_TEST, innerSet);
+    bool ret = sundleSandboxDataMgr.RestoreSandboxAppIndex(BUNDLE_NAME_TEST, appIndex);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SaveSandboxPersistentInfo_0100
+ * @tc.name: test SaveSandboxPersistentInfo
+ * @tc.desc: 1.the sandboxManagerDb_ is empty
+ *           2.the SaveSandboxPersistentInfo failed
+ */
+HWTEST_F(BmsSandboxAppTest, SaveSandboxPersistentInfo_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    InnerBundleInfo innerBundleInfo;
+    sundleSandboxDataMgr.sandboxManagerDb_ = nullptr;
+    bool ret = sundleSandboxDataMgr.SaveSandboxPersistentInfo("", innerBundleInfo);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: RemoveSandboxPersistentInfo_0100
+ * @tc.name: test RemoveSandboxPersistentInfo
+ * @tc.desc: 1.the sandboxManagerDb_ is empty
+ *           2.the sandboxManagerDb_ failed
+ */
+HWTEST_F(BmsSandboxAppTest, RemoveSandboxPersistentInfo_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr sundleSandboxDataMgr;
+    sundleSandboxDataMgr.sandboxManagerDb_ = nullptr;
+    bool ret = sundleSandboxDataMgr.RemoveSandboxPersistentInfo("");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: DeleteSandboxAppIndex_0100
+ * @tc.name: test DeleteSandboxAppIndex
+ * @tc.desc: 1.the DeleteSandboxAppIndex
+ */
+HWTEST_F(BmsSandboxAppTest, DeleteSandboxAppIndex_0100, Function | SmallTest | Level0)
+{
+    BundleSandboxDataMgr dataMgr;
+    std::set<int32_t> set;
+    int32_t appIndex1 = 100;
+    int32_t appIndex2 = 10;
+    set.insert(appIndex1);
+    set.insert(appIndex2);
+    dataMgr.sandboxAppIndexMap_.insert(std::pair<std::string, std::set<int32_t>>(BUNDLE_NAME, set));
+    bool ret = dataMgr.DeleteSandboxAppIndex(BUNDLE_NAME, INVALID_APP_INDEX);
+    EXPECT_EQ(ret, false);
+}
+} // OHOS

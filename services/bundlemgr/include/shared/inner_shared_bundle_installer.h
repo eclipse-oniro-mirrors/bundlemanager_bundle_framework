@@ -90,10 +90,22 @@ private:
     void AddAppProvisionInfo(const std::string &bundleName,
         const Security::Verify::ProvisionInfo &provisionInfo) const;
     void SaveInstallParamInfo(const std::string &bundleName, const InstallParam &installParam) const;
+    ErrCode CopyHspToSecurityDir(std::vector<std::string> &bundlePaths);
+    ErrCode ObtainHspFileAndSignatureFilePath(const std::vector<std::string> &inBundlePaths,
+        std::vector<std::string> &bundlePaths, std::string &signatureFilePath);
+    ErrCode SaveHspToRealInstallationDir(const std::string &bundlePath, const std::string &moduleDir,
+        const std::string &moduleName, const std::string &realHspPath);
+    std::string ObtainTempSoPath(const std::string &moduleName, const std::string &nativeLibPath);
+    ErrCode MoveSoToRealPath(const std::string &moduleName, const std::string &versionDir);
+    ErrCode ProcessNativeLibrary(const std::string &bundlePath,
+        const std::string &moduleDir, const std::string &moduleName, const std::string &versionDir,
+        InnerBundleInfo &newInfo);
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
     std::string bundleName_;
+    std::string signatureFileDir_;
+    std::vector<std::string> toDeleteTempHspPath_;
     // the key is the real path of each hsp file
     std::unordered_map<std::string, InnerBundleInfo> parsedBundles_;
     // created directories during installation, will be deleted when rollback.
@@ -102,6 +114,7 @@ private:
     InnerBundleInfo oldBundleInfo_;
     InnerBundleInfo newBundleInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
+    std::string nativeLibraryPath_;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 

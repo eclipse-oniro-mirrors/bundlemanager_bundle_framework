@@ -25,27 +25,13 @@ namespace AppExecFwk {
 namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
-constexpr const char* BUNDLE_PROFILE_NAME = "config.json";
-constexpr const char* MODULE_PROFILE_NAME = "module.json";
-constexpr const char* PATCH_PROFILE_NAME = "patch.json";
-constexpr const char* BUNDLE_PACKFILE_NAME = "pack.info";
-constexpr const char* SYSCAP_NAME = "rpcid.sc";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
 constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
-constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";
-constexpr const char* ILLEGAL_PATH_FIELD = "../";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
-constexpr const char* BUNDLE_DATA_BASE_FILE = "/data/bundlemgr/bmsdb.json";
-constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
-constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
-constexpr const char* SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-constexpr const char* THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
-constexpr const char* THIRD_SYSTEM_APP_INSTALL_PATH = "/data/app/el1/bundle";
-constexpr const char* THIRD_PARTY_APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
@@ -58,27 +44,15 @@ constexpr const char* BASE = "/base/";
 constexpr const char* DATABASE = "/database/";
 constexpr const char* HAPS = "/haps/";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
-constexpr const char* BUNDLE_USER_INFO_PATH =
-    "/data/service/el1/public/bms/bundle_manager_service/bundle_user_info.json";
-constexpr const char* BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
-constexpr const char* DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
-constexpr const char* SHARE_FILE_PATH = "/data/service/el2/%/share/";
-constexpr const char* DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
 constexpr const char* REAL_DATA_PATH = "/data/app/el2";
+constexpr const char* DATA_GROUP_PATH = "/group/";
 constexpr const char* STREAM_INSTALL_PATH = "stream_install";
 constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
-constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
-constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
 const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
-constexpr const char* BMS_SERVICE_NAME = "BundleMgrService";
-constexpr const char* INSTALLD_SERVICE_NAME = "installd";
-constexpr const char* SYSTEM_APP = "system";
-constexpr const char* THIRD_PARTY_APP = "third-party";
-constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
-constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -151,6 +125,7 @@ constexpr int32_t BASE_SYS_VEN_UID = 5000;
 constexpr int32_t MAX_SYS_VEN_UID = 5999;
 constexpr int32_t BASE_APP_UID = 10000;
 constexpr int32_t BASE_USER_RANGE = 200000;
+constexpr int32_t DATA_GROUP_UID_OFFSET = 100000;
 constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t U_VALUE = 100000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
@@ -164,6 +139,7 @@ constexpr int32_t END_UID_FOR_RENDER_PROCESS = 1099999;
 
 // permissions
 constexpr const char* PERMISSION_INSTALL_BUNDLE = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* PERMISSION_INSTALL_ENTERPRISE_BUNDLE = "ohos.permission.INSTALL_ENTERPRISE_BUNDLE";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO = "ohos.permission.GET_BUNDLE_INFO";
 constexpr const char* PERMISSION_GET_BUNDLE_INFO_PRIVILEGED = "ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 constexpr const char* PERMISSION_CHANGE_ABILITY_ENABLED_STATE = "ohos.permission.CHANGE_ABILITY_ENABLED_STATE";
@@ -203,17 +179,9 @@ constexpr uint8_t MAX_MODULE_ABILITIES_WRITEPERMISSION = 255;
 constexpr uint8_t MAX_MODULE_SHORTCUTID = 63;
 constexpr uint8_t MAX_MODULE_LABEL = 63;
 constexpr uint8_t MAX_JSON_ELEMENT_LENGTH = 255;
-constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 512;
+constexpr uint16_t MAX_JSON_ARRAY_LENGTH = 5120;
 // max number of haps under one direction
 constexpr uint8_t MAX_HAP_NUMBER = 128;
-
-// distributed database
-constexpr const char* APP_ID = "bundle_manager_service";
-constexpr const char* STORE_ID = "installed_bundle_datas";
-constexpr const char* ABILITY_USAGE_STORE_ID = "ability_usage_datas";
-constexpr const char* PRE_INSTALL_DATA_STORE_ID = "preinstall_usage_datas";
-constexpr const char* DISTRIBUTE_DATA_STORE_ID = "distribute_bundle_datas";
-constexpr const char* DEFAULT_APP_DATA_STORE_ID = "default_app_datas";
 
 // single max hap size
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
@@ -242,7 +210,6 @@ constexpr int MAX_DEVICETYPE_SIZE = 50;
 // appFeature
 constexpr const char* HOS_NORMAL_APP = "hos_normal_app";
 constexpr const char* HOS_SYSTEM_APP = "hos_system_app";
-constexpr const char* OHOS_SYSTEM_APP = "ohos_system_app";
 
 // rdb
 constexpr const char* BUNDLE_RDB_NAME = "/bmsdb.db";
@@ -264,19 +231,6 @@ constexpr int32_t INVALID_FILE_SIZE = -1;
 // permission
 constexpr const char* LISTEN_BUNDLE_CHANGE = "ohos.permission.LISTEN_BUNDLE_CHANGE";
 
-// hmdfs and sharefs config
-constexpr const char* HMDFS_CONFIG_PATH {"/config/hmdfs/"};
-constexpr const char* SHAREFS_CONFIG_PATH {"/config/sharefs/"};
-constexpr const char* BUNDLE_ID_FILE = { "appid" };
-
-// pre bundle profile
-constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
-constexpr const char* PRODUCT_SUFFIX = "/etc/app";
-constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
-constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
-constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
-constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/install_list_permissions.json";
-
 // sandbox application
 constexpr const char* SANDBOX_APP_INDEX = "sandbox_app_index";
 constexpr int32_t INITIAL_APP_INDEX = 0;
@@ -295,14 +249,7 @@ constexpr const char* APP_PROVISION_TYPE_RELEASE = "release";
 // crowdtesting
 constexpr int64_t INVALID_CROWDTEST_DEADLINE = -1;
 
-// syscap
-constexpr const char* SYSCAP_SERVICE_ID = "syscap";
-constexpr const char* SYSCAP_SERVICE_TYPE = "syscap";
-constexpr const char* CHARACTER_OS_SYSCAP = "ossyscap";
-constexpr const char* CHARACTER_PRIVATE_SYSCAP = "privatesyscap";
-
 // thread pool
-constexpr int32_t MAX_TASK_NUMBER = 10;
 constexpr const char* RELATIVE_PATH = "../";
 
 // app detail ability
@@ -316,22 +263,19 @@ constexpr int32_t OVERLAY_MAXIMUM_PRIORITY = 100;
 constexpr const char* OVERLAY_STATE = "overlayState";
 constexpr const char* PERMISSION_CHANGE_OVERLAY_ENABLED_STATE = "ohos.permission.CHANGE_OVERLAY_ENABLED_STATE";
 
-// replace want int ecological rule
-constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
-
-constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
-constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // ark compile mode
 constexpr const char* COMPILE_NONE = "none";
 constexpr const char* COMPILE_PARTIAL = "partial";
 constexpr const char* COMPILE_FULL = "full";
-// ark compile option parameter key
-constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
-constexpr const char* COMPILE_OTA_PARAM_KEY = "persist.bm.ota.arkopt";
-constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
 
 constexpr const char* ARK_CACHE_PATH = "/data/local/ark-cache/";
 constexpr const char* ARK_PROFILE_PATH = "/data/local/ark-profile/";
+
+// code signature
+constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
+constexpr const char* CODE_SIGNATURE_HAP = "Hap";
+constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
+constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

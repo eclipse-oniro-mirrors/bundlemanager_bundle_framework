@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -22,22 +22,22 @@ using namespace OHOS::AppExecFwk;
 
 class AppExecFwkLogTest : public testing::Test {
 public:
-    static void SetUpTestCase() const;
-    static void TearDownTestCase() const;
-    void SetUp() const;
-    void TearDown() const;
+    static void SetUpTestCase();
+    static void TearDownTestCase();
+    void SetUp();
+    void TearDown();
 };
 
-void AppExecFwkLogTest::SetUpTestCase() const
+void AppExecFwkLogTest::SetUpTestCase()
 {}
 
-void AppExecFwkLogTest::TearDownTestCase() const
+void AppExecFwkLogTest::TearDownTestCase()
 {}
 
-void AppExecFwkLogTest::SetUp() const
+void AppExecFwkLogTest::SetUp()
 {}
 
-void AppExecFwkLogTest::TearDown() const
+void AppExecFwkLogTest::TearDown()
 {}
 
 /*

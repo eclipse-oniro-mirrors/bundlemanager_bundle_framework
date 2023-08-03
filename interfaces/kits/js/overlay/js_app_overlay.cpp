@@ -107,6 +107,7 @@ void SetOverlayEnabledComplete(napi_env env, napi_status status, void *data)
     }
     if (overlayCallbackInfo->deferred) {
         if (overlayCallbackInfo->err == NO_ERROR) {
+            napi_get_undefined(env, &result[0]);
             NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, overlayCallbackInfo->deferred, result[0]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, overlayCallbackInfo->deferred, result[0]));

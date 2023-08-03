@@ -34,6 +34,12 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+// ark compile option parameter key
+constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
+constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+}
+
 AOTHandler& AOTHandler::GetInstance()
 {
     static AOTHandler handler;
@@ -139,10 +145,10 @@ void AOTHandler::HandleInstall(const std::unordered_map<std::string, InnerBundle
             APP_LOGD("current device doesn't support arm64, no need to AOT");
             return;
         }
-        std::string compileMode = system::GetParameter(Constants::COMPILE_INSTALL_PARAM_KEY, Constants::COMPILE_NONE);
-        APP_LOGD("%{public}s = %{public}s", Constants::COMPILE_INSTALL_PARAM_KEY, compileMode.c_str());
+        std::string compileMode = system::GetParameter(COMPILE_INSTALL_PARAM_KEY, Constants::COMPILE_NONE);
+        APP_LOGD("%{public}s = %{public}s", COMPILE_INSTALL_PARAM_KEY, compileMode.c_str());
         if (compileMode == Constants::COMPILE_NONE) {
-            APP_LOGD("%{public}s = none, no need to AOT", Constants::COMPILE_INSTALL_PARAM_KEY);
+            APP_LOGD("%{public}s = none, no need to AOT", COMPILE_INSTALL_PARAM_KEY);
             return;
         }
         std::for_each(infos.cbegin(), infos.cend(), [this, compileMode](const auto &item) {
@@ -230,10 +236,10 @@ void AOTHandler::HandleIdle() const
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;
     }
-    std::string compileMode = system::GetParameter(Constants::COMPILE_IDLE_PARA_KEY, Constants::COMPILE_PARTIAL);
-    APP_LOGI("%{public}s = %{public}s", Constants::COMPILE_IDLE_PARA_KEY, compileMode.c_str());
+    std::string compileMode = system::GetParameter(COMPILE_IDLE_PARA_KEY, Constants::COMPILE_PARTIAL);
+    APP_LOGI("%{public}s = %{public}s", COMPILE_IDLE_PARA_KEY, compileMode.c_str());
     if (compileMode == Constants::COMPILE_NONE) {
-        APP_LOGI("%{public}s = none, no need to AOT", Constants::COMPILE_IDLE_PARA_KEY);
+        APP_LOGI("%{public}s = none, no need to AOT", COMPILE_IDLE_PARA_KEY);
         return;
     }
     if (!CheckDeviceState()) {

@@ -21,6 +21,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
+#include <random>
+#include <set>
 #include <sys/stat.h>
 #include <sys/statfs.h>
 #include <thread>
@@ -37,10 +39,18 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
+const std::string DEC_TO_HEX = "0123456789abcdef";
+const std::string::size_type DATA_GROUP_DIR_SIZE = 36;
+const char DATA_GROUP_DIR_SEPARATOR = '-';
+const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
+const int32_t RANDOM_NUM_START = 0;
+const int32_t RANDOM_NUM_END = 15;
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
 static std::mutex g_mutex;
+// hmdfs and sharefs config
+constexpr const char* BUNDLE_ID_FILE = "appid";
 }
 
 ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &realPath)
@@ -51,8 +61,9 @@ ErrCode BundleUtil::CheckFilePath(const std::string &bundlePath, std::string &re
     }
     if (!CheckFileType(bundlePath, Constants::INSTALL_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, Constants::INSTALL_SHARED_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX)) {
-        APP_LOGE("file is not hap, hsp or hqf");
+        !CheckFileType(bundlePath, Constants::QUICK_FIX_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("file is not hap, hsp, hqf or sig");
         return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
     }
     if (!PathToRealPath(bundlePath, realPath)) {
@@ -295,7 +306,7 @@ void BundleUtil::MakeFsConfig(const std::string &bundleName, int32_t bundleId, c
         return;
     }
 
-    realBundleDir += (Constants::PATH_SEPARATOR + Constants::BUNDLE_ID_FILE);
+    realBundleDir += (Constants::PATH_SEPARATOR + BUNDLE_ID_FILE);
 
     int32_t bundleIdFd = open(realBundleDir.c_str(), O_WRONLY | O_TRUNC);
     if (bundleIdFd > 0) {
@@ -346,6 +357,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         tempDir += Constants::PATH_SEPARATOR + Constants::STREAM_INSTALL_PATH;
     } else if (type == DirType::QUICK_FIX_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
+    } else if (type == DirType::SIG_FILE_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
     } else {
         return "";
     }
@@ -594,6 +607,81 @@ int64_t BundleUtil::GetFileSize(const std::string &filePath)
         return 0;
     }
     return fileInfo.st_size;
+}
+
+std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const DirType &dirType,
+    std::vector<std::string> &toDeletePaths)
+{
+    APP_LOGD("the original dir is %{public}s", filePath.c_str());
+    std::string destination = "";
+    std::string subStr = "";
+    destination.append(Constants::HAP_COPY_PATH).append(Constants::PATH_SEPARATOR);
+    if (dirType == DirType::STREAM_INSTALL_DIR) {
+        subStr = Constants::STREAM_INSTALL_PATH;
+        destination.append(Constants::SECURITY_STREAM_INSTALL_PATH);
+    }
+    if (dirType == DirType::SIG_FILE_DIR) {
+        subStr = Constants::SIGNATURE_FILE_PATH;
+        destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
+    }
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
+    destination = CreateTempDir(destination);
+    auto pos = filePath.find(subStr);
+    if (pos == std::string::npos) { // this circumstance could not be considered laterly
+        auto lastPathSeperator = filePath.rfind(Constants::PATH_SEPARATOR);
+        if ((lastPathSeperator != std::string::npos) && (lastPathSeperator != filePath.length() - 1)) {
+            toDeletePaths.emplace_back(destination);
+            destination.append(filePath.substr(lastPathSeperator));
+        }
+    } else {
+        auto secondLastPathSep = filePath.find(Constants::PATH_SEPARATOR, pos);
+        if ((secondLastPathSep == std::string::npos) || (secondLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        auto thirdLastPathSep =
+            filePath.find(Constants::PATH_SEPARATOR, secondLastPathSep + 1);
+        if ((thirdLastPathSep == std::string::npos) || (thirdLastPathSep == filePath.length() - 1)) {
+            return "";
+        }
+        toDeletePaths.emplace_back(destination);
+        std::string innerSubstr =
+            filePath.substr(secondLastPathSep, thirdLastPathSep - secondLastPathSep + 1);
+        destination = CreateTempDir(destination.append(innerSubstr));
+        destination.append(filePath.substr(thirdLastPathSep + 1));
+    }
+    APP_LOGD("the destination dir is %{public}s", destination.c_str());
+    if (destination.empty()) {
+        return "";
+    }
+    if (!CopyFile(filePath, destination)) {
+        APP_LOGE("copy file from %{public}s to %{public}s failed", filePath.c_str(), destination.c_str());
+        return "";
+    }
+    return destination;
+}
+
+void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
+{
+    for (const auto &tempDir : tempDirs) {
+        APP_LOGD("the temp hap dir %{public}s needs to be deleted", tempDir.c_str());
+        BundleUtil::DeleteDir(tempDir);
+    }
+}
+
+std::string BundleUtil::GenerateDataGroupDirName()
+{
+    std::string res(DATA_GROUP_DIR_SIZE, DATA_GROUP_DIR_SEPARATOR);
+    int32_t size = static_cast<int32_t>(DATA_GROUP_DIR_SIZE);
+    for (auto i = 0; i < size; i++) {
+        if (SEPARATOR_POSITIONS.find(i) == SEPARATOR_POSITIONS.end()) {
+            std::random_device seed;
+            std::ranlux48 engine(seed());
+            std::uniform_int_distribution<> distrib(RANDOM_NUM_START, RANDOM_NUM_END);
+            int32_t random = distrib(engine);
+            res[i] = DEC_TO_HEX[random];
+        }
+    }
+    return res;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

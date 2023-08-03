@@ -65,15 +65,14 @@ public:
     /**
      * @brief Extract the files of a compressed package to a specific directory.
      * @param srcModulePath Indicates the package file path.
-     * @param targetPath normal files decompression path.
      * @param targetSoPath so files decompression path.
      * @param cpuAbi cpuAbi.
      * @return Returns true if the package extracted successfully; returns false otherwise.
      */
-    static bool ExtractFiles(const std::string &sourcePath, const std::string &targetPath,
-        const std::string &targetSoPath, const std::string &cpuAbi);
+    static bool ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
+        const std::string &cpuAbi);
 
-    static bool IsNativeSo(const std::string &entryName, const std::string &targetSoPath, const std::string &cpuAbi);
+    static bool IsNativeSo(const std::string &entryName, const std::string &cpuAbi);
 
     static bool ExtractFiles(const ExtractParam &extractParam);
     static void ExtractTargetFile(
@@ -194,10 +193,18 @@ public:
     static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
+    static bool VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
+        const std::string &targetSoPath, const std::string &signatureFileDir);
+
+    static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
+
 private:
     static bool OpenHandle(void **handle);
 
     static void CloseHandle(void **handle);
+
+    static bool ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
+        std::vector<std::string> &soEntryFiles);
 
     static bool ProcessApplyDiffPatchPath(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,

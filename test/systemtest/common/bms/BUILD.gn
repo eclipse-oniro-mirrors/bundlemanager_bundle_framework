@@ -62,7 +62,7 @@ ohos_source_set("bms_install_sst_source") {
     "ability_base:base",
     "ability_base:want",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_core",
   ]
 
@@ -76,6 +76,7 @@ group("systemtest_bms") {
     "acts_bms_kit_system_test:systemtest",
     "bms_clean_cache_callback_host_test:systemtest",
     "bms_client_system_test:systemtest",
+    "bms_code_signature_test:systemtest",
     "bms_compatible_system_test:systemtest",
     "bms_install_system_test:systemtest",
     "bms_launcher_service_system_test:systemtest",

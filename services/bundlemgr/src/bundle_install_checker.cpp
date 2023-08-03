@@ -63,6 +63,10 @@ const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
+constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
+constexpr const char* DEVICE_TYPE_OF_DEFAULT = "default";
+constexpr const char* DEVICE_TYPE_OF_PHONE = "phone";
+constexpr const char* APP_INSTALL_PATH = "/data/app/el1/bundle";
 
 const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIBUTION_TYPE_MAPS = {
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
@@ -237,6 +241,35 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     return ERR_OK;
 }
 
+bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    PermissionStatus installBundleStatus = installParam.installBundlePermissionStatus;
+    PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
+    bool isCallByShell = installParam.isCallByShell;
+    if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        return true;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                APP_LOGE("bm install enterprise bundle permission denied");
+                return false;
+            }
+            if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            APP_LOGE("install permission denied");
+            return false;
+        }
+    }
+    return true;
+}
+
 ErrCode BundleInstallChecker::ParseHapFiles(
     const std::vector<std::string> &bundlePaths,
     const InstallCheckParam &checkParam,
@@ -250,9 +283,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         BundlePackInfo packInfo;
         newInfo.SetAppType(checkParam.appType);
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP ||
-            provisionInfo.bundleInfo.appFeature == Constants::OHOS_SYSTEM_APP) ||
-            (bundlePaths[i].find(Constants::SYSTEM_APP_SCAN_PATH) == 0);
+        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP) ||
+            (bundlePaths[i].find(SYSTEM_APP_SCAN_PATH) == 0);
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
         }
@@ -314,8 +346,44 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
+    if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    PermissionStatus installBundleStatus = checkParam.installBundlePermissionStatus;
+    PermissionStatus installEnterpriseBundleStatus = checkParam.installEnterpriseBundlePermissionStatus;
+    bool isCallByShell = checkParam.isCallByShell;
+    if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        return true;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+            if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+                APP_LOGE("bm install enterprise bundle permission denied");
+                return false;
+            }
+            if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+                APP_LOGE("install enterprise bundle permission denied");
+                return false;
+            }
+        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            APP_LOGE("install permission denied");
+            return false;
+        }
+    }
+    return true;
 }
 
 ErrCode BundleInstallChecker::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos)
@@ -517,13 +585,14 @@ void BundleInstallChecker::GetPrivilegeCapability(
     newInfo.SetRunningResourcesApply(preBundleConfigInfo.runningResourcesApply);
     newInfo.SetAssociatedWakeUp(preBundleConfigInfo.associatedWakeUp);
     newInfo.SetAllowCommonEvent(preBundleConfigInfo.allowCommonEvent);
+    newInfo.SetResourcesApply(preBundleConfigInfo.resourcesApply);
 }
 
 void BundleInstallChecker::SetPackInstallationFree(BundlePackInfo &bundlePackInfo,
     const InnerBundleInfo &innerBundleInfo) const
 {
     if (innerBundleInfo.GetIsNewVersion()) {
-        if (innerBundleInfo.GetApplicationBundleType() == BundleType::APP) {
+        if (innerBundleInfo.GetApplicationBundleType() != BundleType::ATOMIC_SERVICE) {
             for (auto &item : bundlePackInfo.summary.modules) {
                 item.distro.installationFree = false;
             }
@@ -595,17 +664,17 @@ ErrCode BundleInstallChecker::CheckSystemSize(
     const Constants::AppType appType) const
 {
     if ((appType == Constants::AppType::SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_SYSTEM_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_SYSTEM_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
     if ((appType == Constants::AppType::THIRD_PARTY_APP) &&
-        (BundleUtil::CheckSystemSize(bundlePath, Constants::THIRD_PARTY_APP_INSTALL_PATH))) {
+        (BundleUtil::CheckSystemSize(bundlePath, APP_INSTALL_PATH))) {
         return ERR_OK;
     }
 
@@ -1031,7 +1100,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
         if (!appPrivilegeCapability.allowExcludeFromMissions) {
             iter->second.excludeFromMissions = false;
         }
-        if (!appPrivilegeCapability.allowMissionNotCleared || !applicationInfo.isSystemApp) {
+        if (!appPrivilegeCapability.allowMissionNotCleared) {
             iter->second.unclearableMission = false;
         }
 #else
@@ -1094,14 +1163,14 @@ ErrCode BundleInstallChecker::CheckDeviceType(std::unordered_map<std::string, In
             continue;
         }
 
-        if ((deviceType == Constants::DEVICE_TYPE_OF_PHONE) &&
-            (find(devVec.begin(), devVec.end(), Constants::DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
+        if ((deviceType == DEVICE_TYPE_OF_PHONE) &&
+            (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_DEFAULT) != devVec.end())) {
             APP_LOGW("current deviceType is phone and bundle is matched with default");
             continue;
         }
 
-        if ((deviceType == Constants::DEVICE_TYPE_OF_DEFAULT) &&
-            (find(devVec.begin(), devVec.end(), Constants::DEVICE_TYPE_OF_PHONE) != devVec.end())) {
+        if ((deviceType == DEVICE_TYPE_OF_DEFAULT) &&
+            (find(devVec.begin(), devVec.end(), DEVICE_TYPE_OF_PHONE) != devVec.end())) {
             APP_LOGW("current deviceType is default and bundle is matched with phone");
             continue;
         }
@@ -1155,8 +1224,12 @@ std::string GetBundleNameFromUri(const std::string &uri)
     return bundleName;
 }
 
-bool CheckPermissionLevel(const std::string &permissionName)
+bool BundleInstallChecker::CheckProxyPermissionLevel(const std::string &permissionName) const
 {
+    // no permission name, only for self usage
+    if (permissionName.empty()) {
+        return true;
+    }
     PermissionDef permissionDef;
     ErrCode ret = BundlePermissionMgr::GetPermissionDef(permissionName, permissionDef);
     if (ret != ERR_OK) {
@@ -1188,8 +1261,8 @@ ErrCode BundleInstallChecker::CheckProxyDatas(const InnerBundleInfo &innerBundle
             if (innerBundleInfo.IsSystemApp()) {
                 continue;
             }
-            if (!CheckPermissionLevel(proxyData.requiredReadPermission)
-                    || !CheckPermissionLevel(proxyData.requiredWritePermission)) {
+            if (!CheckProxyPermissionLevel(proxyData.requiredReadPermission)
+                    || !CheckProxyPermissionLevel(proxyData.requiredWritePermission)) {
                 return ERR_APPEXECFWK_INSTALL_CHECK_PROXY_DATA_PERMISSION_FAILED;
             }
         }
@@ -1231,6 +1304,19 @@ ErrCode BundleInstallChecker::CheckIsolationMode(const std::unordered_map<std::s
                 return ERR_APPEXECFWK_INSTALL_ISOLATION_MODE_FAILED;
             }
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signatureFileDir) const
+{
+    if (!BundleUtil::CheckFileName(signatureFileDir)) {
+        APP_LOGE("code signature file dir is invalid");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    if (!BundleUtil::CheckFileType(signatureFileDir, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
+        APP_LOGE("signatureFileDir is not suffixed with .sig");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     return ERR_OK;
 }

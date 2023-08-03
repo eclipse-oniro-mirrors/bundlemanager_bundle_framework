@@ -73,6 +73,9 @@ const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
 const std::string FINGERPRINT = "fingerprint";
 const std::string UNKNOWN = "";
 const std::string VALUE_TRUE = "true";
+const std::string BMS_EXTENSION_SERVICE_KEY = "startup.service.ctl.broker";
+const std::string BMS_EXTENSION_SERVICE_VALUE = "2";
+const int32_t BMS_EXTENSION_SERVICE_SLEEP_TIME = 10; // 10s
 const int32_t VERSION_LEN = 64;
 const std::vector<std::string> FINGERPRINTS = {
     "const.product.software.version",
@@ -84,6 +87,13 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 const std::string HSP_VERSION_PREFIX = "v";
+// pre bundle profile
+constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
+constexpr const char* PRODUCT_SUFFIX = "/etc/app";
+constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
+constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
+constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
@@ -143,7 +153,7 @@ private:
 };
 }
 
-BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : EventHandler(runner)
+BMSEventHandler::BMSEventHandler()
 {
     APP_LOGD("instance is created");
 }
@@ -151,19 +161,6 @@ BMSEventHandler::BMSEventHandler(const std::shared_ptr<EventRunner> &runner) : E
 BMSEventHandler::~BMSEventHandler()
 {
     APP_LOGD("instance is destroyed");
-}
-
-void BMSEventHandler::ProcessEvent(const InnerEvent::Pointer &event)
-{
-    switch (event->GetInnerEventId()) {
-        case BMS_START: {
-            BmsStartEvent();
-            break;
-        }
-        default:
-            APP_LOGE("the eventId is not supported");
-            break;
-    }
 }
 
 void BMSEventHandler::BmsStartEvent()
@@ -258,6 +255,7 @@ void BMSEventHandler::AfterBmsStart()
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     DelayedSingleton<BundleMgrService>::GetInstance()->GetAOTLoopTask()->ScheduleLoopTask();
+    StartBmsExtensionService();
 }
 
 void BMSEventHandler::ClearCache()
@@ -551,9 +549,9 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
     }
 #endif
     bool ret = std::find(
-        rootDirList.begin(), rootDirList.end(), Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
+        rootDirList.begin(), rootDirList.end(), DEFAULT_PRE_BUNDLE_ROOT_DIR) != rootDirList.end();
     if (!ret) {
-        rootDirList.emplace_back(Constants::DEFAULT_PRE_BUNDLE_ROOT_DIR);
+        rootDirList.emplace_back(DEFAULT_PRE_BUNDLE_ROOT_DIR);
     }
 }
 
@@ -583,7 +581,7 @@ bool BMSEventHandler::LoadPreInstallProFile()
     }
 
     for (const auto &rootDir : rootDirList) {
-        ParsePreBundleProFile(rootDir + Constants::PRODUCT_SUFFIX);
+        ParsePreBundleProFile(rootDir + PRODUCT_SUFFIX);
     }
 
     hasLoadPreInstallProFile_ = true;
@@ -599,11 +597,11 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
 {
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
-        dir + Constants::INSTALL_LIST_CONFIG, installList_);
+        dir + INSTALL_LIST_CONFIG, installList_);
     bundleParser.ParsePreUnInstallConfig(
-        dir + Constants::UNINSTALL_LIST_CONFIG, uninstallList_);
+        dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
-        dir + Constants::INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+        dir + INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
 }
 
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
@@ -822,10 +820,10 @@ void BMSEventHandler::GetBundleDirFromScan(std::list<std::string> &bundleDirs)
         ProcessScanDir(rootDir + APP_SUFFIX, bundleDirs);
     }
 
-    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), Constants::SYSTEM_RESOURCES_APP_PATH);
+    auto iter = std::find(bundleDirs.begin(), bundleDirs.end(), SYSTEM_RESOURCES_APP_PATH);
     if (iter != bundleDirs.end()) {
         bundleDirs.erase(iter);
-        bundleDirs.insert(bundleDirs.begin(), Constants::SYSTEM_RESOURCES_APP_PATH);
+        bundleDirs.insert(bundleDirs.begin(), SYSTEM_RESOURCES_APP_PATH);
     }
 }
 
@@ -1083,31 +1081,21 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 APP_LOGE("module is empty when parser path(%{public}s).", item.first.c_str());
                 continue;
             }
-
-            // Used to judge whether the module has been installed.
-            bool hasModuleInstalled = std::find(
-                hasInstalledInfo.hapModuleNames.begin(), hasInstalledInfo.hapModuleNames.end(),
-                parserModuleNames[0]) != hasInstalledInfo.hapModuleNames.end();
-            if (HasModuleSavedInPreInstalledDb(bundleName, item.first) && !hasModuleInstalled) {
-                APP_LOGW("module(%{public}s) has been uninstalled and do not OTA install",
-                    parserModuleNames[0].c_str());
-                continue;
+            // Generally, when the versionCode of Hap is greater than the installed versionCode,
+            // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
+            if (hasInstalledInfo.versionCode < hapVersionCode) {
+                APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
+                    parserModuleNames[0].c_str(), item.first.c_str());
+                updateBundle = true;
+                break;
             }
 
             // When the accessTokenIdEx is equal to 0, the old application needs to be updated.
             if (hasInstalledInfo.applicationInfo.accessTokenIdEx == 0) {
                 APP_LOGD("OTA update module(%{public}s) by path(%{private}s), accessTokenIdEx is equal to 0",
                     parserModuleNames[0].c_str(), item.first.c_str());
-                filePaths.emplace_back(item.first);
-                continue;
-            }
-
-            // Generally, when the versionCode of Hap is greater than the installed versionCode,
-            // Except for the uninstalled app, they can be installed or upgraded directly by OTA.
-            if (hasInstalledInfo.versionCode < hapVersionCode) {
-                APP_LOGD("OTA update module(%{public}s) by path(%{private}s)",
-                    parserModuleNames[0].c_str(), item.first.c_str());
-                filePaths.emplace_back(item.first);
+                updateBundle = true;
+                break;
             }
 
             // The versionCode of Hap is equal to the installed versionCode.
@@ -1120,9 +1108,17 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                         hasInstalledInfo.applicationInfo.debug);
                     updateSelinuxLabel = true;
                 }
-                if (hasModuleInstalled && UpdateModuleByHash(hasInstalledInfo, item.second)) {
-                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.", parserModuleNames[0].c_str());
-                    updateBundle = true;
+                // Used to judge whether the module has been installed.
+                bool hasModuleInstalled = std::find(
+                    hasInstalledInfo.hapModuleNames.begin(), hasInstalledInfo.hapModuleNames.end(),
+                    parserModuleNames[0]) != hasInstalledInfo.hapModuleNames.end();
+                if (hasModuleInstalled) {
+                    if (UpdateModuleByHash(hasInstalledInfo, item.second)) {
+                        updateBundle = true;
+                        break;
+                    }
+                    APP_LOGD("module(%{public}s) has been installed and versionCode is same.",
+                        parserModuleNames[0].c_str());
                     continue;
                 }
 
@@ -1749,10 +1745,8 @@ void BMSEventHandler::UpdateTrustedPrivilegeCapability(
     appInfo.singleton = preBundleConfigInfo.singleton;
     appInfo.runningResourcesApply = preBundleConfigInfo.runningResourcesApply;
     appInfo.associatedWakeUp = preBundleConfigInfo.associatedWakeUp;
-    for (const auto &event : preBundleConfigInfo.allowCommonEvent) {
-        appInfo.allowCommonEvent.emplace_back(event);
-    }
-
+    appInfo.allowCommonEvent = preBundleConfigInfo.allowCommonEvent;
+    appInfo.resourcesApply = preBundleConfigInfo.resourcesApply;
     dataMgr->UpdatePrivilegeCapability(preBundleConfigInfo.bundleName, appInfo);
 }
 #endif
@@ -1776,6 +1770,7 @@ void BMSEventHandler::ListeningUserUnlocked() const
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    subscribeInfo.SetThreadMode(EventFwk::CommonEventSubscribeInfo::COMMON);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
     if (!EventFwk::CommonEventManager::SubscribeCommonEvent(subscriberPtr)) {
@@ -1811,6 +1806,22 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
     removeThread.detach();
 #endif
     APP_LOGD("RemoveUnreservedSandbox finish");
+}
+
+void BMSEventHandler::StartBmsExtensionService() const
+{
+    APP_LOGD("Start to start bms extension service");
+    auto execFunc = [](int32_t sleepTime, const std::string &key, const std::string &value) {
+        std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
+        int32_t ret = SetParameter(key.c_str(), value.c_str());
+        if (ret <= 0) {
+            APP_LOGE("SetParameter failed!");
+            return;
+        }
+    };
+    std::thread startBmsExtensionServiceThread(execFunc, BMS_EXTENSION_SERVICE_SLEEP_TIME, BMS_EXTENSION_SERVICE_KEY,
+        BMS_EXTENSION_SERVICE_VALUE);
+    startBmsExtensionServiceThread.detach();
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)

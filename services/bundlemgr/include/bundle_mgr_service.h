@@ -21,7 +21,6 @@
 #include "aot/aot_loop_task.h"
 #include "singleton.h"
 #include "system_ability.h"
-#include "thread_pool.h"
 
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
 #include "app_control_manager_host_impl.h"
@@ -126,8 +125,6 @@ public:
 
     void RegisterDataMgr(std::shared_ptr<BundleDataMgr> dataMgrImpl);
 
-    ThreadPool &GetThreadPool();
-
     const std::shared_ptr<BmsParam> GetBmsParam() const;
 
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
@@ -135,6 +132,7 @@ public:
 #endif
 
     std::shared_ptr<AOTLoopTask> GetAOTLoopTask() const;
+    bool IsBrokerServiceStarted() const;
 
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -143,7 +141,6 @@ private:
     bool Init();
     void SelfClean();
 
-    void InitThreadPool();
     void InitBmsParam();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
@@ -156,12 +153,13 @@ private:
     bool InitAppControl();
     bool InitQuickFixManager();
     bool InitOverlayManager();
+    void CreateBmsServiceDir();
 
 private:
     bool ready_ = false;
     bool registerToService_ = false;
     bool notifyBundleScanStatus = false;
-    std::shared_ptr<EventRunner> runner_;
+    bool isBrokerServiceStarted_ = false;
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
@@ -175,9 +173,6 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<BmsParam> bmsParam_;
-    // Thread pool used to start installation or quick fix in parallel.
-    ThreadPool bmsThreadPool_ = ThreadPool(Constants::BMS_SERVICE_NAME);
-    const int THREAD_NUMBER = std::thread::hardware_concurrency();
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;

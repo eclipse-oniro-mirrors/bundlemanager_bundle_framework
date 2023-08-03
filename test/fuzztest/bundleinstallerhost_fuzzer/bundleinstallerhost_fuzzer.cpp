@@ -18,6 +18,7 @@
 #include <cstddef>
 #include <cstdint>
 #include "bundle_installer_host.h"
+#include "bundle_mgr_service.h"
 #include "message_parcel.h"
 #include "securec.h"
 
@@ -34,6 +35,8 @@ uint32_t GetU32Data(const char* ptr)
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
+#ifdef ON_64BIT_SYSTEM
+    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
     std::u16string descriptor = BundleInstallerHost::GetDescriptor();
@@ -42,8 +45,9 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    BundleInstallerHost installdHost;
-    installdHost.OnRemoteRequest(code, datas, reply, option);
+    BundleInstallerHost installerHost;
+    installerHost.OnRemoteRequest(code, datas, reply, option);
+#endif
     return true;
 }
 }

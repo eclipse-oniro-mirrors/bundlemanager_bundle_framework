@@ -41,6 +41,8 @@ struct ExtensionFormInfo {
     std::int32_t defaultDimension;
     std::vector<int32_t> supportDimensions {};
     std::vector<FormCustomizeData> metadata {};
+    bool dataProxyEnabled = false;
+    bool isDynamic = true;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

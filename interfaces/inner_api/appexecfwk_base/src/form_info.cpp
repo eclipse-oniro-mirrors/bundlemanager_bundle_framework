@@ -59,6 +59,8 @@ const std::string JSON_KEY_WINDOW = "window";
 const std::string JSON_KEY_DESIGN_WIDTH = "designWidth";
 const std::string JSON_KEY_AUTO_DESIGN_WIDTH = "autoDesignWidth";
 const std::string JSON_KEY_IS_STATIC = "isStatic";
+const std::string JSON_KEY_DATA_PROXY_ENABLED = "dataProxyEnabled";
+const std::string JSON_KEY_IS_DYNAMIC = "isDynamic";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -96,6 +98,8 @@ FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormI
     for (const auto &metadata : formInfo.metadata) {
         customizeDatas.push_back(metadata);
     }
+    dataProxyEnabled = formInfo.dataProxyEnabled;
+    isDynamic = formInfo.isDynamic;
 }
 
 bool FormInfo::ReadCustomizeData(Parcel &parcel)
@@ -176,6 +180,8 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
 
     window.designWidth = parcel.ReadInt32();
     window.autoDesignWidth = parcel.ReadBool();
+    dataProxyEnabled = parcel.ReadBool();
+    isDynamic = parcel.ReadBool();
     return true;
 }
 
@@ -242,6 +248,8 @@ bool FormInfo::Marshalling(Parcel &parcel) const
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, window.designWidth);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, window.autoDesignWidth);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, dataProxyEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDynamic);
     return true;
 }
 
@@ -298,54 +306,282 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_CUSTOMIZE_DATA, formInfo.customizeDatas},
         {JSON_KEY_LANDSCAPE_LAYOUTS, formInfo.landscapeLayouts},
         {JSON_KEY_PORTRAIT_LAYOUTS, formInfo.portraitLayouts},
-        {JSON_KEY_WINDOW, formInfo.window}
+        {JSON_KEY_WINDOW, formInfo.window},
+        {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled},
+        {JSON_KEY_IS_DYNAMIC, formInfo.isDynamic}
         };
 }
 
 void from_json(const nlohmann::json &jsonObject, FormCustomizeData &customizeDatas)
 {
-    customizeDatas.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
-    customizeDatas.value = jsonObject.at(JSON_KEY_VALUE).get<std::string>();
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_NAME,
+        customizeDatas.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_VALUE,
+        customizeDatas.value,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module customizeDatas from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, FormWindow &formWindow)
 {
-    formWindow.designWidth = jsonObject.at(JSON_KEY_DESIGN_WIDTH).get<int32_t>();
-    formWindow.autoDesignWidth = jsonObject.at(JSON_KEY_AUTO_DESIGN_WIDTH).get<bool>();
+    const auto &jsonObjectEnd = jsonObject.end();
+    int32_t parseResult = ERR_OK;
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DESIGN_WIDTH,
+        formWindow.designWidth,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_AUTO_DESIGN_WIDTH,
+        formWindow.autoDesignWidth,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module formWindow from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 
 void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
 {
-    formInfo.bundleName = jsonObject.at(Constants::BUNDLE_NAME).get<std::string>();
-    formInfo.package = jsonObject.at(JSON_KEY_PACKAGE).get<std::string>();
-    formInfo.moduleName = jsonObject.at(Constants::MODULE_NAME).get<std::string>();
-    formInfo.abilityName = jsonObject.at(Constants::ABILITY_NAME).get<std::string>();
-    formInfo.name = jsonObject.at(JSON_KEY_NAME).get<std::string>();
-    formInfo.description = jsonObject.at(JSON_KEY_DESCRIPTION).get<std::string>();
-    formInfo.relatedBundleName = jsonObject.at(JSON_KEY_RELATED_BUNDLE_NAME).get<std::string>();
-    formInfo.jsComponentName = jsonObject.at(JSON_KEY_JS_COMPONENT_NAME).get<std::string>();
-    formInfo.deepLink = jsonObject.at(JSON_KEY_DEEP_LINK).get<std::string>();
-    formInfo.formConfigAbility = jsonObject.at(JSON_KEY_FORMCONFIG_ABILITY).get<std::string>();
-    formInfo.scheduledUpdateTime = jsonObject.at(JSON_KEY_SCHEDULED_UPDATE_TIME).get<std::string>();
-    formInfo.src = jsonObject.at(JSON_KEY_SRC).get<std::string>();
-    formInfo.originalBundleName = jsonObject.at(JSON_KEY_ORIGINAL_BUNDLE_NAME).get<std::string>();
-    formInfo.descriptionId = jsonObject.at(JSON_KEY_DESCRIPTION_ID).get<int32_t>();
-    formInfo.updateDuration = jsonObject.at(JSON_KEY_UPDATE_DURATION).get<int32_t>();
-    formInfo.defaultDimension = jsonObject.at(JSON_KEY_DEFAULT_DIMENSION).get<int32_t>();
-    formInfo.defaultFlag = jsonObject.at(JSON_KEY_DEFAULT_FLAG).get<bool>();
-    formInfo.formVisibleNotify = jsonObject.at(JSON_KEY_FORM_VISIBLE_NOTIFY).get<bool>();
-    formInfo.updateEnabled = jsonObject.at(JSON_KEY_UPDATE_ENABLED).get<bool>();
-    formInfo.isStatic = jsonObject.at(JSON_KEY_IS_STATIC).get<bool>();
-    formInfo.type = jsonObject.at(JSON_KEY_TYPE).get<FormType>();
-    formInfo.colorMode = jsonObject.at(JSON_KEY_COLOR_MODE).get<FormsColorMode>();
-    formInfo.supportDimensions = jsonObject.at(JSON_KEY_SUPPORT_DIMENSIONS).get<std::vector<int32_t>>();
-    formInfo.customizeDatas = jsonObject.at(JSON_KEY_CUSTOMIZE_DATA).get<std::vector<FormCustomizeData>>();
-    formInfo.landscapeLayouts = jsonObject.at(JSON_KEY_LANDSCAPE_LAYOUTS).get<std::vector<std::string>>();
-    formInfo.portraitLayouts = jsonObject.at(JSON_KEY_PORTRAIT_LAYOUTS).get<std::vector<std::string>>();
-    formInfo.window = jsonObject.at(JSON_KEY_WINDOW).get<FormWindow>();
-
     int32_t parseResult = ERR_OK;
     const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::BUNDLE_NAME,
+        formInfo.bundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PACKAGE,
+        formInfo.package,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::MODULE_NAME,
+        formInfo.moduleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Constants::ABILITY_NAME,
+        formInfo.abilityName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_NAME,
+        formInfo.name,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DESCRIPTION,
+        formInfo.description,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_RELATED_BUNDLE_NAME,
+        formInfo.relatedBundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_JS_COMPONENT_NAME,
+        formInfo.jsComponentName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DEEP_LINK,
+        formInfo.deepLink,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_FORMCONFIG_ABILITY,
+        formInfo.formConfigAbility,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SCHEDULED_UPDATE_TIME,
+        formInfo.scheduledUpdateTime,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SRC,
+        formInfo.src,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_ORIGINAL_BUNDLE_NAME,
+        formInfo.originalBundleName,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DESCRIPTION_ID,
+        formInfo.descriptionId,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_UPDATE_DURATION,
+        formInfo.updateDuration,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DEFAULT_DIMENSION,
+        formInfo.defaultDimension,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DEFAULT_FLAG,
+        formInfo.defaultFlag,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_FORM_VISIBLE_NOTIFY,
+        formInfo.formVisibleNotify,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_UPDATE_ENABLED,
+        formInfo.updateEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_STATIC,
+        formInfo.isStatic,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormType>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_TYPE,
+        formInfo.type,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<FormsColorMode>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_COLOR_MODE,
+        formInfo.colorMode,
+        JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<int32_t>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_SUPPORT_DIMENSIONS,
+        formInfo.supportDimensions,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::NUMBER);
+    GetValueIfFindKey<std::vector<FormCustomizeData>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_CUSTOMIZE_DATA,
+        formInfo.customizeDatas,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::OBJECT);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_LANDSCAPE_LAYOUTS,
+        formInfo.landscapeLayouts,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PORTRAIT_LAYOUTS,
+        formInfo.portraitLayouts,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
+    GetValueIfFindKey<FormWindow>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_WINDOW,
+        formInfo.window,
+        JsonType::OBJECT,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<FormType>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_UI_SYNTAX,
@@ -354,6 +590,25 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_DATA_PROXY_ENABLED,
+        formInfo.dataProxyEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_IS_DYNAMIC,
+        formInfo.isDynamic,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module formInfo from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

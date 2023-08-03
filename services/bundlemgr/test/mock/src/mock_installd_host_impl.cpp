@@ -103,7 +103,8 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     return ERR_OK;
 }
@@ -168,6 +169,17 @@ ErrCode InstalldHostImpl::ExecuteAOT(const AOTArgs &aotArgs)
 
 ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
     std::vector<std::string> &fileNames)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir)
 {
     return ERR_OK;
 }

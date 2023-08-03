@@ -39,8 +39,6 @@ const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
-const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
-const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
@@ -61,7 +59,10 @@ const std::string VERSION_CODE = "versionCode";
 const std::string SHARED_BUNDLE_DIR_PATHS = "sharedBundleDirPaths";
 const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
 const std::string ADDITIONAL_INFO = "additionalInfo";
-
+const std::string VERIFY_CODE_PARAM = "verifyCodeParams";
+const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
+const std::string HAPS_FILE_NEEDED =
+    "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 constexpr int32_t FIRST_PARAM = 0;
 constexpr int32_t SECOND_PARAM = 1;
 
@@ -339,10 +340,13 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
             ERROR_INSTALL_WRONG_DATA_PROXY_URI},
         { IStatusReceiver::ERR_INSATLL_CHECK_PROXY_DATA_PERMISSION_FAILED,
             ERROR_INSTALL_WRONG_DATA_PROXY_PERMISSION},
-        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
         { IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME, ERROR_INSTALL_MULTIPLE_HAP_INFO_INCONSISTENT },
+        { IStatusReceiver::ERR_INSTALL_DISALLOWED, ERROR_DISALLOW_INSTALL},
         { IStatusReceiver::ERR_INSTALL_ISOLATION_MODE_FAILED, ERROR_INSTALL_WRONG_MODE_ISOLATION },
         { IStatusReceiver::ERR_UNINSTALL_DISALLOWED, ERROR_DISALLOW_UNINSTALL },
+        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
+        { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
+        { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST}
     };
 }
 
@@ -405,6 +409,55 @@ static bool ParseHashParams(napi_env env, napi_value args, std::map<std::string,
             return false;
         }
         hashParams.emplace(key, value);
+    }
+    return true;
+}
+
+static bool ParseVerifyCodeParam(napi_env env, napi_value args, std::string &key, std::string &value)
+{
+    APP_LOGD("start to parse moduleName");
+    bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
+    if (!ret || key.empty()) {
+        APP_LOGE("param string moduleName is empty.");
+        return false;
+    }
+    APP_LOGD("ParseVerifyCodeParam moduleName is %{public}s.", key.c_str());
+
+    APP_LOGD("start to parse signatureFilePath");
+    ret = CommonFunc::ParseStringPropertyFromObject(env, args, SIGNATURE_FILE_PATH, true, value);
+    if (!ret || value.empty()) {
+        APP_LOGE("param string signatureFilePath is empty.");
+        return false;
+    }
+    APP_LOGD("ParseVerifyCodeParam signatureFilePath is %{public}s.", value.c_str());
+    return true;
+}
+
+static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::string, std::string> &verifyCodeParams)
+{
+    APP_LOGD("start to parse verifyCodeParams");
+    std::vector<napi_value> valueVec;
+    bool res = CommonFunc::ParsePropertyArray(env, args, VERIFY_CODE_PARAM, valueVec);
+    if (!res) {
+        APP_LOGW("verifyCodeParams type error, using default value.");
+        return true;
+    }
+    if (valueVec.empty()) {
+        APP_LOGW("verifyCodeParams is empty, using default value.");
+        return true;
+    }
+    for (const auto &property : valueVec) {
+        std::string key;
+        std::string value;
+        if (!ParseVerifyCodeParam(env, property, key, value)) {
+            APP_LOGE("parse verify code param failed");
+            return false;
+        }
+        if (verifyCodeParams.find(key) != verifyCodeParams.end()) {
+            APP_LOGE("moduleName(%{public}s) is duplicate", key.c_str());
+            return false;
+        }
+        verifyCodeParams.emplace(key, value);
     }
     return true;
 }
@@ -663,6 +716,9 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseHashParams(env, args, installParam.hashParams)) {
         return false;
     }
+    if (!ParseVerifyCodeParams(env, args, installParam.verifyCodeParams)) {
+        return false;
+    }
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -705,7 +761,9 @@ static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { ERR_APPEXECFWK_INSTALL_PARAM_ERROR, IStatusReceiver::ERR_INSTALL_PARAM_ERROR },
         { ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR },
         { ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
-        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT }
+        { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT },
+        { ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID,
+            IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID}
     };
 }
 
@@ -773,29 +831,27 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[SECOND_PARAM]));
     ConvertInstallResult(callbackPtr->installResult);
     if (callbackPtr->installResult.resultCode != SUCCESS) {
         result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
             GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
 
     if (callbackPtr->deferred) {
         if (callbackPtr->installResult.resultCode == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[SECOND_PARAM]));
+            napi_get_undefined(env, &result[FIRST_PARAM]);
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
         }
     } else {
-        napi_value callback = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, callbackPtr->callback, &callback));
-
-        napi_value undefined = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
-
-        napi_value callResult = CommonFunc::WrapVoidToJS(env);
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, CALLBACK_PARAM_SIZE,
-            &result[FIRST_PARAM], &callResult));
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
     }
 }
 
@@ -836,7 +892,7 @@ napi_value Install(napi_env env, napi_callback_info info)
                 break;
             }
             if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
-                APP_LOGE("Parse installParam.hashParams failed");
+                APP_LOGE("Parse installParam failed");
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
                 return nullptr;
             }
@@ -852,6 +908,10 @@ napi_value Install(napi_env env, napi_callback_info info)
         }
     }
     if (!CheckInstallParam(env, callbackPtr->installParam)) {
+        return nullptr;
+    }
+    if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
@@ -1054,93 +1114,6 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
     napi_value jsthis = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
     return jsthis;
-}
-
-napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("GetSpecifiedDistributionType napi called");
-    NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-
-    std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-        APP_LOGE("bundleName invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-        return nullptr;
-    }
-
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-        napi_throw(env, businessError);
-        return nullptr;
-    }
-
-    std::string specifiedDistributionType;
-    ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetSpecifiedDistributionType(bundleName, specifiedDistributionType));
-    if (ret != SUCCESS) {
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-        napi_throw(env, businessError);
-        return nullptr;
-    }
-
-    napi_value nSpecifiedDistributionType;
-    napi_create_string_utf8(env, specifiedDistributionType.c_str(), NAPI_AUTO_LENGTH, &nSpecifiedDistributionType);
-    APP_LOGD("call GetSpecifiedDistributionType done.");
-    return nSpecifiedDistributionType;
-}
-
-napi_value GetAdditionalInfo(napi_env env, napi_callback_info info)
-{
-    APP_LOGD("GetAdditionalInfo napi called");
-    NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
-
-    std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-        APP_LOGE("bundleName invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-        return nullptr;
-    }
-
-    auto iBundleMgr = CommonFunc::GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("iBundleMgr is null");
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE,
-            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-        napi_throw(env, businessError);
-        return nullptr;
-    }
-
-    std::string additionalInfo;
-    ErrCode ret = CommonFunc::ConvertErrCode(
-        iBundleMgr->GetAdditionalInfo(bundleName, additionalInfo));
-    if (ret != SUCCESS) {
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, RESOURCE_NAME_OF_GET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
-        napi_throw(env, businessError);
-        return nullptr;
-    }
-
-    napi_value nAdditionalInfo;
-    napi_create_string_utf8(env, additionalInfo.c_str(), NAPI_AUTO_LENGTH, &nAdditionalInfo);
-    APP_LOGD("call GetAdditionalInfo done.");
-    return nAdditionalInfo;
 }
 } // AppExecFwk
 } // OHOS

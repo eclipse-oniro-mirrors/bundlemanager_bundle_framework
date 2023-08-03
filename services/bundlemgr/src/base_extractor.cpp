@@ -25,6 +25,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* MODULE_PROFILE_NAME = "module.json";
+}
+
 BaseExtractor::BaseExtractor(const std::string &source) : sourceFile_(source), zipFile_(source)
 {
     APP_LOGI("BaseExtractor instance is created");
@@ -42,7 +46,7 @@ bool BaseExtractor::Init()
         return false;
     }
     ZipEntry zipEntry;
-    isNewVersion_ = zipFile_.GetEntry(Constants::MODULE_PROFILE_NAME, zipEntry);
+    isNewVersion_ = zipFile_.GetEntry(MODULE_PROFILE_NAME, zipEntry);
     initial_ = true;
     APP_LOGI("success");
     return true;
@@ -107,7 +111,7 @@ bool BaseExtractor::ExtractFile(const std::string &fileName, const std::string &
     return true;
 }
 
-bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames)
+bool BaseExtractor::GetZipFileNames(std::vector<std::string> &fileNames) const
 {
     auto &entryMap = zipFile_.GetAllEntries();
     auto entryFilter = [&fileNames](const auto &entry) {

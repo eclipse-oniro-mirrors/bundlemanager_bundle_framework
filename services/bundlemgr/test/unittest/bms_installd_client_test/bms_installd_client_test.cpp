@@ -643,19 +643,6 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ResetInstalldProxy_0100, T
 }
 
 /**
- * @tc.number: BmsInstalldClientTest_GetInstalldProxy_0100
- * @tc.name: GetInstalldProxy
- * @tc.desc: Test whether GetInstalldProxy is called normally.
- */
-HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_GetInstalldProxy_0100, TestSize.Level1)
-{
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetInstalldProxy_0100 start";
-    bool result = installClient_->GetInstalldProxy();
-    EXPECT_EQ(result, true);
-    GTEST_LOG_(INFO) << "BmsInstalldClientTest_GetInstalldProxy_0100 end";
-}
-
-/**
  * @tc.number: BmsInstalldClientTest_ScanDir_0100
  * @tc.name: ScanDir
  * @tc.desc: Test whether ScanDir is called normally.(dir is empty)
@@ -772,7 +759,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_CopyFile_0300, TestSize.Le
     std::string oldPath = OLD_PATH;
     std::string newPath = NEW_PATH;
     ErrCode result = installClient_->CopyFile(oldPath, newPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::CopyFile, oldPath, newPath, ""));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_CopyFile_0300 end";
 }
 

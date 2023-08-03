@@ -41,7 +41,7 @@ ohos_shared_library("bundlemanager") {
     "c_utils:utils",
     "common_event_service:cesfwk_core",
     "common_event_service:cesfwk_innerkits",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
     "napi:ace_napi",
   ]
@@ -49,8 +49,8 @@ ohos_shared_library("bundlemanager") {
   if (global_resmgr_enable && bundle_framework_graphics) {
     defines += [ "BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED" ]
     external_deps += [
-      "multimedia_image_framework:image",
-      "multimedia_image_framework:image_native",
+      "image_framework:image",
+      "image_framework:image_native",
     ]
   }
 

@@ -39,6 +39,7 @@ const std::string RESOURCE_ROOT_PATH = "/data/test/resource/bms/parse_bundle/";
 const std::string BUNDLE_NAME1 = "com.ohos.test1";
 const std::string BUNDLE_PERMISSION_NAME1 = "ohos.permission.test1";
 const std::string BUNDLE_PERMISSION_NAME2 = "ohos.permission.test2";
+const std::string MODULE_NAME = "moduleName";
 const std::string NEW_APP = "new";
 const std::string UNKOWN_PATH = "unknown_path";
 const std::string EMPTY_NAME = "";
@@ -2747,5 +2748,53 @@ HWTEST_F(BmsBundleParserTest, TestParse_6600, Function | SmallTest | Level1)
     ErrCode result = moduleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
     EXPECT_EQ(result, ERR_OK) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_6700
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_6700, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = Constants::RELATIVE_PATH;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
+}
+
+/**
+ * @tc.name: TestParse_6800
+ * @tc.desc: 1. system running normally
+ *           2. test parsing info in the config.json
+ * @tc.type: FUNC
+ */
+HWTEST_F(BmsBundleParserTest, TestParse_6800, Function | SmallTest | Level1)
+{
+    BundleProfile bundleProfile;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.SetIsPreInstallApp(true);
+    std::vector<FormInfo> formInfos;
+    std::ostringstream profileFileBuffer;
+
+    nlohmann::json profileJson = CONFIG_JSON_3;
+    profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_DISTRO][MODULE_NAME] = Constants::MODULE_NAME_SEPARATOR;
+    profileFileBuffer << profileJson.dump();
+
+    BundleExtractor bundleExtractor(EMPTY_NAME);
+    ErrCode result = bundleProfile.TransformTo(
+        profileFileBuffer, bundleExtractor, innerBundleInfo);
+    EXPECT_EQ(result, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR) << profileFileBuffer.str();
 }
 } // OHOS

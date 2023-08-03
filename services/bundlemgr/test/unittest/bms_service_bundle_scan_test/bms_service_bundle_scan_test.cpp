@@ -34,6 +34,7 @@ using namespace testing::ext;
 using namespace OHOS::AppExecFwk;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 
 const std::string TEST_DIR = "/data/test/resource";
@@ -43,11 +44,9 @@ const std::string BUNDLE_FILENAME_3 = "app3.hap";
 const std::string BUNDLE_FILENAME_4 = "app1.ha";
 const std::string BUNDLE_FILENAME_5 = "app2..ap";
 const std::string BUNDLE_FILENAME_6 = "app3";
-const std::string SYSTEM_APP_SCAN_PATH = "/system/app/com.ohos.photos/";
 const std::string THIRD_SYSTEM_APP_SCAN_PATH = "/system/vendor";
 const std::string TEST_ERROR_DIR = "/data/error";
 const std::string PHOTOS_HAP = "Photos.hap";
-const std::string PHOTOS_HAP_NAME = "com.ohos.photos";
 
 }  // namespace
 
@@ -71,7 +70,11 @@ public:
 
 private:
     std::list<std::string> bundleList_{};
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsServiceBundleScanTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsServiceBundleScanTest::BmsServiceBundleScanTest()
 {}
@@ -83,7 +86,9 @@ void BmsServiceBundleScanTest::SetUpTestCase()
 {}
 
 void BmsServiceBundleScanTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsServiceBundleScanTest::SetUp()
 {
@@ -267,23 +272,6 @@ HWTEST_F(BmsServiceBundleScanTest, BundleScan_0500, Function | SmallTest | Level
     DeleteFile(TEST_FILE_NAME_5);
     DeleteFile(TEST_FILE_NAME_6);
 }
-/**
- * @tc.number: RebootBundleScan_0100
- * @tc.name: test reboot scan bundle path
- * @tc.desc: 1. reboot scan dir exist
- *           2. Bundle information can be scanned
- */
-HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0100, Function | SmallTest | Level0)
-{
-    auto scanner = std::make_unique<BundleScanner>();
-    std::string scanDir = Constants::SYSTEM_APP_SCAN_PATH;
-    std::list<std::string> bundleList = scanner->Scan(scanDir);
-    auto result = false;
-    if (bundleList.size() > 0) {
-        result = true;
-    }
-    EXPECT_TRUE(result);
-}
 
 /**
  * @tc.number: RebootBundleScan_0200
@@ -310,12 +298,10 @@ HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0200, Function | SmallTest |
  */
 HWTEST_F(BmsServiceBundleScanTest, RebootBundleScan_0400, Function | SmallTest | Level1)
 {
-    std::shared_ptr<EventRunner> runner_;
-    runner_ = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    std::shared_ptr<BMSEventHandler> handler_;
-    handler_ = std::make_shared<BMSEventHandler>(runner_);
+    std::shared_ptr<BMSEventHandler> handler_ = std::make_shared<BMSEventHandler>();
     std::unordered_map<std::string, InnerBundleInfo> infos;
     const std::string PATH = TEST_ERROR_DIR + "/" + PHOTOS_HAP;
     auto result = handler_->CheckAndParseHapFiles(PATH, true, infos);
     EXPECT_FALSE(result);
 }
+} // OHOS

@@ -22,18 +22,11 @@
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #include "datetime_ex.h"
+#include "ffrt.h"
 #include "ipc_skeleton.h"
-#include "xcollie_helper.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const std::string INSTALL_TASK = "Install_Task";
-const std::string UNINSTALL_TASK = "Uninstall_Task";
-const std::string RECOVER_TASK = "Recover_Task";
-const unsigned int TIME_OUT_SECONDS = 60 * 5;
-}
-
 BundleInstallerManager::BundleInstallerManager()
 {
     APP_LOGI("create bundle installer manager instance");
@@ -54,9 +47,7 @@ void BundleInstallerManager::CreateInstallTask(
     }
     auto task = [installer, bundleFilePath, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePath, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -71,9 +62,7 @@ void BundleInstallerManager::CreateRecoverTask(
     }
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Recover(bundleName, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -88,9 +77,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     }
     auto task = [installer, bundleFilePaths, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePaths, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -106,9 +93,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
 
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->InstallByBundleName(bundleName, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -123,9 +108,7 @@ void BundleInstallerManager::CreateUninstallTask(
     }
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -140,9 +123,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
     }
     auto task = [installer, bundleName, modulePackage, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, modulePackage, installParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -157,9 +138,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
     }
     auto task = [installer, uninstallParam] {
         BundleMemoryGuard memoryGuard;
-        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(uninstallParam);
-        XCollieHelper::CancelTimer(timerId);
     };
     AddTask(task);
 }
@@ -174,14 +153,8 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task)
 {
-    auto bundleMgrService = DelayedSingleton<BundleMgrService>::GetInstance();
-    if (bundleMgrService == nullptr) {
-        APP_LOGE("bundleMgrService is nullptr");
-        return;
-    }
-
-    ThreadPool &installersPool = bundleMgrService->GetThreadPool();
-    installersPool.AddTask(task);
+    APP_LOGD("submit task");
+    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(static_cast<int>(ffrt::qos_default::qos_user_initiated)));
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

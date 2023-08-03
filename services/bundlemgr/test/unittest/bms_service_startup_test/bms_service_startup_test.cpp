@@ -29,8 +29,10 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS::Security;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
+const int32_t TOKENID = 100;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 } // namespace
 
@@ -40,13 +42,20 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
+private:
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsServiceStartupTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 void BmsServiceStartupTest::SetUpTestCase()
 {}
 
 void BmsServiceStartupTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsServiceStartupTest::SetUp()
 {}
@@ -57,132 +66,6 @@ void BmsServiceStartupTest::TearDown()
 }
 
 /**
-* @tc.number: Startup_0100
-* @tc.name: test the start function of the BMS service when service is not ready
-* @tc.desc: 1. the service is not initialized
-*           2. the non initialized BMS service can be started
-*/
-HWTEST_F(BmsServiceStartupTest, Startup_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bool ready = bms->IsServiceReady();
-    EXPECT_EQ(false, ready);
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-}
-
-/**
-* @tc.number: Startup_0200
-* @tc.name: test the stop function of the BMS service when service is ready
-* @tc.desc: 1. the service is already initialized
-*           2. the initialized BMS service can be stopped
-*/
-HWTEST_F(BmsServiceStartupTest, Startup_0200, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    bool ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-    bms->OnStop();
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(false, ready);
-}
-
-/**
-* @tc.number: Startup_0300
-* @tc.name:  test the restart function of the BMS service
-* @tc.desc: 1. the service is already initialized
-*           2. the stopped BMS service can be restarted
-*/
-HWTEST_F(BmsServiceStartupTest, Startup_0300, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    bool ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-    bms->OnStop();
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(false, ready);
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-    bms->OnStop();
-}
-
-/**
-* @tc.number: Startup_0400
-* @tc.name:  test the restart function of the BMS service which is already initialized
-* @tc.desc: 1. the service is already initialized
-*           2. the recall start function will not affect the initialized BMS service
-*/
-HWTEST_F(BmsServiceStartupTest, Startup_0400, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    bool ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-    bms->OnStart();
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-    bms->OnStop();
-}
-
-/**
-* @tc.number: GetDataMgr_0100
-* @tc.name:  test the dataMgr can be obtained
-* @tc.desc: 1. the service is already initialized
-*           2. the dataMgr can be obtained
-*/
-HWTEST_F(BmsServiceStartupTest, GetDataMgr_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    auto dataMgr = bms->GetDataMgr();
-    EXPECT_NE(nullptr, dataMgr);
-    bms->OnStop();
-}
-
-/**
-* @tc.number: GetBundleInstaller_0100
-* @tc.name:  test the installer can be obtained
-* @tc.desc: 1. the service is already initialized
-*           2. the installer can be obtained
-*/
-HWTEST_F(BmsServiceStartupTest, GetBundleInstaller_0100, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    auto installer = bms->GetBundleInstaller();
-    EXPECT_NE(nullptr, installer);
-    bms->OnStop();
-}
-
-/**
-* @tc.number: GuardAgainst_001
-* @tc.name: Guard against install infos lossed strategy
-* @tc.desc: 1. the service is not initialized
-* @tc.require: issueI56WA0
-*/
-HWTEST_F(BmsServiceStartupTest, GuardAgainst_001, Function | SmallTest | Level0)
-{
-    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
-    bool ready = bms->IsServiceReady();
-    EXPECT_EQ(false, ready);
-    bms->OnStart();
-    std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
-    ready = bms->IsServiceReady();
-    EXPECT_EQ(true, ready);
-}
-
-/**
 * @tc.number: GuardAgainst_002
 * @tc.name: Guard against install infos lossed strategy
 * @tc.desc: 1. ScanAndAnalyzeUserDatas
@@ -190,9 +73,7 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainst_001, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, GuardAgainst_002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::map<std::string, std::vector<InnerBundleUserInfo>> innerBundleUserInfoMaps;
     handler->ScanAndAnalyzeUserDatas(innerBundleUserInfoMaps);
     EXPECT_EQ(true, innerBundleUserInfoMaps.empty());
@@ -206,9 +87,7 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainst_002, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, GuardAgainst_003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
     handler->ScanAndAnalyzeInstallInfos(installInfos);
     EXPECT_EQ(false, installInfos.empty());
@@ -222,9 +101,7 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainst_003, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::list<std::string> bundleDirs;
     handler->GetBundleDirFromScan(bundleDirs);
     EXPECT_EQ(false, bundleDirs.empty());
@@ -238,9 +115,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_001, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     bool ret = handler->LoadPreInstallProFile();
     EXPECT_EQ(true, ret);
@@ -255,9 +130,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_002, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, ReInstallAllInstallDirApps_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     auto res = handler->ReInstallAllInstallDirApps();
     EXPECT_EQ(res, ResultCode::SYSTEM_ERROR);
 }
@@ -269,9 +142,7 @@ HWTEST_F(BmsServiceStartupTest, ReInstallAllInstallDirApps_001, Function | Small
 */
 HWTEST_F(BmsServiceStartupTest, GuardAgainstInstallInfosLossedStrategy_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     auto res = handler->GuardAgainstInstallInfosLossedStrategy();
     EXPECT_EQ(res, ResultCode::NO_INSTALLED_DATA);
 }
@@ -283,9 +154,7 @@ HWTEST_F(BmsServiceStartupTest, GuardAgainstInstallInfosLossedStrategy_001, Func
 */
 HWTEST_F(BmsServiceStartupTest, AnalyzeUserData_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     int32_t userId = 0;
     const std::string userDataDir = "/data/test";
     const std::string userDataBundleName = "com.user.test";
@@ -316,9 +185,7 @@ HWTEST_F(BmsServiceStartupTest, AnalyzeUserData_001, Function | SmallTest | Leve
 */
 HWTEST_F(BmsServiceStartupTest, CheckHapPaths_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::vector<std::string> hapPaths;
     hapPaths.emplace_back("test1.hap");
     hapPaths.emplace_back("test2.ha");
@@ -333,9 +200,7 @@ HWTEST_F(BmsServiceStartupTest, CheckHapPaths_0001, Function | SmallTest | Level
 */
 HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     InnerBundleInfo innerBundleInfo;
     std::vector<InnerBundleInfo> innerBundleInfos;
     innerBundleInfos.push_back(innerBundleInfo);
@@ -368,9 +233,7 @@ HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_001, Function | Sma
 */
 HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
     std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
     bool res = handler->CombineBundleInfoAndUserInfo(installInfos, userInfoMaps);
@@ -384,9 +247,7 @@ HWTEST_F(BmsServiceStartupTest, CombineBundleInfoAndUserInfo_002, Function | Sma
 */
 HWTEST_F(BmsServiceStartupTest, InnerProcessBootPreBundleProFileInstall_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::string bundleName = "com.ohos.tes1";
     bool ret = handler->IsHotPatchApp(bundleName);
     EXPECT_EQ(ret, false);
@@ -399,9 +260,7 @@ HWTEST_F(BmsServiceStartupTest, InnerProcessBootPreBundleProFileInstall_001, Fun
 */
 HWTEST_F(BmsServiceStartupTest, OTAInstallSystemBundle_001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::string filePath = "/data/test";
     std::vector<std::string> filePaths;
     filePaths.push_back(filePath);
@@ -422,9 +281,7 @@ HWTEST_F(BmsServiceStartupTest, OTAInstallSystemBundle_001, Function | SmallTest
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     ResultCode ret = handler->GuardAgainstInstallInfosLossedStrategy();
     EXPECT_EQ(ret, ResultCode::NO_INSTALLED_DATA);
@@ -438,9 +295,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_003, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_004, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::map<std::string, std::vector<InnerBundleUserInfo>> userMaps;
     ScanResultCode ret = handler->ScanAndAnalyzeUserDatas(userMaps);
@@ -455,9 +310,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_004, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_005, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     ResultCode ret = handler->ReInstallAllInstallDirApps();
     EXPECT_EQ(ret, ResultCode::SYSTEM_ERROR);
@@ -471,9 +324,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_005, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_006, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::vector<std::string> bundleDirs;
     handler->GetPreInstallDirFromLoadProFile(bundleDirs);
@@ -488,9 +339,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_006, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_007, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::map<std::string, std::vector<InnerBundleInfo>> installInfos;
     std::map<std::string, std::vector<InnerBundleUserInfo>> userInfoMaps;
@@ -510,9 +359,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_007, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_008, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::vector<std::string> filePaths;
     bool removabl = false;
@@ -529,9 +376,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_008, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_009, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     bool res = handler->IsPreInstallRemovable("");
     EXPECT_EQ(res, false);
@@ -545,9 +390,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_009, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_0010, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     PreBundleConfigInfo preBundleConfigInfo;
     bool res = handler->GetPreInstallCapability(preBundleConfigInfo);
@@ -565,9 +408,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0010, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_0011, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::string filePath = "/data/test";
     bool res = handler->IsPreInstallRemovable("");
@@ -584,9 +425,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0011, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_0012, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     handler->ClearPreInstallCache();
     std::string filePath = "/data/test";
     std::unordered_map<std::string, InnerBundleInfo> infos;
@@ -604,9 +443,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0012, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_0013, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     InnerBundleInfo info;
     std::list<std::string> scanPathList;
     handler->LoadAllPreInstallBundleInfos();
@@ -627,9 +464,7 @@ HWTEST_F(BmsServiceStartupTest, PreInstall_0013, Function | SmallTest | Level0)
 */
 HWTEST_F(BmsServiceStartupTest, PreInstall_0014, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner = EventRunner::Create(Constants::BMS_SERVICE_NAME);
-    EXPECT_NE(nullptr, runner);
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     std::vector<std::string> hapPaths;
     std::vector<std::string> res = handler->CheckHapPaths(hapPaths);
     EXPECT_EQ(res.size(), 0);
@@ -865,3 +700,71 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
     ret = param.SaveBmsParam("bms_param", "bms_value");
     EXPECT_EQ(ret, false);
 }
+
+/**
+ * @tc.number: ConvertPermissionDef_0100
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::DefinePermission definePermission;
+    definePermission.grantMode = Profile::DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT;
+    BundlePermissionMgr::ConvertPermissionDef(permDef, definePermission, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(permDef.grantMode, AccessToken::GrantMode::SYSTEM_GRANT);
+}
+
+/**
+ * @tc.number: ConvertPermissionDef_0200
+ * @tc.name: test ConvertPermissionDef
+ * @tc.desc: 1.test ConvertPermissionDef of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, ConvertPermissionDef_0200, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permDef;
+    OHOS::AppExecFwk::DefinePermission definePermission;
+    definePermission.grantMode = Profile::DEFINEPERMISSION_PROVISION_ENABLE;
+    BundlePermissionMgr::ConvertPermissionDef(permDef, definePermission, BUNDLE_TEMP_NAME);
+    EXPECT_EQ(permDef.grantMode, AccessToken::GrantMode::USER_GRANT);
+}
+
+/**
+ * @tc.number: GetNeedDeleteDefinePermissionName_0100
+ * @tc.name: test GetNeedDeleteDefinePermissionName
+ * @tc.desc: 1.test GetNeedDeleteDefinePermissionName of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, GetNeedDeleteDefinePermissionName_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.name = BUNDLE_TEMP_NAME;
+    newInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    oldInfo.innerModuleInfos_.insert(std::pair<std::string, InnerModuleInfo>("1", innerModuleInfo));
+    auto ret = BundlePermissionMgr::GetNeedDeleteDefinePermissionName(oldInfo, newInfo);
+    EXPECT_EQ(ret.size(), 0);
+}
+
+/**
+ * @tc.number: GetNewPermissionDefList_0100
+ * @tc.name: test GetNewPermissionDefList
+ * @tc.desc: 1.test GetNewPermissionDefList of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::AccessTokenID tokenId = TOKENID;
+    std::vector<AccessToken::PermissionDef> permissionDef;
+    std::vector<AccessToken::PermissionDef> newPermissionDef;
+    auto ret = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDef, newPermissionDef);
+    EXPECT_NE(ret, 0);
+}
+} // OHOS

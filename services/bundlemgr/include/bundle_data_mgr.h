@@ -225,6 +225,17 @@ public:
     ErrCode GetApplicationInfoV9(
         const std::string &appName, int32_t flags, int32_t userId, ApplicationInfo &appInfo) const;
     /**
+     * @brief Obtains the ApplicationInfo based on a given bundle name.
+     * @param appName Indicates the application bundle name to be queried.
+     * @param flags Indicates the flag used to specify information contained
+     *             in the ApplicationInfo object that will be returned.
+     * @param userId Indicates the user ID.
+     * @param appInfo Indicates the obtained ApplicationInfo object.
+     * @return Returns ERR_OK if the application is successfully obtained; returns error code otherwise.
+     */
+    ErrCode GetApplicationInfoWithResponseId(
+        const std::string &appName, int32_t flags, int32_t &userId, ApplicationInfo &appInfo) const;
+    /**
      * @brief Obtains information about all installed applications of a specified user.
      * @param flags Indicates the flag used to specify information contained
      *             in the ApplicationInfo objects that will be returned.
@@ -651,7 +662,7 @@ public:
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
      */
-    const std::vector<PreInstallBundleInfo>& GetAllPreInstallBundleInfos();
+    const std::vector<PreInstallBundleInfo> GetAllPreInstallBundleInfos();
     /**
      * @brief Restore uid and gid .
      * @return Returns true if this function is successfully called; returns false otherwise.
@@ -761,7 +772,7 @@ public:
 
     void NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const;
 
-    const std::map<std::string, InnerBundleInfo> &GetAllInnerbundleInfos() const
+    const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
         std::lock_guard<std::mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
@@ -771,7 +782,7 @@ public:
 
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
-    const std::map<std::string, InnerBundleInfo> &GetAllOverlayInnerbundleInfos() const;
+    const std::map<std::string, InnerBundleInfo> GetAllOverlayInnerBundleInfos() const;
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
@@ -821,6 +832,28 @@ public:
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
+    ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType);
+    ErrCode DelExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, const std::string &extName, const std::string &mimeType);
+    bool QueryAppGalleryAbilityName(std::string &bundleName, std::string &abilityName);
+    bool QueryDataGroupInfos(const std::string &bundleName, int32_t userId, std::vector<DataGroupInfo> &infos) const;
+    bool GetGroupDir(const std::string &dataGroupId, std::string &dir,
+        int32_t userId = Constants::UNSPECIFIED_USERID) const;
+    void GenerateDataGroupUuidAndUid(DataGroupInfo &dataGroupInfo, int32_t userId,
+        std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
+    void GenerateDataGroupInfos(InnerBundleInfo &innerBundleInfo,
+        const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
+    void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
+    bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
+    ErrCode GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
+        int32_t userId, bool isNewVersion = false) const;
+    ErrCode GetBundleInfosFromBmsExtension(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId,
+        bool isNewVersion = false) const;
+    ErrCode QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false) const;
+    ErrCode QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+        AbilityInfo &abilityInfo, bool isNewVersion = false) const;
 
 private:
     /**
@@ -868,6 +901,7 @@ private:
         std::vector<AbilityInfo> &abilityInfos, int32_t appIndex = 0) const;
     void GetMatchAbilityInfos(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
+    void AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, AbilityInfo &abilityInfo) const;
     void GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const;
     bool ExplicitQueryAbilityInfo(const Want &want, int32_t flags, int32_t userId, AbilityInfo &abilityInfo,
@@ -885,6 +919,7 @@ private:
         ExtensionAbilityInfo &extensionInfo, int32_t appIndex = 0) const;
     bool ImplicitQueryExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+    void AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill, ExtensionAbilityInfo &extensionAbilityInfo) const;
     ErrCode ImplicitQueryExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     void GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId, const InnerBundleInfo &info,
@@ -930,16 +965,19 @@ private:
     ErrCode GetLauncherAbilityByBundleName(const Want &want, std::vector<AbilityInfo> &abilityInfos,
         const int32_t userId, const int32_t requestUserId) const;
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
+    bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
+        const std::vector<std::string> &supportMimeTypes) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
-    mutable std::mutex eventCallbackMutex_;
+    mutable std::shared_mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
-    mutable std::mutex preInstallInfoMutex_;
     mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
@@ -966,7 +1004,6 @@ private:
     std::shared_ptr<IBundleDataStorage> dataStorage_;
     std::shared_ptr<IPreInstallDataStorage> preInstallDataStorage_;
     std::shared_ptr<BundleStateStorage> bundleStateStorage_;
-    std::vector<PreInstallBundleInfo> preInstallBundleInfos_;
     std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
     std::shared_ptr<BundleSandboxAppHelper> sandboxAppHelper_;
 };

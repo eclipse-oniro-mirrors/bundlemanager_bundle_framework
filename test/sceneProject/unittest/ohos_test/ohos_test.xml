@@ -64,6 +64,14 @@
         src="res" />
       <option name="push" value="test_bundle/thumbnail2.hap -> /data/test/resource/bms/accesstoken_bundle/"
         src="res" />
+      <option name="push" value="bundle_so/compressNativeLibsFalse01.hap -> /data/test/resource/bms/bundle_so/"
+        src="res" />
+      <option name="push" value="bundle_so/compressNativeLibsFalse02.hap -> /data/test/resource/bms/bundle_so/"
+        src="res" />
+      <option name="push" value="bundle_so/compressNativeLibsTrue01.hap -> /data/test/resource/bms/bundle_so/"
+        src="res" />
+      <option name="push" value="bundle_so/compressNativeLibsTrue02.hap -> /data/test/resource/bms/bundle_so/"
+        src="res" />
     </preparer>
   </target>
   <target name="BmsBundleParserTest">

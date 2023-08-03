@@ -16,10 +16,12 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_HOST_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_IPC_INSTALLD_HOST_H
 
+#include <mutex>
 #include <string>
 
+#include "event_handler.h"
+#include "event_runner.h"
 #include "iremote_stub.h"
-
 #include "ipc/installd_interface.h"
 
 namespace OHOS {
@@ -109,7 +111,7 @@ private:
     /**
      * @brief Init private hash map funcMap_.
      */
-    void init();
+    void Init();
     /**
      * @brief Handles the set dir apl function called from a IInstalld proxy object.
      * @param data Indicates the data to be read.
@@ -152,8 +154,21 @@ private:
 
     bool HandGetNativeLibraryFileNames(MessageParcel &data, MessageParcel &reply);
 
+    bool HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply);
+
+    bool HandMoveFiles(MessageParcel &data, MessageParcel &reply);
+
+    void AddCloseInstalldTask();
+
+    void RemoveCloseInstalldTask();
+
+    void InitEventHandler();
+
     using InstalldFunc = bool (InstalldHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, InstalldFunc> funcMap_;
+    std::mutex unloadTaskMutex_;
+    std::shared_ptr<EventHandler> handler_ = nullptr;
+    std::shared_ptr<EventRunner> runner_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

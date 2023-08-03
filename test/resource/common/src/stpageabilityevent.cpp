@@ -163,13 +163,6 @@ void STPageAbilityEventSubscriber::OnReceiveEvent(const CommonEventData &data)
             (this->ability_.lock())->TerminateAbility(requestCode);
         }
     }
-    if (eventName.compare("requ_page_ability_terminate_result") == 0) {
-        std::string target = data.GetData();
-        int startId = data.GetCode();
-        if (target.compare((this->ability_.lock())->GetAbilityName()) == 0) {
-            (this->ability_.lock())->TerminateAbilityResult(startId);
-        }
-    }
 }
 
 std::string STPageAbilityEventSubscriber::RunningProcessInfoToString(std::vector<RunningProcessInfo> &infos)

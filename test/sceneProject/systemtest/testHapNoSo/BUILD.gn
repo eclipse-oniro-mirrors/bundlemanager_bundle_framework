@@ -1,0 +1,41 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+group("testHapNoSo") {
+  testonly = true
+  deps = []
+
+  deps += [
+    # deps file
+    "hapNotIncludeso1:hapNotIncludeso1",
+    "hapNotIncludeso2:hapNotIncludeso2",
+    "hapNotIncludeso3:hapNotIncludeso3",
+    "hapNotIncludeso4:hapNotIncludeso4",
+    "hapNotIncludeso5:hapNotIncludeso5",
+    "hapNotIncludeso5/feature1:hapNotIncludesoFeature1",
+    "hapNotIncludeso5/feature2:hapNotIncludesoFeature2",
+    "hapNotIncludeso5/feature3:hapNotIncludesoFeature3",
+    "hapNotIncludeso6:hapNotIncludeso6",
+    "hapNotIncludeso6/feature4:hapNotIncludesoFeature4",
+    "hapNotIncludeso6/feature5:hapNotIncludesoFeature5",
+    "hapNotIncludeso6/feature6:hapNotIncludesoFeature6",
+    "hapSectionContainso1:hapSectionContainso1",
+    "hapSectionContainso1/feature1:hapSectionContainsoFeature1",
+    "hapSectionContainso1/feature2:hapSectionContainsoFeature2",
+    "hapSectionContainso1/feature3:hapSectionContainsoFeature3",
+    "hapSectionContainso2:hapSectionContainso2",
+    "hapSectionContainso2/feature4:hapSectionContainsoFeature4",
+    "hapSectionContainso2/feature5:hapSectionContainsoFeature5",
+    "hapSectionContainso2/feature6:hapSectionContainsoFeature6",
+  ]
+}

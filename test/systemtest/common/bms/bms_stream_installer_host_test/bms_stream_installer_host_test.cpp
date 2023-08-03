@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 #include "appexecfwk_errors.h"
 #define private public
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_stream_installer_host.h"
 #include "bundle_user_mgr_host.h"
 #undef private
@@ -25,6 +26,11 @@ using namespace testing::ext;
 using testing::_;
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 4;
+const std::string TEST_FILE_NAME = "/data/test/test.hap";
+} // namespace
+
 class BundleStreamInstallerHostMock : public BundleStreamInstallerHost {
 public:
     BundleStreamInstallerHostMock() = default;
@@ -81,7 +87,7 @@ void BmsStreamInstallerHostTest::TearDown() {}
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_001, TestSize.Level1)
 {
     auto size = static_cast<int32_t>(streamInstallerHost_->funcMap_.size());
-    EXPECT_EQ(size, 3);
+    EXPECT_EQ(size, FUNCTION_SIZE_OF_STREAM_INSTALL_HOST);
 }
 
 /**
@@ -91,7 +97,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_001, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_002, TestSize.Level1)
 {
-    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -109,7 +115,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_002, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_003, TestSize.Level1)
 {
-    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
     MessageParcel reply;
@@ -132,7 +138,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_003, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_004, TestSize.Level1)
 {
-    uint32_t code = BundleStreamInstallerHost::StreamMessage::STREAM_INSTALL;
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::STREAM_INSTALL);
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
     MessageParcel reply;
@@ -155,13 +161,14 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_004, TestSize.Level1)
  */
 HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_005, TestSize.Level1)
 {
-    uint32_t code = BundleStreamInstallerHost::StreamMessage::CREATE_STREAM;
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM);
     MessageParcel data;
     data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
+    data.WriteString(TEST_FILE_NAME);
     MessageParcel reply;
     MessageOption option;
 
-    auto func = [](const std::string &hapName) -> int32_t { return -1; };
+    auto func = [](const std::string &fileName) -> int32_t { return -1; };
     EXPECT_CALL(*streamInstallerHost_, CreateStream(_)).Times(1).WillOnce(testing::Invoke(func));
 
     auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
@@ -187,13 +194,32 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_006, TestSize.Level1)
 }
 
 /**
+ * @tc.number: StreamInstallerHost_007
+ * @tc.name: OnRemoteRequest
+ * @tc.desc: 1.code is StreamMessage::CREATE_STREAM.
+ *           2.data is write interface token.
+ *           3.Failed to verify the returned result.
+ */
+HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_007, TestSize.Level1)
+{
+    uint32_t code = static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_STREAM);
+    MessageParcel data;
+    data.WriteInterfaceToken(BundleStreamInstallerHost::GetDescriptor());
+    MessageParcel reply;
+    MessageOption option;
+
+    auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+}
+
+/**
  * @tc.number: UserMgrHost_001
  * @tc.name: OnRemoteRequest
  * @tc.desc: data is not write interface token, failed to verify OnRemoteRequest.
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_001, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::CREATE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -222,13 +248,13 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_002, TestSize.Level1)
 /**
  * @tc.number: UserMgrHost_003
  * @tc.name: OnRemoteRequest
- * @tc.desc: 1.code is IBundleUserMgr::Message::CREATE_USER.
+ * @tc.desc: 1.code is BundleUserMgrInterfaceCode::CREATE_USER.
  *           2.data is write interface token.
  *           3.Verify the returned result successfully.
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_003, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::CREATE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER);
     MessageParcel data;
     data.WriteInterfaceToken(BundleUserMgrHost::GetDescriptor());
     MessageParcel reply;
@@ -242,13 +268,13 @@ HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_003, TestSize.Level1)
 /**
  * @tc.number: UserMgrHost_004
  * @tc.name: OnRemoteRequest
- * @tc.desc: 1.code is IBundleUserMgr::Message::REMOVE_USER.
+ * @tc.desc: 1.code is BundleUserMgrInterfaceCode::REMOVE_USER.
  *           2.data is write interface token.
  *           3.Verify the returned result successfully.
  */
 HWTEST_F(BmsStreamInstallerHostTest, UserMgrHost_004, TestSize.Level1)
 {
-    uint32_t code = static_cast<uint32_t>(IBundleUserMgr::Message::REMOVE_USER);
+    uint32_t code = static_cast<uint32_t>(BundleUserMgrInterfaceCode::REMOVE_USER);
     MessageParcel data;
     data.WriteInterfaceToken(BundleUserMgrHost::GetDescriptor());
     MessageParcel reply;

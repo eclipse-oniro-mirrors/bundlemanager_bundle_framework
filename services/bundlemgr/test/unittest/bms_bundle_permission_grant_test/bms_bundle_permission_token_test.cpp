@@ -64,9 +64,15 @@ public:
 private:
     std::shared_ptr<BundleMgrHostImpl> bundleMgrHostImpl_ = std::make_unique<BundleMgrHostImpl>();
     std::shared_ptr<BundleInstallerHost> bundleInstallerHost_ = std::make_unique<BundleInstallerHost>();
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionTokenTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionTokenTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionTokenTest::BmsBundlePermissionTokenTest()
 {}
@@ -78,7 +84,9 @@ void BmsBundlePermissionTokenTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionTokenTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionTokenTest::SetUp()
 {
@@ -283,6 +291,28 @@ HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1400, Functi
 {
     std::vector<ProxyData> proxyDatas;
     auto ret = bundleMgrHostImpl_->GetAllProxyDataInfos(proxyDatas);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1500
+ * @tc.name: test SetExtNameOrMIMEToApp
+ * @tc.desc: 1.SetExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1500, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->SetExtNameOrMIMEToApp("", "", "", "", "");
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionTokenTest_1600
+ * @tc.name: test DelExtNameOrMIMEToApp
+ * @tc.desc: 1.DelExtNameOrMIMEToApp
+ */
+HWTEST_F(BmsBundlePermissionTokenTest, BmsBundlePermissionTokenTest_1600, Function | MediumTest | Level1)
+{
+    ErrCode ret = bundleMgrHostImpl_->DelExtNameOrMIMEToApp("", "", "", "", "");
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS

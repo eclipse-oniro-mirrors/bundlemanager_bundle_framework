@@ -56,9 +56,15 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundlePermissionStartFullTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundlePermissionStartFullTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundlePermissionStartFullTest::BmsBundlePermissionStartFullTest()
 {}
@@ -70,7 +76,9 @@ void BmsBundlePermissionStartFullTest::SetUpTestCase()
 {}
 
 void BmsBundlePermissionStartFullTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundlePermissionStartFullTest::SetUp()
 {

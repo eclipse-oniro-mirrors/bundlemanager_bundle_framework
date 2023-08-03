@@ -40,11 +40,6 @@ public:
     {
         return;
     }
-    
-    enum class Message {
-        CREATE_USER = 0,
-        REMOVE_USER = 1,
-    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -45,12 +45,18 @@ ErrCode SharedBundleInstaller::ParseFiles()
     checkParam.crowdtestDeadline = installParam_.crowdtestDeadline;
     checkParam.appType = appType_;
     checkParam.removable = installParam_.removable;
+    checkParam.installBundlePermissionStatus = installParam_.installBundlePermissionStatus;
+    checkParam.installEnterpriseBundlePermissionStatus = installParam_.installEnterpriseBundlePermissionStatus;
+    checkParam.isCallByShell = installParam_.isCallByShell;
 
     for (const auto &path : installParam_.sharedBundleDirPaths) {
         auto installer = std::make_shared<InnerSharedBundleInstaller>(path);
         result = installer->ParseFiles(checkParam);
         CHECK_RESULT(result, "parse file failed %{public}d");
-
+        if (innerInstallers_.find(installer->GetBundleName()) != innerInstallers_.end()) {
+            APP_LOGW("sharedBundleDirPaths does not support that different paths contain hsp of same bundleName");
+            continue;
+        }
         innerInstallers_.emplace(installer->GetBundleName(), installer);
     }
 

@@ -36,6 +36,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "inner_bundle_info.h"
+#include "mime_type_mgr.h"
 #include "mock_status_receiver.h"
 #include "scope_guard.h"
 #include "system_bundle_installer.h"
@@ -66,7 +67,7 @@ const std::string BUNDLE_BACKUP_TEST = "backup.hap";
 const std::string BUNDLE_PREVIEW_TEST = "preview.hap";
 const std::string BUNDLE_THUMBNAIL_TEST = "thumbnail.hap";
 const std::string BUNDLE_BACKUP_NAME = "com.example.backuptest";
-const std::string ABILITY_BACKUP_NAME = "MainAbility";
+const std::string ABILITY_BACKUP_NAME = "com.example.backuptest.entry.MainAbility";
 const std::string BUNDLE_PREVIEW_NAME = "com.example.previewtest";
 const std::string BUNDLE_THUMBNAIL_NAME = "com.example.thumbnailtest";
 const std::string MODULE_NAME = "entry";
@@ -75,6 +76,8 @@ const std::string TYPE_001 = "type001";
 const std::string TYPE_002 = "VIDEO";
 const std::string TEST_BUNDLE_NAME = "bundleName";
 const std::string OVER_MAX_SIZE(300, 'x');
+const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
+const std::string EMPTY_STRING = "";
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
@@ -105,13 +108,15 @@ public:
 
 private:
     std::shared_ptr<BundleInstallerManager> manager_ = nullptr;
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
-    const std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->GetConnectAbility();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleManagerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleManagerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleManagerTest::BmsBundleManagerTest()
 {}
@@ -121,6 +126,7 @@ BmsBundleManagerTest::~BmsBundleManagerTest()
 
 bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) const
 {
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     auto installer = std::make_unique<SystemBundleInstaller>();
     InstallParam installParam;
     installParam.userId = USERID;
@@ -134,7 +140,8 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
 
 ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -154,7 +161,8 @@ ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePat
 
 ErrCode BmsBundleManagerTest::UpdateThirdPartyBundle(const std::string &filePath) const
 {
-    auto installer = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleInstaller();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
+    auto installer = bundleMgrService_->GetBundleInstaller();
     if (!installer) {
         EXPECT_FALSE(true) << "the installer is nullptr";
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
@@ -198,6 +206,7 @@ void BmsBundleManagerTest::SetUpTestCase()
 
 void BmsBundleManagerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsBundleManagerTest::SetUp()
@@ -253,8 +262,7 @@ void BmsBundleManagerTest::ClearDataMgr()
 
 void BmsBundleManagerTest::ResetDataMgr()
 {
-    EXPECT_NE(dataMgrInfo_, nullptr);
-    bundleMgrService_->dataMgr_ = dataMgrInfo_;
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
     EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
@@ -265,8 +273,7 @@ void BmsBundleManagerTest::ClearConnectAbilityMgr()
 
 void BmsBundleManagerTest::ResetConnectAbilityMgr()
 {
-    EXPECT_NE(connectAbilityMgrInfo_, nullptr);
-    bundleMgrService_->connectAbilityMgr_ = connectAbilityMgrInfo_;
+    bundleMgrService_->connectAbilityMgr_ = std::make_shared<BundleConnectAbilityMgr>();
     EXPECT_NE(bundleMgrService_->connectAbilityMgr_, nullptr);
 }
 
@@ -320,6 +327,144 @@ void BmsBundleManagerTest::ClearBundleInfo()
     // clear innerBundleInfo from data storage
     bool result = dataStorage->DeleteStorageBundleInfo(innerBundleInfo);
     EXPECT_TRUE(result) << "the bundle info in db clear fail: " << BUNDLE_NAME;
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0100
+ * @tc.name: test Init
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0100, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    InstallParam installParam;
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    bool ret = impl.Init(installParam, statusReceiver);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0200
+ * @tc.name: test UnInit
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0200, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths = {"pata1", "path2"};
+    InstallParam installParam;
+    impl.UnInit();
+    EXPECT_EQ(impl.installParam_.sharedBundleDirPaths.empty(), false);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0300
+ * @tc.name: test UnInit
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0300, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths = {"pata1", "path2"};
+    impl.UnInit();
+    EXPECT_EQ(impl.installParam_.sharedBundleDirPaths.empty(), false);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0400
+ * @tc.name: test Install
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0400, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    sptr<IStatusReceiver> statusReceiver = new (std::nothrow) MockStatusReceiver();
+    EXPECT_NE(statusReceiver, nullptr);
+    impl.receiver_ = statusReceiver;
+    bool ret = impl.Install();
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0500
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0500, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    int ret = impl.CreateStream(BUNDLE_NAME);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0600
+ * @tc.name: test CreateSharedBundleStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0600, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.installParam_.sharedBundleDirPaths.push_back(OVER_MAX_SIZE);
+    auto ret = impl.CreateSharedBundleStream(BUNDLE_NAME, USERID);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0700
+ * @tc.name: test CreateSharedBundleStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0700, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    bool ret = impl.Install();
+    EXPECT_FALSE(ret);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0800
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0800, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    std::string hapName = BUNDLE_NAME;
+    auto ret = impl.CreateStream(hapName);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: BundleStreamInstallerHostImpl_0900
+ * @tc.name: test CreateStream
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, BundleStreamInstallerHostImpl_0900, Function | SmallTest | Level0)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.isInstallSharedBundlesOnly_ = false;
+    auto ret = impl.Install();
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -1739,6 +1884,45 @@ HWTEST_F(BmsBundleManagerTest, SkillFalse_0004, Function | SmallTest | Level1)
 }
 
 /**
+ * @tc.number: SkillFalse_0005
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0005, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    bool ret = skill.MatchMimeType(".notatype");
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: SkillFalse_0006
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0006, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    bool ret = skill.MatchMimeType(".jpg");
+    EXPECT_EQ(false, ret);
+}
+
+/**
+ * @tc.number: SkillFalse_0007
+ * @tc.name: test MatchMimeType
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SkillFalse_0007, Function | SmallTest | Level1)
+{
+    struct Skill skill;
+    SkillUri skillUri;
+    skillUri.type = "image/*";
+    skill.uris.emplace_back(skillUri);
+    bool ret = skill.MatchMimeType(".jpg");
+    EXPECT_EQ(true, ret);
+}
+
+/**
  * @tc.number: InnerBundleInfoFalse_0001
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1.system run normally
@@ -2048,7 +2232,7 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_0500, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     std::vector<std::u16string> args;
-    int fd = 8;
+    int fd = 2;
     int res = hostImpl->Dump(fd, args);
     EXPECT_EQ(res, ERR_OK);
 }
@@ -3981,19 +4165,40 @@ HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0100, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
 
-    AAFwk::Want want;
     int32_t missionId = 0;
-    int32_t userId = 100;
-    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    AAFwk::Want want;
+    ElementName name;
+    name.SetBundleName(BUNDLE_BACKUP_NAME);
+    name.SetAbilityName(ABILITY_BACKUP_NAME);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+
+    auto bundleDistributedManager = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleDistributedManager();
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ =
+        std::make_shared<BundleDistributedManager>();
+    bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", BUNDLE_BACKUP_NAME, "", MODULE_NAME);
-    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ = nullptr;
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", "", "", MODULE_NAME);
-    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, userId, nullptr);
+    name.SetBundleName("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
+
+    name.SetAbilityName("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+
+    name.SetDeviceID("");
+    want.SetElement(name);
+    ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
+    EXPECT_EQ(ret, false);
+
+    DelayedSingleton<BundleMgrService>::GetInstance()->bundleDistributedManager_ = bundleDistributedManager;
 }
 
 /**
@@ -4005,14 +4210,19 @@ HWTEST_F(BmsBundleManagerTest, BundleFreeInstall_0200, Function | MediumTest | L
 {
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
 
-    AAFwk::Want want;
-    AAFwk::Want want1;
-    want1.ClearWant(&want);
     int32_t missionId = 0;
+    AAFwk::Want want;
+    ElementName name;
+    name.SetBundleName(BUNDLE_BACKUP_NAME);
+    name.SetDeviceID("100");
+    want.SetElement(name);
+
     bool ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 
-    want.SetElementName("", BUNDLE_BACKUP_NAME, BUNDLE_BACKUP_NAME, MODULE_NAME);
+    name.SetAbilityName(ABILITY_BACKUP_NAME);
+    name.SetDeviceID("");
+    want.SetElement(name);
     ret = hostImpl->CheckAbilityEnableInstall(want, missionId, USERID, nullptr);
     EXPECT_EQ(ret, false);
 }
@@ -4114,7 +4324,7 @@ HWTEST_F(BmsBundleManagerTest, DataMgrFailedScene_0100, Function | SmallTest | L
     ret = dataMgr->GetProvisionId(BUNDLE_NAME, provisionId);
     EXPECT_EQ(ret, false);
 
-    std::string appFeature = "ohos_system_app";
+    std::string appFeature = "hos_system_app";
     ret = dataMgr->GetAppFeature(BUNDLE_NAME, appFeature);
     EXPECT_EQ(ret, false);
 
@@ -4295,7 +4505,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleGids_0100, Function | SmallTest | Level0
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: GetBundleSpaceSize_0100
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | Level1)
@@ -4308,7 +4518,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0100, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0200
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetAllFreeInstallBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0200, Function | MediumTest | Level1)
@@ -4321,7 +4531,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0200, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0300
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetFreeInstallModules
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | Level1)
@@ -4334,7 +4544,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0300, Function | MediumTest | 
 
 /**
  * @tc.number: GetBundleSpaceSize_0400
- * @tc.name: test CheckAbilityEnableInstall
+ * @tc.name: test GetBundleSpaceSize
  * @tc.desc: 1.check ability infos
  */
 HWTEST_F(BmsBundleManagerTest, GetBundleSpaceSize_0400, Function | MediumTest | Level1)
@@ -4501,7 +4711,7 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoForSelf_0200, Function | SmallTest |
 
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
-    
+
     ErrCode ret = hostImpl->GetBundleInfoForSelf(BundleFlag::GET_BUNDLE_WITH_ABILITIES, info);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
@@ -4556,6 +4766,136 @@ HWTEST_F(BmsBundleManagerTest, GetAllSharedBundleInfo_0001, Function | SmallTest
     std::vector<SharedBundleInfo> sharedBundles;
     ErrCode testRet = GetBundleDataMgr()->GetAllSharedBundleInfo(sharedBundles);
     EXPECT_EQ(testRet, ERR_OK);
+}
+
+/**
+ * @tc.number: SharedBundleInfoTest_0001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedBundleInfoTest_0001, Function | SmallTest | Level1)
+{
+    SharedBundleInfo sharedBundle;
+    std::vector<SharedModuleInfo> sharedModuleInfos;
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfos.emplace_back(sharedModuleInfo);
+    sharedBundle.sharedModuleInfos = sharedModuleInfos;
+    Parcel parcel;
+    bool ret = sharedBundle.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SharedBundleInfoTest_0002
+ * @tc.name: test Unmarshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedBundleInfoTest_0002, Function | SmallTest | Level1)
+{
+    SharedBundleInfo sharedBundle;
+    std::vector<SharedModuleInfo> sharedModuleInfos;
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    sharedModuleInfos.emplace_back(sharedModuleInfo);
+    sharedBundle.sharedModuleInfos = sharedModuleInfos;
+    Parcel parcel;
+    sharedBundle.Marshalling(parcel);
+    auto ret = sharedBundle.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedModuleInfoTest_001, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    Parcel parcel;
+    bool ret = sharedModuleInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SharedModuleInfoTest_002
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, SharedModuleInfoTest_002, Function | SmallTest | Level1)
+{
+    SharedModuleInfo sharedModuleInfo;
+    sharedModuleInfo.name = MODULE_NAME;
+    Parcel parcel;
+    sharedModuleInfo.Marshalling(parcel);
+    auto ret = sharedModuleInfo.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+    EXPECT_EQ(sharedModuleInfo.name, MODULE_NAME);
+}
+
+/**
+ * @tc.number: InstallParamTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, InstallParamTest_001, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    std::map<std::string, std::string> hashParams;
+    hashParams.insert(pair<string, string>("1", "2"));
+    installParam.hashParams = hashParams;
+    installParam.sharedBundleDirPaths = std::vector<std::string>{INVALID_PATH};
+    Parcel parcel;
+    bool ret = installParam.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstallParamTest_002
+ * @tc.name: test Unmarshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, InstallParamTest_002, Function | SmallTest | Level1)
+{
+    InstallParam installParam;
+    Parcel parcel;
+    installParam.userId = USERID;
+    installParam.Marshalling(parcel);
+    auto ret = installParam.Unmarshalling(parcel);
+    EXPECT_NE(ret, nullptr);
+    EXPECT_EQ(installParam.userId, USERID);
+}
+
+/**
+ * @tc.number: AgingUtilTest_0001
+ * @tc.name: test SortTwoAgingBundleInfos
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, AgingUtilTest_0001, Function | SmallTest | Level1)
+{
+    AgingUtil util;
+    AgingBundleInfo bundle1;
+    AgingBundleInfo bundle2;
+    bundle2.recentlyUsedTime_ = NUMBER_ONE;
+    bool ret = util.SortTwoAgingBundleInfos(bundle1, bundle2);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: GetInstallerIdTest_001
+ * @tc.name: test Marshalling
+ * @tc.desc: 1.system run normally
+*/
+HWTEST_F(BmsBundleManagerTest, GetInstallerIdTest_001, Function | SmallTest | Level1)
+{
+    uint32_t installerId = 1;
+    int32_t installedUid = 100;
+    BundleStreamInstallerHostImpl impl(installerId, installedUid);
+    impl.SetInstallerId(USERID);
+    installedUid = impl.GetInstallerId();
+    EXPECT_EQ(installedUid, USERID);
 }
 
 /**
@@ -4800,5 +5140,242 @@ HWTEST_F(BmsBundleManagerTest, GetSandboxHapModuleInfo_0100, Function | SmallTes
     appIndex = 101;
     ret = hostImpl->GetSandboxHapModuleInfo(abilityInfo, appIndex, USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0100
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0100, Function | SmallTest | Level1)
+{
+    std::string wrongUri = "wrong";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(wrongUri, types);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0200
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0200, Function | SmallTest | Level1)
+{
+    std::string wrongUri = "wrong.wongtype";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(wrongUri, types);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: GetMimeTypeByUri_0300
+ * @tc.name: test GetMimeTypeByUri
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, GetMimeTypeByUri_0300, Function | SmallTest | Level1)
+{
+    std::string rightUri = "right.jpg";
+    std::vector<std::string> types;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(rightUri, types);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: SetExtName_0100
+ * @tc.name: test SetExtName
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0100, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string extName = "jpg";
+    auto ret = innerBundleInfo.SetExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = innerBundleInfo.DelExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetExtName_0200
+ * @tc.name: test SetMimeType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0200, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string mimeType = "image/jpeg";
+    auto ret = innerBundleInfo.SetMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = innerBundleInfo.DelMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: SetExtName_0300
+ * @tc.name: test SetExtName
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0300, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::string extName = "jpg";
+    auto ret = innerBundleInfo.SetExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    ret = innerBundleInfo.DelExtName(MODULE_NAME, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string wrongModuleName = "wrong";
+    ret = innerBundleInfo.SetExtName(wrongModuleName, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = innerBundleInfo.DelExtName(wrongModuleName, ABILITY_NAME, extName);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtName_0400
+ * @tc.name: test SetMimeType
+ * @tc.desc: 1.system run normally
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtName_0400, Function | SmallTest | Level1)
+{
+    InnerBundleInfo innerBundleInfo;
+    std::string mimeType = "image/jpeg";
+    auto ret = innerBundleInfo.SetMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    ret = innerBundleInfo.DelMimeType(MODULE_NAME, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+
+    AbilityInfo abilityInfo;
+    abilityInfo.moduleName = MODULE_NAME;
+    abilityInfo.name = ABILITY_NAME;
+    std::map<std::string, AbilityInfo> abilityInfoMap;
+    abilityInfoMap.emplace(ABILITY_NAME, abilityInfo);
+    innerBundleInfo.AddModuleAbilityInfo(abilityInfoMap);
+    std::string wrongModuleName = "wrong";
+    ret = innerBundleInfo.SetMimeType(wrongModuleName, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = innerBundleInfo.DelMimeType(wrongModuleName, ABILITY_NAME, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0001
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetExtNameToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string extName = "ext";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.ext");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, extName, EMPTY_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0002
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(
+        BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    Want want;
+    want.SetUri("/test/test.book");
+    std::vector<AbilityInfo> abilityInfos;
+    ret = dataMgr->QueryAbilityInfosV9(want, 1, USERID, abilityInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->SetExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, wrongName, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = dataMgr->SetExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, wrongName, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: SetExtNameOrMIMEToApp_0003
+ * @tc.name: SetExtNameOrMIMEToApp
+ * @tc.desc: 1. SetMimeTypeToApp
+ */
+HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0004, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    std::string wrongName = "wrong";
+    std::string mimeType = "application/x-maker";
+    auto ret = dataMgr->DelExtNameOrMIMEToApp(wrongName, MODULE_NAME, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, wrongName, ABILITY_BACKUP_NAME, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, wrongName, EMPTY_STRING, mimeType);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 } // OHOS

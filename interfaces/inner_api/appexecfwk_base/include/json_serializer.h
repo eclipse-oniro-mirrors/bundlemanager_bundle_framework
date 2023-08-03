@@ -20,6 +20,7 @@
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
 #include "common_event_info.h"
+#include "data_group_info.h"
 #include "distributed_ability_info.h"
 #include "distributed_module_info.h"
 #include "form_info.h"
@@ -141,6 +142,8 @@ void to_json(nlohmann::json &jsonObject, const SharedModuleInfo &sharedModuleInf
 void from_json(const nlohmann::json &jsonObject, SharedModuleInfo &sharedModuleInfo);
 void to_json(nlohmann::json &jsonObject, const ProxyData &proxyData);
 void from_json(const nlohmann::json &jsonObject, ProxyData &proxyData);
+void to_json(nlohmann::json &jsonObject, const DataGroupInfo &dataGroupInfo);
+void from_json(const nlohmann::json &jsonObject, DataGroupInfo &dataGroupInfo);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_JSON_SERIALIZER_H

@@ -19,8 +19,6 @@
 #include "app_jump_interceptor_event_subscriber.h"
 #include "app_jump_interceptor_manager_db_interface.h"
 
-#include "event_runner.h"
-#include "event_handler.h"
 #include "rdb_data_manager.h"
 
 namespace OHOS {
@@ -42,12 +40,8 @@ public:
         int32_t userId, AppJumpControlRule &controlRule) override;
     virtual bool SubscribeCommonEvent() override;
 private:
-    std::mutex mutex_;
-    std::shared_ptr<EventRunner> runner_ = nullptr;
-    std::shared_ptr<EventHandler> handler_ = nullptr;
     std::shared_ptr<RdbDataManager> rdbDataManager_;
     sptr<AppJumpInterceptorEventSubscriber> eventSubscriber_;
-    bool InitEventRunnerAndHandler();
 };
 } // namespace AppExecFwk
 } // namespace OHOS

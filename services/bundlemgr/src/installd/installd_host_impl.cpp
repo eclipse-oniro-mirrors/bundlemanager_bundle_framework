@@ -28,6 +28,9 @@
 #include "aot/aot_executor.h"
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#if defined(CODE_SIGNATURE_ENABLE)
+#include "code_sign_utils.h"
+#endif
 #include "common_profile.h"
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
@@ -52,6 +55,10 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
+const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
+const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
+const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
+const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -102,7 +109,7 @@ ErrCode InstalldHostImpl::ExtractModuleFiles(const std::string &srcModulePath, c
         APP_LOGE("create target dir %{private}s failed", targetPath.c_str());
         return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
     }
-    if (!InstalldOperator::ExtractFiles(srcModulePath, targetPath, targetSoPath, cpuAbi)) {
+    if (!InstalldOperator::ExtractFiles(srcModulePath, targetSoPath, cpuAbi)) {
         APP_LOGE("extract %{private}s to %{private}s failed", srcModulePath.c_str(), targetPath.c_str());
         InstalldOperator::DeleteDir(targetPath);
         return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
@@ -165,7 +172,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
 static void CreateBackupExtHomeDir(const std::string &bundleName, const int userid, const int uid)
 {
     // Setup BackupExtensionAbility's home directory in a harmless way
-    std::string bundleBackupDir = Constants::BUNDLE_BACKUP_HOME_PATH + bundleName;
+    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
@@ -177,7 +184,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
 
 static void CreateShareDir(const std::string &bundleName, const int userid, const int uid, const int gid)
 {
-    std::string bundleShareDir = Constants::SHARE_FILE_PATH + bundleName;
+    std::string bundleShareDir = SHARE_FILE_PATH + bundleName;
     bundleShareDir = bundleShareDir.replace(bundleShareDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::MkOwnerDir(bundleShareDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
         static std::once_flag logOnce;
@@ -243,14 +250,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             return ret;
         }
     }
-    std::string distributedfile = Constants::DISTRIBUTED_FILE;
+    std::string distributedfile = DISTRIBUTED_FILE;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
         APP_LOGE("Failed to mk dir for distributedfile");
     }
 
-    distributedfile = Constants::DISTRIBUTED_FILE_NON_ACCOUNT;
+    distributedfile = DISTRIBUTED_FILE_NON_ACCOUNT;
     distributedfile = distributedfile.replace(distributedfile.find("%"), 1, std::to_string(createDirParam.userId));
     if (!InstalldOperator::MkOwnerDir(distributedfile + createDirParam.bundleName,
         S_IRWXU | S_IRWXG | S_ISGID, createDirParam.uid, Constants::DFS_GID)) {
@@ -264,7 +271,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
 static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int userid)
 {
-    std::string bundleBackupDir = Constants::BUNDLE_BACKUP_HOME_PATH + bundleName;
+    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(bundleBackupDir)) {
         APP_LOGE("remove dir %{public}s failed, errno is %{public}d", bundleBackupDir.c_str(), errno);
@@ -275,13 +282,13 @@ static ErrCode RemoveBackupExtHomeDir(const std::string &bundleName, const int u
 
 static ErrCode RemoveDistributedDir(const std::string &bundleName, const int userid)
 {
-    std::string distributedFile = Constants::DISTRIBUTED_FILE + bundleName;
+    std::string distributedFile = DISTRIBUTED_FILE + bundleName;
     distributedFile = distributedFile.replace(distributedFile.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(distributedFile)) {
         APP_LOGE("remove dir %{public}s failed, errno is %{public}d", distributedFile.c_str(), errno);
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
-    std::string fileNonAccount = Constants::DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
+    std::string fileNonAccount = DISTRIBUTED_FILE_NON_ACCOUNT + bundleName;
     fileNonAccount = fileNonAccount.replace(fileNonAccount.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(fileNonAccount)) {
         APP_LOGE("remove dir %{public}s failed, errno is %{public}d", fileNonAccount.c_str(), errno);
@@ -292,7 +299,7 @@ static ErrCode RemoveDistributedDir(const std::string &bundleName, const int use
 
 static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
 {
-    std::string shareFileDir = Constants::SHARE_FILE_PATH + bundleName;
+    std::string shareFileDir = SHARE_FILE_PATH + bundleName;
     shareFileDir = shareFileDir.replace(shareFileDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::DeleteDir(shareFileDir)) {
         APP_LOGE("remove dir %{public}s failed", shareFileDir.c_str());
@@ -448,7 +455,7 @@ ErrCode InstalldHostImpl::GetBundleStats(
     bundleStats.push_back(bundleLocalSize);
 
     // index 2 : distributed data size
-    std::string distributedfilePath = Constants::DISTRIBUTED_FILE;
+    std::string distributedfilePath = DISTRIBUTED_FILE;
     distributedfilePath = distributedfilePath.replace(distributedfilePath.find("%"), 1, std::to_string(userId)) +
         bundleName;
     int64_t distributedFileSize = InstalldOperator::GetDiskUsage(distributedfilePath);
@@ -552,7 +559,8 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
@@ -568,6 +576,20 @@ ErrCode InstalldHostImpl::CopyFile(const std::string &oldPath, const std::string
         APP_LOGE("change mode failed");
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
+
+    if (signatureFilePath.empty()) {
+        APP_LOGD("signature file path is empty and no need to process code signature");
+        return ERR_OK;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap = {{ Constants::CODE_SIGNATURE_HAP, newPath }};
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFilePath);
+    if (ret != ERR_OK) {
+        APP_LOGE("hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#endif
     return ERR_OK;
 }
 
@@ -710,6 +732,44 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     InstalldOperator::GetNativeLibraryFileNames(filePath, cpuAbi, fileNames);
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    APP_LOGD("start to process the code signature for so files");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (modulePath.empty()) {
+        APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
+        APP_LOGE("verify code signature failed");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (srcDir.empty() || desDir.empty()) {
+        APP_LOGE("Calling the function MoveFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::MoveFiles(srcDir, desDir)) {
+        APP_LOGE("move files failed");
+        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
+    }
     return ERR_OK;
 }
 }  // namespace AppExecFwk

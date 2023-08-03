@@ -21,6 +21,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_util.h"
 #include "display_power_mgr_client.h"
+#include "ffrt.h"
 #include "parameter.h"
 
 namespace OHOS {
@@ -29,7 +30,8 @@ namespace {
 const int32_t PERIOD_ANNUALLY = 4;
 const std::string SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
 const std::string SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
-const std::string AGING_THREAD = "AgingThread";
+const std::string AGING_QUEUE = "AgingQueue";
+const std::string AGING_TASK = "AgingTask";
 
 void StatisticsUsageStats(
     const std::vector<DeviceUsageStats::BundleActivePackageStats> &useStats,
@@ -58,6 +60,7 @@ void StatisticsUsageStats(
 
 BundleAgingMgr::BundleAgingMgr()
 {
+    serialQueue_ = std::make_shared<SerialQueue>(AGING_QUEUE);
     InitAgingHandlerChain();
     APP_LOGI("BundleAgingMgr is created.");
 }
@@ -65,19 +68,6 @@ BundleAgingMgr::BundleAgingMgr()
 BundleAgingMgr::~BundleAgingMgr()
 {
     APP_LOGI("BundleAgingMgr is destroyed");
-}
-
-void BundleAgingMgr::InitAgingRunner()
-{
-    auto agingRunner = EventRunner::Create(AGING_THREAD);
-    if (agingRunner == nullptr) {
-        APP_LOGE("create aging runner failed");
-        return;
-    }
-
-    SetEventRunner(agingRunner);
-    PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
 }
 
 void BundleAgingMgr::InitAgingTimerInterval()
@@ -118,13 +108,28 @@ void BundleAgingMgr::InitAgingtTimer()
 {
     InitAgingBatteryThresold();
     InitAgingTimerInterval();
-    bool isEventStarted = SendEvent(InnerEvent::Get(EVENT_AGING_NOW), agingTimerInterval_);
-    if (!isEventStarted) {
-        APP_LOGE("faild to send event is not started");
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            running_ = false;
+    ScheduleLoopTask();
+}
+
+void BundleAgingMgr::ScheduleLoopTask()
+{
+    std::weak_ptr<BundleAgingMgr> weakPtr = shared_from_this();
+    auto task = [weakPtr]() {
+        BundleMemoryGuard memoryGuard;
+        while (true) {
+            auto sharedPtr = weakPtr.lock();
+            if (sharedPtr == nullptr) {
+                APP_LOGD("stop aging task");
+                break;
+            }
+            APP_LOGD("begin to run aging task");
+            sharedPtr->Start(AgingTriggertype::PREIOD);
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(sharedPtr->agingTimerInterval_));
         }
+        APP_LOGD("aging task done");
+    };
+    if (agingTimerInterval_ >= 0) {
+        serialQueue_->ScheduleDelayTask(AGING_TASK, agingTimerInterval_, task);
     }
 }
 
@@ -192,8 +197,8 @@ bool BundleAgingMgr::InitAgingRequest()
         APP_LOGE("InitAgingRequest: can not get bundle active bundle record");
         return false;
     }
-
-    for (const auto &item : dataMgr->GetAllInnerbundleInfos()) {
+    auto bundleInfos = dataMgr->GetAllInnerBundleInfos();
+    for (const auto &item : bundleInfos) {
         if (!item.second.IsBundleRemovable()) {
             continue;
         }
@@ -259,16 +264,15 @@ void BundleAgingMgr::Start(AgingTriggertype type)
         running_ = true;
     }
 
-    auto task = [&, dataMgr]() { Process(dataMgr); };
-    bool isEventStarted = SendEvent(InnerEvent::Get(task));
-    if (!isEventStarted) {
-        APP_LOGE("BundleAgingMgr event is not started.");
-        {
-            std::lock_guard<std::mutex> lock(mutex_);
-            running_ = false;
-        }
-    } else {
-        APP_LOGD("BundleAgingMgr schedule process done");
+    auto task = [&, dataMgr]() {
+        BundleMemoryGuard memoryGuard;
+        Process(dataMgr);
+    };
+    ffrt::task_handle task_handle = ffrt::submit_h(task);
+    if (task_handle == nullptr) {
+        APP_LOGE("submit_h return null, execute Process failed");
+        std::lock_guard<std::mutex> lock(mutex_);
+        running_ = false;
     }
 }
 
@@ -288,23 +292,6 @@ bool BundleAgingMgr::CheckPrerequisite(AgingTriggertype type) const
     APP_LOGD("current GetCapacity is %{public}d agingBatteryThresold: %{public}" PRId64,
         currentBatteryCap, agingBatteryThresold_);
     return currentBatteryCap > agingBatteryThresold_;
-}
-
-void BundleAgingMgr::ProcessEvent(const InnerEvent::Pointer &event)
-{
-    uint32_t eventId = event->GetInnerEventId();
-    APP_LOGD("BundleAgingMgr process event : %{public}u", eventId);
-    switch (eventId) {
-        case EVENT_AGING_NOW:
-            APP_LOGD("BundleAgingMgr timer expire, run aging now.");
-            Start(AgingTriggertype::PREIOD);
-            SendEvent(eventId, 0, agingTimerInterval_);
-            APP_LOGD("BundleAginMgr reschedule time.");
-            break;
-        default:
-            APP_LOGD("BundleAgingMgr invalid Event %{public}d.", eventId);
-            break;
-    }
 }
 
 void BundleAgingMgr::InitAgingHandlerChain()

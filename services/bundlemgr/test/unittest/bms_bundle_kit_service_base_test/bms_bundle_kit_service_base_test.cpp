@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 #include "bundle_data_mgr.h"
+#include "bundle_framework_services_ipc_interface_code.h"
 #include "bundle_mgr_service.h"
 #include "installd/installd_service.h"
 #include "bundle_manager_callback.h"
@@ -120,23 +121,29 @@ public:
     void AddApplicationInfo(const std::string &bundleName, ApplicationInfo &appInfo,
         bool userDataClearable = true, bool isSystemApp = false) const;
 public:
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
-    std::shared_ptr<InstalldService> service_ = std::make_shared<InstalldService>();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
     NotifyBundleEvents installRes_;
-    const std::shared_ptr<BundleDataMgr> dataMgrInfo_ =
-        DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleKitServiceBaseTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleKitServiceBaseTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleKitServiceBaseTest::SetUpTestCase()
 {}
 
 void BmsBundleKitServiceBaseTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleKitServiceBaseTest::SetUp()
 {
-    if (!service_->IsServiceReady()) {
-        service_->Start();
+    if (!installdService_->IsServiceReady()) {
+        installdService_->Start();
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
@@ -400,7 +407,7 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackProxy_0200, Function 
 HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0100, Function | MediumTest | Level1)
 {
     MockBundleManagerCallbackStub stub;
-    uint32_t code = IBundleManagerCallback::Message::QUERY_RPC_ID_CALLBACK;
+    uint32_t code = static_cast<uint32_t>(BundleManagerCallbackInterfaceCode::QUERY_RPC_ID_CALLBACK);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -459,19 +466,6 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleManagerCallbackStub_0400, Function |
     MessageOption option;
     auto result = stub.OnRemoteRequest(code, data, reply, option);
     EXPECT_EQ(result, 0);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_0100
- * @tc.name: Test Init
- * @tc.desc: Verify the Init.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_0100, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.Init();
-    EXPECT_TRUE(mgr.handler_ != nullptr);
     sleep(1);
 }
 
@@ -859,7 +853,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
     sleep(1);
 }
 
@@ -879,7 +877,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
+    #endif
     sleep(1);
 }
 
@@ -893,67 +895,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
     BundleDistributedManager mgr;
     TargetAbilityInfo targetAbilityInfo;
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+    #ifdef USE_BUNDLE_QUERYRPCID
+    EXPECT_TRUE(ret);
+    #else
     EXPECT_FALSE(ret);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2200
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2200, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
-    std::string transactId = TRANSACT_ID;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ == nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2300
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2300, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = nullptr;
-    std::string transactId = TRANSACT_ID;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ != nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2400
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2400, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>();
-    std::string transactId = EMPTY_STRING;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ == nullptr);
-    sleep(1);
-}
-
-/**
- * @tc.number: BundleDistributedManager_2500
- * @tc.name: Test OutTimeMonitor
- * @tc.desc: Verify the OutTimeMonitor.
- */
-HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2500, Function | MediumTest | Level1)
-{
-    BundleDistributedManager mgr;
-    mgr.handler_ = nullptr;
-    std::string transactId = EMPTY_STRING;
-    mgr.OutTimeMonitor(transactId);
-    EXPECT_FALSE(mgr.handler_ != nullptr);
+    #endif
     sleep(1);
 }
 

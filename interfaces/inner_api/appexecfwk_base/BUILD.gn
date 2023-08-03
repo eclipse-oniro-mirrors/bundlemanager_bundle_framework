@@ -47,6 +47,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/common_event_info.cpp",
     "src/compatible_ability_info.cpp",
     "src/compatible_application_info.cpp",
+    "src/data_group_info.cpp",
     "src/distributed_ability_info.cpp",
     "src/distributed_bundle_info.cpp",
     "src/distributed_manager/rpc_id_result.cpp",
@@ -92,12 +93,14 @@ ohos_shared_library("appexecfwk_base") {
   external_deps = [
     "ability_base:want",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "ipc:ipc_single",
   ]
 
-  # version_script = "appexecfwk_base.map"
   subsystem_name = "bundlemanager"
-  innerapi_tags = [ "platformsdk" ]
+  innerapi_tags = [
+    "platformsdk",
+    "sasdk",
+  ]
   part_name = "bundle_framework"
 }

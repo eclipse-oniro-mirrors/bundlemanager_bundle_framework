@@ -104,6 +104,10 @@ public:
 
     static bool VerifyPreload(const AAFwk::Want &want);
 
+    static bool VerifyCallingPermissionForAll(const std::string &permissionName);
+
+    static bool IsSelfCalling();
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);
@@ -154,6 +158,19 @@ private:
     static bool GrantPermission(const Security::AccessToken::AccessTokenID tokenId,
         const std::string &permissionName, const Security::AccessToken::PermissionFlag flag,
         const std::string &bundleName);
+
+    static bool InnerUpdateDefinePermission(
+        const Security::AccessToken::AccessTokenID tokenId,
+        const InnerBundleInfo &oldInfo,
+        const InnerBundleInfo &newInfo,
+        std::vector<Security::AccessToken::PermissionDef> &newDefPermList);
+
+    static bool InnerUpdateRequestPermission(
+        const Security::AccessToken::AccessTokenID tokenId,
+        const InnerBundleInfo &oldInfo,
+        const InnerBundleInfo &newInfo,
+        std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
+        std::vector<std::string> &newRequestPermName);
 
     static std::map<std::string, DefaultPermission> defaultPermissions_;
 };

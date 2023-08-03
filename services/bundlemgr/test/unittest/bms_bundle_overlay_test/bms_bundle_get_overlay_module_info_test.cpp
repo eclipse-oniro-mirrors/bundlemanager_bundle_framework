@@ -39,6 +39,7 @@ const std::string TEST_TARGET_BUNDLE_NAME = "testTargetBundleName";
 const std::string TEST_OVERLAY_BUNDLE_DIR = "testBundleDir";
 const int32_t DEFAULT_TARGET_PRIORITY_SECOND = 1;
 const int32_t USERID = 100;
+const int32_t UNSPECIFIED_USERID = -2;
 const int32_t TEST_USERID = 101;
 const int32_t OVERLAY_MODULE_INFO_SIZE = 1;
 const int32_t DEFAULT_OVERLAY_MODULE_INFO_SIZE = 0;
@@ -67,8 +68,11 @@ public:
 
 private:
     std::shared_ptr<OverlayManagerHostImpl> overlayHostImpl_ = std::make_shared<OverlayManagerHostImpl>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleGetOverlayModuleInfoTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
 
 BmsBundleGetOverlayModuleInfoTest::BmsBundleGetOverlayModuleInfoTest()
 {}
@@ -80,8 +84,9 @@ void BmsBundleGetOverlayModuleInfoTest::SetUpTestCase()
 {}
 
 void BmsBundleGetOverlayModuleInfoTest::TearDownTestCase()
-{}
-
+{
+    bundleMgrService_->OnStop();
+}
 void BmsBundleGetOverlayModuleInfoTest::SetUp()
 {
     if (!bundleMgrService_->IsServiceReady()) {
@@ -687,5 +692,71 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2200, Funct
 
     CheckOverlayModuleInfo(overlayModuleInfo[0]);
     RemoveBundleInfo(TEST_BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoTest_2300
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerHostImpl
+ * @tc.desc: 1.the specified bundle is valid bundle
+ */
+HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2300, Function | SmallTest | Level0)
+{
+    // get OverlayManagerHostImpl instance
+    auto hostImpl = GetBundleOverlayHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    OverlayModuleInfo overlayModuleInfo;
+    auto res = hostImpl->GetOverlayModuleInfo("", overlayModuleInfo, USERID);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoTest_2400
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerHostImpl
+ * @tc.desc: 1.the specified bundle is valid bundle
+ */
+HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2400, Function | SmallTest | Level0)
+{
+    // get OverlayManagerHostImpl instance
+    auto hostImpl = GetBundleOverlayHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    OverlayModuleInfo overlayModuleInfo;
+    auto res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfo, UNSPECIFIED_USERID);
+    EXPECT_NE(res, ERR_OK);
+
+    res = hostImpl->GetOverlayModuleInfo(TEST_BUNDLE_NAME, overlayModuleInfo, USERID);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoTest_2500
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerHostImpl
+ * @tc.desc: 1.the specified bundle is valid bundle
+ */
+HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2500, Function | SmallTest | Level0)
+{
+    // get OverlayManagerHostImpl instance
+    auto hostImpl = GetBundleOverlayHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    auto res = hostImpl->GetTargetOverlayModuleInfo(TARGET_MODULE_NAME, overlayModuleInfos, UNSPECIFIED_USERID);
+    EXPECT_NE(res, ERR_OK);
+}
+
+/**
+ * @tc.number: GetOverlayModuleInfoTest_2600
+ * @tc.name: test GetOverlayModuleInfo interface in OverlayManagerHostImpl
+ * @tc.desc: 1.the specified bundle is valid bundle
+ */
+HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2600, Function | SmallTest | Level0)
+{
+    // get OverlayManagerHostImpl instance
+    auto hostImpl = GetBundleOverlayHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    auto res = hostImpl->SetOverlayEnabledForSelf(TARGET_MODULE_NAME, false, UNSPECIFIED_USERID);
+    EXPECT_NE(res, ERR_OK);
 }
 } // OHOS

@@ -20,9 +20,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-const std::string INSTALL_SUCCESS = "install success !";
-const std::string UNINSTALL_SUCCESS = "uninstall success !";
-
 enum class InstallType { INSTALL_CALLBACK, UNINSTALL_CALLBACK };
 
 class IBundleStatusCallback : public IRemoteBroker {
@@ -58,10 +55,6 @@ public:
      * @param userId Indicates the id of the bundle whose state has been Removed.
      */
     virtual void OnBundleRemoved(const std::string &bundleName, const int userId) = 0;
-
-    enum class Message {
-        ON_BUNDLE_STATE_CHANGED,
-    };
 
     std::string GetBundleName()
     {

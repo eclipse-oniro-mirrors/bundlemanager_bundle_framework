@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
 #include "hitrace_meter.h"
 #include "ipc_types.h"
@@ -49,13 +50,13 @@ int QuickFixManagerHost::OnRemoteRequest(uint32_t code, MessageParcel& data,
     }
 
     switch (code) {
-        case IQuickFixManager::Message::DEPLOY_QUICK_FIX:
+        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::DEPLOY_QUICK_FIX):
             return HandleDeployQuickFix(data, reply);
-        case IQuickFixManager::Message::SWITCH_QUICK_FIX:
+        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::SWITCH_QUICK_FIX):
             return HandleSwitchQuickFix(data, reply);
-        case IQuickFixManager::Message::DELETE_QUICK_FIX:
+        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::DELETE_QUICK_FIX):
             return HandleDeleteQuickFix(data, reply);
-        case IQuickFixManager::Message::CREATE_FD:
+        case static_cast<uint32_t>(QuickFixManagerInterfaceCode::CREATE_FD):
             return HandleCreateFd(data, reply);
         default:
             APP_LOGW("QuickFixManagerHost receive unknown code, code = %{public}d", code);

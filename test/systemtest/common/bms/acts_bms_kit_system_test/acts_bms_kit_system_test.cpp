@@ -1276,7 +1276,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0100, Function | MediumTest | Le
     std::vector<BundleInfo> bundleInfos;
     auto getInfoResult = bundleMgrProxy->GetBundleInfosV9(
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_DEFAULT), bundleInfos, Constants::INVALID_USERID);
+    #ifdef USE_KIT_STSTEM
+    EXPECT_EQ(getInfoResult, ERR_OK);
+    #else
     EXPECT_EQ(getInfoResult, ERR_BUNDLE_MANAGER_INVALID_USER_ID);
+    #endif
 }
 
 /**
@@ -8128,6 +8132,25 @@ HWTEST_F(ActsBmsKitSystemTest, GetOverlayManagerProxy_0100, Function | SmallTest
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+}
+
+/**
+ * @tc.number: QueryAppGalleryBundleName_0100
+ * @tc.name: test BundleMgr proxy
+ * @tc.desc: 1.system run normally
+ *           2.return true
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryAppGalleryBundleName_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName;
+    bool ret = bundleMgrProxy->QueryAppGalleryBundleName(bundleName);
+    #ifdef USE_KIT_STSTEM
+    EXPECT_TRUE(ret);
+    #else
+    EXPECT_FALSE(ret);
+    #endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

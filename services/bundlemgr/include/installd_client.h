@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CLIENT_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_CLIENT_H
 
+#include <condition_variable>
 #include <memory>
 #include <mutex>
 #include <string>
@@ -125,7 +126,8 @@ public:
 
     ErrCode MoveFile(const std::string &oldPath, const std::string &newPath);
 
-    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath);
+    ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+        const std::string &signatureFilePath = "");
 
     ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid);
@@ -154,12 +156,25 @@ public:
         std::vector<std::string> &fileNames);
 
     ErrCode ExecuteAOT(const AOTArgs &aotArgs);
+
+    ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
+        const std::string &targetSoPath, const std::string &signatureFileDir);
+
+    ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
+
+    void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
+
+    void OnLoadSystemAbilityFail();
+
+    bool StartInstalldService();
+
 private:
     /**
      * @brief Get the installd proxy object.
      * @return Returns true if the installd proxy object got successfully; returns false otherwise.
      */
     bool GetInstalldProxy();
+    bool LoadInstalldService();
 
     template<typename F, typename... Args>
     ErrCode CallService(F func, Args&&... args)
@@ -171,7 +186,11 @@ private:
     }
 
 private:
+    bool loadSaFinished_;
     std::mutex mutex_;
+    std::mutex loadSaMutex_;
+    std::mutex getProxyMutex_;
+    std::condition_variable loadSaCondition_;
     sptr<IInstalld> installdProxy_;
     sptr<IRemoteObject::DeathRecipient> recipient_;
 };

@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef OHOS_BUNDLE_MANAGER_SERVICE_IPC_INTERFACE_CODE_H
+#define OHOS_BUNDLE_MANAGER_SERVICE_IPC_INTERFACE_CODE_H
+
+#include <stdint.h>
+
+/* SAID: 401 */
+namespace OHOS {
+namespace AppExecFwk {
+enum class BundleManagerCallbackInterfaceCode : uint32_t {
+        QUERY_RPC_ID_CALLBACK = 0,
+};
+
+enum class InstalldInterfaceCode : uint32_t {
+    CREATE_BUNDLE_DIR = 1,
+    EXTRACT_MODULE_FILES,
+    RENAME_MODULE_DIR,
+    CREATE_BUNDLE_DATA_DIR,
+    CLEAN_BUNDLE_DATA_DIR,
+    REMOVE_BUNDLE_DATA_DIR,
+    REMOVE_MODULE_DATA_DIR,
+    REMOVE_DIR,
+    GET_BUNDLE_STATS,
+    SET_DIR_APL,
+    GET_BUNDLE_CACHE_PATH,
+    SCAN_DIR,
+    MOVE_FILE,
+    COPY_FILE,
+    MKDIR,
+    GET_FILE_STAT,
+    EXTRACT_DIFF_FILES,
+    APPLY_DIFF_PATCH,
+    IS_EXIST_DIR,
+    IS_DIR_EMPTY,
+    OBTAIN_QUICK_FIX_DIR,
+    COPY_FILES,
+    EXTRACT_FILES,
+    GET_NATIVE_LIBRARY_FILE_NAMES,
+    EXECUTE_AOT,
+    IS_EXIST_FILE,
+    VERIFY_CODE_SIGNATURE,
+    MOVE_FILES,
+};
+
+} // namespace AppExecFwk
+} // namespace OHOS
+#endif // OHOS_BUNDLE_MANAGER_SERVICE_IPC_INTERFACE_CODE_H

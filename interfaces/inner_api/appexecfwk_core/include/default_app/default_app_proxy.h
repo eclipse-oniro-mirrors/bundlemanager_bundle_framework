@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_PROXY_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_DEFAULT_APP_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "default_app_interface.h"
 #include "iremote_proxy.h"
 
@@ -33,8 +34,8 @@ public:
 
 private:
     template <typename T>
-    ErrCode GetParcelableInfo(IDefaultApp::Message code, MessageParcel& data, T& parcelableInfo);
-    bool SendRequest(IDefaultApp::Message code, MessageParcel& data, MessageParcel& reply);
+    ErrCode GetParcelableInfo(DefaultAppInterfaceCode code, MessageParcel& data, T& parcelableInfo);
+    bool SendRequest(DefaultAppInterfaceCode code, MessageParcel& data, MessageParcel& reply);
     static inline BrokerDelegator<DefaultAppProxy> delegator_;
 };
 }

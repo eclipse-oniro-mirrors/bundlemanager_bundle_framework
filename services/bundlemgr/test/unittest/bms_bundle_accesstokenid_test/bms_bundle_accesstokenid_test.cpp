@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,8 +28,10 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "parameter.h"
 #include "permission_define.h"
 #include "remote_ability_info.h"
+#include "scope_guard.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -56,6 +58,17 @@ const int32_t USERID = 100;
 const uint32_t ZERO = 0;
 const uint32_t INVALID_ACCESSTOKENID = 0;
 const int32_t WAIT_TIME = 5; // init mocked bms
+// test hap with so
+const std::string BUNDLE_NAME_WITH_LIBS = "com.example.nativelibs";
+const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_01 =
+    "/data/test/resource/bms/bundle_so/compressNativeLibsFalse01.hap";
+const std::string HAP_COMPRESS_NATIVE_LIBS_FALSE_02 =
+    "/data/test/resource/bms/bundle_so/compressNativeLibsFalse02.hap";
+const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_01 =
+    "/data/test/resource/bms/bundle_so/compressNativeLibsTrue01.hap";
+const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_02 =
+    "/data/test/resource/bms/bundle_so/compressNativeLibsTrue02.hap";
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
 }  // namespace
 
 class BmsBundleAccessTokenIdTest : public testing::Test {
@@ -74,9 +87,15 @@ public:
     void StartBundleService();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleAccessTokenIdTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleAccessTokenIdTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleAccessTokenIdTest::BmsBundleAccessTokenIdTest()
 {}
@@ -88,12 +107,16 @@ void BmsBundleAccessTokenIdTest::SetUpTestCase()
 {}
 
 void BmsBundleAccessTokenIdTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleAccessTokenIdTest::SetUp()
 {
     StartInstalldService();
     StartBundleService();
+    // set "persist.bms.supportCompressNativeLibs"
+    SetParameter(COMPRESS_NATIVE_LIBS.c_str(), "true");
 }
 
 void BmsBundleAccessTokenIdTest::TearDown()
@@ -521,26 +544,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0001, Function | SmallT
 }
 
 /**
- * @tc.number: DbmsServicesKitTest_0002
- * @tc.name: test DistributedAbilityInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test Dump
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0002, Function | SmallTest | Level0)
-{
-    DistributedAbilityInfo distributedAbilityInfo;
-    std::string path = "/data/test/abilityInfo.txt";
-    std::ofstream file(path);
-    file.close();
-    int fd = 8;
-    std::string prefix = "[ability]";
-    distributedAbilityInfo.Dump(prefix, fd);
-    long length = lseek(fd, ZERO, SEEK_END);
-    EXPECT_GT(length, ZERO);
-}
-
-/**
  * @tc.number: DbmsServicesKitTest_0003
  * @tc.name: test DistributedBundleInfo
  * @tc.require: issueI5MZ8V
@@ -609,26 +612,6 @@ HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0005, Function | SmallT
     DistributedModuleInfo result;
     from_json(jsonObject, result);
     EXPECT_EQ(result.moduleName, "moduleName");
-}
-
-/**
- * @tc.number: DbmsServicesKitTest_0006
- * @tc.name: test DistributedModuleInfo
- * @tc.require: issueI5MZ8V
- * @tc.desc: 1. system running normally
- *           2. test Dump
- */
-HWTEST_F(BmsBundleAccessTokenIdTest, DbmsServicesKitTest_0006, Function | SmallTest | Level0)
-{
-    DistributedModuleInfo distributedModuleInfo;
-    std::string path = "/data/test/abilityInfo.txt";
-    std::ofstream file(path);
-    file.close();
-    int fd = 8;
-    std::string prefix = "[ability]";
-    distributedModuleInfo.Dump(prefix, fd);
-    long length = lseek(fd, ZERO, SEEK_END);
-    EXPECT_GT(length, ZERO);
 }
 
 /**
@@ -861,6 +844,157 @@ HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleHideIconTest_0006, Function | Smal
     EXPECT_TRUE(result);
     EXPECT_TRUE(applicationInfo2.needAppDetail);
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_ICON_STAGE);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallWithSoTest_0001
+ * Function: Install
+ * @tc.name: test can install bundle with so
+ * @tc.desc: 1. system running normally
+ *           2. install success
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0001, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallWithSoTest_0002
+ * Function: Install
+ * @tc.name: test can install bundle with so
+ * @tc.desc: 1. system running normally
+ *           2. install success, update it
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0002, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_02);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallWithSoTest_0003
+ * Function: Install
+ * @tc.name: test can install bundle with so
+ * @tc.desc: 1. system running normally
+ *           2. install success, update it
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0003, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_02);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallWithSoTest_0004
+ * Function: Install
+ * @tc.name: test can install bundle with so
+ * @tc.desc: 1. system running normally
+ *           2. install success
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0004, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleInstallWithSoTest_0005
+ * Function: Install
+ * @tc.name: test can install bundle with so
+ * @tc.desc: 1. system running normally
+ *           2. install success, update it
+ */
+HWTEST_F(BmsBundleAccessTokenIdTest, BmsBundleInstallWithSoTest_0005, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_COMPRESS_NATIVE_LIBS_FALSE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    ApplicationInfo applicationInfo;
+    bool result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_FALSE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+
+    installResult = UpdateBundle(HAP_COMPRESS_NATIVE_LIBS_TRUE_01);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    result = dataMgr->GetApplicationInfo(BUNDLE_NAME_WITH_LIBS, 0, USERID, applicationInfo);
+    EXPECT_TRUE(result);
+    EXPECT_TRUE(applicationInfo.isCompressNativeLibs);
+    EXPECT_FALSE(applicationInfo.nativeLibraryPath.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_WITH_LIBS);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 } // OHOS

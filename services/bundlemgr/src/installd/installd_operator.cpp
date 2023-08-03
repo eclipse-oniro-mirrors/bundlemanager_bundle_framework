@@ -16,8 +16,12 @@
 #include "installd/installd_operator.h"
 
 #include <algorithm>
+#if defined(CODE_SIGNATURE_ENABLE)
+#include "code_sign_utils.h"
+#endif
 #include <cstdio>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <dlfcn.h>
 #include <fstream>
 #include <map>
@@ -106,40 +110,29 @@ bool InstalldOperator::DeleteDir(const std::string &path)
     return true;
 }
 
-bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetPath,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+bool InstalldOperator::ExtractFiles(const std::string &sourcePath, const std::string &targetSoPath,
+    const std::string &cpuAbi)
 {
     APP_LOGD("InstalldOperator::ExtractFiles start");
+    if (targetSoPath.empty()) {
+        return true;
+    }
+
     BundleExtractor extractor(sourcePath);
     if (!extractor.Init()) {
         return false;
     }
-    std::vector<std::string> entryNames;
-    if (!extractor.GetZipFileNames(entryNames)) {
-        return false;
-    }
-    if (entryNames.empty()) {
+
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ExtractFiles obtain native so file entryName failed");
         return false;
     }
 
-    std::string targetDir = targetPath;
-    if (targetPath.back() != Constants::PATH_SEPARATOR[0]) {
-        targetDir = targetPath + Constants::PATH_SEPARATOR;
-    }
-    for (const auto &entryName : entryNames) {
-        if (strcmp(entryName.c_str(), ".") == 0 ||
-            strcmp(entryName.c_str(), "..") == 0) {
-            continue;
-        }
-        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
-            continue;
-        }
-        // handle native so
-        if (IsNativeSo(entryName, targetSoPath, cpuAbi)) {
-            ExtractTargetFile(extractor, entryName, targetSoPath, cpuAbi);
-            continue;
-        }
-    }
+    for_each(soEntryFiles.begin(), soEntryFiles.end(), [&extractor, &targetSoPath, &cpuAbi](const auto &entry) {
+        ExtractTargetFile(extractor, entry, targetSoPath, cpuAbi);
+    });
+
     APP_LOGD("InstalldOperator::ExtractFiles end");
     return true;
 }
@@ -239,14 +232,9 @@ bool InstalldOperator::IsNativeFile(
     return true;
 }
 
-bool InstalldOperator::IsNativeSo(const std::string &entryName,
-    const std::string &targetSoPath, const std::string &cpuAbi)
+bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::string &cpuAbi)
 {
     APP_LOGD("IsNativeSo, entryName : %{public}s", entryName.c_str());
-    if (targetSoPath.empty()) {
-        APP_LOGD("current hap not include so");
-        return false;
-    }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     if (entryName.find(prefix) == std::string::npos) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
@@ -932,6 +920,134 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
         }
     }
     APP_LOGD("InstalldOperator::GetNativeLibraryFileNames end");
+    return true;
+}
+
+bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s", modulePath.c_str(),
+        signatureFileDir.c_str());
+    if (signatureFileDir.empty()) {
+        APP_LOGD("signature file dir is empty and does not need to verify code signature");
+        return true;
+    }
+
+    BundleExtractor extractor(modulePath);
+    if (!extractor.Init()) {
+        return false;
+    }
+
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ObtainNativeSoFile failed");
+        return false;
+    }
+
+    if (soEntryFiles.empty()) {
+        APP_LOGD("no so file in installation file %{public}s", modulePath.c_str());
+        return true;
+    }
+
+#if defined(CODE_SIGNATURE_ENABLE)
+    Security::CodeSign::EntryMap entryMap;
+    if (!targetSoPath.empty()) {
+        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
+            std::string fileName = entry.substr(prefix.length());
+            std::string path = targetSoPath;
+            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+                path += Constants::FILE_SEPARATOR_CHAR;
+            }
+            entryMap.emplace(entry, path + fileName);
+            APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
+        });
+    }
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
+    if (ret != ERR_OK) {
+        APP_LOGE("VerifyCode failed due to %{public}d", ret);
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, const std::string &cpuAbi,
+    std::vector<std::string> &soEntryFiles)
+{
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames)) {
+        return false;
+    }
+    if (entryNames.empty()) {
+        return false;
+    }
+
+    for (const auto &entryName : entryNames) {
+        if (strcmp(entryName.c_str(), ".") == 0 ||
+            strcmp(entryName.c_str(), "..") == 0) {
+            continue;
+        }
+        if (entryName.back() == Constants::PATH_SEPARATOR[0]) {
+            continue;
+        }
+        // save native so file entryName in the hap
+        if (IsNativeSo(entryName, cpuAbi)) {
+            soEntryFiles.emplace_back(entryName);
+            continue;
+        }
+    }
+    return true;
+}
+
+bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    APP_LOGD("srcDir is %{public}s, desDir is %{public}s", srcDir.c_str(), desDir.c_str());
+    if (srcDir.empty() || desDir.empty()) {
+        APP_LOGE("move file failed due to srcDir or desDir is empty");
+        return false;
+    }
+
+    std::string realPath = "";
+    if (!PathToRealPath(srcDir, realPath)) {
+        APP_LOGE("srcDir(%{public}s) is not real path", srcDir.c_str());
+        return false;
+    }
+
+    std::string realDesDir = "";
+    if (!PathToRealPath(desDir, realDesDir)) {
+        APP_LOGE("desDir(%{public}s) is not real path", desDir.c_str());
+        return false;
+    }
+
+    DIR* directory = opendir(realPath.c_str());
+    if (directory == nullptr) {
+        APP_LOGE("MoveFiles open dir(%{public}s) fail", realPath.c_str());
+        return false;
+    }
+
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(directory)) != nullptr) {
+        std::string currentName(ptr->d_name);
+        if (currentName.compare(".") == 0 || currentName.compare("..") == 0) {
+            continue;
+        }
+
+        std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
+        struct stat s;
+        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
+            std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
+            if (!RenameFile(curPath, innerDesStr)) {
+                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s) failed", curPath.c_str(),
+                    innerDesStr.c_str());
+                closedir(directory);
+                return false;
+            }
+            mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+            OHOS::ChangeModeFile(innerDesStr, mode);
+        }
+    }
+    closedir(directory);
     return true;
 }
 }  // namespace AppExecFwk

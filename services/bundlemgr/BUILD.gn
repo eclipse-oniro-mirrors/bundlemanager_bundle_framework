@@ -20,6 +20,7 @@ config("bundlemgr_common_config") {
     "include",
     "include/aot",
     "include/app_provision_info",
+    "include/common",
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
@@ -38,6 +39,11 @@ config("bundlemgr_common_config") {
     "APP_LOG_TAG = \"BundleMgrService\"",
     "LOG_DOMAIN = 0xD001120",
   ]
+
+  if (ecologic_rule_mgr_enabled) {
+    defines += [ "SUPPORT_ERMS" ]
+    include_dirs += [ "${ecological_rule_mgr_path}" ]
+  }
 }
 
 config("rdb_config") {
@@ -82,7 +88,7 @@ ohos_source_set("parser_common") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   part_name = "bundle_framework"
@@ -95,7 +101,7 @@ ohos_source_set("rpcid_decode") {
 
   external_deps = [
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
   ]
 
   part_name = "bundle_framework"
@@ -144,7 +150,7 @@ ohos_source_set("bundle_parser") {
     "ability_base:want",
     "access_token:libaccesstoken_sdk",
     "c_utils:utils",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
   ]
@@ -226,8 +232,9 @@ ohos_shared_library("libbms") {
     "common_event_service:cesfwk_innerkits",
     "device_info_manager:distributed_device_profile_client",
     "eventhandler:libeventhandler",
-    "hitrace_native:hitrace_meter",
-    "hiviewdfx_hilog_native:libhilog",
+    "ffrt:libffrt",
+    "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
@@ -289,6 +296,10 @@ ohos_shared_library("libbms") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
 
+  if (ecologic_rule_mgr_enabled) {
+    external_deps += [ "ecological_rule_mgr:erms_client" ]
+  }
+
   if (bundle_framework_power_mgr_enable) {
     defines += [ "BUNDLE_FRAMEWORK_POWER_MGR_ENABLE" ]
   }
@@ -319,13 +330,13 @@ ohos_shared_library("libbms") {
   }
 
   if (hicollie_enable) {
-    external_deps += [ "hicollie_native:libhicollie" ]
+    external_deps += [ "hicollie:libhicollie" ]
     defines += [ "HICOLLIE_ENABLE" ]
   }
 
   if (hisysevent_enable) {
     sources += [ "src/inner_event_report.cpp" ]
-    external_deps += [ "hisysevent_native:libhisysevent" ]
+    external_deps += [ "hisysevent:libhisysevent" ]
     defines += [ "HISYSEVENT_ENABLE" ]
   }
 
@@ -362,11 +373,16 @@ ohos_shared_library("libbms") {
   part_name = "bundle_framework"
 }
 
-ohos_executable("installs") {
+ohos_shared_library("installs") {
   sources = [
     "src/bundle_extractor.cpp",
-    "src/installd/installd_main.cpp",
     "src/system_ability_helper.cpp",
+  ]
+
+  use_exceptions = true
+  visibility = [
+    "//base/*",
+    "//foundation/*",
   ]
 
   sources += install_daemon_sources
@@ -384,14 +400,21 @@ ohos_executable("installs") {
   ]
 
   external_deps = [
-    "hiviewdfx_hilog_native:libhilog",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
   ]
 
+  if (code_signature_enable) {
+    external_deps += [ "code_signature:libcode_sign_utils" ]
+    defines += [ "CODE_SIGNATURE_ENABLE" ]
+  }
+
   if (build_selinux) {
-    external_deps += [ "selinux:libhap_restorecon" ]
+    external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]
   }
 

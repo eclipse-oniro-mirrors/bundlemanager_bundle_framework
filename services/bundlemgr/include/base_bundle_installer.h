@@ -165,11 +165,6 @@ protected:
         sysEventInfo_.preBundleScene =
             isBootScene ? InstallScene::BOOT : InstallScene::REBOOT;
     }
-    /**
-     * @brief Save hap to install path when install.
-     * @return Returns true if copy success; returns false otherwise.
-     */
-    bool SaveHapToInstallPath();
 
 private:
     /**
@@ -456,7 +451,7 @@ private:
      * @param packageVec Indicates the array of package names of the high version entry or feature hap.
      * @return Returns ERR_OK if uninstall successfully; returns error code otherwise.
      */
-    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec);
+    ErrCode UninstallLowerVersionFeature(const std::vector<std::string> &packageVec, bool noSkipsKill = false);
     /**
      * @brief To get userId.
      * @param installParam Indicates the installParam of the bundle.
@@ -483,9 +478,9 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     bool UninstallAppControl(const std::string &appId, int32_t userId);
+
     ErrCode InstallNormalAppControl(const std::string &installAppId, int32_t userId, bool isPreInstallApp = false);
 
-private:
     ErrCode CreateBundleCodeDir(InnerBundleInfo &info) const;
     ErrCode CreateBundleDataDir(InnerBundleInfo &info) const;
     ErrCode RemoveModuleDataDir(const InnerBundleInfo &info, const std::string &modulePackage,
@@ -581,11 +576,30 @@ private:
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-        int32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
+        uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
     void ProcessAOT(bool isOTA, const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
-    void CopyHapsToSecurityDir(std::vector<std::string> &bundlePaths);
-    void DeleteTempHapPaths() const;
+    ErrCode CopyHapsToSecurityDir(const InstallParam &installParam, std::vector<std::string> &bundlePaths);
     ErrCode RenameAllTempDir(const std::unordered_map<std::string, InnerBundleInfo> &newInfos) const;
+    ErrCode FindSignatureFileDir(const std::string &moduleName, std::string &signatureFileDir);
+    ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    std::string GetTempHapPath(const InnerBundleInfo &info);
+    ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void UpdateAppInstallControlled(int32_t userId);
+    ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,
+        std::unordered_map<std::string, InnerBundleInfo> &infos,
+        int32_t userId, const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+    ErrCode GetGroupDirsChange(const InnerBundleInfo &info, const InnerBundleInfo &oldInfo, bool oldInfoExisted);
+    ErrCode GetRemoveDataGroupDirs(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo);
+    ErrCode RemoveOldGroupDirs() const;
+    ErrCode CreateGroupDirs() const;
+    ErrCode GetDataGroupCreateInfos(const InnerBundleInfo &newInfo);
+    ErrCode RemoveDataGroupDirs(const std::string &bundleName, int32_t userId) const;
+    void DeleteGroupDirsForException() const;
+    ErrCode CreateDataGroupDirs(
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
+    ErrCode UninstallBundleFromBmsExtension(const std::string &bundleName);
+    ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -616,8 +630,14 @@ private:
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     int32_t overlayType_ = NON_OVERLAY_TYPE;
     std::string moduleName_;
-
+    // utilizing for code-signature
+    std::map<std::string, std::string> verifyCodeParams_;
     std::vector<std::string> toDeleteTempHapPath_;
+    // key is the temp path of hap or hsp
+    // value is the signature file path
+    std::map<std::string, std::string> signatureFileMap_;
+    std::vector<DataGroupInfo> createGroupDirs_;
+    std::vector<std::string> removeGroupDirs_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

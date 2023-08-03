@@ -74,9 +74,15 @@ public:
     ErrCode UninstallSharedBundle(const std::string &bundleName) const;
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 private:
-    std::shared_ptr<InstalldService> installdService_;
-    std::shared_ptr<BundleMgrService> bundleMgrService_;
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleSharedLibraryInstallTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleSharedLibraryInstallTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleSharedLibraryInstallTest::BmsBundleSharedLibraryInstallTest()
 {
@@ -91,17 +97,18 @@ void BmsBundleSharedLibraryInstallTest::SetUpTestCase()
 {}
 
 void BmsBundleSharedLibraryInstallTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleSharedLibraryInstallTest::SetUp()
 {
-    StartBundleService();
     StartInstalldService();
+    StartBundleService();
 }
 
 void BmsBundleSharedLibraryInstallTest::TearDown()
 {}
-
 void BmsBundleSharedLibraryInstallTest::StartInstalldService() const
 {
     if (!installdService_->IsServiceReady()) {
@@ -258,7 +265,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallCompati
 
     sharedBundlePaths = {MODULE_FILE_PATH + LIBA_NORMAL_HAP};
     installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 
     ErrCode unInstallResult = UninstallSharedBundle(SHARED_BUNDLE_NAME_A);
     EXPECT_EQ(unInstallResult, ERR_OK);
@@ -321,7 +328,7 @@ HWTEST_F(BmsBundleSharedLibraryInstallTest, BmsBundleSharedLibraryInstallParam_0
     std::vector<std::string> bundleFilePaths{};
     std::vector<std::string> sharedBundlePaths{MODULE_FILE_PATH + LIBA_NORMAL_HAP};
     ErrCode installResult = InstallBundle(bundleFilePaths, sharedBundlePaths);
-    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(installResult, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 
 /**

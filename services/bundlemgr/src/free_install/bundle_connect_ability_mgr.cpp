@@ -19,9 +19,13 @@
 #include "app_log_wrapper.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
+#ifndef SUPPORT_ERMS
 #include "erms_mgr_interface.h"
 #include "erms_mgr_param.h"
+#endif
+#include "ffrt.h"
 #include "free_install_params.h"
+#include "hitrace_meter.h"
 #include "json_util.h"
 #include "parcel.h"
 #include "service_center_connection.h"
@@ -30,17 +34,17 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+#ifndef SUPPORT_ERMS
 using ErmsCallerInfo = OHOS::AppExecFwk::ErmsParams::CallerInfo;
 using ExperienceRule = OHOS::AppExecFwk::ErmsParams::ExperienceRule;
+#endif
 namespace {
-const std::string SERVICE_CENTER_BUNDLE_NAME = "com.ohos.hag.famanager";
-const std::string SERVICE_CENTER_ABILITY_NAME = "HapInstallServiceAbility";
 const std::string PARAM_FREEINSTALL_APPID = "ohos.freeinstall.params.callingAppId";
 const std::string PARAM_FREEINSTALL_BUNDLENAMES = "ohos.freeinstall.params.callingBundleNames";
 const std::string PARAM_FREEINSTALL_UID = "ohos.freeinstall.params.callingUid";
 const std::string DISCONNECT_DELAY_TASK = "DisconnectDelayTask";
 const std::string DEFAULT_VERSION = "1";
-const std::string CONNECT_ABILITY_THREAD = "ConnectAbilityThread";
+const std::string CONNECT_ABILITY_QUEUE = "ConnectAbilityQueue";
 constexpr uint32_t CALLING_TYPE_HARMONY = 2;
 constexpr uint32_t BIT_ZERO_COMPATIBLE = 0;
 constexpr uint32_t BIT_ONE_FRONT_MODE = 0;
@@ -61,6 +65,13 @@ constexpr uint32_t OUT_TIME = 30000;
 const std::u16string ATOMIC_SERVICE_STATUS_CALLBACK_TOKEN = u"ohos.IAtomicServiceStatusCallback";
 const std::u16string SERVICE_CENTER_TOKEN = u"abilitydispatcherhm.openapi.hapinstall.IHapInstall";
 constexpr uint32_t FREE_INSTALL_DONE = 0;
+#ifdef SUPPORT_ERMS
+constexpr uint32_t TYPE_HARMONEY_INVALID = 0;
+constexpr uint32_t TYPE_HARMONEY_APP = 1;
+constexpr uint32_t TYPE_HARMONEY_SERVICE = 2;
+#endif
+// replace want int ecological rule
+constexpr const char* PARAM_REPLACE_WANT = "ohos.extra.param.key.replace_want";
 
 void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 {
@@ -76,50 +87,26 @@ void SendSysEvent(int32_t resultCode, const AAFwk::Want &want, int32_t userId)
 }
 }
 
-void BundleConnectAbilityMgr::Init()
-{
-    runner_ = EventRunner::Create(CONNECT_ABILITY_THREAD);
-    if (runner_ == nullptr) {
-        APP_LOGE("Create runner failed");
-        return;
-    }
-
-    handler_ = std::make_shared<AppExecFwk::EventHandler>(runner_);
-    if (handler_ == nullptr) {
-        APP_LOGE("Create handler failed");
-        return;
-    }
-    handler_->PostTask([]() { BundleMemoryGuard cacheGuard; },
-        AppExecFwk::EventQueue::Priority::IMMEDIATE);
-}
-
 BundleConnectAbilityMgr::BundleConnectAbilityMgr()
 {
-    Init();
+    APP_LOGD("create BundleConnectAbilityMgr");
+    serialQueue_ = std::make_shared<SerialQueue>(CONNECT_ABILITY_QUEUE);
 }
 
 BundleConnectAbilityMgr::~BundleConnectAbilityMgr()
 {
-    if (handler_ != nullptr) {
-        handler_.reset();
-    }
-    if (runner_ != nullptr) {
-        runner_.reset();
-    }
+    APP_LOGD("destroy BundleConnectAbilityMgr");
 }
 
 bool BundleConnectAbilityMgr::ProcessPreloadCheck(const TargetAbilityInfo &targetAbilityInfo)
 {
     APP_LOGD("ProcessPreloadCheck");
-    if (handler_ == nullptr) {
-        APP_LOGE("handler is null");
-        return false;
-    }
-    auto PreloadCheckFunc = [this, targetAbilityInfo]() {
+    auto preloadCheckFunc = [this, targetAbilityInfo]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_PRELOAD_INSTALL;
         this->ProcessPreloadRequestToServiceCenter(flag, targetAbilityInfo);
     };
-    handler_->PostTask(PreloadCheckFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(preloadCheckFunc);
     return true;
 }
 
@@ -127,8 +114,20 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
     const TargetAbilityInfo &targetAbilityInfo)
 {
     APP_LOGD("ProcessPreloadRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        return;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         APP_LOGE("Fail to connect ServiceCenter");
@@ -194,7 +193,7 @@ bool BundleConnectAbilityMgr::GetPreloadList(const std::string &bundleName, cons
         APP_LOGE("GetInnerBundleInfoWithFlags failed.");
         return false;
     }
-    if (innerBundleInfo.GetBaseApplicationInfo().bundleType == BundleType::APP) {
+    if (innerBundleInfo.GetBaseApplicationInfo().bundleType != BundleType::ATOMIC_SERVICE) {
         return false;
     }
     if (moduleName.empty()) {
@@ -283,34 +282,34 @@ bool BundleConnectAbilityMgr::ProcessPreload(const Want &want)
 bool BundleConnectAbilityMgr::SilentInstall(TargetAbilityInfo &targetAbilityInfo, const Want &want,
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGI("SilentInstall");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
+    if (!CheckIsOnDemandLoad(targetAbilityInfo)) {
+        ErmsCallerInfo callerInfo;
+        GetEcologicalCallerInfo(want, callerInfo, userId);
+        ExperienceRule rule;
+        bool ret = CheckEcologicalRule(want, callerInfo, rule);
+        if (!ret) {
+            APP_LOGE("check ecological rule failed, skip.");
+        } else if (rule.isAllow) {
+            APP_LOGI("ecological rule is allow, keep going.");
+        } else if (rule.replaceWant != nullptr) {
+            APP_LOGI("ecological rule is replace want.");
+            targetAbilityInfo.targetExtSetting.extValues.emplace(PARAM_REPLACE_WANT,
+                rule.replaceWant->ToUri());
+        } else {
+            APP_LOGW("ecological rule is not allowed, return.");
+            CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
+            return false;
+        }
     }
 
-    ErmsCallerInfo callerInfo;
-    GetEcologicalCallerInfo(want, callerInfo, userId);
-    ExperienceRule rule;
-    bool ret = CheckEcologicalRule(want, callerInfo, rule);
-    if (!ret) {
-        APP_LOGE("check ecological rule failed, skip.");
-    } else if (rule.isAllow) {
-        APP_LOGI("ecological rule is allow, keep going.");
-    } else if (rule.replaceWant != nullptr) {
-        APP_LOGI("ecological rule is replace want.");
-        targetAbilityInfo.targetExtSetting.extValues.emplace(Constants::PARAM_REPLACE_WANT, rule.replaceWant->ToUri());
-    } else {
-        APP_LOGW("ecological rule is not allowed, return.");
-        return false;
-    }
     auto silentInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_SILENT_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(silentInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(silentInstallFunc, {}, {}, ffrt::task_attr().qos(ffrt::qos_deadline_request));
     return true;
 }
 
@@ -318,17 +317,12 @@ bool BundleConnectAbilityMgr::UpgradeCheck(const TargetAbilityInfo &targetAbilit
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
     APP_LOGI("UpgradeCheck");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
-    }
     auto upgradeCheckFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_CHECK;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(upgradeCheckFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(upgradeCheckFunc);
     return true;
 }
 
@@ -336,17 +330,12 @@ bool BundleConnectAbilityMgr::UpgradeInstall(const TargetAbilityInfo &targetAbil
     const FreeInstallParams &freeInstallParams, int32_t userId)
 {
     APP_LOGI("UpgradeInstall");
-    if (handler_ == nullptr) {
-        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
-        SendSysEvent(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId);
-        APP_LOGE("handler is null");
-        return false;
-    }
     auto upgradeInstallFunc = [this, targetAbilityInfo, want, userId, freeInstallParams]() {
+        BundleMemoryGuard memoryGuard;
         int32_t flag = ServiceCenterFunction::CONNECT_UPGRADE_INSTALL;
         this->SendRequestToServiceCenter(flag, targetAbilityInfo, want, userId, freeInstallParams);
     };
-    handler_->PostTask(upgradeInstallFunc, targetAbilityInfo.targetInfo.transactId.c_str());
+    ffrt::submit(upgradeInstallFunc);
     return true;
 }
 
@@ -354,8 +343,22 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     const Want &want, int32_t userId, const FreeInstallParams &freeInstallParams)
 {
     APP_LOGI("SendRequestToServiceCenter");
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
+        return false;
+    }
+    std::string bundleName;
+    std::string abilityName;
+    if (!(bundleDataMgr_->QueryAppGalleryAbilityName(bundleName, abilityName))) {
+        APP_LOGE("Fail to query ServiceCenter ability and bundle name");
+        CallAbilityManager(FreeInstallErrorCode::UNDEFINED_ERROR, want, userId, freeInstallParams.callback);
+        return false;
+    }
     Want serviceCenterWant;
-    serviceCenterWant.SetElementName(SERVICE_CENTER_BUNDLE_NAME, SERVICE_CENTER_ABILITY_NAME);
+    serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         if (freeInstallParams.serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL) {
@@ -409,9 +412,7 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
 {
     APP_LOGI("ConnectAbility start target bundle = %{public}s", want.GetBundle().c_str());
     std::unique_lock<std::mutex> lock(mutex_);
-    if (handler_ != nullptr) {
-        handler_->RemoveTask(DISCONNECT_DELAY_TASK);
-    }
+    serialQueue_->CancelDelayTask(DISCONNECT_DELAY_TASK);
     if (connectState_ == ServiceCenterConnectState::CONNECTING) {
         WaitFromConnecting(lock);
     } else if (connectState_ == ServiceCenterConnectState::DISCONNECTED) {
@@ -448,17 +449,14 @@ bool BundleConnectAbilityMgr::ConnectAbility(const Want &want, const sptr<IRemot
 
 void BundleConnectAbilityMgr::DisconnectDelay()
 {
-    if (handler_ == nullptr) {
-        APP_LOGE("DisconnectDelay, handler is nullptr");
-        return;
-    }
     auto disconnectFunc = [connect = shared_from_this()]() {
         APP_LOGI("disconnectFunc Disconnect Ability");
+        BundleMemoryGuard memoryGuard;
         if (connect) {
             connect->DisconnectAbility();
         }
     };
-    handler_->PostTask(disconnectFunc, DISCONNECT_DELAY_TASK, DISCONNECT_DELAY);
+    serialQueue_->ScheduleDelayTask(DISCONNECT_DELAY_TASK, DISCONNECT_DELAY, disconnectFunc);
 }
 
 void BundleConnectAbilityMgr::SendCallBack(
@@ -578,11 +576,7 @@ void BundleConnectAbilityMgr::OnServiceCenterCall(std::string installResultStr)
         APP_LOGE("Can not find node in %{public}s function", __func__);
         return;
     }
-    if (handler_ == nullptr) {
-        APP_LOGE("OnServiceCenterCall, handler is nullptr");
-        return;
-    }
-    handler_->RemoveTask(installResult.result.transactId);
+    serialQueue_->CancelDelayTask(installResult.result.transactId);
     freeInstallParams = node->second;
     lock.unlock();
     if (installResult.result.retCode == ServiceCenterResultCode::FREE_INSTALL_DOWNLOADING) {
@@ -613,21 +607,19 @@ void BundleConnectAbilityMgr::OutTimeMonitor(std::string transactId)
     }
     freeInstallParams = node->second;
     lock.unlock();
-    if (handler_ == nullptr) {
-        APP_LOGE("OutTimeMonitor, handler is nullptr");
-        return;
-    }
     auto RegisterEventListenerFunc = [this, freeInstallParams, transactId]() {
         APP_LOGI("RegisterEventListenerFunc");
+        BundleMemoryGuard memoryGuard;
         this->SendCallBack(FreeInstallErrorCode::SERVICE_CENTER_TIMEOUT,
             freeInstallParams.want, freeInstallParams.userId, transactId);
     };
-    handler_->PostTask(RegisterEventListenerFunc, transactId, OUT_TIME, AppExecFwk::EventQueue::Priority::LOW);
+    serialQueue_->ScheduleDelayTask(transactId, OUT_TIME, RegisterEventListenerFunc);
 }
 
 void BundleConnectAbilityMgr::SendRequest(int32_t flag, const TargetAbilityInfo &targetAbilityInfo, const Want &want,
     int32_t userId, const FreeInstallParams &freeInstallParams)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     MessageParcel data;
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
@@ -774,6 +766,9 @@ void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t use
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string moduleName = element.GetModuleName();
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
+    }
     std::string abilityName = element.GetAbilityName();
     std::string deviceId = element.GetDeviceID();
     std::vector<std::string> callingBundleNames;
@@ -849,15 +844,8 @@ bool BundleConnectAbilityMgr::CheckIsModuleNeedUpdate(
 {
     APP_LOGI("CheckIsModuleNeedUpdate called");
     std::string moduleName = want.GetModuleName();
-    if (moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        ElementName element = want.GetElement();
-        std::string abilityName = element.GetAbilityName();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == abilityName) {
-                moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
     if (innerBundleInfo.GetModuleUpgradeFlag(moduleName) != 0) {
         sptr<TargetAbilityInfo> targetAbilityInfo = new(std::nothrow) TargetAbilityInfo();
@@ -959,6 +947,7 @@ bool BundleConnectAbilityMgr::IsObtainAbilityInfo(const Want &want, int32_t flag
 bool BundleConnectAbilityMgr::QueryAbilityInfo(const Want &want, int32_t flags,
     int32_t userId, AbilityInfo &abilityInfo, const sptr<IRemoteObject> &callBack)
 {
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("QueryAbilityInfo");
     InnerBundleInfo innerBundleInfo;
     if (IsObtainAbilityInfo(want, flags, userId, abilityInfo, callBack, innerBundleInfo)) {
@@ -1078,14 +1067,10 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     targetAbilityInfo->targetExtSetting = *targetExtSetting;
     targetAbilityInfo->version = DEFAULT_VERSION;
     this->GetTargetAbilityInfo(want, userId, innerBundleInfo, targetAbilityInfo);
-    if (targetAbilityInfo->targetInfo.moduleName.empty()) {
-        auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
-        for (const auto& info : baseAbilitiesInfo) {
-            if (info.second.name == targetAbilityInfo->targetInfo.abilityName) {
-                targetAbilityInfo->targetInfo.moduleName = info.second.moduleName;
-            }
-        }
+    if (!GetModuleName(innerBundleInfo, want, targetAbilityInfo->targetInfo.moduleName)) {
+        APP_LOGW("GetModuleName failed");
     }
+
     sptr<FreeInstallParams> freeInstallParams = new(std::nothrow) FreeInstallParams();
     if (freeInstallParams == nullptr) {
         APP_LOGE("freeInstallParams is nullptr");
@@ -1097,6 +1082,7 @@ void BundleConnectAbilityMgr::UpgradeAtomicService(const Want &want, int32_t use
     this->UpgradeCheck(*targetAbilityInfo, want, *freeInstallParams, userId);
 }
 
+#ifndef SUPPORT_ERMS
 sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologicalRuleMgr()
 {
     if (iErMgr_ != nullptr) {
@@ -1116,15 +1102,20 @@ sptr<AppExecFwk::IEcologicalRuleManager> BundleConnectAbilityMgr::CheckEcologica
     iErMgr_ = iface_cast<AppExecFwk::IEcologicalRuleManager>(remoteObject);
     return iErMgr_;
 }
+#endif
 
 bool BundleConnectAbilityMgr::CheckEcologicalRule(const Want &want, ErmsCallerInfo &callerInfo, ExperienceRule &rule)
 {
+#ifndef SUPPORT_ERMS
     sptr<AppExecFwk::IEcologicalRuleManager> erms = CheckEcologicalRuleMgr();
     if (!erms) {
         APP_LOGE("CheckEcologicalRuleMgr failed.");
         return false;
     }
     int ret = erms->QueryFreeInstallExperience(want, callerInfo, rule);
+#else
+    int ret = EcologicalRuleMgrServiceClient::GetInstance()->QueryFreeInstallExperience(want, callerInfo, rule);
+#endif
     if (ret != ERR_OK) {
         APP_LOGE("Failed to query free install experience from erms.");
         return false;
@@ -1137,14 +1128,16 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
     callerInfo.packageName = want.GetStringParam(Want::PARAM_RESV_CALLER_BUNDLE_NAME);
     callerInfo.uid = want.GetIntParam(Want::PARAM_RESV_CALLER_UID, IPCSkeleton::GetCallingUid());
     callerInfo.pid = want.GetIntParam(Want::PARAM_RESV_CALLER_PID, -1);
-
+#ifdef SUPPORT_ERMS
+    callerInfo.targetAppType = TYPE_HARMONEY_SERVICE;
+    callerInfo.callerAppType = TYPE_HARMONEY_INVALID;
+#endif
     std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
     std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
     if (bundleDataMgr_ == nullptr) {
         APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
         return;
     }
-
     std::string callerBundleName;
     ErrCode err = bundleDataMgr_->GetNameForUid(callerInfo.uid, callerBundleName);
     if (err != ERR_OK) {
@@ -1158,7 +1151,7 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
         APP_LOGE("Get callerAppInfo failed.");
         return;
     }
-
+#ifndef SUPPORT_ERMS
     switch (callerAppInfo.bundleType) {
         case AppExecFwk::BundleType::ATOMIC_SERVICE:
             APP_LOGD("the caller type is atomic service");
@@ -1170,6 +1163,65 @@ void BundleConnectAbilityMgr::GetEcologicalCallerInfo(const Want &want, ErmsCall
             APP_LOGD("the caller type is invalid type");
             break;
     }
+#else
+    if (callerAppInfo.bundleType == AppExecFwk::BundleType::ATOMIC_SERVICE) {
+        APP_LOGD("the caller type is atomic service");
+        callerInfo.callerAppType = TYPE_HARMONEY_SERVICE;
+    } else if (callerAppInfo.bundleType == AppExecFwk::BundleType::APP) {
+        APP_LOGD("the caller type is app");
+        callerInfo.callerAppType = TYPE_HARMONEY_APP;
+    } else {
+        APP_LOGD("the caller type is invalid type");
+    }
+#endif
+}
+
+bool BundleConnectAbilityMgr::CheckIsOnDemandLoad(const TargetAbilityInfo &targetAbilityInfo) const
+{
+    if (targetAbilityInfo.targetInfo.callingBundleNames.empty()) {
+        APP_LOGD("callingBundleNames in targetAbilityInfo is empty.");
+        return false;
+    }
+    if (targetAbilityInfo.targetInfo.callingBundleNames[0] != targetAbilityInfo.targetInfo.bundleName) {
+        APP_LOGD("callingBundleName is different with target bundleName.");
+        return false;
+    }
+    std::shared_ptr<BundleMgrService> bms = DelayedSingleton<BundleMgrService>::GetInstance();
+    if (bms == nullptr) {
+        APP_LOGE("BundleMgrService GetInstance failed");
+        return false;
+    }
+    std::shared_ptr<BundleDataMgr> bundleDataMgr_ = bms->GetDataMgr();
+    if (bundleDataMgr_ == nullptr) {
+        APP_LOGE("GetDataMgr failed, bundleDataMgr_ is nullptr");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    if (bundleDataMgr_->GetBundleInfo(
+        targetAbilityInfo.targetInfo.bundleName, GET_BUNDLE_DEFAULT, bundleInfo, Constants::ANY_USERID)) {
+        return bundleInfo.applicationInfo.bundleType == BundleType::ATOMIC_SERVICE;
+    }
+    return false;
+}
+
+bool BundleConnectAbilityMgr::GetModuleName(const InnerBundleInfo &innerBundleInfo,
+    const Want &want, std::string &moduleName) const
+{
+    if (!moduleName.empty()) {
+        return true;
+    }
+    auto baseAbilitiesInfo = innerBundleInfo.GetInnerAbilityInfos();
+    ElementName element = want.GetElement();
+    std::string abilityName = element.GetAbilityName();
+    for (const auto& info : baseAbilitiesInfo) {
+        if (info.second.name == abilityName) {
+            moduleName = info.second.moduleName;
+            return true;
+        }
+    }
+    APP_LOGE("GetModuleName failed, ability(%{public}s) is not existed in bundle(%{public}s)",
+        abilityName.c_str(), innerBundleInfo.GetBundleName().c_str());
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

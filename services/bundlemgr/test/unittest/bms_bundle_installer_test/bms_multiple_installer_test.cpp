@@ -39,6 +39,7 @@ using namespace OHOS::AppExecFwk;
 using namespace OHOS;
 using OHOS::DelayedSingleton;
 
+namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
 const std::string SERVICE_BUNDLE_NAME = "com.example.myapplication.hmservice";
@@ -116,9 +117,15 @@ public:
     void IsContainModuleInfo(const BundleInfo &info, const std::string &packageName1) const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsMultipleInstallerTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsMultipleInstallerTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsMultipleInstallerTest::BmsMultipleInstallerTest()
 {}
@@ -193,6 +200,7 @@ void BmsMultipleInstallerTest::SetUpTestCase()
 
 void BmsMultipleInstallerTest::TearDownTestCase()
 {
+    bundleMgrService_->OnStop();
 }
 
 void BmsMultipleInstallerTest::SetUp()
@@ -2001,3 +2009,4 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsUpdateData_2700, Function | Small
 
     dataMgr->UpdateBundleInstallState(BUNDLE_NAME, InstallState::INSTALL_FAIL);
 }
+} // OHOS

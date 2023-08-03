@@ -36,6 +36,7 @@ namespace AppExecFwk {
 namespace {
 const std::string BUNDLE_MAP_CODE_PATH = "/data/storage/el1/bundle";
 const std::string DATA_APP_PATH = "/data/app";
+constexpr const char* PROFILE_FILE_PREFIX = "$profile:";
 } // namespace
 
 BundleMgrClientImpl::BundleMgrClientImpl()
@@ -324,12 +325,12 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
         return false;
     }
 
-    size_t pos = resName.rfind(Constants::PROFILE_FILE_PREFIX);
-    if ((pos == std::string::npos) || (pos == resName.length() - strlen(Constants::PROFILE_FILE_PREFIX))) {
+    size_t pos = resName.rfind(PROFILE_FILE_PREFIX);
+    if ((pos == std::string::npos) || (pos == resName.length() - strlen(PROFILE_FILE_PREFIX))) {
         APP_LOGE("GetResFromResMgr res name is invalid");
         return false;
     }
-    std::string profileName = resName.substr(pos + strlen(Constants::PROFILE_FILE_PREFIX));
+    std::string profileName = resName.substr(pos + strlen(PROFILE_FILE_PREFIX));
     // hap is compressed status, get file content.
     if (isCompressed) {
         APP_LOGD("compressed status.");

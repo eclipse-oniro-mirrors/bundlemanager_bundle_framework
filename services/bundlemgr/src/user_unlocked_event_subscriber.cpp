@@ -17,6 +17,7 @@
 
 #include <thread>
 
+#include "app_control_manager.h"
 #include "app_log_wrapper.h"
 #include "bundle_mgr_service.h"
 #include "common_event_manager.h"
@@ -43,11 +44,17 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
         APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
         std::thread updateDataDirThread(UpdateAppDataDirSelinuxLabel, userId);
         updateDataDirThread.detach();
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+        DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
+#endif
     }
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
 #if defined (BUNDLE_FRAMEWORK_SANDBOX_APP) && defined (DLP_PERMISSION_ENABLE)
     APP_LOGI("RemoveUnreservedSandbox call ClearUnreservedSandbox");
     Security::DlpPermission::DlpPermissionKit::ClearUnreservedSandbox();
+#endif
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
 #endif
     }
 }

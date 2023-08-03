@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_PROXY_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_STREAM_INSTALLER_PROXY_H
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_stream_installer_interface.h"
 #include "ipc_types.h"
 #include "iremote_proxy.h"
@@ -28,8 +29,9 @@ public:
     explicit BundleStreamInstallerProxy(const sptr<IRemoteObject> &impl);
     virtual ~BundleStreamInstallerProxy() override;
 
-    virtual int CreateStream(const std::string &hapName) override;
-    virtual int CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx) override;
+    virtual int32_t CreateStream(const std::string &fileName) override;
+    virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName) override;
+    virtual int32_t CreateSharedBundleStream(const std::string &hspName, uint32_t sharedBundleIdx) override;
     virtual bool Install() override;
     virtual uint32_t GetInstallerId() const override;
     virtual void SetInstallerId(uint32_t installerId) override;
@@ -38,7 +40,7 @@ public:
 private:
     static inline BrokerDelegator<BundleStreamInstallerProxy> delegator_;
     uint32_t installerId_ = -1;
-    bool SendStreamInstallRequest(const uint32_t& code, MessageParcel& data, MessageParcel& reply);
+    bool SendStreamInstallRequest(BundleStreamInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply);
 };
 } // AppExecFwk
 } // OHOS

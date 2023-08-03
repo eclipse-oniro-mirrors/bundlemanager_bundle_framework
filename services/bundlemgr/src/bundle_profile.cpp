@@ -30,6 +30,23 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
+const int32_t THRESHOLD_VAL_LEN = 40;
+bool IsSupportCompressNativeLibs()
+{
+    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
+    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
+    if (ret <= 0) {
+        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
+        return false;
+    }
+    if (std::strcmp(compressNativeLibs, "true") == 0) {
+        return true;
+    }
+    return false;
+}
+}
 namespace ProfileReader {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
@@ -101,6 +118,8 @@ struct ApiVersion {
     uint32_t compatible = 0;
     uint32_t target = 0;
     std::string releaseType = "Release";
+    std::string compileSdkVersion;
+    std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
 };
 // config.json app
 struct App {
@@ -402,6 +421,22 @@ void from_json(const nlohmann::json &jsonObject, ApiVersion &apiVersion)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_VERSION,
+        apiVersion.compileSdkVersion,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_APP_PROFILE_KEY_COMPILE_SDK_TYPE,
+        apiVersion.compileSdkType,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, App &app)
@@ -695,14 +730,16 @@ void from_json(const nlohmann::json &jsonObject, Device &device)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<bool>(jsonObject,
-        jsonObjectEnd,
-        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
-        device.compressNativeLibs,
-        JsonType::BOOLEAN,
-        false,
-        g_parseResult,
-        ArrayType::NOT_ARRAY);
+    if (IsSupportCompressNativeLibs()) {
+        GetValueIfFindKey<bool>(jsonObject,
+            jsonObjectEnd,
+            BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
+            device.compressNativeLibs,
+            JsonType::BOOLEAN,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+    }
     GetValueIfFindKey<Network>(jsonObject,
         jsonObjectEnd,
         BUNDLE_DEVICE_CONFIG_PROFILE_KEY_NETWORK,
@@ -2137,6 +2174,8 @@ bool ToApplicationInfo(
     applicationInfo.apiTargetVersion = configJson.app.apiVersion.target;
     applicationInfo.apiReleaseType = configJson.app.apiVersion.releaseType;
     applicationInfo.asanEnabled = configJson.app.asanEnabled;
+    applicationInfo.compileSdkVersion = configJson.app.apiVersion.compileSdkVersion;
+    applicationInfo.compileSdkType = configJson.app.apiVersion.compileSdkType;
 
     // if there is main ability, it's icon label description will be set to applicationInfo.
 
@@ -2407,6 +2446,7 @@ bool ToInnerBundleInfo(
     ApplicationInfo applicationInfo;
     applicationInfo.isSystemApp = innerBundleInfo.GetAppType() == Constants::AppType::SYSTEM_APP;
     transformParam.isSystemApp = applicationInfo.isSystemApp;
+    applicationInfo.isCompressNativeLibs = configJson.deveicConfig.defaultDevice.compressNativeLibs;
     if (!ToApplicationInfo(configJson, bundleExtractor, transformParam, applicationInfo)) {
         APP_LOGE("To applicationInfo failed");
         return false;

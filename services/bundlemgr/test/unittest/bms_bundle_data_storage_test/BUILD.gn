@@ -37,6 +37,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "${inner_api_path}/appexecfwk_base/src/bundle_user_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
     "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
+    "${services_path}/bundlemgr/src/mime_type_mgr.cpp",
   ]
 
   sources += [ "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp" ]
@@ -57,7 +58,8 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
   external_deps = [
     "ability_base:want",
     "access_token:libtokenid_sdk",
-    "hiviewdfx_hilog_native:libhilog",
+    "hilog:libhilog",
+    "init:libbegetutil",
     "ipc:ipc_core",
   ]
   defines = []

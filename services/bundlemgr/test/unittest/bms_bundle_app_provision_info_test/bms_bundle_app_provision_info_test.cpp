@@ -49,6 +49,9 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
 const std::string HSP_BUNDLE_NAME = "com.example.liba";
 const std::string HSP_FILE_PATH1 = "/data/test/resource/bms/sharelibrary/libA_v10000.hsp";
+const std::string TEST_MODULE_NAME = "testModuleName";
+const std::string TEST_MODULE_NAME_TMP = "testModuleName_tmp/";
+const std::string PATH_SEPARATOR = "/";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -70,9 +73,15 @@ public:
     void StartBundleService();
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleAppProvisionInfoTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleAppProvisionInfoTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 BmsBundleAppProvisionInfoTest::BmsBundleAppProvisionInfoTest()
 {}
@@ -84,7 +93,9 @@ void BmsBundleAppProvisionInfoTest::SetUpTestCase()
 {}
 
 void BmsBundleAppProvisionInfoTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleAppProvisionInfoTest::SetUp()
 {
@@ -797,14 +808,235 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, SaveInstallParamInfo_0008, Function | Sm
 }
 
 /**
+ * @tc.number: InnerSharedBundleInstallerTest_0100
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0100, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    installer.oldBundleInfo_ = innerBundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> parsedBundles;
+    parsedBundles[HAP_FILE_PATH1] = innerBundleInfo;
+    installer.parsedBundles_ = parsedBundles;
+    auto ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0200
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0200, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleType = BundleType::SHARED;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    installer.oldBundleInfo_ = innerBundleInfo;
+    std::unordered_map<std::string, InnerBundleInfo> parsedBundles;
+    parsedBundles[HAP_FILE_PATH1] = innerBundleInfo;
+    std::map<std::string, std::vector<InnerModuleInfo>> innerSharedModuleInfos;
+    std::vector<InnerModuleInfo> innerModuleInfos;
+    innerSharedModuleInfos[HAP_FILE_PATH1] = innerModuleInfos;
+    installer.parsedBundles_ = parsedBundles;
+    innerBundleInfo.innerSharedModuleInfos_ = innerSharedModuleInfos;
+    auto ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfos.emplace_back(innerModuleInfo);
+    innerSharedModuleInfos[HAP_FILE_PATH1] = innerModuleInfos;
+    ret = installer.CheckBundleTypeWithInstalledVersion();
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0400
+ * @tc.name: test the start function of InnerSharedBundleInstaller
+ * @tc.desc: 1.Test CheckBundleTypeWithInstalledVersion
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0400, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    InnerBundleInfo newInfo;
+    auto ret = installer.ExtractSharedBundles("", newInfo);
+    EXPECT_NE(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0500
+ * @tc.name: test the start function of CopyHspToSecurityDir
+ * @tc.desc: 1.Test CopyHspToSecurityDir
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0500, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> bundlePaths = {"stream_install"};
+    auto ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.CopyHspToSecurityDir(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0600
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0600, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths;
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0700
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0700, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths = {HSP_FILE_PATH1};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+    inBundlePaths.emplace_back(HAP_FILE_PATH1);
+    inBundlePaths.emplace_back(HSP_FILE_PATH1);
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0800
+ * @tc.name: test the start function of ObtainHspFileAndSignatureFilePath
+ * @tc.desc: 1.Test ObtainHspFileAndSignatureFilePath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0800, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::vector<std::string> inBundlePaths = {HAP_FILE_PATH1, HAP_FILE_PATH1};
+    std::vector<std::string> bundlePaths;
+    std::string signatureFilePath;
+    auto ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths.clear();
+    inBundlePaths = {HSP_FILE_PATH1, HSP_FILE_PATH1};
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+
+    inBundlePaths[0] = "test.sig";
+    ret = installer.ObtainHspFileAndSignatureFilePath(inBundlePaths, bundlePaths, signatureFilePath);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_0900
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_0900, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    auto ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, "");
+    EXPECT_EQ(ret, "");
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1000
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1000, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string nativeLibPath = HAP_FILE_PATH1;
+    std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
+    EXPECT_EQ(ret, TEST_MODULE_NAME_TMP + HAP_FILE_PATH1 + PATH_SEPARATOR);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1100
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1100, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string nativeLibPath = "path/testModuleName";
+    std::string ret = installer.ObtainTempSoPath(TEST_MODULE_NAME, nativeLibPath);
+    EXPECT_EQ(ret, nativeLibPath + "_tmp/");
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1200
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1200, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1300
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1300, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    installer.nativeLibraryPath_ = "path/testModuleName";
+    std::string versionDir = "data/test";
+    auto ret = installer.MoveSoToRealPath(TEST_MODULE_NAME, versionDir);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED);
+}
+
+/**
+ * @tc.number: InnerSharedBundleInstallerTest_1400
+ * @tc.name: test the start function of ObtainTempSoPath
+ * @tc.desc: 1.Test ObtainTempSoPath
+*/
+HWTEST_F(BmsBundleAppProvisionInfoTest, InnerSharedBundleInstallerTest_1400, Function | SmallTest | Level0)
+{
+    InnerSharedBundleInstaller installer(HAP_FILE_PATH1);
+    std::string versionDir = "data/test";
+    InnerBundleInfo newInfo;
+    auto ret = installer.ProcessNativeLibrary(
+        HAP_FILE_PATH1, TEST_MODULE_NAME, TEST_MODULE_NAME, versionDir, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: InnerProcessStockBundleProvisionInfo_0001
  * @tc.name: test the start function of InnerProcessStockBundleProvisionInfo
  * @tc.desc: call InnerProcessStockBundleProvisionInfo, no bundleInfos
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, InnerProcessStockBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -823,8 +1055,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, InnerProcessStockBundleProvisionInfo_000
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -851,8 +1082,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0001, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -888,8 +1118,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0002, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -922,8 +1151,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0003, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0004, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -961,8 +1189,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessBundleProvisionInfo_0004, Functio
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -989,8 +1216,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0001, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0002, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1031,8 +1257,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0002, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0003, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1070,8 +1295,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0003, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     if (!handler) {
         EXPECT_NE(handler, nullptr);
     } else {
@@ -1115,8 +1339,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0004, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     std::vector<std::string> bundlePath;
     InstallParam installParam;
@@ -1143,8 +1366,7 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessSharedBundleProvisionInfo_0005, F
  */
 HWTEST_F(BmsBundleAppProvisionInfoTest, ParseHapFiles_0001, Function | SmallTest | Level0)
 {
-    std::shared_ptr<EventRunner> runner;
-    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>(runner);
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
     ASSERT_NE(handler, nullptr);
     std::vector<std::string> bundlePath;
     InstallParam installParam;

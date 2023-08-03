@@ -30,6 +30,7 @@
 #include "installd/installd_service.h"
 #include "installd_client.h"
 #include "mock_status_receiver.h"
+#include "scope_guard.h"
 #include "permission_define.h"
 
 using namespace testing::ext;
@@ -79,6 +80,16 @@ const std::string INVALID_TYPE3 = "/abc";
 const std::string INVALID_TYPE4 = "*/abc";
 const std::string INVALID_TYPE5 = "abc/*";
 const std::string INVALID_TYPE6 = "*/*";
+const nlohmann::json DEFAULT_CONFIG = R"(
+[{
+    "bundleName": "bundleName",
+    "moduleName": "moduleName",
+    "abilityName": "abilityName",
+    "extensionName": "extensionName",
+    "type": "type",
+    "appType": "appType"
+}]
+)"_json;
 const int32_t LABEL_ID = 16777218;
 const int32_t ICON_ID = 16777222;
 const int32_t DESCRIPTION_ID = 16777217;
@@ -103,10 +114,18 @@ public:
     ErrCode SetDefaultApplicationWrap(sptr<IDefaultApp> defaultAppProxy, const std::string& type,
         const std::string& abilityName) const;
     static std::set<std::string> invalidTypeSet;
+    void ClearDataMgr();
+    void ResetDataMgr();
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_shared<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleDefaultAppTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleDefaultAppTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 std::set<std::string> BmsBundleDefaultAppTest::invalidTypeSet = {INVALID_TYPE1, INVALID_TYPE2,
     INVALID_TYPE3, INVALID_TYPE4, INVALID_TYPE5, INVALID_TYPE6};
@@ -121,7 +140,9 @@ void BmsBundleDefaultAppTest::SetUpTestCase()
 {}
 
 void BmsBundleDefaultAppTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleDefaultAppTest::SetUp()
 {
@@ -133,6 +154,17 @@ void BmsBundleDefaultAppTest::SetUp()
 void BmsBundleDefaultAppTest::TearDown()
 {
     UnInstallBundle(BUNDLE_NAME);
+}
+
+void BmsBundleDefaultAppTest::ClearDataMgr()
+{
+    bundleMgrService_->dataMgr_ = nullptr;
+}
+
+void BmsBundleDefaultAppTest::ResetDataMgr()
+{
+    bundleMgrService_->dataMgr_ = std::make_shared<BundleDataMgr>();
+    EXPECT_NE(bundleMgrService_->dataMgr_, nullptr);
 }
 
 ErrCode BmsBundleDefaultAppTest::InstallBundle(const std::string &bundlePath) const
@@ -1227,6 +1259,119 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5600, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleDefaultApp_5700
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5700, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    defaultAppData.ParseDefaultApplicationConfig(DEFAULT_CONFIG);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5800
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5800, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["type"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_5900
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_5900, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["bundleName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6000
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6000, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["moduleName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6100
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6100, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json errorTypeJson = DEFAULT_CONFIG;
+    errorTypeJson[0]["abilityName"] = "";
+    errorTypeJson[0]["extensionName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(errorTypeJson);
+    EXPECT_EQ(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6200
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6200, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json rightTypeJson = DEFAULT_CONFIG;
+    rightTypeJson[0]["extensionName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
+    EXPECT_NE(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6300
+ * @tc.name: test ParseDefaultApplicationConfig
+ * @tc.desc: 1. call ParseDefaultApplicationConfig
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6300, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    nlohmann::json rightTypeJson = DEFAULT_CONFIG;
+    rightTypeJson[0]["abilityName"] = "";
+    defaultAppData.ParseDefaultApplicationConfig(rightTypeJson);
+    EXPECT_NE(defaultAppData.infos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleDefaultApp_6400
+ * @tc.name: test ResetDefaultApplication, param type is empty
+ * @tc.desc: 1. call ResetDefaultApplication, return false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_6400, Function | SmallTest | Level1)
+{
+    DefaultAppData defaultAppData;
+    Element element;
+    defaultAppData.infos.insert(std::pair<std::string, Element>("1", element));
+    nlohmann::json jsonObject;
+    defaultAppData.ToJson(jsonObject);
+    defaultAppData.ParseDefaultApplicationConfig(jsonObject);
+    EXPECT_EQ(0, ERR_OK);
+}
+
+/**
  * @tc.number: AOT_EXECUTOR_0100
  * @tc.name: test AOTExecutor
  * @tc.desc: decimal convert to correct hex
@@ -1250,5 +1395,228 @@ HWTEST_F(BmsBundleDefaultAppTest, AOT_EXECUTOR_0100, Function | SmallTest | Leve
     AOTArgs completeArgs;
     ErrCode retCode = AOTExecutor::GetInstance().PrepareArgs(aotArgs, completeArgs);
     EXPECT_EQ(retCode, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: IsUserIdExist_0100
+ * @tc.name: test dataMgr_ is nullptr
+ * @tc.desc: 1.IsUserIdExist false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsUserIdExist_0100, Function | MediumTest | Level1)
+{
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+
+    bool ret = DefaultAppMgr::GetInstance().IsUserIdExist(USER_ID);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IsElementValid_0100
+ * @tc.name: test dataMgr_ is nullptr
+ * @tc.desc: 1.IsElementValid false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsElementValid_0100, Function | MediumTest | Level1)
+{
+    Element element;
+    element.bundleName = "entry";
+    element.moduleName = "entry";
+    element.extensionName= "form";
+    bool ret = DefaultAppMgr::GetInstance().VerifyElementFormat(element);
+    EXPECT_EQ(ret, true);
+
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    ret = DefaultAppMgr::GetInstance().IsElementValid(USER_ID, "", element);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: IsWordSkillsValid_0100
+ * @tc.name: test IsWordSkillsValid
+ * @tc.desc: 1.IsWordSkillsValid is false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsWordSkillsValid_0100, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.clear();;
+
+    SkillUri uris;
+    uris.type = "application/msword";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsWordSkillsValid(skills);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: IsWordSkillsValid_0200
+ * @tc.name: test IsWordSkillsValid
+ * @tc.desc: 1.IsWordSkillsValid is true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsWordSkillsValid_0200, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+
+    SkillUri uris;
+    uris.type = "application/msword";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsWordSkillsValid(skills);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: IsWordSkillsValid_0300
+ * @tc.name: test IsWordSkillsValid
+ * @tc.desc: 1.IsWordSkillsValid is true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsWordSkillsValid_0300, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+
+    SkillUri uris;
+    uris.type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsWordSkillsValid(skills);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: IsPptSkillsValid_0100
+ * @tc.name: test IsPptSkillsValid
+ * @tc.desc: 1.IsPptSkillsValid is false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsPptSkillsValid_0100, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.clear();
+
+    SkillUri uris;
+    uris.type = "application/msword";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsPptSkillsValid(skills);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: IsPptSkillsValid_0200
+ * @tc.name: test IsPptSkillsValid
+ * @tc.desc: 1.IsPptSkillsValid is true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsPptSkillsValid_0200, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+
+    SkillUri uris;
+    uris.type = "application/vnd.ms-powerpoint";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsPptSkillsValid(skills);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: IsPptSkillsValid_0300
+ * @tc.name: test IsPptSkillsValid
+ * @tc.desc: 1.IsPptSkillsValid is true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, IsPptSkillsValid_0300, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+
+    SkillUri uris;
+    uris.type = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().IsPptSkillsValid(skills);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: MatchFileType_0100
+ * @tc.name: test MatchFileType
+ * @tc.desc: 1.MatchFileType is false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0100, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.clear();
+
+    SkillUri uris;
+    uris.type = "application/msword";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().MatchFileType("application/msword", skills);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: MatchFileType_0100
+ * @tc.name: test MatchFileType
+ * @tc.desc: 1.MatchFileType is true
+ */
+HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0200, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    Skill skill;
+    skill.actions.push_back(Constants::ACTION_VIEW_DATA);
+
+    SkillUri uris;
+    uris.type = "application/msword";
+    skill.uris.push_back(uris);
+
+    skills.push_back(skill);
+    bool res = DefaultAppMgr::GetInstance().MatchFileType("application/msword", skills);
+    EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: MatchFileType_0300
+ * @tc.name: test MatchFileType
+ * @tc.desc: 1.MatchFileType is false
+ */
+HWTEST_F(BmsBundleDefaultAppTest, MatchFileType_0300, Function | SmallTest | Level1)
+{
+    std::vector<Skill> skills;
+    bool res = DefaultAppMgr::GetInstance().MatchFileType("", skills);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: SetDefaultApplication_0100
+ * @tc.name: test SetDefaultApplication
+ * @tc.desc: 1.SetDefaultApplication
+ */
+HWTEST_F(BmsBundleDefaultAppTest, SetDefaultApplication_0100, Function | SmallTest | Level1)
+{
+    DefaultAppHostImpl impl;
+    AAFwk::Want want;
+    ElementName elementName("", BUNDLE_NAME, "", MODULE_NAME);
+    want.SetElement(elementName);
+    ClearDataMgr();
+    ScopeGuard stateGuard([&] { ResetDataMgr(); });
+    auto res = impl.SetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, want);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 }
 } // OHOS

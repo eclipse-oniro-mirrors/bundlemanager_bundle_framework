@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -54,16 +54,32 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
-    UI = 16,
     PUSH = 17,
     DRIVER = 18,
     APP_ACCOUNT_AUTHORIZATION = 19,
-    UNSPECIFIED = 255
+    UNSPECIFIED = 255,
+    UI = 256,
+    HMS_ACCOUNT = 257,
+    SYSDIALOG_USERAUTH = 300,
+    SYSDIALOG_COMMON = 301,
+    SYSDIALOG_ATOMICSERVICEPANEL = 302,
+    SYSPICKER_MEDIACONTROL = 400,
+    SYSPICKER_SHARE = 401
 };
 
 enum class CompileMode {
     JS_BUNDLE = 0,
     ES_MODULE,
+};
+
+struct SkillUriForAbilityAndExtension {
+    std::string scheme;
+    std::string host;
+    std::string port;
+    std::string path;
+    std::string pathStartWith;
+    std::string pathRegex;
+    std::string type;
 };
 
 struct ExtensionAbilityInfo : public Parcelable {
@@ -95,10 +111,16 @@ struct ExtensionAbilityInfo : public Parcelable {
     // for NAPI, save self query cache
     int32_t uid = -1;
 
+    // for Check flags, add to abilityInfo and extensionAbilityInfo
+    std::vector<SkillUriForAbilityAndExtension> skillUri;
+
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static ExtensionAbilityInfo *Unmarshalling(Parcel &parcel);
 };
+
+ExtensionAbilityType ConvertToExtensionAbilityType(const std::string &type);
+std::string ConvertToExtensionTypeName(ExtensionAbilityType type);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_EXTENSION_INFO_H

@@ -123,7 +123,8 @@ public:
 
     virtual ErrCode MoveFile(const std::string &oldPath, const std::string &newPath) override;
 
-    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath) override;
+    virtual ErrCode CopyFile(const std::string &oldPath, const std::string &newPath,
+        const std::string &signatureFilePath = "") override;
 
     virtual ErrCode Mkdir(
         const std::string &dir, const int32_t mode, const int32_t uid, const int32_t gid) override;
@@ -148,6 +149,11 @@ public:
 
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
+
+    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir) override;
+
+    virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
 
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;

@@ -112,7 +112,8 @@ ErrCode InstalldClient::MoveFile(const std::string &oldPath, const std::string &
     return 0;
 }
 
-ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath)
+ErrCode InstalldClient::CopyFile(const std::string &oldPath, const std::string &newPath,
+    const std::string &signatureFilePath)
 {
     return 0;
 }
@@ -168,6 +169,22 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
     std::vector<std::string> &fileNames)
 {
     return 0;
+}
+
+ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
+    const std::string &targetSoPath, const std::string &signatureFileDir)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
+{
+    return ERR_OK;
+}
+
+bool InstalldClient::StartInstalldService()
+{
+    return GetInstalldProxy();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

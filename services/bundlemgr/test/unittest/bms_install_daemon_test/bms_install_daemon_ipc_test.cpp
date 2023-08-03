@@ -532,4 +532,80 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2400, Function | SmallTest |
     auto ret = installdProxy->ObtainQuickFixFileDir(TEST_STRING, vec);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_2500
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling CopyFiles of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2500, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    auto ret = proxy->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_2600
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling VerifyCodeSignature of proxy
+ * @tc.require: issueI5T6P3
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2600, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    auto ret = installdProxy->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_2700
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling ExecuteAOT of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2700, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    AOTArgs aotArgs;
+    auto ret = installdProxy->ExecuteAOT(aotArgs);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_2800
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling IsExistFile of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2800, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    bool isExist = false;
+    auto ret = installdProxy->IsExistFile("data/test", isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_2900
+ * @tc.name: test Marshalling function of FileStat
+ * @tc.desc: 1. calling GetNativeLibraryFileNames of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2900, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    std::vector<std::string> fileNames;
+    std::string apuAbi = "libs/arm";
+    auto ret = installdProxy->GetNativeLibraryFileNames("data/test", apuAbi, fileNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS

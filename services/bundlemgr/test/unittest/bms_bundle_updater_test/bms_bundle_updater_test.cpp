@@ -35,6 +35,7 @@ using namespace std::chrono_literals;
 using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 
+namespace OHOS {
 namespace {
 const std::string PACKAGE_NAME = "com.example.l3jsdemo";
 const std::string BUNDLE_NAME = "com.example.l3jsdemo";
@@ -78,16 +79,24 @@ public:
     bool CheckBundleInfo(const uint32_t versionCode, const bool needCheckVersion) const;
 
 private:
-    std::shared_ptr<InstalldService> installdService_ = std::make_unique<InstalldService>();
-    std::shared_ptr<BundleMgrService> bundleMgrService_ = DelayedSingleton<BundleMgrService>::GetInstance();
+    static std::shared_ptr<InstalldService> installdService_;
+    static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
+
+std::shared_ptr<BundleMgrService> BmsBundleUpdaterTest::bundleMgrService_ =
+    DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<InstalldService> BmsBundleUpdaterTest::installdService_ =
+    std::make_shared<InstalldService>();
 
 void BmsBundleUpdaterTest::SetUpTestCase()
 {
 }
 
 void BmsBundleUpdaterTest::TearDownTestCase()
-{}
+{
+    bundleMgrService_->OnStop();
+}
 
 void BmsBundleUpdaterTest::SetUp()
 {
@@ -456,3 +465,4 @@ HWTEST_F(BmsBundleUpdaterTest, Update_0800, Function | SmallTest | Level2)
     installResult = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(installResult, ERR_OK);
 }
+} // OHOS

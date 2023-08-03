@@ -140,6 +140,9 @@ void from_json(const nlohmann::json& jsonObject, DistributedModuleInfo& distribu
         false,
         parseResult,
         ArrayType::OBJECT);
+    if (parseResult != ERR_OK) {
+        APP_LOGE("read module distributedModuleInfo from jsonObject error, error code : %{public}d", parseResult);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
