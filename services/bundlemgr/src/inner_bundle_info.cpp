@@ -2528,7 +2528,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo", userId);
+        APP_LOGE("can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+            userId, GetBundleName().c_str());
         return false;
     }
 
