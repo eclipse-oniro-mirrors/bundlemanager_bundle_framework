@@ -230,7 +230,7 @@ bool BundleDataMgr::AddInnerBundleInfo(const std::string &bundleName, InnerBundl
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem != bundleInfos_.end()) {
-        APP_LOGE("bundleName: %{public}s : bundle info already exist", bundleName.c_str(0));
+        APP_LOGE("bundleName: %{public}s : bundle info already exist", bundleName.c_str());
         return false;
     }
     std::lock_guard<std::mutex> stateLock(stateMutex_);
@@ -2226,7 +2226,7 @@ bool BundleDataMgr::GetBundlesForUid(const int uid, std::vector<std::string> &bu
 {
     InnerBundleInfo innerBundleInfo;
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
-        APP_LOGE("get innerBundleInfo by uid :%{public}s failed.", uid);
+        APP_LOGE("get innerBundleInfo by uid :%{public}d failed.", uid);
         return false;
     }
 
@@ -3246,7 +3246,7 @@ bool BundleDataMgr::GetShortcutInfos(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), uerId);
+        APP_LOGE("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
         return false;
     }
 
@@ -3267,7 +3267,7 @@ ErrCode BundleDataMgr::GetShortcutInfoV9(
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), uerId);
+        APP_LOGE("input invalid userid, bundleName:%{public}s, userId:%{public}d", bundleName.c_str(), userId);
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     std::lock_guard<std::mutex> lock(bundleInfoMutex_);
@@ -3542,7 +3542,7 @@ bool BundleDataMgr::QueryExtensionAbilityInfos(const Want &want, int32_t flags, 
         ExtensionAbilityInfo info;
         bool ret = ExplicitQueryExtensionInfo(want, flags, requestUserId, info, appIndex);
         if (!ret) {
-            APP_LOGE("explicit queryExtensionInfo error, bundleName:%{public}s, extensionName",
+            APP_LOGE("explicit queryExtensionInfo error, bundleName:%{public}s, extensionName:%{public}s",
                 bundleName.c_str(), extensionName.c_str());
             return false;
         }
@@ -3875,7 +3875,7 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfos(const Want &want, int32_t fla
     APP_LOGD("begin to ImplicitQueryAllExtensionInfos");
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid userId, userId:%{public}s", userId);
+        APP_LOGE("invalid userId, userId:%{public}d", userId);
         return;
     }
 
