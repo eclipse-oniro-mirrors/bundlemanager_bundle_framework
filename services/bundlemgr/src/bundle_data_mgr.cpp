@@ -2822,7 +2822,7 @@ ErrCode BundleDataMgr::IsAbilityEnabled(const AbilityInfo &abilityInfo, bool &is
         abilityInfo.moduleName, abilityInfo.name);
     if (!ability) {
         APP_LOGE("ability not found, bundleName:%{public}s, moduleName:%{public}s, abilityName:%{public}s",
-        abilityInfo.bundleName.c_str(), abilityInfo.moduleName.c_str(), abilityInfo.name.c_str());
+            abilityInfo.bundleName.c_str(), abilityInfo.moduleName.c_str(), abilityInfo.name.c_str());
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(GetUserId());
@@ -4530,15 +4530,12 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     if (moduleName.empty()) {
         auto ability = innerBundleInfo.FindAbilityInfoV9(moduleName, abilityName);
         if (!ability) {
-             APP_LOGE("bundleName: %{public}s not find abilityName:%{public}s",
-                bundleName.c_str(), abilityName.c_str());
             return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
         }
         abilityInfo = *ability;
     } else {
         errCode = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
         if (errCode != ERR_OK) {
-            APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", bundleName.c_str(), errCode);
             return errCode;
         }
     }
