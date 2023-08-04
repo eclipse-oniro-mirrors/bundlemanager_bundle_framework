@@ -364,5 +364,43 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     APP_LOGD("call GetDisposedStatus done.");
     return promise;
 }
+
+napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetDisposedStatusSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nullptr;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_DISPOSED_STATUS);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    OHOS::AAFwk::Want disposedWant;
+    ErrCode ret;
+    ret = CommonFunc::ConvertErrCode(appControlProxy->GetDisposedStatus(appId, disposedWant));;
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedStatusSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nWant = nullptr;
+    CommonFunc::ConvertWantInfo(env, nWant, disposedWant);
+    APP_LOGD("call GetDisposedStatusSync done.");
+    return nWant;
+}
 }
 }
