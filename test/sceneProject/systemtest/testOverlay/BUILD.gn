@@ -18,5 +18,8 @@ group("testOverlay") {
   deps += [
     # deps file
     "internal_overlay_install_test1:internalOverlayTest1",
+    "internal_overlay_install_test2:priority_0",
+    "internal_overlay_install_test2:priority_101",
+    "internal_overlay_install_test3:internalOverlayTest3",
   ]
 }

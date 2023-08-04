@@ -25,7 +25,11 @@ ohos_systemtest("BmsOverlayInternalInstallTest") {
   }
   deps = [
     "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/internal_overlay_install_test1:internalOverlayTest1",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/internal_overlay_install_test2:priority_0",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/internal_overlay_install_test2:priority_101",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/internal_overlay_install_test3:internalOverlayTest3",
     "${common_path}:libappexecfwk_common",
     "${core_path}:appexecfwk_core",
     "${services_path}/test/moduletest/utils:tool_common",
@@ -47,7 +51,5 @@ ohos_systemtest("BmsOverlayInternalInstallTest") {
 group("systemtest") {
   testonly = true
 
-  deps = [
-    ":BmsOverlayInternalInstallTest"
-  ]
+  deps = [ ":BmsOverlayInternalInstallTest" ]
 }

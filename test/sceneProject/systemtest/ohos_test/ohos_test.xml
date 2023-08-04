@@ -194,7 +194,10 @@
   </target>
   <target name="BmsOverlayInternalInstallTest">
     <preparer>
-    <option name="push" value="testOverlay/internalOverlayTest1.hap -> /data/test/internalOverlayTest/" src="res" />
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test1/" src="res" />
+    <option name="push" value="testOverlay/internal/test2/priority_0.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
+    <option name="push" value="testOverlay/internal/test2/priority_101.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
+    <option name="push" value="testOverlay/internal/test3/internalOverlayTest3.hsp -> /data/test/internalOverlayTest/test3/" src="res" />
     </preparer>
   </target>
 

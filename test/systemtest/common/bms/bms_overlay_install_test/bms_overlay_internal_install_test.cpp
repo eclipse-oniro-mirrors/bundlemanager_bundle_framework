@@ -13,13 +13,34 @@
  * limitations under the License.
  */
 
+#include <fstream>
+#include <future>
+#include <gtest/gtest.h>
+
+#include "app_log_wrapper.h"
+#include "bundle_constants.h"
+#include "bundle_installer_interface.h"
+#include "bundle_mgr_interface.h"
+#include "common_event_manager.h"
+#include "common_event_support.h"
+#include "common_tool.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
+#include "status_receiver_host.h"
+
+using namespace testing::ext;
+using namespace std::chrono_literals;
+
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr int32_t TIMEOUT = 5;
 constexpr int32_t USERID = 100;
-constexpr std::string INTERNAL_OVERLAY_TEST1_PATH = "/data/test/internalOverlayTest/internalOverlayTest1.hsp";
-constexpr std::string BUNDLE_NAME_OF_OVERLAY_TEST1 = "com.example.internalOverlayTest1";
+const std::string INTERNAL_OVERLAY_TEST1_PATH = "/data/test/internalOverlayTest/test1/internalOverlayTest1.hsp";
+const std::string INTERNAL_OVERLAY_TEST2_PATH1 = "/data/test/internalOverlayTest/test2/priority_0.hsp";
+const std::string INTERNAL_OVERLAY_TEST2_PATH2 = "/data/test/internalOverlayTest/test2/priority_101.hsp";
+const std::string  INTERNAL_OVERLAY_TEST3_PATH = "/data/test/internalOverlayTest/test3/internalOverlayTest3.hsp";
+const std::string BUNDLE_NAME_OF_OVERLAY_TEST1 = "com.example.internalOverlayTest1";
 } // namespace
 class StatusReceiverImpl : public StatusReceiverHost {
 public:
@@ -81,7 +102,19 @@ public:
     static sptr<IBundleInstaller> GetInstallerProxy();
 };
 
-sptr<IBundleMgr> BmsInstallSystemTest::GetBundleMgrProxy()
+void BmsOverlayInternalInstallTest::SetUpTestCase()
+{}
+
+void BmsOverlayInternalInstallTest::TearDownTestCase()
+{}
+
+void BmsOverlayInternalInstallTest::SetUp()
+{}
+
+void BmsOverlayInternalInstallTest::TearDown()
+{}
+
+sptr<IBundleMgr> BmsOverlayInternalInstallTest::GetBundleMgrProxy()
 {
     sptr<ISystemAbilityManager> systemAbilityManager =
         SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
@@ -100,7 +133,7 @@ sptr<IBundleMgr> BmsInstallSystemTest::GetBundleMgrProxy()
     return iface_cast<IBundleMgr>(remoteObject);
 }
 
-sptr<IBundleInstaller> BmsInstallSystemTest::GetInstallerProxy()
+sptr<IBundleInstaller> BmsOverlayInternalInstallTest::GetInstallerProxy()
 {
     sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -123,7 +156,7 @@ ErrCode BmsOverlayInternalInstallTest::InstallOverlayBundle(const std::vector<st
     sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
     EXPECT_NE(installerProxy, nullptr);
     InstallParam installParam;
-    installParam.userId = USERID
+    installParam.userId = USERID;
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
@@ -149,21 +182,73 @@ ErrCode BmsOverlayInternalInstallTest::UninstallBundle(const std::string &bundle
 
 /**
  * @tc.number: Bms_Overlay_Internal_Install_0100
- * @tc.name:  test the installation of a third-party bundle
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a third-party bundle
- *           2.install the bundle
- *           3.check the bundle info
+ * @tc.name:  test the installation of overlay hsp
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test1/',there is an overlay test hsp internalOverlayTest1.hsp.
+ *           2.bundleType of module is shared.
+ *           3.targetModuleName is entry which is not installed.
+ *           4.install successfully.
  */
 HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0100, Function | MediumTest | Level1)
 {
     std::cout << "START Bms_Overlay_Internal_Install_0100" << std::endl;
     std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST1_PATH };
-    ErrCode ret = InstallOverlayBundle(bundlePaths, InstallFlag::NORMAL, installMsg);
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
     EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST1_PATH;
 
     ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
     EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
     std::cout << "END Bms_Overlay_Internal_Install_0100" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_0200
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test2/',there is two overlay hsp priority_0.hsp.
+ *           2.targetPriority of priority_0.hsp is 0.
+ *           3.install failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0200, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_0200" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST2_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST2_PATH1;
+    std::cout << "END Bms_Overlay_Internal_Install_0200" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_0300
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test2/',there is an overlay hsp priority_101.hsp.
+ *           2.targetPriority of priority_101.hsp is 101.
+ *           3.install failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0300, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_0300" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST2_PATH2 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST2_PATH2;
+    std::cout << "END Bms_Overlay_Internal_Install_0300" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_0400
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test3/',there is an overlay hsp internalOverlayTest3.hsp.
+ *           2.targetPriority of internalOverlayTest3.hsp is existed and targetModuleName is not existed.
+ *           3.install failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_0400" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST3_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_NAME_MISSED) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST3_PATH;
+    std::cout << "END Bms_Overlay_Internal_Install_0400" << std::endl;
 }
 } // AppExecFwk
 } // OHOS
