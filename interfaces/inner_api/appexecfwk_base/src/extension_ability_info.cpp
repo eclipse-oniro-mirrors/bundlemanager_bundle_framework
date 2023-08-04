@@ -68,6 +68,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "thumbnail", ExtensionAbilityType::THUMBNAIL },
     { "preview", ExtensionAbilityType::PREVIEW },
     { "print", ExtensionAbilityType::PRINT },
+    { "share", ExtensionAbilityType::SHARE },
     { "push", ExtensionAbilityType::PUSH },
     { "driver", ExtensionAbilityType::DRIVER },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
@@ -76,7 +77,6 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/common", ExtensionAbilityType::SYSDIALOG_COMMON },
     { "sysPicker/mediaControl", ExtensionAbilityType::SYSPICKER_MEDIACONTROL },
     { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL },
-    { "share", ExtensionAbilityType::SHARE },
     { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE },
     { "hms/account", ExtensionAbilityType::HMS_ACCOUNT }
 };
