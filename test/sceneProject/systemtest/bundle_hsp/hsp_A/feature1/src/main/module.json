@@ -37,9 +37,9 @@
         "name": "feature1",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
-        "type": "feature",
+        "type": "shared",
         "virtualMachine": "ark",
-        "compressNativeLibs": true,
+        "compressNativeLibs": false,
         "libIsolation": true
     }
 }
