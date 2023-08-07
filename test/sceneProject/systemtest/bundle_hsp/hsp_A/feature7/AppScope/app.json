@@ -1,7 +1,7 @@
 {
     "app": {
         "apiReleaseType": "Canary1",
-        "bundleName": "com.example.hsptest4",
+        "bundleName": "com.example.hspfeature7",
         "debug": true,
         "icon": "$media:app_icon",
         "iconId": 16777217,
