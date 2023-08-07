@@ -138,16 +138,6 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
-static ErrCode InnerGetAllLauncherAbilityInfo(int32_t userId,
-    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo>& launcherAbilityInfos)
-{
-    auto launcherService = GetLauncherService();
-    if (launcherService == nullptr) {
-        return ERROR_BUNDLE_SERVICE_EXCEPTION;
-    }
-    return launcherService->GetAllLauncherAbility(userId, launcherAbilityInfos);
-}
-
 void GetAllLauncherAbilityInfoExec(napi_env env, void *data)
 {
     GetAllLauncherAbilityCallbackInfo *asyncCallbackInfo = reinterpret_cast<GetAllLauncherAbilityCallbackInfo *>(data);
