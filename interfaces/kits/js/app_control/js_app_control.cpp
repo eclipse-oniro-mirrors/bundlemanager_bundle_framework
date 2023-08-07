@@ -388,8 +388,8 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     OHOS::AAFwk::Want disposedWant;
-    ErrCode ret;
-    ret = CommonFunc::ConvertErrCode(appControlProxy->GetDisposedStatus(appId, disposedWant));;
+    ErrCode ret = appControlProxy->GetDisposedStatus(appId, disposedWant);
+    ret = CommonFunc::ConvertErrCode(ret);
     if (ret != ERR_OK) {
         APP_LOGE("GetDisposedStatusSync failed");
         napi_value businessError = BusinessError::CreateCommonError(
