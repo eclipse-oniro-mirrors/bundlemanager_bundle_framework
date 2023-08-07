@@ -34,6 +34,7 @@ struct DisposedStatus : public BaseCallbackInfo {
 napi_value GetDisposedStatus(napi_env env, napi_callback_info info);
 napi_value SetDisposedStatus(napi_env env, napi_callback_info info);
 napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info);
+napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* JS_APP_CONTROL_H */
