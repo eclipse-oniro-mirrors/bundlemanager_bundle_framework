@@ -144,7 +144,7 @@ int32_t BmsUninstallSystemTest::ExcuteMaintainCmd(const std::string &cmd, std::v
 {
     CommonTool commonTool;
     int32_t bufSize = 1024;
-    return commonTool.ExcuteCmd(cmd, cmdRes, bufSize);
+    return commonTool.ExecuteCmd(cmd, cmdRes, bufSize);
 }
 
 sptr<IBundleMgr> BmsUninstallSystemTest::GetBundleMgrProxy()

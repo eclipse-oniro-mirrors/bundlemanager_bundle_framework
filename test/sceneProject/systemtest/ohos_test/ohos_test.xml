@@ -204,4 +204,13 @@
     <option name="push" value="testHapNoSo/hapSectionContainsoFeature6.hap -> /data/test/testHapSo/hapSectionContainsoFeature6" src="res" />
     </preparer>
   </target>
+  <target name="BmsOverlayInternalInstallTest">
+    <preparer>
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test1/" src="res" />
+    <option name="push" value="testOverlay/internal/test2/priority_0.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
+    <option name="push" value="testOverlay/internal/test2/priority_101.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
+    <option name="push" value="testOverlay/internal/test3/internalOverlayTest3.hsp -> /data/test/internalOverlayTest/test3/" src="res" />
+    </preparer>
+  </target>
+
 </configuration>

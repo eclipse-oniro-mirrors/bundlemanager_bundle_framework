@@ -5530,7 +5530,8 @@ void BundleDataMgr::BuildExternalOverlayConnection(const std::string &moduleName
     }
 }
 
-void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName)
+void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo,
+    const std::string &bundleName)
 {
     if (innerBundleInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
         std::string targetBundleName = innerBundleInfo.GetTargetBundleName();
