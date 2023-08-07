@@ -34,11 +34,29 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "isDefaultApplicationSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "getDefaultApplication");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "getDefaultApplicationSync");
     napi_throw(env, error);
     return nullptr;
 }
@@ -52,11 +70,29 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "setDefaultApplicationSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "resetDefaultApplication");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.DefaultApp not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "resetDefaultApplicationSync");
     napi_throw(env, error);
     return nullptr;
 }

@@ -37,11 +37,18 @@ using namespace OHOS::AAFwk;
 namespace {
 constexpr int32_t NAPI_RETURN_ZERO = 0;
 const std::string IS_DEFAULT_APPLICATION = "IsDefaultApplication";
+const std::string IS_DEFAULT_APPLICATION_SYNC = "IsDefaultApplicationSync";
 const std::string GET_DEFAULT_APPLICATION = "GetDefaultApplication";
+const std::string GET_DEFAULT_APPLICATION_SYNC = "GetDefaultApplicationSync";
 const std::string SET_DEFAULT_APPLICATION = "SetDefaultApplication";
+const std::string SET_DEFAULT_APPLICATION_SYNC = "SetDefaultApplicationSync";
 const std::string RESET_DEFAULT_APPLICATION = "ResetDefaultApplication";
+const std::string RESET_DEFAULT_APPLICATION_SYNC = "ResetDefaultApplicationSync";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 const std::string PARAM_TYPE_CHECK_ERROR_WITH_POS = "param type check error, error position : ";
+const std::string TYPE_CHECK = "type";
+const std::string USERID_CHECK = "userId";
+const std::string WANT_CHECK = "want";
 }
 
 static const std::unordered_map<std::string, std::string> TYPE_MAPPING = {
@@ -321,6 +328,65 @@ napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
     return promise;
 }
 
+ErrCode ParamsProcessIsDefaultApplicationSync(napi_env env, napi_callback_info info,
+    std::string& type)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseType(env, args[i], type)) {
+                APP_LOGE("type %{public}s invalid", type.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to IsDefaultApplicationSync");
+    napi_value nRet;
+    bool isDefaultApp = false;
+    napi_get_boolean(env, isDefaultApp, &nRet);
+    std::string type;
+    if (ParamsProcessIsDefaultApplicationSync(env, info, type) != ERR_OK) {
+        return nRet;
+    }
+
+    auto defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            IS_DEFAULT_APPLICATION_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+
+    ErrCode ret = defaultAppProxy->IsDefaultApplication(type, isDefaultApp);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("ResetDefaultApplicationSync failed: %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, IS_DEFAULT_APPLICATION_SYNC, "");
+        napi_throw(env, businessError);
+        return nRet;
+    }
+    NAPI_CALL(env, napi_get_boolean(env, isDefaultApp, &nRet));
+    APP_LOGD("call ResetDefaultApplicationSync done.");
+    return nRet;
+}
+
 static ErrCode InnerGetDefaultApplication(DefaultAppCallbackInfo *info)
 {
     if (info == nullptr) {
@@ -429,6 +495,73 @@ napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetDefaultApplication done");
     return promise;
+}
+
+ErrCode ParamsProcessGetDefaultApplicationSync(napi_env env, napi_callback_info info,
+    std::string& type, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseType(env, args[ARGS_POS_ZERO], type)) {
+                APP_LOGE("type %{public}s invalid", type.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return ERROR_PARAM_CHECK_ERROR  ;
+        }
+    }
+    return ERR_OK;
+}
+
+napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetDefaultApplicationSync");
+    std::string type;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (ParamsProcessGetDefaultApplicationSync(env, info, type, userId) != ERR_OK) {
+        return nullptr;
+    }
+
+    auto defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            GET_DEFAULT_APPLICATION_SYNC);
+        napi_throw(env, error);
+        return nullptr;
+    }
+
+    BundleInfo bundleInfo;
+    ErrCode ret = defaultAppProxy->GetDefaultApplication(userId, type, bundleInfo);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDefaultApplicationSync failed: %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DEFAULT_APPLICATION_SYNC, Constants::PERMISSION_GET_DEFAULT_APPLICATION);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+
+    napi_value nBundleInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env,  &nBundleInfo));
+    ConvertBundleInfo(env, nBundleInfo, bundleInfo);
+    APP_LOGD("call GetDefaultApplicationSync done.");
+    return nBundleInfo;
 }
 
 static ErrCode InnerSetDefaultApplication(const DefaultAppCallbackInfo *info)
@@ -546,6 +679,79 @@ napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
     return promise;
 }
 
+ErrCode ParamsProcessSetDefaultApplicationSync(napi_env env, napi_callback_info info,
+    std::string& type, OHOS::AAFwk::Want& want, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseType(env, args[i], type)) {
+                APP_LOGE("type %{public}s invalid", type.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if ((!CommonFunc::ParseElementName(env, args[i], want))) {
+                APP_LOGE("parseElementName failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, WANT_CHECK, TYPE_OBJECT);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if ((!CommonFunc::ParseInt(env, args[i], userId))) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to SetDefaultApplicationSync");
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    std::string type;
+    OHOS::AAFwk::Want want;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (ParamsProcessSetDefaultApplicationSync(env, info, type, want, userId) != ERR_OK) {
+        return nRet;
+    }
+    auto defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            SET_DEFAULT_APPLICATION_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+
+    ErrCode ret = defaultAppProxy->SetDefaultApplication(userId,
+        type, want);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDefaultApplicationSync failed: %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_DEFAULT_APPLICATION_SYNC, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+        napi_throw(env, businessError);
+        return nRet;
+    }
+
+    APP_LOGD("call SetDefaultApplicationSync done.");
+    return nRet;
+}
+
 static ErrCode InnerResetDefaultApplication(const DefaultAppCallbackInfo *info)
 {
     if (info == nullptr) {
@@ -653,6 +859,71 @@ napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call ResetDefaultApplication done");
     return promise;
+}
+
+ErrCode ParamsProcessResetDefaultApplicationSync(napi_env env, napi_callback_info info,
+    std::string& type, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetArgc(); ++i) {
+        if (i == ARGS_POS_ZERO) {
+            if (!ParseType(env, args[i], type)) {
+                APP_LOGE("type %{public}s invalid", type.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, TYPE_CHECK, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], userId)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else {
+            APP_LOGE("param check error");
+            std::string errMsg = PARAM_TYPE_CHECK_ERROR_WITH_POS + std::to_string(i + 1);
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, errMsg);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to ResetDefaultApplicationSync");
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    std::string type;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    if (ParamsProcessResetDefaultApplicationSync(env, info, type, userId) != ERR_OK) {
+        return nRet;
+    }
+    
+    auto defaultAppProxy = GetDefaultAppProxy();
+    if (defaultAppProxy == nullptr) {
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
+            RESET_DEFAULT_APPLICATION_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+
+    ErrCode ret = defaultAppProxy->ResetDefaultApplication(userId, type);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("ResetDefaultApplicationSync failed: %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESET_DEFAULT_APPLICATION_SYNC, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
+        napi_throw(env, businessError);
+        return nRet;
+    }
+
+    APP_LOGD("call ResetDefaultApplicationSync done.");
+    return nRet;
 }
 }
 }
