@@ -191,16 +191,13 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("GetBundleInstallerSync called");
+    APP_LOGD("NAPI GetBundleInstallerSync called.");
     NapiArg args(env, info);
     if (!args.Init(FIRST_PARAM, FIRST_PARAM)) {
-        APP_LOGE("GetBundleInstallerSync args init failed");
+        APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return nullptr;
     }
-    auto argc = args.GetMaxArgc();
-    APP_LOGD("GetBundleInstallerSync argc = [%{public}zu]", argc);
-
     napi_value m_classBundleInstaller = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
@@ -219,7 +216,7 @@ napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
     g_isSystemApp = true;
     napi_value nBundleInstaller = nullptr;
     NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
-    APP_LOGD("GetBundleInstallerSync called");
+    APP_LOGD("call GetBundleInstallerSync done.");
     return nBundleInstaller;
 }
 
