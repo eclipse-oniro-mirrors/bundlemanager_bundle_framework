@@ -3498,8 +3498,8 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
     for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
-        eventInfo.filePath.push_back(innerModuleInfo.hapPath);
-        eventInfo.hashValue.push_back(innerModuleInfo.hashValue);
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
     }
 }
 

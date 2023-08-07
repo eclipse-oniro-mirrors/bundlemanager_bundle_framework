@@ -39,7 +39,7 @@ RdbDataManager::RdbDataManager(const BmsRdbConfig &bmsRdbConfig)
 
 RdbDataManager::~RdbDataManager()
 {
-    rdbStore_ = null;
+    rdbStore_ = nullptr;
 }
 
 void RdbDataManager::ClearCache()
@@ -62,8 +62,7 @@ std::shared_ptr<NativeRdb::RdbStore> RdbDataManager::GetRdbStore()
         bmsRdbConfig_.version,
         bmsRdbOpenCallback,
         errCode);
-    std::thread closeRdbStoreThread(DelayCloseRdbStore);
-    closeRdbStoreThread.detach();
+    DelayCloseRdbStore();
     return rdbStore_;
 }
 
@@ -314,17 +313,21 @@ bool RdbDataManager::CreateTable()
 
 void RdbDataManager::DelayCloseRdbStore()
 {
-    APP_LOGD("RdbDataManager DelayCloseRdbStore begin");
-    std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+    APP_LOGD("RdbDataManager DelayCloseRdbStore start");
     std::weak_ptr<RdbDataManager> weakPtr = shared_from_this();
-    auto sharedPtr = weakPtr.lock();
-    if (sharedPtr == nullptr) {
-        APP_LOGD("stop RdbDataManager DelayCloseRdbStore");
-        return;
-    }
-    std::lock_guard<std::mutex> lock(sharedPtr->rdbMutex_);
-    sharedPtr->rdbStore_ = nullptr;
-    APP_LOGD("RdbDataManager DelayCloseRdbStore end");
+    auto task = [weakPtr]() {
+        APP_LOGD("RdbDataManager DelayCloseRdbStore thread begin");
+        std::this_thread::sleep_for(std::chrono::seconds(CLOSE_TIME));
+        auto sharedPtr = weakPtr.lock();
+        if (sharedPtr == nullptr) {
+            return;
+        }
+        std::lock_guard<std::mutex> lock(sharedPtr->rdbMutex_);
+        sharedPtr->rdbStore_ = nullptr;
+        APP_LOGD("RdbDataManager DelayCloseRdbStore thread end");
+    };
+    std::thread closeRdbStoreThread(task);
+    closeRdbStoreThread.detach();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
