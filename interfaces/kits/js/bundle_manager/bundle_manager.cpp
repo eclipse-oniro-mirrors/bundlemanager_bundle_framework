@@ -47,6 +47,7 @@ constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
+const std::string GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
 const std::string GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -59,6 +60,7 @@ const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
 const std::string GET_APPLICATION_INFO = "GetApplicationInfo";
 const std::string GET_APPLICATION_INFOS = "GetApplicationInfos";
 const std::string GET_PERMISSION_DEF = "GetPermissionDef";
+const std::string GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
 const std::string PERMISSION_NAME = "permissionName";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
@@ -908,7 +910,7 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
     OHOS::AAFwk::Want& want, int32_t& abilityFlags, int32_t& userId)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
@@ -1163,7 +1165,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
     OHOS::AAFwk::Want& want, int32_t& extensionAbilityType, int32_t& flags, int32_t& userId)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
@@ -1366,6 +1368,72 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
     return promise;
+#else
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
+    napi_throw(env, error);
+    return nullptr;
+#endif
+}
+
+ErrCode ParamsProcessGetAbilityLabelSync(napi_env env, napi_callback_info info,
+    std::string& bundleName, std::string& moduleName, std::string& abilityName)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], abilityName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    } else {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    return ERR_OK;
+}
+
+napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetAbilityLabelSync");
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    if (ParamsProcessGetAbilityLabelSync(env, info, bundleName, moduleName, abilityName) != ERR_OK) {
+        return nullptr;
+    }
+    napi_value nAbilityLabel = nullptr;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    std::string abilityLabel;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetAbilityLabel failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_ABILITY_LABEL_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_create_string_utf8(env, abilityLabel.c_str(), NAPI_AUTO_LENGTH, &nAbilityLabel);
+    APP_LOGD("call GetAbilityLabelSync done");
+    return nAbilityLabel;
 #else
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
@@ -2037,7 +2105,7 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
     std::string& bundleName, int32_t& userId)
 {
     NapiArg args(env, info);
-    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
         APP_LOGE("param count invalid");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
@@ -2627,6 +2695,42 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetPermissionDef", GetPermissionDefExec, GetPermissionDefComplete);
     callbackPtr.release();
     return promise;
+}
+
+napi_value GetPermissionDefSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetPermissionDefSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string permissionName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], permissionName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PERMISSION_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    napi_value nPermissionDef = nullptr;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    OHOS::AppExecFwk::PermissionDef permissionDef;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetPermissionDef(permissionName, permissionDef));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetPermissionDef failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_PERMISSION_DEF_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_create_object(env, &nPermissionDef));
+    CommonFunc::ConvertPermissionDef(env, nPermissionDef, permissionDef);
+    APP_LOGD("call GetPermissionDefSync done");
+    return nPermissionDef;
 }
 
 static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
