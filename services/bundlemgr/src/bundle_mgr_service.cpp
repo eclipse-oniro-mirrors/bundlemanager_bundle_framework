@@ -74,19 +74,20 @@ BundleMgrService::~BundleMgrService()
     if (hidumpHelper_) {
         hidumpHelper_.reset();
     }
-    APP_LOGI("instance is destroyed");
+    APP_LOGI("BundleMgrService instance is destroyed");
 }
 
 void BundleMgrService::OnStart()
 {
-    APP_LOGD("start is triggered");
+    APP_LOGI("BundleMgrService OnStart start");
     if (!Init()) {
-        APP_LOGE("init fail");
+        APP_LOGE("BundleMgrService init fail");
         return;
     }
 
     AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
     AddSystemAbilityListener(BUNDLE_BROKER_SERVICE_ABILITY_ID);
+    APP_LOGI("BundleMgrService OnStart end");
 }
 
 void BundleMgrService::OnStop()
@@ -107,7 +108,7 @@ bool BundleMgrService::Init()
         return false;
     }
 
-    APP_LOGI("Init begin");
+    APP_LOGI("BundleMgrService Init begin");
     CreateBmsServiceDir();
     InitBmsParam();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
@@ -122,7 +123,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     ready_ = true;
-    APP_LOGI("Init success");
+    APP_LOGI("BundleMgrService Init success");
     return true;
 }
 
@@ -404,7 +405,7 @@ void BundleMgrService::RegisterService()
             APP_LOGE("fail to register to system ability manager");
             return;
         }
-        APP_LOGI("register to sam success");
+        APP_LOGI("BundleMgrService register to sam success");
         registerToService_ = true;
     }
 
@@ -428,7 +429,7 @@ void BundleMgrService::NotifyBundleScanStatus()
 
 void BundleMgrService::OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId)
 {
-    APP_LOGD("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
+    APP_LOGI("OnAddSystemAbility systemAbilityId:%{public}d added!", systemAbilityId);
     if (COMMON_EVENT_SERVICE_ID == systemAbilityId && notifyBundleScanStatus) {
         NotifyBundleScanStatus();
     }

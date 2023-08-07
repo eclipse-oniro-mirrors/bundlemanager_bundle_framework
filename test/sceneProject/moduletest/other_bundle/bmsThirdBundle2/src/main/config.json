@@ -1,0 +1,64 @@
+{
+    "app": {
+        "bundleName": "com.third.hiworld.example1",
+        "vendor": "example",
+        "version": {
+            "code": 1,
+            "name": "1.0"
+        },
+        "apiVersion": {
+            "compatible": 3,
+            "target": 3
+        }
+    },
+    "deviceConfig": {
+        "default": {}
+    },
+    "module": {
+        "package": "com.third.hiworld.example.h1",
+        "name": "bmsThirdBundle2",
+        "deviceType": [
+            "tablet",
+            "default",
+            "tv",
+            "car"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "testability",
+            "moduleType": "entry"
+        },
+        "abilities": [
+            {
+                "name": "bmsThirdBundle_A1",
+                "icon": "$media:snowball",
+                "label": "bmsThirdBundle_A1 Ability",
+                "launchType": "singleton",
+                "orientation": "unspecified",
+                "type": "page",
+                "visible": true
+            },
+            {
+                "name": "bmsThirdBundle_A2",
+                "icon": "$media:snowball",
+                "label": "bmsThirdBundle_A2 Ability",
+                "launchType": "singleton",
+                "orientation": "unspecified",
+                "type": "page",
+                "visible": true
+            }
+        ],
+        "js": [
+            {
+                "pages": [
+                    "pages/index/index"
+                ],
+                "name": "default",
+                "window": {
+                    "designWidth": 720,
+                    "autoDesignWidth": true
+                }
+            }
+        ]
+    }
+}
