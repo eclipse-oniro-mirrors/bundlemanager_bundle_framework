@@ -1,0 +1,65 @@
+{
+    "app": {
+        "iconId": 33554436,
+        "apiVersion": {
+            "compatible": 4,
+            "releaseType": "Release",
+            "target": 5
+        },
+        "labelId": 33554432,
+        "vendor": "example",
+        "icon": "$media:icon_entry",
+        "bundleName": "com.example.devicetype",
+        "label": "$string:entry_MainAbility_entry",
+        "version": {
+            "code": 1000001,
+            "name": "1.0.0"
+        }
+    },
+    "deviceConfig": {
+        "default": {
+            "debug": true
+        }
+    },
+    "module": {
+        "abilities": [
+            {
+                "iconId": 33554435,
+                "descriptionId": 33554434,
+                "visible": true,
+                "labelId": 33554433,
+                "icon": "$media:icon",
+                "name": "com.example.devicetype.MainAbility",
+                "description": "$string:mainability_description",
+                "label": "$string:l2jsdemo_MainAbility",
+                "type": "page",
+                "homeAbility": false,
+                "launchType": "standard"
+            }
+        ],
+        "deviceType": [
+            "car"
+        ],
+        "mainAbility": "com.example.devicetype.MainAbility",
+        "distro": {
+            "moduleType": "feature",
+            "installationFree": true,
+            "deliveryWithInstall": true,
+            "moduleName": "devicetype"
+        },
+        "package": "com.example.devicetype",
+        "name": ".MyApplication",
+        "js": [
+            {
+                "pages": [
+                    "pages/index/index"
+                ],
+                "name": "default",
+                "window": {
+                    "designWidth": 720,
+                    "autoDesignWidth": true
+                }
+            }
+        ]
+    }
+}

@@ -1,16 +1,16 @@
 {
-  "string": [
-    {
-      "name": "module_desc",
-      "value": "module description"
-    },
-    {
-      "name": "EntryAbility_desc",
-      "value": "description"
-    },
-    {
-      "name": "EntryAbility_label",
-      "value": "label"
-    }
-  ]
+    "string":  [
+        {
+            "name": "MainAbility_desc",
+            "value": "i am an entry for phone"
+        },
+        {
+            "name": "MainAbility_label",
+            "value": "the phone entry ability"
+        },
+        {
+            "name": "entry_desc",
+            "value": "ActsContextTest"
+        }
+    ]
 }

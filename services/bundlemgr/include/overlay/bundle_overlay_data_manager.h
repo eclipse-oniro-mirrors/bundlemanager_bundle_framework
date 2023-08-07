@@ -28,11 +28,13 @@ public:
 
     bool IsExistedNonOverlayHap(const std::string &bundleName);
 
-    ErrCode UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    ErrCode UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
+        InnerBundleInfo &targetInnerBundleInfo);
 
     ErrCode UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    ErrCode UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    ErrCode UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
+        InnerBundleInfo &targetInnerBundleInfo);
 
     ErrCode BuildOverlayConnection(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
@@ -40,33 +42,23 @@ public:
 
     ErrCode RemoveOverlayModuleConnection(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
 
-    void RemoveOverlayBundleInfo(const std::string &targetBundleName, const std::string &bundleName);
+    void RemoveOverlayBundleInfo(const std::string &bundleName, InnerBundleInfo &targetInnerBundleInfo);
 
-    void RemoveOverlayModuleInfo(const std::string &bundleName,
-        const std::string &modulePackage, InnerBundleInfo &oldInfo);
-
-    void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
+    void RemoveOverlayModuleInfo(const std::string &bundleName, const std::string &modulePackage,
+        InnerBundleInfo &oldInfo, InnerBundleInfo &targetInnerBundleInfo);
 
     void BuildInternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
 
-    bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
-
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
-
-    void EnableOverlayBundle(const std::string &bundleName);
 
     ErrCode SaveInternalOverlayModuleState(const OverlayModuleInfo &overlayModuleInfo,
         InnerBundleInfo &innerBundleInfo);
 
     ErrCode SaveExternalOverlayModuleState(const OverlayModuleInfo &overlayModuleInfo,
-        const std::string &targetBundleName, int32_t userId, InnerBundleInfo &innerBundleInfo);
+        const InnerBundleInfo &targetInnerBundleInfo, int32_t userId, InnerBundleInfo &innerBundleInfo);
 
     void ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
         const std::string &modulePackage, InnerBundleInfo &oldInfo);
-
-    void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
-
-    void ResetExternalOverlayModuleState(const std::string &bundleName);
 
     ErrCode GetAllOverlayModuleInfo(const std::string &bundleName, std::vector<OverlayModuleInfo> &overlayModuleInfos,
         int32_t userId);
