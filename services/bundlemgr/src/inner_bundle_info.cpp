@@ -1872,6 +1872,8 @@ std::optional<AbilityInfo> InnerBundleInfo::FindAbilityInfoV9(
             return abilityInfo;
         }
     }
+    APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s",
+        GetBundleName().c_str(), moduleName.c_str(), abilityName.c_str());
     return std::nullopt;
 }
 
@@ -1889,6 +1891,8 @@ ErrCode InnerBundleInfo::FindAbilityInfo(
             }
         }
     }
+    APP_LOGE("bundleName: %{public}s not find moduleName:%{public}s, abilityName:%{public}s, isModuleFind:%{public}d",
+        GetBundleName().c_str(), moduleName.c_str(), abilityName.c_str(), isModuleFind);
     if (isModuleFind) {
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     } else {
@@ -2528,7 +2532,8 @@ bool InnerBundleInfo::GetBundleInfo(int32_t flags, BundleInfo &bundleInfo, int32
 {
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetInnerBundleUserInfo(userId, innerBundleUserInfo)) {
-        APP_LOGE("can not find userId %{public}d when GetBundleInfo", userId);
+        APP_LOGE("can not find userId %{public}d when GetBundleInfo bundleName:%{public}s",
+            userId, GetBundleName().c_str());
         return false;
     }
 

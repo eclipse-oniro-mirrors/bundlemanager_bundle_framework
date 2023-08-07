@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "js_app_control.h"
+#include "js_app_overlay.h"
 
 #include <string>
 

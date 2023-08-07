@@ -2717,8 +2717,15 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    ret = bundleInstallChecker_->CheckAllowEnterpriseBundle(hapVerifyRes);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
     if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
         // need vaild permission
         APP_LOGE("install permission denied");

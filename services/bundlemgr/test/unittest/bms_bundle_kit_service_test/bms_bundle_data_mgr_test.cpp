@@ -2090,7 +2090,6 @@ HWTEST_F(BmsBundleDataMgrTest, UpdateQuickFixInnerBundleInfo_0100, Function | Sm
     GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST3, innerBundleInfo);
     GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
     GetBundleDataMgr()->UpdateRemovable(BUNDLE_TEST3, removable);
-    GetBundleDataMgr()->EnableOverlayBundle(BUNDLE_TEST3);
     GetBundleDataMgr()->UpdatePrivilegeCapability(BUNDLE_TEST3, applicationInfo);
         bool res = GetBundleDataMgr()->UpdateQuickFixInnerBundleInfo(BUNDLE_TEST3, innerBundleInfo);
     EXPECT_EQ(res, true);
