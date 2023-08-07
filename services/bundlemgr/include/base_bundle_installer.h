@@ -560,7 +560,7 @@ private:
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
     void GetCallingEventInfo(EventInfo &eventInfo);
-    void GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos, EventInfo &eventInfo);
+    void GetInstallEventInfo(EventInfo &eventInfo);
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
