@@ -27,6 +27,16 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* INSTALL_TASK = "InstallTask : ";
+constexpr const char* UNINSTALL_TASK = "UninstallTask : ";
+constexpr const char* RECOVER_TASK = "RecoverTask : ";
+constexpr const char* BUNDLE_NAME = "bundleName : ";
+constexpr const char* BUNDLE_FILE_PATH = "bundleFilePath : ";
+constexpr const char* BUNDLE_FILE_PATHS = "bundleFilePaths : ";
+constexpr const char* WHITE_SPACE = " ";
+}  // namespace
+
 BundleInstallerManager::BundleInstallerManager()
 {
     APP_LOGI("create bundle installer manager instance");
@@ -49,7 +59,7 @@ void BundleInstallerManager::CreateInstallTask(
         BundleMemoryGuard memoryGuard;
         installer->Install(bundleFilePath, installParam);
     };
-    AddTask(task);
+    AddTask(task, "InstallTask : bundleFilePath : " + bundleFilePath);
 }
 
 void BundleInstallerManager::CreateRecoverTask(
@@ -64,7 +74,7 @@ void BundleInstallerManager::CreateRecoverTask(
         BundleMemoryGuard memoryGuard;
         installer->Recover(bundleName, installParam);
     };
-    AddTask(task);
+    AddTask(task, "RecoverTask : bundleName : " + bundleName);
 }
 
 void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &bundleFilePaths,
@@ -79,7 +89,11 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
         BundleMemoryGuard memoryGuard;
         installer->Install(bundleFilePaths, installParam);
     };
-    AddTask(task);
+    std::string paths;
+    for (const auto &bundleFilePath : bundleFilePaths) {
+        paths.append(bundleFilePath).append(WHITE_SPACE);
+    }
+    AddTask(task, "InstallTask : bundleFilePaths : " + paths);
 }
 
 void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bundleName,
@@ -95,7 +109,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
         BundleMemoryGuard memoryGuard;
         installer->InstallByBundleName(bundleName, installParam);
     };
-    AddTask(task);
+    AddTask(task, "InstallTask : bundleName : " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(
@@ -110,7 +124,7 @@ void BundleInstallerManager::CreateUninstallTask(
         BundleMemoryGuard memoryGuard;
         installer->Uninstall(bundleName, installParam);
     };
-    AddTask(task);
+    AddTask(task, "UninstallTask : bundleName : " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, const std::string &modulePackage,
@@ -125,7 +139,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
         BundleMemoryGuard memoryGuard;
         installer->Uninstall(bundleName, modulePackage, installParam);
     };
-    AddTask(task);
+    AddTask(task, "UninstallTask : bundleName : " + bundleName);
 }
 
 void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstallParam,
@@ -140,7 +154,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
         BundleMemoryGuard memoryGuard;
         installer->Uninstall(uninstallParam);
     };
-    AddTask(task);
+    AddTask(task, "UninstallTask : bundleName : " + uninstallParam.bundleName);
 }
 
 std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const sptr<IStatusReceiver> &statusReceiver)
@@ -151,10 +165,10 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
     return installer;
 }
 
-void BundleInstallerManager::AddTask(const ThreadPoolTask &task)
+void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
-    APP_LOGD("submit task");
-    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(static_cast<int>(ffrt::qos_default::qos_user_initiated)));
+    APP_LOGD("submit task, taskName : %{public}s", taskName.c_str());
+    ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_user_initiated).name(taskName.c_str()));
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
