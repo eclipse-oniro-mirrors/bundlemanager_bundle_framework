@@ -38,6 +38,7 @@ static napi_value BundleInstallerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("install", Install),
         DECLARE_NAPI_FUNCTION("recover", Recover),
         DECLARE_NAPI_FUNCTION("uninstall", Uninstall),
+        DECLARE_NAPI_FUNCTION("updateBundleForSelf", UpdateBundleForSelf),
     };
 
     NAPI_CALL(env,

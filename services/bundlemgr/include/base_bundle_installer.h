@@ -600,6 +600,8 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, const InnerBundleInfo &oldInfo);
     ErrCode UninstallBundleFromBmsExtension(const std::string &bundleName);
     ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
+    ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

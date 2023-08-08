@@ -52,6 +52,7 @@
 #include "datetime_ex.h"
 #include "installd_client.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -652,8 +653,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         installParam.installFlag, userId_, isAppExist_);
     bool isFreeInstallFlag = (installParam.installFlag == InstallFlag::FREE_INSTALL);
     CheckEnableRemovable(newInfos, oldInfo, userId_, isFreeInstallFlag, isAppExist_);
-
     ErrCode result = ERR_OK;
+    // check MDM self update
+    result = CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, isAppExist_);
+    CHECK_RESULT(result, "update MDM app failed %{public}d");
+
     if (isAppExist_) {
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("old bundle info is shared package");
@@ -2832,6 +2836,35 @@ ErrCode BaseBundleInstaller::CheckProxyDatas(
         ErrCode ret = bundleInstallChecker_->CheckProxyDatas(info.second);
         if (ret != ERR_OK) {
             return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &installParam,
+    InnerBundleInfo &oldInfo, const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist)
+{
+    if (!installParam.isSelfUpdate) {
+        return ERR_OK;
+    }
+    if (!OHOS::system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false)) {
+        APP_LOGE("not enterprise device");
+        return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+    }
+    if (!isAppExist) {
+        APP_LOGE("not self update");
+        return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME;
+    }
+    std::string appDistributionType = oldInfo.GetAppDistributionType();
+    if (appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
+        APP_LOGE("not mdm app");
+        return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM;
+    }
+    std::string bundleName = oldInfo.GetBundleName();
+    for (const auto &info : newInfos) {
+        if (bundleName != info.second.GetBundleName()) {
+            APP_LOGE("bundleName %{public}s not same", info.second.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME;
         }
     }
     return ERR_OK;

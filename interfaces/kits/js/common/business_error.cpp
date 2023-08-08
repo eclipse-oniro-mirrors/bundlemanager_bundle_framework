@@ -101,6 +101,10 @@ constexpr const char* ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG =
     "The input source file is not ZIP format or damaged.";
 constexpr const char* ERR_MSG_CODE_SIGNATURE_FAILED =
     "The specified code-signature file or corresponding module are incorrect.";
+constexpr const char* ERR_MSG_SELF_UPDATE_NOT_MDM =
+    "Failed to install the HAP because the distribution type of caller application is not enterprise_mdm.";
+constexpr const char* ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME =
+    "Failed to install the HAP because the bundleName is different from the bundleName of the caller application.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -151,7 +155,9 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_DISALLOW_UNINSTALL, ERR_MSG_DISALLOW_UNINSTALL },
     { ERROR_INSTALL_ALREADY_EXIST, ERR_MSG_ALREADY_EXIST },
     { ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED, ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED_MSG },
-    { ERROR_INSTALL_CODE_SIGNATURE_FAILED, ERR_MSG_CODE_SIGNATURE_FAILED }
+    { ERROR_INSTALL_CODE_SIGNATURE_FAILED, ERR_MSG_CODE_SIGNATURE_FAILED },
+    { ERROR_INSTALL_SELF_UPDATE_NOT_MDM, ERR_MSG_SELF_UPDATE_NOT_MDM},
+    { ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME},
 };
 } // namespace
 
