@@ -27,16 +27,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-constexpr const char* INSTALL_TASK = "InstallTask : ";
-constexpr const char* UNINSTALL_TASK = "UninstallTask : ";
-constexpr const char* RECOVER_TASK = "RecoverTask : ";
-constexpr const char* BUNDLE_NAME = "bundleName : ";
-constexpr const char* BUNDLE_FILE_PATH = "bundleFilePath : ";
-constexpr const char* BUNDLE_FILE_PATHS = "bundleFilePaths : ";
-constexpr const char* WHITE_SPACE = " ";
-}  // namespace
-
 BundleInstallerManager::BundleInstallerManager()
 {
     APP_LOGI("create bundle installer manager instance");
@@ -91,7 +81,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     };
     std::string paths;
     for (const auto &bundleFilePath : bundleFilePaths) {
-        paths.append(bundleFilePath).append(WHITE_SPACE);
+        paths.append(bundleFilePath).append(" ");
     }
     AddTask(task, "InstallTask : bundleFilePaths : " + paths);
 }
@@ -167,7 +157,7 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
-    APP_LOGD("submit task, taskName : %{public}s", taskName.c_str());
+    APP_LOGI("submit task, taskName : %{public}s", taskName.c_str());
     ffrt::submit(task, {}, {}, ffrt::task_attr().qos(ffrt::qos_user_initiated).name(taskName.c_str()));
 }
 }  // namespace AppExecFwk
