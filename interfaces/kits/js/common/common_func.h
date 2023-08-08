@@ -22,6 +22,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "launcher_ability_info.h"
+#include "napi/common.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -149,7 +150,8 @@ static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
                                  const std::string &methodName,
                                  void (*execFunc)(napi_env, void *),
-                                 void (*completeFunc)(napi_env, napi_status, void *))
+                                 void (*completeFunc)(napi_env, napi_status, void *),
+                                 napi_qos_t qos = napi_qos_default)
 {
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -166,7 +168,11 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource, execFunc, completeFunc,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    if (qos == napi_qos_default) {
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    } else {
+        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, qos));
+    }
     return promise;
 }
 

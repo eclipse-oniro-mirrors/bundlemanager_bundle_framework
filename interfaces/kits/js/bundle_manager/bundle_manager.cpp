@@ -567,7 +567,8 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete);
+        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetApplicationInfo done.");
     return promise;
@@ -890,7 +891,8 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
+        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call QueryAbilityInfos done");
     return promise;
@@ -1064,7 +1066,8 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtensionCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete);
+        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call QueryExtensionInfos done");
     return promise;
@@ -1194,7 +1197,8 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityLabelCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
+        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
     return promise;
@@ -1293,7 +1297,8 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
+        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
@@ -1859,7 +1864,8 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
-        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
+        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("napi call GetLaunchWantForBundle done");
     return promise;
@@ -2870,7 +2876,8 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
+        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfo done.");
     return promise;
@@ -2977,7 +2984,8 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
@@ -3183,7 +3191,7 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
-        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
+        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete, napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetSharedBundleInfo done.");
     return promise;
