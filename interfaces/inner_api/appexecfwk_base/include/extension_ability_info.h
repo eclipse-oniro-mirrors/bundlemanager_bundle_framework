@@ -54,6 +54,7 @@ enum class ExtensionAbilityType {
     THUMBNAIL = 13,
     PREVIEW = 14,
     PRINT = 15,
+    SHARE = 16,
     PUSH = 17,
     DRIVER = 18,
     ACTION = 19,
