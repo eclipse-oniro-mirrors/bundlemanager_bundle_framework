@@ -1004,8 +1004,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0001, Function | Small
 {
     BaseBundleInstaller baseBundleInstaller;
     EventInfo eventInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    baseBundleInstaller.GetInstallEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.fingerprint, Constants::EMPTY_STRING);
 }
 
@@ -1019,8 +1018,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0002, Function | Small
     BaseBundleInstaller baseBundleInstaller;
     baseBundleInstaller.dataMgr_ = std::make_shared<BundleDataMgr>();;
     EventInfo eventInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    baseBundleInstaller.GetInstallEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.fingerprint, Constants::EMPTY_STRING);
 }
 
@@ -1051,8 +1049,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0003, Function | Small
 
     baseBundleInstaller.bundleName_ = BUNDLE_NAME;
     EventInfo eventInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
-    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    baseBundleInstaller.GetInstallEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
 
     baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
@@ -1085,13 +1082,11 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetInstallEventInfo_0004, Function | Small
 
     baseBundleInstaller.bundleName_ = BUNDLE_NAME;
     EventInfo eventInfo;
-    std::unordered_map<std::string, InnerBundleInfo> newInfos;
     InnerModuleInfo moduleInfo;
     moduleInfo.hapPath = "xxxx.hap";
     moduleInfo.hashValue = "111";
     info.InsertInnerModuleInfo(BUNDLE_NAME, moduleInfo);
-    newInfos.emplace(BUNDLE_NAME, info);
-    baseBundleInstaller.GetInstallEventInfo(newInfos, eventInfo);
+    baseBundleInstaller.GetInstallEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.appDistributionType, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY);
     if (!eventInfo.filePath.empty()) {
         EXPECT_EQ(eventInfo.filePath[0], moduleInfo.hapPath);

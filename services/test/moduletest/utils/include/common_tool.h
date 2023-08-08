@@ -24,8 +24,8 @@ namespace OHOS {
 namespace AppExecFwk {
 class CommonTool {
 public:
-    int32_t ExcuteCmd(const std::string &cmd, std::vector<std::string> &resvec, const int size);
-    bool ExcuteCmd(const std::string &cmd);
+    int32_t ExecuteCmd(const std::string &cmd, std::vector<std::string> &resvec, const int size);
+    bool ExecuteCmd(const std::string &cmd);
     bool CheckFilePathISExist(const std::string &filePath);
     bool CopyTmpFileToSystemPath(const std::string &srcPath, const std::string &dstPath);
     bool DeleteFile(const std::string &filePath);

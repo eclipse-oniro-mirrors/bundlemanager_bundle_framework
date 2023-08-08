@@ -943,7 +943,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
-    GetInstallEventInfo(newInfos, sysEventInfo_);
+    GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
@@ -1438,6 +1438,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
+            GetInstallEventInfo(sysEventInfo_);
             return ERR_OK;
         }
     }
@@ -3482,8 +3483,7 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
     eventInfo.callingAppId = bundleInfo.appId;
 }
 
-void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-    EventInfo &eventInfo)
+void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
     InnerBundleInfo info;
@@ -3497,11 +3497,9 @@ void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, In
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
-    for (const auto &newInfo : newInfos) {
-        for (const auto &innerModuleInfo : newInfo.second.GetInnerModuleInfos()) {
-            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
-            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
-        }
+    for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
     }
 }
 
