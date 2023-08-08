@@ -20,6 +20,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_manager.h"
+#include "bundle_manager_sync.h"
 
 namespace OHOS {
 namespace AppExecFwk {

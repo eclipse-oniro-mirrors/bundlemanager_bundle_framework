@@ -291,7 +291,7 @@ int32_t BmsInstallSystemTest::ExcuteMaintainCmd(const std::string &cmd, std::vec
 {
     CommonTool commonTool;
     int32_t bufSize = 1024;
-    return commonTool.ExcuteCmd(cmd, cmdRes, bufSize);
+    return commonTool.ExecuteCmd(cmd, cmdRes, bufSize);
 }
 
 void BmsInstallSystemTest::CheckBundleInfo(const std::string &version, const std::string &bundleName) const
