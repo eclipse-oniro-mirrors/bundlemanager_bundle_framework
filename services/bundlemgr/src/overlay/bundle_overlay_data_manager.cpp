@@ -94,8 +94,6 @@ ErrCode OverlayDataMgr::UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo
     InnerBundleInfo &targetInnerBundleInfo)
 {
     APP_LOGD("start to update external overlay info");
-    std::string targetBundleName = newInfo.GetTargetBundleName();
-
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
