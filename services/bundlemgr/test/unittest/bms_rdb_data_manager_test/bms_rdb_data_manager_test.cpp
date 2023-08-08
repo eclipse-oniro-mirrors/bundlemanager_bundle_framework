@@ -56,7 +56,7 @@ public:
     static void TearDownTestCase();
     void SetUp();
     void TearDown();
-    std::unique_ptr<RdbDataManager> OpenDbAndTable();
+    std::shared_ptr<RdbDataManager> OpenDbAndTable();
     void CloseDb();
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -79,13 +79,13 @@ void BmsRdbDataManagerTest::SetUp()
 void BmsRdbDataManagerTest::TearDown()
 {}
 
-std::unique_ptr<RdbDataManager> BmsRdbDataManagerTest::OpenDbAndTable()
+std::shared_ptr<RdbDataManager> BmsRdbDataManagerTest::OpenDbAndTable()
 {
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbPath = DB_PATH;
     bmsRdbConfig.dbName = DB_NAME;
     bmsRdbConfig.tableName = TABLE_NAME;
-    auto rdbDataManager = std::make_unique<RdbDataManager>(bmsRdbConfig);
+    auto rdbDataManager = std::make_shared<RdbDataManager>(bmsRdbConfig);
     rdbDataManager->CreateTable();
     return rdbDataManager;
 }
