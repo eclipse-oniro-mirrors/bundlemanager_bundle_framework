@@ -210,7 +210,19 @@
     <option name="push" value="testOverlay/internal/test2/priority_0.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
     <option name="push" value="testOverlay/internal/test2/priority_101.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
     <option name="push" value="testOverlay/internal/test3/internalOverlayTest3.hsp -> /data/test/internalOverlayTest/test3/" src="res" />
+    <option name="push" value="testOverlay/internal/test4/internalOverlayTest4.hsp -> /data/test/internalOverlayTest/test4/" src="res" />
+    <option name="push" value="testOverlay/internal/test5/internalOverlayTest5.hsp -> /data/test/internalOverlayTest/test5/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test6/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test7/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test8/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test9/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test10/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test12/" src="res" />
+    <option name="push" value="testOverlay/internal/test12/internalOverlayTest12.hsp -> /data/test/internalOverlayTest/test12/" src="res" />
+    <option name="push" value="testOverlay/internal/entry_hap.hap -> /data/test/internalOverlayTest/" src="res" />
+    <option name="push" value="testOverlay/internal/higher_version_entry_hap.hap -> /data/test/internalOverlayTest/" src="res" />
+    <option name="push" value="testOverlay/internal/feature_hap.hap -> /data/test/internalOverlayTest/" src="res" />
+    <option name="push" value="testOverlay/internal/higher_version_feature_hap.hap -> /data/test/internalOverlayTest/" src="res" />
     </preparer>
   </target>
-
 </configuration>
