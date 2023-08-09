@@ -18,6 +18,7 @@
             "phone",
             "tablet"
         ],
-        "targetModuleName":"entry"
+        "targetModuleName":"entry",
+        "targetPriority":50
     }
 }
