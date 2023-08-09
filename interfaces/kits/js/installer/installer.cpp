@@ -192,12 +192,6 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetBundleInstallerSync called.");
-    NapiArg args(env, info);
-    if (!args.Init(FIRST_PARAM, FIRST_PARAM)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     napi_value m_classBundleInstaller = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
