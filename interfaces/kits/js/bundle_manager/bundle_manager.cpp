@@ -2208,6 +2208,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::SHARE), &nShare));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARE", nShare));
 
+    napi_value nAction;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::ACTION), &nAction));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACTION", nAction));
+
     napi_value nAuthorization;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION), &nAuthorization));

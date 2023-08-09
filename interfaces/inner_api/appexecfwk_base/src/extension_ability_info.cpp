@@ -71,6 +71,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "share", ExtensionAbilityType::SHARE },
     { "push", ExtensionAbilityType::PUSH },
     { "driver", ExtensionAbilityType::DRIVER },
+    { "action", ExtensionAbilityType::ACTION },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
     { "ui", ExtensionAbilityType::UI },
     { "sysDialog/userAuth", ExtensionAbilityType::SYSDIALOG_USERAUTH },
