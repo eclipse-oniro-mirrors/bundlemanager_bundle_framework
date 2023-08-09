@@ -123,6 +123,8 @@ public:
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) override;
     virtual ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) override;
+    bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver) override;
 
 private:
     /**
@@ -188,7 +190,6 @@ private:
 
     void HandleCreateStreamInstaller(Parcel &data, Parcel &reply);
     void HandleDestoryBundleStreamInstaller(Parcel &data, Parcel &reply);
-
 private:
     InstallParam CheckInstallParam(const InstallParam &installParam);
     bool IsPermissionVaild(const InstallParam &installParam, InstallParam &installParam2);

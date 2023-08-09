@@ -150,6 +150,7 @@ constexpr const char* PERMISSION_MANAGE_DISPOSED_APP_STATUS = "ohos.permission.M
 constexpr const char* PERMISSION_GET_DEFAULT_APPLICATION = "ohos.permission.GET_DEFAULT_APPLICATION";
 constexpr const char* PERMISSION_SET_DEFAULT_APPLICATION = "ohos.permission.SET_DEFAULT_APPLICATION";
 constexpr const char* PERMISSION_GET_INSTALLED_BUNDLE_LIST = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
+constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
 // install list permissions file
@@ -282,6 +283,9 @@ constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";
 constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
 constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
+
+// system param
+const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

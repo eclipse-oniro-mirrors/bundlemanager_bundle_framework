@@ -652,5 +652,26 @@ InstallParam BundleInstallerHost::CheckInstallParam(const InstallParam &installP
     return installParam;
 }
 
+bool BundleInstallerHost::UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths,
+    const InstallParam &installParam, const sptr<IStatusReceiver> &statusReceiver)
+{
+    if (!CheckBundleInstallerManager(statusReceiver)) {
+        APP_LOGE("statusReceiver invalid");
+        return false;
+    }
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_SELF_BUNDLE)) {
+        APP_LOGE("install permission denied");
+        statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
+        return false;
+    }
+    manager_->CreateInstallTask(bundleFilePaths, installParam, statusReceiver);
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

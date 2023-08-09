@@ -64,6 +64,7 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         std::string signatureFilePath = Str16ToStr8(parcel.ReadString16());
         verifyCodeParams.emplace(moduleName, signatureFilePath);
     }
+    isSelfUpdate = parcel.ReadBool();
     return true;
 }
 
@@ -104,6 +105,7 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.first));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.second));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSelfUpdate);
     return true;
 }
 
