@@ -25,7 +25,6 @@ group("bms_target") {
     "interfaces/kits/native/bundle:bundle_ndk",
     "sa_profile:appexecfwk_sa_profile",
     "services/bundlemgr:bms_target",
-    "services/bundlemgr/etc:bms_etc",
   ]
   if (bundle_framework_graphics) {
     deps += [ "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics" ]

@@ -327,7 +327,7 @@ bool BundleInstallerHost::Install(
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
@@ -353,7 +353,7 @@ bool BundleInstallerHost::Install(const std::vector<std::string> &bundleFilePath
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
@@ -379,16 +379,12 @@ bool BundleInstallerHost::Recover(
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
-        APP_LOGE("install permission denied");
+    if (!BundlePermissionMgr::VerifyRecoverPermission()) {
+        APP_LOGE("Recover permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
@@ -404,12 +400,11 @@ bool BundleInstallerHost::Uninstall(
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
         APP_LOGE("uninstall permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
         return false;
@@ -426,12 +421,11 @@ bool BundleInstallerHost::Uninstall(const std::string &bundleName, const std::st
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp(Constants::API_VERSION_NINE)) {
-        APP_LOGE("install permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
         APP_LOGE("uninstall permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
         return false;
@@ -449,12 +443,11 @@ bool BundleInstallerHost::Uninstall(const UninstallParam &uninstallParam,
         return false;
     }
     if (!BundlePermissionMgr::VerifySystemApp()) {
-        APP_LOGE("Uninstall permission denied");
+        APP_LOGE("non-system app calling system api");
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED, "");
         return false;
     }
-    if (!BundlePermissionMgr::IsSelfCalling() &&
-        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE)) {
+    if (!BundlePermissionMgr::VerifyUninstallPermission()) {
         APP_LOGE("uninstall permission denied");
         statusReceiver->OnFinished(ERR_APPEXECFWK_UNINSTALL_PERMISSION_DENIED, "");
         return false;
