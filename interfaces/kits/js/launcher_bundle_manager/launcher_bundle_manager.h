@@ -50,8 +50,10 @@ struct GetShortcutInfoCallbackInfo : public BaseCallbackInfo {
 };
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info);
+napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info);
+napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info);
 }
 }
 #endif
