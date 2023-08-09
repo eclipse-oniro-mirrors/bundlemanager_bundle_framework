@@ -36,7 +36,6 @@ uint32_t GetU32Data(const char* ptr)
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
 #ifdef ON_64BIT_SYSTEM
-    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
@@ -46,6 +45,7 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     MessageParcel reply;
     MessageOption option;
     InstalldHost installdHost;
+    DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     installdHost.OnRemoteRequest(code, datas, reply, option);
 #endif
     return true;
