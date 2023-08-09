@@ -79,7 +79,7 @@ int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<Permiss
     #endif
 }
 
-int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
+int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, uint32_t flag)
 {
     return 1;
 }
@@ -113,7 +113,7 @@ int AccessTokenKit::GetReqPermissions(AccessTokenID tokenID, std::vector<Permiss
     return 0;
 }
 
-int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, int flag)
+int AccessTokenKit::GrantPermission(AccessTokenID tokenID, const std::string& permissionName, uint32_t flag)
 {
     return 0;
 }
