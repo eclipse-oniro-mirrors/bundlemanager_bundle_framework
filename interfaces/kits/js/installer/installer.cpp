@@ -36,6 +36,7 @@ namespace AppExecFwk {
 namespace {
 // resource name
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
+const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
@@ -187,6 +188,37 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         GetBundleInstallerCompleted);
     callbackPtr.release();
     return promise;
+}
+
+napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInstallerSync called.");
+    NapiArg args(env, info);
+    if (!args.Init(FIRST_PARAM, FIRST_PARAM)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    napi_value m_classBundleInstaller = nullptr;
+    NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
+        &m_classBundleInstaller));
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    if (!g_isSystemApp && !iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC, INSTALL_PERMISSION);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    g_isSystemApp = true;
+    napi_value nBundleInstaller = nullptr;
+    NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
+    APP_LOGD("call GetBundleInstallerSync done.");
+    return nBundleInstaller;
 }
 
 static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)

@@ -68,6 +68,7 @@ struct AsyncGetBundleInstallerCallbackInfo {
 };
 
 napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
+napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info);
 napi_value Install(napi_env env, napi_callback_info info);
 napi_value Recover(napi_env env, napi_callback_info info);
 napi_value Uninstall(napi_env env, napi_callback_info info);

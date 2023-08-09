@@ -30,6 +30,7 @@ static napi_value BundleInstallerExport(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
+        DECLARE_NAPI_FUNCTION("getBundleInstallerSync", GetBundleInstallerSync),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
