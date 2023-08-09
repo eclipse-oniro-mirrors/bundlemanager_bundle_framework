@@ -20,6 +20,7 @@
 #include "bundle_parser.h"
 #include "ipc_skeleton.h"
 #include "parameter.h"
+#include "privacy_kit.h"
 #include "tokenid_kit.h"
 
 namespace OHOS {
@@ -884,6 +885,17 @@ bool BundlePermissionMgr::VerifyRecoverPermission()
         return false;
     }
     return true;
+}
+
+void BundlePermissionMgr::AddPermissionUsedRecord(
+    const std::string &permission, int32_t successCount, int32_t failCount)
+{
+    APP_LOGD("AddPermissionUsedRecord permission:%{public}s", permission.c_str());
+    AccessToken::AccessTokenID callerToken = IPCSkeleton::GetCallingTokenID();
+    AccessToken::ATokenTypeEnum tokenType = AccessToken::AccessTokenKit::GetTokenTypeFlag(callerToken);
+    if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
+        AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission, successCount, failCount);
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

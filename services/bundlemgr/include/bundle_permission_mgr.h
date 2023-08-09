@@ -112,6 +112,8 @@ public:
 
     static bool VerifyRecoverPermission();
 
+    static void AddPermissionUsedRecord(const std::string &permission, int32_t successCount, int32_t failCount);
+
 private:
     static std::vector<Security::AccessToken::PermissionDef> GetPermissionDefList(
         const InnerBundleInfo &innerBundleInfo);

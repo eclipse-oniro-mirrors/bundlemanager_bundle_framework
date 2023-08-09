@@ -62,6 +62,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -197,6 +198,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -334,6 +336,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
