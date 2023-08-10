@@ -490,8 +490,8 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nWant = nullptr;
-    CommonFunc::ConvertWantInfo(env, nWant, disposedWant);
     NAPI_CALL(env, napi_create_object(env, &nWant));
+    CommonFunc::ConvertWantInfo(env, nWant, disposedWant);
     APP_LOGED("call GetDisposedStatusSync done.");
     return nWant;
 }
