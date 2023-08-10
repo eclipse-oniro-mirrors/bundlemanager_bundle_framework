@@ -1166,14 +1166,8 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto argc = args.GetMaxArgc();
-    APP_LOGD("the number of argc is %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
-        APP_LOGE("the params number is incorrect");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
-    callbackPtr->option = InstallOption::INSTALL;
+    callbackPtr->option = InstallOption::UPDATE_BUNDLE_FOR_SELF;
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
