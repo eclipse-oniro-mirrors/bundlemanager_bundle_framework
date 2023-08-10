@@ -69,7 +69,7 @@ public:
      */
     virtual bool Uninstall(const std::string &bundleName, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;
-    
+
     virtual bool Uninstall(const UninstallParam &uninstallParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;
     /**
@@ -120,6 +120,13 @@ public:
     virtual bool DestoryBundleStreamInstaller(uint32_t streamInstallerId) = 0;
     virtual ErrCode StreamInstall(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
         const sptr<IStatusReceiver> &statusReceiver) = 0;
+
+    virtual bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam,
+        const sptr<IStatusReceiver> &statusReceiver)
+    {
+        return true;
+    }
+
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

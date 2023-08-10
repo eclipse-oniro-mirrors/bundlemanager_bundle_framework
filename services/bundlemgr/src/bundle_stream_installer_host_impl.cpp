@@ -229,7 +229,13 @@ bool BundleStreamInstallerHostImpl::Install()
         pathVec.emplace_back(tempDir_);
     }
     installParam_.withCopyHaps = true;
-    auto res = installer->Install(pathVec, installParam_, receiver_);
+
+    bool res;
+    if (installParam_.isSelfUpdate) {
+        res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
+    } else {
+        res = installer->Install(pathVec, installParam_, receiver_);
+    }
     if (!res) {
         APP_LOGE("install bundle failed");
         return false;

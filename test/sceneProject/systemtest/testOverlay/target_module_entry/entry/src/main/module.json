@@ -1,0 +1,22 @@
+{
+    "module": {
+        "installaitonFree": false,
+        "mainElement": "MainAbility",
+        "name": "entry",
+        "pages": "$profile:main_pages",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
+        "type": "entry",
+        "virtualMachine": "ark",
+        "compressNativeLibs": true,
+        "libIsolation": true,
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "2in1",
+            "default",
+            "phone",
+            "tablet"
+        ]
+    }
+}

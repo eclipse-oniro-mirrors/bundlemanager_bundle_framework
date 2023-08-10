@@ -36,9 +36,11 @@ namespace AppExecFwk {
 namespace {
 // resource name
 const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER = "GetBundleInstaller";
+const std::string RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC = "GetBundleInstallerSync";
 const std::string RESOURCE_NAME_OF_INSTALL = "Install";
 const std::string RESOURCE_NAME_OF_UNINSTALL = "Uninstall";
 const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
+const std::string RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
 const std::string EMPTY_STRING = "";
 // install message
 constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
@@ -186,6 +188,37 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
         GetBundleInstallerCompleted);
     callbackPtr.release();
     return promise;
+}
+
+napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetBundleInstallerSync called.");
+    NapiArg args(env, info);
+    if (!args.Init(FIRST_PARAM, FIRST_PARAM)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    napi_value m_classBundleInstaller = nullptr;
+    NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
+        &m_classBundleInstaller));
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    if (!g_isSystemApp && !iBundleMgr->VerifySystemApi(Constants::INVALID_API_VERSION)) {
+        APP_LOGE("non-system app calling system api");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_NOT_SYSTEM_APP, RESOURCE_NAME_OF_GET_BUNDLE_INSTALLER_SYNC, INSTALL_PERMISSION);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    g_isSystemApp = true;
+    napi_value nBundleInstaller = nullptr;
+    NAPI_CALL(env, napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &nBundleInstaller));
+    APP_LOGD("call GetBundleInstallerSync done.");
+    return nBundleInstaller;
 }
 
 static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
@@ -346,7 +379,9 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_UNINSTALL_DISALLOWED, ERROR_DISALLOW_UNINSTALL },
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED, ERROR_INSTALL_CODE_SIGNATURE_FAILED },
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
-        { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST}
+        { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST},
+        { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_NOT_MDM, ERROR_INSTALL_SELF_UPDATE_NOT_MDM},
+        { IStatusReceiver::ERR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED},
     };
 }
 
@@ -822,6 +857,8 @@ static std::string GetFunctionName(const InstallOption &option)
         return RESOURCE_NAME_OF_RECOVER;
     } else if (option == InstallOption::UNINSTALL) {
         return RESOURCE_NAME_OF_UNINSTALL;
+    } else if (option == InstallOption::UPDATE_BUNDLE_FOR_SELF) {
+        return RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF;
     }
     return EMPTY_STRING;
 }
@@ -1114,6 +1151,72 @@ napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
     napi_value jsthis = nullptr;
     NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
     return jsthis;
+}
+
+/**
+ * Promise and async callback
+ */
+napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("UpdateBundleForSelf called");
+    // obtain arguments of install interface
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("init param failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    auto argc = args.GetMaxArgc();
+    APP_LOGD("the number of argc is %{public}zu", argc);
+    if (argc < ARGS_SIZE_TWO) {
+        APP_LOGE("the params number is incorrect");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
+    callbackPtr->option = InstallOption::INSTALL;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseStringArray(env, callbackPtr->hapFiles, args[i])) {
+                APP_LOGE("Flags %{public}s invalid!", callbackPtr->bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
+            if (valueType == napi_object && !ParseInstallParam(env, args[i], callbackPtr->installParam)) {
+                APP_LOGE("Parse installParam failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+                return nullptr;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &callbackPtr->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PARAMETERS, CORRESPONDING_TYPE);
+            return nullptr;
+        }
+    }
+    if (!CheckInstallParam(env, callbackPtr->installParam)) {
+        return nullptr;
+    }
+    if (callbackPtr->hapFiles.empty() && !callbackPtr->installParam.verifyCodeParams.empty()) {
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, HAPS_FILE_NEEDED);
+        return nullptr;
+    }
+    callbackPtr->installParam.isSelfUpdate = true;
+    auto promise = CommonFunc::AsyncCallNativeMethod(env, callbackPtr.get(), RESOURCE_NAME_OF_INSTALL, InstallExecuter,
+        OperationCompleted);
+    callbackPtr.release();
+    return promise;
 }
 } // AppExecFwk
 } // OHOS

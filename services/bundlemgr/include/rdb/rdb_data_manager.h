@@ -21,11 +21,10 @@
 #include "bms_rdb_config.h"
 #include "bms_rdb_open_callback.h"
 #include "rdb_helper.h"
-#include "serial_queue.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class RdbDataManager {
+class RdbDataManager : public std::enable_shared_from_this<RdbDataManager> {
 public:
     RdbDataManager(const BmsRdbConfig &bmsRdbConfig);
     ~RdbDataManager();
@@ -51,8 +50,6 @@ private:
     std::shared_ptr<NativeRdb::RdbStore> GetRdbStore();
     std::mutex rdbMutex_;
     std::shared_ptr<NativeRdb::RdbStore> rdbStore_;
-    std::mutex taskMutex_;
-    std::shared_ptr<SerialQueue> serialQueue_;
 
     BmsRdbConfig bmsRdbConfig_;
 };

@@ -105,7 +105,7 @@ private:
      */
     std::shared_ptr<BundleInstaller> CreateInstaller(const sptr<IStatusReceiver> &statusReceiver);
 
-    void AddTask(const ThreadPoolTask &task);
+    void AddTask(const ThreadPoolTask &task, const std::string &taskName);
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 };

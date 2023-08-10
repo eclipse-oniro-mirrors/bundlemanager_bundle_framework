@@ -54,8 +54,8 @@ public:
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
         g_installedHapNum++;
-        APP_LOGD("OnFinished::resultCode:(%{public}d) resultMsg:(%{public}s).",
-            resultCode, resultMsg.c_str());
+        APP_LOGI("OnFinished, resultCode : %{public}d, resultMsg : %{public}s, count : %{public}u",
+            resultCode, resultMsg.c_str(), g_installedHapNum.load());
         if (static_cast<int32_t>(g_installedHapNum) >= totalHapNum_ && bundlePromise_ != nullptr) {
             bundlePromise_->NotifyAllTasksExecuteFinished();
         }
@@ -69,14 +69,14 @@ void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
-    APP_LOGD("CreateNewUser user(%{public}d) start.", userId);
+    APP_LOGI("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
     CheckInitialUser();
     BeforeCreateNewUser(userId);
     OnCreateNewUser(userId);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
-    APP_LOGD("CreateNewUser end userId: (%{public}d)", userId);
+    APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
 }
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
@@ -125,6 +125,7 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
     }
     if (static_cast<int32_t>(g_installedHapNum) < totalHapNum) {
         bundlePromise->WaitForAllTasksExecute();
+        APP_LOGI("OnCreateNewUser wait complete");
     }
     IPCSkeleton::SetCallingIdentity(identity);
 }
