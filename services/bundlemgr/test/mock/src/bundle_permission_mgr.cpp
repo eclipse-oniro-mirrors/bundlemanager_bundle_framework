@@ -330,5 +330,10 @@ bool BundlePermissionMgr::GrantPermission(const Security::AccessToken::AccessTok
 {
     return true;
 }
+
+void BundlePermissionMgr::AddPermissionUsedRecord(
+    const std::string &permission, int32_t successCount, int32_t failCount)
+{
+}
 } // AppExecFwk
 } // OHOS
