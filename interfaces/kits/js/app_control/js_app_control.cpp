@@ -43,7 +43,6 @@ const std::string GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 const std::string APP_ID = "appId";
 const std::string DISPOSED_WANT = "disposedWant";
 }
-#define APP_LOGED APP_LOGE
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
     auto bundleMgr = CommonFunc::GetBundleMgr();
@@ -139,7 +138,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 
 napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("begin to SetDisposedStatus");
+    APP_LOGD("begin to SetDisposedStatus");
     NapiArg args(env, info);
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
@@ -172,7 +171,7 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGED("SetDisposedStatus extra arg ignored");
+                APP_LOGD("SetDisposedStatus extra arg ignored");
             }
         } else {
             APP_LOGE("SetDisposedStatus arg err!");
@@ -183,13 +182,13 @@ napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "SetDisposedStatus", SetDisposedStatusExec, SetDisposedStatusComplete);
     callbackPtr.release();
-    APP_LOGED("call SetDisposedStatus done.");
+    APP_LOGD("call SetDisposedStatus done.");
     return promise;
 }
 
 napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("begin to SetDisposedStatusSync");
+    APP_LOGD("begin to SetDisposedStatusSync");
     NapiArg args(env, info);
     napi_value nRet = nullptr;
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
@@ -230,7 +229,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
-    APP_LOGED("call SetDisposedStatusSync done.");
+    APP_LOGD("call SetDisposedStatusSync done.");
     return nRet;
 }
 
@@ -280,7 +279,7 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
 
 napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("begin to DeleteDisposedStatus.");
+    APP_LOGD("begin to DeleteDisposedStatus.");
     NapiArg args(env, info);
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
@@ -309,7 +308,7 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGED("DeleteDisposedStatus extra arg ignored");
+                APP_LOGD("DeleteDisposedStatus extra arg ignored");
             }
         } else {
             APP_LOGE("DeleteDisposedStatus arg err!");
@@ -320,13 +319,13 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "DeleteDisposedStatus", DeleteDisposedStatusExec, DeleteDisposedStatusComplete);
     callbackPtr.release();
-    APP_LOGED("call DeleteDisposedStatus done.");
+    APP_LOGD("call DeleteDisposedStatus done.");
     return promise;
 }
 
 napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("begin to DeleteDisposedStatusSync.");
+    APP_LOGD("begin to DeleteDisposedStatusSync.");
     NapiArg args(env, info);
     napi_value nRet = nullptr;
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
@@ -360,7 +359,7 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
-    APP_LOGED("call DeleteDisposedStatusSync done.");
+    APP_LOGD("call DeleteDisposedStatusSync done.");
     return nRet;
 }
 
@@ -412,7 +411,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
 
 napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("NAPI GetDisposedStatus called");
+    APP_LOGD("NAPI GetDisposedStatus called");
     NapiArg args(env, info);
     DisposedStatus *asyncCallbackInfo = new (std::nothrow) DisposedStatus(env);
     if (asyncCallbackInfo == nullptr) {
@@ -441,7 +440,7 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             } else {
-                APP_LOGED("GetDisposedStatus extra arg ignored");
+                APP_LOGD("GetDisposedStatus extra arg ignored");
             }
         } else {
             APP_LOGE("GetDisposedStatus arg err!");
@@ -452,13 +451,13 @@ napi_value GetDisposedStatus(napi_env env, napi_callback_info info)
     auto promise = CommonFunc::AsyncCallNativeMethod<DisposedStatus>(
         env, asyncCallbackInfo, "GetDisposedStatus", GetDisposedStatusExec, GetDisposedStatusComplete);
     callbackPtr.release();
-    APP_LOGED("call GetDisposedStatus done.");
+    APP_LOGD("call GetDisposedStatus done.");
     return promise;
 }
 
 napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 {
-    APP_LOGED("NAPI GetDisposedStatusSync called");
+    APP_LOGD("NAPI GetDisposedStatusSync called");
     NapiArg args(env, info);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
@@ -492,7 +491,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     napi_value nWant = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nWant));
     CommonFunc::ConvertWantInfo(env, nWant, disposedWant);
-    APP_LOGED("call GetDisposedStatusSync done.");
+    APP_LOGD("call GetDisposedStatusSync done.");
     return nWant;
 }
 }
