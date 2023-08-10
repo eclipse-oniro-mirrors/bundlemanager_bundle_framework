@@ -227,6 +227,8 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
+        NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
+        return nRet;
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call SetDisposedStatusSync done.");
@@ -357,6 +359,8 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, DELETE_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
+        NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
+        return nRet;
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call DeleteDisposedStatusSync done.");
