@@ -72,6 +72,8 @@ const std::unordered_map<Security::Verify::AppDistType, std::string> APP_DISTRIB
     { Security::Verify::AppDistType::NONE_TYPE, Constants::APP_DISTRIBUTION_TYPE_NONE },
     { Security::Verify::AppDistType::APP_GALLERY, Constants::APP_DISTRIBUTION_TYPE_APP_GALLERY },
     { Security::Verify::AppDistType::ENTERPRISE, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE },
+    { Security::Verify::AppDistType::ENTERPRISE_NORMAL, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_NORMAL },
+    { Security::Verify::AppDistType::ENTERPRISE_MDM, Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM },
     { Security::Verify::AppDistType::OS_INTEGRATION, Constants::APP_DISTRIBUTION_TYPE_OS_INTEGRATION },
     { Security::Verify::AppDistType::CROWDTESTING, Constants::APP_DISTRIBUTION_TYPE_CROWDTESTING },
 };
@@ -246,26 +248,73 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
 {
     PermissionStatus installBundleStatus = installParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = installParam.installEnterpriseBundlePermissionStatus;
+    PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
     bool isCallByShell = installParam.isCallByShell;
     if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
-        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("bm install enterprise bundle permission denied");
+                APP_LOGE("enterprise bundle can not be installed by shell");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 APP_LOGE("install enterprise bundle permission denied");
                 return false;
             }
-        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            continue;
+        }
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+            provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
+            bool result = VaildEnterpriseInstallPermission(installParam, provisionInfo);
+            if (!result) {
+                return false;
+            }
+            continue;
+        }
+        if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
             APP_LOGE("install permission denied");
             return false;
         }
+    }
+    return true;
+}
+
+bool BundleInstallChecker::VaildEnterpriseInstallPermission(const InstallParam &installParam,
+    const Security::Verify::ProvisionInfo &provisionInfo)
+{
+    if (installParam.isSelfUpdate) {
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
+            APP_LOGI("Mdm self update");
+            return true;
+        } else {
+            APP_LOGE("Self update not MDM");
+            return false;
+        }
+    }
+    bool isCallByShell = installParam.isCallByShell;
+    PermissionStatus installEtpNormalBundleStatus = installParam.installEtpNormalBundlePermissionStatus;
+    PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
+    if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+        APP_LOGE("enterprise normal/mdm bundle can not be installed by shell");
+        return false;
+    }
+    if (!isCallByShell &&
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
+        installEtpNormalBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        APP_LOGE("install enterprise normal bundle permission denied");
+        return false;
+    }
+    if (!isCallByShell &&
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM &&
+        installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        APP_LOGE("install enterprise mdm bundle permission denied");
+        return false;
     }
     return true;
 }
@@ -346,8 +395,14 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
+    if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
+        APP_LOGE("install failed due to non-enterprise device");
+        return result;
+    }
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
         // need vaild permission
         APP_LOGE("install permission denied");
@@ -362,26 +417,64 @@ bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckPara
 {
     PermissionStatus installBundleStatus = checkParam.installBundlePermissionStatus;
     PermissionStatus installEnterpriseBundleStatus = checkParam.installEnterpriseBundlePermissionStatus;
+    PermissionStatus installEtpMdmBundleStatus = checkParam.installEtpMdmBundlePermissionStatus;
     bool isCallByShell = checkParam.isCallByShell;
     if (!isCallByShell && installBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
-        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
+        installEnterpriseBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEtpMdmBundleStatus == PermissionStatus::HAVE_PERMISSION_STATUS) {
         return true;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
         Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        if (provisionInfo.distributionType  == Security::Verify::AppDistType::ENTERPRISE) {
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
             if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
-                APP_LOGE("bm install enterprise bundle permission denied");
+                APP_LOGE("enterprise bundle can not be installed by shell");
                 return false;
             }
             if (!isCallByShell && installEnterpriseBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
                 APP_LOGE("install enterprise bundle permission denied");
                 return false;
             }
-        } else if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+            continue;
+        }
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+            provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
+            bool result = VaildEnterpriseInstallPermissionForShare(checkParam, provisionInfo);
+            if (!result) {
+                return false;
+            }
+            continue;
+        }
+        if (installBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
             APP_LOGE("install permission denied");
             return false;
         }
+    }
+    return true;
+}
+
+bool BundleInstallChecker::VaildEnterpriseInstallPermissionForShare(const InstallCheckParam &checkParam,
+    const Security::Verify::ProvisionInfo &provisionInfo)
+{
+    bool isCallByShell = checkParam.isCallByShell;
+    PermissionStatus installEtpNormalBundleStatus = checkParam.installEtpNormalBundlePermissionStatus;
+    PermissionStatus installEtpMdmBundleStatus = checkParam.installEtpMdmBundlePermissionStatus;
+    if (isCallByShell && provisionInfo.type != Security::Verify::ProvisionType::DEBUG) {
+        APP_LOGE("enterprise normal/mdm bundle can not be installed by shell");
+        return false;
+    }
+    if (!isCallByShell &&
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL &&
+        installEtpNormalBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS &&
+        installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        APP_LOGE("install enterprise normal bundle permission denied");
+        return false;
+    }
+    if (!isCallByShell &&
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM &&
+        installEtpMdmBundleStatus != PermissionStatus::HAVE_PERMISSION_STATUS) {
+        APP_LOGE("install enterprise mdm bundle permission denied");
+        return false;
     }
     return true;
 }
@@ -1317,6 +1410,23 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
     if (!BundleUtil::CheckFileType(signatureFileDir, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("signatureFileDir is not suffixed with .sig");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false)) {
+        return ERR_OK;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+            provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
+            APP_LOGE("enterprise normal/mdm bundle cannot be installed on non-enterprise device");
+            return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+        }
     }
     return ERR_OK;
 }

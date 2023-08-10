@@ -57,6 +57,16 @@ bool BundlePermissionMgr::IsSelfCalling()
 {
     return false;
 }
+
+bool BundlePermissionMgr::VerifyRecoverPermission()
+{
+    return false;
+}
+
+bool BundlePermissionMgr::VerifyUninstallPermission()
+{
+    return false;
+}
 #else
 bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionName)
 {
@@ -92,6 +102,16 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
 }
 
 bool BundlePermissionMgr::IsSelfCalling()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyRecoverPermission()
+{
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyUninstallPermission()
 {
     return true;
 }

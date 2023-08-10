@@ -782,8 +782,6 @@ public:
 
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
-    const std::map<std::string, InnerBundleInfo> GetAllOverlayInnerBundleInfos() const;
-
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
 
     void EnableOverlayBundle(const std::string &bundleName);
@@ -969,6 +967,12 @@ private:
         const std::vector<std::string> &supportMimeTypes) const;
     ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos) const;
+    bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+    void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
+    void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
+    void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
+    ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
+        const std::string &abilityName, AbilityInfo &abilityInfo) const;
 
 private:
     mutable std::mutex bundleInfoMutex_;
@@ -978,7 +982,6 @@ private:
     mutable std::shared_mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
-    mutable std::mutex overlayMutex_;
     bool initialUserFlag_ = false;
     int32_t baseAppUid_ = Constants::BASE_APP_UID;
     // using for locking by bundleName

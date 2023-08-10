@@ -27,7 +27,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-int32_t CommonTool::ExcuteCmd(const std::string &cmd, std::vector<std::string> &resvec, const int32_t size)
+int32_t CommonTool::ExecuteCmd(const std::string &cmd, std::vector<std::string> &resvec, const int32_t size)
 {
     if (size <= 0) {
         return 0;
@@ -50,7 +50,7 @@ int32_t CommonTool::ExcuteCmd(const std::string &cmd, std::vector<std::string> &
     return resvec.size();
 }
 
-bool CommonTool::ExcuteCmd(const std::string &cmd)
+bool CommonTool::ExecuteCmd(const std::string &cmd)
 {
     FILE *file = popen(cmd.c_str(), "r");
     if (file == nullptr) {
@@ -126,7 +126,7 @@ int32_t CommonTool::GetPid(const std::string &processName)
     std::string cmd = "ps -A | grep " + processName;
     int32_t size = 1024;
     std::vector<std::string> echoContents;
-    int32_t queryResult = ExcuteCmd(cmd, echoContents, size);
+    int32_t queryResult = ExecuteCmd(cmd, echoContents, size);
     if (queryResult == 0) {
         return 0;
     }
@@ -178,7 +178,7 @@ bool CommonTool::StartExecutable(const std::string &serviceName, const std::stri
 
     std::vector<std::string> resvec;
     int32_t size = 1024;
-    int32_t contentSize = ExcuteCmd("ps -A |grep " + serviceName, resvec, size);
+    int32_t contentSize = ExecuteCmd("ps -A |grep " + serviceName, resvec, size);
     if (contentSize == 0) {
         return false;
     }

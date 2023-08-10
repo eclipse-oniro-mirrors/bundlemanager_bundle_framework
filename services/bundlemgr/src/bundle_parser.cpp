@@ -64,7 +64,7 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
 bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
-        APP_LOGE("can not access the file: %{public}s", filePath.c_str());
+        APP_LOGW("can not access the file: %{public}s, not existed", filePath.c_str());
         return false;
     }
 

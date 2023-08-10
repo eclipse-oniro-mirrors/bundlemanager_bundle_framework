@@ -424,7 +424,7 @@ ApplicationInfo *ApplicationInfo::Unmarshalling(Parcel &parcel)
 
 bool ApplicationInfo::Marshalling(Parcel &parcel) const
 {
-    APP_LOGD("ApplicationInfo::Marshalling called");
+    APP_LOGD("ApplicationInfo::Marshalling called, bundleName: %{public}s", bundleName.c_str());
     CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(name));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
@@ -493,7 +493,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(cpuAbi));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFilePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkNativeFileAbi));
-
+    CHECK_PARCEL_CAPACITY(parcel, APPLICATION_CAPACITY);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, permissions.size());
     for (auto &permission : permissions) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(permission));

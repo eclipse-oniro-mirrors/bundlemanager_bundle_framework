@@ -863,5 +863,27 @@ bool BundlePermissionMgr::IsSelfCalling()
     }
     return false;
 }
+
+bool BundlePermissionMgr::VerifyUninstallPermission()
+{
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_UNINSTALL_BUNDLE)) {
+        APP_LOGE("uninstall bundle permission denied");
+        return false;
+    }
+    return true;
+}
+
+bool BundlePermissionMgr::VerifyRecoverPermission()
+{
+    if (!BundlePermissionMgr::IsSelfCalling() &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermissionForAll(Constants::PERMISSION_RECOVER_BUNDLE)) {
+        APP_LOGE("recover bundle permission denied");
+        return false;
+    }
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

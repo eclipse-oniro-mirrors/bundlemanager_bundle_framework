@@ -134,7 +134,8 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetLauncherAbilityCallbackInfo>(
-        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete);
+        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetLauncherAbilityInfo done");
     return promise;
@@ -151,30 +152,26 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
     }
     std::string bundleName;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
-        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
-            return nullptr;
-        }
-        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-            return nullptr;
-        }
-    } else {
-        APP_LOGE("parameters error");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+        return nullptr;
+    }
+
     std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_LAUNCHER_ABILITY_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_LAUNCHER_ABILITY_INFO_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
-    ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos));
+    ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
+        GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos));
     if (ret != SUCCESS) {
         APP_LOGE("GetLauncherAbilityByBundleName failed");
         napi_value businessError = BusinessError::CreateCommonError(
@@ -182,11 +179,11 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    napi_value nlauncherAbilityInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nlauncherAbilityInfos));
-    CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nlauncherAbilityInfos);
+    napi_value nLauncherAbilityInfos = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityInfos));
+    CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nLauncherAbilityInfos);
     APP_LOGD("call GetLauncherAbilityInfoSync done.");
-    return nlauncherAbilityInfos;
+    return nLauncherAbilityInfos;
 }
 
 static ErrCode InnerGetAllLauncherAbilityInfo(int32_t userId,
@@ -278,7 +275,7 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
-        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete);
+        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete, napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
@@ -370,7 +367,8 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);
+        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetShortcutInfo done");
     return promise;
@@ -386,14 +384,8 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string bundleName;
-    if (args.GetMaxArgc() >= ARGS_SIZE_ONE) {
-        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
-            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-            return nullptr;
-        }
-    } else {
-        APP_LOGE("parameters error");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
     
@@ -401,7 +393,8 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+            env, ERROR_BUNDLE_SERVICE_EXCEPTION, GET_SHORTCUT_INFO_SYNC,
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -413,11 +406,11 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    napi_value nshortcutInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nshortcutInfos));
-    CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nshortcutInfos);
+    napi_value nShortcutInfos = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nShortcutInfos));
+    CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
     APP_LOGD("call GetShortcutInfoSync done.");
-    return nshortcutInfos;
+    return nShortcutInfos;
 }
 }
 }

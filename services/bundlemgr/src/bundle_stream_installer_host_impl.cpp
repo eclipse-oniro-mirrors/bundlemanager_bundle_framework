@@ -82,7 +82,9 @@ void BundleStreamInstallerHostImpl::UnInit()
 int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("CreateStream permission denied");
         return -1;
     }
@@ -120,7 +122,9 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
     const std::string &fileName)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("CreateStream permission denied");
         return -1;
     }
@@ -164,7 +168,9 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
 int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
 {
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE)) {
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("CreateSharedBundleStream permission denied");
         return -1;
     }
@@ -223,7 +229,13 @@ bool BundleStreamInstallerHostImpl::Install()
         pathVec.emplace_back(tempDir_);
     }
     installParam_.withCopyHaps = true;
-    auto res = installer->Install(pathVec, installParam_, receiver_);
+
+    bool res;
+    if (installParam_.isSelfUpdate) {
+        res = installer->UpdateBundleForSelf(pathVec, installParam_, receiver_);
+    } else {
+        res = installer->Install(pathVec, installParam_, receiver_);
+    }
     if (!res) {
         APP_LOGE("install bundle failed");
         return false;

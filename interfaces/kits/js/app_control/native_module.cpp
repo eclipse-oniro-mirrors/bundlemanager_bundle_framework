@@ -32,6 +32,7 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
         DECLARE_NAPI_FUNCTION("setDisposedStatus", SetDisposedStatus),
         DECLARE_NAPI_FUNCTION("deleteDisposedStatus", DeleteDisposedStatus),
+        DECLARE_NAPI_FUNCTION("getDisposedStatusSync", GetDisposedStatusSync),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
