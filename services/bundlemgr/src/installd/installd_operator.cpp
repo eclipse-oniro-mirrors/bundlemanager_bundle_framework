@@ -53,6 +53,11 @@ static std::string HandleScanResult(
 
     return dir + Constants::PATH_SEPARATOR + subName;
 }
+
+static bool StartsWith(const std::string &sourceString, const std::string &targetPrefix)
+{
+    return sourceString.rfind(targetPrefix, 0) == 0;
+}
 }
 
 bool InstalldOperator::IsExistFile(const std::string &path)
@@ -145,6 +150,11 @@ bool InstalldOperator::ExtractFiles(const ExtractParam &extractParam)
         APP_LOGE("extractor init failed");
         return false;
     }
+
+    if (extractParam.extractFileType == ExtractFileType::RESOURCE) {
+        return ExtractResourceFiles(extractParam, extractor);
+    }
+
     if ((extractParam.extractFileType == ExtractFileType::AP) &&
         !extractor.IsDirExist(Constants::AP)) {
         APP_LOGD("hap has no ap files and does not need to be extracted.");
@@ -236,7 +246,7 @@ bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::strin
 {
     APP_LOGD("IsNativeSo, entryName : %{public}s", entryName.c_str());
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    if (entryName.find(prefix) == std::string::npos) {
+    if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
@@ -1048,6 +1058,47 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         }
     }
     closedir(directory);
+    return true;
+}
+
+bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor)
+{
+    APP_LOGD("ExtractResourceFiles begin");
+    std::string targetDir = extractParam.targetPath;
+    if (!MkRecursiveDir(targetDir, true)) {
+        APP_LOGE("create targetDir failed");
+        return false;
+    }
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames)) {
+        APP_LOGE("GetZipFileNames failed");
+        return false;
+    }
+    for (const auto &entryName : entryNames) {
+        if (StartsWith(entryName, Constants::LIBS)
+            || StartsWith(entryName, Constants::AN)
+            || StartsWith(entryName, Constants::AP)) {
+            continue;
+        }
+        const std::string relativeDir = GetPathDir(entryName);
+        if (!relativeDir.empty()) {
+            if (!MkRecursiveDir(targetDir + relativeDir, true)) {
+                APP_LOGE("MkRecursiveDir failed");
+                return false;
+            }
+        }
+        std::string filePath = targetDir + entryName;
+        if (!extractor.ExtractFile(entryName, filePath)) {
+            APP_LOGE("ExtractFile failed");
+            return false;
+        }
+        mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+        if (!OHOS::ChangeModeFile(filePath, mode)) {
+            APP_LOGE("change mode failed");
+            return false;
+        }
+    }
+    APP_LOGD("ExtractResourceFiles success");
     return true;
 }
 }  // namespace AppExecFwk
