@@ -322,7 +322,6 @@ void BundleMgrService::SelfClean()
         }
     }
     aotLoopTask_.reset();
-    bmsParam_.reset();
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     agingMgr_.reset();
     connectAbilityMgr_.reset();
