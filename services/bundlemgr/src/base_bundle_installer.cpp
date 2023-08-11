@@ -2439,7 +2439,7 @@ void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, cons
 {
     APP_LOGD("ExtractResourceFiles begin");
     int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
-    if (apiTargetVersion > Constants::API_VERSION_NINE) {
+    if (info.IsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
         APP_LOGD("no need to extract resource files");
         return;
     }
