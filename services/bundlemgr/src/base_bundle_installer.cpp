@@ -1412,7 +1412,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
                 (!isSingleton && (userId_ == Constants::DEFAULT_USERID))) {
                 APP_LOGW("singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched.",
-                    isSingleton, bundleName.c_str(), userId_);
+                    isSingleton, bundleName_.c_str(), userId_);
                 return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
             }
 
@@ -1442,7 +1442,6 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
-            bundleName_ = bundleName;
             GetInstallEventInfo(sysEventInfo_);
             return ERR_OK;
         }
