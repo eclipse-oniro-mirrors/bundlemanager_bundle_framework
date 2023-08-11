@@ -561,6 +561,7 @@ private:
     NotifyType GetNotifyType();
     void GetCallingEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(EventInfo &eventInfo);
+    void GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo);
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
