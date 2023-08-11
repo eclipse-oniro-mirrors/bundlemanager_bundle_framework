@@ -43,7 +43,14 @@ const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
 const std::string RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
 const std::string EMPTY_STRING = "";
 // install message
-constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* INSTALL_PERMISSION =
+    "ohos.permission.INSTALL_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
+constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
+constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
+constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
@@ -870,8 +877,26 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     ConvertInstallResult(callbackPtr->installResult);
     if (callbackPtr->installResult.resultCode != SUCCESS) {
-        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
-            GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
+        switch (callbackPtr->option) {
+            case InstallOption::INSTALL:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
+                break;
+            case InstallOption::RECOVER:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
+                break;
+            case InstallOption::UNINSTALL:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_UNINSTALL, UNINSTALL_PERMISSION);
+                break;
+            case InstallOption::UPDATE_BUNDLE_FOR_SELF:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF, INSTALL_SELF_PERMISSION);
+                break;
+            default:
+                break;
+        }
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
