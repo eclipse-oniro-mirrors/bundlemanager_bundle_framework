@@ -190,25 +190,23 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to SetDisposedStatusSync");
     NapiArg args(env, info);
-    napi_value nRet = nullptr;
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
     if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
         APP_LOGE("Napi func init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
         return nRet;
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
         APP_LOGE("appId %{public}s invalid!", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
         return nRet;
     }
     OHOS::AAFwk::Want want;
     if (!CommonFunc::ParseWantWithoutVerification(env, args[ARGS_POS_ONE], want)) {
         APP_LOGE("want invalid!");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
         return nRet;
     }
     auto appControlProxy = GetAppControlProxy();
@@ -217,6 +215,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             SET_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
+        return nRet;
     }
     ErrCode ret = appControlProxy->SetDisposedStatus(appId, want);
     ret = CommonFunc::ConvertErrCode(ret);
@@ -226,7 +225,6 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
             env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
     }
-    NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call SetDisposedStatusSync done.");
     return nRet;
 }
@@ -325,18 +323,17 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("begin to DeleteDisposedStatusSync.");
     NapiArg args(env, info);
-    napi_value nRet = nullptr;
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
     if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
         return nRet;
     }
     std::string appId;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
         APP_LOGE("appId %{public}s invalid!", appId.c_str());
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
         return nRet;
     }
     auto appControlProxy = GetAppControlProxy();
@@ -345,6 +342,7 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             DELETE_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
+        return nRet;
     }
     ErrCode ret = appControlProxy->DeleteDisposedStatus(appId);
     ret = CommonFunc::ConvertErrCode(ret);
@@ -354,7 +352,6 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
             env, ret, DELETE_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
     }
-    NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call DeleteDisposedStatusSync done.");
     return nRet;
 }
