@@ -1442,8 +1442,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
-            bundleName_ = bundleName;
-            GetInstallEventInfo(sysEventInfo_);
+            GetInstallEventInfo(oldInfo, sysEventInfo_);
             return ERR_OK;
         }
     }
@@ -3532,6 +3531,20 @@ void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
     for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
+    }
+}
+
+void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleInfo.GetBundleName().c_str());
+    eventInfo.fingerprint = bundleInfo.GetCertificateFingerprint();
+    eventInfo.appDistributionType = bundleInfo.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIcon();
+    eventInfo.timeStamp = bundleInfo.GetBundleUpdateTime(userId_);
+    // report hapPath and hashValue
+    for (const auto &innerModuleInfo : bundleInfo.GetInnerModuleInfos()) {
         eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
         eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
     }
