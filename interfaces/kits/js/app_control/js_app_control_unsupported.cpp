@@ -59,5 +59,23 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     napi_throw(env, error);
     return nullptr;
 }
+
+napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.AppControl not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "setDisposedStatusSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.AppControl not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "deleteDisposedStatusSync");
+    napi_throw(env, error);
+    return nullptr;
+}
 } // AppExecFwk
 } // OHOS
