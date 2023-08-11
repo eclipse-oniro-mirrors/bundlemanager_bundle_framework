@@ -280,6 +280,22 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsExtensionDataMgr_0009
+ * @tc.name: HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0009, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.Uninstall("");
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_NE(res, ERR_OK);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
  * @tc.number: BmsExtensionProfile_0001
  * @tc.name: TransformTo
  * @tc.desc: TransformTo
