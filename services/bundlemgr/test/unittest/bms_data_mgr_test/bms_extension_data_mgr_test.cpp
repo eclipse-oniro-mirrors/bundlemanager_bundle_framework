@@ -289,7 +289,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0009, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.Uninstall("");
     #ifdef USE_EXTENSION_DATA
-    EXPECT_NE(res, ERR_OK);
+    EXPECT_EQ(res, BMS_BROKER_ERR_INSTALL_FAILED);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
