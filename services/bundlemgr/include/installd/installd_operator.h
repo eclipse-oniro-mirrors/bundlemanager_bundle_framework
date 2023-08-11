@@ -209,6 +209,7 @@ private:
     static bool ProcessApplyDiffPatchPath(const std::string &oldSoPath, const std::string &diffFilePath,
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
+    static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

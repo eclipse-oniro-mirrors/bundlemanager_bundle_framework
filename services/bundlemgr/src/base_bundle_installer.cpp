@@ -2420,6 +2420,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
+    ExtractResourceFiles(info, modulePath);
+
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -2430,6 +2432,23 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const
+{
+    APP_LOGD("ExtractResourceFiles begin");
+    int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
+    if (info.IsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
+        APP_LOGD("no need to extract resource files");
+        return;
+    }
+    APP_LOGD("apiTargetVersion is %{public}d, extract resource files", apiTargetVersion);
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = targetPath + Constants::PATH_SEPARATOR;
+    extractParam.extractFileType = ExtractFileType::RESOURCE;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    APP_LOGD("ExtractResourceFiles ret : %{public}d", ret);
 }
 
 ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath)
