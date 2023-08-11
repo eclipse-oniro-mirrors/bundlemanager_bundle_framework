@@ -191,7 +191,7 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
     APP_LOGD("begin to SetDisposedStatusSync");
     NapiArg args(env, info);
     napi_value nRet = nullptr;
-    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
         APP_LOGE("Napi func init failed");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
@@ -217,8 +217,6 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             SET_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, &nRet));
-        return nRet;
     }
     ErrCode ret = appControlProxy->SetDisposedStatus(appId, want);
     ret = CommonFunc::ConvertErrCode(ret);
@@ -227,8 +225,6 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
-        NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
-        return nRet;
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call SetDisposedStatusSync done.");
@@ -330,7 +326,7 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
     APP_LOGD("begin to DeleteDisposedStatusSync.");
     NapiArg args(env, info);
     napi_value nRet = nullptr;
-    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
         APP_LOGE("param count invalid.");
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         NAPI_CALL(env, napi_create_int32(env, ERROR_PARAM_CHECK_ERROR, &nRet));
@@ -349,8 +345,6 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
             DELETE_DISPOSED_STATUS_SYNC);
         napi_throw(env, error);
-        NAPI_CALL(env, napi_create_int32(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, &nRet));
-        return nRet;
     }
     ErrCode ret = appControlProxy->DeleteDisposedStatus(appId);
     ret = CommonFunc::ConvertErrCode(ret);
@@ -359,8 +353,6 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, DELETE_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
         napi_throw(env, businessError);
-        NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
-        return nRet;
     }
     NAPI_CALL(env, napi_create_int32(env, ret, &nRet));
     APP_LOGD("call DeleteDisposedStatusSync done.");
