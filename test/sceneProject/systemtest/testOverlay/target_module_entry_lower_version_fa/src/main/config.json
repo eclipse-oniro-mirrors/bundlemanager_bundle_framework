@@ -1,0 +1,78 @@
+{
+    "app": {
+        "bundleName": "com.example.internalOverlayTest1",
+        "originalName": "com.third.hiworld.example",
+        "vendor": "example",
+        "version": {
+            "code": 999999,
+            "name": "1.0"
+        },
+        "apiVersion": {
+            "compatible": 3,
+            "target": 3
+        }
+    },
+    "deviceConfig": {
+        "default": {
+            "keepAlive": true
+        }
+    },
+    "module": {
+        "package": "entry",
+        "name": "entry",
+        "deviceType": [
+            "tablet",
+            "default",
+            "tv",
+            "car"
+        ],
+        "distro": {
+            "deliveryWithInstall": true,
+            "moduleName": "entry",
+            "moduleType": "entry"
+        },
+        "abilities": [
+            {
+                "name": "bmsThirdBundle_A1",
+                "description": "himusic main ability",
+                "icon": "$media:ic_launcher",
+                "label": "bmsThirdBundle_A1 Ability",
+                "launchType": "standard",
+                "orientation": "unspecified",
+                "permissions": [],
+                "visible": true,
+                "skills": [
+                    {
+                        "actions": [
+                            "action.system.home"
+                        ],
+                        "entities": [
+                            "entity.system.home"
+                        ]
+                    }
+                ],
+                "directLaunch": false,
+                "configChanges": [
+                    "locale",
+                    "layout",
+                    "fontSize",
+                    "orientation"
+                ],
+                "type": "page",
+                "formsEnabled": false
+            }
+        ],
+        "js": [
+            {
+                "pages": [
+                    "pages/index/index"
+                ],
+                "name": "default",
+                "window": {
+                    "designWidth": 720,
+                    "autoDesignWidth": true
+                }
+            }
+        ]
+    }
+}
