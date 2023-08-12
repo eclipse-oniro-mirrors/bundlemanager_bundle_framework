@@ -2890,7 +2890,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, CopyHapsToSecurityDir_0010, Function | Sma
     std::vector<std::string> bundlePaths;
     bundlePaths.push_back("data/test/test");
     ErrCode res = installer.CopyHapsToSecurityDir(installParam, bundlePaths);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
 }
 
 /**
@@ -2950,6 +2950,6 @@ HWTEST_F(BmsBundleOverlayCheckerTest, FindSignatureFileDir_0030, Function | Smal
 
     installer.verifyCodeParams_.emplace(TEST_MODULE_NAME, signatureFileDir);
     ErrCode res = installer.FindSignatureFileDir(TEST_MODULE_NAME, signatureFileDir);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT);
 }
 } // OHOS
