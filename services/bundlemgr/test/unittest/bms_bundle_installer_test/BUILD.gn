@@ -472,7 +472,10 @@ ohos_unittest("BmsBundleInstallIpcTest") {
 ohos_unittest("BmsBundleInstallCheckerTest") {
   use_exceptions = true
   module_out_path = module_output_path
-  include_dirs = [ "//third_party/jsoncpp/include" ]
+  include_dirs = [
+    "//third_party/jsoncpp/include",
+    "../../mock/include/parameter",
+  ]
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += bundle_install_sources
@@ -483,6 +486,8 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_status_receiver.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameter.cpp",
+    "${services_path}/bundlemgr/test/mock/src/parameter/parameters.cpp",
     "${services_path}/bundlemgr/test/mock/src/system_ability_helper.cpp",
   ]
 
@@ -589,6 +594,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  defines += [ "GET_BOOL_PARAMETER_TRUE" ]
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {

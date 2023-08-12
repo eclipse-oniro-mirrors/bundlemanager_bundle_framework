@@ -291,10 +291,9 @@ bool BundleInstallChecker::VaildEnterpriseInstallPermission(const InstallParam &
         if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
             APP_LOGI("Mdm self update");
             return true;
-        } else {
-            APP_LOGE("Self update not MDM");
-            return false;
         }
+        APP_LOGE("Self update not MDM");
+        return false;
     }
     bool isCallByShell = installParam.isCallByShell;
     PermissionStatus installEtpNormalBundleStatus = installParam.installEtpNormalBundlePermissionStatus;
