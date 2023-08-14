@@ -219,10 +219,31 @@
     <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test10/" src="res" />
     <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test12/" src="res" />
     <option name="push" value="testOverlay/internal/test12/internalOverlayTest12.hsp -> /data/test/internalOverlayTest/test12/" src="res" />
+    <option name="push" value="testOverlay/internal/test14/internalOverlayTest14.hsp -> /data/test/internalOverlayTest/test14/" src="res" />
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test14/" src="res" />
+    <option name="push" value="testOverlay/internal/test15/internalOverlayTest15.hsp -> /data/test/internalOverlayTest/test15/" src="res" />
     <option name="push" value="testOverlay/internal/entry_hap.hap -> /data/test/internalOverlayTest/" src="res" />
     <option name="push" value="testOverlay/internal/higher_version_entry_hap.hap -> /data/test/internalOverlayTest/" src="res" />
     <option name="push" value="testOverlay/internal/feature_hap.hap -> /data/test/internalOverlayTest/" src="res" />
     <option name="push" value="testOverlay/internal/higher_version_feature_hap.hap -> /data/test/internalOverlayTest/" src="res" />
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test16/" src="res" />
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test17/" src="res" />
+    <option name="push" value="testOverlay/internal/test15/internalOverlayTest15.hsp -> /data/test/internalOverlayTest/test17/" src="res" />
+    <option name="push" value="testOverlay/internal/test12/internalOverlayTest12.hsp -> /data/test/internalOverlayTest/test18/" src="res" />
+    <option name="push" value="testOverlay/internal/higher_version_feature_hap.hap -> /data/test/internalOverlayTest/test18/" src="res" />
+    <option name="push" value="testOverlay/internal/entry_hap.hap  -> /data/test/internalOverlayTest/test19/" src="res" />
+    <option name="push" value="testOverlay/internal/feature_hap.hap -> /data/test/internalOverlayTest/test19/" src="res" />
+    <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test19/" src="res" />
+    <option name="push" value="testOverlay/internal/test18/internalOverlayTest18.hsp -> /data/test/internalOverlayTest/test19/" src="res" />
+    <option name="push" value="testOverlay/internal/test14/internalOverlayTest14.hsp -> /data/test/internalOverlayTest/test21/" src="res" />
+    <option name="push" value="testOverlay/internal/test15/internalOverlayTest15.hsp -> /data/test/internalOverlayTest/test21/" src="res" />
+    <option name="push" value="testOverlay/internal/feature1_hap.hap -> /data/test/internalOverlayTest/test24/" src="res" />
+    <option name="push" value="testOverlay/internal/test12/internalOverlayTest12.hsp -> /data/test/internalOverlayTest/test24/" src="res" />
+    <option name="push" value="testOverlay/internal/test6/internalOverlayTest6.hsp -> /data/test/internalOverlayTest/test24/" src="res" />
+    <option name="push" value="testOverlay/internal/entry_fa.hap -> /data/test/internalOverlayTest/test25/" src="res" />
+    <option name="push" value="testOverlay/internal/higher_version_entry_hap.hap -> /data/test/internalOverlayTest/test26/" src="res" />
+    <option name="push" value="testOverlay/internal/test15/internalOverlayTest15.hsp -> /data/test/internalOverlayTest/test26/" src="res" />
+    <option name="push" value="testOverlay/internal/entry_fa_lower_version.hap -> /data/test/internalOverlayTest/test27/" src="res" />
     </preparer>
   </target>
 </configuration>
