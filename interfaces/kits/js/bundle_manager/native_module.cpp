@@ -80,7 +80,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
+        DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
         DECLARE_NAPI_FUNCTION("getBundleNameByUid", GetBundleNameByUid),
+        DECLARE_NAPI_FUNCTION("getBundleNameByUidSync", GetBundleNameByUidSync),
         DECLARE_NAPI_FUNCTION("queryAbilityInfo", QueryAbilityInfos),
         DECLARE_NAPI_FUNCTION("queryAbilityInfoSync", QueryAbilityInfosSync),
         DECLARE_NAPI_FUNCTION("queryExtensionAbilityInfo", QueryExtensionInfos),
@@ -96,7 +98,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getLaunchWantForBundle", GetLaunchWantForBundle),
         DECLARE_NAPI_FUNCTION("getLaunchWantForBundleSync", GetLaunchWantForBundleSync),
         DECLARE_NAPI_FUNCTION("getProfileByAbility", GetProfileByAbility),
+        DECLARE_NAPI_FUNCTION("getProfileByAbilitySync", GetProfileByAbilitySync),
         DECLARE_NAPI_FUNCTION("getProfileByExtensionAbility", GetProfileByExAbility),
+        DECLARE_NAPI_FUNCTION("getProfileByExtensionAbilitySync", GetProfileByExAbilitySync),
         DECLARE_NAPI_FUNCTION("getPermissionDefSync", GetPermissionDefSync),
         DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
