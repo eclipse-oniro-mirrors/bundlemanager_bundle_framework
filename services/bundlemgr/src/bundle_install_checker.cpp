@@ -61,7 +61,6 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
-const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
@@ -288,6 +287,14 @@ bool BundleInstallChecker::VaildInstallPermission(const InstallParam &installPar
 bool BundleInstallChecker::VaildEnterpriseInstallPermission(const InstallParam &installParam,
     const Security::Verify::ProvisionInfo &provisionInfo)
 {
+    if (installParam.isSelfUpdate) {
+        if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM) {
+            APP_LOGI("Mdm self update");
+            return true;
+        }
+        APP_LOGE("Self update not MDM");
+        return false;
+    }
     bool isCallByShell = installParam.isCallByShell;
     PermissionStatus installEtpNormalBundleStatus = installParam.installEtpNormalBundlePermissionStatus;
     PermissionStatus installEtpMdmBundleStatus = installParam.installEtpMdmBundlePermissionStatus;
@@ -1409,7 +1416,7 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
 ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
     const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
 {
-    if (system::GetBoolParameter(ALLOW_ENTERPRISE_BUNDLE, false)) {
+    if (system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false)) {
         return ERR_OK;
     }
     for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {

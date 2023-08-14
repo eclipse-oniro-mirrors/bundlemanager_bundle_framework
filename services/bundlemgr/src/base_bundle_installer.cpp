@@ -52,6 +52,7 @@
 #include "datetime_ex.h"
 #include "installd_client.h"
 #include "parameter.h"
+#include "parameters.h"
 #include "perf_profile.h"
 #include "scope_guard.h"
 #include "string_ex.h"
@@ -652,8 +653,11 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         installParam.installFlag, userId_, isAppExist_);
     bool isFreeInstallFlag = (installParam.installFlag == InstallFlag::FREE_INSTALL);
     CheckEnableRemovable(newInfos, oldInfo, userId_, isFreeInstallFlag, isAppExist_);
-
     ErrCode result = ERR_OK;
+    // check MDM self update
+    result = CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, isAppExist_);
+    CHECK_RESULT(result, "update MDM app failed %{public}d");
+
     if (isAppExist_) {
         if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
             APP_LOGE("old bundle info is shared package");
@@ -943,7 +947,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     }
 #endif
     OnSingletonChange(installParam.noSkipsKill);
-    GetInstallEventInfo(newInfos, sysEventInfo_);
+    GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
     sync();
@@ -1408,7 +1412,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
                 (!isSingleton && (userId_ == Constants::DEFAULT_USERID))) {
                 APP_LOGW("singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched.",
-                    isSingleton, bundleName_.c_str(), userId_);
+                    isSingleton, bundleName.c_str(), userId_);
                 return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
             }
 
@@ -1438,6 +1442,7 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
 
             userGuard.Dismiss();
             uid = oldInfo.GetUid(userId_);
+            GetInstallEventInfo(oldInfo, sysEventInfo_);
             return ERR_OK;
         }
     }
@@ -2415,6 +2420,8 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         }
     }
 
+    ExtractResourceFiles(info, modulePath);
+
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
     } else {
@@ -2425,6 +2432,23 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     info.AddModuleSrcDir(moduleDir);
     info.AddModuleResPath(moduleDir);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const
+{
+    APP_LOGD("ExtractResourceFiles begin");
+    int32_t apiTargetVersion = info.GetBaseApplicationInfo().apiTargetVersion;
+    if (info.IsPreInstallApp() || apiTargetVersion > Constants::API_VERSION_NINE) {
+        APP_LOGD("no need to extract resource files");
+        return;
+    }
+    APP_LOGD("apiTargetVersion is %{public}d, extract resource files", apiTargetVersion);
+    ExtractParam extractParam;
+    extractParam.srcPath = modulePath_;
+    extractParam.targetPath = targetPath + Constants::PATH_SEPARATOR;
+    extractParam.extractFileType = ExtractFileType::RESOURCE;
+    ErrCode ret = InstalldClient::GetInstance()->ExtractFiles(extractParam);
+    APP_LOGD("ExtractResourceFiles ret : %{public}d", ret);
 }
 
 ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const std::string &modulePath)
@@ -2831,6 +2855,35 @@ ErrCode BaseBundleInstaller::CheckProxyDatas(
         ErrCode ret = bundleInstallChecker_->CheckProxyDatas(info.second);
         if (ret != ERR_OK) {
             return ret;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckMDMUpdateBundleForSelf(const InstallParam &installParam,
+    InnerBundleInfo &oldInfo, const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist)
+{
+    if (!installParam.isSelfUpdate) {
+        return ERR_OK;
+    }
+    if (!OHOS::system::GetBoolParameter(Constants::ALLOW_ENTERPRISE_BUNDLE, false)) {
+        APP_LOGE("not enterprise device");
+        return ERR_APPEXECFWK_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED;
+    }
+    if (!isAppExist) {
+        APP_LOGE("not self update");
+        return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME;
+    }
+    std::string appDistributionType = oldInfo.GetAppDistributionType();
+    if (appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM) {
+        APP_LOGE("not mdm app");
+        return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_NOT_MDM;
+    }
+    std::string bundleName = oldInfo.GetBundleName();
+    for (const auto &info : newInfos) {
+        if (bundleName != info.second.GetBundleName()) {
+            APP_LOGE("bundleName %{public}s not same", info.second.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME;
         }
     }
     return ERR_OK;
@@ -3482,8 +3535,7 @@ void BaseBundleInstaller::GetCallingEventInfo(EventInfo &eventInfo)
     eventInfo.callingAppId = bundleInfo.appId;
 }
 
-void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
-    EventInfo &eventInfo)
+void BaseBundleInstaller::GetInstallEventInfo(EventInfo &eventInfo)
 {
     APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleName_.c_str());
     InnerBundleInfo info;
@@ -3497,11 +3549,23 @@ void BaseBundleInstaller::GetInstallEventInfo(std::unordered_map<std::string, In
     eventInfo.hideDesktopIcon = info.IsHideDesktopIcon();
     eventInfo.timeStamp = info.GetBundleUpdateTime(userId_);
     // report hapPath and hashValue
-    for (const auto &newInfo : newInfos) {
-        for (const auto &innerModuleInfo : newInfo.second.GetInnerModuleInfos()) {
-            sysEventInfo_.filePath.push_back(innerModuleInfo.second.hapPath);
-            sysEventInfo_.hashValue.push_back(innerModuleInfo.second.hashValue);
-        }
+    for (const auto &innerModuleInfo : info.GetInnerModuleInfos()) {
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
+    }
+}
+
+void BaseBundleInstaller::GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo)
+{
+    APP_LOGD("GetInstallEventInfo start, bundleName:%{public}s", bundleInfo.GetBundleName().c_str());
+    eventInfo.fingerprint = bundleInfo.GetCertificateFingerprint();
+    eventInfo.appDistributionType = bundleInfo.GetAppDistributionType();
+    eventInfo.hideDesktopIcon = bundleInfo.IsHideDesktopIcon();
+    eventInfo.timeStamp = bundleInfo.GetBundleUpdateTime(userId_);
+    // report hapPath and hashValue
+    for (const auto &innerModuleInfo : bundleInfo.GetInnerModuleInfos()) {
+        eventInfo.filePath.push_back(innerModuleInfo.second.hapPath);
+        eventInfo.hashValue.push_back(innerModuleInfo.second.hashValue);
     }
 }
 

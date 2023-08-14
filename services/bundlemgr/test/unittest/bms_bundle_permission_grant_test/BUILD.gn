@@ -77,6 +77,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -221,6 +222,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -367,6 +369,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -515,6 +518,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -659,6 +663,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -804,6 +809,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",
@@ -941,6 +947,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
 
   external_deps = [
     "ability_base:want",
+    "access_token:libprivacy_sdk",
     "access_token:libtokenid_sdk",
     "appverify:libhapverify",
     "common_event_service:cesfwk_innerkits",

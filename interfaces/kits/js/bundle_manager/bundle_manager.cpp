@@ -45,11 +45,14 @@ constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* USER_ID = "userId";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
+constexpr const char* ABILITY_FLAGS = "abilityFlags";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
+const std::string QUERY_ABILITY_INFOS_SYNC = "QueryAbilityInfosSync";
 const std::string QUERY_EXTENSION_INFOS = "QueryExtensionInfos";
 const std::string GET_BUNDLE_INFO = "GetBundleInfo";
 const std::string GET_BUNDLE_INFOS = "GetBundleInfos";
@@ -571,7 +574,8 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete);
+        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetApplicationInfo done.");
     return promise;
@@ -755,21 +759,17 @@ static ErrCode InnerGetAbilityIcon(const std::string &bundleName, const std::str
 }
 #endif
 
-static void CheckAbilityInfoCache(
-    napi_env env, const Query &query, const AbilityCallbackInfo *info, napi_value jsObject)
+static void CheckAbilityInfoCache(napi_env env, const Query &query,
+    const OHOS::AAFwk::Want &want, std::vector<AbilityInfo> abilityInfos,  napi_value jsObject)
 {
-    if (info == nullptr) {
-        return;
-    }
-
-    ElementName element = info->want.GetElement();
+    ElementName element = want.GetElement();
     if (element.GetBundleName().empty() || element.GetAbilityName().empty()) {
         return;
     }
 
     uint32_t explicitQueryResultLen = 1;
-    if (info->abilityInfos.size() != explicitQueryResultLen ||
-        info->abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
+    if (abilityInfos.size() != explicitQueryResultLen ||
+        abilityInfos[0].uid != IPCSkeleton::GetCallingUid()) {
         return;
     }
 
@@ -777,6 +777,15 @@ static void CheckAbilityInfoCache(
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheAbilityInfo));
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
     cache[query] = cacheAbilityInfo;
+}
+
+static void CheckAbilityInfoCache(
+    napi_env env, const Query &query, const AbilityCallbackInfo *info, napi_value jsObject)
+{
+    if (info == nullptr) {
+        return;
+    }
+    CheckAbilityInfoCache(env, query, info->want, info->abilityInfos, jsObject);
 }
 
 void QueryAbilityInfosExec(napi_env env, void *data)
@@ -894,10 +903,98 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
+        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call QueryAbilityInfos done");
     return promise;
+}
+
+ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info,
+    OHOS::AAFwk::Want& want, int32_t& abilityFlags, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseWantPerformance(env, args[i], want)) {
+                APP_LOGE("invalid want");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], abilityFlags)) {
+                APP_LOGE("abilityFlags %{public}d invalid!", abilityFlags);
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_FLAGS, TYPE_NUMBER);
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return ERR_OK;
+}
+
+napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI QueryAbilityInfosSync call");
+    OHOS::AAFwk::Want want;
+    int32_t abilityFlags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (ParamsProcessQueryAbilityInfosSync(env, info, want, abilityFlags, userId) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    napi_value nAbilityInfos = nullptr;
+    {
+        std::shared_lock<std::shared_mutex> lock(g_cacheMutex);
+        auto item = cache.find(Query(want.ToString(),
+            QUERY_ABILITY_INFOS_SYNC, abilityFlags, userId, env));
+        if (item != cache.end()) {
+            APP_LOGD("QueryAbilityInfosSync param from cache");
+            NAPI_CALL(env,
+                napi_get_reference_value(env, item->second, &nAbilityInfos));
+            return nAbilityInfos;
+        }
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::vector<AbilityInfo> abilityInfos;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->QueryAbilityInfosV9(want, abilityFlags, userId, abilityInfos));
+    if (ret != NO_ERROR) {
+        APP_LOGE("QueryAbilityInfosV9 failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, QUERY_ABILITY_INFOS_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    NAPI_CALL(env, napi_create_object(env, &nAbilityInfos));
+    CommonFunc::ConvertAbilityInfos(env, abilityInfos, nAbilityInfos);
+    Query query(want.ToString(),
+                QUERY_ABILITY_INFOS_SYNC, abilityFlags, userId, env);
+    CheckAbilityInfoCache(env, query, want, abilityInfos, nAbilityInfos);
+    APP_LOGD("call QueryAbilityInfosSync done");
+    return nAbilityInfos;
 }
 
 static ErrCode InnerQueryExtensionInfos(ExtensionCallbackInfo *info)
@@ -1068,7 +1165,8 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtensionCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete);
+        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call QueryExtensionInfos done");
     return promise;
@@ -1198,7 +1296,8 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityLabelCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
+        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
     return promise;
@@ -1297,7 +1396,8 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
+        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
@@ -2009,7 +2109,8 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
-        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
+        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("napi call GetLaunchWantForBundle done");
     return promise;
@@ -2352,6 +2453,16 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::PRINT), &nPrint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "PRINT", nPrint));
+
+    napi_value nShare;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SHARE), &nShare));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SHARE", nShare));
+
+    napi_value nAction;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::ACTION), &nAction));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACTION", nAction));
 
     napi_value nAuthorization;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
@@ -3015,7 +3126,8 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
+        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfo done.");
     return promise;
@@ -3122,7 +3234,8 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete,
+        napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
@@ -3328,7 +3441,7 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
-        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
+        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete, napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetSharedBundleInfo done.");
     return promise;

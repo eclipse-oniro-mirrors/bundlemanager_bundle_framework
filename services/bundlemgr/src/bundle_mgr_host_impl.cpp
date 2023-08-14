@@ -40,6 +40,7 @@
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
 #include "json_serializer.h"
+#include "scope_guard.h"
 #include "system_ability_definition.h"
 
 namespace OHOS {
@@ -147,9 +148,16 @@ ErrCode BundleMgrHostImpl::GetApplicationInfosV9(
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetApplicationInfosV9(flags, userId, appInfos);
+    auto ret = dataMgr->GetApplicationInfosV9(flags, userId, appInfos);
+    if (ret == ERR_OK) {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    } else {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
+    }
+    return ret;
 }
 
 bool BundleMgrHostImpl::GetBundleInfo(
@@ -361,12 +369,19 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
     if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
         APP_LOGD("query bundle infos from bms extension successfully");
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
         return ERR_OK;
+    }
+    if (res == ERR_OK) {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+    } else {
+        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 0, 1);
     }
     return res;
 }

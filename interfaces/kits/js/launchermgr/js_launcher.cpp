@@ -766,7 +766,7 @@ napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<JsGetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
-        JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete);
+        JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete, napi_qos_user_initiated);
     callbackPtr.release();
     APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
@@ -877,7 +877,7 @@ static napi_value JSGetLauncherAbilityInfos(napi_env env, napi_callback_info inf
             asyncCallbackInfo = nullptr;
         },
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
+    napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, napi_qos_user_initiated);
     return promise;
 }
 
@@ -979,7 +979,7 @@ static napi_value JSGetShortcutInfos(napi_env env, napi_callback_info info)
             asyncCallbackInfo = nullptr;
         },
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork);
-    napi_queue_async_work(env, asyncCallbackInfo->asyncWork);
+    napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, napi_qos_user_initiated);
 
     return promise;
 }

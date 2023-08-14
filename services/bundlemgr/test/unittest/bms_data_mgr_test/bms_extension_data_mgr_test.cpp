@@ -77,9 +77,8 @@ const nlohmann::json EXTENSIONS_JSON_5 = R"(
 }
 )"_json;
 enum {
-    BMS_BROKER_ERR_PERMISSION_DENIED = 8585219,
-    BMS_BROKER_ERR_INVALID_PARAM = 8585220,
-    BMS_BROKER_ERR_PARCEL_FAILED = 8585221,
+    BMS_BROKER_ERR_INSTALL_FAILED = 8585217,
+    BMS_BROKER_ERR_UNINSTALL_FAILED = 8585218,
 };
 }  // namespace
 
@@ -196,7 +195,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0004, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_PERMISSION_DENIED);
+    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -216,7 +215,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0005, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_PERMISSION_DENIED);
+    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -235,7 +234,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0006, Function | SmallTest
     std::vector<BundleInfo> bundleInfos;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_PERMISSION_DENIED);
+    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -255,7 +254,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0007, Function | SmallTest
     BundleInfo bundleInfo;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_INVALID_PARAM);
+    EXPECT_EQ(res, BMS_BROKER_ERR_INSTALL_FAILED);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -276,6 +275,22 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0008, Function | SmallTest
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FAILED_INVALID_SIGNATURE_FILE_PATH);
     #else
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_INSTALL_FAILED_SIGNATURE_EXTENSION_NOT_EXISTED);
+    #endif
+}
+
+/**
+ * @tc.number: BmsExtensionDataMgr_0009
+ * @tc.name: HapVerify
+ * @tc.desc: HapVerify
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0009, Function | SmallTest | Level0)
+{
+    BmsExtensionDataMgr bmsExtensionDataMgr;
+    ErrCode res = bmsExtensionDataMgr.Uninstall("");
+    #ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, BMS_BROKER_ERR_INSTALL_FAILED);
+    #else
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
 }
 

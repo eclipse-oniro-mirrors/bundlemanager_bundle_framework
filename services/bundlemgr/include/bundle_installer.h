@@ -95,6 +95,7 @@ public:
      * @return
      */
     virtual void UpdateInstallerState(const InstallerState state) override;
+    void UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths, const InstallParam &installParam);
 
 private:
     /**
