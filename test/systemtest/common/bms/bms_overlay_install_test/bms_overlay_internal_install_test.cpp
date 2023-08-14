@@ -37,6 +37,9 @@ namespace {
 constexpr int32_t TIMEOUT = 5;
 constexpr int32_t USERID = 100;
 constexpr int32_t DEFAULT_PRIORITY = 1;
+constexpr int32_t OVERLAY_MODULE_INFO_SIZE = 2;
+constexpr int32_t MIN_OVERLAY_MODULE_INFO_SIZE = 1;
+constexpr int32_t HIGHER_VERSION_CODE = 1000001;
 const std::string TARGET_MODULE_ENTRY_PATH = "/data/test/internalOverlayTest/entry_hap.hap";
 const std::string TARGET_MODULE_HIGHER_VERSION_ENTRY_PATH =
     "/data/test/internalOverlayTest/higher_version_entry_hap.hap";
@@ -56,9 +59,30 @@ const std::string INTERNAL_OVERLAY_TEST9_PATH = "/data/test/internalOverlayTest/
 const std::string INTERNAL_OVERLAY_TEST10_PATH = "/data/test/internalOverlayTest/test10/internalOverlayTest6.hsp";
 const std::string INTERNAL_OVERLAY_TEST12_PATH1 = "/data/test/internalOverlayTest/test12/internalOverlayTest6.hsp";
 const std::string INTERNAL_OVERLAY_TEST12_PATH2 = "/data/test/internalOverlayTest/test12/internalOverlayTest12.hsp";
+const std::string INTERNAL_OVERLAY_TEST14_PATH1 = "/data/test/internalOverlayTest/entry_hap.hap";
+const std::string INTERNAL_OVERLAY_TEST14_PATH2 = "/data/test/internalOverlayTest/test14";
+const std::string INTERNAL_OVERLAY_TEST15_PATH = "/data/test/internalOverlayTest/test15/internalOverlayTest15.hsp";
+const std::string INTERNAL_OVERLAY_TEST16_PATH = "/data/test/internalOverlayTest/test16/internalOverlayTest1.hsp";
+const std::string INTERNAL_OVERLAY_TEST17_PATH1 = "/data/test/internalOverlayTest/test17/internalOverlayTest1.hsp";
+const std::string INTERNAL_OVERLAY_TEST17_PATH2 = "/data/test/internalOverlayTest/test17/internalOverlayTest15.hsp";
+const std::string INTERNAL_OVERLAY_TEST18_PATH1 = "/data/test/internalOverlayTest/test18/internalOverlayTest12.hsp";
+const std::string INTERNAL_OVERLAY_TEST18_PATH2 = "/data/test/internalOverlayTest/test18/higher_version_feature_hap.hap";
+const std::string INTERNAL_OVERLAY_TEST19_PATH1 = "/data/test/internalOverlayTest/test19/entry_hap.hap";
+const std::string INTERNAL_OVERLAY_TEST19_PATH2 = "/data/test/internalOverlayTest/test19/feature_hap.hap";
+const std::string INTERNAL_OVERLAY_TEST19_PATH3 = "/data/test/internalOverlayTest/test19/internalOverlayTest1.hsp";
+const std::string INTERNAL_OVERLAY_TEST19_PATH4 = "/data/test/internalOverlayTest/test19/internalOverlayTest18.hsp";
+const std::string INTERNAL_OVERLAY_TEST21_PATH1 = "/data/test/internalOverlayTest/test21/internalOverlayTest14.hsp";
+const std::string INTERNAL_OVERLAY_TEST21_PATH2 = "/data/test/internalOverlayTest/test21/internalOverlayTest15.hsp";
+const std::string INTERNAL_OVERLAY_TEST24_PATH1 = "/data/test/internalOverlayTest/test24/feature1_hap.hap";
+const std::string INTERNAL_OVERLAY_TEST24_PATH2 = "/data/test/internalOverlayTest/test24/internalOverlayTest12.hsp";
+const std::string INTERNAL_OVERLAY_TEST24_PATH3 = "/data/test/internalOverlayTest/test24/internalOverlayTest6.hsp";
+const std::string INTERNAL_OVERLAY_TEST25_PATH = "/data/test/internalOverlayTest/test25/entry_fa.hap";
+const std::string INTERNAL_OVERLAY_TEST26_PATH = "/data/test/internalOverlayTest/test26";
+const std::string INTERNAL_OVERLAY_TEST27_PATH = "/data/test/internalOverlayTest/test27/entry_fa_lower_version.hap";
 const std::string BUNDLE_NAME_OF_OVERLAY_TEST1 = "com.example.internalOverlayTest1";
-const std::string MODULE_NAME_OF_OVERLAY_TEST4 = "feature";
+const std::string MODULE_NAME_OF_TARGET_FEATURE = "feature";
 const std::string MODULE_NAME_OF_TARGET_ENTRY = "entry";
+const std::string MODULE_NAME_OF_TARGET_FEATURE1 = "feature1";
 } // namespace
 class StatusReceiverImpl : public StatusReceiverHost {
 public:
@@ -120,6 +144,7 @@ public:
         OverlayModuleInfo &overlayModuleInfo);
     static ErrCode GetOverlayModuleInfoForTarget(const std::string &targetBundleName, const std::string &moduleName,
         std::vector<OverlayModuleInfo> &overlayModuleInfos);
+    static ErrCode GetApplicationInfo(const std::string &appName, ApplicationInfo &appInfo);
     static sptr<IBundleMgr> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
     static sptr<IOverlayManager> GetOverlayManagerProxy();
@@ -241,6 +266,16 @@ ErrCode BmsOverlayInternalInstallTest::GetOverlayModuleInfoForTarget(const std::
     return ret;
 }
 
+ErrCode BmsOverlayInternalInstallTest::GetApplicationInfo(const std::string &appName, ApplicationInfo &appInfo)
+{
+    sptr<IBundleMgr> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+
+    auto ret = bundleMgrProxy->GetApplicationInfoV9(appName,
+        static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), USERID, appInfo);
+    return ret;
+}
+
 /**
  * @tc.number: Bms_Overlay_Internal_Install_0100
  * @tc.name:  test the installation of overlay hsp
@@ -327,7 +362,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0500, Funct
     EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST4_PATH;
 
     OverlayModuleInfo overlayModuleInfo;
-    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_OVERLAY_TEST4, overlayModuleInfo);
+    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE, overlayModuleInfo);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_EQ(overlayModuleInfo.priority, DEFAULT_PRIORITY);
 
@@ -351,7 +386,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0600, Funct
     EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST5_PATH;
 
     OverlayModuleInfo overlayModuleInfo;
-    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_OVERLAY_TEST4, overlayModuleInfo);
+    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE, overlayModuleInfo);
     EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
 
     ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
@@ -374,7 +409,7 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_0700, Funct
     EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST6_PATH;
 
     OverlayModuleInfo overlayModuleInfo;
-    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_OVERLAY_TEST4, overlayModuleInfo);
+    ret = GetOverlayModuleInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE, overlayModuleInfo);
     EXPECT_EQ(ret, ERR_OK);
 
     ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
@@ -519,6 +554,523 @@ HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1200, Funct
     ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
     EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
     std::cout << "END Bms_Overlay_Internal_Install_1200" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1400
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test14/',there is two overlay hsp internalOverlayTest14.hsp
+ *             and internalOverlayTest1.hsp.
+ *           2.install entry_hap.hap successfully.
+ *           3.install overlay hsp successfully.
+ *           4.query overlay hsp overlayModuleInfo successfully.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1400, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1400" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST14_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST14_PATH1;
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST14_PATH2);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST14_PATH2;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), OVERLAY_MODULE_INFO_SIZE);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1400" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1500
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test15/',there is an overlay hsp internalOverlayTest15.hsp with
+ *             version code 1000001.
+ *           2.install entry_hap.hap with version code 1000000 successfully.
+ *           3.install overlay internalOverlayTest15.hsp failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1500, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1500" << std::endl;
+    std::vector<std::string> bundlePaths = { TARGET_MODULE_ENTRY_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<TARGET_MODULE_ENTRY_PATH;
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST15_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INCONSISTENT_VERSION_CODE) <<
+        "install fail!" << INTERNAL_OVERLAY_TEST15_PATH;
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1500" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1600
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test16/',there is an overlay hsp internalOverlayTest1.hsp.
+ *           2.install overlay internalOverlayTest1.hsp successfully.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1600, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1600" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST16_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST16_PATH;
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1600" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1700
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test17/',there is two overlay hsp internalOverlayTest1.hsp and
+ *             internalOverlayTest15.hsp.
+ *           2.install overlay internalOverlayTest1.hsp successfully.
+ *           3.install overlay internalOverlayTest15.hsp successfully and low version code module is uninstalled.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1700, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1700" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST17_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST17_PATH1;
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST17_PATH2);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST17_PATH2;
+
+    ApplicationInfo appInfo;
+    ret = GetApplicationInfo(BUNDLE_NAME_OF_OVERLAY_TEST1, appInfo);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(appInfo.versionCode, HIGHER_VERSION_CODE);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1700" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1800
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test18/',there is two files internalOverlayTest12.hsp and
+ *             higher_version_feature_hap.hap.
+ *           2.install overlay internalOverlayTest12.hsp successfully.
+ *           3.install higher_version_feature_hap.hap to update overlay module to non-overlay module failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1800, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1800" << std::endl;
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST18_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST18_PATH1;
+
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST18_PATH2);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST18_PATH2;
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1800" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_1900
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test19/',there is four files entry_hap.hap, feature_hap.hap,
+ *             internalOverlayTest1.hsp and internalOverlayTest18.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update overlay hsp whose target module name is feature1 successfully.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_1900, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_1900" << std::endl;
+    // install haps which modules are entry and feature1
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST19_PATH1, INTERNAL_OVERLAY_TEST19_PATH2 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!";
+
+    // install overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST19_PATH3);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST19_PATH3;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // install overlay hsp whose target module name is feature1
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST19_PATH4);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST19_PATH4;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(overlayModuleInfos.empty());
+
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE1, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_1900" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2000
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test19/',there is four files entry_hap.hap
+ *             internalOverlayTest1.hsp and internalOverlayTest18.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update overlay hsp whose target module name is feature1 successfully.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2000, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2000" << std::endl;
+    // install haps which modules are entry
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST19_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST19_PATH1;
+
+    // install overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST19_PATH3);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST19_PATH3;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // update overlay hsp whose target module name is feature1
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST19_PATH4);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST19_PATH4;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(overlayModuleInfos.empty());
+
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE1, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_MODULE_NOT_EXISTED);
+    EXPECT_TRUE(overlayModuleInfos.empty());
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2000" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2100
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test21/',there is four files entry_hap.hap
+ *             internalOverlayTest14.hsp and internalOverlayTest15.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update overlay hsp failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2100, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2100" << std::endl;
+    // install haps which modules are entry
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST19_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST19_PATH1;
+
+    // install overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH1);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST21_PATH1;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    // install overlay hsp whose target module name is feature1
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH2);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_INCONSISTENT_VERSION_CODE) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST21_PATH2;
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2100" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2200
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test19/',there is four files entry_hap.hap
+ *             internalOverlayTest14.hsp and internalOverlayTest15.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update overlay entry_hap.hap successfully.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2200, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2200" << std::endl;
+    // install haps which modules are entry
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST19_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST19_PATH1;
+
+    // install overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH1);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST21_PATH1;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    // update overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH1);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST21_PATH1;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2200" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2300
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test19/',there is a hap entry_hap.hap,
+ *             under '/data/test/internalOverlayTest/test21/',there is a hsp internalOverlayTest14.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update entry_hap.hap successfully and low version code overlay module is uninstalled.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2300, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2300" << std::endl;
+    // install haps which modules are entry
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST19_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST19_PATH1;
+
+    // install overlay hsp whose target module name is entry
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH1);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST21_PATH1;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    // update overlay entry_hap.hap
+    bundlePaths.clear();
+    bundlePaths.emplace_back(TARGET_MODULE_HIGHER_VERSION_ENTRY_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << TARGET_MODULE_HIGHER_VERSION_ENTRY_PATH;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2300" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2400
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test24/',there is a hap feature1_hap.hap,
+ *             under '/data/test/internalOverlayTest/test21/',there is a hsp internalOverlayTest14.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update entry_hap.hap failed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2400, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2400" << std::endl;
+    // install hap which modules is feature
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST24_PATH1 };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST24_PATH1;
+
+    // install overlay hsp whose target module name is feature
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST24_PATH2);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST24_PATH2;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_FEATURE, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    // update hap entry_hap.hap
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST24_PATH3);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, IStatusReceiver::ERR_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME) << "install fail!" <<
+        INTERNAL_OVERLAY_TEST24_PATH3;
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2400" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2500
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/',there is a hap entry_hap.hap,
+ *             under '/data/test/internalOverlayTest/test7/',there is a hsp internalOverlayTest6.hsp,
+ *             under '/data/test/internalOverlayTest/test25/',there is a hsp internalOverlayTest6.hsp.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update entry_hap.hap to entry_fa.hap successfully and overlay connection is removed.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2500, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2500" << std::endl;
+    // install hap which modules is entry
+    std::vector<std::string> bundlePaths = { TARGET_MODULE_ENTRY_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << TARGET_MODULE_ENTRY_PATH;
+
+    // install overlay hsp whose target module name is feature
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST7_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST7_PATH;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    // update hap entry_hap.hap to entry_fa.hap
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST25_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST25_PATH;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2500" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2600
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/',there is a hap entry_hap.hap,
+ *             under '/data/test/internalOverlayTest/test21/',there is a hsp internalOverlayTest14.hsp,
+ *             under '/data/test/internalOverlayTest/test26/',there is two files internalOverlayTest15.hsp and
+ *             higher_version_entry_hap.hap.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update entry_hap.hap and internalOverlayTest14.hsp successfully, overlayModuleInfo is reserved.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2600, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2600" << std::endl;
+    // install hap which modules is feature
+    std::vector<std::string> bundlePaths = { TARGET_MODULE_ENTRY_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << TARGET_MODULE_ENTRY_PATH;
+
+    // install overlay hsp whose target module name is feature
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST21_PATH1);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" <<INTERNAL_OVERLAY_TEST21_PATH1;
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    // update hap entry_hap.hap to entry_fa.hap
+    bundlePaths.clear();
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST26_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST26_PATH;
+
+    overlayModuleInfos.clear();
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2600" << std::endl;
+}
+
+/**
+ * @tc.number: Bms_Overlay_Internal_Install_2700
+ * @tc.name:  test the installation of a third-party bundle
+ * @tc.desc: 1.under '/data/test/internalOverlayTest/test27/',there is a hap entry_fa_lower_version.hap,
+ *             under '/data/test/internalOverlayTest/test21/',there is a hsp internalOverlayTest14.hsp,
+ *             under '/data/test/internalOverlayTest/test26/',there is two files internalOverlayTest15.hsp and
+ *             higher_version_entry_hap.hap.
+ *           2.install target haps successfully.
+ *           3.install overlay hsp whose target module name is entry successfully.
+ *           4.update entry_hap.hap and internalOverlayTest14.hsp successfully, overlayModuleInfo is reserved.
+ */
+HWTEST_F(BmsOverlayInternalInstallTest, Bms_Overlay_Internal_Install_2700, Function | MediumTest | Level1)
+{
+    std::cout << "START Bms_Overlay_Internal_Install_2700" << std::endl;
+    // install hap which is entry type and fa model
+    std::vector<std::string> bundlePaths = { INTERNAL_OVERLAY_TEST27_PATH };
+    ErrCode ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!" << INTERNAL_OVERLAY_TEST27_PATH;
+
+    // install overlay hsp and update entry module
+    bundlePaths.clear();
+    bundlePaths.emplace_back(TARGET_MODULE_ENTRY_PATH);
+    bundlePaths.emplace_back(INTERNAL_OVERLAY_TEST7_PATH);
+    ret = InstallOverlayBundle(bundlePaths);
+    EXPECT_EQ(ret, ERR_OK) << "install fail!";
+
+    std::vector<OverlayModuleInfo> overlayModuleInfos;
+    ret = GetOverlayModuleInfoForTarget(BUNDLE_NAME_OF_OVERLAY_TEST1, MODULE_NAME_OF_TARGET_ENTRY, overlayModuleInfos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(overlayModuleInfos.size(), MIN_OVERLAY_MODULE_INFO_SIZE);
+
+    ret = UninstallBundle(BUNDLE_NAME_OF_OVERLAY_TEST1);
+    EXPECT_EQ(ret, ERR_OK) << "uninstall fail!" << BUNDLE_NAME_OF_OVERLAY_TEST1;
+    std::cout << "END Bms_Overlay_Internal_Install_2700" << std::endl;
 }
 } // AppExecFwk
 } // OHOS
