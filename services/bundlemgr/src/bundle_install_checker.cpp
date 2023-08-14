@@ -1411,6 +1411,11 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
         APP_LOGE("signatureFileDir is not suffixed with .sig");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
+    // signatureFileDir not support relevant dir
+    if (signatureFileDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("signatureFileDir is invalid");
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
     return ERR_OK;
 }
 
