@@ -30,8 +30,10 @@ static napi_value LauncherBundleManagerExport(napi_env env, napi_value exports)
     APP_LOGD("LauncherBundleManagerExport init");
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getLauncherAbilityInfo", GetLauncherAbilityInfo),
+        DECLARE_NAPI_FUNCTION("getLauncherAbilityInfoSync", GetLauncherAbilityInfoSync),
         DECLARE_NAPI_FUNCTION("getAllLauncherAbilityInfo", GetAllLauncherAbilityInfo),
         DECLARE_NAPI_FUNCTION("getShortcutInfo", GetShortcutInfo),
+        DECLARE_NAPI_FUNCTION("getShortcutInfoSync", GetShortcutInfoSync),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

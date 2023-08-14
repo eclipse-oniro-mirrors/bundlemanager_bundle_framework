@@ -33,6 +33,15 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
     return nullptr;
 }
 
+napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "GetLauncherAbilityInfoSync");
+    napi_throw(env, error);
+    return nullptr;
+}
+
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
@@ -47,6 +56,15 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
     APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
     napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
         "GetShortcutInfo");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Launcher not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "GetShortcutInfoSync");
     napi_throw(env, error);
     return nullptr;
 }

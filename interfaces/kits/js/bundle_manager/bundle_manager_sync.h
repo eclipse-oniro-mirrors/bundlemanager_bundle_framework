@@ -16,18 +16,30 @@
 #define BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_SYNC_H
 
 #include "ability_info.h"
-#include "bundle_constants.h"
-#include "bundle_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
+#include "want.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+
+struct ExtensionParamInfo {
+    OHOS::AAFwk::Want want;
+    int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+};
+
+napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info);
+napi_value GetPermissionDefSync(napi_env env, napi_callback_info info);
+napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info);
+napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info);
 napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info);
 napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info);
+
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_SYNC_H

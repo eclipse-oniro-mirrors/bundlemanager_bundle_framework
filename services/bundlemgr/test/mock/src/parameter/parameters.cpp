@@ -19,7 +19,11 @@ namespace OHOS {
 namespace system {
 bool GetBoolParameter(const std::string& key, bool def)
 {
+#ifndef GET_BOOL_PARAMETER_TRUE
     return false;
+#else
+    return true;
+#endif
 }
 
 std::string GetParameter(const std::string& key, const std::string& def)

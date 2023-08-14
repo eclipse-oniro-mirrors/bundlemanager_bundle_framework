@@ -12,8 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "bundle_manager_sync.h"
-
 #include <string>
 
 #include "app_log_wrapper.h"
@@ -28,20 +26,303 @@
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
+#include "bundle_manager_sync.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
 constexpr const char* MODULE_NAME = "moduleName";
 constexpr const char* ABILITY_NAME = "abilityName";
+constexpr const char* BUNDLE_NAME = "bundleName";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
-const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+constexpr const char* USER_ID = "userId";
+constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
+constexpr const char* FLAGS = "flags";
+constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+const std::string GET_ABILITY_LABEL_SYNC = "GetAbilityLabelSync";
+const std::string GET_LAUNCH_WANT_FOR_BUNDLE_SYNC = "GetLaunchWantForBundleSync";
 const std::string GET_BUNDLE_ARCHIVE_INFO_SYNC = "GetBundleArchiveInfoSync";
 const std::string GET_BUNDLE_NAME_BY_UID_SYNC = "GetBundleNameByUidSync";
 const std::string GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtensionAbilitySync";
 const std::string GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
+const std::string QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
+const std::string GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
+const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
+const std::string PERMISSION_NAME = "permissionName";
+const std::string INVALID_WANT_ERROR =
+    "implicit query condition, at least one query param(action entities uri type) non-empty.";
+const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
+
+ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info info,
+    ExtensionParamInfo& extensionParamInfo)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_FOUR)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseWantPerformance(env, args[i], extensionParamInfo.want)) {
+                APP_LOGE("invalid want");
+                BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.extensionAbilityType)) {
+                APP_LOGE("invalid extensionAbilityType");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
+                    EXTENSIONABILITY_TYPE, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_TWO) {
+            if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.flags)) {
+                APP_LOGE("invalid flags");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, FLAGS, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_THREE) {
+            if (!CommonFunc::ParseInt(env, args[i], extensionParamInfo.userId)) {
+                APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    if (extensionParamInfo.userId == Constants::UNSPECIFIED_USERID) {
+        extensionParamInfo.userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return ERR_OK;
+}
+
+napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI QueryExtensionInfosSync call");
+    ExtensionParamInfo extensionParamInfo;
+    if (ParamsProcessQueryExtensionInfosSync(env, info, extensionParamInfo) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret;
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    if (extensionParamInfo.extensionAbilityType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
+        APP_LOGD("query extensionAbilityInfo sync without type");
+        ret = CommonFunc::ConvertErrCode(
+            iBundleMgr->QueryExtensionAbilityInfosV9(extensionParamInfo.want, extensionParamInfo.flags,
+            extensionParamInfo.userId, extensionInfos));
+    } else {
+        ExtensionAbilityType type = static_cast<ExtensionAbilityType>(extensionParamInfo.extensionAbilityType);
+        APP_LOGD("query extensionAbilityInfo sync with type %{public}d", extensionParamInfo.extensionAbilityType);
+        ret = CommonFunc::ConvertErrCode(iBundleMgr->QueryExtensionAbilityInfosV9(
+            extensionParamInfo.want, type, extensionParamInfo.flags,
+            extensionParamInfo.userId, extensionInfos));
+    }
+    if (ret != NO_ERROR) {
+        APP_LOGE("QueryExtensionAbilityInfosV9 failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, QUERY_EXTENSION_INFOS_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nExtensionInfos = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nExtensionInfos));
+    CommonFunc::ConvertExtensionInfos(env, extensionInfos, nExtensionInfos);
+    APP_LOGD("call QueryExtensionInfosSync done");
+    return nExtensionInfos;
+}
+
+napi_value GetPermissionDefSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetPermissionDefSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string permissionName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], permissionName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PERMISSION_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    OHOS::AppExecFwk::PermissionDef permissionDef;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetPermissionDef(permissionName, permissionDef));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetPermissionDef failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_PERMISSION_DEF_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nPermissionDef = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nPermissionDef));
+    CommonFunc::ConvertPermissionDef(env, nPermissionDef, permissionDef);
+    APP_LOGD("call GetPermissionDefSync done");
+    return nPermissionDef;
+}
+
+ErrCode ParamsProcessGetAbilityLabelSync(napi_env env, napi_callback_info info,
+    std::string& bundleName, std::string& moduleName, std::string& abilityName)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_THREE, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], moduleName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], abilityName)) {
+            BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    } else {
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    return ERR_OK;
+}
+
+napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("begin to GetAbilityLabelSync");
+#ifdef GLOBAL_RESMGR_ENABLE
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    if (ParamsProcessGetAbilityLabelSync(env, info, bundleName, moduleName, abilityName) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    std::string abilityLabel;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAbilityLabel(bundleName, moduleName, abilityName, abilityLabel));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetAbilityLabel failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_ABILITY_LABEL_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nAbilityLabel = nullptr;
+    napi_create_string_utf8(env, abilityLabel.c_str(), NAPI_AUTO_LENGTH, &nAbilityLabel);
+    APP_LOGD("call GetAbilityLabelSync done");
+    return nAbilityLabel;
+#else
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND, "getAbilityLabel");
+    napi_throw(env, error);
+    return nullptr;
+#endif
+}
+
+ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info info,
+    std::string& bundleName, int32_t& userId)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (!CommonFunc::ParseString(env, args[i], bundleName)) {
+                APP_LOGE("bundleName %{public}s invalid", bundleName.c_str());
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else if (i == ARGS_POS_ONE) {
+            if (!CommonFunc::ParseInt(env, args[i], userId)) {
+                APP_LOGE("parseInt failed");
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
+                return ERROR_PARAM_CHECK_ERROR;
+            }
+        } else {
+            APP_LOGE("parameter is invalid");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return ERROR_PARAM_CHECK_ERROR;
+        }
+    }
+    if (bundleName.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
+    }
+    return ERR_OK;
+}
+
+napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetLaunchWantForBundleSync call");
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    if (ParamsProcessGetLaunchWantForBundleSync(env, info, bundleName, userId) != ERR_OK) {
+        APP_LOGE("paramsProcess is invalid");
+        BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    OHOS::AAFwk::Want want;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetLaunchWantForBundle(bundleName, want, userId));
+    if (ret != NO_ERROR) {
+        APP_LOGE("GetLaunchWantForBundle failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nWant = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nWant));
+    CommonFunc::ConvertWantInfo(env, nWant, want);
+    APP_LOGD("call GetLaunchWantForBundleSync done");
+    return nWant;
 }
 
 napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info)

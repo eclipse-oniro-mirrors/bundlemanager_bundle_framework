@@ -561,6 +561,7 @@ private:
     NotifyType GetNotifyType();
     void GetCallingEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(EventInfo &eventInfo);
+    void GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo);
     ErrCode CheckArkProfileDir(const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo) const;
     ErrCode ProcessAsanDirectory(InnerBundleInfo &info) const;
     ErrCode CleanAsanDirectory(InnerBundleInfo &info) const;
@@ -602,6 +603,7 @@ private:
     ErrCode CheckBundleInBmsExtension(const std::string &bundleName, int32_t userId);
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
+    void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

@@ -43,7 +43,14 @@ const std::string RESOURCE_NAME_OF_RECOVER = "Recover";
 const std::string RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF = "UpdateBundleForSelf";
 const std::string EMPTY_STRING = "";
 // install message
-constexpr const char* INSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE";
+constexpr const char* INSTALL_PERMISSION =
+    "ohos.permission.INSTALL_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_MDM_BUNDLE or "
+    "ohos.permission.INSTALL_ENTERPRISE_NORMAL_BUNDLE";
+constexpr const char* UNINSTALL_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.UNINSTALL_BUNDLE";
+constexpr const char* RECOVER_PERMISSION = "ohos.permission.INSTALL_BUNDLE or ohos.permission.RECOVER_BUNDLE";
+constexpr const char* INSTALL_SELF_PERMISSION = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PARAMETERS = "parameters";
 constexpr const char* CORRESPONDING_TYPE = "corresponding type";
 constexpr const char* FUNCTION_TYPE = "napi_function";
@@ -193,12 +200,6 @@ napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
 napi_value GetBundleInstallerSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI GetBundleInstallerSync called.");
-    NapiArg args(env, info);
-    if (!args.Init(FIRST_PARAM, FIRST_PARAM)) {
-        APP_LOGE("param count invalid.");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     napi_value m_classBundleInstaller = nullptr;
     NAPI_CALL(env, napi_get_reference_value(env, g_classBundleInstaller,
         &m_classBundleInstaller));
@@ -381,6 +382,7 @@ static void CreateErrCodeMap(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID, ERROR_INSTALL_CODE_SIGNATURE_FAILED},
         { IStatusReceiver::ERR_UNINSTALL_FROM_BMS_EXTENSION_FAILED, ERROR_BUNDLE_NOT_EXIST},
         { IStatusReceiver::ERR_INSTALL_SELF_UPDATE_NOT_MDM, ERROR_INSTALL_SELF_UPDATE_NOT_MDM},
+        { IStatusReceiver::ERR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED},
     };
 }
 
@@ -869,8 +871,26 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     napi_value result[CALLBACK_PARAM_SIZE] = {0};
     ConvertInstallResult(callbackPtr->installResult);
     if (callbackPtr->installResult.resultCode != SUCCESS) {
-        result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
-            GetFunctionName(callbackPtr->option), INSTALL_PERMISSION);
+        switch (callbackPtr->option) {
+            case InstallOption::INSTALL:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_INSTALL, INSTALL_PERMISSION);
+                break;
+            case InstallOption::RECOVER:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_RECOVER, RECOVER_PERMISSION);
+                break;
+            case InstallOption::UNINSTALL:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_UNINSTALL, UNINSTALL_PERMISSION);
+                break;
+            case InstallOption::UPDATE_BUNDLE_FOR_SELF:
+                result[FIRST_PARAM] = BusinessError::CreateCommonError(env, callbackPtr->installResult.resultCode,
+                    RESOURCE_NAME_OF_UPDATE_BUNDLE_FOR_SELF, INSTALL_SELF_PERMISSION);
+                break;
+            default:
+                break;
+        }
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
@@ -1166,14 +1186,8 @@ napi_value UpdateBundleForSelf(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto argc = args.GetMaxArgc();
-    APP_LOGD("the number of argc is %{public}zu", argc);
-    if (argc < ARGS_SIZE_TWO) {
-        APP_LOGE("the params number is incorrect");
-        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
-        return nullptr;
-    }
     std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr = std::make_unique<AsyncInstallCallbackInfo>(env);
-    callbackPtr->option = InstallOption::INSTALL;
+    callbackPtr->option = InstallOption::UPDATE_BUNDLE_FOR_SELF;
     for (size_t i = 0; i < argc; ++i) {
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);

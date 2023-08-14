@@ -222,6 +222,7 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
+napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
