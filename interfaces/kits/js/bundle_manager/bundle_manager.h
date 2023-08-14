@@ -218,9 +218,13 @@ struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
+napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);

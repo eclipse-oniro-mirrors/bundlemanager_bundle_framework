@@ -70,6 +70,10 @@ const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
+const std::string SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
+const std::string SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
+const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
+const std::string IS_ABILITY_ENABLED_SYNC = "IsAbilityEnabledSync";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -1390,6 +1394,45 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI SetApplicationEnabledSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    bool isEnable;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], isEnable)) {
+        APP_LOGE("parse isEnable failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetApplicationEnabled(bundleName, isEnable));
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetApplicationEnabledSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, SET_APPLICATION_ENABLED_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, ret, &result));
+    APP_LOGD("call SetApplicationEnabledSync done.");
+    return result;
+}
+
 void SetAbilityEnabledExec(napi_env env, void *data)
 {
     AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
@@ -1476,6 +1519,45 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI SetAbilityEnabledSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    AbilityInfo abilityInfo;
+    bool isEnable;
+    if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], abilityInfo)) {
+        APP_LOGE("parse abilityInfo failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+        return nullptr;
+    }
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], isEnable)) {
+        APP_LOGE("parse isEnable failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, IS_ENABLE, TYPE_BOOLEAN);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAbilityEnabled(abilityInfo, isEnable));
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetAbilityEnabledSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, SET_ABILITY_ENABLED_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_create_int32(env, ret, &result));
+    APP_LOGD("call SetAbilityEnabledSync done.");
+    return result;
+}
+
 void IsApplicationEnabledExec(napi_env env, void *data)
 {
     ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
@@ -1557,6 +1639,40 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
+napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI IsApplicationEnabledSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    bool isEnable;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsApplicationEnabled(bundleName, isEnable));
+    if (ret != NO_ERROR) {
+        APP_LOGE("IsApplicationEnabledSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, IS_APPLICATION_ENABLED_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_get_boolean(env, isEnable, &result));
+    APP_LOGD("call IsApplicationEnabledSync done.");
+    return result;
+}
+
 void IsAbilityEnabledExec(napi_env env, void *data)
 {
     AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
@@ -1636,6 +1752,40 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call SetAbilityEnabled done.");
     return promise;
+}
+
+napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI IsAbilityEnabledSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    AbilityInfo abilityInfo;
+    if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], abilityInfo)) {
+        APP_LOGE("parse abilityInfo failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return nullptr;
+    }
+    bool isEnable;
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable));
+    if (ret != NO_ERROR) {
+        APP_LOGE("IsAbilityEnabledSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, IS_ABILITY_ENABLED_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value result = nullptr;
+    NAPI_CALL(env, napi_get_boolean(env, isEnable, &result));
+    APP_LOGD("call IsAbilityEnabledSync done.");
+    return result;
 }
 
 static ErrCode InnerCleanBundleCacheCallback(
