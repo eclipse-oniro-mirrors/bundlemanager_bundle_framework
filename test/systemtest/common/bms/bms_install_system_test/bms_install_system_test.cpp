@@ -152,6 +152,7 @@ public:
     static sptr<IBundleMgr> GetBundleMgrProxy();
     static sptr<IBundleInstaller> GetInstallerProxy();
     void ClearJsonFile() const;
+    bool UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths) const;
 };
 
 sptr<IBundleMgr> BmsInstallSystemTest::GetBundleMgrProxy()
@@ -285,6 +286,23 @@ void BmsInstallSystemTest::UninstallBundle(
     bool uninstallResult = installerProxy->Uninstall(bundleName, installParam, statusReceiver);
     EXPECT_TRUE(uninstallResult);
     uninstallMsg = statusReceiver->GetResultMsg();
+}
+
+bool BmsInstallSystemTest::UpdateBundleForSelf(const std::vector<std::string> &bundleFilePaths) const
+{
+    sptr<IBundleInstaller> installerProxy = GetInstallerProxy();
+    if (!installerProxy) {
+        APP_LOGE("get bundle installer Failure.");
+        return false;
+    }
+
+    sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
+    EXPECT_NE(statusReceiver, nullptr);
+    InstallParam installParam;
+    installParam.userId = USERID;
+
+    bool result = installerProxy->UpdateBundleForSelf(bundleFilePaths, installParam, statusReceiver);
+    return result;
 }
 
 int32_t BmsInstallSystemTest::ExcuteMaintainCmd(const std::string &cmd, std::vector<std::string> &cmdRes)
@@ -1857,6 +1875,18 @@ HWTEST_F(BmsInstallSystemTest, BMS_DFX_0400, Function | MediumTest | Level2)
     UninstallBundle(bundleName, uninstallMsg);
     EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
     std::cout << "END BMS_DFX_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_UpdateBundleForSelf_0100
+ * @tc.name:  test the UpdateBundleForSelf
+ * @tc.desc: 1.test the UpdateBundleForSelf
+ */
+HWTEST_F(BmsInstallSystemTest, BMS_UpdateBundleForSelf_0100, Function | MediumTest | Level1)
+{
+    std::vector<std::string> bundleFilePaths;
+    bool res = UpdateBundleForSelf(bundleFilePaths);
+    EXPECT_EQ(res, true);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
