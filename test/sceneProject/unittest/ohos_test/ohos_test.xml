@@ -104,6 +104,21 @@
       <option name="push" value="test_bundle/devicetype_error.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
     </preparer>
   </target>
+  <target name="BmsBundleOtaUpdateTest">
+    <preparer>
+      <option name="push" value="test_bundle/otaUpdateTestAppField.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestAplDown.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestAplUp.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestBasis.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestBasisFeature1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestBasisFeature2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestModuleField.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestSignaIcon.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestSoChanged.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestSoChangedFeature1.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+      <option name="push" value="test_bundle/otaUpdateTestSoChangedFeature2.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
+    </preparer>
+  </target>
   <target name="BmsBundleManagerTest">
     <preparer>
       <option name="push" value="test_bundle/backup.hap -> /data/test/resource/bms/install_bundle/" src="res"/>
