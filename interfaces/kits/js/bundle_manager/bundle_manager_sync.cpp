@@ -574,8 +574,10 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     int32_t userId;
-    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
-        APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+        }
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
