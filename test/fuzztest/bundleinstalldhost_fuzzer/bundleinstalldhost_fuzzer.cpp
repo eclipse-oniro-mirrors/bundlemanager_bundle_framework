@@ -27,7 +27,7 @@ namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 24;
-ststatic InstalldHost installdHost;
+static InstalldHost installdHost;
 
 uint32_t GetU32Data(const char* ptr)
 {
