@@ -31,6 +31,10 @@ struct ExtensionParamInfo {
     int32_t userId = Constants::UNSPECIFIED_USERID;
 };
 
+napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info);
+napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info);
 napi_value GetPermissionDefSync(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info);
