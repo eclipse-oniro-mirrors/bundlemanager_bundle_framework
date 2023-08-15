@@ -2360,6 +2360,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, value, "SYSDIALOG_ATOMICSERVICEPANEL", nSysDialogAtomicServicePanel));
 
+    napi_value nSysDialogPower;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_POWER), &nSysDialogPower));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_POWER", nSysDialogPower));
+
     napi_value nSysPickerShare;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_SHARE), &nSysPickerShare));
