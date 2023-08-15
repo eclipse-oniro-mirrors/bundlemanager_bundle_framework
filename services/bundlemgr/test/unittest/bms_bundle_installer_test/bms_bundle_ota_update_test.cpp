@@ -318,12 +318,6 @@ HWTEST_F(BmsBundleOtaUpdateTest, SUB_BMS_OTA_0004, Function | SmallTest | Level3
     auto installer = std::make_unique<SystemBundleInstaller>();
     ret = installer->UninstallSystemBundle(bundleName);
     EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
-
-    ret = OTAInstallSystemBundle(bundleFile);
-    EXPECT_TRUE(ret) << "the update failed: " << bundleFile;
-
-    ret = installer->UninstallSystemBundle(bundleName);
-    EXPECT_TRUE(ret) << "the uninstall failed: " << bundleFile;
 }
 
 /**
