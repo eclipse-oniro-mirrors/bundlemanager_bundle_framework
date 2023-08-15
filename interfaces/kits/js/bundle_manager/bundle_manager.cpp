@@ -1827,7 +1827,7 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCH_WANT_FOR_BUNDLE,
-            BUNDLE_PERMISSIONS);
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
 
     if (asyncCallbackInfo->deferred) {

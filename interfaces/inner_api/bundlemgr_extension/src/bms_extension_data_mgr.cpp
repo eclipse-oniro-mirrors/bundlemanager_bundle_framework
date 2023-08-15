@@ -25,7 +25,7 @@ namespace AppExecFwk {
 BmsExtension BmsExtensionDataMgr::bmsExtension_;
 void *BmsExtensionDataMgr::handler_ = nullptr;
 namespace {
-static std::mutex stateMutex_;
+static std::mutex stateMutex;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const uint32_t API_VERSION_BASE = 1000;
 }
@@ -36,7 +36,7 @@ BmsExtensionDataMgr::BmsExtensionDataMgr()
 
 ErrCode BmsExtensionDataMgr::Init()
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::lock_guard<std::mutex> stateLock(stateMutex);
     if (bmsExtension_.bmsExtensionBundleMgr.extensionName.empty() || !handler_) {
         BmsExtensionProfile bmsExtensionProfile;
         auto res = bmsExtensionProfile.ParseBmsExtension(BMS_EXTENSION_PATH, bmsExtension_);

@@ -473,7 +473,7 @@ napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
     if (ret != NO_ERROR) {
         APP_LOGE("GetLaunchWantForBundle failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
+            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
