@@ -96,6 +96,11 @@ static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbili
 
 static void ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value);
 
+static void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity);
+
+static void ConvertAppProvisionInfo(
+    napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo);
+
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
