@@ -295,6 +295,18 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0009, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsExtensionDataMgr_0010
+ * @tc.name: Uninstall
+ * @tc.desc: Uninstall
+ */
+HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0010, Function | SmallTest | Level0)
+{
+    BundleMgrExtTest bundleMgrExtTest;
+    ErrCode res = bundleMgrExtTest.Uninstall("");
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
+}
+
+/**
  * @tc.number: BmsExtensionProfile_0001
  * @tc.name: TransformTo
  * @tc.desc: TransformTo
