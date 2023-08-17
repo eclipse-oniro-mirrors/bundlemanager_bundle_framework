@@ -576,9 +576,21 @@ ErrCode ParamsProcessGetProfileByAbilitySync(napi_env env, napi_callback_info in
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return ERROR_PARAM_CHECK_ERROR;
     }
+    if (moduleName.empty()) {
+        APP_LOGE("param failed due to empty moduleName");
+        napi_value businessError = BusinessError::CreateCommonError(env, ERROR_MODULE_NOT_EXIST);
+        napi_throw(env, businessError);
+        return ERROR_MODULE_NOT_EXIST;
+    }
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], abilityName)) {
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
         return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (abilityName.empty()) {
+        APP_LOGE("param failed due to empty abilityName");
+        napi_value businessError = BusinessError::CreateCommonError(env, ERROR_ABILITY_NOT_EXIST);
+        napi_throw(env, businessError);
+        return ERROR_ABILITY_NOT_EXIST;
     }
     if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], metadataName)) {
@@ -599,7 +611,7 @@ ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
             }
         }
     }
-    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    return ERROR_ABILITY_NOT_EXIST;
 }
 
 napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
@@ -642,7 +654,7 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
     if (!client.GetProfileFromAbility(targetAbilityInfo, metadataName, profileVec)) {
         APP_LOGE("GetProfileByAbilitySync failed by GetProfileFromAbility");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
+            env, ERROR_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -663,7 +675,7 @@ ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::st
             }
         }
     }
-    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    return ERROR_ABILITY_NOT_EXIST;
 }
 
 napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
@@ -707,7 +719,7 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
     if (!client.GetProfileFromExtension(targetExtensionInfo, metadataName, profileVec)) {
         APP_LOGE("GetProfileByExAbilitySync failed by GetProfileFromExtension");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
+            env, ERROR_PROFILE_NOT_EXIST, GET_PROFILE_BY_EXTENSION_ABILITY_SYNC);
         napi_throw(env, businessError);
         return nullptr;
     }
