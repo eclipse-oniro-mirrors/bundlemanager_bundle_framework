@@ -25,10 +25,11 @@
 
 #include "bundle_installer.h"
 #include "status_receiver_interface.h"
+#include "thread_pool.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleInstallerManager {
+class BundleInstallerManager : public std::enable_shared_from_this<BundleInstallerManager> {
 public:
     using ThreadPoolTask = std::function<void()>;
 
@@ -107,7 +108,14 @@ private:
 
     void AddTask(const ThreadPoolTask &task, const std::string &taskName);
 
+    void DelayStopThreadPool();
+
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
+
+    ThreadPool threadPool_ = ThreadPool("InstallThreadPool");
+    const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
+    std::mutex mutex_;
+    bool running_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
