@@ -76,6 +76,7 @@ const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
+const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -118,7 +119,7 @@ std::string BuildTempNativeLibraryPath(const std::string &nativeLibraryPath)
     auto suffixPath = nativeLibraryPath.substr(position);
     return prefixPath + Constants::TMP_SUFFIX + suffixPath;
 }
-}
+} // namespace
 
 BaseBundleInstaller::BaseBundleInstaller()
     : bundleInstallChecker_(std::make_unique<BundleInstallChecker>())
@@ -3854,12 +3855,17 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         return ERR_OK;
     }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
+        if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
+            APP_LOGE("install bundle(%{public}s) failed due to insufficient disk memory", bundlePaths[index].c_str());
+            return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+        }
         auto destination = BundleUtil::CopyFileToSecurityDir(bundlePaths[index], DirType::STREAM_INSTALL_DIR,
             toDeleteTempHapPath_);
         if (destination.empty()) {
             APP_LOGE("copy file %{public}s to security dir failed", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
+        BundleUtil::DeleteDir(bundlePaths[index]);
         bundlePaths[index] = destination;
     }
     return ERR_OK;
@@ -3907,12 +3913,17 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     }
 
     // copy code signature file to security dir
+    if (!BundleUtil::CheckSystemSize(signatureFileDir, APP_INSTALL_PATH)) {
+        APP_LOGE("copy signature file(%{public}s) failed due to insufficient disk memory", signatureFileDir.c_str());
+        return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
     std::string destinationStr =
         BundleUtil::CopyFileToSecurityDir(signatureFileDir, DirType::SIG_FILE_DIR, toDeleteTempHapPath_);
     if (destinationStr.empty()) {
         APP_LOGE("copy file %{public}s to security dir failed", signatureFileDir.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
+    BundleUtil::DeleteDir(signatureFileDir);
     signatureFileDir = destinationStr;
     APP_LOGD("signatureFileDir is %{public}s", signatureFileDir.c_str());
     return ERR_OK;
@@ -4012,6 +4023,7 @@ ErrCode BaseBundleInstaller::MoveSoFileToRealInstallationDir(
                 APP_LOGE("move file to real path failed %{public}d", result);
                 return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
             }
+            RemoveTempSoDir(tempSoDir);
         }
     }
     return ERR_OK;
@@ -4096,6 +4108,27 @@ ErrCode BaseBundleInstaller::CheckBundleInBmsExtension(const std::string &bundle
         return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
     }
     return ERR_OK;
+}
+
+void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
+{
+    auto firstPos = tempSoDir.find(Constants::TMP_SUFFIX);
+    if (firstPos == std::string::npos) {
+        APP_LOGW("invalid tempSoDir %{public}s", tempSoDir.c_str());
+        return;
+    }
+    auto secondPos = tempSoDir.find(Constants::PATH_SEPARATOR, firstPos);
+    if (secondPos == std::string::npos) {
+        APP_LOGW("invalid tempSoDir %{public}s", tempSoDir.c_str());
+        return;
+    }
+    auto thirdPos = tempSoDir.find(Constants::PATH_SEPARATOR, secondPos);
+    if (thirdPos == std::string::npos) {
+        InstalldClient::GetInstance()->RemoveDir(tempSoDir);
+        return;
+    }
+    std::string subTempSoDir = tempSoDir.substr(0, thirdPos);
+    InstalldClient::GetInstance()->RemoveDir(subTempSoDir);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

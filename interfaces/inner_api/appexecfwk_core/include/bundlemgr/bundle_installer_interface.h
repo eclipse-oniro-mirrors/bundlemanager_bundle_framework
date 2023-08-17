@@ -126,7 +126,6 @@ public:
     {
         return true;
     }
-
 };
 
 #define PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                                 \

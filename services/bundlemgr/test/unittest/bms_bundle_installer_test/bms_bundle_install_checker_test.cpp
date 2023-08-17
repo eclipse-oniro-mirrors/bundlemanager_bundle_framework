@@ -1828,4 +1828,82 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckMDMUpdateBundleForSelf_0006, Function
     auto ret = baseBundleInstaller.CheckMDMUpdateBundleForSelf(param, innerBundleInfo, infos, true);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME);
 }
+
+/**
+ * @tc.number: VaildEnterpriseInstallPermission_0001
+ * @tc.name: test the start function of VaildEnterpriseInstallPermission
+ * @tc.desc: 1. test VaildEnterpriseInstallPermission
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermission_0001, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam param;
+    Security::Verify::ProvisionInfo provisionInfo;
+    param.isSelfUpdate = true;
+    auto ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, false);
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: VaildEnterpriseInstallPermission_0002
+ * @tc.name: test the start function of VaildEnterpriseInstallPermission
+ * @tc.desc: 1. test VaildEnterpriseInstallPermission
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermission_0002, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam param;
+    Security::Verify::ProvisionInfo provisionInfo;
+    param.isCallByShell = true;
+    provisionInfo.type = Security::Verify::ProvisionType::RELEASE;
+    auto ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, false);
+    provisionInfo.type = Security::Verify::ProvisionType::DEBUG;
+    ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: VaildEnterpriseInstallPermission_0003
+ * @tc.name: test the start function of VaildEnterpriseInstallPermission
+ * @tc.desc: 1. test VaildEnterpriseInstallPermission
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermission_0003, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam param;
+    Security::Verify::ProvisionInfo provisionInfo;
+    param.isCallByShell = false;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_NORMAL;
+    auto ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, false);
+    param.installEtpNormalBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, true);
+    param.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: VaildEnterpriseInstallPermission_0004
+ * @tc.name: test the start function of VaildEnterpriseInstallPermission
+ * @tc.desc: 1. test VaildEnterpriseInstallPermission
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, VaildEnterpriseInstallPermission_0004, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    InstallParam param;
+    Security::Verify::ProvisionInfo provisionInfo;
+    param.isCallByShell = false;
+    provisionInfo.distributionType = Security::Verify::AppDistType::ENTERPRISE_MDM;
+    auto ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, false);
+    param.installEtpMdmBundlePermissionStatus = PermissionStatus::HAVE_PERMISSION_STATUS;
+    ret = installChecker.VaildEnterpriseInstallPermission(param, provisionInfo);
+    EXPECT_EQ(ret, true);
+}
 } // OHOS

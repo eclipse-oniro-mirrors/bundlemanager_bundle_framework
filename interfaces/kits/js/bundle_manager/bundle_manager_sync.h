@@ -31,11 +31,19 @@ struct ExtensionParamInfo {
     int32_t userId = Constants::UNSPECIFIED_USERID;
 };
 
+napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info);
+napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info);
 napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info);
 napi_value GetPermissionDefSync(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabelSync(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info);
-
+napi_value GetBundleArchiveInfoSync(napi_env env, napi_callback_info info);
+napi_value GetBundleNameByUidSync(napi_env env, napi_callback_info info);
+napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info);
+napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info);
+napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // BUNDLE_FRAMEWORK_INTERFACES_KITS_JS_BUNDLE_MANAGER_BUNDLE_MANAGER_SYNC_H

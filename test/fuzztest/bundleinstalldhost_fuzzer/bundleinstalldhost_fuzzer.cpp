@@ -27,6 +27,7 @@ namespace OHOS {
 constexpr size_t FOO_MAX_LEN = 1024;
 constexpr size_t U32_AT_SIZE = 4;
 constexpr size_t MESSAGE_SIZE = 24;
+static InstalldHost installdHost;
 
 uint32_t GetU32Data(const char* ptr)
 {
@@ -44,7 +45,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     datas.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    InstalldHost installdHost;
     DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     installdHost.OnRemoteRequest(code, datas, reply, option);
 #endif

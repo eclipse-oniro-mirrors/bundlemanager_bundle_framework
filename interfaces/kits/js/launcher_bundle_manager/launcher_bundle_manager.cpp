@@ -134,8 +134,7 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetLauncherAbilityCallbackInfo>(
-        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetLauncherAbilityInfo done");
     return promise;
@@ -274,7 +273,7 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
-        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete, napi_qos_user_initiated);
+        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
@@ -366,8 +365,7 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetShortcutInfo done");
     return promise;

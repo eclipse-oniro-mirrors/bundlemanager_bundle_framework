@@ -604,6 +604,7 @@ private:
     ErrCode CheckMDMUpdateBundleForSelf(const InstallParam &installParam, InnerBundleInfo &oldInfo,
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos, bool isAppExist);
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
+    void RemoveTempSoDir(const std::string &tempSoDir);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
