@@ -203,6 +203,12 @@ napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
     OHOS::AAFwk::Want want;
     if (!CommonFunc::ParseWantWithoutVerification(env, args[ARGS_POS_ONE], want)) {
         APP_LOGE("want invalid!");
@@ -336,6 +342,12 @@ napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nRet;
     }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, DELETE_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
@@ -463,8 +475,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }
-    if (asyncCallbackInfo->appId.size() == 0) {
-        asyncCallbackInfo->err = ERROR_INVALID_APPID;
+    if (appId.size() == 0) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
         napi_throw(env, businessError);
