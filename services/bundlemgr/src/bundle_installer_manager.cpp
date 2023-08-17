@@ -54,12 +54,12 @@ void BundleInstallerManager::DelayStopThreadPool()
     do {
         APP_LOGI("sleep for 60s");
         std::this_thread::sleep_for(std::chrono::seconds(DELAY_INTERVAL_SECONDS));
-    } while (threadPool_.GetCurTaskNum() != 0);
+    } while (threadPool_->GetCurTaskNum() != 0);
 
     std::lock_guard<std::mutex> guard(mutex_);
     APP_LOGI("stop installer thread pool");
-    threadPool_.Stop();
-    running_ = false;
+    threadPool_->Stop();
+    threadPool_->reset();
     APP_LOGI("DelayStopThreadPool end");
 }
 
@@ -198,17 +198,17 @@ std::shared_ptr<BundleInstaller> BundleInstallerManager::CreateInstaller(const s
 void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::string &taskName)
 {
     std::lock_guard<std::mutex> guard(mutex_);
-    if (!running_) {
+    if (threadPool_ == nullptr) {
         APP_LOGI("begin to start thread pool");
-        threadPool_.Start(THREAD_NUMBER);
-        threadPool_.SetMaxTaskNum(MAX_TASK_NUMBER);
-        running_ = true;
+        threadPool_ = std::make_shared<ThreadPool>("InstallThreadPool");
+        threadPool_->Start(THREAD_NUMBER);
+        threadPool_->SetMaxTaskNum(MAX_TASK_NUMBER);
         auto delayCloseTask = std::bind(&BundleInstallerManager::DelayStopThreadPool, shared_from_this());
         std::thread t(delayCloseTask);
         t.detach();
     }
     APP_LOGI("add task, taskName : %{public}s", taskName.c_str());
-    threadPool_.AddTask(task);
+    threadPool_->AddTask(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

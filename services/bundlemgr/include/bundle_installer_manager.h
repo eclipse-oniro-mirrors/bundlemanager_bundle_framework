@@ -112,7 +112,7 @@ private:
 
     DISALLOW_COPY_AND_MOVE(BundleInstallerManager);
 
-    ThreadPool threadPool_ = ThreadPool("InstallThreadPool");
+    std::shared_ptr<ThreadPool> threadPool_ = nullptr;
     const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
     std::mutex mutex_;
     bool running_ = false;
