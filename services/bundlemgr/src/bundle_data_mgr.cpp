@@ -43,6 +43,7 @@
 #include "ipc_skeleton.h"
 #include "json_serializer.h"
 #ifdef GLOBAL_I18_ENABLE
+#include "locale_config.h"
 #include "locale_info.h"
 #endif
 #include "mime_type_mgr.h"
@@ -4234,7 +4235,8 @@ std::shared_ptr<Global::Resource::ResourceManager> BundleDataMgr::GetResourceMan
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
 #ifdef GLOBAL_I18_ENABLE
     std::map<std::string, std::string> configs;
-    OHOS::Global::I18n::LocaleInfo locale(localeInfo, configs);
+    OHOS::Global::I18n::LocaleInfo locale(
+        localeInfo.empty() ? Global::I18n::LocaleConfig::GetSystemLocale() : localeInfo, configs);
     resConfig->SetLocaleInfo(locale.GetLanguage().c_str(), locale.GetScript().c_str(), locale.GetRegion().c_str());
 #endif
     resourceManager->UpdateResConfig(*resConfig);
@@ -5405,7 +5407,7 @@ ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerB
         abilityInfo = *ability;
         return ERR_OK;
     }
-    
+
     ErrCode ret = innerBundleInfo.FindAbilityInfo(moduleName, abilityName, abilityInfo);
     if (ret != ERR_OK) {
         APP_LOGE("%{public}s:FindAbilityInfo failed: %{public}d", innerBundleInfo.GetBundleName().c_str(), ret);
