@@ -81,7 +81,7 @@ bool InstalldOperator::IsExistDir(const std::string &path)
 
     struct stat buf = {};
     if (stat(path.c_str(), &buf) != 0) {
-        APP_LOGE("the path is not existed %{public}s", path.c_str());
+        APP_LOGW("the path is not existed %{private}s", path.c_str());
         return false;
     }
     return S_ISDIR(buf.st_mode);

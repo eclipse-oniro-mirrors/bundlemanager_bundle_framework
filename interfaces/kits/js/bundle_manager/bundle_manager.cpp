@@ -82,72 +82,6 @@ static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
-
-void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity)
-{
-    napi_value notBefore;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notBefore, &notBefore));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notBefore", notBefore));
-
-    napi_value notAfter;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notAfter, &notAfter));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notAfter", notAfter));
-}
-
-void ConvertAppProvisionInfo(
-    napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo)
-{
-    napi_value versionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appProvisionInfo.versionCode, &versionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionCode", versionCode));
-
-    napi_value versionName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &versionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionName", versionName));
-
-    napi_value uuid;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.uuid.c_str(), NAPI_AUTO_LENGTH, &uuid));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "uuid", uuid));
-
-    napi_value type;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.type.c_str(), NAPI_AUTO_LENGTH, &type));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "type", type));
-
-    napi_value appDistributionType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.appDistributionType.c_str(),
-        NAPI_AUTO_LENGTH, &appDistributionType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appDistributionType",
-        appDistributionType));
-
-    napi_value developerId;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.developerId.c_str(), NAPI_AUTO_LENGTH, &developerId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "developerId", developerId));
-
-    napi_value certificate;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &certificate));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "certificate", certificate));
-
-    napi_value apl;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.apl.c_str(), NAPI_AUTO_LENGTH, &apl));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "apl", apl));
-
-    napi_value issuer;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.issuer.c_str(), NAPI_AUTO_LENGTH, &issuer));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "issuer", issuer));
-
-    napi_value validity;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
-    ConvertValidity(env, appProvisionInfo.validity, validity);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
-}
 }
 
 ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -570,8 +504,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetApplicationInfo done.");
     return promise;
@@ -899,8 +832,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
     APP_LOGD("call QueryAbilityInfos done");
     return promise;
@@ -1161,8 +1093,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtensionCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete);
     callbackPtr.release();
     APP_LOGD("call QueryExtensionInfos done");
     return promise;
@@ -1292,8 +1223,7 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityLabelCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
     return promise;
@@ -1392,8 +1322,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
@@ -1893,7 +1822,7 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCH_WANT_FOR_BUNDLE,
-            BUNDLE_PERMISSIONS);
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
 
     if (asyncCallbackInfo->deferred) {
@@ -1959,8 +1888,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
-        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
     callbackPtr.release();
     APP_LOGD("napi call GetLaunchWantForBundle done");
     return promise;
@@ -2981,8 +2909,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfo done.");
     return promise;
@@ -3089,8 +3016,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
@@ -3296,7 +3222,7 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
-        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete, napi_qos_user_initiated);
+        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetSharedBundleInfo done.");
     return promise;
@@ -3506,7 +3432,7 @@ void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        ConvertAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE]);
+        CommonFunc::ConvertAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);

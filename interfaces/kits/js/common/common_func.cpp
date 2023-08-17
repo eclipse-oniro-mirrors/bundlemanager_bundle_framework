@@ -872,6 +872,72 @@ void CommonFunc::ConvertStringArrays(napi_env env, const std::vector<std::string
     }
 }
 
+void CommonFunc::ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity)
+{
+    napi_value notBefore;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notBefore, &notBefore));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notBefore", notBefore));
+
+    napi_value notAfter;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notAfter, &notAfter));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notAfter", notAfter));
+}
+
+void CommonFunc::ConvertAppProvisionInfo(
+    napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo)
+{
+    napi_value versionCode;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appProvisionInfo.versionCode, &versionCode));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionCode", versionCode));
+
+    napi_value versionName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &versionName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionName", versionName));
+
+    napi_value uuid;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.uuid.c_str(), NAPI_AUTO_LENGTH, &uuid));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "uuid", uuid));
+
+    napi_value type;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.type.c_str(), NAPI_AUTO_LENGTH, &type));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "type", type));
+
+    napi_value appDistributionType;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.appDistributionType.c_str(),
+        NAPI_AUTO_LENGTH, &appDistributionType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appDistributionType",
+        appDistributionType));
+
+    napi_value developerId;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.developerId.c_str(), NAPI_AUTO_LENGTH, &developerId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "developerId", developerId));
+
+    napi_value certificate;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &certificate));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "certificate", certificate));
+
+    napi_value apl;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.apl.c_str(), NAPI_AUTO_LENGTH, &apl));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "apl", apl));
+
+    napi_value issuer;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.issuer.c_str(), NAPI_AUTO_LENGTH, &issuer));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "issuer", issuer));
+
+    napi_value validity;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
+    ConvertValidity(env, appProvisionInfo.validity, validity);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
+}
+
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
     napi_value objExtensionInfo)
 {

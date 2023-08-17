@@ -54,6 +54,7 @@ const std::string GET_PROFILE_BY_EXTENSION_ABILITY_SYNC = "GetProfileByExtension
 const std::string GET_PROFILE_BY_ABILITY_SYNC = "GetProfileByAbilitySync";
 const std::string QUERY_EXTENSION_INFOS_SYNC = "QueryExtensionInfosSync";
 const std::string GET_PERMISSION_DEF_SYNC = "GetPermissionDefSync";
+const std::string GET_APP_PROVISION_INFO_SYNC = "GetAppProvisionInfoSync";
 const std::string BUNDLE_PERMISSIONS = "ohos.permission.GET_BUNDLE_INFO or ohos.permission.GET_BUNDLE_INFO_PRIVILEGED";
 const std::string PERMISSION_NAME = "permissionName";
 const std::string INVALID_WANT_ERROR =
@@ -472,7 +473,7 @@ napi_value GetLaunchWantForBundleSync(napi_env env, napi_callback_info info)
     if (ret != NO_ERROR) {
         APP_LOGE("GetLaunchWantForBundle failed");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
+            env, ret, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -575,9 +576,21 @@ ErrCode ParamsProcessGetProfileByAbilitySync(napi_env env, napi_callback_info in
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, MODULE_NAME, TYPE_STRING);
         return ERROR_PARAM_CHECK_ERROR;
     }
+    if (moduleName.empty()) {
+        APP_LOGE("param failed due to empty moduleName");
+        napi_value businessError = BusinessError::CreateCommonError(env, ERROR_MODULE_NOT_EXIST);
+        napi_throw(env, businessError);
+        return ERROR_MODULE_NOT_EXIST;
+    }
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], abilityName)) {
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_NAME, TYPE_STRING);
         return ERROR_PARAM_CHECK_ERROR;
+    }
+    if (abilityName.empty()) {
+        APP_LOGE("param failed due to empty abilityName");
+        napi_value businessError = BusinessError::CreateCommonError(env, ERROR_ABILITY_NOT_EXIST);
+        napi_throw(env, businessError);
+        return ERROR_ABILITY_NOT_EXIST;
     }
     if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
         if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], metadataName)) {
@@ -598,7 +611,7 @@ ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
             }
         }
     }
-    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    return ERROR_ABILITY_NOT_EXIST;
 }
 
 napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
@@ -641,7 +654,7 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
     if (!client.GetProfileFromAbility(targetAbilityInfo, metadataName, profileVec)) {
         APP_LOGE("GetProfileByAbilitySync failed by GetProfileFromAbility");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
+            env, ERROR_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -662,7 +675,7 @@ ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::st
             }
         }
     }
-    return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    return ERROR_ABILITY_NOT_EXIST;
 }
 
 napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
@@ -706,7 +719,7 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
     if (!client.GetProfileFromExtension(targetExtensionInfo, metadataName, profileVec)) {
         APP_LOGE("GetProfileByExAbilitySync failed by GetProfileFromExtension");
         napi_value businessError = BusinessError::CreateCommonError(
-            env, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST, GET_PROFILE_BY_ABILITY_SYNC);
+            env, ERROR_PROFILE_NOT_EXIST, GET_PROFILE_BY_EXTENSION_ABILITY_SYNC);
         napi_throw(env, businessError);
         return nullptr;
     }
@@ -714,6 +727,48 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_array(env, &nProfileInfos));
     CommonFunc::ConvertStringArrays(env, profileVec, nProfileInfos);
     return nProfileInfos;
+}
+
+napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetAppProvisionInfoSync called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    int32_t userId;
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
+            APP_LOGW("Parse userId failed, set this parameter to the caller userId!");
+        }
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    AppProvisionInfo appProvisionInfo;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetAppProvisionInfo(bundleName, userId, appProvisionInfo));
+    if (ret != ERR_OK) {
+        APP_LOGE("GetAppProvisionInfoSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_APP_PROVISION_INFO_SYNC, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nAppProvisionInfo = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAppProvisionInfo));
+    CommonFunc::ConvertAppProvisionInfo(env, appProvisionInfo, nAppProvisionInfo);
+    APP_LOGD("call GetAppProvisionInfoSync done.");
+    return nAppProvisionInfo;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
