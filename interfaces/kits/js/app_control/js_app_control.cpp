@@ -463,6 +463,13 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
         return nullptr;
     }
+    if (asyncCallbackInfo->appId.size() == 0) {
+        asyncCallbackInfo->err = ERROR_INVALID_APPID;
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
     auto appControlProxy = GetAppControlProxy();
     if (appControlProxy == nullptr) {
         APP_LOGE("AppControlProxy is null");
