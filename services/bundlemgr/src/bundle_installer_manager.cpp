@@ -59,7 +59,7 @@ void BundleInstallerManager::DelayStopThreadPool()
     std::lock_guard<std::mutex> guard(mutex_);
     APP_LOGI("stop installer thread pool");
     threadPool_->Stop();
-    threadPool_->reset();
+    threadPool_ = nullptr;
     APP_LOGI("DelayStopThreadPool end");
 }
 

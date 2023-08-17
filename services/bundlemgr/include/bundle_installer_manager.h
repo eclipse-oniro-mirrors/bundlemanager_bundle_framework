@@ -115,7 +115,6 @@ private:
     std::shared_ptr<ThreadPool> threadPool_ = nullptr;
     const int32_t THREAD_NUMBER = std::thread::hardware_concurrency();
     std::mutex mutex_;
-    bool running_ = false;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
