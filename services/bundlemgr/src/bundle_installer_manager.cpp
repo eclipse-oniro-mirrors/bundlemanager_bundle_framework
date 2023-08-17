@@ -58,7 +58,7 @@ void BundleInstallerManager::DelayStopThreadPool()
 
     std::lock_guard<std::mutex> guard(mutex_);
     APP_LOGI("stop installer thread pool");
-    threadPool_.stop();
+    threadPool_.Stop();
     running_ = false;
     APP_LOGI("DelayStopThreadPool end");
 }
@@ -208,7 +208,7 @@ void BundleInstallerManager::AddTask(const ThreadPoolTask &task, const std::stri
         t.detach();
     }
     APP_LOGI("add task, taskName : %{public}s", taskName.c_str());
-    threadPool_->AddTask(task);
+    threadPool_.AddTask(task);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
