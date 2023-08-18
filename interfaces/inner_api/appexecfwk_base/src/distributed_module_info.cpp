@@ -31,46 +31,28 @@ const std::string JSON_KEY_ABILITIES = "abilities";
 }
 bool DistributedModuleInfo::ReadFromParcel(Parcel &parcel)
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
+    moduleName = Str16ToStr8(parcel.ReadString16());
+
+    int32_t abilityInfosSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilityInfosSize);
+    CONTAINER_SECURITY_VERIFY(parcel, abilityInfosSize, &abilities);
+    for (auto i = 0; i < abilityInfosSize; i++) {
+        std::unique_ptr<DistributedAbilityInfo> abilityInfo(parcel.ReadParcelable<DistributedAbilityInfo>());
+        if (!abilityInfo) {
+            APP_LOGE("ReadParcelable<AbilityInfo> failed");
+            return false;
+        }
+        abilities.emplace_back(*abilityInfo);
     }
-    uint32_t length = messageParcel->ReadUint32();
-    if (length == 0) {
-        APP_LOGE("Invalid data length");
-        return false;
-    }
-    const char *data = reinterpret_cast<const char *>(messageParcel->ReadRawData(length));
-    if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", length);
-        return false;
-    }
-    nlohmann::json jsonObject = nlohmann::json::parse(data, nullptr, false);
-    if (jsonObject.is_discarded()) {
-        APP_LOGE("failed to parse DistributedModuleInfo");
-        return false;
-    }
-    *this = jsonObject.get<DistributedModuleInfo>();
     return true;
 }
 
 bool DistributedModuleInfo::Marshalling(Parcel &parcel) const
 {
-    MessageParcel *messageParcel = reinterpret_cast<MessageParcel *>(&parcel);
-    if (!messageParcel) {
-        APP_LOGE("Type conversion failed");
-        return false;
-    }
-    nlohmann::json json = *this;
-    std::string str = json.dump();
-    if (!messageParcel->WriteUint32(str.size() + 1)) {
-        APP_LOGE("Failed to write data size");
-        return false;
-    }
-    if (!messageParcel->WriteRawData(str.c_str(), str.size() + 1)) {
-        APP_LOGE("Failed to write data");
-        return false;
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, abilities.size());
+    for (auto &ability : abilities) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &ability);
     }
     return true;
 }
