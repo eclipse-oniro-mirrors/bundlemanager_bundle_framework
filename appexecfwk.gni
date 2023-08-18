@@ -143,6 +143,11 @@ declare_args() {
       !defined(global_parts_info.bundlemanager_ecological_rule_mgr)) {
     ecologic_rule_mgr_enabled = false
   }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.multimedia_image_framework)) {
+    bundle_framework_graphics = false
+  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
