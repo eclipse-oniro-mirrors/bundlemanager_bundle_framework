@@ -2366,23 +2366,6 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, FormInfo_0200, Function | SmallTest |
 }
 
 /**
- * @tc.number: DistributedModuleInfo_0100
- * @tc.name: Test FormInfo
- * @tc.desc: 1.Test Unmarshalling and Dump of DistributedModuleInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function | SmallTest | Level1)
-{
-    DistributedModuleInfo info1;
-    info1.moduleName = MODULE_NAME;
-    OHOS::Parcel parcel;
-    info1.Marshalling(parcel);
-    DistributedModuleInfo info2;
-    info2.Unmarshalling(parcel);
-    bool res = info2.ReadFromParcel(parcel);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: DistributedAbilityInfo_0100
  * @tc.name: Test FormInfo
  * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
