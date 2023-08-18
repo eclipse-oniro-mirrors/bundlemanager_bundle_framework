@@ -159,8 +159,6 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
-
-    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -169,6 +167,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
+    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
         GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos));
     if (ret != SUCCESS) {
@@ -386,8 +385,6 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
-    
-    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -396,6 +393,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos));
     if (ret != SUCCESS) {
         APP_LOGE("GetShortcutInfoV9 failed");
