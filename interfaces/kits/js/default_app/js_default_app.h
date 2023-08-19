@@ -40,9 +40,13 @@ struct DefaultAppCallbackInfo : public BaseCallbackInfo {
 #endif
 
 napi_value IsDefaultApplication(napi_env env, napi_callback_info info);
+napi_value IsDefaultApplicationSync(napi_env env, napi_callback_info info);
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info);
+napi_value GetDefaultApplicationSync(napi_env env, napi_callback_info info);
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info);
+napi_value SetDefaultApplicationSync(napi_env env, napi_callback_info info);
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info);
+napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info);
 }
 }
 #endif
