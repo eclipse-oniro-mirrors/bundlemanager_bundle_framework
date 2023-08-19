@@ -2366,6 +2366,23 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, FormInfo_0200, Function | SmallTest |
 }
 
 /**
+ * @tc.number: DistributedModuleInfo_0100
+ * @tc.name: Test FormInfo
+ * @tc.desc: 1.Test Unmarshalling and Dump of DistributedModuleInfo
+ */
+HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedModuleInfo_0100, Function | SmallTest | Level1)
+{
+    DistributedModuleInfo info1;
+    info1.moduleName = MODULE_NAME;
+    OHOS::Parcel parcel;
+    bool result = info1.Marshalling(parcel);
+    ASSERT_TRUE(result);
+    auto info2 = DistributedModuleInfo::Unmarshalling(parcel);
+    ASSERT_NE(info2, nullptr);
+    delete(info2);
+}
+
+/**
  * @tc.number: DistributedAbilityInfo_0100
  * @tc.name: Test FormInfo
  * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
@@ -2375,26 +2392,12 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, DistributedAbilityInfo_0100, Function
     DistributedAbilityInfo info;
     info.abilityName = ABILITY_NAME;
     OHOS::Parcel parcel;
-    info.Marshalling(parcel);
-    info.Unmarshalling(parcel);
-    bool res = info.ReadFromParcel(parcel);
-    EXPECT_EQ(res, false);
-}
+    auto res = info.Marshalling(parcel);
+    ASSERT_TRUE(res);
 
-/**
- * @tc.number: PerfProfile_0100
- * @tc.name: Test FormInfo
- * @tc.desc: 1.Test Unmarshalling and Dump of DistributedAbilityInfo
- */
-HWTEST_F(BmsBundleDataStorageDatabaseTest, PerfProfile_0100, Function | SmallTest | Level1)
-{
-    DistributedAbilityInfo info;
-    info.abilityName = ABILITY_NAME;
-    OHOS::Parcel parcel;
-    info.Marshalling(parcel);
-    info.Unmarshalling(parcel);
-    bool res = info.ReadFromParcel(parcel);
-    EXPECT_EQ(res, false);
+    auto info2 = DistributedAbilityInfo::Unmarshalling(parcel);
+    ASSERT_NE(info2, nullptr);
+    delete(info2);
 }
 
 /**
@@ -2408,7 +2411,11 @@ HWTEST_F(BmsBundleDataStorageDatabaseTest, CommonEventInfo_0100, Function | Smal
     info.uid = 0;
     OHOS::Parcel parcel;
     bool res = info.Marshalling(parcel);
-    EXPECT_EQ(res, true);
+    ASSERT_TRUE(res);
+
+    auto info2 = CommonEventInfo::Unmarshalling(parcel);
+    ASSERT_NE(info2, nullptr);
+    delete(info2);
 }
 
 /**
