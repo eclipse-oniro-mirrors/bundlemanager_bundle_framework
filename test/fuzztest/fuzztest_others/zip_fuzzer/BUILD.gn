@@ -1,0 +1,59 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#####################hydra-fuzz###################
+import("//build/config/features.gni")
+import("//build/ohos.gni")
+import("//build/test.gni")
+import("../../../../appexecfwk.gni")
+module_output_path = "bundle_framework/fuzz"
+
+##############################fuzztest##########################################
+ohos_fuzztest("ZipFuzzTest") {
+  include_dirs = [ "${kits_path}/js/zip/include" ]
+  module_out_path = module_output_path
+  fuzz_config_file = "../../../fuzztest/fuzztest_others/zip_fuzzer"
+
+  cflags = [
+    "-g",
+    "-O0",
+    "-Wno-unused-variable",
+    "-fno-omit-frame-pointer",
+  ]
+  sources = [
+    "${kits_path}/js/zip/napi/zlib_callback_info.cpp",
+    "${kits_path}/js/zip/src/file_path.cpp",
+    "${kits_path}/js/zip/src/zip.cpp",
+    "${kits_path}/js/zip/src/zip_internal.cpp",
+    "${kits_path}/js/zip/src/zip_reader.cpp",
+    "${kits_path}/js/zip/src/zip_utils.cpp",
+    "${kits_path}/js/zip/src/zip_writer.cpp",
+  ]
+  sources += [ "zip_fuzzer.cpp" ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${kits_path}/js/common:bundle_napi_common",
+    "${kits_path}/js/zip:zlib",
+    "//third_party/zlib:libz",
+  ]
+  external_deps = [
+    "c_utils:utils",
+    "eventhandler:libeventhandler",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "napi:ace_napi",
+  ]
+}
