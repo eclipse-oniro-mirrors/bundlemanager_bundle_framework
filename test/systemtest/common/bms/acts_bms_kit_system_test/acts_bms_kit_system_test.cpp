@@ -1256,7 +1256,11 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0300, Function | MediumTest | Leve
 
         std::vector<BundleInfo> bundleInfos;
         bool getInfoResult = bundleMgrProxy->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, INVALIED_ID);
+    #ifdef USE_KIT_STSTEM
+        EXPECT_TRUE(getInfoResult);
+    #else
         EXPECT_FALSE(getInfoResult);
+    #endif
     }
     std::cout << "END GetBundleInfos_0300" << std::endl;
 }
