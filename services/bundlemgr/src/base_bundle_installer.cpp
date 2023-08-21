@@ -129,6 +129,10 @@ BaseBundleInstaller::BaseBundleInstaller()
 
 BaseBundleInstaller::~BaseBundleInstaller()
 {
+    bundlePaths_.clear();
+    BundleUtil::DeleteTempDirs(toDeleteTempHapPath_);
+    toDeleteTempHapPath_.clear();
+    signatureFileTmpMap_.clear();
     APP_LOGI("base bundle installer instance is destroyed");
 }
 
@@ -815,7 +819,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateInstallerState(InstallerState::INSTALL_BUNDLE_CHECKED);                  // ---- 5%
 
     // copy the haps to the dir which cannot be accessed from caller
-    ScopeGuard securityTempHapPathsGuard([this] { BundleUtil::DeleteTempDirs(toDeleteTempHapPath_); });
     result = CopyHapsToSecurityDir(installParam, bundlePaths);
     CHECK_RESULT(result, "copy file failed %{public}d");
 
@@ -3456,7 +3459,6 @@ void BaseBundleInstaller::ResetInstallProperties()
     accessTokenId_ = 0;
     sysEventInfo_.Reset();
     moduleName_.clear();
-    toDeleteTempHapPath_.clear();
     verifyCodeParams_.clear();
     otaInstall_ = false;
     signatureFileMap_.clear();
@@ -3854,6 +3856,11 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
         APP_LOGD("no need to copy preInstallApp to secure dir");
         return ERR_OK;
     }
+    if (!bundlePaths_.empty()) {
+        bundlePaths = bundlePaths_;
+        APP_LOGD("using the existed hap files in security dir");
+        return ERR_OK;
+    }
     for (size_t index = 0; index < bundlePaths.size(); ++index) {
         if (!BundleUtil::CheckSystemSize(bundlePaths[index], APP_INSTALL_PATH)) {
             APP_LOGE("install bundle(%{public}s) failed due to insufficient disk memory", bundlePaths[index].c_str());
@@ -3865,9 +3872,12 @@ ErrCode BaseBundleInstaller::CopyHapsToSecurityDir(const InstallParam &installPa
             APP_LOGE("copy file %{public}s to security dir failed", bundlePaths[index].c_str());
             return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
         }
-        BundleUtil::DeleteDir(bundlePaths[index]);
+        if (bundlePaths[index].find(Constants::STREAM_INSTALL_PATH) != std::string::npos) {
+            BundleUtil::DeleteDir(bundlePaths[index]);
+        }
         bundlePaths[index] = destination;
     }
+    bundlePaths_ = bundlePaths;
     return ERR_OK;
 }
 
@@ -3897,7 +3907,11 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
             moduleName.c_str());
         return ERR_OK;
     }
-
+    if (signatureFileTmpMap_.find(moduleName) != signatureFileTmpMap_.end()) {
+        signatureFileDir = signatureFileTmpMap_.at(moduleName);
+        APP_LOGD("signature file of %{public}s is existed in temp map", moduleName.c_str());
+        return ERR_OK;
+    }
     auto iterator = verifyCodeParams_.find(moduleName);
     if (iterator == verifyCodeParams_.end()) {
         APP_LOGE("no signature file dir exist of module %{public}s", moduleName.c_str());
@@ -3905,7 +3919,7 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
     }
     signatureFileDir = verifyCodeParams_.at(moduleName);
 
-    // check signature file suffix
+    // check validity of the signature file
     auto ret = bundleInstallChecker_->CheckSignatureFileDir(signatureFileDir);
     if (ret != ERR_OK) {
         APP_LOGE("checkout signature file dir %{public}s failed", signatureFileDir.c_str());
@@ -3923,8 +3937,11 @@ ErrCode BaseBundleInstaller::FindSignatureFileDir(const std::string &moduleName,
         APP_LOGE("copy file %{public}s to security dir failed", signatureFileDir.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
     }
-    BundleUtil::DeleteDir(signatureFileDir);
+    if (signatureFileDir.find(Constants::SIGNATURE_FILE_PATH) != std::string::npos) {
+        BundleUtil::DeleteDir(signatureFileDir);
+    }
     signatureFileDir = destinationStr;
+    signatureFileTmpMap_.emplace(moduleName, destinationStr);
     APP_LOGD("signatureFileDir is %{public}s", signatureFileDir.c_str());
     return ERR_OK;
 }
@@ -4122,7 +4139,7 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
         APP_LOGW("invalid tempSoDir %{public}s", tempSoDir.c_str());
         return;
     }
-    auto thirdPos = tempSoDir.find(Constants::PATH_SEPARATOR, secondPos);
+    auto thirdPos = tempSoDir.find(Constants::PATH_SEPARATOR, secondPos + 1);
     if (thirdPos == std::string::npos) {
         InstalldClient::GetInstance()->RemoveDir(tempSoDir);
         return;

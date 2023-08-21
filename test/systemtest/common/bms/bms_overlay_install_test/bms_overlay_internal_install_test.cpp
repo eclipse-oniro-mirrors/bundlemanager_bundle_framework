@@ -225,8 +225,8 @@ ErrCode BmsOverlayInternalInstallTest::InstallOverlayBundle(const std::vector<st
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(bundleFilePaths, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    auto installResult = installerProxy->StreamInstall(bundleFilePaths, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultCode();
 }
 
