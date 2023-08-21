@@ -2227,7 +2227,12 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
+    auto ret = dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
+    if (dataMgr->ImplicitQueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, false) == ERR_OK) {
+        APP_LOGD("implicitly query from bms extension successfully");
+        return true;
+    }
+    return ret;
 }
 
 int BundleMgrHostImpl::Dump(int fd, const std::vector<std::u16string> &args)

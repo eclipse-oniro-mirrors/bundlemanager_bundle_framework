@@ -5319,6 +5319,12 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
     std::vector<AbilityInfo> &abilityInfos) const
 {
     APP_LOGD("start to query launcher abilities from bms extension");
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
@@ -5336,6 +5342,12 @@ ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32
     std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
 {
     APP_LOGD("start to query abilityInfos from bms extension");
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
@@ -5372,6 +5384,12 @@ ErrCode BundleDataMgr::GetBundleInfosFromBmsExtension(
     int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
 {
     APP_LOGD("start to query bundle infos from bms extension");
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
     if (res != ERR_OK) {
@@ -5386,11 +5404,50 @@ ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleNa
     BundleInfo &bundleInfo, int32_t userId, bool isNewVersion) const
 {
     APP_LOGD("start to query bundle info from bms extension");
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     if (res != ERR_OK) {
         APP_LOGE("query bundle info failed due to error code %{public}d", res);
         return res;
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ImplicitQueryAbilityInfosFromBmsExtension(
+    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
+{
+    APP_LOGD("start to implicitly query ability info from bms extension");
+    if (userId != Constants::ALL_USERID) {
+        int32_t requestUserId = GetUserId(userId);
+        if (requestUserId == Constants::INVALID_USERID) {
+            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+        }
+    }
+
+    ElementName element = want.GetElement();
+    std::string bundleName = element.GetBundleName();
+    std::string abilityName = element.GetAbilityName();
+    // does not support explicit query
+    if (!bundleName.empty() && !abilityName.empty()) {
+        APP_LOGW("implicitly query failed due to bundleName:%{public}s, bilityName:%{public}s not empty",
+            bundleName.c_str(), abilityName.c_str());
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, isNewVersion);
+    if (res != ERR_OK) {
+        APP_LOGE("query ability info failed due to error code %{public}d", res);
+        return res;
+    }
+    if (abilityInfos.empty()) {
+        APP_LOGE("no ability info can be found from bms extension");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
 
     return ERR_OK;

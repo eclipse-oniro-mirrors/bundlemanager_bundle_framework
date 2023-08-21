@@ -852,6 +852,8 @@ public:
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false) const;
     ErrCode QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
         AbilityInfo &abilityInfo, bool isNewVersion = false) const;
+    ErrCode ImplicitQueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const;
 
 private:
     /**
