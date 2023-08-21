@@ -903,7 +903,7 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
     if (ParamsProcessResetDefaultApplicationSync(env, info, type, userId) != ERR_OK) {
         return nRet;
     }
-    
+
     auto defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
