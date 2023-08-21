@@ -23,7 +23,7 @@ namespace OHOS {
 namespace AppExecFwk {
 struct PermissionInfo {
     std::string name;
-    bool userCancellable;
+    bool userCancellable = false;
 };
 
 struct DefaultPermission {
