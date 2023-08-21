@@ -2584,7 +2584,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    bool isEnabled;
+    bool isEnabled = false;
     auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
     if (ret != ERR_OK) {
         return ret;
@@ -2623,7 +2623,7 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bu
     }
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
-    bool isEnabled;
+    bool isEnabled = false;
     auto ret = innerBundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
     if (ret != ERR_OK) {
         return ret;
@@ -4535,7 +4535,7 @@ ErrCode BundleDataMgr::GetMediaData(const std::string &bundleName, const std::st
     if (errCode != ERR_OK) {
         return errCode;
     }
-    bool isEnable;
+    bool isEnable = false;
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     errCode = innerBundleInfo.IsAbilityEnabledV9(abilityInfo, responseUserId, isEnable);
     if (errCode != ERR_OK) {

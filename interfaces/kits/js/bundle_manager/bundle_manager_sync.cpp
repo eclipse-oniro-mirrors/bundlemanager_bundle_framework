@@ -71,7 +71,7 @@ napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string bundleName;
-    bool isEnable;
+    bool isEnable = false;
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
@@ -112,7 +112,7 @@ napi_value SetAbilityEnabledSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     AbilityInfo abilityInfo;
-    bool isEnable;
+    bool isEnable = false;
     if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], abilityInfo)) {
         APP_LOGE("parse abilityInfo failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ABILITY_INFO, TYPE_OBJECT);
@@ -164,7 +164,7 @@ napi_value IsApplicationEnabledSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    bool isEnable;
+    bool isEnable = false;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsApplicationEnabled(bundleName, isEnable));
     if (ret != NO_ERROR) {
         APP_LOGE("IsApplicationEnabledSync failed");
@@ -199,7 +199,7 @@ napi_value IsAbilityEnabledSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    bool isEnable;
+    bool isEnable = false;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable));
     if (ret != NO_ERROR) {
         APP_LOGE("IsAbilityEnabledSync failed");
