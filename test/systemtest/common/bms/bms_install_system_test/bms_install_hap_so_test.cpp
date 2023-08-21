@@ -280,8 +280,9 @@ std::string BmsInstallHapSoTest::InstallBundle(
     installParam.installFlag = InstallFlag::NORMAL;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(THIRD_BUNDLE_PATH + hapFile, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    std::vector<std::string> pathVec { THIRD_BUNDLE_PATH + hapFile };
+    auto installResult = installerProxy->StreamInstall(pathVec, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
@@ -295,8 +296,8 @@ std::string BmsInstallHapSoTest::InstallBundles(
     installParam.installFlag = InstallFlag::NORMAL;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(hapPaths, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    auto installResult = installerProxy->StreamInstall(hapPaths, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
@@ -325,8 +326,9 @@ std::string BmsInstallHapSoTest::InstallPathBundle(
     installParam.installFlag = InstallFlag::NORMAL;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(path, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    std::vector<std::string> pathVec { path };
+    auto installResult = installerProxy->StreamInstall(pathVec, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
@@ -351,8 +353,9 @@ std::string BmsInstallHapSoTest::UpdateInstall(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(THIRD_BUNDLE_PATH + hapFile, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    std::vector<std::string> pathVec { THIRD_BUNDLE_PATH + hapFile };
+    auto installResult = installerProxy->StreamInstall(pathVec, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
@@ -366,8 +369,8 @@ std::string BmsInstallHapSoTest::UpdateInstalls(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(hapPaths, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    auto installResult = installerProxy->StreamInstall(hapPaths, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
@@ -381,8 +384,9 @@ std::string BmsInstallHapSoTest::UpdateInstallPath(
     installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     sptr<StatusReceiverImpl> statusReceiver(new (std::nothrow) StatusReceiverImpl());
     EXPECT_NE(statusReceiver, nullptr);
-    bool installResult = installerProxy->Install(path, installParam, statusReceiver);
-    EXPECT_TRUE(installResult);
+    std::vector<std::string> pathVec { path };
+    auto installResult = installerProxy->StreamInstall(pathVec, installParam, statusReceiver);
+    EXPECT_EQ(installResult, ERR_OK);
     return statusReceiver->GetResultMsg();
 }
 
