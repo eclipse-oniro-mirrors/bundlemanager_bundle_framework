@@ -175,11 +175,7 @@ bool BundlePermissionMgr::UpdateDefineAndRequestPermissions(Security::AccessToke
     const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, std::vector<std::string> &newRequestPermName)
 {
     APP_LOGD("UpdateDefineAndRequestPermissions bundleName = %{public}s", newInfo.GetBundleName().c_str());
-    std::vector<AccessToken::PermissionDef> newDefPermList;
-    if (!InnerUpdateDefinePermission(tokenIdEx.tokenIdExStruct.tokenID, oldInfo, newInfo, newDefPermList)) {
-        APP_LOGE("UpdateDefineAndRequestPermissions InnerUpdateDefinePermission failed");
-        return false;
-    }
+    std::vector<AccessToken::PermissionDef> newDefPermList = GetPermissionDefList(newInfo);
 
     std::vector<AccessToken::PermissionStateFull> newPermissionStateList;
     if (!InnerUpdateRequestPermission(tokenIdEx.tokenIdExStruct.tokenID, oldInfo, newInfo,
