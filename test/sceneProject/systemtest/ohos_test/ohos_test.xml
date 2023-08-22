@@ -246,4 +246,11 @@
     <option name="push" value="testOverlay/internal/entry_fa_lower_version.hap -> /data/test/internalOverlayTest/test27/" src="res" />
     </preparer>
   </target>
+  <target name="BmsInstallMultiUserTest">
+    <preparer>
+    <option name="push" value="testOverlay/internal/entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="testOverlay/internal/higher_version_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+    <option name="push" value="multiUser/lower_versionCode_entry_hap.hap -> /data/test/bms_bundle/" src="res" />
+    </preparer>
+  </target>
 </configuration>
