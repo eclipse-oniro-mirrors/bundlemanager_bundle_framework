@@ -337,7 +337,7 @@ ErrCode ParamsProcessIsDefaultApplicationSync(napi_env env, napi_callback_info i
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
     }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         if (i == ARGS_POS_ZERO) {
             if (!ParseType(env, args[i], type)) {
                 APP_LOGE("type %{public}s invalid", type.c_str());
@@ -506,7 +506,7 @@ ErrCode ParamsProcessGetDefaultApplicationSync(napi_env env, napi_callback_info 
         BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
         return ERROR_PARAM_CHECK_ERROR;
     }
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         if (i == ARGS_POS_ZERO) {
             if (!ParseType(env, args[ARGS_POS_ZERO], type)) {
                 APP_LOGE("type %{public}s invalid", type.c_str());
@@ -689,7 +689,7 @@ ErrCode ParamsProcessSetDefaultApplicationSync(napi_env env, napi_callback_info 
         return ERROR_PARAM_CHECK_ERROR;
     }
 
-    for (size_t i = 0; i < args.GetArgc(); ++i) {
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
         if (i == ARGS_POS_ZERO) {
             if (!ParseType(env, args[i], type)) {
                 APP_LOGE("type %{public}s invalid", type.c_str());
@@ -903,7 +903,7 @@ napi_value ResetDefaultApplicationSync(napi_env env, napi_callback_info info)
     if (ParamsProcessResetDefaultApplicationSync(env, info, type, userId) != ERR_OK) {
         return nRet;
     }
-    
+
     auto defaultAppProxy = GetDefaultAppProxy();
     if (defaultAppProxy == nullptr) {
         napi_value error = BusinessError::CreateCommonError(env, ERROR_BUNDLE_SERVICE_EXCEPTION,
