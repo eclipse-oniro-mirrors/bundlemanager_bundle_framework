@@ -774,7 +774,7 @@ public:
 
     const std::map<std::string, InnerBundleInfo> GetAllInnerBundleInfos() const
     {
-        std::lock_guard<std::mutex> lock(bundleInfoMutex_);
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         return bundleInfos_;
     }
 
@@ -975,7 +975,7 @@ private:
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
 
 private:
-    mutable std::mutex bundleInfoMutex_;
+    mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
