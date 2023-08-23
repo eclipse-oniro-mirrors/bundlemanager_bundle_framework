@@ -192,12 +192,46 @@ ohos_systemtest("BmsInstallExternalHspSoTest") {
   ]
 }
 
+ohos_systemtest("BmsInstallMultiUserTest") {
+  module_out_path = module_output_path
+
+  sources = [ "bm_install_multi_user_test.cpp" ]
+  cflags = []
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/test/sceneProject/systemtest/multiUser/lower_versionCode_entry:lower_versionCode_entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/target_module_entry:entry_hap",
+    "${bundle_framework_path}/test/sceneProject/systemtest/testOverlay/target_module_entry_higher_version:higher_version_entry_hap",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "${services_path}/test/moduletest/utils:tool_common",
+    "//third_party/googletest:gtest_main",
+  ]
+
+  defines = [ "APP_LOG_TAG = \"BundleMgrTool\"" ]
+
+  external_deps = [
+    "ability_base:want",
+    "common_event_service:cesfwk_innerkits",
+    "hilog:libhilog",
+    "ipc:ipc_core",
+    "os_account:os_account_innerkits",
+    "samgr:samgr_proxy",
+  ]
+}
+
 group("systemtest") {
   testonly = true
 
   deps = [
     ":BmsInstallExternalHspSoTest",
     ":BmsInstallHapSoTest",
+    ":BmsInstallMultiUserTest",
     ":BmsInstallSystemTest",
   ]
 }
