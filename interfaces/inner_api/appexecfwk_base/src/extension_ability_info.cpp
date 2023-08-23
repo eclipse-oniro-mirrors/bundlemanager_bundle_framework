@@ -81,6 +81,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/power", ExtensionAbilityType::SYSDIALOG_POWER },
     { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE },
     { "hms/account", ExtensionAbilityType::HMS_ACCOUNT },
+    { "ads", ExtensionAbilityType::ADS },
     { "sysDialog/meetimeCall", ExtensionAbilityType::SYSDIALOG_MEETIMECALL },
     { "sysDialog/meetimeContact", ExtensionAbilityType::SYSDIALOG_MEETIMECONTACT },
     { "sysDialog/meetimeMessage", ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE },
