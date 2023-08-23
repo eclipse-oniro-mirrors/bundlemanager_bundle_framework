@@ -531,7 +531,10 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "storage_service:storage_manager_sa_proxy",
   ]
   external_deps += bundle_install_external_deps
-  defines = [ "BUNDLE_PERMISSION_START_FULL_FALSE" ]
+  defines = [
+    "BUNDLE_PERMISSION_DEF_LIST",
+    "BUNDLE_PERMISSION_START_FULL_FALSE",
+  ]
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
