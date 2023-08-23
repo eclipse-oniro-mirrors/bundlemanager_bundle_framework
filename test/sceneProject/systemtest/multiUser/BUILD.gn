@@ -18,5 +18,6 @@ group("multiUser") {
   deps += [
     # deps file
     "lower_versionCode_entry:lower_versionCode_entry_hap",
+    "lower_versionCode_entry/feature:lower_versionCode_entry_hapB",
   ]
 }

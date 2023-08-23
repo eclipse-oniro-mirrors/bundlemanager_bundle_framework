@@ -36,8 +36,11 @@ namespace {
 const std::string THIRD_BUNDLE_PATH = "/data/test/bms_bundle/";
 const std::string BUNDLE_NAME = "com.example.internalOverlayTest1";
 const std::string TEST_BUNDLE_HAPA = "entry_hap.hap";
+const std::string TEST_BUNDLE_HAPB = "entry_hapB.hap";
 const std::string HIGHER_VERSION_CODE_TEST_BUNDLE_HAPA = "higher_version_entry_hap.hap";
+const std::string HIGHER_VERSION_CODE_TEST_BUNDLE_HAPB = "higher_version_entry_hapB.hap";
 const std::string LOWER_VERSION_CODE_TEST_BUNDLE_HAPA = "lower_versionCode_entry_hap.hap";
+const std::string LOWER_VERSION_CODE_TEST_BUNDLE_HAPB = "lower_versionCode_entry_hapB.hap";
 const int TIMEOUT = 10;
 const int32_t WAIT_TIME = 3; // for creating or removing new user
 const int32_t USERID = 100;
@@ -344,11 +347,128 @@ HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0300, Function | Medium
 /**
  * @tc.number: BMS_Install_multi_user_0400
  * @tc.name:  test the installation of a third-party bundle for multi users
+ * @tc.desc: 1.install hapA under user 100 successfully
+ *           2.create user 101 successfully
+ *           3.install the higher version-code hapB under the user 101 successfully
+ *           4.query bundleInfo under user 100 and 101 successfully
+ */
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0400, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_multi_user_0400" << std::endl;
+    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + TEST_BUNDLE_HAPA };
+    auto res = InstallBundle(bundleFilePaths, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    int32_t userId = CreateNewUser();
+    EXPECT_NE(userId, 0);
+
+    bundleFilePaths.clear();
+    bundleFilePaths.emplace_back(THIRD_BUNDLE_PATH + TEST_BUNDLE_HAPB);
+    res = InstallBundle(bundleFilePaths, newUserId_);
+    EXPECT_EQ(res, ERR_OK);
+
+    auto bmsProxy = GetBundleMgrProxy();
+    EXPECT_NE(bmsProxy, nullptr);
+
+    // query bundleInfo under two users respectively
+    BundleInfo bundleInfo1;
+    bool ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
+    EXPECT_TRUE(ret);
+
+    BundleInfo bundleInfo2;
+    ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, userId);
+    EXPECT_TRUE(ret);
+
+    UninstallBundle(BUNDLE_NAME, Constants::ALL_USERID);
+    std::cout << "END BMS_Install_multi_user_0400" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_multi_user_0500
+ * @tc.name:  test the installation of a third-party bundle for multi users
+ * @tc.desc: 1.install hapA under user 100 successfully
+ *           2.create user 101 successfully
+ *           3.install the lower version-code hapB under the user 101 failed
+ *           4.query bundleInfo under user 100 and 101 successfully
+ */
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0500, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_multi_user_0500" << std::endl;
+    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + TEST_BUNDLE_HAPA };
+    auto res = InstallBundle(bundleFilePaths, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    int32_t userId = CreateNewUser();
+    EXPECT_NE(userId, 0);
+
+    bundleFilePaths.clear();
+    bundleFilePaths.emplace_back(THIRD_BUNDLE_PATH + LOWER_VERSION_CODE_TEST_BUNDLE_HAPB);
+    res = InstallBundle(bundleFilePaths, userId);
+    EXPECT_EQ(res, IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE);
+
+    auto bmsProxy = GetBundleMgrProxy();
+    EXPECT_NE(bmsProxy, nullptr);
+
+    // query bundleInfo under two users respectively
+    BundleInfo bundleInfo1;
+    bool ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
+    EXPECT_TRUE(ret);
+
+    BundleInfo bundleInfo2;
+    ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, userId);
+    EXPECT_FALSE(ret);
+
+    UninstallBundle(BUNDLE_NAME, Constants::ALL_USERID);
+    std::cout << "END BMS_Install_multi_user_0500" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_multi_user_0600
+ * @tc.name:  test the installation of a third-party bundle for multi users
+ * @tc.desc: 1.install hapA under user 100 successfully
+ *           2.create user 101 successfully
+ *           3.install the same version-code hapB under the user 101 successfully
+ *           4.query bundleInfo under user 100 and 101 successfully
+ */
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0600, Function | MediumTest | Level1)
+{
+    std::cout << "START BMS_Install_multi_user_0600" << std::endl;
+    std::vector<std::string> bundleFilePaths = { THIRD_BUNDLE_PATH + TEST_BUNDLE_HAPA };
+    auto res = InstallBundle(bundleFilePaths, USERID);
+    EXPECT_EQ(res, ERR_OK);
+
+    int32_t userId = CreateNewUser();
+    EXPECT_NE(userId, 0);
+
+    bundleFilePaths.clear();
+    bundleFilePaths.emplace_back(THIRD_BUNDLE_PATH + TEST_BUNDLE_HAPB);
+    res = InstallBundle(bundleFilePaths, userId);
+    EXPECT_EQ(res, ERR_OK);
+
+    auto bmsProxy = GetBundleMgrProxy();
+    EXPECT_NE(bmsProxy, nullptr);
+
+    // query bundleInfo under two users respectively
+    BundleInfo bundleInfo1;
+    bool ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo1, USERID);
+    EXPECT_TRUE(ret);
+
+    BundleInfo bundleInfo2;
+    ret = bmsProxy->GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, userId);
+    EXPECT_TRUE(ret);
+
+    UninstallBundle(BUNDLE_NAME, Constants::ALL_USERID);
+    std::cout << "END BMS_Install_multi_user_0600" << std::endl;
+}
+
+/**
+ * @tc.number: BMS_Install_multi_user_0400
+ * @tc.name:  test the installation of a third-party bundle for multi users
  * @tc.desc: 1.create user 101
  *           2.install the bundle under user 100 and user 101
  *           3.query bundle info under user 100 and user 101
  */
-HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0400, Function | MediumTest | Level1)
+HWTEST_F(BmsInstallMultiUserTest, BMS_Install_multi_user_0700, Function | MediumTest | Level1)
 {
     std::cout << "START BMS_Install_multi_user_0400" << std::endl;
     int32_t userId = CreateNewUser();
