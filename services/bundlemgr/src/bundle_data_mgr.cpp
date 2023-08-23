@@ -1631,7 +1631,8 @@ bool BundleDataMgr::GetApplicationInfos(
         int32_t responseUserId = info.GetResponseUserId(requestUserId);
         if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
             && !info.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
+            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
+                info.GetBundleName().c_str(), responseUserId);
             continue;
         }
         ApplicationInfo appInfo;
@@ -1666,7 +1667,8 @@ ErrCode BundleDataMgr::GetApplicationInfosV9(
         if (!(static_cast<uint32_t>(flags) &
             static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE))
             && !info.GetApplicationEnabled(responseUserId)) {
-            APP_LOGD("bundleName: %{public}s is disabled", info.GetBundleName().c_str());
+            APP_LOGD("bundleName: %{public}s userId: %{public}d incorrect",
+                info.GetBundleName().c_str(), responseUserId);
             continue;
         }
         ApplicationInfo appInfo;
@@ -1960,7 +1962,8 @@ ErrCode BundleDataMgr::CheckInnerBundleInfoWithFlags(
 
     if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
         && !innerBundleInfo.GetApplicationEnabled(userId)) {
-        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGE("bundleName: %{public}s userId: %{public}d incorrect",
+            innerBundleInfo.GetBundleName().c_str(), userId);
         return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
     }
 
@@ -2551,7 +2554,8 @@ bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     if (!(static_cast<uint32_t>(flags) & GET_APPLICATION_INFO_WITH_DISABLE)
         && !innerBundleInfo.GetApplicationEnabled(responseUserId)) {
-        APP_LOGE("bundleName: %{public}s is disabled", innerBundleInfo.GetBundleName().c_str());
+        APP_LOGE("bundleName: %{public}s userId: %{public}d incorrect",
+            innerBundleInfo.GetBundleName().c_str(), requestUserId);
         return false;
     }
     info = innerBundleInfo;
