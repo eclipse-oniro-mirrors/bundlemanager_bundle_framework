@@ -624,7 +624,7 @@ std::string BundleUtil::CopyFileToSecurityDir(const std::string &filePath, const
         subStr = Constants::SIGNATURE_FILE_PATH;
         destination.append(Constants::SECURITY_SIGNATURE_FILE_PATH);
     }
-    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(std::time(0)));
+    destination.append(Constants::PATH_SEPARATOR).append(std::to_string(GetCurrentTimeMs()));
     destination = CreateTempDir(destination);
     auto pos = filePath.find(subStr);
     if (pos == std::string::npos) { // this circumstance could not be considered laterly
