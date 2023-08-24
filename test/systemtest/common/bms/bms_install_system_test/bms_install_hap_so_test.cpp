@@ -5952,11 +5952,11 @@ HWTEST_F(BmsInstallHapSoTest, BMS_Update_Installs_Path_Multi_Haps_Standalone_SO_
     EXPECT_EQ(res, OPERATION_SUCCESS);
 
     bool ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME5 + LIBS);
-    EXPECT_EQ(ret, false);
+    EXPECT_EQ(ret, true);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME5 + MODULE_NAME + LIBS);
     EXPECT_EQ(ret, true);
     ret = CheckFilePath(CODE_ROOT_PATH + BUNDLE_NAME5 + FEATURE_MODULE_NAME3 + LIBS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 
     res = UninstallBundle(BUNDLE_NAME5);
     EXPECT_EQ(res, OPERATION_SUCCESS);
