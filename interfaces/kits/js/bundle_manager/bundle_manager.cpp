@@ -2304,29 +2304,33 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "HMS_ACCOUNT", nSysHmsAccount));
 
     napi_value nSysDialogMeetimeCall;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMECALL), &nSysDialogMeetimeCall));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMECALL), &nSysDialogMeetimeCall));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_MEETIMECALL", nSysDialogMeetimeCall));
 
     napi_value nSysDialogMeetimeContact;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMECONTACT), &nSysDialogMeetimeContact));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_MEETIMECONTACT", nSysDialogMeetimeContact));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMECONTACT), &nSysDialogMeetimeContact));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_MEETIMECONTACT",
+        nSysDialogMeetimeContact));
 
     napi_value nSysDialogMeetimeMessage;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE), &nSysDialogMeetimeMessage));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_MEETIMEMESSAGE", nSysDialogMeetimeMessage));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE), &nSysDialogMeetimeMessage));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSDIALOG_MEETIMEMESSAGE",
+        nSysDialogMeetimeMessage));
 
     napi_value nSysPickerMeetimeContact;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEETIMECONTACT), &nSysPickerMeetimeContact));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEETIMECONTACT", nSysPickerMeetimeContact));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEETIMECONTACT), &nSysPickerMeetimeContact));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEETIMECONTACT",
+        nSysPickerMeetimeContact));
 
     napi_value nSysPickerMeetimeCallLog;
-    NAPI_CALL_RETURN_VOID(env,
-        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG), &nSysPickerMeetimeCallLog));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEETIMECALLLOG", nSysPickerMeetimeCallLog));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG), &nSysPickerMeetimeCallLog));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEETIMECALLLOG",
+        nSysPickerMeetimeCallLog));
     
     napi_value nAds;
     NAPI_CALL_RETURN_VOID(env,
