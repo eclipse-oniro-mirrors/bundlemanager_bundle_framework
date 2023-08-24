@@ -32,6 +32,7 @@ void AppDetailAbility::OnStart(const Want &want, sptr<AAFwk::SessionInfo> sessio
     std::string bundleName = want.GetBundle();
     APP_LOGD("AppDetailAbility::OnStart, bundleName: %{public}s", bundleName.c_str());
     Want newWant;
+    sessionInfo_ = sessionInfo;
     newWant.SetAction(SETTINGS_ACTION);
     newWant.SetParam(SETTINGS_PARAM_BUNDLE_NAME, bundleName);
     ErrCode errCode = AbilityManagerClient::GetInstance()->StartAbility(newWant);
