@@ -297,7 +297,7 @@ napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nExtensionInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nExtensionInfos));
+    NAPI_CALL(env, napi_create_array(env, &nExtensionInfos));
     CommonFunc::ConvertExtensionInfos(env, extensionInfos, nExtensionInfos);
     APP_LOGD("call QueryExtensionInfosSync done");
     return nExtensionInfos;
