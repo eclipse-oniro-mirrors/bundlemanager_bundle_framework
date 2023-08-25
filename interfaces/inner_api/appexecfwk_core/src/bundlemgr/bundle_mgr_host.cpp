@@ -34,6 +34,7 @@ namespace AppExecFwk {
 namespace {
 const int32_t LIMIT_PARCEL_SIZE = 1024;
 const int32_t ASHMEM_LEN = 16;
+constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 
 void SplitString(const std::string &source, std::vector<std::string> &strings)
 {
@@ -472,18 +473,12 @@ ErrCode BundleMgrHost::HandleGetBundleInfo(MessageParcel &data, MessageParcel &r
     int userId = data.ReadInt32();
     APP_LOGD("name %{public}s, flag %{public}d", name.c_str(), flag);
     BundleInfo info;
-    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
     bool ret = GetBundleInfo(name, flag, info, userId);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("write failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
-    }
     if (ret) {
-        if (WriteBigParcelable(info, __func__, reply) != ERR_OK) {
-            APP_LOGE("write failed");
-            return ERR_APPEXECFWK_PARCEL_ERROR;
-        }
+        WRITE_PARCEL(reply.WriteInt32(ERR_OK));
+        return WriteParcelInfo(info, reply);
     }
+    WRITE_PARCEL(reply.WriteInt32(ERR_APPEXECFWK_PARCEL_ERROR));
     return ERR_OK;
 }
 
@@ -2896,6 +2891,19 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
     }
+    return ERR_OK;
+}
+
+template<typename T>
+ErrCode BundleMgrHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const
+{
+    Parcel tmpParcel;
+    (void)tmpParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
+    WRITE_PARCEL(tmpParcel.WriteParcelable(&parcelInfo));
+    size_t dataSize = tmpParcel.GetDataSize();
+
+    WRITE_PARCEL(reply.WriteUint32(dataSize));
+    WRITE_PARCEL(reply.WriteRawData(reinterpret_cast<uint8_t *>(tmpParcel.GetData()), dataSize));
     return ERR_OK;
 }
 }  // namespace AppExecFwk

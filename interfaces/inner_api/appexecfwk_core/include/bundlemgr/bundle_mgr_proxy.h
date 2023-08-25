@@ -886,6 +886,12 @@ private:
     bool GetBigParcelableInfo(
         BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
 
+    template<typename T>
+    ErrCode GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
+
+    template<typename T>
+    ErrCode InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo);
+
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
 };
