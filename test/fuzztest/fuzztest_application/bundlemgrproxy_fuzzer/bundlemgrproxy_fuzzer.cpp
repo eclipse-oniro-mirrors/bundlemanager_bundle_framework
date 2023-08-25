@@ -141,7 +141,6 @@ namespace OHOS {
             reinterpret_cast<uintptr_t>(data));
         bundleMgrProxy.GetIconById(bundleName, moduleName, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), reinterpret_cast<uintptr_t>(data));
-        std::string udid (reinterpret_cast<const char*>(data), size);
         bundleMgrProxy.GetSandboxAbilityInfo(want, reinterpret_cast<uintptr_t>(data),
             reinterpret_cast<uintptr_t>(data), reinterpret_cast<uintptr_t>(data), abilityInfo);
         bundleMgrProxy.GetSandboxExtAbilityInfos(want, reinterpret_cast<uintptr_t>(data),
