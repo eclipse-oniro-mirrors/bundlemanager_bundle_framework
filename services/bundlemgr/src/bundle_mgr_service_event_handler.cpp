@@ -93,6 +93,7 @@ constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 
 std::set<PreScanInfo> installList_;
@@ -609,6 +610,8 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
         dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
         dir + INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+    bundleParser.ParsePreInstallConfig(
+        dir + SHARED_BUNDLES_INSTALL_LIST_CONFIG, installList_);
 }
 
 void BMSEventHandler::GetPreInstallDir(std::vector<std::string> &bundleDirs)
