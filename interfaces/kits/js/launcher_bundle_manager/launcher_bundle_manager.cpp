@@ -178,7 +178,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nLauncherAbilityInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityInfos));
+    NAPI_CALL(env, napi_create_array(env, &nLauncherAbilityInfos));
     CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nLauncherAbilityInfos);
     APP_LOGD("call GetLauncherAbilityInfoSync done.");
     return nLauncherAbilityInfos;
@@ -403,7 +403,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nShortcutInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nShortcutInfos));
+    NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
     APP_LOGD("call GetShortcutInfoSync done.");
     return nShortcutInfos;
