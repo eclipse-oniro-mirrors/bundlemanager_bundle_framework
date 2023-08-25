@@ -36,7 +36,6 @@ uint32_t GetU32Data(const char* ptr)
 
 bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
 {
-#ifdef ON_64BIT_SYSTEM
     uint32_t code = (GetU32Data(data) % MESSAGE_SIZE);
     MessageParcel datas;
     std::u16string descriptor = InstalldHost::GetDescriptor();
@@ -47,7 +46,6 @@ bool DoSomethingInterestingWithMyAPI(const char* data, size_t size)
     MessageOption option;
     DelayedSingleton<BundleMgrService>::GetInstance()->OnStop();
     installdHost.OnRemoteRequest(code, datas, reply, option);
-#endif
     return true;
 }
 }
@@ -57,15 +55,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 {
     /* Run your code on data */
     if (data == nullptr) {
-        return 0;
-    }
-
-    if (size < OHOS::U32_AT_SIZE) {
-        return 0;
-    }
-
-    /* Validate the length of size */
-    if (size > OHOS::FOO_MAX_LEN) {
         return 0;
     }
 
