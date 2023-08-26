@@ -3192,7 +3192,12 @@ bool BundleMgrProxy::ProcessPreload(const Want &want)
     }
     MessageParcel reply;
     MessageOption option(MessageOption::TF_ASYNC);
-    auto res = Remote()->SendRequest(
+    auto remoteObj = Remote();
+    if (remoteObj == nullptr) {
+        APP_LOGE("remote is null");
+        return false;
+    }
+    auto res = remoteObj->SendRequest(
         static_cast<uint32_t>(BundleMgrInterfaceCode::PROCESS_PRELOAD), data, reply, option);
     if (res != ERR_OK) {
         APP_LOGE("SendRequest fail, error: %{public}d", res);
@@ -3619,7 +3624,7 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
         APP_LOGE("fail to QueryAppGalleryBundleName due to write InterfaceToken failed.");
         return false;
     }
-    
+
     MessageParcel reply;
     if (!SendTransactCmd(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME, data, reply)) {
         APP_LOGE("fail to QueryAppGalleryBundleName from server");

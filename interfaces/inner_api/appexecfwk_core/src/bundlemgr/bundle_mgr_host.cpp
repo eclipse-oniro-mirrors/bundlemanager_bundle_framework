@@ -685,7 +685,7 @@ ErrCode BundleMgrHost::HandleGetBundleInfosWithIntFlagsV9(MessageParcel &data, M
 ErrCode BundleMgrHost::HandleGetBundleNameForUid(MessageParcel &data, MessageParcel &reply)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    int uid = data.ReadInt32();
+    auto uid = data.ReadInt32();
     std::string name;
     bool ret = GetBundleNameForUid(uid, name);
     if (!reply.WriteBool(ret)) {

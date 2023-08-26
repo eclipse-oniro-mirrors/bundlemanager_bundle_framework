@@ -778,13 +778,9 @@ public:
         return bundleInfos_;
     }
 
-    bool GetOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
-
     bool QueryOverlayInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info);
 
     void SaveOverlayInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
-
-    void EnableOverlayBundle(const std::string &bundleName);
 
     ErrCode GetAppProvisionInfo(const std::string &bundleName, int32_t userId,
         AppProvisionInfo &appProvisionInfo);

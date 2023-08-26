@@ -1040,7 +1040,7 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
             info.GetCurrentModulePackage() + Constants::TMP_SUFFIX;
         RemoveModuleDir(createModulePath);
         oldInfo.SetCurrentModulePackage(info.GetCurrentModulePackage());
-        RollBackMoudleInfo(bundleName_, oldInfo);
+        RollBackModuleInfo(bundleName_, oldInfo);
     } else {
         auto modulePackage = info.GetCurrentModulePackage();
         RemoveModuleDir(info.GetModuleDir(modulePackage));
@@ -1067,7 +1067,7 @@ void BaseBundleInstaller::RemoveInfo(const std::string &bundleName, const std::s
     APP_LOGD("finish to remove innerBundleInfo due to rollback");
 }
 
-void BaseBundleInstaller::RollBackMoudleInfo(const std::string &bundleName, InnerBundleInfo &oldInfo)
+void BaseBundleInstaller::RollBackModuleInfo(const std::string &bundleName, InnerBundleInfo &oldInfo)
 {
     APP_LOGD("rollBackMoudleInfo due to rollback");
     InnerBundleInfo innerBundleInfo;

@@ -52,8 +52,8 @@ struct ShortcutInfo : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string hostAbility;
-    int32_t iconId;
-    int32_t labelId;
+    int32_t iconId = 0;
+    int32_t labelId = 0;
     std::string icon;
     std::string label;
     std::string disableMessage;

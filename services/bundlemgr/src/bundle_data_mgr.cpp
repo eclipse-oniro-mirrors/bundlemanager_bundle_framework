@@ -4847,7 +4847,7 @@ bool BundleDataMgr::IsPreInstallApp(const std::string &bundleName)
 }
 
 ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const std::string &moduleName,
-    int userId, std::vector<ProxyData> &proxyDatas) const
+    int32_t userId, std::vector<ProxyData> &proxyDatas) const
 {
     InnerBundleInfo info;
     auto ret = GetInnerBundleInfoWithBundleFlagsV9(
@@ -4859,7 +4859,7 @@ ErrCode BundleDataMgr::GetProxyDataInfos(const std::string &bundleName, const st
     return info.GetProxyDataInfos(moduleName, proxyDatas);
 }
 
-ErrCode BundleDataMgr::GetAllProxyDataInfos(int userId, std::vector<ProxyData> &proxyDatas) const
+ErrCode BundleDataMgr::GetAllProxyDataInfos(int32_t userId, std::vector<ProxyData> &proxyDatas) const
 {
     std::vector<BundleInfo> bundleInfos;
     auto ret = GetBundleInfosV9(

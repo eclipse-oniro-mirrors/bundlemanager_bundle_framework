@@ -113,7 +113,6 @@ struct InnerModuleInfo {
     std::string targetModuleName;
     int32_t targetPriority;
     std::vector<OverlayModuleInfo> overlayModuleInfo;
-    AtomicServiceModuleType atomicServiceModuleType;
     std::vector<std::string> preloads;
     BundleType bundleType = BundleType::SHARED;
     uint32_t versionCode = 0;
@@ -1822,16 +1821,6 @@ public:
             return false;
         }
         innerModuleInfos_.at(moduleName).preloads = preloads;
-        return true;
-    }
-
-    bool SetInnerModuleAtomicType(const std::string &moduleName, AtomicServiceModuleType type)
-    {
-        if (innerModuleInfos_.find(moduleName) == innerModuleInfos_.end()) {
-            APP_LOGE("innerBundleInfo does not contain the module.");
-            return false;
-        }
-        innerModuleInfos_.at(moduleName).atomicServiceModuleType = type;
         return true;
     }
 

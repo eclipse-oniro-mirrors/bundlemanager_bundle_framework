@@ -236,8 +236,8 @@ struct ApplicationInfo : public Parcelable {
 
     // overlay installation
     std::string targetBundleName;
-    int32_t targetPriority;
-    int32_t overlayState;
+    int32_t targetPriority = 0;
+    int32_t overlayState = 0;
 
     BundleType bundleType = BundleType::APP;
 
