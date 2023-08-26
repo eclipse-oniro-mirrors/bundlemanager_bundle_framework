@@ -916,7 +916,7 @@ napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    NAPI_CALL(env, napi_create_object(env, &nAbilityInfos));
+    NAPI_CALL(env, napi_create_array(env, &nAbilityInfos));
     CommonFunc::ConvertAbilityInfos(env, abilityInfos, nAbilityInfos);
     Query query(want.ToString(),
                 QUERY_ABILITY_INFOS_SYNC, abilityFlags, userId, env);
