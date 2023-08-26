@@ -44,7 +44,6 @@ using WriterFactory = std::function<std::unique_ptr<WriterDelegate>(FilePath &, 
 const std::string SEPARATOR = "/";
 const char HIDDEN_SEPARATOR = '.';
 const std::string ZIP = ".zip";
-const std::int32_t ZIP_SIZE = 4;
 
 struct UnzipParam {
     FilterCallback filterCB = nullptr;
@@ -270,19 +269,13 @@ bool Unzip(const std::string &srcFile, const std::string &destFile, OPTIONS opti
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_DEST_FILE_DISABLED);
         return false;
     }
-    if (srcFileDir.Value().size() == 0 || srcFileDir.Value().size() <= ZIP_SIZE) {
+    if (srcFileDir.Value().size() == 0) {
         APP_LOGI("%{public}s called fail, srcFile isn't Exist.", __func__);
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
-    if (srcFileDir.Value().substr(srcFileDir.Value().size()-ZIP_SIZE, ZIP_SIZE) == ZIP) {
-        if (!FilePath::PathIsValid(srcFileDir)) {
-            APP_LOGI("%{public}s called fail, srcFile isn't Exist.", __func__);
-            zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
-            return false;
-        }
-    } else {
-        APP_LOGI("%{public}s called fail, The file format of srcFile is incorrect .", __func__);
+    if (!FilePath::PathIsValid(srcFileDir)) {
+        APP_LOGI("%{public}s called fail, srcFile isn't Exist.", __func__);
         zlibCallbackInfo->OnZipUnZipFinish(ERR_ZLIB_SRC_FILE_DISABLED);
         return false;
     }
