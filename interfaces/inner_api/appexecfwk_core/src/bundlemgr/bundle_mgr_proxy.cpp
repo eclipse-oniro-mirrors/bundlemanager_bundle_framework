@@ -74,7 +74,30 @@ bool SendData(void *&buffer, size_t size, const void *data)
 
     return true;
 }
+
+bool GetData(void *&buffer, size_t size, const void *data)
+{
+    if (data == nullptr) {
+        APP_LOGE("GetData failed due to null data");
+        return false;
+    }
+    if (size == 0) {
+        APP_LOGE("GetData failed due to zero size");
+        return false;
+    }
+    buffer = malloc(size);
+    if (buffer == nullptr) {
+        APP_LOGE("GetData failed due to malloc buffer failed");
+        return false;
+    }
+    if (memcpy_s(buffer, size, data, size) != EOK) {
+        free(buffer);
+        APP_LOGE("GetData failed due to memcpy_s failed");
+        return false;
+    }
+    return true;
 }
+} // namespace
 
 BundleMgrProxy::BundleMgrProxy(const sptr<IRemoteObject> &impl) : IRemoteProxy<IBundleMgr>(impl)
 {
@@ -296,11 +319,7 @@ bool BundleMgrProxy::GetBundleInfo(
         return false;
     }
 
-    if (!GetBigParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO, data, bundleInfo)) {
-        APP_LOGE("fail to GetBundleInfo from server");
-        return false;
-    }
-    return true;
+    return GetParcelInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO, data, bundleInfo) == ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleInfo(
@@ -3933,6 +3952,48 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
     ClearAshmem(ashmem);
     APP_LOGD("Get parcelable vector from ashmem success");
     return true;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
+        return ret;
+    }
+    return InnerGetParcelInfo<T>(reply, parcelInfo);
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo)
+{
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed, dataSize : %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelInfo = *info;
+    APP_LOGD("InnerGetParcelInfo success");
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

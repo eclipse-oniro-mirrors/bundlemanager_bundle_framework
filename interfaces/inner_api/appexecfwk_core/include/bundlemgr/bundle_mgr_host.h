@@ -683,6 +683,9 @@ private:
     ErrCode WriteBigParcelable(
         T &parcelable, const char *ashmemName, MessageParcel &reply);
 
+    template<typename T>
+    ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
+
     using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, BundleMgrHostFunc> funcMap_;
 

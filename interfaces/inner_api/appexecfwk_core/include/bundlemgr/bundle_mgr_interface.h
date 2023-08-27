@@ -1206,6 +1206,14 @@ public:
         return false;
     }
 };
+
+#define WRITE_PARCEL(func)                                             \
+    do {                                                               \
+        if (!(func)) {                                                 \
+            APP_LOGE("write parcel failed, func : %{public}s", #func); \
+            return ERR_APPEXECFWK_PARCEL_ERROR;                        \
+        }                                                              \
+    } while (0)
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_MGR_INTERFACE_H
