@@ -595,14 +595,14 @@ bool BundleInstallerHost::IsPermissionVaild(const InstallParam &installParam, In
     verifiedInstallParam.installEtpMdmBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
-    auto installUpdateSelfBundlePermissionStatus =
+    verifiedInstallParam.installUpdateSelfBundlePermissionStatus =
         BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_SELF_BUNDLE) ?
         PermissionStatus::HAVE_PERMISSION_STATUS : PermissionStatus::NON_HAVE_PERMISSION_STATUS;
     return (verifiedInstallParam.installBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEnterpriseBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpNormalBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
         verifiedInstallParam.installEtpMdmBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS ||
-        installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS);
+        verifiedInstallParam.installUpdateSelfBundlePermissionStatus == PermissionStatus::HAVE_PERMISSION_STATUS);
 }
 
 bool BundleInstallerHost::DestoryBundleStreamInstaller(uint32_t streamInstallerId)
