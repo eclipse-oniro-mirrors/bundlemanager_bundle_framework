@@ -99,7 +99,7 @@ struct UninstallParam : public Parcelable {
     std::string bundleName;
     std::string moduleName;
     int32_t versionCode = Constants::ALL_VERSIONCODE;
-    int32_t userId;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

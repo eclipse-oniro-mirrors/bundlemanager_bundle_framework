@@ -27,10 +27,10 @@ struct LauncherAbilityInfo {
 public:
     ApplicationInfo applicationInfo;
     ElementName elementName; // bundle name , ability name, deviceid
-    int32_t labelId;
-    int32_t iconId;
-    int32_t userId;
-    int64_t installTime;
+    int32_t labelId = 0;
+    int32_t iconId = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    int64_t installTime = 0;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

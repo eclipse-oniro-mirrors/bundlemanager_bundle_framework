@@ -41,7 +41,7 @@ int32_t AccountHelper::GetCurrentActiveUserId()
 {
 #ifdef ACCOUNT_ENABLE
     std::vector<int32_t> activeIds;
-    int ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
+    int32_t ret = AccountSA::OsAccountManager::QueryActiveOsAccountIds(activeIds);
     if (ret != 0) {
         APP_LOGE("QueryActiveOsAccountIds failed ret:%{public}d", ret);
         return Constants::INVALID_USERID;

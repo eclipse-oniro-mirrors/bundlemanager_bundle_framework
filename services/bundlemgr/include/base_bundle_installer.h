@@ -291,14 +291,6 @@ private:
     ErrCode ProcessModuleUpdate(InnerBundleInfo &newInfo,
         InnerBundleInfo &oldInfo, bool isReplace, bool noSkipsKill = true);
     /**
-     * @brief try to get the bundle info to decide use install or update.
-     * @param newInfo Indicates the InnerBundleInfo object parsed from the config.json in the HAP package.
-     * @param uid Indicates the uid of the application.
-     * @param installFlag Indicates install Flag.
-     * @return Returns ERR_OK if the bundle install successfully; returns error code otherwise.
-     */
-    ErrCode ProcessBundleStatus(InnerBundleInfo &newInfo, int32_t &uid, const InstallFlag &installFlag);
-    /**
      * @brief The real procedure for bundle install by bundleName.
      * @param bundleName Indicates the bundleName the application to install.
      * @param installParam Indicates the install parameters.
@@ -419,7 +411,7 @@ private:
      * @param oldInfo Indicates the original innerBundleInfo of the bundle.
      * @return Returns ERR_OK if the rollback is successful; returns error code otherwise.
      */
-    void RollBackMoudleInfo(const std::string &bundleName, InnerBundleInfo &oldInfo);
+    void RollBackModuleInfo(const std::string &bundleName, InnerBundleInfo &oldInfo);
     /**
      * @brief To obtain the innerBundleInfo of the corresponding hap.
      * @param info Indicates the innerBundleInfo obtained.

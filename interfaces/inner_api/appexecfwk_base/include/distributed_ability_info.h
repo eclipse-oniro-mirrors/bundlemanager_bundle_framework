@@ -26,7 +26,7 @@ namespace AppExecFwk {
 struct DistributedAbilityInfo : public Parcelable {
     std::string abilityName;
     std::vector<std::string> permissions;
-    AbilityType type;
+    AbilityType type = AbilityType::UNKNOWN;
     bool enabled = true;
 
     bool ReadFromParcel(Parcel &parcel);

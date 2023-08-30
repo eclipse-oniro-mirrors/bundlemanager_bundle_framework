@@ -124,7 +124,6 @@ const std::string MODULE_OVERLAY_MODULE_INFO = "overlayModuleInfo";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string APPLY_QUICK_FIX_FREQUENCY = "applyQuickFixFrequency";
-const std::string MODULE_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string MODULE_PRELOADS = "preloads";
 const std::string INNER_SHARED_MODULE_INFO = "innerSharedModuleInfos";
 const std::string MODULE_BUNDLE_TYPE = "bundleType";
@@ -623,7 +622,6 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_TARGET_MODULE_NAME, info.targetModuleName},
         {MODULE_TARGET_PRIORITY, info.targetPriority},
         {MODULE_OVERLAY_MODULE_INFO, info.overlayModuleInfo},
-        {MODULE_ATOMIC_SERVICE_MODULE_TYPE, info.atomicServiceModuleType},
         {MODULE_PRELOADS, info.preloads},
         {MODULE_BUNDLE_TYPE, info.bundleType},
         {MODULE_VERSION_CODE, info.versionCode},
@@ -1088,14 +1086,6 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<AtomicServiceModuleType>(jsonObject,
-        jsonObjectEnd,
-        MODULE_ATOMIC_SERVICE_MODULE_TYPE,
-        info.atomicServiceModuleType,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<std::string>>(jsonObject,
         jsonObjectEnd,
         MODULE_PRELOADS,
@@ -1826,7 +1816,6 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
             break;
         }
     }
-    hapInfo.atomicServiceModuleType = it->second.atomicServiceModuleType;
     for (const auto &item : it->second.preloads) {
         PreloadItem preload(item);
         hapInfo.preloads.emplace_back(preload);

@@ -212,10 +212,10 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
     int32_t metaDataSize = parcel.ReadInt32();
     CONTAINER_SECURITY_VERIFY(parcel, metaDataSize, &metaData);
     for (int32_t i = 0; i < metaDataSize; i++) {
-        std::string mouduleName = Str16ToStr8(parcel.ReadString16());
+        std::string moduleName = Str16ToStr8(parcel.ReadString16());
         int32_t customizeDataSize = parcel.ReadInt32();
         std::vector<CustomizeData> customizeDatas;
-        metaData[mouduleName] = customizeDatas;
+        metaData[moduleName] = customizeDatas;
         CONTAINER_SECURITY_VERIFY(parcel, customizeDataSize, &customizeDatas);
         for (int j = 0; j < customizeDataSize; j++) {
             std::unique_ptr<CustomizeData> customizeData(parcel.ReadParcelable<CustomizeData>());
@@ -223,7 +223,7 @@ bool ApplicationInfo::ReadMetaDataFromParcel(Parcel &parcel)
                 APP_LOGE("ReadParcelable<CustomizeData> failed");
                 return false;
             }
-            metaData[mouduleName].emplace_back(*customizeData);
+            metaData[moduleName].emplace_back(*customizeData);
         }
     }
     return true;

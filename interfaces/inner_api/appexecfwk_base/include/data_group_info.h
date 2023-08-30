@@ -27,9 +27,9 @@ struct DataGroupInfo : public Parcelable {
 public:
     std::string dataGroupId;
     std::string uuid;
-    int32_t uid;
-    int32_t gid;
-    int32_t userId;
+    int32_t uid = 0;
+    int32_t gid = 0;
+    int32_t userId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

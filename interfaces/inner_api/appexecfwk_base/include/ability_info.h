@@ -172,9 +172,9 @@ struct AbilityInfo : public Parcelable {
     std::string label;
     std::string description;
     std::string iconPath;
-    int32_t labelId;
-    int32_t descriptionId;
-    int32_t iconId;
+    int32_t labelId = 0;
+    int32_t descriptionId = 0;
+    int32_t iconId = 0;
     std::string theme;
     bool visible = false;
     std::string kind;  // ability category
@@ -231,9 +231,9 @@ struct AbilityInfo : public Parcelable {
 
     // configuration fields on startup page
     std::string startWindowIcon;
-    int32_t startWindowIconId;
+    int32_t startWindowIconId = 0;
     std::string startWindowBackground;
-    int32_t startWindowBackgroundId;
+    int32_t startWindowBackgroundId = 0;
     // whether to display in the missions list
     bool excludeFromMissions = false;
     bool unclearableMission = false;
@@ -270,7 +270,7 @@ struct AbilityInfo : public Parcelable {
     AbilitySubType subType = AbilitySubType::UNSPECIFIED;
     std::string libPath;
     std::string deviceId;
-    int64_t installTime;
+    int64_t installTime = 0;
     std::vector<std::string> supportExtNames;
     std::vector<std::string> supportMimeTypes;
 

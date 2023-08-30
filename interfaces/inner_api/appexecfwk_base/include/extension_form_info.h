@@ -38,7 +38,7 @@ struct ExtensionFormInfo {
     bool updateEnabled = false;
     std::string scheduledUpdateTime = "";
     int32_t updateDuration = 0;
-    std::int32_t defaultDimension;
+    int32_t defaultDimension = 0;
     std::vector<int32_t> supportDimensions {};
     std::vector<FormCustomizeData> metadata {};
     bool dataProxyEnabled = false;

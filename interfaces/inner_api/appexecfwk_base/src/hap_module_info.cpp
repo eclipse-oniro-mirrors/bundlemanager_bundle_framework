@@ -67,7 +67,6 @@ const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_PATH = "nativeLibraryPath";
 const std::string HAP_MODULE_INFO_CPU_ABI = "cpuAbi";
 const std::string HAP_MODULE_INFO_MODULE_SOURCE_DIR = "moduleSourceDir";
 const std::string HAP_OVERLAY_MODULE_INFO = "overlayModuleInfos";
-const std::string HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE = "atomicServiceModuleType";
 const std::string HAP_MODULE_INFO_PRELOADS = "preloads";
 const std::string PRELOAD_ITEM_MODULE_NAME = "moduleName";
 const std::string HAP_MODULE_INFO_VERSION_CODE = "versionCode";
@@ -413,7 +412,6 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
         }
         overlayModuleInfos.emplace_back(*overlayModuleInfo);
     }
-    atomicServiceModuleType = static_cast<AtomicServiceModuleType>(parcel.ReadInt32());
 
     int32_t preloadsSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloadsSize);
@@ -543,7 +541,6 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &overlayModuleInfo : overlayModuleInfos) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &overlayModuleInfo);
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(atomicServiceModuleType));
 
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, preloads.size());
     for (auto &item : preloads) {
@@ -611,7 +608,6 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_CPU_ABI, hapModuleInfo.cpuAbi},
         {HAP_MODULE_INFO_MODULE_SOURCE_DIR, hapModuleInfo.moduleSourceDir},
         {HAP_OVERLAY_MODULE_INFO, hapModuleInfo.overlayModuleInfos},
-        {HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE, hapModuleInfo.atomicServiceModuleType},
         {HAP_MODULE_INFO_PRELOADS, hapModuleInfo.preloads},
         {HAP_MODULE_INFO_PROXY_DATAS, hapModuleInfo.proxyDatas},
         {HAP_MODULE_INFO_BUILD_HASH, hapModuleInfo.buildHash},
@@ -978,14 +974,6 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::OBJECT);
-    GetValueIfFindKey<AtomicServiceModuleType>(jsonObject,
-        jsonObjectEnd,
-        HAP_MODULE_INFO_ATOMIC_SERVICE_MODULE_TYPE,
-        hapModuleInfo.atomicServiceModuleType,
-        JsonType::NUMBER,
-        false,
-        parseResult,
-        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<PreloadItem>>(jsonObject,
         jsonObjectEnd,
         HAP_MODULE_INFO_PRELOADS,

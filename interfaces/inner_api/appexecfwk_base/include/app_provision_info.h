@@ -23,13 +23,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 struct Validity {
-    int64_t notBefore;
-    int64_t notAfter;
+    int64_t notBefore = 0;
+    int64_t notAfter = 0;
 };
 
 // configuration information about a profile
 struct AppProvisionInfo : public Parcelable {
-    uint32_t versionCode;
+    uint32_t versionCode = 0;
     std::string versionName;
     std::string uuid;
     std::string type;
