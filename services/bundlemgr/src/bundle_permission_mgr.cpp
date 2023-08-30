@@ -793,7 +793,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
         return false;
     }
     std::string bundleName = want.GetElement().GetBundleName();
-    return bundleName == callingBundleName || bundleName == SCENEBOARD_BUNDLE_NAME;
+    return bundleName == callingBundleName || callingBundleName == SCENEBOARD_BUNDLE_NAME;
 }
 
 bool BundlePermissionMgr::InnerUpdateDefinePermission(
