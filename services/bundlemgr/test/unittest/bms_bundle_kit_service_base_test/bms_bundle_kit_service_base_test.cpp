@@ -27,6 +27,7 @@
 #include "mock_bundle_manager_callback_stub.h"
 #include "bundle_distributed_manager.h"
 #include "bundle_manager_callback_proxy.h"
+#include "scope_guard.h"
 #define private public
 
 using namespace testing::ext;
@@ -852,12 +853,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
     targetAbilityInfo.targetInfo.abilityName = abilityName;
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    #ifdef USE_BUNDLE_QUERYRPCID
-    EXPECT_TRUE(ret);
-    #else
     EXPECT_FALSE(ret);
-    #endif
     sleep(1);
 }
 
@@ -876,12 +875,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
     targetAbilityInfo.targetInfo.abilityName = abilityName;
     targetAbilityInfo.targetInfo.moduleName = moduleName;
     targetAbilityInfo.targetInfo.bundleName = bundleName;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    #ifdef USE_BUNDLE_QUERYRPCID
-    EXPECT_TRUE(ret);
-    #else
     EXPECT_FALSE(ret);
-    #endif
     sleep(1);
 }
 
@@ -894,12 +891,10 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
 {
     BundleDistributedManager mgr;
     TargetAbilityInfo targetAbilityInfo;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    #ifdef USE_BUNDLE_QUERYRPCID
-    EXPECT_TRUE(ret);
-    #else
     EXPECT_FALSE(ret);
-    #endif
     sleep(1);
 }
 

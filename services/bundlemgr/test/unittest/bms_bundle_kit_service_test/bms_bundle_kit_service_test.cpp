@@ -47,6 +47,7 @@
 #include "mock_bundle_status.h"
 #include "nlohmann/json.hpp"
 #include "perf_profile.h"
+#include "scope_guard.h"
 #include "service_control.h"
 #include "shortcut_info.h"
 #include "system_ability_helper.h"
@@ -7858,12 +7859,10 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | S
 {
     auto bundleMgr = GetBundleDistributedManager();
     TargetAbilityInfo targetAbilityInfo;
+    setuid(Constants::FOUNDATION_UID);
+    ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     bool res = bundleMgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    #ifdef USE_BUNDLE_QUERYRPCID
-    EXPECT_TRUE(res);
-    #else
     EXPECT_FALSE(res);
-    #endif
 }
 
 /**
