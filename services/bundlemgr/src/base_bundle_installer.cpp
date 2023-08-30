@@ -2747,10 +2747,14 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
         APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
         return ret;
     }
+    if (installParam.isSelfUpdate) {
+        return ERR_OK;
+    }
     if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
         !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
         // need vaild permission
         APP_LOGE("install permission denied");
