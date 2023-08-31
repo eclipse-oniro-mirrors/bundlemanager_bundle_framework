@@ -327,7 +327,7 @@ bool BundleMgrClientImpl::GetResFromResMgr(const std::string &resName, const std
 
     size_t pos = resName.rfind(PROFILE_FILE_PREFIX);
     if ((pos == std::string::npos) || (pos == resName.length() - strlen(PROFILE_FILE_PREFIX))) {
-        APP_LOGE("GetResFromResMgr res name is invalid");
+        APP_LOGE("GetResFromResMgr res name %{public}s is invalid", resName.c_str());
         return false;
     }
     std::string profileName = resName.substr(pos + strlen(PROFILE_FILE_PREFIX));
