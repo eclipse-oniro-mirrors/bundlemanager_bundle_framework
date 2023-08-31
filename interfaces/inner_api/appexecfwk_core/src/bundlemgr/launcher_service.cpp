@@ -69,7 +69,7 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
 
 bool LauncherService::RegisterCallback(const sptr<IBundleStatusCallback> &callback)
 {
-    APP_LOGI("RegisterCallback called");
+    APP_LOGD("RegisterCallback called");
     if (bundleMonitor_ == nullptr) {
         APP_LOGE("failed to register callback, bundleMonitor is null");
         return false;
@@ -94,7 +94,7 @@ bool LauncherService::RegisterCallback(const sptr<IBundleStatusCallback> &callba
 
 bool LauncherService::UnRegisterCallback()
 {
-    APP_LOGI("UnRegisterCallback called");
+    APP_LOGD("UnRegisterCallback called");
     if (bundleMonitor_ == nullptr) {
         APP_LOGE("failed to unregister callback, bundleMonitor is null");
         return false;
@@ -218,7 +218,7 @@ bool LauncherService::GetAllLauncherAbilityInfos(int32_t userId, std::vector<Lau
 bool LauncherService::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    APP_LOGI("GetShortcutInfos called");
+    APP_LOGD("GetShortcutInfos called");
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
         return false;
@@ -354,7 +354,7 @@ ErrCode LauncherService::GetShortcutInfoV9(
         return errCode;
     }
     if (infos.empty()) {
-        APP_LOGI("ShortcutInfo is not exist for this bundle");
+        APP_LOGD("ShortcutInfo is not exist for this bundle");
         return ERR_OK;
     }
 
