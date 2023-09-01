@@ -231,8 +231,10 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     }
     auto res = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
     if (res != ERR_OK) {
-        if (dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
-            return ERR_OK;
+        if (isBrokerServiceExisted_) {
+            if (dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+                return ERR_OK;
+            }
         }
     }
     return res;
@@ -350,7 +352,9 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     dataMgr->GetBundleInfos(flags, bundleInfos, userId);
-    dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    if (isBrokerServiceExisted_) {
+        dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    }
     return !bundleInfos.empty();
 }
 
@@ -373,10 +377,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
-    if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
-        APP_LOGD("query bundle infos from bms extension successfully");
-        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
-        return ERR_OK;
+    if (isBrokerServiceExisted_) {
+        if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
+            APP_LOGD("query bundle infos from bms extension successfully");
+            BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+            return ERR_OK;
+        }
     }
     if (res == ERR_OK) {
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
@@ -618,7 +624,9 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    if (isBrokerServiceExisted_) {
+        dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    }
     return !abilityInfos.empty();
 }
 
@@ -641,7 +649,8 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
-    if (dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, true) == ERR_OK) {
+    if (isBrokerServiceExisted_ &&
+        dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
     }
@@ -686,7 +695,13 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
+    bool res = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
+    if (isBrokerServiceExisted_ &&
+        dataMgr->QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos) == ERR_OK) {
+        APP_LOGD("query launcher ability infos from bms extension successfully");
+        return true;
+    }
+    return res;
 }
 
 bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)
@@ -2228,7 +2243,8 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         return false;
     }
     auto ret = dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
-    if (dataMgr->ImplicitQueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, false) == ERR_OK) {
+    if (isBrokerServiceExisted_ &&
+        dataMgr->ImplicitQueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         return true;
     }
