@@ -29,19 +29,19 @@ public:
      * @param userId Indicates the userId.
      * @param bundleUserStatus Indicates the bundleUserStatus.
      */
-    virtual void CreateNewUser(int32_t userId) override;
+    virtual ErrCode CreateNewUser(int32_t userId) override;
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
      * @param bundleUserStatus Indicates the bundleUserStatus.
      */
-    virtual void RemoveUser(int32_t userId) override;
+    virtual ErrCode RemoveUser(int32_t userId) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
     void InnerUninstallBundle(int32_t userId, const std::vector<BundleInfo> &bundleInfos);
-    void CheckInitialUser();
+    ErrCode CheckInitialUser();
     void BeforeCreateNewUser(int32_t userId);
     void OnCreateNewUser(int32_t userId);
     void AfterCreateNewUser(int32_t userId);

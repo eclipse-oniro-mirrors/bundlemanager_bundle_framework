@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_USER_MGR_INTERFACE_H
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLEMGR_BUNDLE_USER_MGR_INTERFACE_H
 
+#include "appexecfwk_errors.h"
 #include "iremote_broker.h"
 
 namespace OHOS {
@@ -28,17 +29,17 @@ public:
      * @brief Create new user.
      * @param userId Indicates the userId.
      */
-    virtual void CreateNewUser(int32_t userId)
+    virtual ErrCode CreateNewUser(int32_t userId)
     {
-        return;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
      */
-    virtual void RemoveUser(int32_t userId)
+    virtual ErrCode RemoveUser(int32_t userId)
     {
-        return;
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 };
 }  // namespace AppExecFwk
