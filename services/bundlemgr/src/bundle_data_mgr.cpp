@@ -2071,7 +2071,6 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
 bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) const
 {
     InnerBundleInfo innerBundleInfo;
-    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s", uid, bundleName.c_str());
     if (GetInnerBundleInfoByUid(uid, innerBundleInfo) != ERR_OK) {
         if (sandboxAppHelper_ == nullptr) {
             return false;
@@ -2082,16 +2081,17 @@ bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) 
     }
 
     bundleName = innerBundleInfo.GetBundleName();
+    APP_LOGD("GetBundleNameForUid, uid %{public}d, bundleName %{public}s", uid, bundleName.c_str());
     return true;
 }
 
 ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const
 {
-    int32_t userId = GetUserIdByUid(uid);
-    if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {
-        APP_LOGW("the uid %{public}d is illegal when get bundleName by uid.", uid);
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    if (uid < baseAppUid_) {
+        APP_LOGD("the uid(%{public}d) is not an application.", uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
+    int32_t userId = GetUserIdByUid(uid);
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     if (bundleInfos_.empty()) {

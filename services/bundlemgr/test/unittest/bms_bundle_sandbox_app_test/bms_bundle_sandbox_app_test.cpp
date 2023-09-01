@@ -1967,7 +1967,7 @@ HWTEST_F(BmsSandboxAppTest, GetInnerBundleInfoByUid_0500, Function | SmallTest |
         std::make_shared<BundleSandboxDataMgr>();
     InnerBundleInfo info;
     ErrCode testRet = dataMgr->GetInnerBundleInfoByUid(Constants::INVALID_UID, info);
-    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID);
+    EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);
     testRet = dataMgr->GetInnerBundleInfoByUid(TEST_UID, info);
     EXPECT_EQ(testRet, ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP);
 }
