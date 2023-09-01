@@ -229,7 +229,7 @@ ErrCode AppControlManager::GetAppRunningControlRule(
     ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("DataMgr GetBundleInfoV9 failed");
+        APP_LOGW("DataMgr GetBundleInfoV9 failed");
         return ret;
     }
     std::string key = bundleInfo.appId + std::string("_") + std::to_string(userId);

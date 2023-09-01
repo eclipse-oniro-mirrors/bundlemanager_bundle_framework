@@ -2470,7 +2470,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
 static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
 {
     if (uid != callingUid) {
-        APP_LOGE("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
+        APP_LOGD("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
         return;
     }
     APP_LOGD("put applicationInfo to cache");

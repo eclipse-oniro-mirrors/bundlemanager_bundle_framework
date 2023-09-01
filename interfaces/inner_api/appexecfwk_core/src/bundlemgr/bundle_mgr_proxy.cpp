@@ -3760,7 +3760,7 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode cod
         }
         APP_LOGD("get parcelable infos success");
     }
-    APP_LOGD("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
+    APP_LOGW("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
 }
 
