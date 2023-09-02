@@ -516,8 +516,6 @@ ErrCode ParamsProcessGetDefaultApplicationSync(napi_env env, napi_callback_info 
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
-                return ERROR_PARAM_CHECK_ERROR;
             }
         } else {
             APP_LOGE("param check error");
@@ -705,8 +703,6 @@ ErrCode ParamsProcessSetDefaultApplicationSync(napi_env env, napi_callback_info 
         } else if (i == ARGS_POS_TWO) {
             if ((!CommonFunc::ParseInt(env, args[i], userId))) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
-                return ERROR_PARAM_CHECK_ERROR;
             }
         } else {
             APP_LOGE("param check error");
@@ -880,8 +876,6 @@ ErrCode ParamsProcessResetDefaultApplicationSync(napi_env env, napi_callback_inf
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
                 APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USERID_CHECK, TYPE_NUMBER);
-                return ERROR_PARAM_CHECK_ERROR;
             }
         } else {
             APP_LOGE("param check error");
