@@ -1401,21 +1401,12 @@ ErrCode BundleDataMgr::QueryLauncherAbilityInfos(
     if (bundleName.empty()) {
         // query all launcher ability
         GetAllLauncherAbility(want, abilityInfos, userId, requestUserId);
-        QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos);
         return ERR_OK;
     }
     // query definite abilities by bundle name
     ErrCode ret = GetLauncherAbilityByBundleName(want, abilityInfos, userId, requestUserId);
     if (ret == ERR_OK) {
         APP_LOGD("ability infos have been found");
-        return ret;
-    }
-
-    if (ret == ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST) {
-        if (QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos) == ERR_OK) {
-            APP_LOGD("query launcher abilities from bms extension successfully");
-            return ERR_OK;
-        }
     }
     return ret;
 }
@@ -2242,7 +2233,7 @@ ErrCode BundleDataMgr::GetNameForUid(const int uid, std::string &name) const
     InnerBundleInfo innerBundleInfo;
     ErrCode ret = GetInnerBundleInfoByUid(uid, innerBundleInfo);
     if (ret != ERR_OK) {
-        APP_LOGW("get innerBundleInfo from bundleInfo_ by uid failed.");
+        APP_LOGD("get innerBundleInfo from bundleInfo_ by uid failed.");
         if (sandboxAppHelper_ == nullptr) {
             APP_LOGW("sandboxAppHelper_ is nullptr");
             return ERR_BUNDLE_MANAGER_INVALID_UID;
@@ -5328,6 +5319,7 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         }
     }
+
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
@@ -5335,8 +5327,9 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
         return res;
     }
     for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
-        // fix labelId or iconId is equal 0
-        ModifyLauncherAbilityInfo(true, info);
+        // if labelId and label of abilityInfo is 0 or empty, replacing them by utilizing the corresponding
+        // elements of applicationInfo
+        ModifyLauncherAbilityInfoFromBmsExtension(info);
     });
     return ERR_OK;
 }
@@ -5454,6 +5447,21 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosFromBmsExtension(
     }
 
     return ERR_OK;
+}
+
+void BundleDataMgr::ModifyLauncherAbilityInfoFromBmsExtension(AbilityInfo &abilityInfo) const
+{
+    if (abilityInfo.labelId == 0) {
+        abilityInfo.labelId = abilityInfo.applicationInfo.labelId;
+    }
+
+    if (abilityInfo.label.empty()) {
+        abilityInfo.label = abilityInfo.applicationInfo.label;
+    }
+
+    if (abilityInfo.iconId == 0) {
+        abilityInfo.iconId = abilityInfo.applicationInfo.iconId;
+    }
 }
 
 ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo,

@@ -850,6 +850,8 @@ public:
         AbilityInfo &abilityInfo, bool isNewVersion = false) const;
     ErrCode ImplicitQueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     /**
@@ -963,8 +965,7 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
-    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
+    void ModifyLauncherAbilityInfoFromBmsExtension(AbilityInfo &abilityInfo) const;
     bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
