@@ -242,12 +242,12 @@ ErrCode BundleSandboxDataMgr::GetSandboxHapModuleInfo(const AbilityInfo &ability
 ErrCode BundleSandboxDataMgr::GetInnerBundleInfoByUid(const int32_t &uid, InnerBundleInfo &innerBundleInfo) const
 {
     APP_LOGD("GetInnerBundleInfoByUid with uid is %{public}d", uid);
+    if (uid < Constants::BASE_APP_UID) {
+        APP_LOGD("the uid(%{public}d) is not an application.", uid);
+        return ERR_APPEXECFWK_SANDBOX_QUERY_NO_SANDBOX_APP;
+    }
     int32_t userId = BundleUtil::GetUserIdByUid(uid);
     APP_LOGD("GetInnerBundleInfoByUid with userId is %{public}d", userId);
-    if (userId == Constants::UNSPECIFIED_USERID || userId == Constants::INVALID_USERID) {
-        APP_LOGE("the uid %{public}d is illegal when get bundleName by uid.", uid);
-        return ERR_APPEXECFWK_SANDBOX_QUERY_INVALID_USER_ID;
-    }
 
     {
         std::shared_lock<std::shared_mutex> lock(sandboxAppMutex_);
