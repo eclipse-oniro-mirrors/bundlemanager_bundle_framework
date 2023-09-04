@@ -17,7 +17,6 @@
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_MIME_TYPE_MGR_H
 
 #include <map>
-#include <shared_mutex>
 #include <string>
 #include <vector>
 
@@ -25,14 +24,13 @@ namespace OHOS {
 namespace AppExecFwk {
 class MimeTypeMgr {
 public:
-    MimeTypeMgr();
-    ~MimeTypeMgr();
+    MimeTypeMgr() = default;
+    ~MimeTypeMgr() = default;
     static bool GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes);
+    static bool GetMimeTypeByUri(const std::string &uri, std::string &mimeType);
 
 private:
-    static void InitMimeMap();
     static std::multimap<std::string, std::string> mimeTypeMap_;
-    static std::shared_mutex mapMutex_;
 };
 }
 }
