@@ -4067,7 +4067,7 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
     }
 }
 
-std::string GetEntryModuleName() const
+std::string InnerBundleInfo::GetEntryModuleName() const
 {
     for (const auto &item : innerModuleInfos_) {
         if (item.second.isEntry) {
