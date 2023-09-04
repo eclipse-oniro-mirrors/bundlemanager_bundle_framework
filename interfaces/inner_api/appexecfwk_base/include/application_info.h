@@ -188,6 +188,7 @@ struct ApplicationInfo : public Parcelable {
     std::string process;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     std::string vendor;
+    bool gwpAsanEnabled = false;
 
     // apl
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;

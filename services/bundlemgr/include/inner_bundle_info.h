@@ -1944,6 +1944,16 @@ public:
         }
     }
 
+    void SetGwpAsanEnabled(bool gwpAsanEnabled)
+    {
+        baseApplicationInfo_->gwpAsanEnabled = gwpAsanEnabled;
+    }
+
+    bool GetGwpAsanEnabled() const
+    {
+        return baseApplicationInfo_->gwpAsanEnabled;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;
