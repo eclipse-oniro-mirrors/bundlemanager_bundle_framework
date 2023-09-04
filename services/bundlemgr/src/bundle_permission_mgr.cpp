@@ -28,6 +28,7 @@ namespace AppExecFwk {
 namespace {
 // pre bundle profile
 constexpr const char* INSTALL_LIST_PERMISSIONS_CONFIG = "/etc/app/install_list_permissions.json";
+constexpr const char* SCENEBOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 }
 
 using namespace OHOS::Security;
@@ -796,7 +797,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
         return false;
     }
     std::string bundleName = want.GetElement().GetBundleName();
-    return bundleName == callingBundleName;
+    return bundleName == callingBundleName || callingBundleName == SCENEBOARD_BUNDLE_NAME;
 }
 
 bool BundlePermissionMgr::InnerUpdateDefinePermission(
