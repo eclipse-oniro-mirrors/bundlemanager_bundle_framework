@@ -4066,5 +4066,15 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
         shortcutInfo.intents.emplace_back(shortcutIntent);
     }
 }
+
+std::string GetEntryModuleName() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.isEntry) {
+            return item.second.modulePackage;
+        }
+    }
+    return Constants::EMPTY_STRING;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
