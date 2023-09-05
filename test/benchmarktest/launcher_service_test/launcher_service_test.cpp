@@ -71,7 +71,7 @@ namespace {
     static void BenchmarkTestForRegisterCallback(benchmark::State &state)
     {
         LauncherService launcherservice;
-        sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+        sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
         for (auto _ : state) {
             /* @tc.steps: step1.call RegisterCallback in loop */
             launcherservice.RegisterCallback(callback);
