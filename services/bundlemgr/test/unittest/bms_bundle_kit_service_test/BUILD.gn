@@ -107,7 +107,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
   if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    external_deps += [ "ecological_rule_manager:erms_client" ]
     defines += [ "SUPPORT_ERMS" ]
     include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
@@ -243,7 +243,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
   if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    external_deps += [ "ecological_rule_manager:erms_client" ]
     defines += [ "SUPPORT_ERMS" ]
     include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
@@ -378,7 +378,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     defines += [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
   }
   if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    external_deps += [ "ecological_rule_manager:erms_client" ]
     defines += [ "SUPPORT_ERMS" ]
     include_dirs += [ "${ecological_rule_mgr_path}" ]
   }
