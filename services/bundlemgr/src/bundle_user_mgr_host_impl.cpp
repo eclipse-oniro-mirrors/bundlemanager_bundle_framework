@@ -250,7 +250,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.forceExecuted = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
-        sptr<UserReceiverImpl> userReceiverImpl(new UserReceiverImpl());
+        sptr<UserReceiverImpl> userReceiverImpl(new (std::nothrow) UserReceiverImpl());
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(info.name, installParam, userReceiverImpl);

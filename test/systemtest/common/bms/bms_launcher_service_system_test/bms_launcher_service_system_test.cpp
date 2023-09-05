@@ -372,7 +372,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0100, Function | MediumTest 
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -394,7 +394,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0200, Function | MediumTest 
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -417,7 +417,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0300, Function | MediumTest 
     std::string bundleFilePath2 = THIRD_BUNDLE_PATH + "bmsThirdBundle4.hap";
     std::string message;
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     Install(bundleFilePath1, InstallFlag::NORMAL, message);
     EXPECT_EQ(message, "Success") << "install fail!";
@@ -441,7 +441,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0400, Function | MediumTest 
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string message;
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     EXPECT_TRUE(launcherservice.UnRegisterCallback());
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -465,9 +465,9 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0500, Function | MediumTest 
     std::string bundleName = TEST_BUNDLE_NAME;
     std::string message;
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     std::string code = "callback2";
-    sptr<TestBundleStatusCallback> callback2 = new TestBundleStatusCallback(code);
+    sptr<TestBundleStatusCallback> callback2 = new (std::nothrow) TestBundleStatusCallback(code);
     EXPECT_TRUE(launcherservice.RegisterCallback(callback));
     EXPECT_TRUE(launcherservice.RegisterCallback(callback2));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -494,8 +494,8 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0600, Function | MediumTest 
     LauncherService launcherservice2;
     std::string code1 = "callback1";
     std::string code2 = "callback2";
-    sptr<TestBundleStatusCallback> callback1 = new TestBundleStatusCallback(code1);
-    sptr<TestBundleStatusCallback> callback2 = new TestBundleStatusCallback(code2);
+    sptr<TestBundleStatusCallback> callback1 = new (std::nothrow) TestBundleStatusCallback(code1);
+    sptr<TestBundleStatusCallback> callback2 = new (std::nothrow) TestBundleStatusCallback(code2);
     EXPECT_TRUE(launcherservice1.RegisterCallback(callback1));
     EXPECT_TRUE(launcherservice2.RegisterCallback(callback2));
     Install(bundleFilePath, InstallFlag::NORMAL, message);
@@ -553,7 +553,7 @@ HWTEST_F(BmsLauncherServiceSystemTest, BMS_Register_0900, Function | MediumTest 
 {
     GTEST_LOG_(INFO) << "START BMS_Register_0500";
     LauncherService launcherservice;
-    sptr<TestBundleStatusCallback> callback = new TestBundleStatusCallback();
+    sptr<TestBundleStatusCallback> callback = new (std::nothrow) TestBundleStatusCallback();
     launcherservice.bundleMonitor_ = nullptr;
     EXPECT_FALSE(launcherservice.RegisterCallback(callback));
     EXPECT_FALSE(launcherservice.UnRegisterCallback());

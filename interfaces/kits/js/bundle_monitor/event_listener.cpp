@@ -91,11 +91,11 @@ void EventListener::EmitOnUV(const std::string &bundleName, int32_t userId, napi
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    uv_work_t* work = new uv_work_t;
+    uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
         return;
     }
-    AsyncCallbackInfo *asyncCallbackInfo = new AsyncCallbackInfo {
+    AsyncCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
         .env = env_,
         .bundleName = bundleName,
         .userId = userId,

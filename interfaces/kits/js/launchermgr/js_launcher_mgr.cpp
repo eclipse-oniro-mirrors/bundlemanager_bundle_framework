@@ -19,7 +19,7 @@ namespace OHOS {
 namespace AppExecFwk {
 JSLauncherMgr::JSLauncherMgr()
 {
-    launcherService_ = new LauncherService();
+    launcherService_ = new (std::nothrow) LauncherService();
 }
 
 JSLauncherMgr::~JSLauncherMgr() {}

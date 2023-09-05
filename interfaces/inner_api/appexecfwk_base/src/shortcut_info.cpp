@@ -80,8 +80,8 @@ bool ShortcutInfo::ReadFromParcel(Parcel &parcel)
 
 ShortcutInfo *ShortcutInfo::Unmarshalling(Parcel &parcel)
 {
-    ShortcutInfo *info = new ShortcutInfo();
-    if (!info->ReadFromParcel(parcel)) {
+    ShortcutInfo *info = new (std::nothrow) ShortcutInfo();
+    if (info && !info->ReadFromParcel(parcel)) {
         APP_LOGW("read from parcel failed");
         delete info;
         info = nullptr;
