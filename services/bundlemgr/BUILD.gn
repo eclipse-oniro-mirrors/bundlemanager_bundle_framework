@@ -298,7 +298,7 @@ ohos_shared_library("libbms") {
   }
 
   if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    external_deps += [ "ecological_rule_manager:erms_client" ]
   }
 
   if (bundle_framework_power_mgr_enable) {
