@@ -934,6 +934,8 @@ public:
         return false;
     }
 
+    std::string GetEntryModuleName() const;
+
     bool GetIsKeepAlive() const
     {
         return baseBundleInfo_->isKeepAlive;
