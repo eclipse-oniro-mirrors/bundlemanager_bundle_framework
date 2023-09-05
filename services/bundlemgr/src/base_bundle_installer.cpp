@@ -1623,9 +1623,18 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 {
     APP_LOGD("ProcessNewModuleInstall %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), userId_);
-    if (!VerifyUriPrefix(newInfo, userId_)) {
-        APP_LOGE("VerifyUriPrefix failed");
-        return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+    bool isModifyEntryName = oldInfo.HasEntry() && newInfo.HasEntry();
+    APP_LOGD("isModifyEntryName : %{public}d", isModifyEntryName);
+    if (isModifyEntryName) {
+        if (!VerifyUriPrefix(newInfo, userId_, false, true, oldInfo.GetEntryModuleName())) {
+            APP_LOGE("VerifyUriPrefix failed");
+            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+        }
+    } else {
+        if (!VerifyUriPrefix(newInfo, userId_)) {
+            APP_LOGE("VerifyUriPrefix failed");
+            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+        }
     }
 
     if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
@@ -3322,7 +3331,8 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate) const
+bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate,
+    bool isModifyEntryName, std::string oldEntryName) const
 {
     // uriPrefix must be unique
     // verify current module uriPrefix
@@ -3355,6 +3365,9 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     std::string excludeModule;
     if (isUpdate) {
         excludeModule.append(info.GetBundleName()).append(".").append(info.GetCurrentModulePackage()).append(".");
+    }
+    if (isModifyEntryName) {
+        excludeModule.append(info.GetBundleName()).append(".").append(oldEntryName).append(".");
     }
     dataMgr_->GetAllUriPrefix(uriPrefixList, userId, excludeModule);
     if (uriPrefixList.empty()) {
