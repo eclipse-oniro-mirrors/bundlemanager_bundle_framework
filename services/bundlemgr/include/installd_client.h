@@ -162,6 +162,9 @@ public:
 
     ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
 
+    ErrCode ExtractDriverSoFiles(const std::string &srcPath,
+        const std::unordered_multimap<std::string, std::string> &dirMap);
+
     void OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject);
 
     void OnLoadSystemAbilityFail();
