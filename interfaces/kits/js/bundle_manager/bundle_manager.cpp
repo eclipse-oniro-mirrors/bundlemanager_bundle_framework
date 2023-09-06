@@ -1901,6 +1901,10 @@ ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                if (!abilityInfo.enabled) {
+                    APP_LOGI("ability disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
                 ifExists = true;
                 targetAbilityInfo = abilityInfo;
                 break;
@@ -1927,6 +1931,10 @@ ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
                 ifExists = true;
                 targetExtensionInfo = extensionInfo;
                 break;
+            }
+            if (!extensionInfo.enabled) {
+                APP_LOGI("extension disabled");
+                return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
             }
         }
         if (ifExists) {
@@ -1958,7 +1966,8 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;
@@ -2331,7 +2340,7 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG), &nSysPickerMeetimeCallLog));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYSPICKER_MEETIMECALLLOG",
         nSysPickerMeetimeCallLog));
-    
+
     napi_value nAds;
     NAPI_CALL_RETURN_VOID(env,
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::ADS), &nAds));

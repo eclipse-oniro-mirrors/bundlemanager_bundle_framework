@@ -606,6 +606,10 @@ ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                if (!abilityInfo.enabled) {
+                    APP_LOGI("ability disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
                 targetAbilityInfo = abilityInfo;
                 return ERR_OK;
             }
@@ -631,7 +635,8 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     auto getAbilityFlag = baseFlag + static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo));
@@ -670,6 +675,10 @@ ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::st
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
             if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
+                if (!extensionInfo.enabled) {
+                    APP_LOGI("extension disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
                 targetExtensionInfo = extensionInfo;
                 return ERR_OK;
             }
@@ -695,7 +704,8 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     auto getExtensionFlag = baseFlag +
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
     BundleInfo bundleInfo;
