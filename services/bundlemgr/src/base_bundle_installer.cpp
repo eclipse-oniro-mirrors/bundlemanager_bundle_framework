@@ -259,7 +259,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
+    bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
+    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
+        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
+        isUninstalledFromBmsExtension = true;
+        result = ERR_OK;
+    }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
@@ -267,7 +273,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .type = NotifyType::UNINSTALL_BUNDLE,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isAgingUninstall = installParam.isAgingUninstall
+            .isAgingUninstall = installParam.isAgingUninstall,
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -419,7 +426,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
+    bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, modulePackage, installParam, uid);
+    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
+        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
+        isUninstalledFromBmsExtension = true;
+        result = ERR_OK;
+    }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
@@ -428,7 +441,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .type = NotifyType::UNINSTALL_MODULE,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isAgingUninstall = installParam.isAgingUninstall
+            .isAgingUninstall = installParam.isAgingUninstall,
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -1110,7 +1124,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGW("uninstall bundle info missing");
-        return UninstallBundleFromBmsExtension(bundleName);
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1236,7 +1250,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGW("uninstall bundle info missing");
-        return UninstallBundleFromBmsExtension(bundleName);
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
