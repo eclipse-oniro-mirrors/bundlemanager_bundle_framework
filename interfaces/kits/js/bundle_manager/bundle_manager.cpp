@@ -1868,6 +1868,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 return nullptr;
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
+            if (asyncCallbackInfo->bundleName.size() == 0) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
+                return nullptr;
+            }
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -2514,9 +2518,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("userId parseInt failed");
             }
         } else {
             APP_LOGE("parameter is invalid");

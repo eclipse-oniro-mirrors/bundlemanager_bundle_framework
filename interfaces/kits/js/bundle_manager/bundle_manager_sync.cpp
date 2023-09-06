@@ -38,7 +38,6 @@ constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
-constexpr const char* USER_ID = "userId";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
@@ -429,9 +428,7 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return ERROR_PARAM_CHECK_ERROR;
+                APP_LOGW("userId parseInt failed");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -440,9 +437,6 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
         }
     }
     if (bundleName.size() == 0) {
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_NOT_EXIST, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
-        napi_throw(env, businessError);
         return ERROR_PARAM_CHECK_ERROR;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
