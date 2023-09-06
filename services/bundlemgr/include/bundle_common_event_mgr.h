@@ -53,6 +53,7 @@ struct NotifyBundleEvents {
     int32_t uid = 0;
     uint32_t accessTokenId = 0;
     bool isAgingUninstall = false;
+    bool isBmsExtensionUninstalled = false;
 };
 
 class BundleCommonEventMgr {
