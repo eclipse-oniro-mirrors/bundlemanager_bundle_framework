@@ -903,6 +903,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0700, Function | SmallTest 
     ApplicationInfo applicationInfo;
     applicationInfo.bundleName = NO_EXIST;
     oldInfo.SetBaseApplicationInfo(applicationInfo);
+    EXPECT_EQ(oldInfo.baseApplicationInfo_->bundleName, NO_EXIST);
 }
 
 /**
@@ -918,6 +919,7 @@ HWTEST_F(BmsBundleOverlayCheckerTest, OverlayDataMgr_0900, Function | SmallTest 
     InnerBundleInfo oldInfo;
     oldInfo.SetIsPreInstallApp(true);
     oldInfo.SetCertificateFingerprint(NO_EXIST);
+    EXPECT_EQ(oldInfo.baseApplicationInfo_->fingerprint, NO_EXIST);
 }
 #endif
 
