@@ -65,18 +65,22 @@ private:
     int32_t totalHapNum_ = INT32_MAX;
 };
 
-void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     APP_LOGI("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
-    CheckInitialUser();
+    if (CheckInitialUser() != ERR_OK) {
+        APP_LOGE("CheckInitialUser failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     BeforeCreateNewUser(userId);
     OnCreateNewUser(userId);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
+    return ERR_OK;
 }
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
@@ -143,7 +147,7 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
         RdbDataManager::ClearCache();
 }
 
-void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
@@ -152,18 +156,18 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     auto installer = GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
     if (!dataMgr->HasUserId(userId)) {
         APP_LOGE("Has remove user %{public}d.", userId);
-        return;
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
     std::vector<BundleInfo> bundleInfos;
@@ -172,7 +176,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
-        return;
+        return ERR_OK;
     }
 
     InnerUninstallBundle(userId, bundleInfos);
@@ -185,6 +189,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 #endif
     EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
+    return ERR_OK;
 }
 
 void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
@@ -203,12 +208,12 @@ void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
     InstalldClient::GetInstance()->RemoveDir(asanLogDir);
 }
 
-void BundleUserMgrHostImpl::CheckInitialUser()
+ErrCode BundleUserMgrHostImpl::CheckInitialUser()
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     if (!dataMgr->HasInitialUserCreated()) {
@@ -218,6 +223,7 @@ void BundleUserMgrHostImpl::CheckInitialUser()
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGD("Bms initial user created successfully.");
     }
+    return ERR_OK;
 }
 
 const std::shared_ptr<BundleDataMgr> BundleUserMgrHostImpl::GetDataMgrFromService()

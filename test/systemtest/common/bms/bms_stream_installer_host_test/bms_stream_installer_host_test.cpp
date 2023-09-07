@@ -53,8 +53,8 @@ public:
     BundleUserMgrHostMock() = default;
     virtual ~BundleUserMgrHostMock() = default;
 
-    MOCK_METHOD1(CreateNewUser, void(int32_t userId));
-    MOCK_METHOD1(RemoveUser, void(int32_t userId));
+    MOCK_METHOD1(CreateNewUser, int(int32_t userId));
+    MOCK_METHOD1(RemoveUser, int(int32_t userId));
 };
 
 class BmsStreamInstallerHostTest : public testing::Test {
