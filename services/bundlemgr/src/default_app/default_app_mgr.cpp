@@ -602,7 +602,7 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
 
 bool DefaultAppMgr::IsTypeValid(const std::string& type) const
 {
-    return IsAppType(type) || IsFileType(type);
+    return IsAppType(type) || IsFileType(type) || IsUriSuffix(type);
 }
 
 bool DefaultAppMgr::IsAppType(const std::string& type) const
@@ -627,6 +627,15 @@ bool DefaultAppMgr::IsFileType(const std::string& type) const
     }
     APP_LOGW("file type format invalid.");
     return false;
+}
+
+bool DefaultAppMgr::IsUriSuffix(const std::string& type) const
+{
+    if (type.empty() || type.find('.') != 0) {
+        APP_LOGW("file type is not uri suffix");
+        return false;
+    }
+    return true;
 }
 
 bool DefaultAppMgr::IsUserIdExist(int32_t userId) const
