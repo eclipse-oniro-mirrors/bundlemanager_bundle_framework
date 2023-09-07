@@ -2083,23 +2083,31 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     int32_t userId = GetUserIdByUid(uid);
+    int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
+
+    std::lock_guard<std::mutex> bundleIdLock(bundleIdMapMutex_);
+
+    auto bundleIdIter = bundleIdMap_.find(bundleId);
+    if (bundleIdIter == bundleIdMap_.end()) {
+        APP_LOGW("uid %{public}d is not existed.", uid);
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    std::string bundleName = bundleIdIter->second;
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    if (bundleInfos_.empty()) {
-        APP_LOGW("bundleInfos_ data is empty");
-        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    auto bundleInfoIter = bundleInfos_.find(bundleName);
+    if (bundleInfoIter == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s is not existed in bundleInfos_.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
 
-    for (const auto &item : bundleInfos_) {
-        const InnerBundleInfo &info = item.second;
-        if (info.IsDisabled()) {
-            APP_LOGD("app %{public}s is disabled", info.GetBundleName().c_str());
-            continue;
-        }
-        if (info.GetUid(userId) == uid) {
-            innerBundleInfo = info;
-            return ERR_OK;
-        }
+    if (bundleInfoIter->second.IsDisabled()) {
+        APP_LOGD("app %{public}s is disabled", bundleInfoIter->second.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    if (bundleInfoIter->second.GetUid(userId) == uid) {
+        innerBundleInfo = bundleInfoIter->second;
+        return ERR_OK;
     }
 
     APP_LOGW("the uid(%{public}d) is not exists.", uid);
