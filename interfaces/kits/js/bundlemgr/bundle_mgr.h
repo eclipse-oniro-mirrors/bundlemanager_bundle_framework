@@ -148,7 +148,7 @@ struct AsyncInstallCallbackInfo : public AsyncWorkData {
     std::string param;
     OHOS::AppExecFwk::InstallParam installParam;
     InstallResult installResult;
-    int32_t errCode = 0;
+    int32_t err = 0;
 };
 
 struct AsyncGetBundleInstallerCallbackInfo : public AsyncWorkData {

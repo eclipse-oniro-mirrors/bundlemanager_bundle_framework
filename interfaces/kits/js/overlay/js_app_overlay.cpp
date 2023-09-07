@@ -105,20 +105,7 @@ void SetOverlayEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
             SET_OVERLAY_ENABLED_BY_BUNDLE_NAME, Constants::PERMISSION_CHANGE_OVERLAY_ENABLED_STATE);
     }
-    if (overlayCallbackInfo->deferred) {
-        if (overlayCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, overlayCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, overlayCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, overlayCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<OverlayCallbackInfo>(env, overlayCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetOverlayEnabled(napi_env env, napi_callback_info info)
@@ -301,19 +288,7 @@ void GetOverlayModuleInfoComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
             GET_OVERLAY_MODULE_INFO_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (overlayCallbackInfo->deferred) {
-        if (overlayCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, overlayCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, overlayCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, overlayCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<OverlayCallbackInfo>(env, overlayCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetOverlayModuleInfo(napi_env env, napi_callback_info info)
@@ -378,19 +353,7 @@ void GetTargetOverlayModuleInfosComplete(napi_env env, napi_status status, void 
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, overlayCallbackInfo->err,
             GET_TARGET_OVERLAY_MODULE_INFOS_BY_BUNDLE_NAME, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (overlayCallbackInfo->deferred) {
-        if (overlayCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, overlayCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, overlayCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, overlayCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<OverlayCallbackInfo>(env, overlayCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetTargetOverlayModuleInfos(napi_env env, napi_callback_info info)

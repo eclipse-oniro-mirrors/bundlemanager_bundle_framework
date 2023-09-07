@@ -720,19 +720,7 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
         napi_create_int32(env, asyncCallbackInfo->err, &result[0]);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == OPERATION_SUCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<JsGetAllLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)

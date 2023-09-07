@@ -120,20 +120,7 @@ void SetDisposedStatusComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, SET_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DisposedStatus>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetDisposedStatus(napi_env env, napi_callback_info info)
@@ -263,20 +250,7 @@ void DeleteDisposedStatusComplete(napi_env env, napi_status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, DELETE_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DisposedStatus>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info)
@@ -399,19 +373,7 @@ void GetDisposedStatusComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, GET_DISPOSED_STATUS, PERMISSION_DISPOSED_STATUS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DisposedStatus>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetDisposedStatus(napi_env env, napi_callback_info info)

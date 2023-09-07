@@ -270,19 +270,7 @@ void IsDefaultApplicationComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             IS_DEFAULT_APPLICATION, "");
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DefaultAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value IsDefaultApplication(napi_env env, napi_callback_info info)
@@ -430,19 +418,7 @@ void GetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_DEFAULT_APPLICATION, Constants::PERMISSION_GET_DEFAULT_APPLICATION);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DefaultAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetDefaultApplication(napi_env env, napi_callback_info info)
@@ -603,20 +579,7 @@ void SetDefaultApplicationComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             SET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DefaultAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetDefaultApplication(napi_env env, napi_callback_info info)
@@ -789,20 +752,7 @@ void ResetDefaultApplicationComplete(napi_env env, napi_status status, void *dat
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             RESET_DEFAULT_APPLICATION, Constants::PERMISSION_SET_DEFAULT_APPLICATION);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<DefaultAppCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value ResetDefaultApplication(napi_env env, napi_callback_info info)
