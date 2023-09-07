@@ -90,13 +90,12 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
     }
     std::string mimeType = type;
     // type is uri suffix
-    bool ret = GetTypeBySuffix(type, mimeType);
-    if (!ret) {
+    if (!GetTypeBySuffix(type, mimeType)) {
         APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
     Element element;
-    ret = defaultAppDb_->GetDefaultApplicationInfo(userId, mimeType, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
         isDefaultApp = false;
@@ -143,8 +142,7 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
 
     std::string mimeType = type;
     // type is uri suffix
-    bool ret = GetTypeBySuffix(type, mimeType);
-    if (!ret) {
+    if (!GetTypeBySuffix(type, mimeType)) {
         APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
@@ -177,14 +175,13 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 
     std::string mimeType = type;
     // type is uri suffix
-    bool ret = GetTypeBySuffix(type, mimeType);
-    if (!ret) {
+    if (!GetTypeBySuffix(type, mimeType)) {
         APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     // clear default app
-    ret = IsElementEmpty(element);
+    bool ret = IsElementEmpty(element);
     if (ret) {
         APP_LOGD("clear default app.");
         ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, mimeType);
@@ -227,13 +224,12 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
 
     std::string mimeType = type;
     // type is uri suffix
-    bool ret = GetTypeBySuffix(type, mimeType);
-    if (!ret) {
+    if (!GetTypeBySuffix(type, mimeType)) {
         APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
     Element element;
-    ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, mimeType, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, mimeType, element);
     if (!ret) {
         APP_LOGD("directly delete default info.");
         if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, mimeType)) {
@@ -728,7 +724,7 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
 bool DefaultAppMgr::GetTypeBySuffix(const std::string &suffix, std::string &mimeType) const
 {
     if (suffix.empty() || suffix.find('.') != 0) {
-        APP_LOGD("default app type is not suffix");
+        APP_LOGD("default app type is not suffix form");
         return true;
     }
 
