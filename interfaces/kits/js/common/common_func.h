@@ -142,6 +142,9 @@ static void ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info
 
 static void ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos, napi_value objInfos);
 
+static void ConvertModuleMetaInfos(napi_env env,
+    const std::map<std::string, std::vector<Metadata>> &metadata, napi_value objInfos);
+
 static std::string ObtainCallingBundleName();
 
 static void ConvertSharedModuleInfo(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo);

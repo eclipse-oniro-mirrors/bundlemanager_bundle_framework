@@ -1128,6 +1128,11 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, META_DATA, nMetaData));
 
+    napi_value nMetaDataArrayInfo;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nMetaDataArrayInfo));
+    ConvertModuleMetaInfos(env, appInfo.metadata, nMetaDataArrayInfo);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "metadataArray", nMetaDataArrayInfo));
+
     napi_value nRemovable;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.removable, &nRemovable));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "removable", nRemovable));
@@ -1671,6 +1676,33 @@ void CommonFunc::ConvertOverlayModuleInfos(napi_env env, const std::vector<Overl
         napi_create_object(env, &objInfo);
         ConvertOverlayModuleInfo(env, Infos[index], objInfo);
         napi_set_element(env, objInfos, index, objInfo);
+    }
+}
+
+void CommonFunc::ConvertModuleMetaInfos(napi_env env,
+    const std::map<std::string, std::vector<Metadata>> &metadata, napi_value objInfos)
+{
+    size_t index = 0;
+    for (const auto &item : metadata) {
+        napi_value objInfo = nullptr;
+        napi_create_object(env, &objInfo);
+
+        napi_value nModuleName;
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+            env, item.first.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, MODULE_NAME, nModuleName));
+
+        napi_value nMetadataInfos;
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nMetadataInfos));
+        for (size_t idx = 0; idx < item.second.size(); idx++) {
+            napi_value nModuleMetadata;
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nModuleMetadata));
+            ConvertMetadata(env, item.second[idx], nModuleMetadata);
+            NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadataInfos, idx, nModuleMetadata));
+        }
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, "metadata", nMetadataInfos));
+
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
     }
 }
 
