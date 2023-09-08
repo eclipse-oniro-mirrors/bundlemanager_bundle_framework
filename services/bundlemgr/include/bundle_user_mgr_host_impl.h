@@ -47,6 +47,7 @@ private:
     void AfterCreateNewUser(int32_t userId);
     void RemoveArkProfile(int32_t userId);
     void RemoveAsanLogDirectory(int32_t userId);
+    void HandleSceneBoard(int32_t userId) const;
 
     std::mutex bundleUserMgrMutex_;
 };
