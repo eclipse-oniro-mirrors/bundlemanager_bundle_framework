@@ -828,7 +828,6 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-
 }
 
 void from_json(const nlohmann::json &jsonObject, Form &form)
