@@ -69,6 +69,7 @@ constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_CAR = "car";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_WEARABLE = "wearable";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_LITE_WEARABLE = "liteWearable";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_SMART_VISION = "smartVision";
+constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TWO_IN_ONE = "2in1";
 // sub BUNDLE_DEVICE_CONFIG_PROFILE_KEY_DEFAULT
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_JOINT_USER_ID = "jointUserId";
 constexpr const char* BUNDLE_DEVICE_CONFIG_PROFILE_KEY_PROCESS = "process";
@@ -335,6 +336,7 @@ constexpr const char* APP_LITE_WEARABLE = "liteWearable";
 constexpr const char* APP_CAR = "car";
 constexpr const char* APP_SMART_VISION = "smartVision";
 constexpr const char* APP_ROUTER = "router";
+constexpr const char* APP_TWO_IN_ONE = "2in1";
 constexpr const char* APP_ACCESSIBLE = "accessible";
 constexpr const char* APP_TARGETBUNDLELIST = "targetBundleList";
 constexpr const char* APP_MULTI_PROJECTS = "multiProjects";

@@ -1091,6 +1091,18 @@ void from_json(const nlohmann::json &jsonObject, App &app)
             ArrayType::NOT_ARRAY);
         app.deviceConfigs[APP_ROUTER] = deviceConfig;
     }
+    if (jsonObject.find(APP_TWO_IN_ONE) != jsonObjectEnd) {
+        DeviceConfig deviceConfig;
+        GetValueIfFindKey<DeviceConfig>(jsonObject,
+            jsonObjectEnd,
+            APP_TWO_IN_ONE,
+            deviceConfig,
+            JsonType::OBJECT,
+            false,
+            g_parseResult,
+            ArrayType::NOT_ARRAY);
+        app.deviceConfigs[APP_TWO_IN_ONE] = deviceConfig;
+    }
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         APP_MULTI_PROJECTS,
