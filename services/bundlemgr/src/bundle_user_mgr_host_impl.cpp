@@ -28,12 +28,16 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#ifdef WINDOW_ENABLE
+#include "scene_board_judgement.h"
+#endif
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -143,6 +147,16 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
     BundlePermissionMgr::UnInit();
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
+#endif
+#ifdef WINDOW_ENABLE
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
+    APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
+    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
 #endif
         RdbDataManager::ClearCache();
 }
