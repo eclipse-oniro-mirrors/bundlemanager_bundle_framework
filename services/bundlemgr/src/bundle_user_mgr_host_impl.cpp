@@ -148,17 +148,8 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
-#ifdef WINDOW_ENABLE
-    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (dataMgr == nullptr) {
-        APP_LOGE("dataMgr is null");
-        return;
-    }
-    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
-    APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
-#endif
-        RdbDataManager::ClearCache();
+    HandleSceneBoard(userId);
+    RdbDataManager::ClearCache();
 }
 
 ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
@@ -280,6 +271,20 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     }
     IPCSkeleton::SetCallingIdentity(identity);
     APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
+}
+
+void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
+{
+#ifdef WINDOW_ENABLE
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
+    APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
+    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
