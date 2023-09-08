@@ -189,6 +189,7 @@ struct DeviceConfig {
     Device wearable;
     Device liteWearable;
     Device smartVision;
+    Device twoInOne;
 };
 
 struct Form {
@@ -819,6 +820,15 @@ void from_json(const nlohmann::json &jsonObject, DeviceConfig &deviceConfig)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<Device>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_TWO_IN_ONE,
+        deviceConfig.twoInOne,
+        JsonType::OBJECT,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+
 }
 
 void from_json(const nlohmann::json &jsonObject, Form &form)
