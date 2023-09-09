@@ -158,6 +158,8 @@ private:
 
     bool HandMoveFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

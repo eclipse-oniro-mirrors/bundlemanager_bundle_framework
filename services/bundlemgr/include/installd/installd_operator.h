@@ -198,6 +198,12 @@ public:
 
     static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
 
+    static bool ExtractDriverSoFiles(const std::string &srcPath,
+        const std::unordered_multimap<std::string, std::string> &dirMap);
+
+    static bool CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
+        const std::string &destinedDir);
+
 private:
     static bool OpenHandle(void **handle);
 

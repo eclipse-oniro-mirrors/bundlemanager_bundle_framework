@@ -47,9 +47,10 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
-#include "hitrace_meter.h"
 #include "data_group_info.h"
 #include "datetime_ex.h"
+#include "driver_installer.h"
+#include "hitrace_meter.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -1217,6 +1218,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
     }
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
+
+    // remove drive so file
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    driverInstaller->RemoveDriverSoFile(oldInfo);
     return ERR_OK;
 }
 
@@ -1363,7 +1368,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGE("RemoveModuleInfo failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage));
     APP_LOGD("finish to process %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
 }
@@ -2448,6 +2454,9 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     }
 
     ExtractResourceFiles(info, modulePath);
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    result = driverInstaller->CopyDriverSoFile(info, modulePath_);
+    CHECK_RESULT(result, "copy driver so files failed due to error code %{public}d");
 
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);

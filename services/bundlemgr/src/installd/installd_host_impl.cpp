@@ -772,5 +772,25 @@ ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string
     }
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    APP_LOGD("start to copy driver so files");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (dirMap.empty()) {
+        APP_LOGE("Calling the function ExtractDriverSoFiles with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    if (!InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap)) {
+        APP_LOGE("copy driver so files failed");
+        return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

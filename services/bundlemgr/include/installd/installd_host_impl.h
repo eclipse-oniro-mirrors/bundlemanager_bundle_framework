@@ -155,6 +155,9 @@ public:
 
     virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
 
+    virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
+        const std::unordered_multimap<std::string, std::string> &dirMap) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
 };

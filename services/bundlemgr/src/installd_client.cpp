@@ -350,6 +350,16 @@ ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &
     return CallService(&IInstalld::MoveFiles, srcDir, desDir);
 }
 
+
+ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    if (srcPath.empty() || dirMap.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractDriverSoFiles, srcPath, dirMap);
+}
+
 void InstalldClient::OnLoadSystemAbilitySuccess(const sptr<IRemoteObject> &remoteObject)
 {
     {

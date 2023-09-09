@@ -89,6 +89,8 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
         &InstalldHost::HandVerifyCodeSignature);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE),
+        &InstalldHost::HandExtractDriverSoFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -446,6 +448,23 @@ bool InstalldHost::HandMoveFiles(MessageParcel &data, MessageParcel &reply)
     std::string desDir = Str16ToStr8(data.ReadString16());
 
     ErrCode result = MoveFiles(srcDir, desDir);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+
+bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string srcPath = Str16ToStr8(data.ReadString16());
+    int32_t size = data.ReadInt32();
+    std::unordered_multimap<std::string, std::string> dirMap;
+    for (int32_t index = 0; index < size; ++index) {
+        std::string originalDir = Str16ToStr8(data.ReadString16());
+        std::string destinedDir = Str16ToStr8(data.ReadString16());
+        dirMap.emplace(originalDir, destinedDir);
+    }
+
+    ErrCode result = ExtractDriverSoFiles(srcPath, dirMap);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

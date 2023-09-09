@@ -183,5 +183,11 @@ ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string
 {
     return ERR_OK;
 }
+
+ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
