@@ -82,19 +82,7 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
@@ -224,19 +212,7 @@ void GetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *d
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetAllLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
@@ -317,19 +293,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetShortcutInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info)

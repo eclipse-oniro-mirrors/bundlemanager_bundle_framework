@@ -48,7 +48,7 @@ struct AsyncInstallCallbackInfo {
     OHOS::AppExecFwk::InstallParam installParam;
     OHOS::AppExecFwk::UninstallParam uninstallParam;
     InstallResult installResult;
-    int32_t errCode = 0;
+    int32_t err = 0;
     InstallOption option = InstallOption::UNKNOWN;
 
     napi_env env;

@@ -178,6 +178,32 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     return promise;
 }
 
+template<typename T>
+static void NapiReturnDeferred(napi_env env, T *asyncCallbackInfo, napi_value result[], const size_t resultSize)
+{
+    const size_t size = 1;
+    if (resultSize < size) {
+        return;
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == 0) {
+            if (resultSize == size) {
+                napi_get_undefined(env, &result[0]);
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            } else {
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[size]));
+            }
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, resultSize, result, &placeHolder));
+    }
+}
+
 private:
     static sptr<IBundleMgr> bundleMgr_;
     static std::mutex bundleMgrMutex_;
