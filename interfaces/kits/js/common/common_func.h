@@ -181,18 +181,17 @@ static napi_value AsyncCallNativeMethod(napi_env env,
 template<typename T>
 static void NapiReturnDeferred(napi_env env, T *asyncCallbackInfo, napi_value result[], const size_t resultSize)
 {
-    size_t minLenth = 1;
-    if (resultSize < minLenth) {
+    const size_t size = 1;
+    if (resultSize < size) {
         return;
     }
     if (asyncCallbackInfo->deferred) {
-        ErrCode SUCCESS = 0;
-        if (asyncCallbackInfo->err == SUCCESS) {
-            if (resultSize == minLenth) {
+        if (asyncCallbackInfo->err == 0) {
+            if (resultSize == size) {
                 napi_get_undefined(env, &result[0]);
                 NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
             } else {
-                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[size]));
             }
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
