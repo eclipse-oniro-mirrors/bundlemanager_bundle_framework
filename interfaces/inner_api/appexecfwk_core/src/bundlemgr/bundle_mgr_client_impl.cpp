@@ -63,7 +63,7 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
 
 bool BundleMgrClientImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
 {
-    APP_LOGI("GetBundleNameForUid begin");
+    APP_LOGD("GetBundleNameForUid begin");
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
@@ -77,7 +77,7 @@ bool BundleMgrClientImpl::GetBundleNameForUid(const int uid, std::string &bundle
 bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {
-    APP_LOGI("GetBundleInfo begin");
+    APP_LOGD("GetBundleInfo begin");
 
     ErrCode result = Connect();
     if (result != ERR_OK) {
@@ -91,7 +91,7 @@ bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const Bun
 ErrCode BundleMgrClientImpl::GetBundlePackInfo(
     const std::string &bundleName, const BundlePackFlag flag, BundlePackInfo &bundlePackInfo, int32_t userId)
 {
-    APP_LOGI("enter");
+    APP_LOGD("enter");
     ErrCode result = Connect();
     if (result != ERR_OK) {
         APP_LOGE("failed to connect");
@@ -520,7 +520,7 @@ ErrCode BundleMgrClientImpl::GetSandboxHapModuleInfo(const AbilityInfo &abilityI
 
 ErrCode BundleMgrClientImpl::Connect()
 {
-    APP_LOGI("connect begin");
+    APP_LOGD("connect begin");
     std::lock_guard<std::mutex> lock(mutex_);
     if (bundleMgr_ == nullptr) {
         sptr<ISystemAbilityManager> systemAbilityManager =
@@ -553,7 +553,7 @@ ErrCode BundleMgrClientImpl::Connect()
             return ERR_APPEXECFWK_SERVICE_NOT_CONNECTED;
         }
     }
-    APP_LOGI("connect end");
+    APP_LOGD("connect end");
     return ERR_OK;
 }
 
