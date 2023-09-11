@@ -28,7 +28,6 @@
 #include "parameters.h"
 #include "string_ex.h"
 #ifdef BUNDLE_FRAMEWORK_POWER_MGR_ENABLE
-#include "battery_srv_client.h"
 #include "display_power_mgr_client.h"
 #endif
 
@@ -101,6 +100,8 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.hapPath = info.GetModuleHapPath(aotArgs.moduleName);
     aotArgs.coreLibPath = Constants::EMPTY_STRING;
     aotArgs.outputPath = Constants::ARK_CACHE_PATH + aotArgs.bundleName + Constants::PATH_SEPARATOR + Constants::ARM64;
+    // handle internal hsp
+    info.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
@@ -113,7 +114,7 @@ void AOTHandler::AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCod
     }
     ErrCode ret = ERR_OK;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(executeMutex_);
         ret = InstalldClient::GetInstance()->ExecuteAOT(*aotArgs);
     }
     APP_LOGI("ExecuteAOT ret : %{public}d", ret);
@@ -214,15 +215,7 @@ bool AOTHandler::CheckDeviceState() const
         APP_LOGI("displayState is not DISPLAY_OFF");
         return false;
     }
-    PowerMgr::BatteryChargeState batteryChargeState =
-        OHOS::PowerMgr::BatterySrvClient::GetInstance().GetChargingStatus();
-    if (batteryChargeState == PowerMgr::BatteryChargeState::CHARGE_STATE_ENABLE
-        || batteryChargeState == PowerMgr::BatteryChargeState::CHARGE_STATE_FULL) {
-        APP_LOGI("device is in charging state");
-        return true;
-    }
-    APP_LOGI("device is not in charging state");
-    return false;
+    return true;
 #else
     APP_LOGI("device not support power system");
     return false;
@@ -232,6 +225,11 @@ bool AOTHandler::CheckDeviceState() const
 void AOTHandler::HandleIdle() const
 {
     APP_LOGI("HandleIdle begin");
+    std::unique_lock<std::mutex> lock(idleMutex_, std::defer_lock);
+    if (!lock.try_lock()) {
+        APP_LOGI("idle task is running, skip");
+        return;
+    }
     if (!IsSupportARM64()) {
         APP_LOGI("current device doesn't support arm64, no need to AOT");
         return;

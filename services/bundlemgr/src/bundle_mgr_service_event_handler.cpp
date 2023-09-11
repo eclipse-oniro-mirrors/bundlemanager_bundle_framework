@@ -261,7 +261,7 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetAOTLoopTask()->ScheduleLoopTask();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     StartBmsExtensionService();
     APP_LOGI("BMSEventHandler AfterBmsStart end");
 }

@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "aot/aot_loop_task.h"
+#include "aot/charge_idle_listener.h"
 #include "singleton.h"
 #include "system_ability.h"
 
@@ -131,8 +131,9 @@ public:
     sptr<IOverlayManager> GetOverlayManagerProxy() const;
 #endif
 
-    std::shared_ptr<AOTLoopTask> GetAOTLoopTask() const;
     bool IsBrokerServiceStarted() const;
+
+    void RegisterChargeIdleListener();
 
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
@@ -163,7 +164,7 @@ private:
     std::shared_ptr<BMSEventHandler> handler_;
     std::shared_ptr<BundleDataMgr> dataMgr_;
     std::shared_ptr<HidumpHelper> hidumpHelper_;
-    std::shared_ptr<AOTLoopTask> aotLoopTask_ = std::make_shared<AOTLoopTask>();
+    std::shared_ptr<ChargeIdleListener> chargeIdleListener_;
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     std::shared_ptr<BundleAgingMgr> agingMgr_;
     std::shared_ptr<BundleConnectAbilityMgr> connectAbilityMgr_;

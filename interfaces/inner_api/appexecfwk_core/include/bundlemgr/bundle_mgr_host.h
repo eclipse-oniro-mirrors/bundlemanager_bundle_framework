@@ -656,6 +656,8 @@ private:
     ErrCode HandleGetPreferenceDirByGroupId(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleQueryAppGalleryBundleName(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

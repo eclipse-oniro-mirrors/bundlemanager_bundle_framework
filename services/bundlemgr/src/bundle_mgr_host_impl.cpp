@@ -2866,5 +2866,23 @@ bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
     APP_LOGD("bundleName is %{public}s", bundleName.c_str());
     return  true;
 }
+
+ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    APP_LOGD("ResetAOTCompileStatus begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string callingBundleName;
+    ErrCode ret = dataMgr->GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (ret != ERR_OK || bundleName != callingBundleName) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

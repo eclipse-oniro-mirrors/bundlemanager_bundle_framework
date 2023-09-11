@@ -823,6 +823,8 @@ public:
     void SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         AOTCompileStatus aotCompileStatus, uint32_t versionCode);
     void ResetAOTFlags();
+    ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;

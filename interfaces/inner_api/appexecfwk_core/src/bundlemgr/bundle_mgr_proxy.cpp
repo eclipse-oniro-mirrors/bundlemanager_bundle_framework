@@ -3662,6 +3662,41 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     return true;
 }
 
+ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("ResetAOTCompileStatus begin, bundleName : %{public}s, moduleName : %{public}s, triggerMode : %{public}d",
+        bundleName.c_str(), moduleName.c_str(), triggerMode);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("invalid param");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(triggerMode)) {
+        APP_LOGE("write triggerMode failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
