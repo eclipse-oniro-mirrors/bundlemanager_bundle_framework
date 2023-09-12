@@ -25,6 +25,8 @@ group("test_bundle") {
     "bmsThirdBundle2:bmsThirdBundle2",
     "defaultAppTest:defaultAppTest",
     "devicetype_error:devicetype_error",
+    "driverTest/non_driver_bundle:non_driver_entry_hap",
+    "driverTest/non_driver_bundle:non_driver_feature_hap",
     "eighth_right:eighth_right",
     "eleventh_right:eleventh_right",
     "fifteenth_right:fifteenth_right",
