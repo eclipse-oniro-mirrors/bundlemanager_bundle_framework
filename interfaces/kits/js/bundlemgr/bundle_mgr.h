@@ -282,18 +282,18 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
 
-NativeValue *CreateAbilityTypeObject(NativeEngine *engine);
-NativeValue *CreateAbilitySubTypeObject(NativeEngine *engine);
-NativeValue *CreateDisplayOrientationObject(NativeEngine *engine);
-NativeValue *CreateLaunchModeObject(NativeEngine *engine);
-NativeValue *CreateColorModeObject(NativeEngine *engine);
-NativeValue *CreateGrantStatusObject(NativeEngine *engine);
-NativeValue *CreateModuleRemoveFlagObject(NativeEngine *engine);
-NativeValue *CreateSignatureCompareResultObject(NativeEngine *engine);
-NativeValue *CreateShortcutExistenceObject(NativeEngine *engine);
-NativeValue *CreateQueryShortCutFlagObject(NativeEngine *engine);
-NativeValue *CreateInstallErrorCodeObject(NativeEngine *engine);
-NativeValue *CreateBundleFlagObject(NativeEngine *engine);
+napi_value CreateAbilityTypeObject(napi_env env);
+napi_value CreateAbilitySubTypeObject(napi_env env);
+napi_value CreateDisplayOrientationObject(napi_env env);
+napi_value CreateLaunchModeObject(napi_env env);
+napi_value CreateColorModeObject(napi_env env);
+napi_value CreateGrantStatusObject(napi_env env);
+napi_value CreateModuleRemoveFlagObject(napi_env env);
+napi_value CreateSignatureCompareResultObject(napi_env env);
+napi_value CreateShortcutExistenceObject(napi_env env);
+napi_value CreateQueryShortCutFlagObject(napi_env env);
+napi_value CreateInstallErrorCodeObject(napi_env env);
+napi_value CreateBundleFlagObject(napi_env env);
 class JsBundleMgr {
 public:
     JsBundleMgr() = default;
