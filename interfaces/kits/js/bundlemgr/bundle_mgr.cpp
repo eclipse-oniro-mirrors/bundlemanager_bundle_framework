@@ -3105,65 +3105,67 @@ napi_value CreateInstallErrorCodeObject(napi_env env)
         static_cast<int32_t>(InstallErrorCode::SUCCESS), &nSuccess));
     NAPI_CALL(env, napi_set_named_property(env, value, "SUCCESS", nSuccess));
 
-    napi_value nInstallFilure = nullptr;
+    napi_value nInFail = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nInstallFilure));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nInstallFilure));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nInFail));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nInFail));
 
-    napi_value nInstallFilureAborted = nullptr;
+    napi_value nInFailAborted = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED), &nInstallFilureAborted));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nInstallFilureAborted));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED), &nInFailAborted));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nInFailAborted));
 
-    napi_value nInstallFilureInvalid = nullptr;
+    napi_value nInFailInvalid = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID), &nInstallFilureInvalid));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nInstallFilureInvalid));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID), &nInFailInvalid));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nInFailInvalid));
 
-    napi_value nInstallFilureConflict = nullptr;
+    napi_value nInFailConflict = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT), &nInstallFilureConflict));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nInstallFilureConflict));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT), &nInFailConflict));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nInFailConflict));
 
-    napi_value nInstallFilureStorage = nullptr;
+    napi_value nInFailStorage = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE), &nInstallFilureStorage));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nInstallFilureStorage));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE), &nInFailStorage));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nInFailStorage));
 
-    napi_value nInstallFilureIncompatible = nullptr;
+    napi_value nInFailIncompatible = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE), &nInstallFilureIncompatible));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nInstallFilureIncompatible));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE), &nInFailIncompatible));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nInFailIncompatible));
 
-    napi_value nUninstallFilure = nullptr;
+    napi_value nUninFail = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nUninstallFilure));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nUninstallFilure));
+        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nUninFail));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nUninFail));
 
-    napi_value nUninstallFilureBlocked = nullptr;
+    napi_value nUninFailBlocked = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED), &nUninstallFilureBlocked));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nUninstallFilureBlocked));
+        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED), &nUninFailBlocked));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nUninFailBlocked));
 
-    napi_value nUninstallFilureAborted = nullptr;
+    napi_value nUninFailAborted = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED), &nUninstallFilureAborted));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nUninstallFilureAborted));
+        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED), &nUninFailAborted));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nUninFailAborted));
 
-    napi_value nUninstallFilureConflict = nullptr;
+    napi_value nUninFailConflict = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT), &nUninstallFilureConflict));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nUninstallFilureConflict));
+        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT), &nUninFailConflict));
+    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nUninFailConflict));
 
-    napi_value nInstallFilureDownloadTimeout = nullptr;
+    napi_value nInFailDownloadTimeout = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT), &nInstallFilureDownloadTimeout));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nInstallFilureDownloadTimeout));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT), &nInFailDownloadTimeout));
+    NAPI_CALL(env, napi_set_named_property(env, value,
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nInFailDownloadTimeout));
 
-    napi_value nInstallFilureDownloadFailed = nullptr;
+    napi_value nInFailDownloadFailed = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED), &nInstallFilureDownloadFailed));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nInstallFilureDownloadFailed));
+        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED), &nInFailDownloadFailed));
+    NAPI_CALL(env, napi_set_named_property(env, value,
+        "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nInFailDownloadFailed));
 
     napi_value nAbilityNotFound = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
@@ -3175,11 +3177,11 @@ napi_value CreateInstallErrorCodeObject(napi_env env)
         static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR), &nBmsServiceError));
     NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_BMS_SERVICE_ERROR", nBmsServiceError));
 
-    napi_value nGrantRequestPermissionsFailed = nullptr;
+    napi_value nGrantPermissionsFailed = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED), &nGrantRequestPermissionsFailed));
+        static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED), &nGrantPermissionsFailed));
     NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED", nGrantRequestPermissionsFailed));
+        "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED", nGrantPermissionsFailed));
 
     napi_value nInstallPermissionDenied = nullptr;
     NAPI_CALL(env, napi_create_int32(env,
