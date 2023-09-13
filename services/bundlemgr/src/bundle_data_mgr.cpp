@@ -2895,7 +2895,7 @@ bool BundleDataMgr::RegisterBundleEventCallback(const sptr<IBundleEventCallback>
         APP_LOGW("bundleEventCallback is null");
         return false;
     }
-    std::unique_lock<std::shared_mutex> lock(eventCallbackMutex_);
+    std::lock_guard lock(eventCallbackMutex_);
     if (eventCallbackList_.size() >= MAX_EVENT_CALL_BACK_SIZE) {
         APP_LOGW("eventCallbackList_ reach max size %{public}d", MAX_EVENT_CALL_BACK_SIZE);
         return false;
@@ -2920,7 +2920,7 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
         APP_LOGW("bundleEventCallback is null");
         return false;
     }
-    std::unique_lock<std::shared_mutex> lock(eventCallbackMutex_);
+    std::lock_guard lock(eventCallbackMutex_);
     eventCallbackList_.erase(std::remove_if(eventCallbackList_.begin(), eventCallbackList_.end(),
         [&bundleEventCallback](const sptr<IBundleEventCallback> &callback) {
             return callback->AsObject() == bundleEventCallback->AsObject();
@@ -2931,7 +2931,7 @@ bool BundleDataMgr::UnregisterBundleEventCallback(const sptr<IBundleEventCallbac
 void BundleDataMgr::NotifyBundleEventCallback(const EventFwk::CommonEventData &eventData) const
 {
     APP_LOGD("begin to NotifyBundleEventCallback");
-    std::shared_lock<std::shared_mutex> lock(eventCallbackMutex_);
+    std::lock_guard lock(eventCallbackMutex_);
     for (const auto &callback : eventCallbackList_) {
         callback->OnReceiveEvent(eventData);
     }
