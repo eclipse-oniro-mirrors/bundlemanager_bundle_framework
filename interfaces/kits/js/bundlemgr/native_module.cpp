@@ -45,18 +45,19 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
 
     std::unique_ptr<JsBundleMgr> jsBundleMgr = std::make_unique<JsBundleMgr>();
     object->SetNativePointer(jsBundleMgr.release(), JsBundleMgr::Finalizer, nullptr);
-    object->SetProperty("AbilityType", CreateAbilityTypeObject(engine));
-    object->SetProperty("AbilitySubType", CreateAbilitySubTypeObject(engine));
-    object->SetProperty("DisplayOrientation", CreateDisplayOrientationObject(engine));
-    object->SetProperty("LaunchMode", CreateLaunchModeObject(engine));
-    object->SetProperty("ColorMode", CreateColorModeObject(engine));
-    object->SetProperty("GrantStatus", CreateGrantStatusObject(engine));
-    object->SetProperty("ModuleRemoveFlag", CreateModuleRemoveFlagObject(engine));
-    object->SetProperty("SignatureCompareResult", CreateSignatureCompareResultObject(engine));
-    object->SetProperty("ShortcutExistence", CreateShortcutExistenceObject(engine));
-    object->SetProperty("QueryShortCutFlag", CreateQueryShortCutFlagObject(engine));
-    object->SetProperty("InstallErrorCode", CreateInstallErrorCodeObject(engine));
-    object->SetProperty("BundleFlag", CreateBundleFlagObject(engine));
+    napi_env env = reinterpret_cast<napi_env>(engine);
+    object->SetProperty("AbilityType", reinterpret_cast<NativeValue*>(CreateAbilityTypeObject(env)));
+    object->SetProperty("AbilitySubType", reinterpret_cast<NativeValue*>(CreateAbilitySubTypeObject(env)));
+    object->SetProperty("DisplayOrientation", reinterpret_cast<NativeValue*>(CreateDisplayOrientationObject(env)));
+    object->SetProperty("LaunchMode", reinterpret_cast<NativeValue*>(CreateLaunchModeObject(env)));
+    object->SetProperty("ColorMode", reinterpret_cast<NativeValue*>(CreateColorModeObject(env)));
+    object->SetProperty("GrantStatus", reinterpret_cast<NativeValue*>(CreateGrantStatusObject(env)));
+    object->SetProperty("ModuleRemoveFlag", reinterpret_cast<NativeValue*>(CreateModuleRemoveFlagObject(env)));
+    object->SetProperty("SignatureCompareResult", reinterpret_cast<NativeValue*>(CreateSignatureCompareResultObject(env)));
+    object->SetProperty("ShortcutExistence", reinterpret_cast<NativeValue*>(CreateShortcutExistenceObject(env)));
+    object->SetProperty("QueryShortCutFlag", reinterpret_cast<NativeValue*>(CreateQueryShortCutFlagObject(env)));
+    object->SetProperty("InstallErrorCode", reinterpret_cast<NativeValue*>(CreateInstallErrorCodeObject(env)));
+    object->SetProperty("BundleFlag", reinterpret_cast<NativeValue*>(CreateBundleFlagObject(env)));
 
     const char *moduleName = "JsBundleMgr";
     BindNativeFunction(*engine, *object, "getAllApplicationInfo", moduleName, JsBundleMgr::GetAllApplicationInfo);
