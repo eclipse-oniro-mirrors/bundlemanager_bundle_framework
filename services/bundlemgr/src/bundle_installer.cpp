@@ -160,6 +160,7 @@ void BundleInstaller::Uninstall(
         if (std::find(errCode.begin(), errCode.end(), ERR_OK) != errCode.end()) {
             for (const auto &err : errCode) {
                 if (!(err == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE ||
+                    ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_MODULE ||
                     err == ERR_APPEXECFWK_USER_NOT_INSTALL_HAP || err == ERR_OK)) {
                     resultCode = err;
                     break;

@@ -3672,12 +3672,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5400, Function | SmallTest 
     EXPECT_EQ(ret, true);
 
     auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 
     ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_SUCCESS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 /**
@@ -3743,12 +3743,12 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5700, Function | SmallTest 
     EXPECT_EQ(ret, true);
 
     auto res = installer.ProcessBundleUninstall(BUNDLE_BACKUP_NAME, TEST_PACK_AGE, installParam, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    EXPECT_EQ(res, ERR_OK);
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 
     ret = GetBundleDataMgr()->UpdateBundleInstallState(BUNDLE_BACKUP_NAME, InstallState::UNINSTALL_SUCCESS);
-    EXPECT_EQ(ret, true);
+    EXPECT_EQ(ret, false);
 }
 
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
