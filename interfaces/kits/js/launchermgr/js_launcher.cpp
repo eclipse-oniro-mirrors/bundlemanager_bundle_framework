@@ -766,7 +766,7 @@ napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<JsGetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
-        JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete, napi_qos_user_initiated);
+        JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
