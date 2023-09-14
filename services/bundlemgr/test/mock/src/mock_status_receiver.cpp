@@ -15,11 +15,21 @@
 
 #include "mock_status_receiver.h"
 
+#include "appexecfwk_errors.h"
+
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const int32_t WAIT_TIME = 5; // 5s
+} // namespace
+
 void MockStatusReceiver::OnFinished(const int32_t resultCode, [[maybe_unused]] const std::string &resultMsg)
 {
-    signal_.set_value(resultCode);
+    std::lock_guard<std::mutex> lock(setValueMutex_);
+    if (!isSetValue) {
+        isSetValue = true;
+        signal_.set_value(resultCode);
+    }
 }
 
 void MockStatusReceiver::OnStatusNotify(const int32_t progress)
@@ -35,8 +45,11 @@ sptr<IRemoteObject> MockStatusReceiver::AsObject()
 int32_t MockStatusReceiver::GetResultCode()
 {
     auto future = signal_.get_future();
-    future.wait();
-    return future.get();
+    if (future.wait_for(std::chrono::seconds(WAIT_TIME)) == std::future_status::ready) {
+        int32_t resultCode = future.get();
+        return resultCode;
+    }
+    return ERR_APPEXECFWK_OPERATION_TIME_OUT;
 }
 
 void MockStatusReceiver::SetStreamInstallId(uint32_t installerId)

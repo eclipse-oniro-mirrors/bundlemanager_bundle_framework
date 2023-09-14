@@ -33,6 +33,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_util.h"
 #include "directory_ex.h"
 #include "parameters.h"
 
@@ -42,6 +43,8 @@ namespace {
 static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_shared.z.so";
 static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
+static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
+static std::string PREFIX_TARGET_PATH = "/data/service/el1/public/print_service/cups/";
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
@@ -1125,6 +1128,12 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
     for (auto &[originalDir, destinedDir] : dirMap) {
         if ((originalDir.compare(".") == 0) || (originalDir.compare("..") == 0)) {
             APP_LOGE("the originalDir %{public}s is not existed in the hap", originalDir.c_str());
+            return false;
+        }
+        if (!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_PATH) ||
+            !BundleUtil::StartWith(destinedDir, PREFIX_TARGET_PATH)) {
+            APP_LOGE("the originalDir %{public}s and destined dir %{public}s are invalid", originalDir.c_str(),
+                destinedDir.c_str());
             return false;
         }
         std::string innerOriginalDir = originalDir;
