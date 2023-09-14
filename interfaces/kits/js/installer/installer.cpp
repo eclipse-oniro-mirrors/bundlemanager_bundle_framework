@@ -895,21 +895,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
-
-    if (callbackPtr->deferred) {
-        if (callbackPtr->installResult.resultCode == SUCCESS) {
-            napi_get_undefined(env, &result[FIRST_PARAM]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, callbackPtr->deferred, result[FIRST_PARAM]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AsyncInstallCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 /**
