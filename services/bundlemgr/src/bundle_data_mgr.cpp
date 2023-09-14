@@ -2085,14 +2085,16 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     int32_t userId = GetUserIdByUid(uid);
     int32_t bundleId = uid - userId * Constants::BASE_USER_RANGE;
 
-    std::lock_guard<std::mutex> bundleIdLock(bundleIdMapMutex_);
-
-    auto bundleIdIter = bundleIdMap_.find(bundleId);
-    if (bundleIdIter == bundleIdMap_.end()) {
-        APP_LOGW("uid %{public}d is not existed.", uid);
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    std::string bundleName;
+    {
+        std::lock_guard<std::mutex> bundleIdLock(bundleIdMapMutex_);
+        auto bundleIdIter = bundleIdMap_.find(bundleId);
+        if (bundleIdIter == bundleIdMap_.end()) {
+            APP_LOGW("uid %{public}d is not existed.", uid);
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+        bundleName = bundleIdIter->second;
     }
-    std::string bundleName = bundleIdIter->second;
 
     std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto bundleInfoIter = bundleInfos_.find(bundleName);
