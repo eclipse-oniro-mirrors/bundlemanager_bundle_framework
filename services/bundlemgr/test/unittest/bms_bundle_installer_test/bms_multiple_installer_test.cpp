@@ -83,6 +83,7 @@ const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.l3j
 const std::string PACKAGE_NAME_FIRST = "com.example.l3jsdemo";
 const std::string PACKAGE_NAME_SECOND = "com.example.l2jsdemo";
 const std::string PACKAGE_NAME_THIRD = "com.example.l1jsdemo";
+const std::string ROOT_DIR = "/data/app";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {

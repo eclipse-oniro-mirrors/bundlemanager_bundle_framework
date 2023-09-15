@@ -37,8 +37,7 @@ public:
 
 private:
     std::promise<int32_t> signal_;
-    bool isSetValue = false;
-    std::mutex setValueMutex_;
+
     DISALLOW_COPY_AND_MOVE(MockStatusReceiver);
 };
 }  // namespace AppExecFwk
