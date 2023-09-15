@@ -82,19 +82,7 @@ void GetLauncherAbilityInfoComplete(napi_env env, napi_status status, void *data
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
@@ -134,8 +122,7 @@ napi_value GetLauncherAbilityInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetLauncherAbilityCallbackInfo>(
-        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetLauncherAbilityInfo", GetLauncherAbilityInfoExec, GetLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetLauncherAbilityInfo done");
     return promise;
@@ -160,8 +147,6 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
-
-    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -170,6 +155,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
+    std::vector<OHOS::AppExecFwk::LauncherAbilityInfo> launcherAbilityInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->
         GetLauncherAbilityByBundleName(bundleName, userId, launcherAbilityInfos));
     if (ret != SUCCESS) {
@@ -180,7 +166,7 @@ napi_value GetLauncherAbilityInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nLauncherAbilityInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nLauncherAbilityInfos));
+    NAPI_CALL(env, napi_create_array(env, &nLauncherAbilityInfos));
     CommonFunc::ConvertLauncherAbilityInfos(env, launcherAbilityInfos, nLauncherAbilityInfos);
     APP_LOGD("call GetLauncherAbilityInfoSync done.");
     return nLauncherAbilityInfos;
@@ -226,19 +212,7 @@ void GetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void *d
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetAllLauncherAbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
@@ -275,7 +249,7 @@ napi_value GetAllLauncherAbilityInfo(napi_env env, napi_callback_info info)
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetAllLauncherAbilityCallbackInfo>(
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
-        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete, napi_qos_user_initiated);
+        GetAllLauncherAbilityInfoExec, GetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetAllLauncherAbilityInfo done");
     return promise;
@@ -319,19 +293,7 @@ void GetShortcutInfoComplete(napi_env env, napi_status status, void *data)
             Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_get_undefined(env, &result[ARGS_POS_ONE]);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetShortcutInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
@@ -367,8 +329,7 @@ napi_value GetShortcutInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<GetShortcutInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetShortcutInfo", GetShortcutInfoExec, GetShortcutInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetShortcutInfo done");
     return promise;
@@ -388,8 +349,6 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
         return nullptr;
     }
-    
-    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     auto launcherService = GetLauncherService();
     if (launcherService == nullptr) {
         napi_value businessError = BusinessError::CreateCommonError(
@@ -398,6 +357,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
+    std::vector<OHOS::AppExecFwk::ShortcutInfo> shortcutInfos;
     ErrCode ret = CommonFunc::ConvertErrCode(launcherService->GetShortcutInfoV9(bundleName, shortcutInfos));
     if (ret != SUCCESS) {
         APP_LOGE("GetShortcutInfoV9 failed");
@@ -407,7 +367,7 @@ napi_value GetShortcutInfoSync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nShortcutInfos = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &nShortcutInfos));
+    NAPI_CALL(env, napi_create_array(env, &nShortcutInfos));
     CommonFunc::ConvertShortCutInfos(env, shortcutInfos, nShortcutInfos);
     APP_LOGD("call GetShortcutInfoSync done.");
     return nShortcutInfos;

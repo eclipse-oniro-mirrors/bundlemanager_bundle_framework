@@ -22,7 +22,6 @@
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
 #include "launcher_ability_info.h"
-#include "napi/common.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
@@ -96,6 +95,11 @@ static void ConvertExtensionInfos(napi_env env, const std::vector<ExtensionAbili
 
 static void ConvertStringArrays(napi_env env, const std::vector<std::string> &strs, napi_value value);
 
+static void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity);
+
+static void ConvertAppProvisionInfo(
+    napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo);
+
 static void ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo, napi_value objExtensionInfo);
 
 static void ConvertResource(napi_env env, const Resource &resource, napi_value objResource);
@@ -153,8 +157,7 @@ static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
                                  const std::string &methodName,
                                  void (*execFunc)(napi_env, void *),
-                                 void (*completeFunc)(napi_env, napi_status, void *),
-                                 napi_qos_t qos = napi_qos_default)
+                                 void (*completeFunc)(napi_env, napi_status, void *))
 {
     if (asyncCallbackInfo == nullptr) {
         APP_LOGE("asyncCallbackInfo is null");
@@ -171,12 +174,34 @@ static napi_value AsyncCallNativeMethod(napi_env env,
     NAPI_CALL(env, napi_create_async_work(
         env, nullptr, resource, execFunc, completeFunc,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    if (qos == napi_qos_default) {
-        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
-    } else {
-        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCallbackInfo->asyncWork, qos));
-    }
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
+}
+
+template<typename T>
+static void NapiReturnDeferred(napi_env env, T *asyncCallbackInfo, napi_value result[], const size_t resultSize)
+{
+    const size_t size = 1;
+    if (resultSize < size) {
+        return;
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == 0) {
+            if (resultSize == size) {
+                napi_get_undefined(env, &result[0]);
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            } else {
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[size]));
+            }
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, resultSize, result, &placeHolder));
+    }
 }
 
 private:

@@ -82,72 +82,6 @@ static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
-
-void ConvertValidity(napi_env env, const Validity &validity, napi_value objValidity)
-{
-    napi_value notBefore;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notBefore, &notBefore));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notBefore", notBefore));
-
-    napi_value notAfter;
-    NAPI_CALL_RETURN_VOID(env, napi_create_int64(env, validity.notAfter, &notAfter));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objValidity, "notAfter", notAfter));
-}
-
-void ConvertAppProvisionInfo(
-    napi_env env, const AppProvisionInfo &appProvisionInfo, napi_value objAppProvisionInfo)
-{
-    napi_value versionCode;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appProvisionInfo.versionCode, &versionCode));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionCode", versionCode));
-
-    napi_value versionName;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.versionName.c_str(), NAPI_AUTO_LENGTH, &versionName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "versionName", versionName));
-
-    napi_value uuid;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.uuid.c_str(), NAPI_AUTO_LENGTH, &uuid));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "uuid", uuid));
-
-    napi_value type;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.type.c_str(), NAPI_AUTO_LENGTH, &type));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "type", type));
-
-    napi_value appDistributionType;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.appDistributionType.c_str(),
-        NAPI_AUTO_LENGTH, &appDistributionType));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appDistributionType",
-        appDistributionType));
-
-    napi_value developerId;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.developerId.c_str(), NAPI_AUTO_LENGTH, &developerId));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "developerId", developerId));
-
-    napi_value certificate;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.certificate.c_str(), NAPI_AUTO_LENGTH, &certificate));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "certificate", certificate));
-
-    napi_value apl;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.apl.c_str(), NAPI_AUTO_LENGTH, &apl));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "apl", apl));
-
-    napi_value issuer;
-    NAPI_CALL_RETURN_VOID(
-        env, napi_create_string_utf8(env, appProvisionInfo.issuer.c_str(), NAPI_AUTO_LENGTH, &issuer));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "issuer", issuer));
-
-    napi_value validity;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
-    ConvertValidity(env, appProvisionInfo.validity, validity);
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
-}
 }
 
 ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
@@ -217,19 +151,7 @@ void GetBundleArchiveInfoComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_ARCHIVE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetBundleArchiveInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info)
@@ -373,19 +295,7 @@ void GetBundleNameByUidComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_NAME_BY_UID, BUNDLE_PERMISSIONS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetBundleNameByUidCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetApplicationInfoComplete(napi_env env, napi_status status, void *data)
@@ -406,19 +316,7 @@ void GetApplicationInfoComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APPLICATION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<ApplicationInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetApplicationInfosComplete(napi_env env, napi_status status, void *data)
@@ -439,19 +337,7 @@ void GetApplicationInfosComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APPLICATION_INFOS, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<ApplicationInfosCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetApplicationInfoExec(napi_env env, void *data)
@@ -570,8 +456,7 @@ napi_value GetApplicationInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, GET_APPLICATION_INFO, GetApplicationInfoExec, GetApplicationInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetApplicationInfo done.");
     return promise;
@@ -836,19 +721,7 @@ void QueryAbilityInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_ABILITY_INFOS, BUNDLE_PERMISSIONS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AbilityCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
@@ -899,8 +772,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, QUERY_ABILITY_INFOS, QueryAbilityInfosExec, QueryAbilityInfosComplete);
     callbackPtr.release();
     APP_LOGD("call QueryAbilityInfos done");
     return promise;
@@ -984,7 +856,7 @@ napi_value QueryAbilityInfosSync(napi_env env, napi_callback_info info)
         napi_throw(env, businessError);
         return nullptr;
     }
-    NAPI_CALL(env, napi_create_object(env, &nAbilityInfos));
+    NAPI_CALL(env, napi_create_array(env, &nAbilityInfos));
     CommonFunc::ConvertAbilityInfos(env, abilityInfos, nAbilityInfos);
     Query query(want.ToString(),
                 QUERY_ABILITY_INFOS_SYNC, abilityFlags, userId, env);
@@ -1096,19 +968,7 @@ void QueryExtensionInfosComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             QUERY_EXTENSION_INFOS, BUNDLE_PERMISSIONS);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<ExtensionCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
@@ -1161,8 +1021,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<ExtensionCallbackInfo>(
-        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, QUERY_EXTENSION_INFOS, QueryExtensionInfosExec, QueryExtensionInfosComplete);
     callbackPtr.release();
     APP_LOGD("call QueryExtensionInfos done");
     return promise;
@@ -1236,19 +1095,7 @@ void GetAbilityLabelComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, "GetAbilityLabel", Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AbilityLabelCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
@@ -1292,8 +1139,7 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityLabelCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetAbilityLabel", GetAbilityLabelExec, GetAbilityLabelComplete);
     callbackPtr.release();
     APP_LOGD("call GetAbilityLabel done.");
     return promise;
@@ -1334,19 +1180,7 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, "GetAbilityIcon", Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AbilityIconCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 #endif
 
@@ -1392,8 +1226,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<AbilityIconCallbackInfo>(
-        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetAbilityIcon", GetAbilityIconExec, GetAbilityIconComplete);
     callbackPtr.release();
     APP_LOGD("call GetAbilityIcon done.");
     return promise;
@@ -1432,20 +1265,7 @@ void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, "SetApplicationEnabled", Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
@@ -1517,20 +1337,7 @@ void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, "SetAbilityEnabled", Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
@@ -1603,19 +1410,7 @@ void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
@@ -1684,19 +1479,7 @@ void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
         APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
@@ -1790,20 +1573,7 @@ void CleanBundleCacheFilesComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             "CleanBundleCacheFiles", Constants::PERMISSION_REMOVECACHEFILE);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<CleanBundleCacheCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
@@ -1893,22 +1663,10 @@ void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data
         CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
     } else {
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, GET_LAUNCH_WANT_FOR_BUNDLE,
-            BUNDLE_PERMISSIONS);
+            Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
 
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<LaunchWantCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
@@ -1939,6 +1697,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
                 return nullptr;
             }
             CommonFunc::ParseString(env, args[i], asyncCallbackInfo->bundleName);
+            if (asyncCallbackInfo->bundleName.size() == 0) {
+                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, STRING_TYPE);
+                return nullptr;
+            }
         } else if (i == ARGS_POS_ONE) {
             if (valueType == napi_function) {
                 NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
@@ -1959,8 +1721,7 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
-        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetLaunchWantForBundle", GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
     callbackPtr.release();
     APP_LOGD("napi call GetLaunchWantForBundle done");
     return promise;
@@ -1973,6 +1734,10 @@ ErrCode GetAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::string
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                if (!abilityInfo.enabled) {
+                    APP_LOGI("ability disabled");
+                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                }
                 ifExists = true;
                 targetAbilityInfo = abilityInfo;
                 break;
@@ -1999,6 +1764,10 @@ ErrCode GetExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
                 ifExists = true;
                 targetExtensionInfo = extensionInfo;
                 break;
+            }
+            if (!extensionInfo.enabled) {
+                APP_LOGI("extension disabled");
+                return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
             }
         }
         if (ifExists) {
@@ -2030,7 +1799,8 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;
@@ -2111,19 +1881,7 @@ void GetProfileComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err, "", "");
     }
 
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetProfileCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType)
@@ -2444,19 +2202,7 @@ void GetPermissionDefComplete(napi_env env, napi_status status, void *data)
         result[0] = BusinessError::CreateCommonError(
             env, asyncCallbackInfo->err, GET_PERMISSION_DEF, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AsyncPermissionDefineCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 /**
@@ -2508,7 +2254,7 @@ napi_value GetPermissionDef(napi_env env, napi_callback_info info)
 static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Query &query, napi_value jsObject)
 {
     if (uid != callingUid) {
-        APP_LOGE("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
+        APP_LOGD("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
         return;
     }
     APP_LOGD("put applicationInfo to cache");
@@ -2547,9 +2293,7 @@ napi_value GetApplicationInfoSync(napi_env env, napi_callback_info info)
             }
         } else if (i == ARGS_POS_TWO) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return nullptr;
+                APP_LOGW("userId parseInt failed");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -2807,19 +2551,7 @@ void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_INFOS, Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<BundleInfosCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
@@ -2858,19 +2590,7 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<BundleInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 void GetBundleInfoExec(napi_env env, void *data)
@@ -2981,8 +2701,7 @@ napi_value GetBundleInfo(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, GET_BUNDLE_INFO, GetBundleInfoExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetBundleInfo done.");
     return promise;
@@ -3089,8 +2808,7 @@ napi_value GetBundleInfoForSelf(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<BundleInfoCallbackInfo>(
-        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete,
-        napi_qos_user_initiated);
+        env, asyncCallbackInfo, "GetBundleInfoForSelf", GetBundleInfoForSelfExec, GetBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call GetBundleInfoForSelf done.");
     return promise;
@@ -3135,19 +2853,7 @@ void GetAllSharedBundleInfoComplete(napi_env env, napi_status status, void *data
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_ALL_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<SharedBundleCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAllSharedBundleInfo(napi_env env, napi_callback_info info)
@@ -3232,19 +2938,7 @@ void GetSharedBundleInfoComplete(napi_env env, napi_status status, void *data)
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_SHARED_BUNDLE_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<SharedBundleCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
@@ -3296,7 +2990,7 @@ napi_value GetSharedBundleInfo(napi_env env, napi_callback_info info)
     }
 
     auto promise = CommonFunc::AsyncCallNativeMethod<SharedBundleCallbackInfo>(env, asyncCallbackInfo,
-        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete, napi_qos_user_initiated);
+        GET_SHARED_BUNDLE_INFO, GetSharedBundleInfoExec, GetSharedBundleInfoComplete);
     callbackPtr.release();
     APP_LOGD("call NAPI_GetSharedBundleInfo done.");
     return promise;
@@ -3506,24 +3200,12 @@ void GetAppProvisionInfoComplete(napi_env env, napi_status status, void *data)
     if (asyncCallbackInfo->err == NO_ERROR) {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
-        ConvertAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE]);
+        CommonFunc::ConvertAppProvisionInfo(env, asyncCallbackInfo->appProvisionInfo, result[ARGS_POS_ONE]);
     } else {
         result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_APP_PROVISION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == NO_ERROR) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<AppProvisionInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info)

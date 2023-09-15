@@ -56,9 +56,9 @@ struct AsyncCallbackInfo {
     napi_env env;
     napi_ref callback;
     napi_deferred deferred;
-    bool isCallBack;
+    bool isCallBack = false;
     ErrCode callbackResult;
-    bool deliverErrcode;
+    bool deliverErrcode = false;
 };
 }  // namespace LIBZIP
 }  // namespace AppExecFwk
