@@ -421,7 +421,6 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get dependent bundle info");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetDependentBundleInfo due to write InterfaceToken fail");
@@ -3319,7 +3318,6 @@ ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedBundleInfo");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetSharedBundleInfo due to write InterfaceToken fail");
@@ -3341,7 +3339,6 @@ ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedBundleInfoBySelf");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetSharedBundleInfoBySelf due to write InterfaceToken fail");

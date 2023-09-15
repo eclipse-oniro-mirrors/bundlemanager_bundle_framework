@@ -25,7 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 static napi_value BundleInstallerExport(napi_env env, napi_value exports)
 {
-    APP_LOGI("export bundle installer begin.");
+    APP_LOGD("export bundle installer begin.");
     napi_value m_classBundleInstaller;
 
     napi_property_descriptor desc[] = {

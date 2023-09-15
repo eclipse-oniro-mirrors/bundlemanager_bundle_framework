@@ -75,7 +75,7 @@ std::vector<FileAccessor::DirectoryContentEntry> ListDirectoryContent(const File
     std::vector<std::string> filelist;
     isSuccess = FilePath::GetZipAllDirFiles(curPath.Value(), filelist);
     if (isSuccess) {
-        APP_LOGI("ListDirectoryContent filelist =====filelist.size=%{public}zu====", filelist.size());
+        APP_LOGD("ListDirectoryContent filelist =====filelist.size=%{public}zu====", filelist.size());
         for (size_t i = 0; i < filelist.size(); i++) {
             std::string str(filelist[i]);
             if (!str.empty()) {
@@ -177,7 +177,7 @@ bool Zip(const ZipParams &params, const OPTIONS &options)
 ErrCode UnzipWithFilterAndWriters(const PlatformFile &srcFile, FilePath &destDir, WriterFactory writerFactory,
     DirectoryCreator directoryCreator, UnzipParam &unzipParam)
 {
-    APP_LOGI("%{public}s called, destDir=%{private}s", __func__, destDir.Value().c_str());
+    APP_LOGD("%{public}s called, destDir=%{private}s", __func__, destDir.Value().c_str());
     ZipReader reader;
     if (!reader.OpenFromPlatformFile(srcFile)) {
         APP_LOGI("%{public}s called, Failed to open srcFile.", __func__);
@@ -232,7 +232,7 @@ ErrCode UnzipWithFilterCallback(
 
     FilePath dest = destDir;
 
-    APP_LOGI("%{public}s called,  srcFile=%{private}s, destFile=%{private}s",
+    APP_LOGD("%{public}s called,  srcFile=%{private}s, destFile=%{private}s",
         __func__,
         src.Value().c_str(),
         dest.Value().c_str());
@@ -345,7 +345,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath,
     }
     FilePath srcDir(srcPath);
     FilePath destFile(destPath);
-    APP_LOGI("%{public}s called,  srcDir=%{private}s, destFile=%{private}s", __func__,
+    APP_LOGD("%{public}s called,  srcDir=%{private}s, destFile=%{private}s", __func__,
         srcDir.Value().c_str(), destFile.Value().c_str());
 
     if (srcDir.Value().size() == 0) {

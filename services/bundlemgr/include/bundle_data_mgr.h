@@ -568,7 +568,6 @@ public:
     /**
      * @brief Save installation mark to datebase storage.
      * @param info Indicates the innerBundleInfo of the bundle which needs to save installation mark.
-     * @param isAppExisted Indicates whether the application exists in the database storage or not.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool SaveInnerBundleInfo(const InnerBundleInfo &info) const;

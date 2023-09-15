@@ -1759,7 +1759,7 @@ bool BundleDataMgr::GetBaseSharedBundleInfo(const Dependency &dependency,
 {
     auto infoItem = bundleInfos_.find(dependency.bundleName);
     if (infoItem == bundleInfos_.end()) {
-        APP_LOGW("GetBaseSharedBundleInfo failed, can not find dependency bundle %{public}s",
+        APP_LOGD("GetBaseSharedBundleInfo failed, can not find dependency bundle %{public}s",
             dependency.bundleName.c_str());
         return false;
     }
@@ -2531,6 +2531,9 @@ bool BundleDataMgr::IsAppOrAbilityInstalled(const std::string &bundleName) const
 bool BundleDataMgr::GetInnerBundleInfoWithFlags(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId) const
 {
+    if (bundleName.empty()) {
+        return false;
+    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return false;
@@ -2605,6 +2608,9 @@ ErrCode BundleDataMgr::GetInnerBundleInfoWithFlagsV9(const std::string &bundleNa
 ErrCode BundleDataMgr::GetInnerBundleInfoWithBundleFlagsV9(const std::string &bundleName,
     const int32_t flags, InnerBundleInfo &info, int32_t userId) const
 {
+    if (bundleName.empty()) {
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
         return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
@@ -5330,6 +5336,16 @@ ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, in
         }
     }
 
+    {
+        std::string bundleName = want.GetElement().GetBundleName();
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        if (!bundleName.empty() && bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
+                bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
     if (res != ERR_OK) {
@@ -5354,6 +5370,17 @@ ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         }
     }
+
+    {
+        std::string bundleName = want.GetElement().GetBundleName();
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        if (!bundleName.empty() && bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
+                bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
     if (res != ERR_OK) {
@@ -5416,6 +5443,16 @@ ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleNa
             return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
         }
     }
+
+    {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
+            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
+                bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
     if (res != ERR_OK) {
@@ -5442,7 +5479,7 @@ ErrCode BundleDataMgr::ImplicitQueryAbilityInfosFromBmsExtension(
     std::string abilityName = element.GetAbilityName();
     // does not support explicit query
     if (!bundleName.empty() && !abilityName.empty()) {
-        APP_LOGW("implicitly query failed due to bundleName:%{public}s, bilityName:%{public}s not empty",
+        APP_LOGW("implicitly query failed due to bundleName:%{public}s, abilityName:%{public}s not empty",
             bundleName.c_str(), abilityName.c_str());
         return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }

@@ -173,7 +173,7 @@ long SeekZipBuffer(void *opaque, void *, uLong offset, int origin)
         buffer->offset = std::min(buffer->length, static_cast<size_t>(offset));
         return 0;
     }
-    APP_LOGI("%{public}s called. origin is not supported.", __func__);
+    APP_LOGD("%{public}s called. origin is not supported.", __func__);
     return -1;
 }
 

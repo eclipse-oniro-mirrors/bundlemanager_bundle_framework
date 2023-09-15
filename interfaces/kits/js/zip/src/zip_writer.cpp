@@ -35,7 +35,7 @@ std::mutex g_mutex;;
 
 bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
     char buf[kZipBufSize];
     if (!FilePathCheckValid(file_path.Value())) {
         APP_LOGI(
@@ -78,7 +78,7 @@ bool AddFileContentToZip(zipFile zip_file, FilePath &file_path)
 bool OpenNewFileEntry(
     zipFile zip_file, FilePath &path, bool isDirectory, struct tm *lastModified, const OPTIONS &options)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
     std::string strPath = path.Value();
 
     if (isDirectory) {
@@ -90,13 +90,13 @@ bool OpenNewFileEntry(
 
 bool CloseNewFileEntry(zipFile zip_file)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
     return zipCloseFileInZip(zip_file) == ZIP_OK;
 }
 
 bool AddFileEntryToZip(zipFile zip_file, FilePath &relativePath, FilePath &absolutePath, const OPTIONS &options)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
 
     struct tm *lastModified = GetCurrentSystemTime();
     if (lastModified == nullptr) {
@@ -140,7 +140,7 @@ zipFile ZipWriter::InitZipFileWithFile(const FilePath &zip_file_path)
 {
     std::lock_guard<std::mutex> lock(g_mutex);
     FilePath zipFilePath = zip_file_path;
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
     if (zipFilePath.Value().empty()) {
         APP_LOGI("%{public}s called, Path is empty", __func__);
         return nullptr;
@@ -164,7 +164,7 @@ ZipWriter::~ZipWriter()
 
 bool ZipWriter::WriteEntries(const std::vector<FilePath> &paths, const OPTIONS &options)
 {
-    APP_LOGI("%{public}s called", __func__);
+    APP_LOGD("%{public}s called", __func__);
     return AddEntries(paths, options) && Close(options);
 }
 
