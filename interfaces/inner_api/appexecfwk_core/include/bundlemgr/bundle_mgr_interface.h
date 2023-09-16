@@ -1205,6 +1205,31 @@ public:
     {
         return false;
     }
+
+    /**
+     * @brief Check extension type name in the configuration file.
+     * @param typeName Indicates the type of the extension.
+     * @return Returns false if this function is successfully called.
+     */
+    virtual bool CheckExtensionTypeInConfig(const std::string &typeName)
+    {
+        return false;
+    }
+
+    /**
+     * @brief Query extension info with type name.
+     * @param Want Indicates the information of extension info.
+     * @param typeName Indicates the type of the extension.
+     * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
+        const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

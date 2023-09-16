@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -198,6 +198,15 @@ ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo,
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
     return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
+}
+
+bool BundleMgrClient::CheckExtensionTypeInConfig(const std::string &typeName)
+{
+    if (impl_ == nullptr) {
+        APP_LOGE("Bundle mgr client impl is nullptr");
+        return false;
+    }
+    return impl_->CheckExtensionTypeInConfig(typeName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

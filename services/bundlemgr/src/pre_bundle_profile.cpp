@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -25,12 +25,14 @@ const int32_t COMMON_PRIORITY = 0;
 const int32_t HIGH_PRIORITY = 1;
 const std::string INSTALL_LIST = "install_list";
 const std::string UNINSTALL_LIST = "uninstall_list";
+const std::string EXTENSION_TYPE = "extensionType";
 const std::string RECOVER_LIST = "recover_list";
 const std::string INSTALL_ABILITY_CONFIGS = "install_ability_configs";
 const std::string APP_DIR = "app_dir";
 const std::string REMOVABLE = "removable";
 const std::string PRIORITY = "priority";
 const std::string BUNDLE_NAME = "bundleName";
+const std::string TYPE_NAME = "name";
 const std::string KEEP_ALIVE = "keepAlive";
 const std::string SINGLETON = "singleton";
 const std::string ALLOW_COMMON_EVENT = "allowCommonEvent";
@@ -381,6 +383,57 @@ ErrCode PreBundleProfile::TransformTo(
         }
 
         preBundleConfigInfos.insert(preBundleConfigInfo);
+    }
+
+    return ERR_OK;
+}
+
+ErrCode PreBundleProfile::TransformTo(
+    const nlohmann::json &jsonBuf,
+    std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const
+{
+    if (jsonBuf.is_discarded()) {
+        APP_LOGE("Profile format error");
+        return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
+    }
+    
+    if (jsonBuf.find(EXTENSION_TYPE) == jsonBuf.end()) {
+        APP_LOGE("Profile does not have 'extensionType'key");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+
+    auto arrays = jsonBuf.at(EXTENSION_TYPE);
+    if (!arrays.is_array() || arrays.empty()) {
+        APP_LOGE("Value is not array");
+        return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+    }
+
+    ParseExtensionTypeConfig parseExtensionTypeConfig;
+    for (const auto &array : arrays) {
+        if (!array.is_object()) {
+            APP_LOGE("Array is not json object");
+            return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
+        }
+
+        parseExtensionTypeConfig.Reset();
+        const auto &jsonObjectEnd = array.end();
+        int32_t parseResult = ERR_OK;
+        GetValueIfFindKey<std::string>(array,
+            jsonObjectEnd,
+            TYPE_NAME,
+            parseExtensionTypeConfig.typeName,
+            JsonType::STRING,
+            true,
+            parseResult,
+            ArrayType::NOT_ARRAY);
+
+        auto iter = std::find(extensionTypeConfig.begin(), extensionTypeConfig.end(), parseExtensionTypeConfig);
+        if (iter != extensionTypeConfig.end()) {
+            APP_LOGE("Replace old extensionTypeConfig(%{public}s)", parseExtensionTypeConfig.typeName.c_str());
+            extensionTypeConfig.erase(iter);
+        }
+
+        extensionTypeConfig.insert(parseExtensionTypeConfig);
     }
 
     return ERR_OK;

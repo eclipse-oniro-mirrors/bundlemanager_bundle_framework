@@ -799,6 +799,25 @@ public:
     virtual bool QueryAppGalleryBundleName(std::string &bundleName) override;
     void SetBrokerServiceStatus(bool isServiceExisted);
 
+    /**
+     * @brief Check typeName in the configuration file.
+     * @param typeName Indicates the typeName of the extension.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    virtual bool CheckExtensionTypeInConfig(const std::string &typeName) override;
+
+    /**
+     * @brief Query extension info with type name.
+     * @param Want Indicates the information of extension info.
+     * @param typeName Indicates the type of the extension.
+     * @param flag Indicates the query flag which will fliter any specified stuff in the extension info.
+     * @param userId Indicates the userId in the system.
+     * @param extensionInfos Indicates the obtained extensions.
+     * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
+     */
+    virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
+        const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

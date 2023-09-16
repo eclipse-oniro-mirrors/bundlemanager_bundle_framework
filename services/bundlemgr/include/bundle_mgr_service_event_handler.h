@@ -70,6 +70,12 @@ public:
      */
     static bool GetPreInstallCapability(PreBundleConfigInfo &preBundleConfigInfo);
     /**
+     * @brief Check extension type name in the configuration file.
+     * @param typeName Indicates the typeName to check in the configuration file.
+     * @return Returns true if the typeName is in the configuration file; returns false otherwise.
+     */
+    static bool CheckExtensionTypeInConfig(const std::string &typeName);
+    /**
      * @brief Has preInstall profile or not.
      * @return Returns result.
      */

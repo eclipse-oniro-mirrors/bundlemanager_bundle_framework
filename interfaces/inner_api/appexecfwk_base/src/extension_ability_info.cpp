@@ -38,6 +38,7 @@ const std::string DESCRIPTION = "description";
 const std::string DESCRIPTION_ID = "descriptionId";
 const std::string PRIORITY = "priority";
 const std::string TYPE = "type";
+const std::string TYPE_NAME = "typeName";
 const std::string PERMISSIONS = "permissions";
 const std::string READ_PERMISSION = "readPermission";
 const std::string WRITE_PERMISSION = "writePermission";
@@ -113,6 +114,7 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     writePermission = Str16ToStr8(parcel.ReadString16());
     uri = Str16ToStr8(parcel.ReadString16());
     type = static_cast<ExtensionAbilityType>(parcel.ReadInt32());
+    typeName = Str16ToStr8(parcel.ReadString16());
     visible = parcel.ReadBool();
 
     int32_t metadataSize;
@@ -190,6 +192,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(typeName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
     for (auto &mete : metadata) {
@@ -231,6 +234,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {DESCRIPTION_ID, extensionInfo.descriptionId},
         {PRIORITY, extensionInfo.priority},
         {TYPE, extensionInfo.type},
+        {TYPE_NAME, extensionInfo.typeName},
         {READ_PERMISSION, extensionInfo.readPermission},
         {WRITE_PERMISSION, extensionInfo.writePermission},
         {URI, extensionInfo.uri},
@@ -344,6 +348,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         TYPE,
         extensionInfo.type,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        TYPE_NAME,
+        extensionInfo.typeName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

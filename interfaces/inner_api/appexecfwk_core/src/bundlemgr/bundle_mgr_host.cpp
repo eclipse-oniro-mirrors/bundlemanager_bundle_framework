@@ -312,6 +312,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetPreferenceDirByGroupId);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME),
         &BundleMgrHost::HandleQueryAppGalleryBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_EXTENSION_TYPE_IN_CONFIG),
+        &BundleMgrHost::HandleCheckExtensionTypeInConfig);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
+        &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2799,6 +2803,30 @@ ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, Mess
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::string typeName = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
+    ErrCode ret = QueryExtensionAbilityInfosWithTypeName(*want, typeName, flags, userId, extensionAbilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(extensionAbilityInfos, reply)) {
+        APP_LOGE("Write extension infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 bool BundleMgrHost::WriteParcelableIntoAshmem(
     T &parcelable, const char *ashmemName, MessageParcel &reply)
@@ -2890,6 +2918,18 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleCheckExtensionTypeInConfig(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string typeName = data.ReadString();
+    bool ret = CheckExtensionTypeInConfig(typeName);
+    if (!reply.WriteBool(ret)) {
+        APP_LOGE("Write typeName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

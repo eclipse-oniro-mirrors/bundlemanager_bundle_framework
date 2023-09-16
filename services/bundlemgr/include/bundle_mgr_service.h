@@ -134,6 +134,13 @@ public:
     std::shared_ptr<AOTLoopTask> GetAOTLoopTask() const;
     bool IsBrokerServiceStarted() const;
 
+    /**
+     * @brief Check extension type name in the configuration file.
+     * @param typeName Indicates the typeName to check in the configuration file.
+     * @return Returns true if the typeName is in the configuration file; returns false otherwise.
+     */
+    bool CheckExtensionTypeInConfig(const std::string &typeName);
+
 protected:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string& deviceId) override;
 

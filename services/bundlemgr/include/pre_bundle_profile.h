@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -53,6 +53,15 @@ public:
     ErrCode TransformTo(
         const nlohmann::json &jsonBuf,
         std::set<PreBundleConfigInfo> &preBundleConfigInfos) const;
+    /**
+     * @brief Transform the jsonBuf to extensionTypeConfig.
+     * @param jsonBuf Indicates the jsonBuf.
+     * @param extensionTypeConfig Indicates the extensionTypeConfig.
+     * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
+     */
+    ErrCode TransformTo(
+        const nlohmann::json &jsonBuf,
+        std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

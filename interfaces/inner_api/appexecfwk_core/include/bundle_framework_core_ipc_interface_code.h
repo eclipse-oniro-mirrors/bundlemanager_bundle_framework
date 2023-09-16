@@ -144,7 +144,9 @@ enum class BundleMgrInterfaceCode : uint32_t {
     DEL_EXT_NAME_OR_MIME_TO_APP,
     QUERY_DATA_GROUP_INFOS,
     GET_PREFERENCE_DIR_BY_GROUP_ID,
-    QUERY_APPGALLERY_BUNDLE_NAME
+    QUERY_APPGALLERY_BUNDLE_NAME,
+    CHECK_EXTENSION_TYPE_IN_CONFIG,
+    QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

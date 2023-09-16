@@ -3662,6 +3662,34 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
+    const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("Write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(typeName)) {
+        APP_LOGE("Write type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flag)) {
+        APP_LOGE("Write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
+        data, extensionInfos);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -3956,6 +3984,34 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
 
     ClearAshmem(ashmem);
     APP_LOGD("Get parcelable vector from ashmem success");
+    return true;
+}
+
+bool BundleMgrProxy::CheckExtensionTypeInConfig(const std::string &typeName)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write InterfaceToken fail");
+        return false;
+    }
+
+    if (!data.WriteString(typeName)) {
+        APP_LOGE("Write typeName fail");
+        return false;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::CHECK_EXTENSION_TYPE_IN_CONFIG, data, reply)) {
+        APP_LOGE("Fail to check extension typeName from server");
+        return false;
+    }
+
+    auto result = reply.ReadBool();
+    if (!result) {
+        APP_LOGE("Fail to check extension typeName from server");
+        return false;
+    }
+
     return true;
 }
 

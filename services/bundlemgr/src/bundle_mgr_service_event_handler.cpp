@@ -93,12 +93,14 @@ constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
+constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
 constexpr const char* SHARED_BUNDLES_INSTALL_LIST_CONFIG = "/shared_bundles_install_list.json";
 constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.systemres";
 
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
+std::set<ParseExtensionTypeConfig> extensiontype_;
 bool hasLoadPreInstallProFile_ = false;
 
 void MoveTempPath(const std::vector<std::string> &fromPaths,
@@ -572,6 +574,7 @@ void BMSEventHandler::ClearPreInstallCache()
     installList_.clear();
     uninstallList_.clear();
     installListCapabilities_.clear();
+    extensiontype_.clear();
     hasLoadPreInstallProFile_ = false;
 }
 
@@ -610,6 +613,8 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
         dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
         dir + INSTALL_LIST_CAPABILITY_CONFIG, installListCapabilities_);
+    bundleParser.ParseExtTypeConfig(
+        dir + EXTENSION_TYPE_LIST_CONFIG, extensiontype_);
     bundleParser.ParsePreInstallConfig(
         dir + SHARED_BUNDLES_INSTALL_LIST_CONFIG, installList_);
 }
@@ -1689,6 +1694,30 @@ bool BMSEventHandler::GetPreInstallCapability(PreBundleConfigInfo &preBundleConf
     }
 
     preBundleConfigInfo = *iter;
+    return true;
+}
+
+bool BMSEventHandler::CheckExtensionTypeInConfig(const std::string &typeName)
+{
+    if (!hasLoadPreInstallProFile_) {
+        APP_LOGE("Not load typeName proFile or release.");
+        return false;
+    }
+
+    if (typeName.empty() || extensiontype_.empty()) {
+        APP_LOGE("TypeName or typeName configuration file is empty.");
+        return false;
+    }
+
+    ParseExtensionTypeConfig extensionTypeConfig;
+    extensionTypeConfig.typeName = typeName;
+    auto iter = extensiontype_.find(extensionTypeConfig);
+    if (iter == extensiontype_.end()) {
+        APP_LOGE("ExtensionTypeConfig does not have '(%{public}s)' type",
+            extensionTypeConfig.typeName.c_str());
+        return false;
+    }
+
     return true;
 }
 

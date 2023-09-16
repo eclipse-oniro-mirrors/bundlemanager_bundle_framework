@@ -20,6 +20,7 @@ config("bundlemgr_common_config") {
     "include",
     "include/aot",
     "include/app_provision_info",
+    "include/bundlemgr",
     "include/common",
     "include/default_app",
     "include/free_install",
@@ -31,6 +32,7 @@ config("bundlemgr_common_config") {
     "include/quick_fix/state/include",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
+    "${core_path}/include/bundlemgr/",
   ]
 
   include_dirs += bundle_mgr_impl_include_dirs

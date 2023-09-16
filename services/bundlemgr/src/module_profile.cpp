@@ -22,6 +22,7 @@
 #include "app_log_wrapper.h"
 #include "app_privilege_capability.h"
 #include "bundle_constants.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_util.h"
 #include "common_profile.h"
 #include "parameter.h"
@@ -1927,6 +1928,12 @@ bool ToExtensionInfo(
 {
     APP_LOGD("transform ModuleJson to ExtensionAbilityInfo");
     extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
+    if (extensionInfo.type == ExtensionAbilityType::UNSPECIFIED &&
+        !BMSEventHandler::CheckExtensionTypeInConfig(extension.type)) {
+        APP_LOGE("There is no corresponding type in the configuration");
+        return false;
+    }
+    extensionInfo.typeName = extension.type;
     extensionInfo.name = extension.name;
     extensionInfo.srcEntrance = extension.srcEntrance;
     extensionInfo.icon = extension.icon;
