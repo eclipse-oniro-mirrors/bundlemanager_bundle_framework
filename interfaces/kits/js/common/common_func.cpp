@@ -476,7 +476,7 @@ void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
     napi_value moduleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &moduleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, "moduleName", moduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, elementInfo, MODULE_NAME, moduleName));
 
     // wrap abilityName
     napi_value abilityName;
@@ -1239,7 +1239,7 @@ void CommonFunc::ConvertRequestPermission(napi_env env, const RequestPermission 
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, requestPermission.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "moduleName", nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, MODULE_NAME, nModuleName));
 }
 
 void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem, napi_value value)
@@ -1247,7 +1247,7 @@ void CommonFunc::ConvertPreloadItem(napi_env env, const PreloadItem &preloadItem
     napi_value nModuleName;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env,
         preloadItem.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "moduleName", nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
 }
 
 void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatureInfo, napi_value value)
@@ -1325,7 +1325,7 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         ConvertMetadata(env, hapModuleInfo.metadata[index], innerMeta);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadata, index, innerMeta));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "metadata", nMetadata));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, META_DATA, nMetadata));
 
     napi_value nDeviceTypes;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nDeviceTypes));
@@ -1700,7 +1700,7 @@ void CommonFunc::ConvertModuleMetaInfos(napi_env env,
             ConvertMetadata(env, item.second[idx], nModuleMetadata);
             NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nMetadataInfos, idx, nModuleMetadata));
         }
-        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, "metadata", nMetadataInfos));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objInfo, META_DATA, nMetadataInfos));
 
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, objInfos, index++, objInfo));
     }
