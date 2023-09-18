@@ -19,8 +19,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-std::multimap<std::string, std::string> MimeTypeMgr::mimeTypeMap_ =
-{
+std::multimap<std::string, std::string> MimeTypeMgr::mimeTypeMap_ = {
     {"323", "text/h323"},
     {"3g2", "video/3gpp2"},
     {"3gp", "video/3gpp"},
