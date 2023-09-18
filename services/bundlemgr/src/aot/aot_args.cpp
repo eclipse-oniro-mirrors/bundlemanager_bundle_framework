@@ -15,22 +15,101 @@
 
 #include "aot/aot_args.h"
 
+#include <algorithm>
+
 #include "parcel_macro.h"
 #include "string_ex.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr uint32_t MAX_HSP_VECTOR_SIZE = 10000;
+}
+bool HspInfo::ReadFromParcel(Parcel &parcel)
+{
+    std::u16string bundleNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, bundleNameVal);
+    bundleName = Str16ToStr8(bundleNameVal);
+    std::u16string moduleNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, moduleNameVal);
+    moduleName = Str16ToStr8(moduleNameVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    std::u16string hapPathVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, hapPathVal);
+    hapPath = Str16ToStr8(hapPathVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
+    return true;
+}
+
+bool HspInfo::Marshalling(Parcel &parcel) const
+{
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(bundleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(moduleName));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, versionCode);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(hapPath));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
+    return true;
+}
+
+HspInfo *HspInfo::Unmarshalling(Parcel &parcel)
+{
+    HspInfo *hspInfo = new (std::nothrow) HspInfo();
+    if (hspInfo && !hspInfo->ReadFromParcel(parcel)) {
+        APP_LOGE("read HspInfo from parcel failed");
+        delete hspInfo;
+        hspInfo = nullptr;
+    }
+    return hspInfo;
+}
+
+std::string HspInfo::ToString() const
+{
+    return "[ bundleName = " +  bundleName
+            + ", moduleName = " + moduleName
+            + ", versionCode = " + std::to_string(versionCode)
+            + ", hapPath = " + hapPath
+            + ", offset = " + std::to_string(offset)
+            + ", length = " + std::to_string(length) + "]";
+}
+
 bool AOTArgs::ReadFromParcel(Parcel &parcel)
 {
-    bundleName = Str16ToStr8(parcel.ReadString16());
-    moduleName = Str16ToStr8(parcel.ReadString16());
-    compileMode = Str16ToStr8(parcel.ReadString16());
-    hapPath = Str16ToStr8(parcel.ReadString16());
-    coreLibPath = Str16ToStr8(parcel.ReadString16());
-    outputPath = Str16ToStr8(parcel.ReadString16());
-    arkProfilePath = Str16ToStr8(parcel.ReadString16());
-    offset = parcel.ReadUint32();
-    length = parcel.ReadUint32();
+    std::u16string bundleNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, bundleNameVal);
+    bundleName = Str16ToStr8(bundleNameVal);
+    std::u16string moduleNameVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, moduleNameVal);
+    moduleName = Str16ToStr8(moduleNameVal);
+    std::u16string compileModeVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, compileModeVal);
+    compileMode = Str16ToStr8(compileModeVal);
+    std::u16string hapPathVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, hapPathVal);
+    hapPath = Str16ToStr8(hapPathVal);
+    std::u16string coreLibPathVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, coreLibPathVal);
+    coreLibPath = Str16ToStr8(coreLibPathVal);
+    std::u16string outputPathVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, outputPathVal);
+    outputPath = Str16ToStr8(outputPathVal);
+    std::u16string arkProfilePathVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, arkProfilePathVal);
+    arkProfilePath = Str16ToStr8(arkProfilePathVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
+    uint32_t hspVectorSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, hspVectorSize);
+    hspVectorSize = std::min(hspVectorSize, MAX_HSP_VECTOR_SIZE);
+    for (uint32_t i = 0; i < hspVectorSize; ++i) {
+        std::unique_ptr<HspInfo> hspInfoPtr(parcel.ReadParcelable<HspInfo>());
+        if (!hspInfoPtr) {
+            APP_LOGE("read HspInfo failed");
+            return false;
+        }
+        hspVector.emplace_back(*hspInfoPtr);
+    }
     return true;
 }
 
@@ -45,29 +124,40 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(arkProfilePath));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, offset);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, length);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, hspVector.size());
+    for (const auto &hspInfo : hspVector) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hspInfo);
+    }
     return true;
 }
 
 AOTArgs *AOTArgs::Unmarshalling(Parcel &parcel)
 {
     AOTArgs *aotArgs = new (std::nothrow) AOTArgs();
-    if (aotArgs) {
-        aotArgs->ReadFromParcel(parcel);
+    if (aotArgs && !aotArgs->ReadFromParcel(parcel)) {
+        APP_LOGE("read AOTArgs from parcel failed");
+        delete aotArgs;
+        aotArgs = nullptr;
     }
     return aotArgs;
 }
 
 std::string AOTArgs::ToString() const
 {
-    return "[ bundleName = " +  bundleName
-            + ", moduleName = " + moduleName
-            + ", compileMode = " + compileMode
-            + ", hapPath = " + hapPath
-            + ", coreLibPath = " + coreLibPath
-            + ", outputPath = " + outputPath
-            + ", arkProfilePath = " + arkProfilePath
-            + ", offset = " + std::to_string(offset)
-            + ", length = " + std::to_string(length) + "]";
+    std::string ret = "[ bundleName = " +  bundleName
+        + ", moduleName = " + moduleName
+        + ", compileMode = " + compileMode
+        + ", hapPath = " + hapPath
+        + ", coreLibPath = " + coreLibPath
+        + ", outputPath = " + outputPath
+        + ", arkProfilePath = " + arkProfilePath
+        + ", offset = " + std::to_string(offset)
+        + ", length = " + std::to_string(length) + "]";
+    ret.append(" hspVector = ");
+    for (const auto &hspInfo : hspVector) {
+        ret.append(hspInfo.ToString());
+    }
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

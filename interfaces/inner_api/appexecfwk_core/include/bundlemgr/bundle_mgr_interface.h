@@ -1205,6 +1205,11 @@ public:
     {
         return false;
     }
+    virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        int32_t triggerMode)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

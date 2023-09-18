@@ -13,23 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_LOOP_TASK
-#define FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_LOOP_TASK
+#include "aot/charge_idle_listener.h"
 
-#include <cstdint>
-#include <memory>
+#include <thread>
 
-#include "serial_queue.h"
+#include "aot/aot_handler.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-class AOTLoopTask : public std::enable_shared_from_this<AOTLoopTask> {
-public:
-    void ScheduleLoopTask();
-    static uint32_t GetAOTIdleInterval();
-private:
-    std::shared_ptr<SerialQueue> serialQueue_ = std::make_shared<SerialQueue>("AOTQueue");
-};
+ChargeIdleListener::ChargeIdleListener(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    : EventFwk::CommonEventSubscriber(subscribeInfo)
+{}
+
+void ChargeIdleListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
+{
+    APP_LOGI("receive COMMON_EVENT_CHARGE_IDLE_MODE_CHANGED event");
+    auto task = []() {
+        AOTHandler::GetInstance().HandleIdle();
+    };
+    std::thread(task).detach();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_BUNDLE_FRAMEWORK_AOT_AOT_LOOP_TASK

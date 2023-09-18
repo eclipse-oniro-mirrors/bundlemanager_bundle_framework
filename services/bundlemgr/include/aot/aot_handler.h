@@ -50,7 +50,8 @@ private:
     bool CheckDeviceState() const;
     void AOTInternal(std::optional<AOTArgs> aotArgs, uint32_t versionCode) const;
 private:
-    mutable std::mutex mutex_;
+    mutable std::mutex executeMutex_;
+    mutable std::mutex idleMutex_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

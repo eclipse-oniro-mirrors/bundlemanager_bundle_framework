@@ -4945,6 +4945,28 @@ void BundleDataMgr::ResetAOTFlags()
     APP_LOGI("ResetAOTFlags end");
 }
 
+ErrCode BundleDataMgr::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    APP_LOGI("ResetAOTCompileStatus begin");
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName %{public}s not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    ErrCode ret = item->second.ResetAOTCompileStatus(moduleName);
+    if (ret != ERR_OK) {
+        return ret;
+    }
+    if (!dataStorage_->SaveStorageBundleInfo(item->second)) {
+        APP_LOGW("SaveStorageBundleInfo failed, bundleName : %{public}s", item->second.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    APP_LOGI("ResetAOTCompileStatus end");
+    return ERR_OK;
+}
+
 std::vector<std::string> BundleDataMgr::GetAllBundleName() const
 {
     APP_LOGD("GetAllBundleName begin");
