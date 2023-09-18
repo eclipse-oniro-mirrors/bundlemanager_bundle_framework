@@ -55,6 +55,8 @@ public:
 
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
 
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
+
 #ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
     std::shared_ptr<BundleSandboxDataMgr> GetSandboxDataMgr() const
     {
