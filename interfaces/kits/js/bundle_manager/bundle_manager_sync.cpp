@@ -602,7 +602,7 @@ ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
                 if (!abilityInfo.enabled) {
                     APP_LOGI("ability disabled");
-                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                    return ERROR_ABILITY_IS_DISABLED;
                 }
                 targetAbilityInfo = abilityInfo;
                 return ERR_OK;
@@ -671,7 +671,7 @@ ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::st
             if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
                 if (!extensionInfo.enabled) {
                     APP_LOGI("extension disabled");
-                    return ERR_BUNDLE_MANAGER_ABILITY_DISABLED;
+                    return ERROR_ABILITY_IS_DISABLED;
                 }
                 targetExtensionInfo = extensionInfo;
                 return ERR_OK;
