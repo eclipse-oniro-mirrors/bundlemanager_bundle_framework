@@ -48,6 +48,7 @@ public:
     bool SaveSandboxPersistentInfo(const std::string &bundleName, const InnerBundleInfo &innerBundleInfo);
     bool RemoveSandboxPersistentInfo(const std::string &bundleName);
     bool RestoreSandboxPersistentInnerBundleInfo();
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
 
 private:
     bool RestoreSandboxAppIndex(const std::string &bundleName, int32_t appIndex);

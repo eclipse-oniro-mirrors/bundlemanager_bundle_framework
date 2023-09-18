@@ -198,5 +198,19 @@ ErrCode BundleSandboxAppHelper::UninstallAllSandboxApps(const std::string &bundl
     return ERR_APPEXECFWK_SANDBOX_APP_NOT_SUPPORTED;
 #endif
 }
+
+void BundleSandboxAppHelper::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
+{
+#ifdef BUNDLE_FRAMEWORK_SANDBOX_APP
+    APP_LOGD("enter RestoreSandboxUidAndGid");
+    if (sandboxDataMgr_ == nullptr) {
+        APP_LOGE("sandboxDataMgr_ is nullptr");
+        return;
+    }
+    sandboxDataMgr_->RestoreSandboxUidAndGid(bundleIdMap);
+#else
+    APP_LOGD("sandbox app not supported");
+#endif
+}
 } // AppExecFwk
 } // OHOS
