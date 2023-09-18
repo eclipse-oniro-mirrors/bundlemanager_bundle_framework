@@ -2443,6 +2443,7 @@ void BundleDataMgr::InitStateTransferMap()
     transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::INSTALL_START);
     transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UPDATING_SUCCESS);
     transferStates_.emplace(InstallState::UNINSTALL_FAIL, InstallState::UNINSTALL_START);
+    transferStates_.emplace(InstallState::UNINSTALL_START, InstallState::UNINSTALL_START);
     transferStates_.emplace(InstallState::UNINSTALL_SUCCESS, InstallState::UNINSTALL_START);
     transferStates_.emplace(InstallState::UPDATING_START, InstallState::INSTALL_SUCCESS);
     transferStates_.emplace(InstallState::UPDATING_SUCCESS, InstallState::UPDATING_START);
