@@ -404,6 +404,7 @@ ohos_shared_library("installs") {
   external_deps = [
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_single",
     "safwk:system_ability_fwk",
