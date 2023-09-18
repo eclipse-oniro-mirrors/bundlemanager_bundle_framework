@@ -711,6 +711,7 @@ void DefaultAppMgr::ConvertTypeBySuffix(std::string &suffix) const
         return;
     }
     APP_LOGD("corresponding mime type is %{public}s", type.c_str());
+    suffix = type;
     return;
 }
 }
