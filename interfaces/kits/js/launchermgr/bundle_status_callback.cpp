@@ -28,14 +28,18 @@ BundleStatusCallback::~BundleStatusCallback()
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    uv_work_t* work = new uv_work_t;
-    DelRefCallbackInfo* delRefCallbackInfo = new DelRefCallbackInfo {
+    uv_work_t* work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+    DelRefCallbackInfo* delRefCallbackInfo = new (std::nothrow) DelRefCallbackInfo {
         .env_ = env_,
         .addedCallback_ = addedCallback_,
         .updatedCallback_ = updatedCallback_,
         .removeCallback_ = removeCallback_,
     };
-    if (work == nullptr || delRefCallbackInfo == nullptr) {
+    if (delRefCallbackInfo == nullptr) {
+        delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(delRefCallbackInfo);
@@ -65,14 +69,18 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    uv_work_t* work = new uv_work_t;
-    AsyncCallbackInfo* asyncCallbackInfo = new AsyncCallbackInfo {
+    uv_work_t* work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
         .env_ = env_,
         .callback_ = addedCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
     };
-    if (work == nullptr || asyncCallbackInfo == nullptr) {
+    if (asyncCallbackInfo == nullptr) {
+        delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
@@ -115,14 +123,18 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    uv_work_t* work = new uv_work_t;
-    AsyncCallbackInfo* asyncCallbackInfo = new AsyncCallbackInfo {
+    uv_work_t* work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
         .env_ = env_,
         .callback_ = updatedCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
     };
-    if (work == nullptr || asyncCallbackInfo == nullptr) {
+    if (asyncCallbackInfo == nullptr) {
+        delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
@@ -168,14 +180,18 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
 {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(env_, &loop);
-    uv_work_t* work = new uv_work_t;
-    AsyncCallbackInfo* asyncCallbackInfo = new AsyncCallbackInfo {
+    uv_work_t* work = new (std::nothrow) uv_work_t;
+    if (work == nullptr) {
+        return;
+    }
+    AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
         .env_ = env_,
         .callback_ = removeCallback_,
         .bundleName_ = bundleName,
         .userId_ = userId,
     };
-    if (work == nullptr || asyncCallbackInfo == nullptr) {
+    if (asyncCallbackInfo == nullptr) {
+        delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);

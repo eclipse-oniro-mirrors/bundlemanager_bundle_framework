@@ -99,7 +99,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
         }
     }
 
-    if (installResult.resultCode != ERR_OK) {
+    if (installResult.resultCode != ERR_OK || installResult.isBmsExtensionUninstalled) {
         return;
     }
     EventFwk::CommonEventManager::PublishCommonEvent(commonData);

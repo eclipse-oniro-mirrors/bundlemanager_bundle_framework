@@ -555,11 +555,7 @@ HWTEST_F(BundleMgrCodeSignatureSystemTest, InstallCodeSignatureTest016, TestSize
     installParam.verifyCodeParams.emplace(MODULE_NAME1, codeSignatureFilePath1);
     CreateSignatureFile();
     auto ret = InstallBundle(bundlePathVec, installParam);
-#ifndef USE_BUNDLE_EXTENSION
-    EXPECT_EQ(ret, ERR_OK);
-#else
     EXPECT_EQ(ret, IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FAILED);
-#endif
     DeleteSignatureFile();
     if (ret == ERR_OK) {
         ret = UninstallBundle(BUNDLE_NAME_WITHOUT_LIBS);

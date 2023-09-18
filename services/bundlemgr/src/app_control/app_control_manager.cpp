@@ -201,14 +201,34 @@ ErrCode AppControlManager::GetAppJumpControlRule(const std::string &callerBundle
 
 ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Want& want, int32_t userId)
 {
-    return appControlManagerDb_->SetDisposedStatus(
-        APP_MARKET_CALLING, appId, want, userId);
+    auto ret = appControlManagerDb_->SetDisposedStatus(APP_MARKET_CALLING, appId, want, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDisposedStatus to rdb failed");
+        return ret;
+    }
+    std::string key = appId + std::string("_") + std::to_string(userId);
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    auto iter = appRunningControlRuleResult_.find(key);
+    if (iter != appRunningControlRuleResult_.end()) {
+        appRunningControlRuleResult_.erase(iter);
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
-    return appControlManagerDb_->DeleteDisposedStatus(
-        APP_MARKET_CALLING, appId, userId);
+    auto ret = appControlManagerDb_->DeleteDisposedStatus(APP_MARKET_CALLING, appId, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteDisposedStatus to rdb failed");
+        return ret;
+    }
+    std::string key = appId + std::string("_") + std::to_string(userId);
+    std::lock_guard<std::mutex> lock(appRunningControlMutex_);
+    auto iter = appRunningControlRuleResult_.find(key);
+    if (iter != appRunningControlRuleResult_.end()) {
+        appRunningControlRuleResult_.erase(iter);
+    }
+    return ERR_OK;
 }
 
 ErrCode AppControlManager::GetDisposedStatus(const std::string &appId, Want& want, int32_t userId)

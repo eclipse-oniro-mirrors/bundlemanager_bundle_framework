@@ -29,12 +29,19 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #include "bundle_extractor.h"
+#include <nlohmann/json.hpp>
 
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string ABC_RELATIVE_PATH = "ets/modules.abc";
-const std::string HEX_PREFIX = "0x";
+constexpr const char* ABC_RELATIVE_PATH = "ets/modules.abc";
+constexpr const char* HEX_PREFIX = "0x";
+constexpr const char* BUNDLE_NAME = "bundleName";
+constexpr const char* MODULE_NAME = "moduleName";
+constexpr const char* PKG_PATH = "pkgPath";
+constexpr const char* ABC_NAME = "abcName";
+constexpr const char* ABC_OFFSET = "abcOffset";
+constexpr const char* ABC_SIZE = "abcSize";
 }
 
 AOTExecutor& AOTExecutor::GetInstance()
@@ -88,15 +95,15 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
         APP_LOGE("param check failed");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    uint32_t offset = 0;
-    uint32_t length = 0;
-    if (!GetAbcFileInfo(aotArgs.hapPath, offset, length)) {
+    completeArgs = aotArgs;
+    if (!GetAbcFileInfo(completeArgs.hapPath, completeArgs.offset, completeArgs.length)) {
         APP_LOGE("GetAbcFileInfo failed");
         return ERR_APPEXECFWK_INSTALLD_AOT_ABC_NOT_EXIST;
     }
-    completeArgs = aotArgs;
-    completeArgs.offset = offset;
-    completeArgs.length = length;
+    // handle hsp
+    for (auto &hspInfo : completeArgs.hspVector) {
+        (void)GetAbcFileInfo(hspInfo.hapPath, hspInfo.offset, hspInfo.length);
+    }
     APP_LOGD("PrepareArgs success");
     return ERR_OK;
 }
@@ -104,13 +111,32 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
 void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
 {
     APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
+    nlohmann::json subject;
+    subject[BUNDLE_NAME] = aotArgs.bundleName;
+    subject[MODULE_NAME] = aotArgs.moduleName;
+    subject[PKG_PATH] = aotArgs.hapPath;
+    subject[ABC_NAME] = ABC_RELATIVE_PATH;
+    subject[ABC_OFFSET] = DecToHex(aotArgs.offset);
+    subject[ABC_SIZE] = DecToHex(aotArgs.length);
+
+    nlohmann::json objectArray = nlohmann::json::array();
+    for (const auto &hspInfo : aotArgs.hspVector) {
+        nlohmann::json object;
+        object[BUNDLE_NAME] = hspInfo.bundleName;
+        object[MODULE_NAME] = hspInfo.moduleName;
+        object[PKG_PATH] = hspInfo.hapPath;
+        object[ABC_NAME] = ABC_RELATIVE_PATH;
+        object[ABC_OFFSET] = DecToHex(hspInfo.offset);
+        object[ABC_SIZE] = DecToHex(hspInfo.length);
+        objectArray.push_back(object);
+    }
+
     std::vector<std::string> tmpVector = {
         "/system/bin/ark_aot_compiler",
         "--target-compiler-mode=" + aotArgs.compileMode,
-        "--hap-path=" + aotArgs.hapPath,
         "--aot-file=" + aotArgs.outputPath + Constants::PATH_SEPARATOR + aotArgs.moduleName,
-        "--hap-abc-offset=" + DecToHex(aotArgs.offset),
-        "--hap-abc-size=" + DecToHex(aotArgs.length),
+        "--compiler-pkg-info=" + subject.dump(),
+        "--compiler-external-pkg-info=" + objectArray.dump(),
     };
     if (aotArgs.compileMode == Constants::COMPILE_PARTIAL) {
         tmpVector.emplace_back("--compiler-pgo-profiler-path=" + aotArgs.arkProfilePath);

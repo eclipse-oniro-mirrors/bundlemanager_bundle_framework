@@ -52,6 +52,8 @@ const std::string ENTRY = "entry";
 const std::string PROXY_DATAS = "2";
 const int32_t PRIORITY_ONE = 1;
 const int32_t PRIORITY_TWO = 2;
+const int32_t TEST_UID = 20013999;
+const int32_t TEST_BUNDLE_ID = 13999;
 }  // namespace
 
 class BmsBundleInstallCheckerTest : public testing::Test {
@@ -975,7 +977,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | Small
     info.SetBaseBundleInfo(bundleInfo);
     info.SetBaseApplicationInfo(applicationInfo);
     InnerBundleUserInfo innerBundleUserInfo;
-    innerBundleUserInfo.uid = 20010999;
+    innerBundleUserInfo.uid = TEST_UID;
     innerBundleUserInfo.bundleName = BUNDLE_NAME;
     innerBundleUserInfo.bundleUserInfo.userId = 100;
     info.AddInnerBundleUserInfo(innerBundleUserInfo);
@@ -988,10 +990,13 @@ HWTEST_F(BmsBundleInstallCheckerTest, GetCallingEventInfo_0003, Function | Small
     EXPECT_TRUE(ret2);
 
     EventInfo eventInfo;
-    eventInfo.callingUid = 20010999;
+    eventInfo.callingUid = TEST_UID;
+
+    baseBundleInstaller.dataMgr_->bundleIdMap_.insert(std::pair<int32_t, std::string>(TEST_BUNDLE_ID, BUNDLE_NAME));
     baseBundleInstaller.GetCallingEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.callingBundleName, BUNDLE_NAME);
 
+    baseBundleInstaller.dataMgr_->bundleIdMap_.erase(TEST_BUNDLE_ID);
     baseBundleInstaller.dataMgr_->UpdateBundleInstallState(BUNDLE_NAME, InstallState::UNINSTALL_START);
 }
 

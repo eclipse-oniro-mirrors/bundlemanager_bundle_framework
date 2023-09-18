@@ -38,7 +38,6 @@ constexpr const char* IS_ENABLE = "isEnable";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* HAP_FILE_PATH = "hapFilePath";
 constexpr const char* UID = "uid";
-constexpr const char* USER_ID = "userId";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
@@ -429,9 +428,7 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
             }
         } else if (i == ARGS_POS_ONE) {
             if (!CommonFunc::ParseInt(env, args[i], userId)) {
-                APP_LOGE("parseInt failed");
-                BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, USER_ID, TYPE_NUMBER);
-                return ERROR_PARAM_CHECK_ERROR;
+                APP_LOGW("userId parseInt failed");
             }
         } else {
             APP_LOGE("parameter is invalid");
@@ -440,9 +437,6 @@ ErrCode ParamsProcessGetLaunchWantForBundleSync(napi_env env, napi_callback_info
         }
     }
     if (bundleName.size() == 0) {
-        napi_value businessError = BusinessError::CreateCommonError(
-            env, ERROR_BUNDLE_NOT_EXIST, GET_LAUNCH_WANT_FOR_BUNDLE_SYNC, BUNDLE_PERMISSIONS);
-        napi_throw(env, businessError);
         return ERROR_PARAM_CHECK_ERROR;
     }
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -606,6 +600,10 @@ ErrCode CheckAbilityFromBundleInfo(const BundleInfo& bundleInfo, const std::stri
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& abilityInfo : hapModuleInfo.abilityInfos) {
             if (abilityInfo.name == abilityName && abilityInfo.moduleName == moduleName) {
+                if (!abilityInfo.enabled) {
+                    APP_LOGI("ability disabled");
+                    return ERROR_ABILITY_IS_DISABLED;
+                }
                 targetAbilityInfo = abilityInfo;
                 return ERR_OK;
             }
@@ -631,7 +629,8 @@ napi_value GetProfileByAbilitySync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     auto getAbilityFlag = baseFlag + static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
     BundleInfo bundleInfo;
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo));
@@ -670,6 +669,10 @@ ErrCode CheckExtensionFromBundleInfo(const BundleInfo& bundleInfo, const std::st
     for (const auto& hapModuleInfo : bundleInfo.hapModuleInfos) {
         for (const auto& extensionInfo : hapModuleInfo.extensionInfos) {
             if (extensionInfo.name == abilityName && extensionInfo.moduleName == moduleName) {
+                if (!extensionInfo.enabled) {
+                    APP_LOGI("extension disabled");
+                    return ERROR_ABILITY_IS_DISABLED;
+                }
                 targetExtensionInfo = extensionInfo;
                 return ERR_OK;
             }
@@ -695,7 +698,8 @@ napi_value GetProfileByExAbilitySync(napi_env env, napi_callback_info info)
         return nullptr;
     }
     auto baseFlag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) +
-           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA);
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA) +
+           static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE);
     auto getExtensionFlag = baseFlag +
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
     BundleInfo bundleInfo;
@@ -743,7 +747,7 @@ napi_value GetAppProvisionInfoSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
     }
-    int32_t userId;
+    int32_t userId = IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
     if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
         if (!CommonFunc::ParseInt(env, args[ARGS_POS_ONE], userId)) {
             APP_LOGW("Parse userId failed, set this parameter to the caller userId!");

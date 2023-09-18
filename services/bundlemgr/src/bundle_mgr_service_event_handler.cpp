@@ -261,7 +261,7 @@ void BMSEventHandler::AfterBmsStart()
     }
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
-    DelayedSingleton<BundleMgrService>::GetInstance()->GetAOTLoopTask()->ScheduleLoopTask();
+    DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
     StartBmsExtensionService();
     APP_LOGI("BMSEventHandler AfterBmsStart end");
 }
@@ -549,7 +549,7 @@ void BMSEventHandler::GetPreInstallRootDirList(std::vector<std::string> &rootDir
                 continue;
             }
 
-            APP_LOGI("BMSEventHandler cfgDir: %{public}s ", cfgDir);
+            APP_LOGI("cfgDir: %{public}s ", cfgDir);
             rootDirList.emplace_back(cfgDir);
         }
 

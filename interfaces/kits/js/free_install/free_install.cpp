@@ -94,19 +94,7 @@ void IsHapModuleRemovableComplete(napi_env env, napi_status status, void *data)
             RESOURCE_NAME_OF_IS_HAP_MODULE_REMOVABLE, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<HapModuleRemovableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value IsHapModuleRemovable(napi_env env, napi_callback_info info)
@@ -196,20 +184,8 @@ void SetHapModuleUpgradeFlagComplete(napi_env env, napi_status status, void *dat
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             RESOURCE_NAME_OF_SET_HAP_MODULE_UPGRADE_FLAG, Constants::PERMISSION_INSTALL_BUNDLE);
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            napi_get_undefined(env, &result[0]);
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<SetHapModuleUpgradeFlagCallbackInfo>(env,
+        asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
 napi_value SetHapModuleUpgradeFlag(napi_env env, napi_callback_info info)
@@ -613,19 +589,7 @@ void GetBundlePackInfoComplete(napi_env env, napi_status status, void *data)
             RESOURCE_NAME_OF_GET_BUNDLE_PACK_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetBundlePackInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetBundlePackInfo(napi_env env, napi_callback_info info)
@@ -738,19 +702,7 @@ void GetDispatchInfoComplete(napi_env env, napi_status status, void *data)
             RESOURCE_NAME_OF_GET_DISPATCH_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_SIZE_ONE]));
     }
-    if (asyncCallbackInfo->deferred) {
-        if (asyncCallbackInfo->err == SUCCESS) {
-            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_SIZE_ONE]));
-        } else {
-            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-        }
-    } else {
-        napi_value callback = nullptr;
-        napi_value placeHolder = nullptr;
-        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-            sizeof(result) / sizeof(result[0]), result, &placeHolder));
-    }
+    CommonFunc::NapiReturnDeferred<GetDispatchInfoCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
 napi_value GetDispatchInfo(napi_env env, napi_callback_info info)

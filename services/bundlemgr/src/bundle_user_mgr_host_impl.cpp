@@ -28,12 +28,16 @@
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
 #include "default_app_mgr.h"
 #endif
+#ifdef WINDOW_ENABLE
+#include "scene_board_judgement.h"
+#endif
 #include "ipc_skeleton.h"
 
 namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
+const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -65,18 +69,22 @@ private:
     int32_t totalHapNum_ = INT32_MAX;
 };
 
-void BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
     APP_LOGI("CreateNewUser user(%{public}d) start.", userId);
     std::lock_guard<std::mutex> lock(bundleUserMgrMutex_);
-    CheckInitialUser();
+    if (CheckInitialUser() != ERR_OK) {
+        APP_LOGE("CheckInitialUser failed");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
     BeforeCreateNewUser(userId);
     OnCreateNewUser(userId);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
+    return ERR_OK;
 }
 
 void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
@@ -140,10 +148,11 @@ void BundleUserMgrHostImpl::AfterCreateNewUser(int32_t userId)
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     DefaultAppMgr::GetInstance().HandleCreateUser(userId);
 #endif
-        RdbDataManager::ClearCache();
+    HandleSceneBoard(userId);
+    RdbDataManager::ClearCache();
 }
 
-void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::REMOVE_START, userId);
@@ -152,18 +161,18 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     auto installer = GetBundleInstaller();
     if (installer == nullptr) {
         APP_LOGE("installer is nullptr");
-        return;
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
     if (!dataMgr->HasUserId(userId)) {
         APP_LOGE("Has remove user %{public}d.", userId);
-        return;
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
     }
 
     std::vector<BundleInfo> bundleInfos;
@@ -172,7 +181,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         RemoveArkProfile(userId);
         RemoveAsanLogDirectory(userId);
         dataMgr->RemoveUserId(userId);
-        return;
+        return ERR_OK;
     }
 
     InnerUninstallBundle(userId, bundleInfos);
@@ -185,6 +194,7 @@ void BundleUserMgrHostImpl::RemoveUser(int32_t userId)
 #endif
     EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
+    return ERR_OK;
 }
 
 void BundleUserMgrHostImpl::RemoveArkProfile(int32_t userId)
@@ -203,12 +213,12 @@ void BundleUserMgrHostImpl::RemoveAsanLogDirectory(int32_t userId)
     InstalldClient::GetInstance()->RemoveDir(asanLogDir);
 }
 
-void BundleUserMgrHostImpl::CheckInitialUser()
+ErrCode BundleUserMgrHostImpl::CheckInitialUser()
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        return;
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
 
     if (!dataMgr->HasInitialUserCreated()) {
@@ -218,6 +228,7 @@ void BundleUserMgrHostImpl::CheckInitialUser()
         bundlePromise->WaitForAllTasksExecute();
         APP_LOGD("Bms initial user created successfully.");
     }
+    return ERR_OK;
 }
 
 const std::shared_ptr<BundleDataMgr> BundleUserMgrHostImpl::GetDataMgrFromService()
@@ -250,7 +261,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.forceExecuted = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
-        sptr<UserReceiverImpl> userReceiverImpl(new UserReceiverImpl());
+        sptr<UserReceiverImpl> userReceiverImpl(new (std::nothrow) UserReceiverImpl());
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(info.name, installParam, userReceiverImpl);
@@ -260,6 +271,20 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     }
     IPCSkeleton::SetCallingIdentity(identity);
     APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
+}
+
+void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
+{
+#ifdef WINDOW_ENABLE
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return;
+    }
+    bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
+    APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
+    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+#endif
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

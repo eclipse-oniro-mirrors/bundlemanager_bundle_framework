@@ -20,6 +20,7 @@
 
 #include "ability_info.h"
 #include "access_token.h"
+#include "aot/aot_args.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "common_event_info.h"
@@ -932,6 +933,8 @@ public:
         }
         return false;
     }
+
+    std::string GetEntryModuleName() const;
 
     bool GetIsKeepAlive() const
     {
@@ -2014,6 +2017,8 @@ public:
     AOTCompileStatus GetAOTCompileStatus(const std::string &moduleName) const;
     void SetAOTCompileStatus(const std::string &moduleName, AOTCompileStatus aotCompileStatus);
     void ResetAOTFlags();
+    ErrCode ResetAOTCompileStatus(const std::string &moduleName);
+    void GetInternalDependentHspInfo(const std::string &moduleName, std::vector<HspInfo> &hspInfoVector) const;
     ErrCode SetExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);
     ErrCode SetMimeType(const std::string &moduleName, const std::string &abilityName, const std::string mimeType);
     ErrCode DelExtName(const std::string &moduleName, const std::string &abilityName, const std::string extName);

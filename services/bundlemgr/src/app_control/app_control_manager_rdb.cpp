@@ -261,7 +261,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &callin
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppRunningControlRule size 0");
+        APP_LOGD("GetAppRunningControlRule size 0");
         return ERR_OK;
     }
     ret = absSharedResultSet->GoToFirstRow();
@@ -302,7 +302,7 @@ ErrCode AppControlManagerRdb::GetAppRunningControlRule(const std::string &appId,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGE("GetAppRunningControlRuleResult size 0");
+        APP_LOGW("invalid size 0");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_CONTROL;
     }
     ret = absSharedResultSet->GoToFirstRow();
@@ -404,7 +404,7 @@ ErrCode AppControlManagerRdb::GetDisposedStatus(const std::string &callingName,
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
     if (count == 0) {
-        APP_LOGI("GetAppRunningControlRule size 0");
+        APP_LOGD("GetAppRunningControlRule size 0");
         return ERR_OK;
     }
     ret = absSharedResultSet->GoToFirstRow();

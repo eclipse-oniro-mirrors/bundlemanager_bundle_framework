@@ -281,6 +281,12 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
+        const std::unordered_multimap<std::string, std::string> &dirMap)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

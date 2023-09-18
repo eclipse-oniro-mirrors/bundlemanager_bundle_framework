@@ -55,7 +55,7 @@ ErrCode BmsExtensionDataMgr::Init()
 
 bool BmsExtensionDataMgr::OpenHandler()
 {
-    APP_LOGI("OpenHandler start");
+    APP_LOGD("OpenHandler start");
     auto handle = &handler_;
     if (handle == nullptr) {
         APP_LOGE("OpenHandler error handle is nullptr.");
@@ -72,7 +72,7 @@ bool BmsExtensionDataMgr::OpenHandler()
         APP_LOGE("failed to open %{public}s, err:%{public}s", libPath, dlerror());
         return false;
     }
-    APP_LOGI("OpenHandler end");
+    APP_LOGD("OpenHandler end");
     return true;
 }
 

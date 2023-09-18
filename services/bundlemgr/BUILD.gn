@@ -24,6 +24,7 @@ config("bundlemgr_common_config") {
     "include/default_app",
     "include/free_install",
     "include/distributed_manager",
+    "include/driver",
     "include/overlay",
     "include/quick_fix",
     "include/sandbox_app",
@@ -298,7 +299,7 @@ ohos_shared_library("libbms") {
   }
 
   if (ecologic_rule_mgr_enabled) {
-    external_deps += [ "ecological_rule_mgr:erms_client" ]
+    external_deps += [ "ecological_rule_manager:erms_client" ]
   }
 
   if (bundle_framework_power_mgr_enable) {

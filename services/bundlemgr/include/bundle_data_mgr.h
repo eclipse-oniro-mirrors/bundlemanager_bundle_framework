@@ -37,6 +37,7 @@
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
+#include "ffrt.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "preinstall_data_storage_interface.h"
@@ -567,7 +568,6 @@ public:
     /**
      * @brief Save installation mark to datebase storage.
      * @param info Indicates the innerBundleInfo of the bundle which needs to save installation mark.
-     * @param isAppExisted Indicates whether the application exists in the database storage or not.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool SaveInnerBundleInfo(const InnerBundleInfo &info) const;
@@ -823,6 +823,8 @@ public:
     void SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         AOTCompileStatus aotCompileStatus, uint32_t versionCode);
     void ResetAOTFlags();
+    ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
@@ -978,7 +980,7 @@ private:
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
-    mutable std::shared_mutex eventCallbackMutex_;
+    mutable ffrt::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     bool initialUserFlag_ = false;

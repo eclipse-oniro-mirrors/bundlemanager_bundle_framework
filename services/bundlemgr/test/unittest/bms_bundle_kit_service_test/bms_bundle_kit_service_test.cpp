@@ -2413,7 +2413,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0100, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     std::string testResult;
     bool testRet = GetBundleDataMgr()->GetBundleNameForUid(TEST_UID, testResult);
-    EXPECT_TRUE(testRet);
+    EXPECT_FALSE(testRet);
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
@@ -2498,7 +2498,7 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleNameForUid_0600, Function | SmallTest
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     std::string testResult;
     bool testRet = GetBundleDataMgr()->GetBundleNameForUid(TEST_UID, testResult);
-    EXPECT_TRUE(testRet);
+    EXPECT_FALSE(testRet);
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool result = hostImpl->VerifyQueryPermission(testResult);
@@ -4084,27 +4084,6 @@ HWTEST_F(BmsBundleKitServiceTest, UnregisterBundleStatus_0100, Function | SmallT
 }
 
 /**
- * @tc.number: GetBundlesForUid_0100
- * @tc.name: test can get the bundle names with bundle installed
- * @tc.desc: 1.system run normally
- *           2.get installed bundle names successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, GetBundlesForUid_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    std::vector<std::string> testResult;
-    bool testRet = GetBundleDataMgr()->GetBundlesForUid(TEST_UID, testResult);
-    EXPECT_TRUE(testRet);
-    EXPECT_EQ(BUNDLE_NAMES_SIZE_ONE, testResult.size());
-    if (testResult.size() > 0) {
-        EXPECT_EQ(BUNDLE_NAME_TEST, testResult[0]);
-    }
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
  * @tc.number: GetBundlesForUid_0200
  * @tc.name: test can not get not installed bundle names
  * @tc.desc: 1.system run normally
@@ -4169,26 +4148,8 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundlesForUid_0400, Function | SmallTest | 
     testResult.emplace_back(BUNDLE_NAME_DEMO);
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool testRet = hostImpl->GetBundlesForUid(TEST_UID, testResult);
-    EXPECT_TRUE(testRet);
+    EXPECT_FALSE(testRet);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
-}
-
-/**
- * @tc.number: GetNameForUid_0100
- * @tc.name: test can get the uid name with bundle installed
- * @tc.desc: 1.system run normally
- *           2.get installed uid name successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    std::string testResult;
-    ErrCode testRet = GetBundleDataMgr()->GetNameForUid(TEST_UID, testResult);
-    EXPECT_EQ(testRet, ERR_OK);
-    EXPECT_EQ(BUNDLE_NAME_TEST, testResult);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -4242,25 +4203,6 @@ HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0400, Function | SmallTest | Lev
 
     MockUninstallBundle(BUNDLE_NAME_TEST);
     MockUninstallBundle(BUNDLE_NAME_DEMO);
-}
-
-/**
- * @tc.number: GetNameForUid_0500
- * @tc.name: test can get the uid name with bundle installed
- * @tc.desc: 1.system run normally
- *           2.get installed uid name successfully
- */
-HWTEST_F(BmsBundleKitServiceTest, GetNameForUid_0500, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-
-    std::string testResult;
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    ErrCode testRet = hostImpl->GetNameForUid(TEST_UID, testResult);
-    EXPECT_EQ(testRet, ERR_OK);
-    EXPECT_EQ(BUNDLE_NAME_TEST, testResult);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**

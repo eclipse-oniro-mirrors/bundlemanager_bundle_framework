@@ -37,14 +37,14 @@ private:
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    void HandleCreateNewUser(Parcel &data, Parcel &reply);
+    ErrCode HandleCreateNewUser(Parcel &data, Parcel &reply);
     /**
      * @brief Handles the RemoveUser function called from a IBundleUserMgr proxy object.
      * @param data Indicates the data to be read.
      * @param reply Indicates the reply to be sent;
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
-    void HandleRemoveUser(Parcel &data, Parcel &reply);
+    ErrCode HandleRemoveUser(Parcel &data, Parcel &reply);
 
     DISALLOW_COPY_AND_MOVE(BundleUserMgrHost);
 };

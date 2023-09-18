@@ -15,6 +15,7 @@
 
 #include "bundle_user_mgr_proxy.h"
 
+#include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "ipc_types.h"
@@ -34,50 +35,72 @@ BundleUserMgrProxy::~BundleUserMgrProxy()
     APP_LOGD("destroy BundleUserMgrProxy instance");
 }
 
-void BundleUserMgrProxy::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId)
 {
     APP_LOGD("CreateNewUser %{public}d", userId);
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
     if (!data.WriteInterfaceToken(BundleUserMgrProxy::GetDescriptor())) {
         APP_LOGE("fail to CreateNewUser due to write MessageParcel fail");
-        return;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(userId))) {
+        APP_LOGE("fail to CreateNewUser due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    data.WriteInt32(static_cast<int32_t>(userId));
-    SendRequest(
-        static_cast<int32_t>(BundleUserMgrInterfaceCode::CREATE_USER), data, reply, option);
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleUserMgrInterfaceCode::CREATE_USER, data, reply)) {
+        APP_LOGE("fail to CreateNewUser from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply errCode : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
-void BundleUserMgrProxy::RemoveUser(int32_t userId)
+ErrCode BundleUserMgrProxy::RemoveUser(int32_t userId)
 {
     APP_LOGD("RemoveUser %{public}d", userId);
     MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_SYNC);
     if (!data.WriteInterfaceToken(BundleUserMgrProxy::GetDescriptor())) {
         APP_LOGE("fail to RemoveUser due to write MessageParcel fail");
-        return;
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(static_cast<int32_t>(userId))) {
+        APP_LOGE("fail to RemoveUser due to write uid fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    data.WriteInt32(static_cast<int32_t>(userId));
-    SendRequest(
-        static_cast<int32_t>(BundleUserMgrInterfaceCode::REMOVE_USER), data, reply, option);
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleUserMgrInterfaceCode::REMOVE_USER, data, reply)) {
+        APP_LOGE("fail to RemoveUser from server");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply errCode : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
-bool BundleUserMgrProxy::SendRequest(const int32_t& code, MessageParcel& data, MessageParcel& reply,
-    MessageOption& option)
+bool BundleUserMgrProxy::SendTransactCmd(BundleUserMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply)
 {
+    MessageOption option(MessageOption::TF_SYNC);
+
     sptr<IRemoteObject> remote = Remote();
     if (remote == nullptr) {
-        APP_LOGE("fail to uninstall, for Remote() is nullptr");
+        APP_LOGE("fail to send transact cmd %{public}d due to remote object", code);
         return false;
     }
-
-    int32_t ret = remote->SendRequest(code, data, reply, option);
-    if (ret != NO_ERROR) {
-        APP_LOGE("fail to sendRequest, for transact is failed and error code is: %{public}d", ret);
+    int32_t result = remote->SendRequest(static_cast<uint32_t>(code), data, reply, option);
+    if (result != NO_ERROR) {
+        APP_LOGE("receive error transact code %{public}d in transact cmd %{public}d", result, code);
         return false;
     }
     return true;

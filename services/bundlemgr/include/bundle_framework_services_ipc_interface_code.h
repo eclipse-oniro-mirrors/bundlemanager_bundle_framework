@@ -54,6 +54,7 @@ enum class InstalldInterfaceCode : uint32_t {
     IS_EXIST_FILE,
     VERIFY_CODE_SIGNATURE,
     MOVE_FILES,
+    EXTRACT_DRIVER_SO_FILE,
 };
 
 } // namespace AppExecFwk

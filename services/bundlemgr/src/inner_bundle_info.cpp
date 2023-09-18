@@ -191,6 +191,37 @@ void InnerBundleInfo::ResetAOTFlags()
     });
 }
 
+ErrCode InnerBundleInfo::ResetAOTCompileStatus(const std::string &moduleName)
+{
+    auto item = innerModuleInfos_.find(moduleName);
+    if (item == innerModuleInfos_.end()) {
+        APP_LOGE("moduleName %{public}s not exist", moduleName.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    item->second.aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    return ERR_OK;
+}
+
+void InnerBundleInfo::GetInternalDependentHspInfo(
+    const std::string &moduleName, std::vector<HspInfo> &hspInfoVector) const
+{
+    std::vector<std::string> dependentModuleNames;
+    if (!GetAllDependentModuleNames(moduleName, dependentModuleNames)) {
+        return;
+    }
+    for (const auto &name : dependentModuleNames) {
+        auto item = innerModuleInfos_.find(name);
+        if (item == innerModuleInfos_.end()) {
+            continue;
+        }
+        HspInfo hspInfo;
+        hspInfo.bundleName = baseApplicationInfo_->bundleName;
+        hspInfo.moduleName = item->second.moduleName;
+        hspInfo.hapPath = item->second.hapPath;
+        hspInfoVector.emplace_back(hspInfo);
+    }
+}
+
 bool Skill::Match(const OHOS::AAFwk::Want &want) const
 {
     bool matchAction = MatchAction(want.GetAction());
@@ -4065,6 +4096,16 @@ void InnerBundleInfo::InnerProcessShortcut(const Shortcut &oldShortcut, Shortcut
         shortcutIntent.targetClass = shortcutWant.abilityName;
         shortcutInfo.intents.emplace_back(shortcutIntent);
     }
+}
+
+std::string InnerBundleInfo::GetEntryModuleName() const
+{
+    for (const auto &item : innerModuleInfos_) {
+        if (item.second.isEntry) {
+            return item.second.modulePackage;
+        }
+    }
+    return Constants::EMPTY_STRING;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -21,6 +21,7 @@
 #include <set>
 #include <string>
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_privilege_capability.h"
 #include "bundle_mgr_service.h"
@@ -425,8 +426,8 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -711,8 +712,8 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, Abi
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -751,8 +752,8 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -1715,7 +1716,14 @@ bool BundleMgrHostImpl::GetFormsInfoByModule(
 bool BundleMgrHostImpl::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    return GetShortcutInfos(bundleName, Constants::UNSPECIFIED_USERID, shortcutInfos);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    APP_LOGD("current active userId is %{public}d", currentUserId);
+    if (currentUserId == Constants::INVALID_USERID) {
+        APP_LOGW("current userId is invalid");
+        return false;
+    }
+
+    return GetShortcutInfos(bundleName, currentUserId, shortcutInfos);
 }
 
 bool BundleMgrHostImpl::GetShortcutInfos(
@@ -2007,8 +2015,8 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
 
 bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName)
 {
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) ||
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) ||
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGD("verify query permission successfully");
         return true;
     }
@@ -2068,8 +2076,8 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -2084,8 +2092,8 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
 std::string BundleMgrHostImpl::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return Constants::EMPTY_STRING;
     }
@@ -2865,6 +2873,24 @@ bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
     }
     APP_LOGD("bundleName is %{public}s", bundleName.c_str());
     return  true;
+}
+
+ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    APP_LOGD("ResetAOTCompileStatus begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string callingBundleName;
+    ErrCode ret = dataMgr->GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (ret != ERR_OK || bundleName != callingBundleName) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

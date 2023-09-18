@@ -16,12 +16,13 @@ import("//build/config/features.gni")
 import("//build/ohos.gni")
 import("//build/test.gni")
 import("../../../../appexecfwk.gni")
-module_output_path = "bundle_framework/fuzz"
+module_output_path = fuzz_test_path
 
 ##############################fuzztest##########################################
 ohos_fuzztest("GetLaunchWantForBundleFuzzTest") {
   module_out_path = module_output_path
-  fuzz_config_file = "../../../fuzztest/fuzztest_information/getlaunchwantforbundle_fuzzer"
+  fuzz_config_file =
+      "../../../fuzztest/fuzztest_information/getlaunchwantforbundle_fuzzer"
 
   cflags = [
     "-g",

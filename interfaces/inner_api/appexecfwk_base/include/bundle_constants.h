@@ -98,6 +98,7 @@ const std::map<std::string, std::string> ABI_MAP = {
     {X86, "x86"},
     {X86_64, "x86_64"},
 };
+constexpr const char* DOT = ".";
 constexpr const char* SO_SUFFIX = ".so";
 constexpr const char* AN_SUFFIX = ".an";
 constexpr const char* AI_SUFFIX = ".ai";
