@@ -60,8 +60,7 @@ private:
     bool IsWordSkillsValid(const std::vector<Skill>& skills) const;
     bool IsExcelSkillsValid(const std::vector<Skill>& skills) const;
     bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
-    bool GetTypeBySuffix(const std::string &suffix, std::string &mimeType) const;
-    bool IsUriSuffix(const std::string& type) const;
+    void ConvertTypeBySuffix(std::string &suffix) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
     static std::set<std::string> supportAppTypes;

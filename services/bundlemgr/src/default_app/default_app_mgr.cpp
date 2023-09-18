@@ -83,16 +83,12 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
-    if (VerifyUserIdAndType(userId, type) != ERR_OK) {
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+    if (VerifyUserIdAndType(userId, mimeType) != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         isDefaultApp = false;
         return ERR_OK;
-    }
-    std::string mimeType = type;
-    // type is uri suffix
-    if (!GetTypeBySuffix(type, mimeType)) {
-        APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, mimeType, element);
@@ -126,7 +122,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 
 ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -138,13 +137,6 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.GET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-
-    std::string mimeType = type;
-    // type is uri suffix
-    if (!GetTypeBySuffix(type, mimeType)) {
-        APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     if (IsAppType(mimeType)) {
@@ -159,7 +151,10 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -171,13 +166,6 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_SET_DEFAULT_APPLICATION)) {
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
-    }
-
-    std::string mimeType = type;
-    // type is uri suffix
-    if (!GetTypeBySuffix(type, mimeType)) {
-        APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
     }
 
     // clear default app
@@ -208,7 +196,10 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -222,12 +213,6 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    std::string mimeType = type;
-    // type is uri suffix
-    if (!GetTypeBySuffix(type, mimeType)) {
-        APP_LOGW("uri suffix %{public}s has no corresponding mime type", type.c_str());
-        return ERR_BUNDLE_MANAGER_INVALID_TYPE;
-    }
     Element element;
     bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, mimeType, element);
     if (!ret) {
@@ -598,7 +583,7 @@ bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Ski
 
 bool DefaultAppMgr::IsTypeValid(const std::string& type) const
 {
-    return IsAppType(type) || IsFileType(type) || IsUriSuffix(type);
+    return IsAppType(type) || IsFileType(type);
 }
 
 bool DefaultAppMgr::IsAppType(const std::string& type) const
@@ -623,15 +608,6 @@ bool DefaultAppMgr::IsFileType(const std::string& type) const
     }
     APP_LOGW("file type format invalid.");
     return false;
-}
-
-bool DefaultAppMgr::IsUriSuffix(const std::string& type) const
-{
-    if (type.empty() || type.find('.') != 0) {
-        APP_LOGW("file type is not uri suffix");
-        return false;
-    }
-    return true;
 }
 
 bool DefaultAppMgr::IsUserIdExist(int32_t userId) const
@@ -721,22 +697,21 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
     return true;
 }
 
-bool DefaultAppMgr::GetTypeBySuffix(const std::string &suffix, std::string &mimeType) const
+void DefaultAppMgr::ConvertTypeBySuffix(std::string &suffix) const
 {
     if (suffix.empty() || suffix.find('.') != 0) {
         APP_LOGD("default app type is not suffix form");
-        return true;
+        return;
     }
 
     std::string type;
     bool ret = MimeTypeMgr::GetMimeTypeByUri(suffix, type);
     if (!ret) {
         APP_LOGW("uri suffix %{public}s has no corresponding mime type", suffix.c_str());
-        return false;
+        return;
     }
     APP_LOGD("corresponding mime type is %{public}s", type.c_str());
-    mimeType = type;
-    return true;
+    return;
 }
 }
 }
