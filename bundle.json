@@ -49,6 +49,7 @@
                 "device_info_manager",
                 "device_usage_statistics",
                 "display_manager",
+                "ecological_rule_manager",
                 "eventhandler",
                 "ffrt",
                 "hisysevent",
