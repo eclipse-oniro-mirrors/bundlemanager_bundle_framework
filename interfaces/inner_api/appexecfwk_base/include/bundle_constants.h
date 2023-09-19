@@ -287,6 +287,10 @@ constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 
 // system param
 const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
+
+// hmdfs and sharefs config
+constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
+constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS
