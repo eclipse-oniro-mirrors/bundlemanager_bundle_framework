@@ -4313,6 +4313,14 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
         std::string uri = want.GetUriString();
         std::string type = want.GetType();
         APP_LOGD("action : %{public}s, uri : %{public}s, type : %{public}s", action.c_str(), uri.c_str(), type.c_str());
+        if (!uri.empty() && type.empty()) {
+            if (!MimeTypeMgr::GetMimeTypeByUri(uri, type)) {
+                APP_LOGW("GetMimeTypeByUri failed");
+            } else {
+                APP_LOGD("get type %{public}s by uri suffix", type.c_str());
+                uri = Constants::EMPTY_STRING;
+            }
+        }
         if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
             BundleInfo bundleInfo;
             ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
