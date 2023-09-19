@@ -71,6 +71,7 @@
                 "window_manager",
                 "distributed_bundle_framework",
                 "relational_store",
+                "dlp_permission_service",
                 "code_signature"
             ],
             "third_party": [
