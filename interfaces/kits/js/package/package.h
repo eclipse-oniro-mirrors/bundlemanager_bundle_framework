@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -14,15 +14,9 @@
  */
 #ifndef APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H
 #define APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H
-#include <native_engine/native_value.h>
-
-#include "hilog_wrapper.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
 #include "napi/native_node_api.h"
-#include "nlohmann/json.hpp"
-#include "js_runtime_utils.h"
-#include "js_runtime.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -30,29 +24,18 @@ struct CheckPackageHasInstalledResponse {
     bool result = false;
 };
 struct CheckPackageHasInstalledOptions {
-    std::unique_ptr<NativeReference> jsSuccessRef = nullptr;
-    std::unique_ptr<NativeReference> jsFailRef = nullptr;
-    std::unique_ptr<NativeReference> jsCompleteRef = nullptr;
+    napi_env env = nullptr;
+    napi_async_work asyncWork = nullptr;
+    napi_ref successRef = nullptr;
+    napi_ref failRef = nullptr;
+    napi_ref completeRef = nullptr;
     std::string bundleName;
     bool isString = false;
     CheckPackageHasInstalledResponse response;
+    int32_t errCode = 0;
     ~CheckPackageHasInstalledOptions();
 };
-class JsPackage {
-public:
-    JsPackage() = default;
-    ~JsPackage() = default;
-
-    static void Finalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* HasInstalled(NativeEngine *engine, NativeCallbackInfo *info);
-private:
-    NativeValue* OnHasInstalled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* CreateHasInstalled(NativeEngine &engine, const OHOS::AppExecFwk::CheckPackageHasInstalledOptions &
-        hasInstalledOptions);
-    void JsParseCheckPackageHasInstalledOptions(NativeEngine &engine, const NativeCallbackInfo &info,
-        std::shared_ptr<CheckPackageHasInstalledOptions> hasInstalledOptions);
-};
-NativeValue* JsPackageInit(NativeEngine *engine, NativeValue *exports);
+napi_value HasInstalled(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* APPEXECFWK_STANDARD_KITS_APPKIT_NAPI_PACKAGE_PACKAGE_H */
