@@ -386,7 +386,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
 
 bool TransformToInfos(const ExtensionFormProfileInfoVec &forms, std::vector<ExtensionFormInfo> &infos)
 {
-    APP_LOGI("transform ExtensionFormProfileInfo to ExtensionFormInfo");
+    APP_LOGD("transform ExtensionFormProfileInfo to ExtensionFormInfo");
     for (const auto &form: forms.forms) {
         ExtensionFormInfo info;
         if (!TransformToExtensionFormInfo(form, info)) {
@@ -400,7 +400,7 @@ bool TransformToInfos(const ExtensionFormProfileInfoVec &forms, std::vector<Exte
 
 ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::vector<ExtensionFormInfo> &infos)
 {
-    APP_LOGI("transform profile to extension form infos");
+    APP_LOGD("transform profile to extension form infos");
     nlohmann::json jsonObject = nlohmann::json::parse(formProfile, nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("bad profile");

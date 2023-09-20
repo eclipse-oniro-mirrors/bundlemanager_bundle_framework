@@ -33,6 +33,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_util.h"
 #include "directory_ex.h"
 #include "parameters.h"
 
@@ -42,6 +43,8 @@ namespace {
 static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_shared.z.so";
 static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
+static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
+static std::string PREFIX_TARGET_PATH = "/data/service/el1/public/print_service/";
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
@@ -58,7 +61,7 @@ static bool StartsWith(const std::string &sourceString, const std::string &targe
 {
     return sourceString.rfind(targetPrefix, 0) == 0;
 }
-}
+} // namespace
 
 bool InstalldOperator::IsExistFile(const std::string &path)
 {
@@ -1099,6 +1102,90 @@ bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, co
         }
     }
     APP_LOGD("ExtractResourceFiles success");
+    return true;
+}
+
+bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    APP_LOGD("ExtractDriverSoFiles start with src(%{public}s)", srcPath.c_str());
+    if (srcPath.empty() || dirMap.empty()) {
+        APP_LOGE("ExtractDriverSoFiles parameters are invalid");
+        return false;
+    }
+    BundleExtractor extractor(srcPath);
+    if (!extractor.Init()) {
+        APP_LOGE("extractor init failed");
+        return false;
+    }
+
+    std::vector<std::string> entryNames;
+    if (!extractor.GetZipFileNames(entryNames)) {
+        APP_LOGE("GetZipFileNames failed");
+        return false;
+    }
+
+    for (auto &[originalDir, destinedDir] : dirMap) {
+        if ((originalDir.compare(".") == 0) || (originalDir.compare("..") == 0)) {
+            APP_LOGE("the originalDir %{public}s is not existed in the hap", originalDir.c_str());
+            return false;
+        }
+        if (!BundleUtil::StartWith(originalDir, PREFIX_RESOURCE_PATH) ||
+            !BundleUtil::StartWith(destinedDir, PREFIX_TARGET_PATH)) {
+            APP_LOGE("the originalDir %{public}s and destined dir %{public}s are invalid", originalDir.c_str(),
+                destinedDir.c_str());
+            return false;
+        }
+        std::string innerOriginalDir = originalDir;
+        if (innerOriginalDir.front() == Constants::PATH_SEPARATOR[0]) {
+            innerOriginalDir = innerOriginalDir.substr(1);
+        }
+        if (find(entryNames.cbegin(), entryNames.cend(), innerOriginalDir) == entryNames.cend()) {
+            APP_LOGE("the innerOriginalDir %{public}s is not existed in the hap", innerOriginalDir.c_str());
+            return false;
+        }
+        if (!CopyDriverSoFiles(extractor, innerOriginalDir, destinedDir)) {
+            APP_LOGE("CopyDriverSoFiles failed");
+            return false;
+        }
+    }
+    APP_LOGD("ExtractDriverSoFiles end");
+    return true;
+}
+
+bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
+    const std::string &destinedDir)
+{
+    APP_LOGD("CopyDriverSoFiles beign");
+    auto pos = destinedDir.rfind(Constants::PATH_SEPARATOR);
+    if ((pos == std::string::npos) || (pos == destinedDir.length() -1)) {
+        APP_LOGE("destinedDir(%{public}s) is invalid path", destinedDir.c_str());
+        return false;
+    }
+    std::string desDir = destinedDir.substr(0, pos);
+    std::string realDesDir;
+    if (!PathToRealPath(desDir, realDesDir)) {
+        APP_LOGE("desDir(%{public}s) is not real path", desDir.c_str());
+        return false;
+    }
+    std::string realDestinedDir = realDesDir + destinedDir.substr(pos);
+    APP_LOGD("realDestinedDir is %{public}s", realDestinedDir.c_str());
+    if (!extractor.ExtractFile(originalDir, realDestinedDir)) {
+        APP_LOGE("ExtractFile failed");
+        return false;
+    }
+
+    struct stat buf = {};
+    if (stat(realDesDir.c_str(), &buf) != 0) {
+        APP_LOGE("failed to obtain the stat status of realDesDir %{public}s", realDesDir.c_str());
+        return false;
+    }
+    ChangeFileAttr(realDestinedDir, buf.st_uid, buf.st_gid);
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(realDestinedDir, mode)) {
+        return false;
+    }
+    APP_LOGD("CopyDriverSoFiles end");
     return true;
 }
 }  // namespace AppExecFwk

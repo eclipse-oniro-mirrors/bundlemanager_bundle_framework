@@ -41,10 +41,6 @@ ohos_systemtest("BundleMgrCodeSignatureSystemTest") {
     defines += [ "BUNDLE_FRAMEWORK_SANDBOX_APP" ]
   }
 
-  if (current_cpu == "arm64") {
-    defines += [ "USE_BUNDLE_EXTENSION" ]
-  }
-
   if (bundle_framework_graphics) {
     public_deps = [
       "//third_party/icu/icu4c:shared_icuuc",

@@ -1227,6 +1227,8 @@ public:
      */
     virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
         const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        int32_t triggerMode)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

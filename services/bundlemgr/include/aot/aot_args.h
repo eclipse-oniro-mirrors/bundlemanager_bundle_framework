@@ -20,6 +20,20 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct HspInfo : public Parcelable {
+    std::string bundleName;
+    std::string moduleName;
+    uint32_t versionCode = 0;
+    std::string hapPath;
+    uint32_t offset = 0;
+    uint32_t length = 0;
+
+    std::string ToString() const;
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static HspInfo *Unmarshalling(Parcel &parcel);
+};
+
 struct AOTArgs : public Parcelable {
     std::string bundleName;
     std::string moduleName;
@@ -30,6 +44,7 @@ struct AOTArgs : public Parcelable {
     std::string arkProfilePath;
     uint32_t offset = 0;
     uint32_t length = 0;
+    std::vector<HspInfo> hspVector;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

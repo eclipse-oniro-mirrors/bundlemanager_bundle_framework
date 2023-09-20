@@ -15,6 +15,7 @@
 
 #include "bundle_user_mgr_host.h"
 
+#include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
@@ -44,30 +45,41 @@ int BundleUserMgrHost::OnRemoteRequest(
         return OBJECT_NULL;
     }
 
+    ErrCode errCode = ERR_OK;
     switch (code) {
         case static_cast<uint32_t>(BundleUserMgrInterfaceCode::CREATE_USER): {
-            HandleCreateNewUser(data, reply);
+            errCode = HandleCreateNewUser(data, reply);
             break;
         }
         case static_cast<uint32_t>(BundleUserMgrInterfaceCode::REMOVE_USER): {
-            HandleRemoveUser(data, reply);
+            errCode = HandleRemoveUser(data, reply);
             break;
         }
         default:
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
     }
-
-    return NO_ERROR;
+    APP_LOGD("BundleUserMgr host finish to process message, errCode: %{public}d", errCode);
+    return (errCode == ERR_OK) ? NO_ERROR : UNKNOWN_ERROR;
 }
 
-void BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
+ErrCode BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
 {
-    CreateNewUser(data.ReadInt32());
+    auto ret = CreateNewUser(data.ReadInt32());
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
-void BundleUserMgrHost::HandleRemoveUser(Parcel &data, Parcel &reply)
+ErrCode BundleUserMgrHost::HandleRemoveUser(Parcel &data, Parcel &reply)
 {
-    RemoveUser(data.ReadInt32());
+    auto ret = RemoveUser(data.ReadInt32());
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

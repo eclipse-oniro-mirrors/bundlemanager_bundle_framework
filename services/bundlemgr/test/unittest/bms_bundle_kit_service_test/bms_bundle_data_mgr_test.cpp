@@ -3120,7 +3120,7 @@ HWTEST_F(BmsBundleDataMgrTest, DelExtNameOrMIMEToApp_0200, Function | MediumTest
 HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFiles_0001, Function | MediumTest | Level1)
 {
     std::string bundleName = BUNDLE_NAME_DEMO;
-    sptr<ICleanCacheCallback> cleanCacheCallback =  new ICleanCacheCallbackTest();
+    sptr<ICleanCacheCallback> cleanCacheCallback =  new (std::nothrow) ICleanCacheCallbackTest();
     int32_t userId = USERID;
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -3136,7 +3136,7 @@ HWTEST_F(BmsBundleDataMgrTest, CleanBundleCacheFiles_0001, Function | MediumTest
  */
 HWTEST_F(BmsBundleDataMgrTest, RegisterBundleStatusCallback_0001, Function | MediumTest | Level1)
 {
-    sptr<IBundleStatusCallback> bundleStatusCallback = new IBundleStatusCallbackTest();
+    sptr<IBundleStatusCallback> bundleStatusCallback = new (std::nothrow) IBundleStatusCallbackTest();
     bundleStatusCallback->SetBundleName(BUNDLE_NAME_DEMO);
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
@@ -3152,7 +3152,7 @@ HWTEST_F(BmsBundleDataMgrTest, RegisterBundleStatusCallback_0001, Function | Med
  */
 HWTEST_F(BmsBundleDataMgrTest, RegisterBundleEventCallback_0001, Function | MediumTest | Level1)
 {
-    sptr<IBundleEventCallbackTest> bundleEventCallback = new IBundleEventCallbackTest();
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->RegisterBundleEventCallback(bundleEventCallback);
@@ -3167,7 +3167,7 @@ HWTEST_F(BmsBundleDataMgrTest, RegisterBundleEventCallback_0001, Function | Medi
  */
 HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleEventCallback_0001, Function | MediumTest | Level1)
 {
-    sptr<IBundleEventCallbackTest> bundleEventCallback = new IBundleEventCallbackTest();
+    sptr<IBundleEventCallbackTest> bundleEventCallback = new (std::nothrow) IBundleEventCallbackTest();
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->UnregisterBundleEventCallback(bundleEventCallback);
@@ -3182,7 +3182,7 @@ HWTEST_F(BmsBundleDataMgrTest, UnregisterBundleEventCallback_0001, Function | Me
  */
 HWTEST_F(BmsBundleDataMgrTest, ClearBundleStatusCallback_0001, Function | MediumTest | Level1)
 {
-    sptr<IBundleStatusCallback> bundleStatusCallback = new IBundleStatusCallbackTest();
+    sptr<IBundleStatusCallback> bundleStatusCallback = new (std::nothrow) IBundleStatusCallbackTest();
     ClearDataMgr();
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bool ret = bundleMgrHostImpl_->ClearBundleStatusCallback(bundleStatusCallback);

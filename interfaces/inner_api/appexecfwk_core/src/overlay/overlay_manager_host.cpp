@@ -26,13 +26,13 @@ namespace OHOS {
 namespace AppExecFwk {
 OverlayManagerHost::OverlayManagerHost()
 {
-    APP_LOGI("create OverlayManagerHost.");
+    APP_LOGD("create OverlayManagerHost.");
     init();
 }
 
 OverlayManagerHost::~OverlayManagerHost()
 {
-    APP_LOGI("destroy OverlayManagerHost.");
+    APP_LOGD("destroy OverlayManagerHost.");
 }
 
 void OverlayManagerHost::init()

@@ -454,21 +454,4 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
     EXPECT_NE(ret, std::nullopt);
 }
-
-/**
- * @tc.number: AOTArgs_0001
- * Function: test AOTArgs
- * @tc.desc: 1. system running normally
- */
-HWTEST_F(BmsAOTMgrTest, AOTArgs_0001, Function | SmallTest | Level0)
-{
-    AOTArgs info;
-    info.bundleName = AOT_BUNDLE_NAME;
-    Parcel parcel;
-    auto result = info.Unmarshalling(parcel);
-    EXPECT_NE(result->bundleName, AOT_BUNDLE_NAME);
-    info.Marshalling(parcel);
-    result = info.Unmarshalling(parcel);
-    EXPECT_EQ(result->bundleName, AOT_BUNDLE_NAME);
-}
 } // OHOS

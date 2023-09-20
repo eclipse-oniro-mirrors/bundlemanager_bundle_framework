@@ -25,12 +25,12 @@ namespace OHOS {
 namespace AppExecFwk {
 OverlayManagerProxy::OverlayManagerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IOverlayManager>(object)
 {
-    APP_LOGI("create OverlayManagerProxy.");
+    APP_LOGD("create OverlayManagerProxy.");
 }
 
 OverlayManagerProxy::~OverlayManagerProxy()
 {
-    APP_LOGI("destroy OverlayManagerProxy.");
+    APP_LOGD("destroy OverlayManagerProxy.");
 }
 
 ErrCode OverlayManagerProxy::GetAllOverlayModuleInfo(const std::string &bundleName,

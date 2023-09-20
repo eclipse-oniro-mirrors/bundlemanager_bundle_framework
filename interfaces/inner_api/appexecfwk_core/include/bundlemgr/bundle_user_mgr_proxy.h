@@ -18,6 +18,7 @@
 
 #include "iremote_proxy.h"
 
+#include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_user_mgr_interface.h"
 
 namespace OHOS {
@@ -31,16 +32,15 @@ public:
      * @brief Create new user.
      * @param userId Indicates the userId.
      */
-    void CreateNewUser(int32_t userId) override;
+    ErrCode CreateNewUser(int32_t userId) override;
     /**
      * @brief Remove user.
      * @param userId Indicates the userId.
      */
-    void RemoveUser(int32_t userId) override;
+    ErrCode RemoveUser(int32_t userId) override;
 
 private:
-    bool SendRequest(const int32_t& code, MessageParcel& data, MessageParcel& reply,
-        MessageOption& option);
+    bool SendTransactCmd(BundleUserMgrInterfaceCode code, MessageParcel &data, MessageParcel &reply);
     static inline BrokerDelegator<BundleUserMgrProxy> delegator_;
 };
 }  // namespace AppExecFwk

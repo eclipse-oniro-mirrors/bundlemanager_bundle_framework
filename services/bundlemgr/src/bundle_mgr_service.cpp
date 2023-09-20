@@ -321,7 +321,6 @@ void BundleMgrService::SelfClean()
             registerToService_ = false;
         }
     }
-    aotLoopTask_.reset();
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
     agingMgr_.reset();
     connectAbilityMgr_.reset();
@@ -367,9 +366,15 @@ sptr<IOverlayManager> BundleMgrService::GetOverlayManagerProxy() const
 }
 #endif
 
-std::shared_ptr<AOTLoopTask> BundleMgrService::GetAOTLoopTask() const
+void BundleMgrService::RegisterChargeIdleListener()
 {
-    return aotLoopTask_;
+    APP_LOGI("begin to register charge idle listener");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_CHARGE_IDLE_MODE_CHANGED);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    chargeIdleListener_ = std::make_shared<ChargeIdleListener>(subscribeInfo);
+    (void)EventFwk::CommonEventManager::SubscribeCommonEvent(chargeIdleListener_);
+    APP_LOGI("register charge idle listener done");
 }
 
 void BundleMgrService::CheckAllUser()

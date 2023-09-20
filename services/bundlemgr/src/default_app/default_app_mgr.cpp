@@ -20,6 +20,7 @@
 #include "bundle_permission_mgr.h"
 #include "default_app_rdb.h"
 #include "ipc_skeleton.h"
+#include "mime_type_mgr.h"
 #include "string_ex.h"
 
 namespace OHOS {
@@ -82,19 +83,21 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
-    if (VerifyUserIdAndType(userId, type) != ERR_OK) {
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+    if (VerifyUserIdAndType(userId, mimeType) != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         isDefaultApp = false;
         return ERR_OK;
     }
     Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, type, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("GetDefaultApplicationInfo failed.");
         isDefaultApp = false;
         return ERR_OK;
     }
-    ret = IsElementValid(userId, type, element);
+    ret = IsElementValid(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
         isDefaultApp = false;
@@ -119,7 +122,10 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 
 ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -133,10 +139,10 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
-    if (IsAppType(type)) {
-        return GetBundleInfoByAppType(userId, type, bundleInfo);
-    } else if (IsFileType(type)) {
-        return GetBundleInfoByFileType(userId, type, bundleInfo);
+    if (IsAppType(mimeType)) {
+        return GetBundleInfoByAppType(userId, mimeType, bundleInfo);
+    } else if (IsFileType(mimeType)) {
+        return GetBundleInfoByFileType(userId, mimeType, bundleInfo);
     } else {
         APP_LOGW("invalid type, not app type or file type.");
         return ERR_BUNDLE_MANAGER_INVALID_TYPE;
@@ -145,7 +151,10 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -158,11 +167,12 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+
     // clear default app
     bool ret = IsElementEmpty(element);
     if (ret) {
         APP_LOGD("clear default app.");
-        ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, type);
+        ret = defaultAppDb_->DeleteDefaultApplicationInfo(userId, mimeType);
         if (!ret) {
             APP_LOGW("DeleteDefaultApplicationInfo failed.");
             return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
@@ -170,12 +180,12 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
         APP_LOGD("SetDefaultApplication success.");
         return ERR_OK;
     }
-    ret = IsElementValid(userId, type, element);
+    ret = IsElementValid(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
     }
-    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
+    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
         return ERR_BUNDLE_MANAGER_ABILITY_AND_TYPE_MISMATCH;
@@ -186,7 +196,10 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
-    ErrCode errCode = VerifyUserIdAndType(userId, type);
+    std::string mimeType = type;
+    ConvertTypeBySuffix(mimeType);
+
+    ErrCode errCode = VerifyUserIdAndType(userId, mimeType);
     if (errCode != ERR_OK) {
         APP_LOGW("VerifyUserIdAndType failed.");
         return errCode;
@@ -199,21 +212,22 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
         APP_LOGW("verify permission ohos.permission.SET_DEFAULT_APPLICATION failed.");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
+
     Element element;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, type, element);
+    bool ret = defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, mimeType, element);
     if (!ret) {
         APP_LOGD("directly delete default info.");
-        if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, type)) {
+        if (defaultAppDb_->DeleteDefaultApplicationInfo(userId, mimeType)) {
             return ERR_OK;
         }
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    ret = IsElementValid(userId, type, element);
+    ret = IsElementValid(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("Element is invalid.");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, type, element);
+    ret = defaultAppDb_->SetDefaultApplicationInfo(userId, mimeType, element);
     if (!ret) {
         APP_LOGW("SetDefaultApplicationInfo failed.");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
@@ -681,6 +695,24 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
     }
     APP_LOGD("Element is valid.");
     return true;
+}
+
+void DefaultAppMgr::ConvertTypeBySuffix(std::string &suffix) const
+{
+    if (suffix.empty() || suffix.find('.') != 0) {
+        APP_LOGD("default app type is not suffix form");
+        return;
+    }
+
+    std::string type;
+    bool ret = MimeTypeMgr::GetMimeTypeByUri(suffix, type);
+    if (!ret) {
+        APP_LOGW("uri suffix %{public}s has no corresponding mime type", suffix.c_str());
+        return;
+    }
+    APP_LOGD("corresponding mime type is %{public}s", type.c_str());
+    suffix = type;
+    return;
 }
 }
 }

@@ -84,6 +84,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
@@ -142,6 +143,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
   sources = [
     "${services_path}/bundlemgr/src/aot/aot_args.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+    "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",

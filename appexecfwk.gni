@@ -28,6 +28,7 @@ if (vendor_config_exist) {
 bundle_framework_path = "//foundation/bundlemanager/bundle_framework"
 ecological_rule_mgr_path = "//foundation/bundlemanager/ecological_rule_mgr/interfaces/innerkits/include"
 common_path = "${bundle_framework_path}/common"
+fuzz_test_path = "bundle_framework/bundle_framework"
 services_path = "${bundle_framework_path}/services"
 kits_path = "${bundle_framework_path}/interfaces/kits"
 inner_api_path = "${bundle_framework_path}/interfaces/inner_api"
@@ -140,7 +141,7 @@ declare_args() {
   }
 
   if (defined(global_parts_info) &&
-      !defined(global_parts_info.bundlemanager_ecological_rule_mgr)) {
+      !defined(global_parts_info.bundlemanager_ecological_rule_manager)) {
     ecologic_rule_mgr_enabled = false
   }
 

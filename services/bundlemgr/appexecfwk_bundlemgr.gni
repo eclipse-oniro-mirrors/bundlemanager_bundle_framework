@@ -16,6 +16,7 @@ import("../../appexecfwk.gni")
 install_daemon_sources = [
   "${services_path}/bundlemgr/src/aot/aot_args.cpp",
   "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
+  "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
@@ -44,6 +45,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/bundle_stream_installer_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_util.cpp",
   "${services_path}/bundlemgr/src/bundle_verify_mgr.cpp",
+  "${services_path}/bundlemgr/src/driver/driver_installer.cpp",
   "${services_path}/bundlemgr/src/event_report.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_info.cpp",
   "${services_path}/bundlemgr/src/inner_bundle_user_info.cpp",
@@ -152,7 +154,7 @@ if (bundle_framework_power_mgr_enable) {
 
 bundle_mgr_source = [
   "${services_path}/bundlemgr/src/account_helper.cpp",
-  "${services_path}/bundlemgr/src/aot/aot_loop_task.cpp",
+  "${services_path}/bundlemgr/src/aot/charge_idle_listener.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_manager.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_rdb.cpp",
   "${services_path}/bundlemgr/src/bms_param.cpp",

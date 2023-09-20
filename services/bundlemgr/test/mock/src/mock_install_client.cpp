@@ -186,5 +186,11 @@ bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
 }
+
+ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
+    const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

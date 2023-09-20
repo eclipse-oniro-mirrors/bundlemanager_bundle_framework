@@ -21,6 +21,7 @@
 #include <set>
 #include <string>
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "app_privilege_capability.h"
 #include "bundle_mgr_service.h"
@@ -231,8 +232,10 @@ ErrCode BundleMgrHostImpl::GetBundleInfoV9(
     }
     auto res = dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
     if (res != ERR_OK) {
-        if (dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
-            return ERR_OK;
+        if (isBrokerServiceExisted_) {
+            if (dataMgr->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId, true) == ERR_OK) {
+                return ERR_OK;
+            }
         }
     }
     return res;
@@ -350,7 +353,9 @@ bool BundleMgrHostImpl::GetBundleInfos(int32_t flags, std::vector<BundleInfo> &b
         return false;
     }
     dataMgr->GetBundleInfos(flags, bundleInfos, userId);
-    dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    if (isBrokerServiceExisted_) {
+        dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    }
     return !bundleInfos.empty();
 }
 
@@ -373,10 +378,12 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
-    if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
-        APP_LOGD("query bundle infos from bms extension successfully");
-        BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
-        return ERR_OK;
+    if (isBrokerServiceExisted_) {
+        if (dataMgr->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId, true) == ERR_OK) {
+            APP_LOGD("query bundle infos from bms extension successfully");
+            BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
+            return ERR_OK;
+        }
     }
     if (res == ERR_OK) {
         BundlePermissionMgr::AddPermissionUsedRecord(Constants::PERMISSION_GET_INSTALLED_BUNDLE_LIST, 1, 0);
@@ -419,8 +426,8 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -618,7 +625,9 @@ bool BundleMgrHostImpl::QueryAbilityInfos(
         return false;
     }
     dataMgr->QueryAbilityInfos(want, flags, userId, abilityInfos);
-    dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    if (isBrokerServiceExisted_) {
+        dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    }
     return !abilityInfos.empty();
 }
 
@@ -641,7 +650,8 @@ ErrCode BundleMgrHostImpl::QueryAbilityInfosV9(
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->QueryAbilityInfosV9(want, flags, userId, abilityInfos);
-    if (dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, true) == ERR_OK) {
+    if (isBrokerServiceExisted_ &&
+        dataMgr->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, true) == ERR_OK) {
         APP_LOGD("query ability infos from bms extension successfully");
         return ERR_OK;
     }
@@ -686,7 +696,13 @@ bool BundleMgrHostImpl::QueryAllAbilityInfos(const Want &want, int32_t userId, s
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    return dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
+    bool res = dataMgr->QueryLauncherAbilityInfos(want, userId, abilityInfos) == ERR_OK;
+    if (isBrokerServiceExisted_ &&
+        dataMgr->QueryLauncherAbilityFromBmsExtension(want, userId, abilityInfos) == ERR_OK) {
+        APP_LOGD("query launcher ability infos from bms extension successfully");
+        return true;
+    }
+    return res;
 }
 
 bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, AbilityInfo &abilityInfo)
@@ -696,8 +712,8 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(const std::string &abilityUri, Abi
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -736,8 +752,8 @@ bool BundleMgrHostImpl::QueryAbilityInfoByUri(
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -1700,7 +1716,14 @@ bool BundleMgrHostImpl::GetFormsInfoByModule(
 bool BundleMgrHostImpl::GetShortcutInfos(
     const std::string &bundleName, std::vector<ShortcutInfo> &shortcutInfos)
 {
-    return GetShortcutInfos(bundleName, Constants::UNSPECIFIED_USERID, shortcutInfos);
+    int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+    APP_LOGD("current active userId is %{public}d", currentUserId);
+    if (currentUserId == Constants::INVALID_USERID) {
+        APP_LOGW("current userId is invalid");
+        return false;
+    }
+
+    return GetShortcutInfos(bundleName, currentUserId, shortcutInfos);
 }
 
 bool BundleMgrHostImpl::GetShortcutInfos(
@@ -1992,8 +2015,8 @@ std::set<int32_t> BundleMgrHostImpl::GetExistsCommonUserIs()
 
 bool BundleMgrHostImpl::VerifyQueryPermission(const std::string &queryBundleName)
 {
-    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) ||
-        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) ||
+        BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGD("verify query permission successfully");
         return true;
     }
@@ -2053,8 +2076,8 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
         APP_LOGD("non-system app calling system api");
         return true;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return false;
     }
@@ -2069,8 +2092,8 @@ bool BundleMgrHostImpl::QueryExtensionAbilityInfoByUri(const std::string &uri, i
 std::string BundleMgrHostImpl::GetAppIdByBundleName(const std::string &bundleName, const int userId)
 {
     APP_LOGD("bundleName : %{public}s, userId : %{public}d", bundleName.c_str(), userId);
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED) &&
-        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
         APP_LOGE("verify query permission failed");
         return Constants::EMPTY_STRING;
     }
@@ -2228,7 +2251,8 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         return false;
     }
     auto ret = dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
-    if (dataMgr->ImplicitQueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, false) == ERR_OK) {
+    if (isBrokerServiceExisted_ &&
+        dataMgr->ImplicitQueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, false) == ERR_OK) {
         APP_LOGD("implicitly query from bms extension successfully");
         return true;
     }
@@ -2894,6 +2918,24 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    APP_LOGD("ResetAOTCompileStatus begin");
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::string callingBundleName;
+    ErrCode ret = dataMgr->GetNameForUid(IPCSkeleton::GetCallingUid(), callingBundleName);
+    if (ret != ERR_OK || bundleName != callingBundleName) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

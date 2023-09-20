@@ -36,12 +36,12 @@ const int32_t DEFAULT_BUFFER_SIZE = 65536;
 
 BundleInstallerProxy::BundleInstallerProxy(const sptr<IRemoteObject> &object) : IRemoteProxy<IBundleInstaller>(object)
 {
-    APP_LOGI("create bundle installer proxy instance");
+    APP_LOGD("create bundle installer proxy instance");
 }
 
 BundleInstallerProxy::~BundleInstallerProxy()
 {
-    APP_LOGI("destroy bundle installer proxy instance");
+    APP_LOGD("destroy bundle installer proxy instance");
 }
 
 bool BundleInstallerProxy::Install(

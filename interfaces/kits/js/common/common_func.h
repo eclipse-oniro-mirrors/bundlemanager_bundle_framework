@@ -142,6 +142,9 @@ static void ConvertOverlayModuleInfo(napi_env env, const OverlayModuleInfo &info
 
 static void ConvertOverlayModuleInfos(napi_env env, const std::vector<OverlayModuleInfo> &Infos, napi_value objInfos);
 
+static void ConvertModuleMetaInfos(napi_env env,
+    const std::map<std::string, std::vector<Metadata>> &metadata, napi_value objInfos);
+
 static std::string ObtainCallingBundleName();
 
 static void ConvertSharedModuleInfo(napi_env env, napi_value value, const SharedModuleInfo &moduleInfo);
@@ -173,6 +176,32 @@ static napi_value AsyncCallNativeMethod(napi_env env,
         reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
     NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
     return promise;
+}
+
+template<typename T>
+static void NapiReturnDeferred(napi_env env, T *asyncCallbackInfo, napi_value result[], const size_t resultSize)
+{
+    const size_t size = 1;
+    if (resultSize < size) {
+        return;
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->err == 0) {
+            if (resultSize == size) {
+                napi_get_undefined(env, &result[0]);
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+            } else {
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[size]));
+            }
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, resultSize, result, &placeHolder));
+    }
 }
 
 private:

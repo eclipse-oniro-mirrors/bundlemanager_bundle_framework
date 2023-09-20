@@ -289,7 +289,7 @@ AsyncZipCallbackInfo *CreateZipAsyncCallbackInfo(napi_env env)
         APP_LOGE("%{public}s asyncCallbackInfo is null", __func__);
         return nullptr;
     }
-    APP_LOGI("%{public}s end.", __func__);
+    APP_LOGD("%{public}s end.", __func__);
     return asyncCallbackInfo;
 }
 
@@ -345,7 +345,7 @@ bool UnwrapOptionsParams(OPTIONS &options, napi_env env, napi_value arg)
     for (uint32_t index = 0; index < jsProCount; index++) {
         NAPI_CALL_BASE(env, napi_get_element(env, jsProNameList, index, &jsProName), false);
         std::string strProName = UnwrapStringFromJS(env, jsProName, std::string());
-        APP_LOGI("%{public}s called. Property name=%{public}s.", __func__, strProName.c_str());
+        APP_LOGD("%{public}s called. Property name=%{public}s.", __func__, strProName.c_str());
         NAPI_CALL_BASE(env, napi_get_named_property(env, arg, strProName.c_str(), &jsProValue), false);
         NAPI_CALL_BASE(env, napi_typeof(env, jsProValue, &jsValueType), false);
 

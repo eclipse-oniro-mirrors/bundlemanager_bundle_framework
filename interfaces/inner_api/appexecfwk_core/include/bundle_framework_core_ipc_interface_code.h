@@ -147,6 +147,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_APPGALLERY_BUNDLE_NAME,
     CHECK_EXTENSION_TYPE_IN_CONFIG,
     QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME
+    RESET_AOT_COMPILE_STATUS,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

@@ -47,9 +47,10 @@
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
 #include "bundle_util.h"
-#include "hitrace_meter.h"
 #include "data_group_info.h"
 #include "datetime_ex.h"
+#include "driver_installer.h"
+#include "hitrace_meter.h"
 #include "installd_client.h"
 #include "parameter.h"
 #include "parameters.h"
@@ -259,7 +260,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
+    bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, installParam, uid);
+    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
+        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
+        isUninstalledFromBmsExtension = true;
+        result = ERR_OK;
+    }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
@@ -267,7 +274,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .type = NotifyType::UNINSTALL_BUNDLE,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isAgingUninstall = installParam.isAgingUninstall
+            .isAgingUninstall = installParam.isAgingUninstall,
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -419,7 +427,13 @@ ErrCode BaseBundleInstaller::UninstallBundle(
     UninstallAllSandboxApps(bundleName, installParam.userId);
 
     int32_t uid = Constants::INVALID_UID;
+    bool isUninstalledFromBmsExtension = false;
     ErrCode result = ProcessBundleUninstall(bundleName, modulePackage, installParam, uid);
+    if ((result == ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE) &&
+        (UninstallBundleFromBmsExtension(bundleName) == ERR_OK)) {
+        isUninstalledFromBmsExtension = true;
+        result = ERR_OK;
+    }
     if (installParam.needSendEvent && dataMgr_) {
         NotifyBundleEvents installRes = {
             .bundleName = bundleName,
@@ -428,7 +442,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .type = NotifyType::UNINSTALL_MODULE,
             .uid = uid,
             .accessTokenId = accessTokenId_,
-            .isAgingUninstall = installParam.isAgingUninstall
+            .isAgingUninstall = installParam.isAgingUninstall,
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -1110,7 +1125,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGW("uninstall bundle info missing");
-        return UninstallBundleFromBmsExtension(bundleName);
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1203,6 +1218,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
     }
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
+
+    // remove drive so file
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    driverInstaller->RemoveDriverSoFile(oldInfo);
     return ERR_OK;
 }
 
@@ -1236,7 +1255,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     InnerBundleInfo oldInfo;
     if (!dataMgr_->GetInnerBundleInfo(bundleName, oldInfo)) {
         APP_LOGW("uninstall bundle info missing");
-        return UninstallBundleFromBmsExtension(bundleName);
+        return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
 
     versionCode_ = oldInfo.GetVersionCode();
@@ -1349,7 +1368,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGE("RemoveModuleInfo failed");
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage));
     APP_LOGD("finish to process %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
 }
@@ -1623,9 +1643,18 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 {
     APP_LOGD("ProcessNewModuleInstall %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), userId_);
-    if (!VerifyUriPrefix(newInfo, userId_)) {
-        APP_LOGE("VerifyUriPrefix failed");
-        return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+    bool isModifyEntryName = oldInfo.HasEntry() && newInfo.HasEntry();
+    APP_LOGD("isModifyEntryName : %{public}d", isModifyEntryName);
+    if (isModifyEntryName) {
+        if (!VerifyUriPrefix(newInfo, userId_, false, true, oldInfo.GetEntryModuleName())) {
+            APP_LOGE("VerifyUriPrefix failed");
+            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+        }
+    } else {
+        if (!VerifyUriPrefix(newInfo, userId_)) {
+            APP_LOGE("VerifyUriPrefix failed");
+            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
+        }
     }
 
     if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
@@ -2425,6 +2454,9 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     }
 
     ExtractResourceFiles(info, modulePath);
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    result = driverInstaller->CopyDriverSoFile(info, modulePath_);
+    CHECK_RESULT(result, "copy driver so files failed due to error code %{public}d");
 
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
@@ -3319,7 +3351,8 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate) const
+bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate,
+    bool isModifyEntryName, std::string oldEntryName) const
 {
     // uriPrefix must be unique
     // verify current module uriPrefix
@@ -3352,6 +3385,9 @@ bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t u
     std::string excludeModule;
     if (isUpdate) {
         excludeModule.append(info.GetBundleName()).append(".").append(info.GetCurrentModulePackage()).append(".");
+    }
+    if (isModifyEntryName) {
+        excludeModule.append(info.GetBundleName()).append(".").append(oldEntryName).append(".");
     }
     dataMgr_->GetAllUriPrefix(uriPrefixList, userId, excludeModule);
     if (uriPrefixList.empty()) {

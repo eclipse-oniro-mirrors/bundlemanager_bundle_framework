@@ -49,6 +49,7 @@
                 "device_info_manager",
                 "device_usage_statistics",
                 "display_manager",
+                "ecological_rule_manager",
                 "eventhandler",
                 "ffrt",
                 "hisysevent",
@@ -71,7 +72,8 @@
                 "window_manager",
                 "distributed_bundle_framework",
                 "relational_store",
-                "dlp_permission_service"
+                "dlp_permission_service",
+                "code_signature"
             ],
             "third_party": [
                 "json",

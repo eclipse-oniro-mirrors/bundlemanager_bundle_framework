@@ -24,13 +24,13 @@ namespace OHOS {
 namespace AppExecFwk {
 BundleMgrClient::BundleMgrClient()
 {
-    APP_LOGI("create BundleMgrClient");
+    APP_LOGD("create BundleMgrClient");
     impl_ = std::make_shared<BundleMgrClientImpl>();
 }
 
 BundleMgrClient::~BundleMgrClient()
 {
-    APP_LOGI("destory BundleMgrClient");
+    APP_LOGD("destory BundleMgrClient");
 }
 
 ErrCode BundleMgrClient::GetNameForUid(const int uid, std::string &name)

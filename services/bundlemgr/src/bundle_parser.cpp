@@ -64,7 +64,7 @@ bool ParseStr(const char *buf, const int itemLen, int totalLen, std::vector<std:
 bool BundleParser::ReadFileIntoJson(const std::string &filePath, nlohmann::json &jsonBuf)
 {
     if (access(filePath.c_str(), F_OK) != 0) {
-        APP_LOGW("can not access the file: %{public}s, not existed", filePath.c_str());
+        APP_LOGD("%{public}s, not existed", filePath.c_str());
         return false;
     }
 
@@ -222,7 +222,7 @@ ErrCode BundleParser::ParsePreInstallConfig(
     APP_LOGD("Parse preInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse preInstallConfig file failed");
+        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -237,7 +237,7 @@ ErrCode BundleParser::ParsePreUnInstallConfig(
     APP_LOGD("Parse PreUnInstallConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse preUnInstallConfig file failed");
+        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -251,7 +251,7 @@ ErrCode BundleParser::ParsePreInstallAbilityConfig(
     APP_LOGD("Parse PreInstallAbilityConfig from %{public}s", configFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
-        APP_LOGE("Parse preInstallAbilityConfig file failed");
+        APP_LOGE("Parse file %{public}s failed", configFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 
@@ -265,7 +265,7 @@ ErrCode BundleParser::ParseDefaultPermission(
     APP_LOGD("Parse DefaultPermission from %{private}s", permissionFile.c_str());
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(permissionFile, jsonBuf)) {
-        APP_LOGE("Parse default-permissions file failed");
+        APP_LOGE("Parse file %{public}s failed", permissionFile.c_str());
         return ERR_APPEXECFWK_PARSE_FILE_FAILED;
     }
 

@@ -672,6 +672,7 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleQueryExtensionAbilityInfosWithTypeName(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply);
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

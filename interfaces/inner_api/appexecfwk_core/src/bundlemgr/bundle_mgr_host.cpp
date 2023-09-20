@@ -316,6 +316,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleCheckExtensionTypeInConfig);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
         &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
+        &BundleMgrHost::HandleResetAOTCompileStatus);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2822,6 +2824,23 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
     }
     if (ret == ERR_OK && !WriteParcelableVector(extensionAbilityInfos, reply)) {
         APP_LOGE("Write extension infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    int32_t triggerMode = data.ReadInt32();
+    APP_LOGD("bundleName : %{public}s, moduleName : %{public}s, triggerMode : %{public}d",
+        bundleName.c_str(), moduleName.c_str(), triggerMode);
+    ErrCode ret = ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    APP_LOGD("ret : %{public}d", ret);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

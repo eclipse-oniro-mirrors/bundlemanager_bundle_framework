@@ -54,7 +54,7 @@ bool BundlePermissionMgr::Init()
     std::set<DefaultPermission> permissions;
     for (const auto &permissionFile : permissionFileList) {
         if (bundleParser.ParseDefaultPermission(permissionFile, permissions) != ERR_OK) {
-            APP_LOGW("BundlePermissionMgr::Init failed");
+            APP_LOGD("BundlePermissionMgr::Init failed");
             continue;
         }
     }
@@ -592,7 +592,7 @@ bool BundlePermissionMgr::VerifyCallingPermission(const std::string &permissionN
     }
     int32_t ret = AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName);
     if (ret == AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        APP_LOGE("permission %{public}s denied", permissionName.c_str());
         return false;
     }
     APP_LOGD("verify AccessToken success");
@@ -606,7 +606,7 @@ bool BundlePermissionMgr::VerifyCallingPermissionForAll(const std::string &permi
         permissionName.c_str(), callerToken);
     if (AccessToken::AccessTokenKit::VerifyAccessToken(callerToken, permissionName) ==
         AccessToken::PermissionState::PERMISSION_DENIED) {
-        APP_LOGE("permission %{public}s: PERMISSION_DENIED", permissionName.c_str());
+        APP_LOGE("permission %{public}s denied", permissionName.c_str());
         return false;
     }
     return true;

@@ -37,6 +37,7 @@
 #include "bundle_state_storage.h"
 #include "bundle_status_callback_interface.h"
 #include "common_event_data.h"
+#include "ffrt.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
 #include "preinstall_data_storage_interface.h"
@@ -567,7 +568,6 @@ public:
     /**
      * @brief Save installation mark to datebase storage.
      * @param info Indicates the innerBundleInfo of the bundle which needs to save installation mark.
-     * @param isAppExisted Indicates whether the application exists in the database storage or not.
      * @return Returns true if this function is successfully called; returns false otherwise.
      */
     bool SaveInnerBundleInfo(const InnerBundleInfo &info) const;
@@ -823,6 +823,8 @@ public:
     void SetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         AOTCompileStatus aotCompileStatus, uint32_t versionCode);
     void ResetAOTFlags();
+    ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+        int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
@@ -850,6 +852,8 @@ public:
         AbilityInfo &abilityInfo, bool isNewVersion = false) const;
     ErrCode ImplicitQueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const;
+    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos) const;
 
 private:
     /**
@@ -963,21 +967,21 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
-    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
+    void ModifyLauncherAbilityInfoFromBmsExtension(AbilityInfo &abilityInfo) const;
     bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
     void RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerBundleInfo, const std::string &bundleName);
     ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
+    void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;
     mutable std::mutex stateMutex_;
     mutable std::mutex bundleIdMapMutex_;
     mutable std::shared_mutex callbackMutex_;
-    mutable std::shared_mutex eventCallbackMutex_;
+    mutable ffrt::mutex eventCallbackMutex_;
     mutable std::shared_mutex bundleMutex_;
     mutable std::mutex multiUserIdSetMutex_;
     bool initialUserFlag_ = false;

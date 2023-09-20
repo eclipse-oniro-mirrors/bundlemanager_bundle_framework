@@ -421,7 +421,6 @@ ErrCode BundleMgrProxy::GetDependentBundleInfo(const std::string &bundleName, Bu
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to get dependent bundle info");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetDependentBundleInfo due to write InterfaceToken fail");
@@ -3319,7 +3318,6 @@ ErrCode BundleMgrProxy::GetSharedBundleInfo(const std::string &bundleName, const
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedBundleInfo");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetSharedBundleInfo due to write InterfaceToken fail");
@@ -3341,7 +3339,6 @@ ErrCode BundleMgrProxy::GetSharedBundleInfoBySelf(const std::string &bundleName,
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetSharedBundleInfoBySelf");
-
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
         APP_LOGE("fail to GetSharedBundleInfoBySelf due to write InterfaceToken fail");
@@ -3688,6 +3685,41 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want,
     }
     return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
         data, extensionInfos);
+}
+
+ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
+    int32_t triggerMode)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("ResetAOTCompileStatus begin, bundleName : %{public}s, moduleName : %{public}s, triggerMode : %{public}d",
+        bundleName.c_str(), moduleName.c_str(), triggerMode);
+    if (bundleName.empty() || moduleName.empty()) {
+        APP_LOGE("invalid param");
+        return ERR_BUNDLE_MANAGER_INVALID_PARAMETER;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("write moduleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(triggerMode)) {
+        APP_LOGE("write triggerMode failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
 }
 
 template<typename T>
