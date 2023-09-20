@@ -29,6 +29,14 @@ config("bundle_all_dependent_config") {
 }
 
 ohos_shared_library("libappexecfwk_common") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "log/src/app_log_wrapper.cpp",
     "utils/src/bundle_file_util.cpp",

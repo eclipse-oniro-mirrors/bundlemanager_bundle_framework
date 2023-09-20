@@ -44,6 +44,14 @@ ohos_js_assets("hjs_demo_js_assets") {
 }
 
 ohos_shared_library("otaUpdateTestSoChangedFt2So1") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "src/main/cpp/hapso33.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

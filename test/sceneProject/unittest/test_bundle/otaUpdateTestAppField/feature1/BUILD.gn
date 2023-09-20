@@ -47,6 +47,14 @@ ohos_js_assets("hjs_demo_js_assets") {
 }
 
 ohos_shared_library("otaUpdateTestAppFieldFt1So1") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "src/main/cpp/hapso23.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -54,6 +62,14 @@ ohos_shared_library("otaUpdateTestAppFieldFt1So1") {
 }
 
 ohos_shared_library("otaUpdateTestAppFieldFt1So2") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "src/main/cpp/hapso24.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

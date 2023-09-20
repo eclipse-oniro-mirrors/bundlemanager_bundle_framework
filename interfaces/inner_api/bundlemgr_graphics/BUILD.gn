@@ -23,6 +23,14 @@ config("bundlemgr_graphics_config") {
 }
 
 ohos_shared_library("bundlemgr_graphics") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "src/bundle_graphics_client.cpp",
     "src/bundle_graphics_client_impl.cpp",

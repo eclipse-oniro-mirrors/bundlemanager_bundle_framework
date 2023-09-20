@@ -47,6 +47,14 @@ ohos_resources("hjs_demo_resources") {
 }
 
 ohos_shared_library("hapso7") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "entry/src/main/cpp/hapso7.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -54,6 +62,14 @@ ohos_shared_library("hapso7") {
 }
 
 ohos_shared_library("hapso8") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [ "entry/src/main/cpp/hapso8.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

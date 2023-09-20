@@ -33,6 +33,14 @@ config("appexecfwk_core_config") {
 }
 
 ohos_shared_library("appexecfwk_core") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   sources = [
     "src/bundlemgr/bundle_event_callback_host.cpp",
     "src/bundlemgr/bundle_event_callback_proxy.cpp",

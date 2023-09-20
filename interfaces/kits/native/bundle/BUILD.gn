@@ -29,6 +29,14 @@ ohos_ndk_library("libbundle_ndk") {
 }
 
 ohos_shared_library("bundle_ndk") {
+  stack_protector_ret = true
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
   public_configs = [ ":bundle_ndk_config" ]
   include_dirs = [
     "${common_path}/log/include",
