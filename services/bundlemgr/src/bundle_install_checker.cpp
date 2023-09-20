@@ -329,12 +329,12 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
         BundlePackInfo packInfo;
-        newInfo.SetAppType(checkParam.appType);
-        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
-        bool isSystemApp = (provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP) ||
-            (bundlePaths[i].find(SYSTEM_APP_SCAN_PATH) == 0);
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();         
+        bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
+        } else {
+            newInfo.SetAppType(Constants::AppType::THIRD_PARTY_APP);
         }
 
         newInfo.SetIsPreInstallApp(checkParam.isPreInstallApp);

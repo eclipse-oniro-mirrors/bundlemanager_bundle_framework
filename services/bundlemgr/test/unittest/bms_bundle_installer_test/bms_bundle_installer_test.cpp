@@ -3091,6 +3091,82 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_1900, Function | SmallTest | Lev
 }
 
 /**
+ * @tc.number: InstallChecker_2000
+ * @tc.name: test the start function of ParseHapFiles
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_2000, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::vector<std::string> bundlePaths;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    bundlePaths.push_back(bundlePath);
+
+    InstallCheckParam checkParam;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.bundleInfo.appFeature = "hos_system_app";
+    info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_BACKUP_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "moduleName";
+    innerBundleInfo.innerModuleInfos_.insert(
+        pair<std::string, InnerModuleInfo>("moduleName", innerModuleInfo));
+    infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+
+    auto ret = installChecker.ParseHapFiles(bundlePaths, checkParam, hapVerifyRes, infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstallChecker_2100
+ * @tc.name: test the start function of ParseHapFiles
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallerTest, InstallChecker_2100, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::vector<std::string> bundlePaths;
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    bundlePaths.push_back(bundlePath);
+
+    InstallCheckParam checkParam;
+
+    std::vector<Security::Verify::HapVerifyResult> hapVerifyRes;
+    Security::Verify::HapVerifyResult result;
+    Security::Verify::ProvisionInfo info;
+    info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.bundleInfo.appFeature = "hos_normal_app";
+    info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
+    result.SetProvisionInfo(info);
+    hapVerifyRes.emplace_back(result);
+
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_BACKUP_NAME;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = "moduleName";
+    innerBundleInfo.innerModuleInfos_.insert(
+        pair<std::string, InnerModuleInfo>("moduleName", innerModuleInfo));
+    infos.insert(pair<std::string, InnerBundleInfo>("moduleName", innerBundleInfo));
+
+    auto ret = installChecker.ParseHapFiles(bundlePaths, checkParam, hapVerifyRes, infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: BmsBundleSignatureType_0100
  * @tc.name: test signed name is not the same
  * @tc.desc: 1. system running normally
