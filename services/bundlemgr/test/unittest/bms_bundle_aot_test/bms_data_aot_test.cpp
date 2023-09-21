@@ -61,6 +61,8 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
 
 private:
+    HspInfo CreateHspInfo() const;
+    void CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo) const;
     std::shared_ptr<BundleDataMgr> dataMgr_ = std::make_shared<BundleDataMgr>();
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
@@ -93,6 +95,28 @@ void BmsAOTMgrTest::TearDown()
 const std::shared_ptr<BundleDataMgr> BmsAOTMgrTest::GetBundleDataMgr() const
 {
     return dataMgr_;
+}
+
+HspInfo BmsAOTMgrTest::CreateHspInfo() const
+{
+    HspInfo hspInfo;
+    hspInfo.bundleName = "bundleName";
+    hspInfo.moduleName = "moduleName";
+    hspInfo.versionCode = 1;
+    hspInfo.hapPath = "hapPath";
+    hspInfo.offset = 2;
+    hspInfo.length = 3;
+    return hspInfo;
+}
+
+void BmsAOTMgrTest::CheckHspInfo(HspInfo &sourceHspInfo, HspInfo &targetHspInfo) const
+{
+    EXPECT_EQ(sourceHspInfo.bundleName, targetHspInfo.bundleName);
+    EXPECT_EQ(sourceHspInfo.moduleName, targetHspInfo.moduleName);
+    EXPECT_EQ(sourceHspInfo.versionCode, targetHspInfo.versionCode);
+    EXPECT_EQ(sourceHspInfo.hapPath, targetHspInfo.hapPath);
+    EXPECT_EQ(sourceHspInfo.offset, targetHspInfo.offset);
+    EXPECT_EQ(sourceHspInfo.length, targetHspInfo.length);
 }
 
 /**
@@ -453,5 +477,66 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
     InnerBundleInfo innerBundleInfo;
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
     EXPECT_NE(ret, std::nullopt);
+}
+
+/**
+ * @tc.number: AOTArgs_0100
+ * @tc.name: test HspInfo Marshalling and Unmarshalling
+ * @tc.desc: Marshalling and Unmarshalling success
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("AOTArgs_0100 begin");
+    HspInfo hspInfo = CreateHspInfo();
+    Parcel parcel;
+    bool ret = hspInfo.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    std::shared_ptr<HspInfo> hspInfoPtr(hspInfo.Unmarshalling(parcel));
+    ASSERT_NE(hspInfoPtr, nullptr);
+    CheckHspInfo(*hspInfoPtr, hspInfo);
+    APP_LOGI("AOTArgs_0100 end");
+}
+
+/**
+ * @tc.number: AOTArgs_0200
+ * @tc.name: test AOTArgs Marshalling and Unmarshalling
+ * @tc.desc: Marshalling and Unmarshalling success
+ */
+HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("AOTArgs_0200 begin");
+    AOTArgs aotArgs;
+    aotArgs.bundleName = "bundleName";
+    aotArgs.moduleName = "moduleName";
+    aotArgs.compileMode = "compileMode";
+    aotArgs.hapPath = "hapPath";
+    aotArgs.coreLibPath = "coreLibPath";
+    aotArgs.outputPath = "outputPath";
+    aotArgs.arkProfilePath = "arkProfilePath";
+    aotArgs.offset = 1;
+    aotArgs.length = 2;
+    aotArgs.hspVector.emplace_back(CreateHspInfo());
+    aotArgs.hspVector.emplace_back(CreateHspInfo());
+
+    Parcel parcel;
+    bool ret = aotArgs.Marshalling(parcel);
+    EXPECT_EQ(ret, true);
+    std::shared_ptr<AOTArgs> aotArgsPtr(aotArgs.Unmarshalling(parcel));
+    ASSERT_NE(aotArgsPtr, nullptr);
+    EXPECT_EQ(aotArgsPtr->bundleName, aotArgs.bundleName);
+    EXPECT_EQ(aotArgsPtr->moduleName, aotArgs.moduleName);
+    EXPECT_EQ(aotArgsPtr->compileMode, aotArgs.compileMode);
+    EXPECT_EQ(aotArgsPtr->hapPath, aotArgs.hapPath);
+    EXPECT_EQ(aotArgsPtr->coreLibPath, aotArgs.coreLibPath);
+    EXPECT_EQ(aotArgsPtr->outputPath, aotArgs.outputPath);
+    EXPECT_EQ(aotArgsPtr->arkProfilePath, aotArgs.arkProfilePath);
+    EXPECT_EQ(aotArgsPtr->offset, aotArgs.offset);
+    EXPECT_EQ(aotArgsPtr->length, aotArgs.length);
+    size_t expectVectorSize = 2;
+    EXPECT_EQ(aotArgsPtr->hspVector.size(), expectVectorSize);
+    for (size_t i = 0; i < aotArgsPtr->hspVector.size(); ++i) {
+        CheckHspInfo(aotArgsPtr->hspVector[i], aotArgs.hspVector[i]);
+    }
+    APP_LOGI("AOTArgs_0200 end");
 }
 } // OHOS

@@ -8148,5 +8148,98 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAppGalleryBundleName_0100, Function | SmallT
     EXPECT_FALSE(ret);
     #endif
 }
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0100
+ * @tc.name: ResetAOTCompileStatus testcase
+ * @tc.desc: 1.bundleName and moduleName exist, call ResetAOTCompileStatus
+ *           2.return ERR_OK
+ */
+HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0100, Function | SmallTest | Level1)
+{
+    APP_LOGI("ResetAOTCompileStatus_0100 begin");
+    // install
+    std::vector<std::string> resvec;
+    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
+    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    CommonTool commonTool;
+    std::string installResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(installResult, "Success") << "install fail!";
+
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+    std::string bundleName = "com.example.ohosproject.hmservice";
+    std::string moduleName = "entry_phone";
+    int32_t triggerMode = 0;
+
+    int32_t originUid = geteuid();
+    int32_t uid = bundleMgrProxy->GetUidByBundleName(bundleName, USERID);
+    APP_LOGI("uid : %{public}d", uid);
+    seteuid(uid);
+    // success testcase
+    ErrCode ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_OK);
+    // moduleName not exist testcase
+    moduleName = "notExistModuleName";
+    ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    seteuid(originUid);
+    // uninstall
+    Uninstall(bundleName, resvec);
+    std::string uninstallResult = commonTool.VectorToStr(resvec);
+    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
+    APP_LOGI("ResetAOTCompileStatus_0100 end");
+}
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0200
+ * @tc.name: failed testcase, invalid param
+ * @tc.desc: 1.call ResetAOTCompileStatus
+ *           2.return ERR_BUNDLE_MANAGER_INVALID_PARAMETER
+ */
+HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0200, Function | SmallTest | Level1)
+{
+    APP_LOGI("ResetAOTCompileStatus_0200 begin");
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    int32_t triggerMode = 0;
+
+    ErrCode ret = bundleMgrProxy->ResetAOTCompileStatus(Constants::EMPTY_STRING, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, Constants::EMPTY_STRING, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_INVALID_PARAMETER);
+    APP_LOGI("ResetAOTCompileStatus_0200 end");
+}
+
+/**
+ * @tc.number: ResetAOTCompileStatus_0300
+ * @tc.name: failed testcase, invalid calling uid
+ * @tc.desc: 1.call ResetAOTCompileStatus
+ *           2.return ERR_BUNDLE_MANAGER_PERMISSION_DENIED
+ */
+HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0300, Function | SmallTest | Level1)
+{
+    APP_LOGI("ResetAOTCompileStatus_0300 begin");
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string bundleName = "bundleName";
+    std::string moduleName = "moduleName";
+    int32_t triggerMode = 0;
+    ErrCode ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    int32_t originUid = geteuid();
+    int32_t invalidUid = 1234567;
+    seteuid(invalidUid);
+
+    ret = bundleMgrProxy->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    seteuid(originUid);
+    APP_LOGI("ResetAOTCompileStatus_0300 end");
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
