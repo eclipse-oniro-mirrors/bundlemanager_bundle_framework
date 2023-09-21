@@ -131,6 +131,17 @@ struct AsyncBundleInfoCallbackInfo : public AsyncWorkData {
     BundleOptions bundleOptions;
 };
 
+struct AsyncApplicationInfoCallbackInfo : public AsyncWorkData {
+    explicit AsyncApplicationInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
+    std::string bundleName;
+    int32_t flags = 0;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    OHOS::AppExecFwk::ApplicationInfo appInfo;
+    bool ret = false;
+    int32_t err = 0;
+    std::string message;
+};
+
 struct AsyncPermissionDefCallbackInfo : public AsyncWorkData {
     explicit AsyncPermissionDefCallbackInfo(napi_env env) : AsyncWorkData(env) {}
     std::string permissionName;
@@ -338,6 +349,8 @@ napi_value CreateShortcutExistenceObject(napi_env env);
 napi_value CreateQueryShortCutFlagObject(napi_env env);
 napi_value CreateInstallErrorCodeObject(napi_env env);
 napi_value CreateBundleFlagObject(napi_env env);
+napi_value GetAllApplicationInfo(napi_env env, napi_callback_info info);
+napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
 class JsBundleMgr {
 public:
     JsBundleMgr() = default;
@@ -385,8 +398,6 @@ public:
         bool getCache = false;
     };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -395,8 +406,6 @@ public:
     std::string errMessage_;
 
 private:
-    NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
