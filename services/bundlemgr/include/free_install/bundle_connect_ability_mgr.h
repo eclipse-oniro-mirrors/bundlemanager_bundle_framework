@@ -264,6 +264,7 @@ private:
     bool GetPreloadList(const std::string &bundleName, const std::string &moduleName,
         int32_t userId, sptr<TargetAbilityInfo> &targetAbilityInfo);
     bool CheckDependencies(const std::string &moduleName, const InnerBundleInfo &innerBundleInfo);
+    void LoadDownloadService() const;
 
 #ifndef SUPPORT_ERMS
     sptr<AppExecFwk::IEcologicalRuleManager> CheckEcologicalRuleMgr();

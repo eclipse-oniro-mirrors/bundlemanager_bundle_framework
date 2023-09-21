@@ -288,6 +288,8 @@ constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 // system param
 const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 
+// sa id
+constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 // hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
