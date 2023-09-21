@@ -20,15 +20,19 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_constants.h"
+#include "bundle_errors.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
+#include "business_error.h"
 #include "cleancache_callback.h"
 #include "common_func.h"
 #include "if_system_ability_manager.h"
 #include "installer_callback.h"
 #include "ipc_skeleton.h"
 #include "iservice_registry.h"
+#include "napi_arg.h"
+#include "napi_constants.h"
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
@@ -50,18 +54,12 @@ constexpr size_t NAPI_ERR_NO_ERROR = 0;
 constexpr size_t ARGS_ASYNC_COUNT = 1;
 constexpr size_t ARGS_MAX_COUNT = 10;
 constexpr size_t CALLBACK_SIZE = 1;
-constexpr size_t ARGS_SIZE_ONE = 1;
-constexpr size_t ARGS_SIZE_TWO = 2;
-constexpr size_t ARGS_SIZE_THREE = 3;
-constexpr size_t ARGS_SIZE_FOUR = 4;
-constexpr size_t ARGS_SIZE_FIVE = 5;
 constexpr int32_t PARAM0 = 0;
 constexpr int32_t PARAM1 = 1;
 constexpr int32_t PARAM2 = 2;
 constexpr int32_t PARAM3 = 3;
 constexpr int32_t NAPI_RETURN_FAILED = -1;
 constexpr int32_t NAPI_RETURN_ZERO = 0;
-constexpr int32_t NAPI_RETURN_ONE = 1;
 constexpr int32_t NAPI_RETURN_TWO = 2;
 constexpr int32_t NAPI_RETURN_THREE = 3;
 constexpr int32_t CODE_SUCCESS = 0;
@@ -104,6 +102,9 @@ enum class InstallErrorCode {
 const std::string PERMISSION_CHANGE = "permissionChange";
 const std::string ANY_PERMISSION_CHANGE = "anyPermissionChange";
 
+const std::string IS_SET_APPLICATION_ENABLED = "IsSetApplicationEnabled";
+const std::string IS_ABILITY_ENABLED = "IsAbilityEnabled";
+const std::string GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 const std::string GET_APPLICATION_INFO = "getApplicationInfo";
 const std::string GET_BUNDLE_INFO = "getBundleInfo";
 const std::string QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
@@ -3232,23 +3233,6 @@ static bool InnerGetApplicationInfos(
     return iBundleMgr->GetApplicationInfos(flags, userId, appInfos);
 }
 
-static bool InnerGetLaunchWantForBundle(const std::string &bundleName, Want &want)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-
-    ErrCode ret = iBundleMgr->GetLaunchWantForBundle(bundleName, want);
-    if (ret != ERR_OK) {
-        APP_LOGE("launchWantForBundle is not find");
-        return false;
-    }
-
-    return true;
-}
-
 static bool InnerGetArchiveInfo(const std::string &hapFilePath, const int32_t flags, BundleInfo &bundleInfo)
 {
     auto iBundleMgr = GetBundleMgr();
@@ -4213,22 +4197,258 @@ NativeValue* JsBundleMgr::GetBundleArchiveInfo(NativeEngine *engine, NativeCallb
     return (me != nullptr) ? me->OnGetBundleArchiveInfo(*engine, *info) : nullptr;
 }
 
-NativeValue* JsBundleMgr::GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info)
+void GetLaunchWantForBundleExec(napi_env env, void *data)
 {
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetLaunchWantForBundle(*engine, *info) : nullptr;
+    APP_LOGD("NAPI begin");
+    LaunchWantCallbackInfo* asyncCallbackInfo = reinterpret_cast<LaunchWantCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is not NO_ERROR, but %{public}d", asyncCallbackInfo->err);
+        return;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return;
+    }
+    APP_LOGD("start GetLaunchWantForBundle, bundleName %{public}s", asyncCallbackInfo->bundleName.c_str());
+    asyncCallbackInfo->ret = iBundleMgr->GetLaunchWantForBundle(
+        asyncCallbackInfo->bundleName, asyncCallbackInfo->want, asyncCallbackInfo->userId);
+    APP_LOGD("NAPI end");
 }
 
-NativeValue* JsBundleMgr::IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info)
+void GetLaunchWantForBundleComplete(napi_env env, napi_status status, void *data)
 {
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnIsAbilityEnabled(*engine, *info) : nullptr;
+    APP_LOGD("NAPI begin");
+    LaunchWantCallbackInfo *asyncCallbackInfo = reinterpret_cast<LaunchWantCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<LaunchWantCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is %{public}d", asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "type mismatch");
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else if (asyncCallbackInfo->ret != ERR_OK) {
+        APP_LOGE("asyncCallbackInfo->ret is %{public}d", asyncCallbackInfo->ret);
+        asyncCallbackInfo->err = OPERATION_FAILED;
+        result[0] = BusinessError::CreateError(env, OPERATION_FAILED, "GetBundleArchiveInfo falied");
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else {
+        result[0] = BusinessError::CreateError(env, NO_ERROR, "");
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[1]));
+        CommonFunc::ConvertWantInfo(env, result[1], asyncCallbackInfo->want);
+    }
+    CommonFunc::NapiReturnDeferred<LaunchWantCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    APP_LOGD("NAPI end");
 }
 
-NativeValue* JsBundleMgr::IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info)
+napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info)
 {
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnIsApplicationEnabled(*engine, *info) : nullptr;
+    APP_LOGD("NAPI begin");
+    LaunchWantCallbackInfo *asyncCallbackInfo = new (std::nothrow) LaunchWantCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        return nullptr;
+    }
+    std::unique_ptr<LaunchWantCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = NO_ERROR;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("parameters init failed");
+        asyncCallbackInfo->err = PARAM_TYPE_ERROR;
+        auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(env,
+            asyncCallbackInfo, IS_SET_APPLICATION_ENABLED, GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
+        callbackPtr.release();
+        return promise;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE("BundleName parse failed");
+        asyncCallbackInfo->err = PARAM_TYPE_ERROR;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+                NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        }
+    }
+    
+    auto promise = CommonFunc::AsyncCallNativeMethod<LaunchWantCallbackInfo>(
+        env, asyncCallbackInfo, GET_LAUNCH_WANT_FOR_BUNDLE, GetLaunchWantForBundleExec, GetLaunchWantForBundleComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI end");
+    return promise;
+}
+
+void IsAbilityEnabledExec(napi_env env, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is not NO_ERROR, but %{public}d", asyncCallbackInfo->err);
+        return;
+    }
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
+        return;
+    }
+    bundleMgr->IsAbilityEnabled(asyncCallbackInfo->abilityInfo, asyncCallbackInfo->isEnable);
+    APP_LOGD("NAPI end");
+}
+
+void IsAbilityEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AbilityEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<AbilityEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is %{public}d", asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "type mismatch");
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else {
+        result[0] = BusinessError::CreateError(env, NO_ERROR, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[1]));
+    }
+    CommonFunc::NapiReturnDeferred<AbilityEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    APP_LOGD("NAPI end");
+}
+
+napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI begin");
+    AbilityEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<AbilityEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = NO_ERROR;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("parameters init failed");
+        asyncCallbackInfo->err = INVALID_PARAM;
+        auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(env,
+            asyncCallbackInfo, IS_SET_APPLICATION_ENABLED, IsAbilityEnabledExec, IsAbilityEnabledComplete);
+        callbackPtr.release();
+        return promise;
+    }
+    if (!CommonFunc::ParseAbilityInfo(env, args[ARGS_POS_ZERO], asyncCallbackInfo->abilityInfo)) {
+        APP_LOGE("AbilityInfo parse failed");
+        asyncCallbackInfo->err = INVALID_PARAM;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+            NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        }
+    }
+    
+    auto promise = CommonFunc::AsyncCallNativeMethod<AbilityEnableCallbackInfo>(
+        env, asyncCallbackInfo, IS_ABILITY_ENABLED, IsAbilityEnabledExec, IsAbilityEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI end");
+    return promise;
+}
+
+void IsApplicationEnabledExec(napi_env env, void *data)
+{
+    APP_LOGD("NAPI begin");
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is not NO_ERROR, but %{public}d", asyncCallbackInfo->err);
+        return;
+    }
+    auto bundleMgr = CommonFunc::GetBundleMgr();
+    if (bundleMgr == nullptr) {
+        APP_LOGE("CommonFunc::GetBundleMgr failed");
+        return;
+    }
+    bundleMgr->IsApplicationEnabled(asyncCallbackInfo->bundleName, asyncCallbackInfo->isEnable);
+    APP_LOGD("NAPI end");
+}
+
+void IsApplicationEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin");
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = reinterpret_cast<ApplicationEnableCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        APP_LOGE("asyncCallbackInfo->err is %{public}d", asyncCallbackInfo->err);
+        result[0] = BusinessError::CreateError(env, asyncCallbackInfo->err, "type mismatch");
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else {
+        result[0] = BusinessError::CreateError(env, NO_ERROR, "");
+        NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, asyncCallbackInfo->isEnable, &result[1]));
+    }
+    CommonFunc::NapiReturnDeferred<ApplicationEnableCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    APP_LOGD("NAPI end");
+}
+
+napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI begin");
+    ApplicationEnableCallbackInfo *asyncCallbackInfo = new (std::nothrow) ApplicationEnableCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return nullptr;
+    }
+    std::unique_ptr<ApplicationEnableCallbackInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->err = NO_ERROR;
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_TWO)) {
+        APP_LOGE("parameters init failed");
+        asyncCallbackInfo->err = INVALID_PARAM;
+        auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(env,
+            asyncCallbackInfo, IS_SET_APPLICATION_ENABLED, IsApplicationEnabledExec, IsApplicationEnabledComplete);
+        callbackPtr.release();
+        return promise;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], asyncCallbackInfo->bundleName)) {
+        APP_LOGE("BundleName parse failed");
+        asyncCallbackInfo->err = INVALID_PARAM;
+    }
+    if (args.GetMaxArgc() >= ARGS_SIZE_TWO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_POS_ONE], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(env, napi_create_reference(env, args[ARGS_POS_ONE],
+            NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        }
+    }
+    
+    auto promise = CommonFunc::AsyncCallNativeMethod<ApplicationEnableCallbackInfo>(env,
+        asyncCallbackInfo, IS_SET_APPLICATION_ENABLED, IsApplicationEnabledExec, IsApplicationEnabledComplete);
+    callbackPtr.release();
+    APP_LOGD("NAPI end");
+    return promise;
 }
 
 NativeValue* JsBundleMgr::GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
@@ -4429,116 +4649,6 @@ NativeValue* JsBundleMgr::OnGetBundleArchiveInfo(NativeEngine &engine, NativeCal
     auto callback = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnGetBundleArchiveInfo",
         engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    std::string bundleName("");
-    if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
-        APP_LOGE("conversion failed!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    auto complete = [obj = this, bundleName, errCode](
-                        NativeEngine &engine, AsyncTask &task, int32_t status) {
-        if (errCode != ERR_OK) {
-            task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
-            return;
-        }
-        Want want;
-        std::string name(bundleName);
-        auto ret = InnerGetLaunchWantForBundle(name, want);
-        if (!ret) {
-            task.Reject(engine, CreateJsError(engine, 1, "getLaunchWantForBundle failed"));
-            return;
-        }
-        task.Resolve(engine, obj->CreateWant(engine, want));
-    };
-
-    NativeValue *result = nullptr;
-    auto callback = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
-    AsyncTask::Schedule("JsBundleMgr::OnGetLaunchWantForBundle",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    auto env = reinterpret_cast<napi_env>(&engine);
-    auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
-    OHOS::AppExecFwk::AbilityInfo abilityInfo;
-    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = INVALID_PARAM;
-    }
-    if (info.argv[PARAM0]->TypeOf() != NATIVE_OBJECT) {
-        APP_LOGE("input params is not object!");
-        errCode = INVALID_PARAM;
-    }
-    if (!UnwrapAbilityInfo(env, inputAbilityInfo, abilityInfo)) {
-        APP_LOGE("conversion failed!");
-        errCode = INVALID_PARAM;
-    }
-
-    AsyncTask::CompleteCallback complete = [obj = this, abilityInfo, errCode, info]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (errCode != ERR_OK) {
-                task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
-                return;
-            }
-            bool isEnable = false;
-            auto iBundleMgr = GetBundleMgr();
-            iBundleMgr->IsAbilityEnabled(abilityInfo, isEnable);
-            task.Resolve(engine, CreateJsValue(engine, isEnable));
-    };
-    NativeValue* lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnIsAbilityEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    std::string bundleName;
-    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = INVALID_PARAM;
-    }
-    if (info.argv[PARAM0]->TypeOf() != NATIVE_STRING) {
-        APP_LOGE("input params is not string!");
-        errCode = INVALID_PARAM;
-    } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
-        APP_LOGE("conversion failed!");
-        errCode = INVALID_PARAM;
-    }
-    AsyncTask::CompleteCallback complete = [bundleName, errCode, info]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (errCode != ERR_OK) {
-                task.Reject(engine, CreateJsError(engine, errCode, "type mismatch"));
-                return;
-            }
-            bool isEnable = false;
-            auto iBundleMgr = GetBundleMgr();
-            iBundleMgr->IsApplicationEnabled(bundleName, isEnable);
-            task.Resolve(engine, CreateJsValue(engine, isEnable));
-    };
-    NativeValue* lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnIsApplicationEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
     return result;
 }
 
