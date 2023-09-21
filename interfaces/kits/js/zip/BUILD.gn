@@ -33,12 +33,6 @@ config("zip_config") {
 ohos_shared_library("zlib") {
   stack_protector_ret = true
 
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   public_configs = [ ":zip_config" ]
 
   sources = [

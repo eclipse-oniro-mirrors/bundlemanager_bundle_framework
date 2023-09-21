@@ -17,12 +17,6 @@ import("../../../../appexecfwk.gni")
 ohos_shared_library("bundlemanager") {
   stack_protector_ret = true
 
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   include_dirs = [
     "//third_party/node/src",
     "${kits_path}/js/common",

@@ -24,12 +24,6 @@ config("bundlemgr_extension_config") {
 ohos_shared_library("bundlemgr_extension") {
   stack_protector_ret = true
 
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
-
   sources = [
     "src/bms_extension_data_mgr.cpp",
     "src/bms_extension_profile.cpp",
