@@ -1,0 +1,40 @@
+{
+    "module": {
+        "installaitonFree": false,
+        "mainElement": "MainAbility",
+        "name": "feature8",
+        "pages": "$profile:main_pages",
+        "srcEntry": "./ets/Application/AbilityStage.ts",
+        "type": "feature",
+        "virtualMachine": "ark",
+        "compressNativeLibs": true,
+        "libIsolation": true,
+        "deliveryWithInstall": true,
+        "description": "$string:entry_desc",
+        "descriptionId": 16777220,
+        "deviceTypes": [
+            "2in1",
+            "default",
+            "phone",
+            "tablet"
+        ],
+        "extensionAbilities": [
+            {
+              "name": "driverTest",
+              "type": "driver",
+              "visible": false,
+              "srcEntrance": "./ets/Application/AbilityStage.ts",
+              "description": "$string:entry_desc",
+              "icon":  "$media:icon",
+              "label": "$string:MainAbility_label",
+              "metadata": [
+                {
+                  "name": "demo1",
+                  "value": "",
+                  "resource": "$profile:main_pages"
+                }
+              ]
+            }
+        ]
+    }
+}
