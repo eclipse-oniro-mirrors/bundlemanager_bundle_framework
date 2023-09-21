@@ -8185,6 +8185,7 @@ HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0100, Function | SmallTest 
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
     seteuid(originUid);
     // uninstall
+    resvec.clear();
     Uninstall(bundleName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";

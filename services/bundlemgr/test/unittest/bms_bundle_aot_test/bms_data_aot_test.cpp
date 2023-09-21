@@ -47,7 +47,9 @@ const std::string STRING_TYPE_ONE = "string1";
 const std::string STRING_TYPE_TWO = "string2";
 const int32_t USERID_ONE = 100;
 const int32_t USERID_TWO = -1;
-
+constexpr uint32_t VERSION_CODE = 3;
+constexpr uint32_t OFFSET = 1001;
+constexpr uint32_t LENGTH = 2002;
 }  // namespace
 
 class BmsAOTMgrTest : public testing::Test {
@@ -102,10 +104,10 @@ HspInfo BmsAOTMgrTest::CreateHspInfo() const
     HspInfo hspInfo;
     hspInfo.bundleName = "bundleName";
     hspInfo.moduleName = "moduleName";
-    hspInfo.versionCode = 1;
+    hspInfo.versionCode = VERSION_CODE;
     hspInfo.hapPath = "hapPath";
-    hspInfo.offset = 2;
-    hspInfo.length = 3;
+    hspInfo.offset = OFFSET;
+    hspInfo.length = LENGTH;
     return hspInfo;
 }
 
@@ -513,8 +515,8 @@ HWTEST_F(BmsAOTMgrTest, AOTArgs_0200, Function | SmallTest | Level1)
     aotArgs.coreLibPath = "coreLibPath";
     aotArgs.outputPath = "outputPath";
     aotArgs.arkProfilePath = "arkProfilePath";
-    aotArgs.offset = 1;
-    aotArgs.length = 2;
+    aotArgs.offset = OFFSET;
+    aotArgs.length = LENGTH;
     aotArgs.hspVector.emplace_back(CreateHspInfo());
     aotArgs.hspVector.emplace_back(CreateHspInfo());
 
