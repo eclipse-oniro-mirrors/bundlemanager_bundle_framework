@@ -80,7 +80,8 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/atomicServicePanel", ExtensionAbilityType::SYSDIALOG_ATOMICSERVICEPANEL },
     { "sysDialog/power", ExtensionAbilityType::SYSDIALOG_POWER },
     { "sysPicker/share", ExtensionAbilityType::SYSPICKER_SHARE },
-    { "hms/account", ExtensionAbilityType::HMS_ACCOUNT }
+    { "hms/account", ExtensionAbilityType::HMS_ACCOUNT },
+    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI }
 };
 }; // namespace
 
