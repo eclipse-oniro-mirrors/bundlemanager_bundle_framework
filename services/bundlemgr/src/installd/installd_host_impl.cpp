@@ -169,7 +169,7 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-static void CreateBackupExtHomeDir(const std::string &bundleName, const int userid, const int uid)
+static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid)
 {
     // Setup BackupExtensionAbility's home directory in a harmless way
     std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
@@ -182,7 +182,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int user
     }
 }
 
-static void CreateShareDir(const std::string &bundleName, const int userid, const int uid, const int gid)
+static void CreateShareDir(const std::string &bundleName, const int32_t userid, const int32_t uid, const int32_t gid)
 {
     std::string bundleShareDir = SHARE_FILE_PATH + bundleName;
     bundleShareDir = bundleShareDir.replace(bundleShareDir.find("%"), 1, std::to_string(userid));
