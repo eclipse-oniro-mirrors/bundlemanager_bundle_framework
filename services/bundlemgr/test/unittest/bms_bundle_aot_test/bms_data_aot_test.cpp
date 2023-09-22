@@ -471,7 +471,7 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTHandler_1100
  * @tc.name: test AOTHandler
- * @tc.desc: bundle not exist, return td::nullopt
+ * @tc.desc: bundle not exist, return std::nullopt
  */
 HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
 {
