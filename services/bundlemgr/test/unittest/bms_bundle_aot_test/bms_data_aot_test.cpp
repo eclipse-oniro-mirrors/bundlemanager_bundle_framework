@@ -471,14 +471,13 @@ HWTEST_F(BmsAOTMgrTest, AOTHandler_1000, Function | SmallTest | Level0)
 /**
  * @tc.number: AOTHandler_1100
  * @tc.name: test AOTHandler
- * @tc.desc: 1. system running normally
- *           2. verify function return value
+ * @tc.desc: bundle not exist, return std::nullopt
  */
 HWTEST_F(BmsAOTMgrTest, AOTHandler_1100, Function | SmallTest | Level0)
 {
     InnerBundleInfo innerBundleInfo;
     auto ret = AOTHandler::GetInstance().BuildAOTArgs(innerBundleInfo, AOT_MODULE_NAME, "");
-    EXPECT_NE(ret, std::nullopt);
+    EXPECT_EQ(ret, std::nullopt);
 }
 
 /**
