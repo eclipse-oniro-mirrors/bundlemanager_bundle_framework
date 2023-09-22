@@ -67,7 +67,8 @@ enum class ExtensionAbilityType {
     SYSDIALOG_ATOMICSERVICEPANEL = 302,
     SYSDIALOG_POWER = 303,
     SYSPICKER_MEDIACONTROL = 400,
-    SYSPICKER_SHARE = 401
+    SYSPICKER_SHARE = 401,
+    SYS_COMMON_UI = 500
 };
 
 enum class CompileMode {
