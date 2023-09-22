@@ -372,6 +372,14 @@
         src="res" />
       <option name="push" value="test_bundle/driver_test/driver_feature6_hap.hap -> /data/test/resource/bms/driver_test/"
         src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature7_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature8_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature9_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature10_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
       <option name="push" value="test_bundle/driver_test/non_driver_entry1_hap.hap -> /data/test/resource/bms/driver_test/"
         src="res" />
     </preparer>

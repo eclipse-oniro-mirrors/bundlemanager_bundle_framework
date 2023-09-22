@@ -1047,12 +1047,16 @@ ohos_unittest("BmsBundleInstallDriverTest") {
   }
   deps = [
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature10_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature1_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature2_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature3_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature4_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature5_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature6_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature7_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature8_hap",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature9_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:driver_feature_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:non_driver_entry1_hap",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/driverTest:non_driver_entry_hap",

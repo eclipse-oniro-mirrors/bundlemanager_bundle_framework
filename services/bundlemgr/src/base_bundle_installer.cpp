@@ -988,6 +988,13 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
             AccessToken::AccessTokenKitRet::RET_SUCCESS) {
             APP_LOGE("delete accessToken failed");
         }
+
+        // remove driver file
+        std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+        for (const auto &info : newInfos) {
+            driverInstaller->RemoveDriverSoFile(info.second);
+        }
+
         // remove innerBundleInfo
         RemoveInfo(bundleName_, "");
         return;
@@ -1059,6 +1066,11 @@ void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo 
     } else {
         auto modulePackage = info.GetCurrentModulePackage();
         RemoveModuleDir(info.GetModuleDir(modulePackage));
+
+        // remove driver file
+        std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+        driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage));
+
         // remove module info
         RemoveInfo(bundleName_, modulePackage);
     }
@@ -3028,6 +3040,11 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
                 APP_LOGE("remove module dir failed");
                 return result;
             }
+
+            // remove driver file
+            std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+            driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(package));
+
             if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info)) {
                 APP_LOGE("RemoveModuleInfo failed");
                 return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;

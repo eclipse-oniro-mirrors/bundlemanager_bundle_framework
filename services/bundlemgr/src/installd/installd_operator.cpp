@@ -44,7 +44,7 @@ static const char LIB_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib/libdiff_patch_sh
 static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patch_shared.z.so";
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
-static std::string PREFIX_TARGET_PATH = "/data/service/el1/public/print_service/";
+static std::string PREFIX_TARGET_PATH = "/print_service/";
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
@@ -1144,7 +1144,8 @@ bool InstalldOperator::ExtractDriverSoFiles(const std::string &srcPath,
             APP_LOGE("the innerOriginalDir %{public}s is not existed in the hap", innerOriginalDir.c_str());
             return false;
         }
-        if (!CopyDriverSoFiles(extractor, innerOriginalDir, destinedDir)) {
+        std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
+        if (!CopyDriverSoFiles(extractor, innerOriginalDir, systemServiceDir + destinedDir)) {
             APP_LOGE("CopyDriverSoFiles failed");
             return false;
         }
