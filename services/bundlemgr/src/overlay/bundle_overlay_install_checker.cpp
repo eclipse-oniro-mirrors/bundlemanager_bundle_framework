@@ -28,7 +28,7 @@ ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const InnerBundleInfo &innerBundleInfo) const
 {
-    APP_LOGD("start to check internal overlay installation");
+    APP_LOGD("start");
     // 1. check hap type
     ErrCode result = CheckHapType(innerBundleInfo);
     if (result != ERR_OK) {
@@ -71,7 +71,7 @@ ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
 
 ErrCode BundleOverlayInstallChecker::CheckExternalBundle(const InnerBundleInfo &innerBundleInfo, int32_t userId) const
 {
-    APP_LOGD("start to check external overlay installation");
+    APP_LOGD("start");
     // 1. check bundle type
     ErrCode result = CheckBundleType(innerBundleInfo);
     if (result != ERR_OK) {
@@ -153,7 +153,7 @@ ErrCode BundleOverlayInstallChecker::CheckBundleType(const InnerBundleInfo &info
 
 ErrCode BundleOverlayInstallChecker::CheckTargetPriority(int32_t priority) const
 {
-    APP_LOGD("start to check overlay priority");
+    APP_LOGD("start");
     if ((priority < Constants::OVERLAY_MINIMUM_PRIORITY) || (priority > Constants::OVERLAY_MAXIMUM_PRIORITY)) {
         APP_LOGE("overlay hap has invalid module priority %{public}d", priority);
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_PRIORITY;
@@ -189,7 +189,7 @@ ErrCode BundleOverlayInstallChecker::CheckVersionCode(
 ErrCode BundleOverlayInstallChecker::CheckTargetBundle(const std::string &targetBundleName,
     const std::string &targetModuleName, const std::string &fingerprint, int32_t userId) const
 {
-    APP_LOGD("start to check target bundle");
+    APP_LOGD("start");
     if (targetBundleName.empty()) {
         APP_LOGE("invalid target bundle name");
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INVALID_BUNDLE_NAME;

@@ -72,7 +72,7 @@ bool OverlayDataMgr::IsExistedNonOverlayHap(const std::string &bundleName)
 
 ErrCode OverlayDataMgr::UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("start to update internal overlay info");
+    APP_LOGD("start");
     auto &innerModuleInfos = newInfo.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
         APP_LOGW("innerModuleInfos is empty");
@@ -93,7 +93,7 @@ ErrCode OverlayDataMgr::UpdateInternalOverlayInfo(const InnerBundleInfo &newInfo
 ErrCode OverlayDataMgr::UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo,
     InnerBundleInfo &targetInnerBundleInfo)
 {
-    APP_LOGD("start to update external overlay info");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -135,7 +135,7 @@ ErrCode OverlayDataMgr::UpdateExternalOverlayInfo(const InnerBundleInfo &newInfo
 
 ErrCode OverlayDataMgr::BuildOverlayConnection(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("start to update overlay connection");
+    APP_LOGD("start");
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     // 1. build overlay connection for internal overlay
     const auto &moduleInfos = newInfo.GetInnerModuleInfos();
@@ -207,7 +207,7 @@ ErrCode OverlayDataMgr::GetBundleDir(const std::string &moduleHapPath, std::stri
 
 ErrCode OverlayDataMgr::RemoveOverlayModuleConnection(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
 {
-    APP_LOGD("start to remove overlay connection before update");
+    APP_LOGD("start");
     const auto &innerModuleInfos = newInfo.GetInnerModuleInfos();
     if (innerModuleInfos.empty()) {
         APP_LOGW("innerModuleInfos is empty");
@@ -253,19 +253,19 @@ ErrCode OverlayDataMgr::RemoveOverlayModuleConnection(const InnerBundleInfo &new
 
 void OverlayDataMgr::RemoveOverlayBundleInfo(const std::string &bundleName, InnerBundleInfo &targetInnerBundleInfo)
 {
-    APP_LOGD("start to remove overlay bundleInfo under uninstalling external overlay");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return;
     }
     targetInnerBundleInfo.RemoveOverLayBundleInfo(bundleName);
     targetInnerBundleInfo.RemoveAllOverlayModuleInfo(bundleName);
-    APP_LOGD("finish to remove overlay bundleInfo");
+    APP_LOGD("finish");
 }
 
 void OverlayDataMgr::RemoveOverlayModuleInfo(const std::string &bundleName, const std::string &modulePackage,
     InnerBundleInfo &oldInfo, InnerBundleInfo &targetInnerBundleInfo)
 {
-    APP_LOGD("start to remove overlay moduleInfo under uninstalling overlay module");
+    APP_LOGD("start");
     if (!oldInfo.FindModule(modulePackage)) {
         return;
     }
@@ -294,7 +294,7 @@ void OverlayDataMgr::RemoveOverlayModuleInfo(const std::string &bundleName, cons
         // uninstall overlay module, remove state info from innerUserInfo
         oldInfo.ClearOverlayModuleStates(modulePackage);
     }
-    APP_LOGD("finish to remove overlay moduleInfo");
+    APP_LOGD("finish");
 }
 
 void OverlayDataMgr::ResetInternalOverlayModuleState(const std::map<std::string, InnerModuleInfo> &innerModuleInfos,
@@ -406,7 +406,7 @@ ErrCode OverlayDataMgr::SaveExternalOverlayModuleState(const OverlayModuleInfo &
 ErrCode OverlayDataMgr::GetAllOverlayModuleInfo(const std::string &bundleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfos, int32_t userId)
 {
-    APP_LOGD("start to get all overlay moduleInfo");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -453,7 +453,7 @@ ErrCode OverlayDataMgr::GetAllOverlayModuleInfo(const std::string &bundleName,
 ErrCode OverlayDataMgr::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get specific overlay moduleInfo");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -505,7 +505,7 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfo(const std::string &bundleName, cons
 ErrCode OverlayDataMgr::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
     std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
-    APP_LOGD("start to get target overlay bundle info");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -530,7 +530,7 @@ ErrCode OverlayDataMgr::GetOverlayBundleInfoForTarget(const std::string &targetB
 ErrCode OverlayDataMgr::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
     const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get target overlay module infos");
+    APP_LOGD("start");
     if (GetBundleDataMgr() != ERR_OK) {
         return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_ERROR;
     }
@@ -587,7 +587,7 @@ ErrCode OverlayDataMgr::GetOverlayModuleInfoForTarget(const std::string &targetB
 ErrCode OverlayDataMgr::GetOverlayModuleInfoForTarget(const InnerBundleInfo &innerBundleInfo,
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get all target overlay module infos");
+    APP_LOGD("start");
     const auto &InnerModuleInfos = innerBundleInfo.GetInnerModuleInfos();
     for (const auto &moduleInfo : InnerModuleInfos) {
         if (!moduleInfo.second.overlayModuleInfo.empty()) {
