@@ -101,7 +101,17 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     aotArgs.coreLibPath = Constants::EMPTY_STRING;
     aotArgs.outputPath = Constants::ARK_CACHE_PATH + aotArgs.bundleName + Constants::PATH_SEPARATOR + Constants::ARM64;
     // handle internal hsp
-    info.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr) {
+        APP_LOGE("dataMgr is null");
+        return std::nullopt;
+    }
+    InnerBundleInfo installedInfo;
+    if (!dataMgr->QueryInnerBundleInfo(info.GetBundleName(), installedInfo)) {
+        APP_LOGE("QueryInnerBundleInfo failed");
+        return std::nullopt;
+    }
+    installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }
