@@ -86,11 +86,11 @@ public:
     /**
      * @brief Parse default extension type name file, then save in ParseExtensionTypeConfig info.
      * @param configFile Indicates the path of configFile.
-     * @param extensionTypeConfig Indicates the obtained ParseExtensionTypeConfig object.
+     * @param extensionTypeList Indicates the obtained extension type name list.
      * @return Returns ERR_OK if the extensionType successfully parsed; returns ErrCode otherwise.
      */
     ErrCode ParseExtTypeConfig(
-        const std::string &configFile, std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const;
+        const std::string &configFile, std::set<std::string> &extensionTypeList) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

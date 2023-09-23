@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -123,31 +123,6 @@ struct PreScanInfo {
         return "[ bundleDir = " + bundleDir
             + ", removable = " + GetBoolStrVal(removable)
             + ", priority = " + std::to_string(priority) + "]";
-    }
-};
-
-struct ParseExtensionTypeConfig {
-    std::string typeName;
-
-    bool operator<(const ParseExtensionTypeConfig &parseExtensionTypeConfig) const
-    {
-        return typeName < parseExtensionTypeConfig.typeName;
-    }
-
-    friend bool operator==(const ParseExtensionTypeConfig &oldParseExtensionTypeConfig,
-        const ParseExtensionTypeConfig &newParseExtensionTypeConfig)
-    {
-        return oldParseExtensionTypeConfig.typeName == newParseExtensionTypeConfig.typeName;
-    }
-
-    void Reset()
-    {
-        typeName.clear();
-    }
-
-    std::string ToString() const
-    {
-        return "[ typeName = " + typeName + "]";
     }
 };
 }  // namespace AppExecFwk

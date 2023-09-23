@@ -199,14 +199,5 @@ ErrCode BundleMgrClient::GetSandboxHapModuleInfo(const AbilityInfo &abilityInfo,
     }
     return impl_->GetSandboxHapModuleInfo(abilityInfo, appIndex, userId, hapModuleInfo);
 }
-
-bool BundleMgrClient::CheckExtensionTypeInConfig(const std::string &typeName)
-{
-    if (impl_ == nullptr) {
-        APP_LOGE("Bundle mgr client impl is nullptr");
-        return false;
-    }
-    return impl_->CheckExtensionTypeInConfig(typeName);
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

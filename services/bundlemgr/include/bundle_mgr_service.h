@@ -133,12 +133,6 @@ public:
 
     bool IsBrokerServiceStarted() const;
 
-    /**
-     * @brief Check extension type name in the configuration file.
-     * @param typeName Indicates the typeName to check in the configuration file.
-     * @return Returns true if the typeName is in the configuration file; returns false otherwise.
-     */
-    bool CheckExtensionTypeInConfig(const std::string &typeName);
     void RegisterChargeIdleListener();
 
 protected:

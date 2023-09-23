@@ -100,7 +100,7 @@ constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.syste
 std::set<PreScanInfo> installList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
-std::set<ParseExtensionTypeConfig> extensiontype_;
+std::set<std::string> extensiontype_;
 bool hasLoadPreInstallProFile_ = false;
 
 void MoveTempPath(const std::vector<std::string> &fromPaths,
@@ -1709,12 +1709,10 @@ bool BMSEventHandler::CheckExtensionTypeInConfig(const std::string &typeName)
         return false;
     }
 
-    ParseExtensionTypeConfig extensionTypeConfig;
-    extensionTypeConfig.typeName = typeName;
-    auto iter = extensiontype_.find(extensionTypeConfig);
+    auto iter = extensiontype_.find(typeName);
     if (iter == extensiontype_.end()) {
         APP_LOGE("ExtensionTypeConfig does not have '(%{public}s)' type",
-            extensionTypeConfig.typeName.c_str());
+            typeName.c_str());
         return false;
     }
 

@@ -3659,7 +3659,7 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     return true;
 }
 
-ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &extensionTypeName,
     const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     MessageParcel data;
@@ -3671,7 +3671,7 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want,
         APP_LOGE("Write want fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    if (!data.WriteString(typeName)) {
+    if (!data.WriteString(extensionTypeName)) {
         APP_LOGE("Write type fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -4016,34 +4016,6 @@ bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelable
 
     ClearAshmem(ashmem);
     APP_LOGD("Get parcelable vector from ashmem success");
-    return true;
-}
-
-bool BundleMgrProxy::CheckExtensionTypeInConfig(const std::string &typeName)
-{
-    MessageParcel data;
-    if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("Write InterfaceToken fail");
-        return false;
-    }
-
-    if (!data.WriteString(typeName)) {
-        APP_LOGE("Write typeName fail");
-        return false;
-    }
-
-    MessageParcel reply;
-    if (!SendTransactCmd(BundleMgrInterfaceCode::CHECK_EXTENSION_TYPE_IN_CONFIG, data, reply)) {
-        APP_LOGE("Fail to check extension typeName from server");
-        return false;
-    }
-
-    auto result = reply.ReadBool();
-    if (!result) {
-        APP_LOGE("Fail to check extension typeName from server");
-        return false;
-    }
-
     return true;
 }
 

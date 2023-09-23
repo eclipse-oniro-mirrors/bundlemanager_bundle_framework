@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
+ * Copyright (c) 2022 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -563,22 +563,6 @@ void BundleMgrClientImpl::OnDeath()
     std::lock_guard<std::mutex> lock(mutex_);
     bundleMgr_ = nullptr;
     bundleInstaller_ = nullptr;
-}
-
-bool BundleMgrClientImpl::CheckExtensionTypeInConfig(const std::string &typeName)
-{
-    if (typeName.empty()) {
-        return false;
-    }
-    ErrCode result = Connect();
-    if (result != ERR_OK) {
-        APP_LOGE("Failed to connect");
-        return false;
-    }
-    if (bundleMgr_ == nullptr) {
-        return false;
-    }
-    return bundleMgr_->CheckExtensionTypeInConfig(typeName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

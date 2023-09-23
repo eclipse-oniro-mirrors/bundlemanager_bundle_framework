@@ -460,10 +460,5 @@ bool BundleMgrService::IsBrokerServiceStarted() const
 {
     return isBrokerServiceStarted_;
 }
-
-bool BundleMgrService::CheckExtensionTypeInConfig(const std::string &typeName)
-{
-    return BMSEventHandler::CheckExtensionTypeInConfig(typeName);
-}
 }  // namespace AppExecFwk
 }  // namespace OHOS

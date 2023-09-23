@@ -312,8 +312,6 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetPreferenceDirByGroupId);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME),
         &BundleMgrHost::HandleQueryAppGalleryBundleName);
-    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::CHECK_EXTENSION_TYPE_IN_CONFIG),
-        &BundleMgrHost::HandleCheckExtensionTypeInConfig);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
         &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
@@ -2813,11 +2811,11 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    std::string typeName = data.ReadString();
+    std::string extensionTypeName = data.ReadString();
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
-    ErrCode ret = QueryExtensionAbilityInfosWithTypeName(*want, typeName, flags, userId, extensionAbilityInfos);
+    ErrCode ret = QueryExtensionAbilityInfosWithTypeName(*want, extensionTypeName, flags, userId, extensionAbilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2937,18 +2935,6 @@ ErrCode BundleMgrHost::WriteBigParcelable(T &parcelable, const char *ashmemName,
             APP_LOGE("write failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
         }
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleMgrHost::HandleCheckExtensionTypeInConfig(MessageParcel &data, MessageParcel &reply)
-{
-    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
-    std::string typeName = data.ReadString();
-    bool ret = CheckExtensionTypeInConfig(typeName);
-    if (!reply.WriteBool(ret)) {
-        APP_LOGE("Write typeName failed");
-        return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;
 }

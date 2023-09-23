@@ -56,12 +56,11 @@ public:
     /**
      * @brief Transform the jsonBuf to extensionTypeConfig.
      * @param jsonBuf Indicates the jsonBuf.
-     * @param extensionTypeConfig Indicates the extensionTypeConfig.
+     * @param extensionTypeList Indicates the obtained extension type name list.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
-    ErrCode TransformTo(
-        const nlohmann::json &jsonBuf,
-        std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const;
+    ErrCode TransformJsonToExtensionTypeList(
+        const nlohmann::json &jsonBuf, std::set<std::string> &extensionTypeList) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -29,8 +29,8 @@ struct ExtensionParamInfo {
     int32_t extensionAbilityType = static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED);
     int32_t flags = 0;
     int32_t userId = Constants::UNSPECIFIED_USERID;
-    std::string typeName;
-    bool isStringFlag = false;
+    std::string extensionTypeName;
+    bool isExtensionTypeName = false;
 };
 
 napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info);

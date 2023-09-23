@@ -41,7 +41,7 @@ constexpr const char* UID = "uid";
 constexpr const char* EXTENSIONABILITY_TYPE = "extensionAbilityType";
 constexpr const char* FLAGS = "flags";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
-constexpr const char* TYPE_NAME = "typeName";
+constexpr const char* EXTENSION_TYPE_NAME = "extensionTypeName";
 const std::string SET_APPLICATION_ENABLED_SYNC = "SetApplicationEnabledSync";
 const std::string SET_ABILITY_ENABLED_SYNC = "SetAbilityEnabledSync";
 const std::string IS_APPLICATION_ENABLED_SYNC = "IsApplicationEnabledSync";
@@ -217,11 +217,11 @@ bool ParamsExtensionTypeSync(napi_env env, napi_valuetype valueType, napi_value 
     ExtensionParamInfo& extensionParamInfo)
 {
     if (valueType == napi_number) {
-        extensionParamInfo.isStringFlag = false;
+        extensionParamInfo.isExtensionTypeName = false;
         return CommonFunc::ParseInt(env, args, extensionParamInfo.extensionAbilityType);
     } else if (valueType == napi_string) {
-        extensionParamInfo.isStringFlag = true;
-        return CommonFunc::ParseString(env, args, extensionParamInfo.typeName);
+        extensionParamInfo.isExtensionTypeName = true;
+        return CommonFunc::ParseString(env, args, extensionParamInfo.extensionTypeName);
     }
     APP_LOGE("Parameter is invalid");
     return false;
@@ -248,7 +248,8 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
         } else if (i == ARGS_POS_ONE) {
             if (!ParamsExtensionTypeSync(env, valueType, args[i], extensionParamInfo)) {
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR,
-                    (extensionParamInfo.isStringFlag ? TYPE_NAME : EXTENSIONABILITY_TYPE), TYPE_NUMBER);
+                    (extensionParamInfo.isExtensionTypeName ? EXTENSION_TYPE_NAME : EXTENSIONABILITY_TYPE),
+                    (extensionParamInfo.isExtensionTypeName ? TYPE_STRING : TYPE_NUMBER));
                 return ERROR_PARAM_CHECK_ERROR;
             }
         } else if (i == ARGS_POS_TWO) {
@@ -290,7 +291,7 @@ napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
         BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
         return nullptr;
     }
-    if (!extensionParamInfo.isStringFlag) {
+    if (!extensionParamInfo.isExtensionTypeName) {
         if (extensionParamInfo.extensionAbilityType == static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED)) {
             APP_LOGD("Query extensionAbilityInfo sync without type");
             ret = CommonFunc::ConvertErrCode(iBundleMgr->QueryExtensionAbilityInfosV9(extensionParamInfo.want,
@@ -302,9 +303,11 @@ napi_value QueryExtensionInfosSync(napi_env env, napi_callback_info info)
                 type, extensionParamInfo.flags, extensionParamInfo.userId, extensionInfos));
         }
     } else {
-        APP_LOGD("Query extensionAbilityInfo sync with typeName %{public}s", extensionParamInfo.typeName.c_str());
+        APP_LOGD("Query extensionAbilityInfo sync with extensionTypeName %{public}s",
+            extensionParamInfo.extensionTypeName.c_str());
         ret = CommonFunc::ConvertErrCode(iBundleMgr->QueryExtensionAbilityInfosWithTypeName(extensionParamInfo.want,
-            extensionParamInfo.typeName, extensionParamInfo.flags, extensionParamInfo.userId, extensionInfos));
+            extensionParamInfo.extensionTypeName, extensionParamInfo.flags, extensionParamInfo.userId,
+            extensionInfos));
     }
     if (ret != NO_ERROR) {
         APP_LOGE("QueryExtensionAbilityInfosV9 failed");

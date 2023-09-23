@@ -388,15 +388,14 @@ ErrCode PreBundleProfile::TransformTo(
     return ERR_OK;
 }
 
-ErrCode PreBundleProfile::TransformTo(
-    const nlohmann::json &jsonBuf,
-    std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const
+ErrCode PreBundleProfile::TransformJsonToExtensionTypeList(
+    const nlohmann::json &jsonBuf, std::set<std::string> &extensionTypeList) const
 {
     if (jsonBuf.is_discarded()) {
         APP_LOGE("Profile format error");
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
-    
+
     if (jsonBuf.find(EXTENSION_TYPE) == jsonBuf.end()) {
         APP_LOGE("Profile does not have 'extensionType'key");
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
@@ -408,32 +407,24 @@ ErrCode PreBundleProfile::TransformTo(
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
     }
 
-    ParseExtensionTypeConfig parseExtensionTypeConfig;
     for (const auto &array : arrays) {
         if (!array.is_object()) {
             APP_LOGE("Array is not json object");
             return ERR_APPEXECFWK_PARSE_PROFILE_PROP_TYPE_ERROR;
         }
 
-        parseExtensionTypeConfig.Reset();
+        std::string extensionAbilityType;
         const auto &jsonObjectEnd = array.end();
         int32_t parseResult = ERR_OK;
         GetValueIfFindKey<std::string>(array,
             jsonObjectEnd,
             TYPE_NAME,
-            parseExtensionTypeConfig.typeName,
+            extensionAbilityType,
             JsonType::STRING,
             true,
             parseResult,
             ArrayType::NOT_ARRAY);
-
-        auto iter = std::find(extensionTypeConfig.begin(), extensionTypeConfig.end(), parseExtensionTypeConfig);
-        if (iter != extensionTypeConfig.end()) {
-            APP_LOGE("Replace old extensionTypeConfig(%{public}s)", parseExtensionTypeConfig.typeName.c_str());
-            extensionTypeConfig.erase(iter);
-        }
-
-        extensionTypeConfig.insert(parseExtensionTypeConfig);
+        extensionTypeList.insert(extensionAbilityType);
     }
 
     return ERR_OK;

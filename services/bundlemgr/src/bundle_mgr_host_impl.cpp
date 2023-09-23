@@ -2875,11 +2875,6 @@ bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
     return  true;
 }
 
-bool BundleMgrHostImpl::CheckExtensionTypeInConfig(const std::string &typeName)
-{
-    return DelayedSingleton<BundleMgrService>::GetInstance()->CheckExtensionTypeInConfig(typeName);
-}
-
 ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
     int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
@@ -2907,8 +2902,8 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     } else {
         for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
             APP_LOGD("Input typeName is %{public}s, info.type is %{public}s",
-                typeName.c_str(), info.typeName.c_str());
-            if (typeName == info.typeName) {
+                typeName.c_str(), info.extensionTypeName.c_str());
+            if (typeName == info.extensionTypeName) {
                 extensionInfos.emplace_back(info);
             }
         });

@@ -274,7 +274,7 @@ ErrCode BundleParser::ParseDefaultPermission(
 }
 
 ErrCode BundleParser::ParseExtTypeConfig(
-    const std::string &configFile, std::set<ParseExtensionTypeConfig> &extensionTypeConfig) const
+    const std::string &configFile, std::set<std::string> &extensionTypeList) const
 {
     nlohmann::json jsonBuf;
     if (!ReadFileIntoJson(configFile, jsonBuf)) {
@@ -283,7 +283,7 @@ ErrCode BundleParser::ParseExtTypeConfig(
     }
 
     PreBundleProfile preBundleProfile;
-    return preBundleProfile.TransformTo(jsonBuf, extensionTypeConfig);
+    return preBundleProfile.TransformJsonToExtensionTypeList(jsonBuf, extensionTypeList);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
