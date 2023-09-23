@@ -42,6 +42,12 @@ struct AsyncWorkData {
     napi_ref callback = nullptr;
 };
 
+struct BaseCallbackInfo: public AsyncWorkData {
+    explicit BaseCallbackInfo(napi_env napiEnv) : AsyncWorkData(napiEnv) {}
+    int32_t err = 0;
+    std::string message;
+};
+
 struct QueryParameter {
     int flags;
     std::string userId;
@@ -49,6 +55,26 @@ struct QueryParameter {
 
 struct BundleOptions {
     int32_t userId = Constants::UNSPECIFIED_USERID;
+};
+
+struct AbilityEnableCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    AbilityInfo abilityInfo;
+    bool isEnable = false;
+};
+
+struct ApplicationEnableCallbackInfo : public BaseCallbackInfo {
+    explicit ApplicationEnableCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    bool isEnable = false;
+};
+
+struct LaunchWantCallbackInfo : public BaseCallbackInfo {
+    explicit LaunchWantCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    OHOS::AAFwk::Want want;
+    ErrCode ret = ERR_OK;
 };
 
 struct AsyncAbilityInfoCallbackInfo : public AsyncWorkData {
@@ -83,17 +109,6 @@ struct AsyncBundleInfoCallbackInfo : public AsyncWorkData {
     int32_t err = 0;
     std::string message;
     BundleOptions bundleOptions;
-};
-
-struct AsyncApplicationInfoCallbackInfo : public AsyncWorkData {
-    explicit AsyncApplicationInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
-    std::string bundleName;
-    int32_t flags = 0;
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    OHOS::AppExecFwk::ApplicationInfo appInfo;
-    bool ret = false;
-    int32_t err = 0;
-    std::string message;
 };
 
 struct AsyncPermissionDefCallbackInfo : public AsyncWorkData {
@@ -277,7 +292,9 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfos(napi_env env, napi_callback_info info);
 napi_value UnregisterPermissionsChanged(napi_env env, napi_callback_info info);
 napi_value ClearBundleCache(napi_env env, napi_callback_info info);
-napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
+napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
+napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
@@ -344,9 +361,6 @@ public:
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetLaunchWantForBundle(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* IsAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* IsApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
@@ -364,9 +378,6 @@ private:
     NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetLaunchWantForBundle(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnIsAbilityEnabled(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnIsApplicationEnabled(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
