@@ -382,7 +382,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0600, Function | SmallTest | 
  * @tc.number: InstallDriverTest_0700
  * @tc.name: test the installation of driver bundle
  * @tc.desc: 1. install bundle of driver type, the prefix of the target dir does not contain
-                "/data/service/el1/public/print_service/cups/".
+                "/print_service".
  *           2. install failed.
  */
 HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0700, Function | SmallTest | Level0)
@@ -545,7 +545,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1400, Function | SmallTest | 
  * @tc.number: InstallDriverTest_1500
  * @tc.name: test the installation of driver bundle
  * @tc.desc: 1. install some haps, part of them are driver type and the prefix of the target dir does not contain
-                "/data/service/el1/public/print_service/cups/".
+                "/print_service".
  *           2. install failed.
  */
 HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1500, Function | SmallTest | Level0)
@@ -684,7 +684,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2100, Function | SmallTest | 
  * @tc.name: test the installation of driver bundle
  * @tc.desc: 1. install some haps, all of them are driver type and part of them contain metdata.
  *           2. name of the metadata is satisified the rule to copy driver files, but target dir does not contain
- *              "/data/service/el1/public/print_service/cups/".
+ *              "/print_service".
  *           3. install failed.
  */
 HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2200, Function | SmallTest | Level0)
@@ -806,7 +806,7 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2700, Function | SmallTest | 
  * @tc.name: test the installation of driver bundle
  * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
  *           2. partial names of the metadata is satisified the rule to copy driver files, but target dir does not
- *              contain "/data/service/el1/public/print_service/cups/".
+ *              contain "/print_service".
  *           3. install failed.
  */
 HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2800, Function | SmallTest | Level0)
@@ -823,8 +823,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2800, Function | SmallTest | 
  * @tc.number: InstallDriverTest_2900
  * @tc.name: test the installation of driver bundle
  * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
- *           2. partial names of the metadata is satisified the rule to copy driver files and resource dir and target dir
- *              are valid.
+ *           2. partial names of the metadata is satisified the rule to copy driver files and resource dir and target
+ *              dir are valid.
  *           3. install successfully.
  */
 HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2900, Function | SmallTest | Level0)
@@ -913,5 +913,319 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_3400
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and partial resource dirs are
+ *              not existed.
+ *           3. install failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3400, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE,
+        RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_3500
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and partial resource dirs do not
+ *              contain "/resources/rawfile/".
+ *           3. install failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3500, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE,
+        RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_3600
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and partial target dirs are
+ *              not existed.
+ *           3. install failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3600, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE,
+        RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_3700
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and partial target dirs do not
+ *              contain "/print_service".
+ *           3. install failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3700, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE,
+        RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_3800
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install some haps, all of them are driver type and all contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and all dirs are valid.
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3800, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE,
+        RESOURCE_ROOT_PATH + DRIVER_FEATURE10_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4300
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, all of them are non-driver type.
+ *           2. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4300, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY1_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4400
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial of them are driver type, but without metadata.
+ *           2. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4400, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4500
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial of them are driver type with metadata, but name of metadata does not
+ *              satisify the rule to copy file.
+ *           2. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4500, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE1_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4600
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial haps are driver type and contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and resource dirs are
+ *              not existed.
+ *           3. update failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4600, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE2_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4700
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial haps are driver type and contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and prefix of partial resource dirs
+ *              are not "/resources/rawfile/".
+ *           3. update failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4700, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE3_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4800
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial haps are driver type and contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and partial target dirs are
+ *              not existed.
+ *           3. update failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4800, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE4_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_4900
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial haps are driver type and contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and prefix of partial target dirs are
+ *              not "/print_service".
+ *           3. update failed.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4900, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5000
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps, partial haps are driver type and contain metadata.
+ *           2. name of the metadata is satisified the rule to copy driver files and resource and target dirs are
+ *              valid.
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5000, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5100
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. update some haps which are driver type with metadata.
+ *           2. update successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 } // OHOS
