@@ -291,6 +291,7 @@ const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 // hmdfs and sharefs config
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
+constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

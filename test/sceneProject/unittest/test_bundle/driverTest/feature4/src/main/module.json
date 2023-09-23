@@ -30,7 +30,7 @@
               "metadata": [
                 {
                   "name": "cupsFilter",
-                  "value": "/data/service/el1/public/print_service/cupsss/datadir/model",
+                  "value": "/print_service/cupsss/datadir/model",
                   "resource": "/resources/rawfile/main_pages.json"
                 }
               ]

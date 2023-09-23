@@ -230,3 +230,95 @@ ohos_resources("hjs_demo_entry1_resources") {
 ohos_js_assets("hjs_demo_js_entry1_assets") {
   source_dir = "entry1/src/main/ets"
 }
+
+ohos_hap("driver_feature7_hap") {
+  hap_profile = "feature7/src/main/module.json"
+  hap_name = "driver_feature7_hap"
+  subsystem_name = "bundlemanager"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/test_bundle/driver_test/${hap_name}.hap"
+  testonly = true
+  deps = [
+    ":hjs_demo_feature7_resources",
+    ":hjs_demo_js_feature7_assets",
+  ]
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.driverTest.p7b"
+}
+
+ohos_resources("hjs_demo_feature7_resources") {
+  sources = [ "feature7/src/main/resources" ]
+  deps = [ ":bmsstagedemotwo_app_profile" ]
+  hap_profile = "feature7/src/main/module.json"
+}
+
+ohos_js_assets("hjs_demo_js_feature7_assets") {
+  source_dir = "feature7/src/main/ets"
+}
+
+ohos_hap("driver_feature8_hap") {
+  hap_profile = "feature8/src/main/module.json"
+  hap_name = "driver_feature8_hap"
+  subsystem_name = "bundlemanager"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/test_bundle/driver_test/${hap_name}.hap"
+  testonly = true
+  deps = [
+    ":hjs_demo_feature8_resources",
+    ":hjs_demo_js_feature8_assets",
+  ]
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.driverTest.p7b"
+}
+
+ohos_resources("hjs_demo_feature8_resources") {
+  sources = [ "feature8/src/main/resources" ]
+  deps = [ ":bmsstagedemotwo_app_profile" ]
+  hap_profile = "feature8/src/main/module.json"
+}
+
+ohos_js_assets("hjs_demo_js_feature8_assets") {
+  source_dir = "feature8/src/main/ets"
+}
+
+ohos_hap("driver_feature9_hap") {
+  hap_profile = "feature9/src/main/module.json"
+  hap_name = "driver_feature9_hap"
+  subsystem_name = "bundlemanager"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/test_bundle/driver_test/${hap_name}.hap"
+  testonly = true
+  deps = [
+    ":hjs_demo_feature9_resources",
+    ":hjs_demo_js_feature9_assets",
+  ]
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.driverTest.p7b"
+}
+
+ohos_resources("hjs_demo_feature9_resources") {
+  sources = [ "feature9/src/main/resources" ]
+  deps = [ ":bmsstagedemotwo_app_profile" ]
+  hap_profile = "feature9/src/main/module.json"
+}
+
+ohos_js_assets("hjs_demo_js_feature9_assets") {
+  source_dir = "feature9/src/main/ets"
+}
+
+ohos_hap("driver_feature10_hap") {
+  hap_profile = "feature10/src/main/module.json"
+  hap_name = "driver_feature10_hap"
+  subsystem_name = "bundlemanager"
+  final_hap_path = "$root_out_dir/tests/unittest/bundle_framework/bundlemgrservice/resource/test_bundle/driver_test/${hap_name}.hap"
+  testonly = true
+  deps = [
+    ":hjs_demo_feature10_resources",
+    ":hjs_demo_js_feature10_assets",
+  ]
+  certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.driverTest.p7b"
+}
+
+ohos_resources("hjs_demo_feature10_resources") {
+  sources = [ "feature10/src/main/resources" ]
+  deps = [ ":bmsstagedemotwo_app_profile" ]
+  hap_profile = "feature10/src/main/module.json"
+}
+
+ohos_js_assets("hjs_demo_js_feature10_assets") {
+  source_dir = "feature10/src/main/ets"
+}
