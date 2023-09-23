@@ -285,6 +285,8 @@ napi_value WrapVoidToJS(napi_env env);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
+napi_value GetBundleInfo(napi_env env, napi_callback_info info);
+napi_value GetNameForUid(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetAllFormsInfo(napi_env env, napi_callback_info info);
 napi_value GetFormsInfoByApp(napi_env env, napi_callback_info info);
@@ -296,7 +298,10 @@ napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
 napi_value SetAbilityEnabled(napi_env env, napi_callback_info info);
+napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
+napi_value GetAbilityInfo(napi_env env, napi_callback_info info);
+napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
 
 napi_value CreateAbilityTypeObject(napi_env env);
@@ -361,14 +366,9 @@ public:
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetNameForUid(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAbilityInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAbilityLabel(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* QueryAbilityInfos(NativeEngine *engine, NativeCallbackInfo *info);
+    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);    
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info);
@@ -378,18 +378,11 @@ private:
     NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetNameForUid(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
-    NativeValue* OnQueryAbilityInfos(NativeEngine &engine, NativeCallbackInfo &info);
     static int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
         std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
-    static int32_t InitGetAbilityLabel(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
-        std::string &errMessage, std::shared_ptr<JsAbilityLabel> abilityLabel);
     NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
