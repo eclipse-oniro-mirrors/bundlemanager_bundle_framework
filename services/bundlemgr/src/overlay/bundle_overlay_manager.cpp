@@ -20,9 +20,9 @@ namespace OHOS {
 namespace AppExecFwk {
 bool BundleOverlayManager::IsExistedNonOverlayHap(const std::string &bundleName)
 {
-    APP_LOGD("overlayManager query if the bundle contain non overlay hap");
+    APP_LOGD("start");
     if (bundleName.empty()) {
-        APP_LOGE("invalid bundleName for checking whether non-overlay hap in the bundle");
+        APP_LOGE("invalid bundleName");
         return false;
     }
     return OverlayDataMgr::GetInstance()->IsExistedNonOverlayHap(bundleName);
@@ -30,9 +30,9 @@ bool BundleOverlayManager::IsExistedNonOverlayHap(const std::string &bundleName)
 
 bool BundleOverlayManager::GetInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info)
 {
-    APP_LOGD("start to get inner bundleInfo");
+    APP_LOGD("start");
     if (bundleName.empty()) {
-        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        APP_LOGE("invalid bundleName");
         return false;
     }
 
@@ -42,9 +42,9 @@ bool BundleOverlayManager::GetInnerBundleInfo(const std::string &bundleName, Inn
 ErrCode BundleOverlayManager::GetAllOverlayModuleInfo(const std::string &bundleName,
     std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get all overlay ModuleInfo");
+    APP_LOGD("start");
     if (bundleName.empty() || userId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        APP_LOGE("invalid bundleName or userId");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
@@ -54,9 +54,9 @@ ErrCode BundleOverlayManager::GetAllOverlayModuleInfo(const std::string &bundleN
 ErrCode BundleOverlayManager::GetOverlayModuleInfo(const std::string &bundleName, const std::string &moduleName,
     OverlayModuleInfo &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get overlay moduleInfo");
+    APP_LOGD("start");
     if (bundleName.empty() || moduleName.empty() || userId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        APP_LOGE("invalid bundleName、moduleName or userId");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
@@ -66,9 +66,9 @@ ErrCode BundleOverlayManager::GetOverlayModuleInfo(const std::string &bundleName
 ErrCode BundleOverlayManager::GetOverlayBundleInfoForTarget(const std::string &targetBundleName,
     std::vector<OverlayBundleInfo> &overlayBundleInfo, int32_t userId)
 {
-    APP_LOGD("start to get overlay bundleInfo for target bundle");
+    APP_LOGD("start");
     if (targetBundleName.empty() || userId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        APP_LOGE("invalid bundleName or userId");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
@@ -78,9 +78,9 @@ ErrCode BundleOverlayManager::GetOverlayBundleInfoForTarget(const std::string &t
 ErrCode BundleOverlayManager::GetOverlayModuleInfoForTarget(const std::string &targetBundleName,
     const std::string &targetModuleName, std::vector<OverlayModuleInfo> &overlayModuleInfo, int32_t userId)
 {
-    APP_LOGD("start to get overlay moduleInfo for target bundle and targte module");
+    APP_LOGD("start");
     if (targetBundleName.empty() || userId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid bundleName for get innerBundleInfo");
+        APP_LOGE("invalid bundleName or userId");
         return ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PARAM_ERROR;
     }
 
@@ -91,9 +91,9 @@ ErrCode BundleOverlayManager::GetOverlayModuleInfoForTarget(const std::string &t
 ErrCode BundleOverlayManager::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
     bool isEnabled, int32_t userId)
 {
-    APP_LOGD("start to SetOverlayEnabled");
+    APP_LOGD("start");
     if (bundleName.empty() || moduleName.empty() || userId == Constants::INVALID_USERID) {
-        APP_LOGE("invalid bundleName or userId for get innerBundleInfo");
+        APP_LOGE("invalid bundleName、moduleName or userId");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
     }
     return OverlayDataMgr::GetInstance()->SetOverlayEnabled(bundleName, moduleName, isEnabled, userId);

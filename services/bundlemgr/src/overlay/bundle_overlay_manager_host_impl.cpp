@@ -27,12 +27,12 @@ namespace OHOS {
 namespace AppExecFwk {
 OverlayManagerHostImpl::OverlayManagerHostImpl()
 {
-    APP_LOGI("create OverlayManagerHostImpl");
+    APP_LOGI("create");
 }
 
 OverlayManagerHostImpl::~OverlayManagerHostImpl()
 {
-    APP_LOGI("destory OverlayManagerHostImpl");
+    APP_LOGI("destory");
 }
 
 ErrCode OverlayManagerHostImpl::GetAllOverlayModuleInfo(const std::string &bundleName,
@@ -222,7 +222,7 @@ ErrCode OverlayManagerHostImpl::GetOverlayModuleInfoForTarget(const std::string 
 ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &moduleName, bool isEnabled,
     int32_t userId)
 {
-    APP_LOGD("start to SetOverlayEnabledForSelf");
+    APP_LOGD("start");
     if (moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
@@ -243,7 +243,7 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabledForSelf(const std::string &modu
 ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName, const std::string &moduleName,
     bool isEnabled, int32_t userId)
 {
-    APP_LOGD("start to SetOverlayEnabled");
+    APP_LOGD("start");
     if (bundleName.empty() || moduleName.empty()) {
         APP_LOGE("invalid param");
         return ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR;
@@ -266,7 +266,7 @@ ErrCode OverlayManagerHostImpl::SetOverlayEnabled(const std::string &bundleName,
 
 ErrCode OverlayManagerHostImpl::VerifySystemApi()
 {
-    APP_LOGD("begin to verify system app");
+    APP_LOGD("start");
     if (BundlePermissionMgr::VerifySystemApp()) {
         return ERR_OK;
     }
@@ -275,7 +275,7 @@ ErrCode OverlayManagerHostImpl::VerifySystemApi()
 
 ErrCode OverlayManagerHostImpl::IsNativeTokenType()
 {
-    APP_LOGD("begin to verify whether native token");
+    APP_LOGD("start");
     if (BundlePermissionMgr::IsNativeTokenType()) {
         return ERR_OK;
     }
