@@ -38,6 +38,7 @@ const std::string DESCRIPTION = "description";
 const std::string DESCRIPTION_ID = "descriptionId";
 const std::string PRIORITY = "priority";
 const std::string TYPE = "type";
+const std::string EXTENSION_TYPE_NAME = "extensionTypeName";
 const std::string PERMISSIONS = "permissions";
 const std::string READ_PERMISSION = "readPermission";
 const std::string WRITE_PERMISSION = "writePermission";
@@ -89,6 +90,41 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
     { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI }
 };
+
+bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)
+{
+    int32_t skillUriSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUriSize);
+    CONTAINER_SECURITY_VERIFY(parcel, skillUriSize, &skillUri);
+    for (auto i = 0; i < skillUriSize; i++) {
+        SkillUriForAbilityAndExtension stctUri;
+        stctUri.scheme = Str16ToStr8(parcel.ReadString16());
+        stctUri.host = Str16ToStr8(parcel.ReadString16());
+        stctUri.port = Str16ToStr8(parcel.ReadString16());
+        stctUri.path = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathStartWith = Str16ToStr8(parcel.ReadString16());
+        stctUri.pathRegex = Str16ToStr8(parcel.ReadString16());
+        stctUri.type = Str16ToStr8(parcel.ReadString16());
+        skillUri.emplace_back(stctUri);
+    }
+    return true;
+}
+
+bool ReadMetadataFromParcel(Parcel &parcel, std::vector<Metadata> &metadata)
+{
+    int32_t metadataSize = 0;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
+    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
+    for (auto i = 0; i < metadataSize; i++) {
+        std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
+        if (!meta) {
+            APP_LOGE("ReadParcelable<Metadata> failed");
+            return false;
+        }
+        metadata.emplace_back(*meta);
+    }
+    return true;
+}
 }; // namespace
 
 bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
@@ -114,18 +150,11 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     writePermission = Str16ToStr8(parcel.ReadString16());
     uri = Str16ToStr8(parcel.ReadString16());
     type = static_cast<ExtensionAbilityType>(parcel.ReadInt32());
+    extensionTypeName = Str16ToStr8(parcel.ReadString16());
     visible = parcel.ReadBool();
-
-    int32_t metadataSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadataSize);
-    CONTAINER_SECURITY_VERIFY(parcel, metadataSize, &metadata);
-    for (auto i = 0; i < metadataSize; i++) {
-        std::unique_ptr<Metadata> meta(parcel.ReadParcelable<Metadata>());
-        if (!meta) {
-            APP_LOGE("ReadParcelable<Metadata> failed");
-            return false;
-        }
-        metadata.emplace_back(*meta);
+    if (!ReadMetadataFromParcel(parcel, metadata)) {
+        APP_LOGE("Read meta data failed");
+        return false;
     }
 
     std::unique_ptr<ApplicationInfo> appInfo(parcel.ReadParcelable<ApplicationInfo>());
@@ -141,19 +170,9 @@ bool ExtensionAbilityInfo::ReadFromParcel(Parcel &parcel)
     process = Str16ToStr8(parcel.ReadString16());
     compileMode = static_cast<CompileMode>(parcel.ReadInt32());
     uid = parcel.ReadInt32();
-    int32_t skillUriSize;
-    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, skillUriSize);
-    CONTAINER_SECURITY_VERIFY(parcel, skillUriSize, &skillUri);
-    for (auto i = 0; i < skillUriSize; i++) {
-        SkillUriForAbilityAndExtension stctUri;
-        stctUri.scheme = Str16ToStr8(parcel.ReadString16());
-        stctUri.host = Str16ToStr8(parcel.ReadString16());
-        stctUri.port = Str16ToStr8(parcel.ReadString16());
-        stctUri.path = Str16ToStr8(parcel.ReadString16());
-        stctUri.pathStartWith = Str16ToStr8(parcel.ReadString16());
-        stctUri.pathRegex = Str16ToStr8(parcel.ReadString16());
-        stctUri.type = Str16ToStr8(parcel.ReadString16());
-        skillUri.emplace_back(stctUri);
+    if (!ReadSkillInfoFromParcel(parcel, skillUri)) {
+        APP_LOGE("Read skill info failed");
+        return false;
     }
     return true;
 }
@@ -191,6 +210,7 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(writePermission));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(type));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(extensionTypeName));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, visible);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, metadata.size());
     for (auto &mete : metadata) {
@@ -232,6 +252,7 @@ void to_json(nlohmann::json &jsonObject, const ExtensionAbilityInfo &extensionIn
         {DESCRIPTION_ID, extensionInfo.descriptionId},
         {PRIORITY, extensionInfo.priority},
         {TYPE, extensionInfo.type},
+        {EXTENSION_TYPE_NAME, extensionInfo.extensionTypeName},
         {READ_PERMISSION, extensionInfo.readPermission},
         {WRITE_PERMISSION, extensionInfo.writePermission},
         {URI, extensionInfo.uri},
@@ -345,6 +366,14 @@ void from_json(const nlohmann::json &jsonObject, ExtensionAbilityInfo &extension
         TYPE,
         extensionInfo.type,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        EXTENSION_TYPE_NAME,
+        extensionInfo.extensionTypeName,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

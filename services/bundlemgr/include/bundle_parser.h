@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -82,6 +82,15 @@ public:
      */
     ErrCode ParseDefaultPermission(
         const std::string &permissionFile, std::set<DefaultPermission> &defaultPermissions) const;
+
+    /**
+     * @brief Parse default extension type name file, then save in ParseExtensionTypeConfig info.
+     * @param configFile Indicates the path of configFile.
+     * @param extensionTypeList Indicates the obtained extension type name list.
+     * @return Returns ERR_OK if the extensionType successfully parsed; returns ErrCode otherwise.
+     */
+    ErrCode ParseExtTypeConfig(
+        const std::string &configFile, std::set<std::string> &extensionTypeList) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

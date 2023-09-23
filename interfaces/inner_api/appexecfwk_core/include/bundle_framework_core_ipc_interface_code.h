@@ -146,6 +146,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_PREFERENCE_DIR_BY_GROUP_ID,
     QUERY_APPGALLERY_BUNDLE_NAME,
     RESET_AOT_COMPILE_STATUS,
+    QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

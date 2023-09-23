@@ -3659,6 +3659,34 @@ bool BundleMgrProxy::QueryAppGalleryBundleName(std::string &bundleName)
     return true;
 }
 
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &extensionTypeName,
+    const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&want)) {
+        APP_LOGE("Write want fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(extensionTypeName)) {
+        APP_LOGE("Write type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(flag)) {
+        APP_LOGE("Write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
+        data, extensionInfos);
+}
+
 ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {

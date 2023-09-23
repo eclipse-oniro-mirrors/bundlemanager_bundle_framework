@@ -312,6 +312,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetPreferenceDirByGroupId);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_APPGALLERY_BUNDLE_NAME),
         &BundleMgrHost::HandleQueryAppGalleryBundleName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
+        &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
         &BundleMgrHost::HandleResetAOTCompileStatus);
 }
@@ -2798,6 +2800,30 @@ ErrCode BundleMgrHost::HandleQueryAppGalleryBundleName(MessageParcel &data, Mess
         }
     }
     APP_LOGD("BundleName is %{public}s", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    if (want == nullptr) {
+        APP_LOGE("ReadParcelable<want> failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::string extensionTypeName = data.ReadString();
+    int32_t flags = data.ReadInt32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
+    ErrCode ret = QueryExtensionAbilityInfosWithTypeName(*want, extensionTypeName, flags, userId, extensionAbilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteParcelableVector(extensionAbilityInfos, reply)) {
+        APP_LOGE("Write extension infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     return ERR_OK;
 }
 

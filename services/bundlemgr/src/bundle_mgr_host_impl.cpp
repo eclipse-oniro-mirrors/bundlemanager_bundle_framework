@@ -2875,6 +2875,46 @@ bool BundleMgrHostImpl::QueryAppGalleryBundleName(std::string &bundleName)
     return  true;
 }
 
+ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &typeName,
+    int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    if (!VerifySystemApi()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!VerifyQueryPermission(want.GetElement().GetBundleName())) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode ret = dataMgr->QueryExtensionAbilityInfosV9(want, flags, userId, infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("QueryExtensionAbilityInfosV9 is failed");
+        return ret;
+    }
+    if (typeName.empty()) {
+        extensionInfos = infos;
+    } else {
+        for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
+            APP_LOGD("Input typeName is %{public}s, info.type is %{public}s",
+                typeName.c_str(), info.extensionTypeName.c_str());
+            if (typeName == info.extensionTypeName) {
+                extensionInfos.emplace_back(info);
+            }
+        });
+    }
+    if (extensionInfos.empty()) {
+        APP_LOGE("No valid extension info can be inquired");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {

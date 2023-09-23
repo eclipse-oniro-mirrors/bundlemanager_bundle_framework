@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -180,6 +180,7 @@ struct AbilityInfo : public Parcelable {
     std::string kind;  // ability category
     AbilityType type = AbilityType::UNKNOWN;
     ExtensionAbilityType extensionAbilityType = ExtensionAbilityType::UNSPECIFIED;
+    std::string extensionTypeName;
     DisplayOrientation orientation = DisplayOrientation::UNSPECIFIED;
     LaunchMode launchMode = LaunchMode::SINGLETON;
     std::string srcPath;

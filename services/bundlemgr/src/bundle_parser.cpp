@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021-2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -271,6 +271,19 @@ ErrCode BundleParser::ParseDefaultPermission(
 
     DefaultPermissionProfile profile;
     return profile.TransformTo(jsonBuf, defaultPermissions);
+}
+
+ErrCode BundleParser::ParseExtTypeConfig(
+    const std::string &configFile, std::set<std::string> &extensionTypeList) const
+{
+    nlohmann::json jsonBuf;
+    if (!ReadFileIntoJson(configFile, jsonBuf)) {
+        APP_LOGE("Parse file failed");
+        return ERR_APPEXECFWK_PARSE_FILE_FAILED;
+    }
+
+    PreBundleProfile preBundleProfile;
+    return preBundleProfile.TransformJsonToExtensionTypeList(jsonBuf, extensionTypeList);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

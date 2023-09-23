@@ -61,6 +61,7 @@ constexpr const char* APPLICATION_INFO = "applicationInfo";
 constexpr const char* PRIORITY = "priority";
 constexpr const char* STATE = "state";
 constexpr const char* DEBUG = "debug";
+constexpr const char* EXTENSION_ABILITY_TYPE_NAME = "extensionAbilityTypeName";
 
 static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_OK, SUCCESS },
@@ -980,6 +981,12 @@ void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &
         env, napi_create_int32(env, static_cast<int32_t>(extensionInfo.type), &nExtensionAbilityType));
     NAPI_CALL_RETURN_VOID(env,
         napi_set_named_property(env, objExtensionInfo, "extensionAbilityType", nExtensionAbilityType));
+
+    napi_value nExtensionTypeName;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_string_utf8(env, extensionInfo.extensionTypeName.c_str(), NAPI_AUTO_LENGTH, &nExtensionTypeName));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, objExtensionInfo, EXTENSION_ABILITY_TYPE_NAME, nExtensionTypeName));
 
     napi_value nPermissions;
     size_t size = extensionInfo.permissions.size();

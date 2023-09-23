@@ -1939,6 +1939,7 @@ bool ToExtensionInfo(
 {
     APP_LOGD("transform ModuleJson to ExtensionAbilityInfo");
     extensionInfo.type = ConvertToExtensionAbilityType(extension.type);
+    extensionInfo.extensionTypeName = extension.type;
     extensionInfo.name = extension.name;
     extensionInfo.srcEntrance = extension.srcEntrance;
     extensionInfo.icon = extension.icon;
