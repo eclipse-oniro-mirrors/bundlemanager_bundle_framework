@@ -895,6 +895,7 @@ void OperationCompleted(napi_env env, napi_status status, void *data)
     } else {
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[FIRST_PARAM]));
     }
+    callbackPtr->err = callbackPtr->installResult.resultCode;
     CommonFunc::NapiReturnDeferred<AsyncInstallCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
@@ -1016,7 +1017,8 @@ void UninstallByUninstallParamExecuter(napi_env env, void* data)
     const std::string bundleName = asyncCallbackInfo->uninstallParam.bundleName;
     InstallResult &installResult = asyncCallbackInfo->installResult;
     if (bundleName.empty()) {
-        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        installResult.resultCode =
+            static_cast<int32_t>(IStatusReceiver::ERR_APPEXECFWK_UNINSTALL_SHARE_APP_LIBRARY_IS_NOT_EXIST);
         return;
     }
     auto iBundleInstaller = CommonFunc::GetBundleInstaller();
