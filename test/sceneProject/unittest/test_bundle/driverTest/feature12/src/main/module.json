@@ -2,7 +2,7 @@
     "module": {
         "installaitonFree": false,
         "mainElement": "MainAbility",
-        "name": "feature11",
+        "name": "feature12",
         "pages": "$profile:main_pages",
         "srcEntry": "./ets/Application/AbilityStage.ts",
         "type": "feature",

@@ -382,6 +382,22 @@
         src="res" />
       <option name="push" value="test_bundle/driver_test/non_driver_entry1_hap.hap -> /data/test/resource/bms/driver_test/"
         src="res" />
+      <option name="push" value="test_bundle/driver_test/high_version_non_driver_feature11_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/lower_version_non_driver_feature12_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/high_version_driver_feature13_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/lower_version_driver_feature14_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature15_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature16_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature17_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
+      <option name="push" value="test_bundle/driver_test/driver_feature18_hap.hap -> /data/test/resource/bms/driver_test/"
+        src="res" />
     </preparer>
   </target>
 </configuration>
