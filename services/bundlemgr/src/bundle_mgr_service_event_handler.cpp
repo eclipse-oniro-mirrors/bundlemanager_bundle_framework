@@ -73,9 +73,6 @@ const std::string HOT_PATCH_METADATA = "ohos.app.quickfix";
 const std::string FINGERPRINT = "fingerprint";
 const std::string UNKNOWN = "";
 const std::string VALUE_TRUE = "true";
-const std::string BMS_EXTENSION_SERVICE_KEY = "startup.service.ctl.broker";
-const std::string BMS_EXTENSION_SERVICE_VALUE = "2";
-const int32_t BMS_EXTENSION_SERVICE_SLEEP_TIME = 10; // 10s
 const int32_t VERSION_LEN = 64;
 const std::vector<std::string> FINGERPRINTS = {
     "const.product.software.version",
@@ -264,7 +261,6 @@ void BMSEventHandler::AfterBmsStart()
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
-    StartBmsExtensionService();
     APP_LOGI("BMSEventHandler AfterBmsStart end");
 }
 
@@ -1843,22 +1839,6 @@ void BMSEventHandler::RemoveUnreservedSandbox() const
     removeThread.detach();
 #endif
     APP_LOGI("RemoveUnreservedSandbox finish");
-}
-
-void BMSEventHandler::StartBmsExtensionService() const
-{
-    APP_LOGD("Start to start bms extension service");
-    auto execFunc = [](int32_t sleepTime, const std::string &key, const std::string &value) {
-        std::this_thread::sleep_for(std::chrono::seconds(sleepTime));
-        int32_t ret = SetParameter(key.c_str(), value.c_str());
-        if (ret <= 0) {
-            APP_LOGE("SetParameter failed!");
-            return;
-        }
-    };
-    std::thread startBmsExtensionServiceThread(execFunc, BMS_EXTENSION_SERVICE_SLEEP_TIME, BMS_EXTENSION_SERVICE_KEY,
-        BMS_EXTENSION_SERVICE_VALUE);
-    startBmsExtensionServiceThread.detach();
 }
 
 void BMSEventHandler::AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath)
