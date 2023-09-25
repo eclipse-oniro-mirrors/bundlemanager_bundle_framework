@@ -368,7 +368,7 @@ public:
     static NativeValue* GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);    
+    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info);
