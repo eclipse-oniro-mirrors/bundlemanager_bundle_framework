@@ -62,8 +62,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     const char *moduleName = "JsBundleMgr";
     BindNativeFunction(*engine, *object, "getAllApplicationInfo", moduleName, JsBundleMgr::GetAllApplicationInfo);
     BindNativeFunction(*engine, *object, "getApplicationInfo", moduleName, JsBundleMgr::GetApplicationInfo);
-    BindNativeFunction(*engine, *object, "getBundleArchiveInfo", moduleName, JsBundleMgr::GetBundleArchiveInfo);
-    BindNativeFunction(*engine, *object, "getAbilityIcon", moduleName, JsBundleMgr::GetAbilityIcon);
     BindNativeFunction(*engine, *object, "setAbilityEnabled", moduleName, JsBundleMgr::SetAbilityEnabled);
     BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
     BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
@@ -86,6 +84,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("isAbilityEnabled", IsAbilityEnabled),
         DECLARE_NAPI_FUNCTION("isApplicationEnabled", IsApplicationEnabled),
         DECLARE_NAPI_FUNCTION("queryAbilityByWant", QueryAbilityInfos),
+        DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
+        DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
