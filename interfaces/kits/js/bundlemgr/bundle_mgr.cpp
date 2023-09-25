@@ -4790,7 +4790,7 @@ void GetBundleInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
-    if (asyncCallbackInfo->err != 0) {
+    if (asyncCallbackInfo->err == 0) {
         asyncCallbackInfo->ret = InnerGetBundleInfo(asyncCallbackInfo->env, asyncCallbackInfo->param,
             asyncCallbackInfo->flags, asyncCallbackInfo->bundleOptions, asyncCallbackInfo->bundleInfo);
     }
@@ -4805,7 +4805,7 @@ void GetBundleInfoForSelfExec(napi_env env, napi_status status, void* data)
         return;
     }
     napi_value result[2] = { 0 };
-    if (asyncCallbackInfo->err == 0) {
+    if (asyncCallbackInfo->err != 0) {
         NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
             &result[0]));
         NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
