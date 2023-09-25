@@ -4790,7 +4790,7 @@ void GetBundleInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is nullptr");
         return;
     }
-    if (asyncCallbackInfo->err == 0) {
+    if (asyncCallbackInfo->err != 0) {
         asyncCallbackInfo->ret = InnerGetBundleInfo(asyncCallbackInfo->env, asyncCallbackInfo->param,
             asyncCallbackInfo->flags, asyncCallbackInfo->bundleOptions, asyncCallbackInfo->bundleInfo);
     }
