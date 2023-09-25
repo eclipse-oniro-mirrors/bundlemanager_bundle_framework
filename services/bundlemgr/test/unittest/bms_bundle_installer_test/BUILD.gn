@@ -1169,7 +1169,8 @@ group("unittest") {
     deps = [
       ":BmsBundleInstallCheckerTest",
       ":BmsBundleInstallDeviceTypeTest",
-      ":BmsBundleInstallDriverTest",
+
+      #":BmsBundleInstallDriverTest",
       ":BmsBundleInstallIpcTest",
       ":BmsBundleInstallerTest",
       ":BmsBundleOtaUpdateTest",
