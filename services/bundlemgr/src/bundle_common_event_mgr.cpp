@@ -29,6 +29,7 @@ namespace AppExecFwk {
 namespace {
 constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
+constexpr const char* APP_ID = "appId";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -74,6 +75,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
     want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
+    want.SetParam(APP_ID, installResult.appId);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {
@@ -85,7 +87,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
             static_cast<uint8_t>(InstallType::UNINSTALL_CALLBACK) :
             static_cast<uint8_t>(InstallType::INSTALL_CALLBACK);
 
-    // trigger the status callback for status listenning
+    // trigger the status callback for status listening
     if (dataMgr != nullptr) {
         auto &callbackMutex = dataMgr->GetStatusCallbackMutex();
         std::shared_lock<std::shared_mutex> lock(callbackMutex);
