@@ -47,6 +47,8 @@ ohos_js_assets("hjs_demo_js_assets") {
 }
 
 ohos_shared_library("hapso29") {
+  stack_protector_ret = true
+
   sources = [ "src/main/cpp/hapso29.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -54,6 +56,8 @@ ohos_shared_library("hapso29") {
 }
 
 ohos_shared_library("hapso30") {
+  stack_protector_ret = true
+
   sources = [ "src/main/cpp/hapso30.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

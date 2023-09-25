@@ -47,6 +47,8 @@ ohos_js_assets("hjs_demo_js_assets") {
 }
 
 ohos_shared_library("otaUpdateTestAplDownFt2So1") {
+  stack_protector_ret = true
+
   sources = [ "src/main/cpp/hapso33.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -54,6 +56,8 @@ ohos_shared_library("otaUpdateTestAplDownFt2So1") {
 }
 
 ohos_shared_library("otaUpdateTestAplDownFt2So2") {
+  stack_protector_ret = true
+
   sources = [ "src/main/cpp/hapso34.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

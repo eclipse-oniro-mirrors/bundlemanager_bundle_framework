@@ -22,6 +22,8 @@ config("bundlemgr_extension_config") {
 }
 
 ohos_shared_library("bundlemgr_extension") {
+  stack_protector_ret = true
+
   sources = [
     "src/bms_extension_data_mgr.cpp",
     "src/bms_extension_profile.cpp",
