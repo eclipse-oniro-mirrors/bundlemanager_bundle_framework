@@ -4206,7 +4206,8 @@ void GetAbilityIconComplete(napi_env env, napi_status status, void *data)
     APP_LOGD("NAPI end");
 }
 
-napi_value GetAbilityIcon(napi_env env, napi_callback_info info) {
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info)
+{
     APP_LOGD("NAPI begin");
     AbilityIconCallbackInfo *asyncCallbackInfo = new (std::nothrow) AbilityIconCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
