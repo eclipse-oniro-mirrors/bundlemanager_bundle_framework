@@ -56,6 +56,7 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     "${bundle_framework_path}/test/sceneProject/unittest/bundle_share_library/libA_v10000:libA_v10000",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest2:bmsAccessTokentest2",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps

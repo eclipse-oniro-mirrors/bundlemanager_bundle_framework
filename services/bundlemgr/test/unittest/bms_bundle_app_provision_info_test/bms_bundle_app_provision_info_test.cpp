@@ -47,11 +47,15 @@ namespace OHOS {
 namespace {
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const std::string HAP_FILE_PATH2 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest2.hap";
 const std::string HSP_BUNDLE_NAME = "com.example.liba";
 const std::string HSP_FILE_PATH1 = "/data/test/resource/bms/sharelibrary/libA_v10000.hsp";
 const std::string TEST_MODULE_NAME = "testModuleName";
 const std::string TEST_MODULE_NAME_TMP = "testModuleName_tmp/";
 const std::string PATH_SEPARATOR = "/";
+const std::string NOT_EXIST_PATH = "notExist";
+const std::string EXIST_PATH = "/data/test/resource/bms/quickfix";
+const std::string EXIST_PATH2 = "/data/test/resource/bms/accesstoken_bundle";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -1383,4 +1387,133 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ParseHapFiles_0001, Function | SmallTest
     ErrCode unInstallResult = UninstallSharedBundle(HSP_BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
+
+/**
+ * @tc.number: ProcessRebootQuickFixBundleInstall_0001
+ * @tc.name: test the start function of ProcessRebootQuickFixBundleInstall
+ * @tc.desc: 1. test ProcessRebootQuickFixBundleInstall
+ *           2. path not exist, bundle not exist
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        handler->ProcessRebootQuickFixBundleInstall(NOT_EXIST_PATH, false);
+        BundleInfo info;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, info, USERID);
+        EXPECT_FALSE(result);
+
+        handler->ProcessRebootQuickFixBundleInstall(EXIST_PATH, false);
+        result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, info, USERID);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: ProcessRebootQuickFixBundleInstall_0002
+ * @tc.name: test the start function of ProcessRebootQuickFixBundleInstall
+ * @tc.desc: 1. test ProcessRebootQuickFixBundleInstall
+ *           2. path exist, bundle exist, update success
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0002, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        BundleInfo info;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, info, USERID);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(info.name, BUNDLE_NAME);
+
+        handler->ProcessRebootQuickFixBundleInstall(EXIST_PATH, false);
+        BundleInfo newInfo;
+        result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
+        EXPECT_TRUE(result);
+        EXPECT_NE(info.versionCode, newInfo.versionCode); // update success
+
+        ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessRebootQuickFixBundleInstall_0003
+ * @tc.name: test the start function of ProcessRebootQuickFixBundleInstall
+ * @tc.desc: 1. test ProcessRebootQuickFixBundleInstall
+ *           2. path exist, bundle exist, update failed
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0003, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        ErrCode installResult = InstallBundle(HAP_FILE_PATH2);
+        EXPECT_EQ(installResult, ERR_OK);
+
+        BundleInfo info;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, info, USERID);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(info.name, BUNDLE_NAME);
+
+        handler->ProcessRebootQuickFixBundleInstall(EXIST_PATH, false);
+        BundleInfo newInfo;
+        result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
+        EXPECT_TRUE(result);
+        EXPECT_EQ(info.versionCode, newInfo.versionCode); // update failed
+
+        ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+        EXPECT_EQ(unInstallResult, ERR_OK);
+    }
+}
+
+/**
+ * @tc.number: ProcessRebootQuickFixBundleInstall_0004
+ * @tc.name: test the start function of ProcessRebootQuickFixBundleInstall
+ * @tc.desc: 1. test ProcessRebootQuickFixBundleInstall
+ *           2. path exist, bundle not exist, update failed
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0004, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        handler->ProcessRebootQuickFixBundleInstall(EXIST_PATH, true);
+        BundleInfo newInfo;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
+        EXPECT_FALSE(result);
+    }
+}
+
+/**
+ * @tc.number: ProcessRebootQuickFixBundleInstall_0005
+ * @tc.name: test the start function of ProcessRebootQuickFixBundleInstall
+ * @tc.desc: 1. test ProcessRebootQuickFixBundleInstall
+ *           2. path exist, parse filed
+ */
+HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0005, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    ASSERT_NE(handler, nullptr);
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if ((handler != nullptr) && (dataMgr != nullptr)) {
+        handler->ProcessRebootQuickFixBundleInstall(EXIST_PATH2, false);
+        BundleInfo newInfo;
+        bool result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
+        EXPECT_FALSE(result);
+    }
+}
+
 } // OHOS
