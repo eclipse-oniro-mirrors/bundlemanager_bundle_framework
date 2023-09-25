@@ -5270,7 +5270,7 @@ bool BundleDataMgr::GetGroupDir(const std::string &dataGroupId, std::string &dir
     }
     dir = Constants::REAL_DATA_PATH + Constants::PATH_SEPARATOR + std::to_string(userId)
         + Constants::DATA_GROUP_PATH + uuid;
-    APP_LOGD("groupDir: %{public}s", dir.c_str());
+    APP_LOGD("groupDir: %{private}s", dir.c_str());
     return true;
 }
 
@@ -5353,7 +5353,7 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         if (iter == dataGroupInfos.end()) {
             continue;
         }
-        for (auto dataGroupInfo : iter->second) {
+        for (const auto &dataGroupInfo : iter->second) {
             if (dataGroupInfo.userId == userId && ++count > 1) {
                 APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
                 return true;
