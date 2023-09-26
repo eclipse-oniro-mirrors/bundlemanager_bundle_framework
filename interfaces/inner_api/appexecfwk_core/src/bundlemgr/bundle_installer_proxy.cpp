@@ -520,6 +520,11 @@ ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstalle
 ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
     const InstallParam &installParam)
 {
+    if (streamInstaller == nullptr) {
+        APP_LOGE("copy file failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
     if (installParam.verifyCodeParams.empty()) {
         return ERR_OK;
     }
