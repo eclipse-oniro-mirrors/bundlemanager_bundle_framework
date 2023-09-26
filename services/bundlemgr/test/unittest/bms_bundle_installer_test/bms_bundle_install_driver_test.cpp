@@ -55,13 +55,28 @@ const std::string DRIVER_FEATURE7_BUNDLE = "driver_feature7_hap.hap";
 const std::string DRIVER_FEATURE8_BUNDLE = "driver_feature8_hap.hap";
 const std::string DRIVER_FEATURE9_BUNDLE = "driver_feature9_hap.hap";
 const std::string DRIVER_FEATURE10_BUNDLE = "driver_feature10_hap.hap";
+const std::string DRIVER_FEATURE15_BUNDLE = "driver_feature15_hap.hap";
+const std::string DRIVER_FEATURE16_BUNDLE = "driver_feature16_hap.hap";
+const std::string DRIVER_FEATURE17_BUNDLE = "driver_feature17_hap.hap";
+const std::string DRIVER_FEATURE18_BUNDLE = "driver_feature18_hap.hap";
 const std::string NON_DRIVER_ENTRY1_BUNDLE = "non_driver_entry1_hap.hap";
+const std::string HIGHER_VERSION_NON_DRIVER_FEATURE11_BUNDLE = "high_version_non_driver_feature11_hap.hap";
+const std::string LOWER_VERSION_NON_DRIVER_FEATURE12_BUNDLE = "lower_version_non_driver_feature12_hap.hap";
+const std::string HIGHER_VERSION_DRIVER_FEATURE13_BUNDLE = "high_version_driver_feature13_hap.hap";
+const std::string LOWER_VERSION_DRIVER_FEATURE14_BUNDLE = "lower_version_driver_feature14_hap.hap";
 const std::string BUNDLE_DATA_DIR = "/data/app/el2/100/base/com.example.driverTest";
 const std::string BUNDLE_CODE_DIR = "/data/app/el1/bundle/public/com.example.driverTest";
 const std::string PACKAGE_NAME_FIRST = "com.example.driverTest";
 const std::string DRIVER_FILE_DIR = "/data/service/el1/public/print_service/cups/datadir/model/";
 const std::string DRIVER_FILE_NAME = "main_pages.json";
+const std::string DRIVER_FILE_NAME1 = "main_test_pages.json";
 const std::string MODULE_NAME_FEATURE6 = "feature6";
+const std::string MODULE_NAME_FEATURE10 = "feature10";
+const std::string MODULE_NAME_FEATURE13 = "feature13";
+const std::string MODULE_NAME_FEATURE15 = "feature15";
+const std::string MODULE_NAME_FEATURE16 = "feature16";
+const std::string MODULE_NAME_FEATURE17 = "feature17";
+const std::string MODULE_NAME_FEATURE18 = "feature18";
 const std::string PATH_UNDERLIND = "_";
 const std::string DEVICE_TYPE_OF_DEFAULT = "default";
 const int32_t USERID = 100;
@@ -420,6 +435,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_0800, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -582,6 +599,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_1600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -723,6 +742,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -845,6 +866,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_2900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -1008,10 +1031,17 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_3800, Function | SmallTest | 
     bool fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
 
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE10 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
     result = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -1032,6 +1062,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4300, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1052,6 +1087,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4400, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1073,6 +1113,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4500, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1095,6 +1140,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4600, Function | SmallTest | 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1117,6 +1167,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4700, Function | SmallTest | 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1139,6 +1194,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4800, Function | SmallTest | 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1161,6 +1221,11 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_4900, Function | SmallTest | 
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
     bool isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
 }
 
 /**
@@ -1193,6 +1258,8 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5000, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 
 /**
@@ -1227,5 +1294,378 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5100, Function | SmallTest | 
     EXPECT_EQ(result, ERR_OK);
     CheckBundleDirNonExist();
     CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5200
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install non-driver hap driver_feature11_hap.hap which has higher version code than
+ *              driver_feature6_hap.hap.
+ *           3. update successfully and driver_feature6_hap.hap was uninstalled.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + HIGHER_VERSION_NON_DRIVER_FEATURE11_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+
+    // to check if the fetaure6 has been uninstalled
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    if (dataMgr != nullptr) {
+        InnerBundleInfo bundleInfo;
+        bool ret = dataMgr->QueryInnerBundleInfo(BUNDLE_NAME, bundleInfo);
+        EXPECT_TRUE(ret);
+        ret = bundleInfo.FindModule(MODULE_NAME_FEATURE6);
+        EXPECT_FALSE(ret);
+    }
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5300
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install non-driver hap driver_feature12_hap.hap which has lower version code than
+ *              driver_feature6_hap.hap.
+ *           3. update successfully and driver_feature6_hap.hap was uninstalled.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5300, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + LOWER_VERSION_NON_DRIVER_FEATURE12_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5400
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install non-driver hap non_driver_entry_hap.hap which has same version code as
+ *              driver_feature6_hap.hap.
+ *           3. update successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5400, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + NON_DRIVER_ENTRY_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5500
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install driver hap driver_feature13_hap.hap which has higher version code than
+ *              driver_feature6_hap.hap.
+ *           3. update successfully and driver_feature6_hap.hap was uninstalled.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5500, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + HIGHER_VERSION_DRIVER_FEATURE13_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_FALSE(fileExisted);
+
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature13_main_test_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE13 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME1;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5600
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install driver hap driver_feature14_hap.hap which has lower version code than
+ *              driver_feature6_hap.hap.
+ *           3. update successfully and driver_feature6_hap.hap was uninstalled.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5600, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + LOWER_VERSION_DRIVER_FEATURE14_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_VERSION_DOWNGRADE);
+
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_5700
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature6_hap.hap which is driver type with driver file copied to the target dir.
+ *           2. install driver hap driver_feature10_hap.hap which has same version code as
+ *              driver_feature6_hap.hap.
+ *           3. update successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_5700, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE10_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature10_main_pages.json
+    filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE10 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6000
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature15_hap.hap which is driver type with metadata name is cupsBackend.
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6000, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE15_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature15_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE15 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6100
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature16_hap.hap which is driver type with metadata name is cupsPpd.
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6100, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE16_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature16_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE16 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6200
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature17_hap.hap which is driver type with metadata name is saneConfig.
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE17_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature17_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE17 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6300
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature18_hap.hap which is driver type with metadata name is saneBackend
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6300, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE18_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature18_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE18 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
 }
 } // OHOS
