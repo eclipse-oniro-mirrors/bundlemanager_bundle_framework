@@ -77,6 +77,26 @@ struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     ErrCode ret = ERR_OK;
 };
 
+struct GetBundleArchiveInfoCallbackInfo : public BaseCallbackInfo {
+    explicit GetBundleArchiveInfoCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string hapFilePath;
+    int32_t flags = 0;
+    BundleInfo bundleInfo;
+    bool ret = false;
+};
+
+struct AbilityIconCallbackInfo : public BaseCallbackInfo {
+    explicit AbilityIconCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    bool hasModuleName = false;
+    ErrCode ret = ERR_OK;
+#ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    std::shared_ptr<Media::PixelMap> pixelMap = nullptr;
+#endif
+};
+
 struct AsyncAbilityInfoCallbackInfo : public AsyncWorkData {
     explicit AsyncAbilityInfoCallbackInfo(napi_env env) : AsyncWorkData(env) {}
     OHOS::AAFwk::Want want;
@@ -294,6 +314,8 @@ napi_value GetFormsInfoByModule(napi_env env, napi_callback_info info);
 napi_value GetShortcutInfos(napi_env env, napi_callback_info info);
 napi_value UnregisterPermissionsChanged(napi_env env, napi_callback_info info);
 napi_value ClearBundleCache(napi_env env, napi_callback_info info);
+napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
+napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
 napi_value IsApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value IsAbilityEnabled(napi_env env, napi_callback_info info);
@@ -365,8 +387,6 @@ public:
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* GetAllApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetApplicationInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetBundleArchiveInfo(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAbilityIcon(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
@@ -377,12 +397,8 @@ public:
 private:
     NativeValue* OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetBundleArchiveInfo(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
-    static int32_t InitGetAbilityIcon(NativeEngine &engine, NativeCallbackInfo &info, NativeValue *&lastParam,
-        std::string &errMessage, std::shared_ptr<JsAbilityIcon> abilityIcon);
     NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
