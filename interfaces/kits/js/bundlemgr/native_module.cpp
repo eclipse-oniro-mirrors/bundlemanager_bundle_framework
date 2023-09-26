@@ -64,8 +64,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     BindNativeFunction(*engine, *object, "getApplicationInfo", moduleName, JsBundleMgr::GetApplicationInfo);
     BindNativeFunction(*engine, *object, "setAbilityEnabled", moduleName, JsBundleMgr::SetAbilityEnabled);
     BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
-    BindNativeFunction(*engine, *object, "getAllBundleInfo", moduleName, JsBundleMgr::GetAllBundleInfo);
-    BindNativeFunction(*engine, *object, "getPermissionDef", moduleName, JsBundleMgr::GetPermissionDef);
     BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
@@ -80,6 +78,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAbilityInfo", GetAbilityInfo),
         DECLARE_NAPI_FUNCTION("getAbilityLabel", GetAbilityLabel),
         DECLARE_NAPI_FUNCTION("cleanBundleCacheFiles", ClearBundleCache),
+        DECLARE_NAPI_FUNCTION("getAllBundleInfo", GetBundleInfos),
+        DECLARE_NAPI_FUNCTION("getPermissionDef", GetPermissionDef),
         DECLARE_NAPI_FUNCTION("getLaunchWantForBundle", GetLaunchWantForBundle),
         DECLARE_NAPI_FUNCTION("isAbilityEnabled", IsAbilityEnabled),
         DECLARE_NAPI_FUNCTION("isApplicationEnabled", IsApplicationEnabled),

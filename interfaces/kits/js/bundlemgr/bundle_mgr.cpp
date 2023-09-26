@@ -109,6 +109,8 @@ const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_ABILITY_ICON = "GetAbilityIcon";
 const std::string GET_APPLICATION_INFO = "getApplicationInfo";
 const std::string GET_BUNDLE_INFO = "getBundleInfo";
+const std::string GET_ALL_BUNDLE_INFO = "GetAllBundleInfo";
+const std::string GET_PERMISSION_DEF = "GetPermissionDef";
 const std::string QUERY_ABILITY_BY_WANT = "queryAbilityByWant";
 const std::string TYPE_MISMATCH = "type misMatch";
 
@@ -1625,12 +1627,66 @@ static void ProcessBundleInfos(
         APP_LOGI("-----bundleInfos is null-----");
     }
 }
-/**
- * Promise and async callback
- */
+
+void GetBundleInfosExec(napi_env env, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->ret = InnerGetBundleInfos(
+            env, asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
+    }
+    APP_LOGD("NAPI end");
+}
+
+void GetBundleInfosComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<AsyncBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = { 0 };
+    if (asyncCallbackInfo->err != NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
+            &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
+            NAPI_AUTO_LENGTH, &result[ARGS_POS_ONE]));
+    } else {
+        if (asyncCallbackInfo->ret) {
+            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[ARGS_POS_ZERO]));
+            NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+            ProcessBundleInfos(env, result[ARGS_POS_ONE], asyncCallbackInfo->bundleInfos);
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[ARGS_POS_ZERO]));
+            NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[ARGS_POS_ONE]));
+        }
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->ret) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ONE]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[ARGS_POS_ZERO]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[ARGS_POS_ZERO]), result, &placeHolder));
+    }
+    APP_LOGD("NAPI end");
+}
+
 napi_value GetBundleInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("NAPI GetBundleInfos called");
+    APP_LOGD("NAPI called");
     size_t argc = ARGS_SIZE_THREE;
     napi_value argv[ARGS_SIZE_THREE] = {0};
     napi_value thisArg = nullptr;
@@ -1661,62 +1717,10 @@ napi_value GetBundleInfos(napi_env env, napi_callback_info info)
             asyncCallbackInfo->message = TYPE_MISMATCH;
         }
     }
-
-    napi_value promise = nullptr;
-    if (asyncCallbackInfo->callback == nullptr) {
-        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
-    } else {
-        NAPI_CALL(env, napi_get_undefined(env,  &promise));
-    }
-
-    napi_value resource = nullptr;
-    NAPI_CALL(env, napi_create_string_utf8(env, "GetBundleInfos", NAPI_AUTO_LENGTH, &resource));
-
-    NAPI_CALL(env, napi_create_async_work(
-        env, nullptr, resource,
-        [](napi_env env, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
-            if (!asyncCallbackInfo->err) {
-                asyncCallbackInfo->ret = InnerGetBundleInfos(
-                    env, asyncCallbackInfo->flags, asyncCallbackInfo->userId, asyncCallbackInfo->bundleInfos);
-            }
-        },
-        [](napi_env env, napi_status status, void* data) {
-            AsyncBundleInfosCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfosCallbackInfo*>(data);
-            std::unique_ptr<AsyncBundleInfosCallbackInfo> callbackPtr {asyncCallbackInfo};
-            napi_value result[2] = { 0 };
-            if (asyncCallbackInfo->err) {
-                NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
-                    &result[0]));
-                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
-                    NAPI_AUTO_LENGTH, &result[1]));
-            } else {
-                if (asyncCallbackInfo->ret) {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 0, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[1]));
-                    ProcessBundleInfos(env, result[1], asyncCallbackInfo->bundleInfos);
-                } else {
-                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, 1, &result[0]));
-                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
-                }
-            }
-            if (asyncCallbackInfo->deferred) {
-              if (asyncCallbackInfo->ret) {
-                  NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
-              } else {
-                  NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
-              }
-            } else {
-                napi_value callback = nullptr;
-                napi_value placeHolder = nullptr;
-                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
-                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
-                    sizeof(result) / sizeof(result[0]), result, &placeHolder));
-            }
-        },
-        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
-    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    auto promise = CommonFunc::AsyncCallNativeMethod<AsyncBundleInfosCallbackInfo>(
+        env, asyncCallbackInfo, GET_ALL_BUNDLE_INFO, GetBundleInfosExec, GetBundleInfosComplete);
     callbackPtr.release();
+    APP_LOGD("NAPI done");
     return promise;
 }
 
@@ -1733,6 +1737,94 @@ static bool InnerGetPermissionDef(const std::string &permissionName, PermissionD
         return false;
     }
     return true;
+}
+
+void GetPermissionDefExec(napi_env env, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AsyncPermissionDefCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        asyncCallbackInfo->ret =
+            InnerGetPermissionDef(asyncCallbackInfo->permissionName, asyncCallbackInfo->permissionDef);
+    }
+    APP_LOGD("NAPI end");
+}
+
+void GetPermissionDefComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin");
+    AsyncPermissionDefCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<AsyncPermissionDefCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = {0};
+    if (asyncCallbackInfo->err) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<uint32_t>(asyncCallbackInfo->err),
+            &result[PARAM0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, asyncCallbackInfo->message.c_str(),
+            NAPI_AUTO_LENGTH, &result[PARAM1]));
+    } else {
+        if (asyncCallbackInfo->ret) {
+            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, CODE_SUCCESS, &result[PARAM0]));
+            NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
+            CommonFunc::ConvertPermissionDef(env, result[PARAM1], asyncCallbackInfo->permissionDef);
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, OPERATION_FAILED, &result[PARAM0]));
+            NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[PARAM1]));
+        }
+    }
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->ret) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[PARAM1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[PARAM0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[PARAM0]), result, &placeHolder));
+    }
+    APP_LOGD("NAPI end");
+}
+
+napi_value GetPermissionDef(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Napi called");
+    size_t argc = ARGS_SIZE_TWO;
+    napi_value argv[ARGS_SIZE_TWO] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    AsyncPermissionDefCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncPermissionDefCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<AsyncPermissionDefCallbackInfo> callbackPtr {asyncCallbackInfo};
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valuetype));
+        if ((i == PARAM0) && (valuetype == napi_string)) {
+            ParseString(env, asyncCallbackInfo->permissionName, argv[i]);
+        } else if ((i == PARAM1) && (valuetype == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            asyncCallbackInfo->err = PARAM_TYPE_ERROR;
+            asyncCallbackInfo->message = TYPE_MISMATCH;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<AsyncPermissionDefCallbackInfo>(
+        env, asyncCallbackInfo, GET_PERMISSION_DEF, GetPermissionDefExec, GetPermissionDefComplete);
+    callbackPtr.release();
+    APP_LOGD("Napi done");
+    return promise;
 }
 
 static bool VerifyCallingPermission(std::string permissionName)
@@ -3830,16 +3922,6 @@ NativeValue* JsBundleMgr::UnwarpQueryAbilityInfoParams(NativeEngine &engine,
     return nullptr;
 }
 
-static bool InnerGetBundleInfos(int32_t flags, int32_t userId, std::vector<OHOS::AppExecFwk::BundleInfo> &bundleInfos)
-{
-    auto iBundleMgr = GetBundleMgr();
-    if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
-    }
-    return iBundleMgr->GetBundleInfos(flags, bundleInfos, userId);
-}
-
 NativeValue* JsBundleMgr::CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef)
 {
     APP_LOGD("called");
@@ -4674,21 +4756,10 @@ NativeValue* JsBundleMgr::SetApplicationEnabled(NativeEngine *engine, NativeCall
     return (me != nullptr) ? me->OnSetApplicationEnabled(*engine, *info) : nullptr;
 }
 
-NativeValue* JsBundleMgr::GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetAllBundleInfo(*engine, *info) : nullptr;
-}
-
 NativeValue* JsBundleMgr::GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
     return (me != nullptr) ? me->OnGetBundleInstaller(*engine, *info) : nullptr;
-}
-NativeValue* JsBundleMgr::GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetPermissionDef(*engine, *info) : nullptr;
 }
 
 NativeValue* JsBundleMgr::OnGetAllApplicationInfo(NativeEngine &engine, NativeCallbackInfo &info)
@@ -5464,109 +5535,6 @@ NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const Native
     NativeValue *result = nullptr;
     NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
     AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    int32_t bundleFlags = 0;
-    std::shared_ptr<std::vector<BundleInfo>> bundleInfos = std::make_shared<std::vector<BundleInfo>>();
-    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
-    } else {
-        if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleFlags)) {
-            APP_LOGE("conversion failed!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-    }
-    int32_t userId = Constants::UNSPECIFIED_USERID;
-    bool flagCall = UnwarpUserIdThreeParams(engine, info, userId);
-    auto apiResult = std::make_shared<bool>();
-    auto execute = [obj = this, bundleFlags, userId, infos = bundleInfos, ret = apiResult] () {
-        *ret = InnerGetBundleInfos(bundleFlags, userId, *infos);
-    };
-    auto complete = [obj = this, errCode, ret = apiResult, infos = bundleInfos]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-        if (errCode != ERR_OK) {
-            std::string getAllBundleInfoErrData = TYPE_MISMATCH;
-            task.RejectWithCustomize(engine, CreateJsValue(engine, errCode),
-                CreateJsValue(engine, getAllBundleInfoErrData));
-            return;
-        }
-        if (!*ret) {
-            task.RejectWithCustomize(engine, CreateJsValue(engine, 1), engine.CreateUndefined());
-            return;
-        }
-        task.ResolveWithCustomize(engine, CreateJsValue(engine, 0), obj->CreateBundleInfos(engine, *infos));
-    };
-
-    NativeValue *result = nullptr;
-    NativeValue *callback = nullptr;
-    if (flagCall) {
-        if (info.argc == ARGS_SIZE_TWO || info.argc == ARGS_SIZE_THREE) {
-            callback = (info.argc == ARGS_SIZE_TWO) ? info.argv[PARAM1] : info.argv[PARAM2];
-        }
-    }
-
-    AsyncTask::Schedule("JsBundleMgr::OnGetAllBundleInfo",
-        engine, CreateAsyncTaskWithLastParam(engine, callback, std::move(execute), std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    auto jsInfo = std::make_shared<JsGetPermissionDef>();
-    if (info.argc > ARGS_SIZE_TWO || info.argc < ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-
-    if (info.argv[PARAM0]->TypeOf() == NATIVE_STRING) {
-        if (!ConvertFromJsValue(engine, info.argv[PARAM0], jsInfo->permissionName)) {
-            APP_LOGE("conversion failed!");
-            errCode = PARAM_TYPE_ERROR;
-        }
-    } else {
-        APP_LOGE("input params is not string!");
-        errCode = PARAM_TYPE_ERROR;
-    }
-    auto execute = [info = jsInfo, errCode] () {
-        if (errCode == ERR_OK) {
-            info->ret = InnerGetPermissionDef(info->permissionName, info->permissionDef);
-            return;
-        }
-    };
-    auto complete = [obj = this, info = jsInfo, errCode]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            OHOS::AppExecFwk::PermissionDef permissionDef;
-            if (errCode != ERR_OK) {
-                std::string errMessage = TYPE_MISMATCH;
-                task.RejectWithCustomize(
-                    engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errMessage));
-                return;
-            }
-            if (info == nullptr) {
-                std::string errMessage = "Parameter is empty.";
-                task.RejectWithCustomize(
-                    engine, CreateJsValue(engine, INVALID_PARAM), CreateJsValue(engine, errMessage));
-                return;
-            }
-            if (!info->ret) {
-                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
-                return;
-            }
-            task.ResolveWithCustomize(
-                engine, CreateJsValue(engine, CODE_SUCCESS), obj->CreatePermissionDef(engine, info->permissionDef));
-    };
-    NativeValue *lastParam = (info.argc == ARGS_SIZE_ONE) ? nullptr : info.argv[PARAM1];
-    NativeValue *result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnGetPermissionDef",
         engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
     return result;
 }
