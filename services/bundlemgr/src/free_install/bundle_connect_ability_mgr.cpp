@@ -15,8 +15,11 @@
 
 #include "bundle_connect_ability_mgr.h"
 
+#include <thread>
+
 #include "ability_manager_client.h"
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "bundle_memory_guard.h"
 #include "bundle_mgr_service.h"
 #ifndef SUPPORT_ERMS
@@ -31,6 +34,7 @@
 #include "service_center_connection.h"
 #include "service_center_status_callback.h"
 #include "string_ex.h"
+#include "system_ability_load_callback_stub.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -126,6 +130,16 @@ void BundleConnectAbilityMgr::ProcessPreloadRequestToServiceCenter(int32_t flag,
         APP_LOGE("Fail to query ServiceCenter ability and bundle name");
         return;
     }
+    auto task = [ owner = weak_from_this() ] {
+        auto mgr = owner.lock();
+        if (mgr == nullptr) {
+            APP_LOGE("BundleConnectAbilityMgr is nullptr");
+            return;
+        }
+        mgr->LoadDownloadService();
+    };
+    std::thread loadServiceThread(task);
+    loadServiceThread.detach();
     Want serviceCenterWant;
     serviceCenterWant.SetElementName(bundleName, abilityName);
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
@@ -359,6 +373,16 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
     }
     Want serviceCenterWant;
     serviceCenterWant.SetElementName(bundleName, abilityName);
+    auto task = [ owner = weak_from_this() ] {
+        auto mgr = owner.lock();
+        if (mgr == nullptr) {
+            APP_LOGE("BundleConnectAbilityMgr is nullptr");
+            return;
+        }
+        mgr->LoadDownloadService();
+    };
+    std::thread loadServiceThread(task);
+    loadServiceThread.detach();
     bool isConnectSuccess = ConnectAbility(serviceCenterWant, nullptr);
     if (!isConnectSuccess) {
         if (freeInstallParams.serviceCenterFunction == ServiceCenterFunction::CONNECT_UPGRADE_INSTALL) {
@@ -374,6 +398,27 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
         SendRequest(flag, targetAbilityInfo, want, userId, freeInstallParams);
         return true;
     }
+}
+
+void BundleConnectAbilityMgr::LoadDownloadService() const
+{
+    APP_LOGD("LoadDownloadService start");
+    auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (systemAbilityMgr == nullptr) {
+        APP_LOGE("Failed to get SystemAbilityManager");
+        return;
+    }
+    sptr<SystemAbilityLoadCallbackStub> loadCallback = new (std::nothrow) SystemAbilityLoadCallbackStub();
+    if (loadCallback == nullptr) {
+        APP_LOGE("Create load callback failed");
+        return;
+    }
+    auto ret = systemAbilityMgr->LoadSystemAbility(Constants::DOWNLOAD_SERVICE_SA_ID, loadCallback);
+    if (ret != 0) {
+        APP_LOGE("Load system ability %{public}d failed with %{public}d.", Constants::DOWNLOAD_SERVICE_SA_ID, ret);
+        return;
+    }
+    APP_LOGD("LoadDownloadService end");
 }
 
 void BundleConnectAbilityMgr::DisconnectAbility()
