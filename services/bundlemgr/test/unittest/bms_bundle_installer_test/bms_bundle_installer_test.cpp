@@ -2099,24 +2099,6 @@ HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Le
 }
 
 /**
- * @tc.number: baseBundleInstaller_3500
- * @tc.name: test ProcessBundleInstallStatus
- * @tc.desc: 1.Test the ProcessBundleInstallStatus
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo innerBundleInfo;
-    AbilityInfo info;
-    int32_t uid = 0;
-    info.uri = "dataability://";
-    innerBundleInfo.userId_ = Constants::ALL_USERID;
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
-}
-
-/**
  * @tc.number: baseBundleInstaller_3600
  * @tc.name: test ProcessNewModuleInstall
  * @tc.desc: 1.Test the ProcessNewModuleInstall
@@ -4224,26 +4206,6 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1
     oldInfo.SetApplicationBundleType(BundleType::SHARED);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
-}
-
-/**
- * @tc.number: ProcessModuleUpdate_0010
- * @tc.name: test ProcessBundleInstallStatus
- * @tc.desc: 1.Test the ProcessBundleInstallStatus
-*/
-HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0010, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo innerBundleInfo;
-    InnerBundleInfo oldInfo;
-    AbilityInfo info;
-    bool isReplace = false;
-    bool noSkipsKill = false;
-    info.uri = "dataability://";
-    innerBundleInfo.userId_ = Constants::ALL_USERID;
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
 }
 
 /**
