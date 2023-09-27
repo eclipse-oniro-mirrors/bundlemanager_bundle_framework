@@ -316,6 +316,7 @@ napi_value WrapVoidToJS(napi_env env);
 napi_value GetApplicationInfos(napi_env env, napi_callback_info info);
 napi_value QueryAbilityInfos(napi_env env, napi_callback_info info);
 napi_value GetBundleInfos(napi_env env, napi_callback_info info);
+napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetBundleInfo(napi_env env, napi_callback_info info);
 napi_value GetNameForUid(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
@@ -400,17 +401,13 @@ public:
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
     static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetAllBundleInfo(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* GetPermissionDef(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
     NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
-    NativeValue* OnGetAllBundleInfo(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
-    NativeValue* OnGetPermissionDef(NativeEngine &engine, NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
     NativeValue* CreateInnerMetaDatas(
