@@ -2932,5 +2932,28 @@ ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, 
     }
     return dataMgr->ResetAOTCompileStatus(bundleName, moduleName, triggerMode);
 }
+
+ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+    const std::string &moduleName, std::string &profile)
+{
+    APP_LOGD("GetJsonProfile profileType: %{public}d, bundleName: %{public}s, moduleName: %{public}s",
+        profileType, bundleName.c_str(), moduleName.c_str());
+    if (!VerifyQueryPermission(bundleName)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    auto uid = IPCSkeleton::GetCallingUid();
+    int32_t userId = uid / Constants::BASE_USER_RANGE;
+    return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

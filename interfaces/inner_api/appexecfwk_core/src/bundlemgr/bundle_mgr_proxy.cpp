@@ -3722,6 +3722,37 @@ ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, con
     return reply.ReadInt32();
 }
 
+ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+    const std::string &moduleName, std::string &profile)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetJsonProfile");
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetJsonProfile due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(profileType)) {
+        APP_LOGE("fail to GetJsonProfile due to write flags fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetJsonProfile due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to GetJsonProfile due to write moduleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -4058,6 +4089,38 @@ ErrCode BundleMgrProxy::InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo)
     }
     parcelInfo = *info;
     APP_LOGD("InnerGetParcelInfo success");
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
+        return ret;
+    }
+    return InnerGetBigString(reply, result);
+}
+
+ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &result)
+{
+    size_t dataSize = reply.ReadUint32();
+    if (dataSize == 0) {
+        APP_LOGE("Invalid data size");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    const char *data = reinterpret_cast<const char *>(reply.ReadRawData(dataSize));
+    if (!data) {
+        APP_LOGE("Fail to read raw data, length = %{public}d", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    result = data;
+    APP_LOGD("InnerGetBigString success");
     return ERR_OK;
 }
 }  // namespace AppExecFwk

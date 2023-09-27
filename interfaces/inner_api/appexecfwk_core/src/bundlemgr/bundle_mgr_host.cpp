@@ -316,6 +316,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
         &BundleMgrHost::HandleResetAOTCompileStatus);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE),
+        &BundleMgrHost::HandleGetJsonProfile);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2844,6 +2846,25 @@ ErrCode BundleMgrHost::HandleResetAOTCompileStatus(MessageParcel &data, MessageP
     return ERR_OK;
 }
 
+ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
+    std::string bundleName = data.ReadString();
+    std::string moduleName = data.ReadString();
+    std::string profile;
+    ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && WriteBigString(profile, reply) != ERR_OK) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ret;
+}
+
 template<typename T>
 bool BundleMgrHost::WriteParcelableIntoAshmem(
     T &parcelable, const char *ashmemName, MessageParcel &reply)
@@ -2949,6 +2970,13 @@ ErrCode BundleMgrHost::WriteParcelInfo(const T &parcelInfo, MessageParcel &reply
 
     WRITE_PARCEL(reply.WriteUint32(dataSize));
     WRITE_PARCEL(reply.WriteRawData(reinterpret_cast<uint8_t *>(tmpParcel.GetData()), dataSize));
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::WriteBigString(const std::string &str, MessageParcel &reply) const
+{
+    WRITE_PARCEL(reply.WriteUint32(str.size() + 1));
+    WRITE_PARCEL(reply.WriteRawData(str.c_str(), str.size() + 1));
     return ERR_OK;
 }
 }  // namespace AppExecFwk

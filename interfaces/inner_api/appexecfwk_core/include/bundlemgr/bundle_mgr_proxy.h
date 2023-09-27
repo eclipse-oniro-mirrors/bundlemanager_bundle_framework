@@ -847,6 +847,10 @@ public:
 
     virtual ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode) override;
+
+    virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+        const std::string &moduleName, std::string &profile) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -905,6 +909,10 @@ private:
 
     template<typename T>
     ErrCode InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo);
+
+    ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
+
+    ErrCode InnerGetBigString(MessageParcel &reply, std::string &result);
 
     ErrCode GetMediaDataFromAshMem(MessageParcel &reply, std::unique_ptr<uint8_t[]> &mediaDataPtr, size_t &len);
     static inline BrokerDelegator<BundleMgrProxy> delegator_;
