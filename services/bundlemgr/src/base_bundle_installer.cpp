@@ -275,7 +275,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .uid = uid,
             .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
-            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
+            .appId = uninstallBundleAppId_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -443,7 +444,8 @@ ErrCode BaseBundleInstaller::UninstallBundle(
             .uid = uid,
             .accessTokenId = accessTokenId_,
             .isAgingUninstall = installParam.isAgingUninstall,
-            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension
+            .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
+            .appId = uninstallBundleAppId_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -1139,7 +1141,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-
+    uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -1269,7 +1271,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         APP_LOGW("uninstall bundle info missing");
         return ERR_APPEXECFWK_UNINSTALL_MISSING_INSTALLED_BUNDLE;
     }
-
+    uninstallBundleAppId_ = oldInfo.GetAppId();
     versionCode_ = oldInfo.GetVersionCode();
     ScopeGuard enableGuard([&] { dataMgr_->EnableBundle(bundleName); });
     if (oldInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -3517,6 +3519,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     otaInstall_ = false;
     signatureFileMap_.clear();
     hapPathRecords_.clear();
+    uninstallBundleAppId_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
