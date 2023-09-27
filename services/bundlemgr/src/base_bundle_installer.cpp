@@ -1536,10 +1536,6 @@ ErrCode BaseBundleInstaller::RemoveBundle(InnerBundleInfo &info, bool isKeepData
 
 ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, int32_t &uid)
 {
-    if (!VerifyUriPrefix(info, userId_)) {
-        APP_LOGE("VerifyUriPrefix failed");
-        return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
-    }
     modulePackage_ = info.GetCurrentModulePackage();
     APP_LOGD("ProcessBundleInstallStatus with bundleName %{public}s and packageName %{public}s",
         bundleName_.c_str(), modulePackage_.c_str());
@@ -1655,20 +1651,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
 {
     APP_LOGD("ProcessNewModuleInstall %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), userId_);
-    bool isModifyEntryName = oldInfo.HasEntry() && newInfo.HasEntry();
-    APP_LOGD("isModifyEntryName : %{public}d", isModifyEntryName);
-    if (isModifyEntryName) {
-        if (!VerifyUriPrefix(newInfo, userId_, false, true, oldInfo.GetEntryModuleName())) {
-            APP_LOGE("VerifyUriPrefix failed");
-            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
-        }
-    } else {
-        if (!VerifyUriPrefix(newInfo, userId_)) {
-            APP_LOGE("VerifyUriPrefix failed");
-            return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
-        }
-    }
-
     if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         APP_LOGE("install more than one entry module");
         return ERR_APPEXECFWK_INSTALL_ENTRY_ALREADY_EXIST;
@@ -1761,10 +1743,6 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 {
     APP_LOGD("ProcessModuleUpdate, bundleName : %{public}s, moduleName : %{public}s, userId: %{public}d.",
         newInfo.GetBundleName().c_str(), newInfo.GetCurrentModulePackage().c_str(), userId_);
-    if (!VerifyUriPrefix(newInfo, userId_, true)) {
-        APP_LOGE("VerifyUriPrefix failed");
-        return ERR_APPEXECFWK_INSTALL_URI_DUPLICATE;
-    }
     // update module type is forbidden
     if ((!isFeatureNeedUninstall_ && !otaInstall_) && (newInfo.HasEntry() && oldInfo.HasEntry())) {
         if (!oldInfo.IsEntryModule(modulePackage_)) {
@@ -3366,61 +3344,6 @@ ErrCode BaseBundleInstaller::RemoveBundleUserData(InnerBundleInfo &innerBundleIn
     }
 
     return ERR_OK;
-}
-
-bool BaseBundleInstaller::VerifyUriPrefix(const InnerBundleInfo &info, int32_t userId, bool isUpdate,
-    bool isModifyEntryName, std::string oldEntryName) const
-{
-    // uriPrefix must be unique
-    // verify current module uriPrefix
-    std::vector<std::string> currentUriPrefixList;
-    info.GetUriPrefixList(currentUriPrefixList);
-    if (currentUriPrefixList.empty()) {
-        APP_LOGD("current module not include uri, verify uriPrefix success");
-        return true;
-    }
-    std::set<std::string> set;
-    for (const std::string &currentUriPrefix : currentUriPrefixList) {
-        if (currentUriPrefix == Constants::DATA_ABILITY_URI_PREFIX) {
-            APP_LOGE("uri format invalid");
-            return false;
-        }
-        if (!set.insert(currentUriPrefix).second) {
-            APP_LOGE("current module contains duplicate uriPrefix, verify uriPrefix failed");
-            APP_LOGE("bundleName : %{public}s, moduleName : %{public}s, uriPrefix : %{public}s",
-                info.GetBundleName().c_str(), info.GetCurrentModulePackage().c_str(), currentUriPrefix.c_str());
-            return false;
-        }
-    }
-    set.clear();
-    // verify exist bundle uriPrefix
-    if (dataMgr_ == nullptr) {
-        APP_LOGE("dataMgr_ is null, verify uriPrefix failed");
-        return false;
-    }
-    std::vector<std::string> uriPrefixList;
-    std::string excludeModule;
-    if (isUpdate) {
-        excludeModule.append(info.GetBundleName()).append(".").append(info.GetCurrentModulePackage()).append(".");
-    }
-    if (isModifyEntryName) {
-        excludeModule.append(info.GetBundleName()).append(".").append(oldEntryName).append(".");
-    }
-    dataMgr_->GetAllUriPrefix(uriPrefixList, userId, excludeModule);
-    if (uriPrefixList.empty()) {
-        APP_LOGD("uriPrefixList empty, verify uriPrefix success");
-        return true;
-    }
-    for (const std::string &currentUriPrefix : currentUriPrefixList) {
-        auto iter = std::find(uriPrefixList.cbegin(), uriPrefixList.cend(), currentUriPrefix);
-        if (iter != uriPrefixList.cend()) {
-            APP_LOGE("uriPrefix alread exist in device, uriPrefix : %{public}s", currentUriPrefix.c_str());
-            APP_LOGE("verify uriPrefix failed");
-            return false;
-        }
-    }
-    APP_LOGD("verify uriPrefix success");
-    return true;
 }
 
 ErrCode BaseBundleInstaller::CheckInstallationFree(const InnerBundleInfo &innerBundleInfo,

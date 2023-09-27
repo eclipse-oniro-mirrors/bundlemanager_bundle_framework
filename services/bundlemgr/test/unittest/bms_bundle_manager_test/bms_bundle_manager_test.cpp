@@ -1794,22 +1794,6 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0027, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: bundleInfosFalse_0028
- * @tc.name: test GetAllUriPrefix
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Level1)
-{
-    std::vector<std::string> uriPrefixList;
-    std::string excludeModule;
-    GetBundleDataMgr()->bundleInfos_.clear();
-    GetBundleDataMgr()->GetAllUriPrefix(
-        uriPrefixList, USERID, excludeModule);
-    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
-}
-
-/**
  * @tc.number: bundleInfosFalse_0029
  * @tc.name: test IsPreInstallApp
  * @tc.desc: 1.system run normally
@@ -2069,19 +2053,6 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0011, Function | SmallTest |
     InnerBundleInfo info;
     bool ret = info.IsUserExistModule("invailed", USERID);
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: InnerBundleInfoFalse_0012
- * @tc.name: test InnerBundleInfo
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0012, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::vector<std::string> uriPrefixList;
-    info.GetUriPrefixList(uriPrefixList, USERID);
-    EXPECT_EQ(uriPrefixList.size(), 0);
 }
 
 /**

@@ -1546,34 +1546,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_0700
- * @tc.name: test VerifyUriPrefix, InnerBundleInfo id is different
- * @tc.desc: 1.Test the VerifyUriPrefix of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0700, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-    InnerBundleInfo innerBundleInfo;
-    bool isUpdate = false;
-    bool ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, true);
-
-    AbilityInfo info;
-    info.uri = "dataability://";
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, false);
-
-    info.uri = "dataability://com.ohos.test";
-    ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, false);
-}
-
-/**
  * @tc.number: baseBundleInstaller_0800
  * @tc.name: test ProcessInstallBundleByBundleName
  * @tc.desc: 1.Test the ProcessInstallBundleByBundleName of BaseBundleInstaller

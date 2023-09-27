@@ -680,9 +680,6 @@ public:
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
-    void GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int32_t userId,
-        const std::string &excludeModule = "") const;
-
     bool AddInnerBundleUserInfo(const std::string &bundleName, const InnerBundleUserInfo& newUserInfo);
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
