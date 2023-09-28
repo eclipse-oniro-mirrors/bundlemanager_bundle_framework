@@ -1546,34 +1546,6 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0600, Function | SmallTest 
 }
 
 /**
- * @tc.number: baseBundleInstaller_0700
- * @tc.name: test VerifyUriPrefix, InnerBundleInfo id is different
- * @tc.desc: 1.Test the VerifyUriPrefix of BaseBundleInstaller
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_0700, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.dataMgr_ = GetBundleDataMgr();
-    InnerBundleInfo innerBundleInfo;
-    bool isUpdate = false;
-    bool ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, true);
-
-    AbilityInfo info;
-    info.uri = "dataability://";
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, false);
-
-    info.uri = "dataability://com.ohos.test";
-    ret = installer.VerifyUriPrefix(
-        innerBundleInfo, Constants::ALL_USERID, isUpdate);
-    EXPECT_EQ(ret, false);
-}
-
-/**
  * @tc.number: baseBundleInstaller_0800
  * @tc.name: test ProcessInstallBundleByBundleName
  * @tc.desc: 1.Test the ProcessInstallBundleByBundleName of BaseBundleInstaller
@@ -2124,24 +2096,6 @@ HWTEST_F(BmsBundleInstallerTest, BundleInstaller_3300, Function | SmallTest | Le
     EXPECT_EQ(installResult, ERR_OK);
 
     UnInstallBundle(BUNDLE_MODULEJSON_NAME);
-}
-
-/**
- * @tc.number: baseBundleInstaller_3500
- * @tc.name: test ProcessBundleInstallStatus
- * @tc.desc: 1.Test the ProcessBundleInstallStatus
-*/
-HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3500, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo innerBundleInfo;
-    AbilityInfo info;
-    int32_t uid = 0;
-    info.uri = "dataability://";
-    innerBundleInfo.userId_ = Constants::ALL_USERID;
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessBundleInstallStatus(innerBundleInfo, uid);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
 }
 
 /**
@@ -4328,26 +4282,6 @@ HWTEST_F(BmsBundleInstallerTest, InnerProcessBundleInstall_0020, TestSize.Level1
     oldInfo.SetApplicationBundleType(BundleType::SHARED);
     auto res = installer.InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
-}
-
-/**
- * @tc.number: ProcessModuleUpdate_0010
- * @tc.name: test ProcessBundleInstallStatus
- * @tc.desc: 1.Test the ProcessBundleInstallStatus
-*/
-HWTEST_F(BmsBundleInstallerTest, ProcessModuleUpdate_0010, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    InnerBundleInfo innerBundleInfo;
-    InnerBundleInfo oldInfo;
-    AbilityInfo info;
-    bool isReplace = false;
-    bool noSkipsKill = false;
-    info.uri = "dataability://";
-    innerBundleInfo.userId_ = Constants::ALL_USERID;
-    innerBundleInfo.baseAbilityInfos_.emplace("key", info);
-    ErrCode res = installer.ProcessModuleUpdate(innerBundleInfo, oldInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_URI_DUPLICATE);
 }
 
 /**

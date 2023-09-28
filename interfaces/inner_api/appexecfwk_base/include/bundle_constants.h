@@ -207,7 +207,6 @@ const char DATA_ABILITY_URI_SEPARATOR = '/';
 constexpr const char* PARAM_URI_SEPARATOR = ":///";
 constexpr uint32_t PARAM_URI_SEPARATOR_LEN = 4;
 constexpr const char* URI_SEPARATOR = "://";
-constexpr uint32_t URI_SEPARATOR_LEN = 3;
 constexpr const char* SEPARATOR = "/";
 
 constexpr int MAX_DIMENSION_SIZE = 10;
