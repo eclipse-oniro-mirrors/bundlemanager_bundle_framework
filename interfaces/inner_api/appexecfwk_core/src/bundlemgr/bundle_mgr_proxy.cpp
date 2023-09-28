@@ -4116,7 +4116,7 @@ ErrCode BundleMgrProxy::InnerGetBigString(MessageParcel &reply, std::string &res
     }
     const char *data = reinterpret_cast<const char *>(reply.ReadRawData(dataSize));
     if (!data) {
-        APP_LOGE("Fail to read raw data, length = %{public}d", dataSize);
+        APP_LOGE("Fail to read raw data, length = %{public}zu", dataSize);
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     result = data;
