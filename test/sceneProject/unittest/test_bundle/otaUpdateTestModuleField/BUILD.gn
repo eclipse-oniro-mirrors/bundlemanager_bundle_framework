@@ -47,8 +47,6 @@ ohos_resources("hjs_demo_resources") {
 }
 
 ohos_shared_library("otaUpdateTestModuleFieldSo1") {
-  stack_protector_ret = true
-
   sources = [ "entry/src/main/cpp/hapso15.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -56,8 +54,6 @@ ohos_shared_library("otaUpdateTestModuleFieldSo1") {
 }
 
 ohos_shared_library("otaUpdateTestModuleFieldSo2") {
-  stack_protector_ret = true
-
   sources = [ "entry/src/main/cpp/hapso16.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

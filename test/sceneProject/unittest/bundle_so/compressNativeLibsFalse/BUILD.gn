@@ -47,8 +47,6 @@ ohos_resources("hjs_demo_resources") {
 }
 
 ohos_shared_library("fun") {
-  stack_protector_ret = true
-
   sources = [ "entry/src/main/cpp/fun.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -56,8 +54,6 @@ ohos_shared_library("fun") {
 }
 
 ohos_shared_library("hello") {
-  stack_protector_ret = true
-
   sources = [ "entry/src/main/cpp/hello.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"

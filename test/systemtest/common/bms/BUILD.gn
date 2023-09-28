@@ -27,8 +27,6 @@ config("bms_system_test_config") {
 }
 
 ohos_source_set("bms_install_sst_source") {
-  stack_protector_ret = true
-
   testonly = true
 
   sources = [

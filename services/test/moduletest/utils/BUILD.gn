@@ -19,8 +19,6 @@ config("tool_config") {
 }
 
 ohos_source_set("tool_common") {
-  stack_protector_ret = true
-
   sources = [ "src/common_tool.cpp" ]
 
   public_configs = [ ":tool_config" ]
