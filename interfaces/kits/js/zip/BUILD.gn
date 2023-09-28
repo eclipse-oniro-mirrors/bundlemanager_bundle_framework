@@ -31,8 +31,6 @@ config("zip_config") {
 }
 
 ohos_shared_library("zlib") {
-  stack_protector_ret = true
-
   public_configs = [ ":zip_config" ]
 
   sources = [

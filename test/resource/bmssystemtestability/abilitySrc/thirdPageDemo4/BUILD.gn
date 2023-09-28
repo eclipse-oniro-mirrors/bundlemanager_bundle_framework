@@ -26,8 +26,6 @@ config("third_page_demo4_config") {
   ]
 }
 ohos_shared_library("page_ability_native4") {
-  stack_protector_ret = true
-
   sources = [ "${SUBDEMOSYSTEM_DIR}/src/pageAbilityDemo.cpp" ]
   configs = [ ":third_page_demo4_config" ]
   deps = [

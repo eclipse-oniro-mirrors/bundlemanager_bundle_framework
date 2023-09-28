@@ -47,8 +47,6 @@ ohos_js_assets("hjs_demo_js_assets") {
 }
 
 ohos_shared_library("hspast41") {
-  stack_protector_ret = true
-
   sources = [ "src/main/cpp/hspast41.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
@@ -56,8 +54,6 @@ ohos_shared_library("hspast41") {
 }
 
 ohos_shared_library("hspast42") {
-  stack_protector_ret = true
-
   sources = [ "src/main/cpp/hspast42.cpp" ]
   visibility = [ ":*" ]
   subsystem_name = "bundlemanager"
