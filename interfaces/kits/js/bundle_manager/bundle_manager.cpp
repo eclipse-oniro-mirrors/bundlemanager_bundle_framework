@@ -2097,6 +2097,21 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::UNSPECIFIED), &nUnspecified));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UNSPECIFIED", nUnspecified));
 
+    napi_value nRemoteNotification;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::REMOTE_NOTIFICATION), &nRemoteNotification));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "REMOTE_NOTIFICATION", nRemoteNotification));
+
+    napi_value nRemoteLocation;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::REMOTE_LOCATION), &nRemoteLocation));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "REMOTE_LOCATION", nRemoteLocation));
+
+    napi_value nVoip;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(ExtensionAbilityType::VOIP), &nVoip));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "VOIP", nVoip));
+
     napi_value nSysDialogUserAuth;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::SYSDIALOG_USERAUTH), &nSysDialogUserAuth));
