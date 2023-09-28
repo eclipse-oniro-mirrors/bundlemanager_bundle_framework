@@ -399,14 +399,10 @@ public:
         bool getCache = false;
     };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info);
     static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
-    NativeValue* OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
-    NativeValue* OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
     NativeValue* CreateCustomizeMetaDatas(
         NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);

@@ -4958,18 +4958,6 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
-NativeValue* JsBundleMgr::SetAbilityEnabled(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnSetAbilityEnabled(*engine, *info) : nullptr;
-}
-
-NativeValue* JsBundleMgr::SetApplicationEnabled(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnSetApplicationEnabled(*engine, *info) : nullptr;
-}
-
 NativeValue* JsBundleMgr::GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info)
 {
     JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
@@ -5545,120 +5533,210 @@ napi_value GetAbilityLabel(napi_env env, napi_callback_info info)
     return ret;
 }
 
-NativeValue* JsBundleMgr::OnSetApplicationEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
+void SetApplicationEnabledExec(napi_env env, void *data)
 {
-    {
-        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
-        abilityInfoCache.clear();
+    APP_LOGD("NAPI begin");
+    EnabledInfo* asyncCallbackInfo =
+        reinterpret_cast<EnabledInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGD("asyncCallbackInfo == nullptr");
+        return;
     }
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    std::string bundleName;
-    bool isEnable = false;
-    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
-        APP_LOGE("wrong number of arguments!");
-        errCode = INVALID_PARAM;
-    }
-    for (size_t i = 0; i < info.argc; ++i) {
-        if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_STRING)) {
-            if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
-                APP_LOGE("conversion failed!");
-                errCode= INVALID_PARAM;
-            }
-        } else if ((i == PARAM1) && (info.argv[PARAM1]->TypeOf() == NATIVE_BOOLEAN)) {
-            if (!ConvertFromJsValue(engine, info.argv[PARAM1], isEnable)) {
-                APP_LOGE("conversion failed!");
-                errCode= INVALID_PARAM;
-            }
-        } else if ((i == PARAM2) && (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION)) {
-            break;
-        } else {
-            errCode = INVALID_PARAM;
+    if (!asyncCallbackInfo->errCode) {
+        asyncCallbackInfo->result = InnerSetApplicationEnabled(asyncCallbackInfo->bundleName,
+                                                               asyncCallbackInfo->isEnable);
+        if (!asyncCallbackInfo->result) {
+            asyncCallbackInfo->errCode = OPERATION_FAILED;
         }
     }
-    auto ret = std::make_shared<bool>(false);
-    auto execute = [result = ret, bundleName, isEnable, errCode] () {
-        if (errCode == ERR_OK) {
-            *result = InnerSetApplicationEnabled(bundleName, isEnable);
-            return;
-        }
-    };
-    auto complete = [result = ret, isEnable, errCode]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (errCode != ERR_OK) {
-                task.Reject(engine, CreateJsValue(engine, errCode));
-                return;
-            }
-            if (!(*result)) {
-                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
-                return;
-            }
-            task.ResolveWithCustomize(engine, engine.CreateUndefined(), engine.CreateUndefined());
-    };
-    NativeValue *result = nullptr;
-    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
-    AsyncTask::Schedule("JsBundleMgr::OnSetApplicationEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
-    return result;
+    APP_LOGD("NAPI end");
 }
 
-NativeValue* JsBundleMgr::OnSetAbilityEnabled(NativeEngine &engine, const NativeCallbackInfo &info)
+void SetApplicationEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    APP_LOGD("NAPI begin");
+    EnabledInfo* asyncCallbackInfo =
+        reinterpret_cast<EnabledInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGD("asyncCallbackInfo == nullptr");
+        return;
+    }
+    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_ONE] = { 0 };
+    if (asyncCallbackInfo->errCode) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
+    }
+    if (asyncCallbackInfo->callback) {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+            sizeof(result) / sizeof(result[0]), result, &placeHolder));
+    } else {
+        if (asyncCallbackInfo->errCode) {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[0]));
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    }
+    APP_LOGD("NAPI end");
+}
+
+napi_value SetApplicationEnabled(napi_env env, napi_callback_info info)
 {
     {
         std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
         abilityInfoCache.clear();
     }
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    int32_t errCode = ERR_OK;
-    bool isEnable = false;
-    OHOS::AppExecFwk::AbilityInfo abilityInfo;
-    auto env = reinterpret_cast<napi_env>(&engine);
-    auto inputAbilityInfo = reinterpret_cast<napi_value>(info.argv[PARAM0]);
-    if (info.argc > ARGS_SIZE_THREE || info.argc < ARGS_SIZE_TWO) {
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = { 0 };
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    if (argc > ARGS_SIZE_THREE || argc < ARGS_SIZE_TWO) {
         APP_LOGE("wrong number of arguments!");
-        errCode = INVALID_PARAM;
+        return nullptr;
     }
-    for (size_t i = 0; i < info.argc; ++i) {
-        if ((i == PARAM0) && (info.argv[PARAM0]->TypeOf() == NATIVE_OBJECT)) {
-            if (!UnwrapAbilityInfo(env, inputAbilityInfo, abilityInfo)) {
-                APP_LOGE("conversion failed!");
-                errCode= INVALID_PARAM;
+
+    EnabledInfo *asyncCallbackInfo = new (std::nothrow) EnabledInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGD("asyncCallbackInfo == nullptr");
+        return nullptr;
+    }
+    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->env = env;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == PARAM0) && (valueType == napi_string)) {
+            ParseString(env, asyncCallbackInfo->bundleName, argv[i]);
+        } else if ((i == PARAM1) && (valueType == napi_boolean)) {
+            bool isEnable = false;
+            NAPI_CALL(env, napi_get_value_bool(env, argv[i], &isEnable));
+            asyncCallbackInfo->isEnable = isEnable;
+        } else if ((i == PARAM2) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        } else {
+            asyncCallbackInfo->errCode = INVALID_PARAM;
+            asyncCallbackInfo->errMssage = TYPE_MISMATCH;
+        }
+    }
+    napi_value promise = nullptr;
+
+    if (asyncCallbackInfo->callback == nullptr) {
+        NAPI_CALL(env, napi_create_promise(env, &asyncCallbackInfo->deferred, &promise));
+    } else {
+        NAPI_CALL(env, napi_get_undefined(env, &promise));
+    }
+    napi_value resource = nullptr;
+    NAPI_CALL(env, napi_create_string_utf8(env, "JSSetApplicationEnabled", NAPI_AUTO_LENGTH, &resource));
+    NAPI_CALL(env, napi_create_async_work(
+        env, nullptr, resource, SetApplicationEnabledExec, SetApplicationEnabledComplete,
+        reinterpret_cast<void*>(asyncCallbackInfo), &asyncCallbackInfo->asyncWork));
+    NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+    callbackPtr.release();
+    return promise;
+}
+
+void SetAbilityEnabledExec(napi_env env, void *data)
+{
+    EnabledInfo* asyncCallbackInfo =
+        reinterpret_cast<EnabledInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    if (!asyncCallbackInfo->errCode) {
+        asyncCallbackInfo->result = InnerSetAbilityEnabled(asyncCallbackInfo->abilityInfo,
+                                                           asyncCallbackInfo->isEnable);
+        if (!asyncCallbackInfo->result) {
+            asyncCallbackInfo->errCode = OPERATION_FAILED;
+        }
+    }
+}
+
+void SetAbilityEnabledComplete(napi_env env, napi_status status, void *data)
+{
+    EnabledInfo* asyncCallbackInfo =
+        reinterpret_cast<EnabledInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is nullptr");
+        return;
+    }
+    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_SIZE_TWO] = { 0 };
+    if (asyncCallbackInfo->errCode != ERR_OK) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else if (!asyncCallbackInfo->result) {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, OPERATION_FAILED, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &result[1]));
+    } else {
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[0]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->errCode, &result[1]));
+    }
+
+    if (asyncCallbackInfo->deferred) {
+        if (asyncCallbackInfo->errCode == ERR_OK) {
+            NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(env, asyncCallbackInfo->deferred, result[1]));
+        } else {
+            NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result[0]));
+        }
+    } else {
+        napi_value callback = nullptr;
+        napi_value placeHolder = nullptr;
+        NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+        NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback, INVALID_PARAM, result, &placeHolder));
+    }
+}
+
+napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
+{
+    {
+        std::lock_guard<std::mutex> lock(abilityInfoCacheMutex_);
+        abilityInfoCache.clear();
+    }
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = { 0 };
+    napi_value thisArg = nullptr;
+    void* data = nullptr;
+
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, &thisArg, &data));
+    if (argc > ARGS_SIZE_THREE || argc < ARGS_SIZE_TWO) {
+        APP_LOGE("wrong number of arguments!");
+        return nullptr;
+    }
+
+    EnabledInfo* asyncCallbackInfo = new (std::nothrow) EnabledInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<EnabledInfo> callbackPtr {asyncCallbackInfo};
+    asyncCallbackInfo->env = env;
+    for (size_t i = 0; i < argc; ++i) {
+        napi_valuetype valueType = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[i], &valueType));
+        if ((i == PARAM0) && (valueType == napi_object)) {
+            if (!UnwrapAbilityInfo(env, argv[i], asyncCallbackInfo->abilityInfo)) {
+                asyncCallbackInfo->errCode = INVALID_PARAM;
+                asyncCallbackInfo->errMssage = TYPE_MISMATCH;
             }
-        } else if ((i == PARAM1) && (info.argv[PARAM1]->TypeOf() == NATIVE_BOOLEAN)) {
-            if (!ConvertFromJsValue(engine, info.argv[PARAM1], isEnable)) {
-                APP_LOGE("conversion failed!");
-                errCode= INVALID_PARAM;
-            }
-        } else if ((i == PARAM2) && (info.argv[PARAM2]->TypeOf() == NATIVE_FUNCTION)) {
+        } else if ((i == PARAM1) && (valueType == napi_boolean)) {
+            NAPI_CALL(env, napi_get_value_bool(env, argv[i], &(asyncCallbackInfo->isEnable)));
+        } else if ((i == PARAM2) && (valueType == napi_function)) {
+            NAPI_CALL(env, napi_create_reference(env, argv[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
             break;
         } else {
-            errCode = INVALID_PARAM;
+            asyncCallbackInfo->errCode = INVALID_PARAM;
+            asyncCallbackInfo->errMssage = TYPE_MISMATCH;
         }
     }
-    auto ret = std::make_shared<bool>(false);
-    auto execute = [result = ret, abilityInfo, isEnable, errCode] () {
-        if (errCode == ERR_OK) {
-            *result = InnerSetAbilityEnabled(abilityInfo, isEnable);
-            return;
-        }
-    };
-    auto complete = [result = ret, errCode]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (errCode != ERR_OK) {
-                task.Reject(engine, CreateJsValue(engine, errCode));
-                return;
-            }
-            if (!*result) {
-                task.Reject(engine, CreateJsValue(engine, OPERATION_FAILED));
-                return;
-            }
-            task.ResolveWithCustomize(engine, CreateJsValue(engine, errCode), CreateJsValue(engine, errCode));
-    };
-    NativeValue *result = nullptr;
-    NativeValue *lastParam = (info.argc == ARGS_SIZE_TWO) ? nullptr : info.argv[PARAM2];
-    AsyncTask::Schedule("JsBundleMgr::OnSetAbilityEnabled",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, std::move(execute), std::move(complete), &result));
-    return result;
+    auto promise = CommonFunc::AsyncCallNativeMethod<EnabledInfo>(
+        env, asyncCallbackInfo, "SetAbilityEnabled", SetAbilityEnabledExec, SetAbilityEnabledComplete);
+    callbackPtr.release();
+    return promise;
 }
 
 NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info)
