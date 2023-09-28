@@ -60,8 +60,6 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     object->SetProperty("BundleFlag", reinterpret_cast<NativeValue*>(CreateBundleFlagObject(env)));
 
     const char *moduleName = "JsBundleMgr";
-    BindNativeFunction(*engine, *object, "setAbilityEnabled", moduleName, JsBundleMgr::SetAbilityEnabled);
-    BindNativeFunction(*engine, *object, "setApplicationEnabled", moduleName, JsBundleMgr::SetApplicationEnabled);
     BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
@@ -86,6 +84,8 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getAbilityIcon", GetAbilityIcon),
         DECLARE_NAPI_FUNCTION("getAllApplicationInfo", GetAllApplicationInfo),
         DECLARE_NAPI_FUNCTION("getApplicationInfo", GetApplicationInfo),
+        DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
+        DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
