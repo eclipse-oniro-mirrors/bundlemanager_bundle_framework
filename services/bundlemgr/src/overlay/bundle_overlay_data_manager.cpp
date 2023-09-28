@@ -780,5 +780,26 @@ void OverlayDataMgr::AddOverlayModuleStates(const InnerBundleInfo &innerBundleIn
     }
     userInfo.bundleUserInfo.overlayModulesState = overlayModuleStatesVec;
 }
+
+ErrCode OverlayDataMgr::UpdateOverlayModule(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (newInfo.GetOverlayType() != NON_OVERLAY_TYPE) {
+        ErrCode result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo);
+        if (result != ERR_OK) {
+            APP_LOGE("remove overlay connection failed due to %{public}d", result);
+            return result;
+        }
+    }
+    // stage model to FA model
+    if (!newInfo.GetIsNewVersion() && oldInfo.GetIsNewVersion()) {
+        oldInfo.CleanAllOverlayModuleInfo();
+        oldInfo.CleanOverLayBundleInfo();
+    }
+#else
+    APP_LOGD("overlay is not supported");
+#endif
+    return ERR_OK;
+}
 } // AppExecFwk
 } // OHOS
