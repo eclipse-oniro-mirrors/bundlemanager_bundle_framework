@@ -1072,7 +1072,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ret;
     }
 
-    if (applicationInfo.isSystemApp && !applicationInfo.userDataClearable) {
+    if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean cacheFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, true, true);
         return ERR_BUNDLE_MANAGER_CAN_NOT_CLEAR_USER_DATA;
@@ -1160,7 +1160,7 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         return false;
     }
 
-    if (applicationInfo.isSystemApp && !applicationInfo.userDataClearable) {
+    if (!applicationInfo.userDataClearable) {
         APP_LOGE("can not clean dataFiles of %{public}s due to userDataClearable is false", bundleName.c_str());
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
