@@ -23,6 +23,10 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum ProfileType {
+    INTENT_PROFILE = 1,
+};
+
 // stores module information about an application
 struct ModuleInfo : public Parcelable {
     std::string moduleName;  // the "name" in module part in config.json

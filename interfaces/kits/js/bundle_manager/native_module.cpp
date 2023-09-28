@@ -78,6 +78,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nCompatiblePolicy));
     CreateCompatiblePolicyObject(env, nCompatiblePolicy);
 
+    napi_value nProfileType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nProfileType));
+    CreateProfileTypeObject(env, nProfileType);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -134,6 +138,8 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getSpecifiedDistributionType", GetSpecifiedDistributionType),
         DECLARE_NAPI_FUNCTION("getAdditionalInfo", GetAdditionalInfo),
         DECLARE_NAPI_FUNCTION("getBundleInfoForSelfSync", GetBundleInfoForSelfSync),
+        DECLARE_NAPI_FUNCTION("getJsonProfile", GetJsonProfile),
+        DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

@@ -46,6 +46,7 @@ constexpr const char* USER_ID = "userId";
 constexpr const char* BUNDLE_FLAGS = "bundleFlags";
 constexpr const char* APP_FLAGS = "appFlags";
 constexpr const char* ABILITY_FLAGS = "abilityFlags";
+constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
@@ -73,6 +74,7 @@ const std::string GET_APP_PROVISION_INFO = "GetAppProvisionInfo";
 const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifiedDistributionType";
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
+const std::string GET_JSON_PROFILE = "GetJsonProfile";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -1804,7 +1806,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
     ErrCode result;
     BundleMgrClient client;
     BundleInfo bundleInfo;
-    if (info.type == ProfileType::ABILITY_PROFILE) {
+    if (info.type == AbilityProfileType::ABILITY_PROFILE) {
         auto getAbilityFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getAbilityFlag, bundleInfo);
@@ -1825,7 +1827,7 @@ static ErrCode InnerGetProfile(GetProfileCallbackInfo &info)
         return ERR_OK;
     }
 
-    if (info.type == ProfileType::EXTENSION_PROFILE) {
+    if (info.type == AbilityProfileType::EXTENSION_PROFILE) {
         auto getExtensionFlag = baseFlag +
             static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY);
         result = iBundleMgr->GetBundleInfoForSelf(getExtensionFlag, bundleInfo);
@@ -1884,7 +1886,7 @@ void GetProfileComplete(napi_env env, napi_status status, void *data)
     CommonFunc::NapiReturnDeferred<GetProfileCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
 }
 
-napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType)
+napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfileType &profileType)
 {
     APP_LOGD("napi begin to GetProfile");
     NapiArg args(env, info);
@@ -1945,13 +1947,13 @@ napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &
 napi_value GetProfileByAbility(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to GetProfileByAbility");
-    return GetProfile(env, info, ProfileType::ABILITY_PROFILE);
+    return GetProfile(env, info, AbilityProfileType::ABILITY_PROFILE);
 }
 
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info)
 {
     APP_LOGD("napi begin to GetProfileByExAbility");
-    return GetProfile(env, info, ProfileType::EXTENSION_PROFILE);
+    return GetProfile(env, info, AbilityProfileType::EXTENSION_PROFILE);
 }
 
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value)
@@ -3216,6 +3218,14 @@ void CreateCompatiblePolicyObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BACKWARD_COMPATIBILITY", nBackwardCompatibility));
 }
 
+void CreateProfileTypeObject(napi_env env, napi_value value)
+{
+    napi_value nIntentProfile;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ProfileType::INTENT_PROFILE), &nIntentProfile));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
+}
+
 ErrCode InnerGetAppProvisionInfo(
     const std::string &bundleName, int32_t userId, AppProvisionInfo &appProvisionInfo)
 {
@@ -3450,6 +3460,76 @@ napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info)
     Query query(bundleName, GET_BUNDLE_INFO, flags, userId, env);
     CheckToCache(env, bundleInfo.uid, IPCSkeleton::GetCallingUid(), query, nBundleInfo);
     return nBundleInfo;
+}
+
+bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
+    int32_t& profileType, std::string& bundleName, std::string& moduleName)
+{
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return false;
+    }
+    if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], profileType)) {
+        APP_LOGE("profileType invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PROFILE_TYPE, TYPE_NUMBER);
+        return false;
+    }
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], bundleName)) {
+        APP_LOGE("bundleName invalid");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return false;
+    }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_BUNDLE_NOT_EXIST, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return false;
+    }
+    if (args.GetMaxArgc() == ARGS_SIZE_THREE) {
+        if (!CommonFunc::ParseString(env, args[ARGS_POS_TWO], moduleName)) {
+            APP_LOGW("parse moduleName failed, try to get profile from entry module!");
+        } else if (moduleName.empty()) {
+            APP_LOGE("moduleName is empty");
+            napi_value businessError = BusinessError::CreateCommonError(
+                env, ERROR_MODULE_NOT_EXIST, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
+            napi_throw(env, businessError);
+            return false;
+        }
+    }
+    return true;
+}
+
+napi_value GetJsonProfile(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("GetJsonProfile napi called");
+    int32_t profileType = 0;
+    std::string bundleName;
+    std::string moduleName;
+    if (!ParamsProcessGetJsonProfile(env, info, profileType, bundleName, moduleName)) {
+        APP_LOGE("paramsProcess failed");
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return nullptr;
+    }
+    std::string profile;
+    ErrCode ret = CommonFunc::ConvertErrCode(
+        iBundleMgr->GetJsonProfile(static_cast<ProfileType>(profileType), bundleName, moduleName, profile));
+    if (ret != SUCCESS) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_JSON_PROFILE, BUNDLE_PERMISSIONS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nProfile;
+    napi_create_string_utf8(env, profile.c_str(), NAPI_AUTO_LENGTH, &nProfile);
+    APP_LOGD("call GetJsonProfile done.");
+    return nProfile;
 }
 }
 }

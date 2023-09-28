@@ -114,7 +114,7 @@ struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     OHOS::AAFwk::Want want;
 };
 
-enum ProfileType : uint32_t {
+enum AbilityProfileType : uint32_t {
     ABILITY_PROFILE = 0,
     EXTENSION_PROFILE,
     UNKNOWN_PROFILE
@@ -122,7 +122,7 @@ enum ProfileType : uint32_t {
 
 struct GetProfileCallbackInfo : public BaseCallbackInfo {
     explicit GetProfileCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
-    ProfileType type = ProfileType::UNKNOWN_PROFILE;
+    AbilityProfileType type = AbilityProfileType::UNKNOWN_PROFILE;
     std::string moduleName;
     std::string abilityName;
     std::string metadataName;
@@ -229,7 +229,7 @@ napi_value GetAbilityIcon(napi_env env, napi_callback_info info);
 napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info);
 napi_value GetPermissionDef(napi_env env, napi_callback_info info);
 napi_value GetLaunchWantForBundle(napi_env env, napi_callback_info info);
-napi_value GetProfile(napi_env env, napi_callback_info info, const ProfileType &profileType);
+napi_value GetProfile(napi_env env, napi_callback_info info, const AbilityProfileType &profileType);
 napi_value GetProfileByAbility(napi_env env, napi_callback_info info);
 napi_value GetProfileByExAbility(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
@@ -245,6 +245,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
 napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
 napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
+napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
@@ -258,6 +259,7 @@ void CreateSupportWindowModesObject(napi_env env, napi_value value);
 void CreateModuleTypeObject(napi_env env, napi_value value);
 void CreateBundleTypeObject(napi_env env, napi_value value);
 void CreateCompatiblePolicyObject(napi_env env, napi_value value);
+void CreateProfileTypeObject(napi_env env, napi_value value);
 void RegisterClearCacheListener();
 }  // namespace AppExecFwk
 }  // namespace OHOS

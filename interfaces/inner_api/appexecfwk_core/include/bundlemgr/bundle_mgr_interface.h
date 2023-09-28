@@ -1226,6 +1226,12 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
+
+    virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+        const std::string &moduleName, std::string &profile)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
 };
 
 #define WRITE_PARCEL(func)                                             \

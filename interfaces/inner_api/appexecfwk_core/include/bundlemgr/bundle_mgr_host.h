@@ -665,6 +665,9 @@ private:
      */
     ErrCode HandleQueryExtensionAbilityInfosWithTypeName(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.
@@ -694,6 +697,8 @@ private:
 
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
+
+    ErrCode WriteBigString(const std::string &str, MessageParcel &reply) const;
 
     using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
     std::unordered_map<uint32_t, BundleMgrHostFunc> funcMap_;
