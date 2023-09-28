@@ -127,6 +127,7 @@ ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info
     want.SetParam(Constants::ABILITY_NAME, info.GetMainAbility());
     want.SetParam(Constants::SANDBOX_APP_INDEX, info.GetAppIndex());
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(info.GetAccessTokenId(userId)));
+    want.SetParam(APP_ID, info.GetAppId());
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::LISTEN_BUNDLE_CHANGE };
