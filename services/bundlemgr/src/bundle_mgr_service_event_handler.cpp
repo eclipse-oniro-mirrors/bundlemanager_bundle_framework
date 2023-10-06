@@ -2034,6 +2034,7 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
             continue;
         }
         InstallParam installParam;
+        installParam.isPreInstallApp = hasInstalledInfo.isPreInstallApp;
         installParam.noSkipsKill = false;
         installParam.needSendEvent = false;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
