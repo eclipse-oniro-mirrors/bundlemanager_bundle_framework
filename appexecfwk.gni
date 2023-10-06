@@ -49,6 +49,7 @@ declare_args() {
   bundle_framework_app_control = true
   distributed_bundle_framework = true
   bundle_framework_overlay_install = true
+  bundle_framework_bundle_resource = true
 
   ability_runtime_enable = true
   account_enable = true
@@ -149,6 +150,10 @@ declare_args() {
       !defined(global_parts_info.multimedia_image_framework)) {
     bundle_framework_graphics = false
   }
+
+  if (!global_resmgr_enable || !global_i18n_enable) {
+    bundle_framework_bundle_resource = false
+  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
@@ -168,5 +173,5 @@ print("global_resmgr_enable = " + "$global_resmgr_enable")
 print("hicollie_enable = " + "$hicollie_enable")
 print("support_jsapi = " + "$support_jsapi")
 print("hisysevent_enable = " + "$hisysevent_enable")
-print(
-    "bundle_framework_overlay_install = " + "$bundle_framework_overlay_install")
+print("bundle_framework_overlay_install = " + "$bundle_framework_overlay_install")
+print("bundle_framework_bundle_resource = " + "$bundle_framework_bundle_resource")

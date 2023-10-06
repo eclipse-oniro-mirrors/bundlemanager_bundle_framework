@@ -17,8 +17,9 @@ import("../../../appexecfwk.gni")
 config("appexecfwk_base_sdk_config") {
   include_dirs = [
     "include",
-    "include/free_install",
+    "include/bundle_resource",
     "include/distributed_manager",
+    "include/free_install",
     "include/overlay",
     "include/quick_fix",
     "include/shared",
@@ -43,6 +44,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/application_info.cpp",
     "src/bundle_info.cpp",
     "src/bundle_pack_info.cpp",
+    "src/bundle_resource/bundle_system_state.cpp",
     "src/bundle_user_info.cpp",
     "src/common_event_info.cpp",
     "src/compatible_ability_info.cpp",
