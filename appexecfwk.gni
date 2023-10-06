@@ -90,6 +90,7 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.global_resource_management)) {
     global_resmgr_enable = false
+    bundle_framework_bundle_resource = false
   }
 
   if (defined(global_parts_info) && !defined(global_parts_info.global_i18n)) {
@@ -149,10 +150,6 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.multimedia_image_framework)) {
     bundle_framework_graphics = false
-  }
-
-  if (!global_resmgr_enable || !global_i18n_enable) {
-    bundle_framework_bundle_resource = false
   }
 }
 
