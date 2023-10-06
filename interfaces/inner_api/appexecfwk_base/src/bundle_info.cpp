@@ -76,6 +76,7 @@ const std::string BUNDLE_INFO_APP_INDEX = "appIndex";
 const std::string BUNDLE_INFO_SIGNATURE_INFO = "signatureInfo";
 const std::string OVERLAY_TYPE = "overlayType";
 const std::string OVERLAY_BUNDLE_INFO = "overlayBundleInfos";
+const std::string APP_IDENTIFIER = "appIdentifier";
 const size_t BUNDLE_CAPACITY = 20480; // 20K
 }
 
@@ -152,6 +153,7 @@ bool SignatureInfo::ReadFromParcel(Parcel &parcel)
 {
     appId = Str16ToStr8(parcel.ReadString16());
     fingerprint = Str16ToStr8(parcel.ReadString16());
+    appIdentifier = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -159,6 +161,7 @@ bool SignatureInfo::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     return true;
 }
 
@@ -486,7 +489,9 @@ void to_json(nlohmann::json &jsonObject, const SignatureInfo &signatureInfo)
 {
     jsonObject = nlohmann::json {
         {SIGNATUREINFO_APPID, signatureInfo.appId},
-        {SIGNATUREINFO_FINGERPRINT, signatureInfo.fingerprint}
+        {SIGNATUREINFO_FINGERPRINT, signatureInfo.fingerprint},
+        {APP_IDENTIFIER, signatureInfo.appIdentifier}
+
     };
 }
 
@@ -592,6 +597,15 @@ void from_json(const nlohmann::json &jsonObject, SignatureInfo &signatureInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        APP_IDENTIFIER,
+        signatureInfo.appIdentifier,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+
     if (parseResult != ERR_OK) {
         APP_LOGE("read SignatureInfo from database error, error code : %{public}d", parseResult);
     }

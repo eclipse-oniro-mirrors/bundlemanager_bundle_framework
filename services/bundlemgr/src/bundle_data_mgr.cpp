@@ -5780,5 +5780,20 @@ void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerB
     }
 }
 #endif
+
+bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return false;
+    }
+    auto innerBundleInfo = bundleInfos_.find(bundleName);
+    if (innerBundleInfo == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s.", bundleName.c_str());
+        return false;
+    }
+    fingerPrints = innerBundleInfo->second.GetFingerprints();
+    return true;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

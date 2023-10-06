@@ -114,6 +114,7 @@ const std::string APPLICATION_APP_TYPE = "bundleType";
 const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
+const std::string FINGERPRINTS = "fingerprints";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -408,6 +409,12 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < resourceApplySize; ++i) {
         resourcesApply.emplace_back(parcel.ReadInt32());
     }
+    int32_t fingerprintsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprintsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, fingerprintsSize, &fingerprints);
+    for (auto i = 0; i < fingerprintsSize; i++) {
+        fingerprints.emplace_back(Str16ToStr8(parcel.ReadString16()));
+    }
     return true;
 }
 
@@ -554,6 +561,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, resourcesApply.size());
     for (auto &item : resourcesApply) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprints.size());
+    for (auto &fingerprint : fingerprints) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fingerprint));
     }
     return true;
 }

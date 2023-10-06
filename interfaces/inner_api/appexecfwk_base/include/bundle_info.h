@@ -79,6 +79,7 @@ struct RequestPermission : public Parcelable {
 struct SignatureInfo : public Parcelable {
     std::string appId;
     std::string fingerprint;
+    std::string appIdentifier;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

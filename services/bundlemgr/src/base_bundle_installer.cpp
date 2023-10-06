@@ -1628,8 +1628,14 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
 
-    if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
-        APP_LOGE("the signature of the new bundle is not the same as old one");
+    if (oldInfo.GetAppIdentifier().empty() || newInfo.GetAppIdentifier().empty()) {
+        if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
+            APP_LOGE("the signature of the new bundle is not the same as old one");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
+        }
+    } else if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
+        APP_LOGE("the appIdentifier of the new bundle is not the same as old one");
+
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
     APP_LOGD("ProcessBundleUpdateStatus noSkipsKill = %{public}d", noSkipsKill);

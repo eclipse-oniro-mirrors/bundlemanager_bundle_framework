@@ -937,6 +937,11 @@ void CommonFunc::ConvertAppProvisionInfo(
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
     ConvertValidity(env, appProvisionInfo.validity, validity);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
+
+    napi_value appIdentifier;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &appIdentifier));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appIdentifier", appIdentifier));
 }
 
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
@@ -1268,6 +1273,11 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, signatureInfo.fingerprint.c_str(), NAPI_AUTO_LENGTH, &nFingerprint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "fingerprint", nFingerprint));
+
+    napi_value nAppIdentifier;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &nAppIdentifier));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
 }
 
 void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)

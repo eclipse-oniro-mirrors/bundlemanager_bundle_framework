@@ -1408,6 +1408,7 @@ bool BundleMgrHostImpl::DumpBundleInfo(
     jsonObject.erase("extensionAbilityInfo");
     jsonObject["applicationInfo"] = bundleInfo.applicationInfo;
     jsonObject["userInfo"] = innerBundleUserInfos;
+    jsonObject["appIdentifier"] = bundleInfo.signatureInfo.appIdentifier;
     result.append(jsonObject.dump(Constants::DUMP_INDENT));
     result.append("\n");
     APP_LOGI("DumpBundleInfo success with bundleName %{public}s", bundleName.c_str());

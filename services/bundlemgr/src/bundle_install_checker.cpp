@@ -629,6 +629,8 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
+    newInfo.SetFingerprints(provisionInfo.fingerprint);
+    newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
 }
 
 void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
@@ -1121,8 +1123,20 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
-        return;
+        std::vector<std::string> fingerPrints;
+        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+        dataMgr->GetFingerprints(bundleName, fingerPrints);
+        bool isExistSignature = false;
+        for (const auto &signature : configInfo.appSignature) {
+            if (std::find(fingerPrints.begin(), fingerPrints.end(), signature) != fingerPrints.end()) {
+                isExistSignature = true;
+                break;
+            }
+        }
+        if (!isExistSignature) {
+            APP_LOGE("bundleName: %{public}s signature verify failed.", bundleName.c_str());
+            return;
+        }
     }
     appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_USE_PRIVILEGE_EXTENSION,
@@ -1304,6 +1318,7 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.uuid = provisionInfo.uuid;
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
+    appProvisionInfo.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     return appProvisionInfo;
 }
 
