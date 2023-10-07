@@ -75,11 +75,6 @@ bundlemgr_parser_common_config = [
 
 ohos_source_set("parser_common") {
   stack_protector_ret = true
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
 
   sources = [
     "src/base_extractor.cpp",
@@ -105,11 +100,6 @@ ohos_source_set("parser_common") {
 
 ohos_source_set("rpcid_decode") {
   stack_protector_ret = true
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
 
   include_dirs = [ "include/rpcid_decode" ]
 
@@ -125,11 +115,6 @@ ohos_source_set("rpcid_decode") {
 
 ohos_source_set("bundle_parser") {
   stack_protector_ret = true
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-    debug = false
-  }
 
   sources = [
     "include/bundle_extractor.h",
