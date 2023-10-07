@@ -187,8 +187,15 @@ void BMSEventHandler::OnBmsStarting()
     APP_LOGI("BMSEventHandler OnBmsStarting start");
     // Judge whether there is install info in the persistent Db
     if (LoadInstallInfosFromDb()) {
-        APP_LOGI("OnBmsStarting Load install info from db success");
-        BundleRebootStartEvent();
+        bool hasSystemFingerprint = HasSystemFingerprint();
+        APP_LOGI("OnBmsStarting Load install info from db success, hasSystemFingerprint: %{public}d",
+            hasSystemFingerprint);
+        if (hasSystemFingerprint) {
+            BundleRebootStartEvent();
+        } else {
+            BundleBootStartEvent();
+            SaveSystemFingerprint();
+        }
         return;
     }
 
@@ -1373,6 +1380,11 @@ std::string BMSEventHandler::GetOldSystemFingerprint()
     }
 
     return oldSystemFingerprint;
+}
+
+bool BMSEventHandler::HasSystemFingerprint()
+{
+    return !GetOldSystemFingerprint().empty();
 }
 
 void BMSEventHandler::AddParseInfosToMap(

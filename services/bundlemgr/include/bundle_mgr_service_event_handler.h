@@ -444,6 +444,7 @@ private:
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
+    bool HasSystemFingerprint();
     std::string GetCurSystemFingerprint();
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
