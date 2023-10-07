@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cinttypes>
+#include <sstream>
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 #ifdef ACCOUNT_ENABLE
@@ -54,6 +55,7 @@
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_data_manager.h"
 #endif
+#include "bundle_extractor.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -67,6 +69,11 @@ constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
+// profile path
+constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
+const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
+    { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
+};
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -4157,22 +4164,6 @@ bool BundleDataMgr::QueryExtensionAbilityInfoByUri(const std::string &uri, int32
     return false;
 }
 
-void BundleDataMgr::GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int32_t userId,
-    const std::string &excludeModule) const
-{
-    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-    APP_LOGD("begin to GetAllUriPrefix, userId : %{public}d, excludeModule : %{public}s",
-        userId, excludeModule.c_str());
-    if (bundleInfos_.empty()) {
-        APP_LOGW("bundleInfos_ is empty");
-        return;
-    }
-    for (const auto &item : bundleInfos_) {
-        item.second.GetUriPrefixList(uriPrefixList, userId, excludeModule);
-        item.second.GetUriPrefixList(uriPrefixList, Constants::DEFAULT_USERID, excludeModule);
-    }
-}
-
 std::string BundleDataMgr::GetStringById(const std::string &bundleName, const std::string &moduleName,
     uint32_t resId, int32_t userId, const std::string &localeInfo)
 {
@@ -5197,6 +5188,78 @@ bool BundleDataMgr::QueryAppGalleryAbilityName(std::string &bundleName, std::str
     APP_LOGD("QueryAppGalleryAbilityName bundleName: %{public}s, abilityName: %{public}s",
         bundleName.c_str(), abilityName.c_str());
     return true;
+}
+
+ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
+    const std::string &moduleName, std::string &profile, int32_t userId) const
+{
+    APP_LOGD("profileType: %{public}d, bundleName: %{public}s, moduleName: %{public}s",
+        profileType, bundleName.c_str(), moduleName.c_str());
+    auto mapItem = PROFILE_TYPE_MAP.find(profileType);
+    if (mapItem == PROFILE_TYPE_MAP.end()) {
+        APP_LOGE("profileType: %{public}d is invalid", profileType);
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+    }
+    std::string profilePath = mapItem->second;
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    const auto &item = bundleInfos_.find(bundleName);
+    if (item == bundleInfos_.end()) {
+        APP_LOGE("bundleName: %{public}s is not found", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+    const InnerBundleInfo &bundleInfo = item->second;
+    bool isEnabled = false;
+    int32_t responseUserId = bundleInfo.GetResponseUserId(userId);
+    ErrCode res = bundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
+    if (res != ERR_OK) {
+        APP_LOGE("check application enabled failed, bundleName: %{public}s", bundleName.c_str());
+        return res;
+    }
+    if (!isEnabled) {
+        APP_LOGE("bundleName: %{public}s is disabled", bundleInfo.GetBundleName().c_str());
+        return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED;
+    }
+    std::string moduleNameTmp = moduleName;
+    if (moduleName.empty()) {
+        APP_LOGW("moduleName is empty, try to get profile from entry module");
+        std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
+        for (const auto &item : moduleInfos) {
+            if (item.second.isEntry) {
+                moduleNameTmp = item.first;
+                APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
+                break;
+            }
+        }
+    }
+    auto moduleInfo = bundleInfo.GetInnerModuleInfoByModuleName(moduleNameTmp);
+    if (!moduleInfo) {
+        APP_LOGE("moduleName: %{public}s is not found", moduleNameTmp.c_str());
+        return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
+    }
+    std::string hapPath = moduleInfo->hapPath;
+    return GetJsonProfileByExtractor(hapPath, profilePath, profile);
+}
+
+ErrCode BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
+    std::string &profile) const
+{
+    APP_LOGD("GetJsonProfileByExtractor called");
+    BundleExtractor bundleExtractor(hapPath);
+    if (!bundleExtractor.Init()) {
+        APP_LOGE("bundle extractor init failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    if (!bundleExtractor.HasEntry(profilePath)) {
+        APP_LOGE("profile not exist");
+        return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST;
+    }
+    std::stringstream profileStream;
+    if (!bundleExtractor.ExtractByName(profilePath, profileStream)) {
+        APP_LOGE("extract profile failed");
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    profile = profileStream.str();
+    return ERR_OK;
 }
 
 bool BundleDataMgr::QueryDataGroupInfos(const std::string &bundleName, int32_t userId,

@@ -2056,24 +2056,6 @@ HWTEST_F(BmsBundleDataMgrTest, QueryExtensionAbilityInfoByUri_0300, Function | S
 }
 
 /**
- * @tc.number: GetAllUriPrefix_0100
- * @tc.name: test GetAllUriPrefix
- * @tc.desc: 1.system run normally
- */
-HWTEST_F(BmsBundleDataMgrTest, GetAllUriPrefix_0100, Function | SmallTest | Level1)
-{
-    std::vector<std::string> uriPrefixList;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    InnerBundleInfo innerBundleInfo;
-    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_NAME_TEST, innerBundleInfo);
-    GetBundleDataMgr()->multiUserIdsSet_.insert(USERID);
-    GetBundleDataMgr()->GetAllUriPrefix(
-        uriPrefixList, USERID, BUNDLE_NAME_TEST);
-    EXPECT_EQ(uriPrefixList.size(), 0);
-    GetBundleDataMgr()->multiUserIdsSet_.clear();
-}
-
-/**
  * @tc.number: UpdateQuickFixInnerBundleInfo_0100
  * @tc.name: test UpdateQuickFixInnerBundleInfo
  * @tc.desc: 1.system run normally
@@ -3561,43 +3543,6 @@ HWTEST_F(BmsBundleDataMgrTest, ClearOverlayModuleStates_0100, Function | SmallTe
 
     info.ClearOverlayModuleStates(MODULE_NAME1);
     EXPECT_EQ(info.innerBundleUserInfos_.empty(), false);
-}
-
-/**
- * @tc.number: GetUriPrefixList_0100
- * @tc.name: test GetUriPrefixList
- * @tc.desc: 1. call GetUriPrefixList, return false
- */
-HWTEST_F(BmsBundleDataMgrTest, GetUriPrefixList_0100, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    AbilityInfo abilityInfo;
-    abilityInfo.name = Constants::APP_DETAIL_ABILITY;
-    abilityInfo.uri = "data/test";
-    info.baseAbilityInfos_.clear();
-    info.baseAbilityInfos_.try_emplace(MODULE_NAME1, abilityInfo);
-
-    std::vector<std::string> uriPrefixList;
-    info.GetUriPrefixList(uriPrefixList, MODULE_NAME1);
-    EXPECT_EQ(uriPrefixList.size(), 0);
-}
-
-/**
- * @tc.number: GetUriPrefixList_0200
- * @tc.name: test GetUriPrefixList
- * @tc.desc: 1. call GetUriPrefixList, return false
- */
-HWTEST_F(BmsBundleDataMgrTest, GetUriPrefixList_0200, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    ExtensionAbilityInfo extensionAbilityInfo;
-    extensionAbilityInfo.uri = "data/test";
-    info.baseExtensionInfos_.clear();
-    info.baseExtensionInfos_.try_emplace(MODULE_NAME1, extensionAbilityInfo);
-
-    std::vector<std::string> uriPrefixList;
-    info.GetUriPrefixList(uriPrefixList, MODULE_NAME1);
-    EXPECT_EQ(uriPrefixList.size(), 0);
 }
 
 /**

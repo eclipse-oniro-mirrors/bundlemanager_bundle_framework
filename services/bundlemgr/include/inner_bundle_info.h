@@ -1419,10 +1419,6 @@ public:
     bool GetAllDependentModuleNames(const std::string &moduleName,
         std::vector<std::string> &dependentModuleNames) const;
 
-    void GetUriPrefixList(std::vector<std::string> &uriPrefixList, const std::string &excludeModule = "") const;
-    void GetUriPrefixList(std::vector<std::string> &uriPrefixList, int32_t userId,
-        const std::string &excludeModule = "") const;
-
     bool IsBundleRemovable() const;
     /**
      * @brief Which modules can be removed.

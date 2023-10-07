@@ -40,6 +40,7 @@
 #include "ffrt.h"
 #include "inner_bundle_info.h"
 #include "inner_bundle_user_info.h"
+#include "module_info.h"
 #include "preinstall_data_storage_interface.h"
 #ifdef GLOBAL_RESMGR_ENABLE
 #include "resource_manager.h"
@@ -680,9 +681,6 @@ public:
     bool QueryExtensionAbilityInfoByUri(const std::string &uri, int32_t userId,
         ExtensionAbilityInfo &extensionAbilityInfo) const;
 
-    void GetAllUriPrefix(std::vector<std::string> &uriPrefixList, int32_t userId,
-        const std::string &excludeModule = "") const;
-
     bool AddInnerBundleUserInfo(const std::string &bundleName, const InnerBundleUserInfo& newUserInfo);
 
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
@@ -854,6 +852,10 @@ public:
         std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const;
     ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
         std::vector<AbilityInfo> &abilityInfos) const;
+    ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
+        std::string &profile, int32_t userId) const;
+    ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
+        std::string &profile) const;
 
 private:
     /**

@@ -1794,22 +1794,6 @@ HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0027, Function | SmallTest | Lev
 }
 
 /**
- * @tc.number: bundleInfosFalse_0028
- * @tc.name: test GetAllUriPrefix
- * @tc.desc: 1.system run normally
- *           2.bundleInfos is empty
-*/
-HWTEST_F(BmsBundleManagerTest, bundleInfosFalse_0028, Function | SmallTest | Level1)
-{
-    std::vector<std::string> uriPrefixList;
-    std::string excludeModule;
-    GetBundleDataMgr()->bundleInfos_.clear();
-    GetBundleDataMgr()->GetAllUriPrefix(
-        uriPrefixList, USERID, excludeModule);
-    EXPECT_EQ(GetBundleDataMgr()->bundleInfos_.empty(), true);
-}
-
-/**
  * @tc.number: bundleInfosFalse_0029
  * @tc.name: test IsPreInstallApp
  * @tc.desc: 1.system run normally
@@ -2069,19 +2053,6 @@ HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0011, Function | SmallTest |
     InnerBundleInfo info;
     bool ret = info.IsUserExistModule("invailed", USERID);
     EXPECT_EQ(ret, false);
-}
-
-/**
- * @tc.number: InnerBundleInfoFalse_0012
- * @tc.name: test InnerBundleInfo
- * @tc.desc: 1.system run normally
-*/
-HWTEST_F(BmsBundleManagerTest, InnerBundleInfoFalse_0012, Function | SmallTest | Level1)
-{
-    InnerBundleInfo info;
-    std::vector<std::string> uriPrefixList;
-    info.GetUriPrefixList(uriPrefixList, USERID);
-    EXPECT_EQ(uriPrefixList.size(), 0);
 }
 
 /**
@@ -5377,5 +5348,142 @@ HWTEST_F(BmsBundleManagerTest, SetExtNameOrMIMEToApp_0004, Function | SmallTest 
     ret = dataMgr->DelExtNameOrMIMEToApp(BUNDLE_BACKUP_NAME, MODULE_NAME, wrongName, EMPTY_STRING, mimeType);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
     UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0001
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile with wrong bundle name
+ *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string wrongName = "wrong";
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, wrongName, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0002
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile with wrong module name
+ *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string wrongName = "wrong";
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, wrongName, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0003
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile in hap without specified profile
+ *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string wrongName = "wrong";
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0004
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile in disabled app
+ *           2. GetJsonProfile failed, return ERR_BUNDLE_MANAGER_APPLICATION_DISABLED
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0004, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string wrongName = "wrong";
+    std::string profile;
+
+    auto ret = dataMgr->SetApplicationEnabled(BUNDLE_BACKUP_NAME, false, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    ret = dataMgr->GetJsonProfile(profileType, BUNDLE_BACKUP_NAME, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_APPLICATION_DISABLED);
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0005
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile successfully
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0005, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_PREVIEW_NAME, MODULE_NAME, profile, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0006
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile with empty module name
+ *           2. GetJsonProfile successfully, get profile in entry module
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0006, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::INTENT_PROFILE;
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_PREVIEW_NAME, EMPTY_STRING, profile, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 } // OHOS
