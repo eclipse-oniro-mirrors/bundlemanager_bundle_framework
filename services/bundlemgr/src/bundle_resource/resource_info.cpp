@@ -34,7 +34,7 @@ std::string ResourceInfo::GetKey() const
 {
     std::string key = bundleName_;
     /**
-    * if moduleName and abilityName both empty, it represents bundle resource 
+    * if moduleName and abilityName both empty, it represents bundle resource,
     * otherwise it represents launcher ability resource.
     */
     key = moduleName_.empty() ? key : (key + SEPARATOR + moduleName_);

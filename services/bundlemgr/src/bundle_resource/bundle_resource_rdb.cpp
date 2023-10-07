@@ -29,7 +29,7 @@ const std::string BUNDLE_RESOURCE_RDB_NAME = "/bundleResource.db";
 const std::string BUNDLE_RESOURCE_RDB_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 // resource table name
 const std::string BUNDLE_RESOURCE_RDB_TABLE_NAME = "bundleResource";
-// app provision info table key
+// bundle resource info table key
 const std::string NAME = "NAME";
 const std::string UPDATE_TIME = "UPDATE_TIME";
 const std::string LABEL = "LABEL";

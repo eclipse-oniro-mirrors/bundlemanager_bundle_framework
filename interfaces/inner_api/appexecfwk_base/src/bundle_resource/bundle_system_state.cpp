@@ -40,31 +40,31 @@ BundleSystemState &BundleSystemState::GetInstance()
 
 void BundleSystemState::SetSystemLanguage(const std::string &language)
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::unique_lock<std::shared_mutex> stateLock(stateMutex_);
     language_ = language;
 }
 
 std::string BundleSystemState::GetSystemLanguage()
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::shared_lock<std::shared_mutex> stateLock(stateMutex_);
     return language_;
 }
 
 void BundleSystemState::SetSystemColorMode(const std::string &colorMode)
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::unique_lock<std::shared_mutex> stateLock(stateMutex_);
     colorMode_ = colorMode;
 }
 
 std::string BundleSystemState::GetSystemColorMode()
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::shared_lock<std::shared_mutex> stateLock(stateMutex_);
     return colorMode_;
 }
 
 std::string BundleSystemState::ToString()
 {
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::shared_lock<std::shared_mutex> stateLock(stateMutex_);
     nlohmann::json jsonObject = nlohmann::json {
         {JSON_KEY_COLOR_MODE, colorMode_},
         {JSON_KEY_LANGUAGE, language_}
@@ -81,7 +81,7 @@ bool BundleSystemState::FromString(const std::string &systemState)
     }
     const auto &jsonObjectEnd = jsonObject.end();
     int32_t parseResult = ERR_OK;
-    std::lock_guard<std::mutex> stateLock(stateMutex_);
+    std::unique_lock<std::shared_mutex> stateLock(stateMutex_);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         JSON_KEY_COLOR_MODE,

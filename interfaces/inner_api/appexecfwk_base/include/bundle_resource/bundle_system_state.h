@@ -16,8 +16,8 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_RESOURCE_SYSTEM_STATE_H
 #define FOUNDATION_BUNDLEMANAGER_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_RESOURCE_SYSTEM_STATE_H
 
+#include <shared_mutex>
 #include <string>
-#include <mutex>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -41,8 +41,7 @@ public:
 
 private:
     BundleSystemState();
-
-    std::mutex stateMutex_;
+    std::shared_mutex stateMutex_;
     // system language
     std::string language_;
     // colorMode : light dark
