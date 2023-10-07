@@ -1964,7 +1964,7 @@ bool ToExtensionInfo(
         extensionInfo.type != ExtensionAbilityType::DATASHARE) {
         extensionInfo.process = extensionInfo.bundleName;
         extensionInfo.process.append(":");
-        extensionInfo.process.append(ConvertToExtensionTypeName(extensionInfo.type));
+        extensionInfo.process.append(extensionInfo.extensionTypeName);
     }
 
     extensionInfo.compileMode = ConvertCompileMode(moduleJson.module.compileMode);
