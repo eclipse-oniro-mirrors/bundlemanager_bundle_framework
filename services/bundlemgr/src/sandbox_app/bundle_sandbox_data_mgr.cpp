@@ -342,5 +342,26 @@ bool BundleSandboxDataMgr::RestoreSandboxAppIndex(const std::string &bundleName,
     APP_LOGD("RestoreSandboxAppIndex finish");
     return true;
 }
+
+void BundleSandboxDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
+{
+    APP_LOGD("RestoreSandboxUidAndGid begin");
+    for (const auto &info : sandboxAppInfos_) {
+        for (auto infoItem : info.second.GetInnerBundleUserInfos()) {
+            auto innerBundleUserInfo = infoItem.second;
+            int32_t bundleId = innerBundleUserInfo.uid -
+                innerBundleUserInfo.bundleUserInfo.userId * Constants::BASE_USER_RANGE;
+            auto item = bundleIdMap.find(bundleId);
+            if (item == bundleIdMap.end()) {
+                bundleIdMap.emplace(bundleId, info.first);
+            } else {
+                bundleIdMap[bundleId] = info.first;
+            }
+            BundleUtil::MakeFsConfig(info.first, bundleId, Constants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(info.first, bundleId, Constants::SHAREFS_CONFIG_PATH);
+        }
+    }
+    APP_LOGD("RestoreSandboxUidAndGid finish");
+}
 } // AppExecFwk
 } // OHOS

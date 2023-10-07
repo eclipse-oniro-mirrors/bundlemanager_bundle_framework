@@ -66,9 +66,6 @@ constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
-// hmdfs and sharefs config
-constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
-constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 }
 
 BundleDataMgr::BundleDataMgr()
@@ -125,6 +122,8 @@ bool BundleDataMgr::LoadDataFromPersistentStorage()
     }
 
     SetInitialUserFlag(true);
+
+    RestoreSandboxUidAndGid(bundleIdMap_);
     return true;
 }
 
@@ -2996,8 +2995,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
             APP_LOGI("the %{public}d app install bundleName:%{public}s", i, bundleName.c_str());
             bundleId = i;
             bundleIdMap_.emplace(bundleId, bundleName);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
-            BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+            BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             return true;
         }
     }
@@ -3009,8 +3008,8 @@ bool BundleDataMgr::GenerateBundleId(const std::string &bundleName, int32_t &bun
 
     bundleId = bundleIdMap_.rbegin()->first + 1;
     bundleIdMap_.emplace(bundleId, bundleName);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, HMDFS_CONFIG_PATH);
-    BundleUtil::MakeFsConfig(bundleName, bundleId, SHAREFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::MakeFsConfig(bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
     return true;
 }
 
@@ -3073,8 +3072,8 @@ void BundleDataMgr::RecycleUidAndGid(const InnerBundleInfo &info)
     }
 
     bundleIdMap_.erase(bundleId);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, HMDFS_CONFIG_PATH);
-    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, SHAREFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::HMDFS_CONFIG_PATH);
+    BundleUtil::RemoveFsConfig(innerBundleUserInfo.bundleName, Constants::SHAREFS_CONFIG_PATH);
 }
 
 bool BundleDataMgr::RestoreUidAndGid()
@@ -3095,12 +3094,20 @@ bool BundleDataMgr::RestoreUidAndGid()
                 } else {
                     bundleIdMap_[bundleId] = innerBundleUserInfo.bundleName;
                 }
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, HMDFS_CONFIG_PATH);
-                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, SHAREFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::HMDFS_CONFIG_PATH);
+                BundleUtil::MakeFsConfig(innerBundleUserInfo.bundleName, bundleId, Constants::SHAREFS_CONFIG_PATH);
             }
         }
     }
     return true;
+}
+
+void BundleDataMgr::RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap)
+{
+    if (sandboxAppHelper_ != nullptr) {
+        std::lock_guard<std::mutex> lock(bundleIdMapMutex_);
+        sandboxAppHelper_->RestoreSandboxUidAndGid(bundleIdMap);
+    }
 }
 
 std::mutex &BundleDataMgr::GetBundleMutex(const std::string &bundleName)
