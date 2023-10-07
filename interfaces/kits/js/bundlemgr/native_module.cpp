@@ -56,16 +56,16 @@ static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
     object->SetProperty("SignatureCompareResult", reinterpret_cast<NativeValue*>(CreateSignatureCompareResultObject(env)));
     object->SetProperty("ShortcutExistence", reinterpret_cast<NativeValue*>(CreateShortcutExistenceObject(env)));
     object->SetProperty("QueryShortCutFlag", reinterpret_cast<NativeValue*>(CreateQueryShortCutFlagObject(env)));
-    object->SetProperty("InstallErrorCode", reinterpret_cast<NativeValue*>(CreateInstallErrorCodeObject(env)));
     object->SetProperty("BundleFlag", reinterpret_cast<NativeValue*>(CreateBundleFlagObject(env)));
-
-    const char *moduleName = "JsBundleMgr";
-    BindNativeFunction(*engine, *object, "getBundleInstaller", moduleName, JsBundleMgr::GetBundleInstaller);
     return exports;
 }
 
 static napi_value Init(napi_env env, napi_value exports)
 {
+    napi_value nInstallErrorCode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
+    CreateInstallErrorCodeObject(env, nInstallErrorCode);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
         DECLARE_NAPI_FUNCTION("getBundleInfos", GetBundleInfos),
@@ -86,9 +86,27 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getApplicationInfo", GetApplicationInfo),
         DECLARE_NAPI_FUNCTION("setAbilityEnabled", SetAbilityEnabled),
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
+        DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
+        DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
+    napi_value m_classBundleInstaller;
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("install", Install),
+        DECLARE_NAPI_FUNCTION("recover", Recover),
+        DECLARE_NAPI_FUNCTION("uninstall", Uninstall),
+    };
+    NAPI_CALL(env,
+        napi_define_class(env,
+            "BundleInstaller",
+            NAPI_AUTO_LENGTH,
+            BundleInstallerConstructor,
+            nullptr,
+            sizeof(properties) / sizeof(*properties),
+            properties,
+            &m_classBundleInstaller));
+    napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
     APP_LOGI("Init end");
     return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
         reinterpret_cast<NativeValue*>(exports)));
