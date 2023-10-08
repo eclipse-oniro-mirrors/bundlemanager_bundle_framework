@@ -350,6 +350,10 @@
     <preparer>
       <option name="push" value="test_bundle/bmsAccessTokentest1.hap -> /data/test/resource/bms/accesstoken_bundle/"
         src="res" />
+      <option name="push" value="test_bundle/bmsAccessTokentest2.hap -> /data/test/resource/bms/accesstoken_bundle/"
+        src="res" />
+      <option name="push" value="test_bundle/bmsAccessTokentest2.hap -> /data/test/resource/bms/quickfix/"
+        src="res" />
       <option name="push" value="bundle_share_library/libA_v10000.hsp -> /data/test/resource/bms/sharelibrary/"
         src="res" />
     </preparer>

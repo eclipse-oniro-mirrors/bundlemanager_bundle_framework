@@ -441,6 +441,8 @@ private:
      */
     bool IsHotPatchApp(const std::string &bundleName);
 
+    void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
+
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
     bool IsSystemFingerprintChanged();
