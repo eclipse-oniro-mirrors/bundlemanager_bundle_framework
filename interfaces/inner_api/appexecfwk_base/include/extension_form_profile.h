@@ -47,7 +47,7 @@ const std::string METADATA_NAME = "name";
 const std::string METADATA_VALUE = "value";
 const std::string DATA_PROXY_ENABLED = "dataProxyEnabled";
 const std::string IS_DYNAMIC = "isDynamic";
-const std::string TRANSPARENT_ENABLED = "transparentEnabled";
+const std::string TRANSPARENCY_ENABLED = "transparencyEnabled";
 }
 
 class ExtensionFormProfile {

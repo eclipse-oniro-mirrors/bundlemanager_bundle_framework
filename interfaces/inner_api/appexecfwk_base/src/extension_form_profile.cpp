@@ -79,7 +79,7 @@ struct ExtensionFormProfileInfo {
     std::vector<Metadata> metadata {};
     bool dataProxyEnabled = false;
     bool isDynamic = true;
-    bool transparentEnabled = false;
+    bool transparencyEnabled = false;
 };
 
 struct ExtensionFormProfileInfoVec {
@@ -277,8 +277,8 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
-        ExtensionFormProfileReader::TRANSPARENT_ENABLED,
-        extensionFormProfileInfo.transparentEnabled,
+        ExtensionFormProfileReader::TRANSPARENCY_ENABLED,
+        extensionFormProfileInfo.transparencyEnabled,
         JsonType::BOOLEAN,
         false,
         g_parseResult,
@@ -390,7 +390,7 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
 
     info.dataProxyEnabled = form.dataProxyEnabled;
     info.isDynamic = form.isDynamic;
-    info.transparentEnabled = form.transparentEnabled;
+    info.transparencyEnabled = form.transparencyEnabled;
     return true;
 }
 

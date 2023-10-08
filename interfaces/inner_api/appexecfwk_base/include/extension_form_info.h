@@ -43,7 +43,7 @@ struct ExtensionFormInfo {
     std::vector<FormCustomizeData> metadata {};
     bool dataProxyEnabled = false;
     bool isDynamic = true;
-    bool transparentEnabled = true;
+    bool transparencyEnabled = true;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
