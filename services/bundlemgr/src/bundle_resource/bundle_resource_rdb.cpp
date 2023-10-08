@@ -45,7 +45,7 @@ const int32_t INDEX_SYSTEM_STATE = 4;
 
 BundleResourceRdb::BundleResourceRdb()
 {
-    APP_LOGI("create BundleResourceRdb.");
+    APP_LOGI("create");
     BmsRdbConfig bmsRdbConfig;
     bmsRdbConfig.dbName = BUNDLE_RESOURCE_RDB_NAME;
     bmsRdbConfig.dbPath = BUNDLE_RESOURCE_RDB_PATH;
@@ -82,6 +82,7 @@ bool BundleResourceRdb::AddResourceInfo(const ResourceInfo &resourceInfo)
 bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
+        APP_LOGE("failed, resourceInfos is empty");
         return false;
     }
     for (const auto &info : resourceInfos) {
@@ -96,6 +97,7 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
 bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
 {
     if (key.empty()) {
+        APP_LOGE("failed, key is empty");
         return false;
     }
     NativeRdb::AbsRdbPredicates absRdbPredicates(BUNDLE_RESOURCE_RDB_TABLE_NAME);
