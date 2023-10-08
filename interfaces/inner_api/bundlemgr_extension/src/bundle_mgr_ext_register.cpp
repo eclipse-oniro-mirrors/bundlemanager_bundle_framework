@@ -28,11 +28,13 @@ BundleMgrExtRegister &BundleMgrExtRegister::GetInstance()
 
 void BundleMgrExtRegister::RegisterBundleMgrExt(const std::string& bundleExtName, const CreateFunc& createFunc)
 {
+    std::lock_guard<std::mutex> lock(BundleMgrExtMutex_);
     bundleMgrExts_.emplace(bundleExtName, createFunc);
 }
 
 std::shared_ptr<BundleMgrExt> BundleMgrExtRegister::GetBundleMgrExt(const std::string &bundleExtName)
 {
+    std::lock_guard<std::mutex> lock(BundleMgrExtMutex_);
     auto it = bundleMgrExts_.find(bundleExtName);
     if (it == bundleMgrExts_.end()) {
         return nullptr;
