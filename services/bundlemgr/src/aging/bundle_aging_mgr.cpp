@@ -30,7 +30,6 @@ namespace {
 const int32_t PERIOD_ANNUALLY = 4;
 const std::string SYSTEM_PARAM_AGING_TIMER_INTERVAL = "persist.sys.bms.aging.policy.timer.interval";
 const std::string SYSTEM_PARAM_AGING_BATTER_THRESHOLD = "persist.sys.bms.aging.policy.battery.threshold";
-const std::string AGING_QUEUE = "AgingQueue";
 const std::string AGING_TASK = "AgingTask";
 
 void StatisticsUsageStats(
@@ -60,7 +59,6 @@ void StatisticsUsageStats(
 
 BundleAgingMgr::BundleAgingMgr()
 {
-    serialQueue_ = std::make_shared<SerialQueue>(AGING_QUEUE);
     InitAgingHandlerChain();
     APP_LOGI("BundleAgingMgr is created.");
 }
@@ -122,14 +120,15 @@ void BundleAgingMgr::ScheduleLoopTask()
                 APP_LOGD("stop aging task");
                 break;
             }
+            ffrt::this_task::sleep_for(std::chrono::milliseconds(sharedPtr->agingTimerInterval_));
             APP_LOGD("begin to run aging task");
             sharedPtr->Start(AgingTriggertype::PREIOD);
-            ffrt::this_task::sleep_for(std::chrono::milliseconds(sharedPtr->agingTimerInterval_));
         }
         APP_LOGD("aging task done");
     };
     if (agingTimerInterval_ >= 0) {
-        serialQueue_->ScheduleDelayTask(AGING_TASK, agingTimerInterval_, task);
+        APP_LOGD("submit aging task");
+        ffrt::submit(task, {}, {}, ffrt::task_attr().name(AGING_TASK.c_str()));
     }
 }
 

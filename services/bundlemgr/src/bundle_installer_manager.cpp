@@ -57,7 +57,7 @@ void BundleInstallerManager::CreateInstallTask(
     }
     auto task = [installer, bundleFilePath, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePath, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -74,7 +74,7 @@ void BundleInstallerManager::CreateRecoverTask(
     }
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(RECOVER_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Recover(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -91,7 +91,7 @@ void BundleInstallerManager::CreateInstallTask(const std::vector<std::string> &b
     }
     auto task = [installer, bundleFilePaths, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Install(bundleFilePaths, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -113,7 +113,7 @@ void BundleInstallerManager::CreateInstallByBundleNameTask(const std::string &bu
 
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(INSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->InstallByBundleName(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -130,7 +130,7 @@ void BundleInstallerManager::CreateUninstallTask(
     }
     auto task = [installer, bundleName, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -147,7 +147,7 @@ void BundleInstallerManager::CreateUninstallTask(const std::string &bundleName, 
     }
     auto task = [installer, bundleName, modulePackage, installParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(bundleName, modulePackage, installParam);
         XCollieHelper::CancelTimer(timerId);
     };
@@ -164,7 +164,7 @@ void BundleInstallerManager::CreateUninstallTask(const UninstallParam &uninstall
     }
     auto task = [installer, uninstallParam] {
         BundleMemoryGuard memoryGuard;
-        int timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
+        int32_t timerId = XCollieHelper::SetTimer(UNINSTALL_TASK, TIME_OUT_SECONDS, nullptr, nullptr);
         installer->Uninstall(uninstallParam);
         XCollieHelper::CancelTimer(timerId);
     };
