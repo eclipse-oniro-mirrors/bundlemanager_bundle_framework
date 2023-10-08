@@ -2010,18 +2010,13 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         return;
     }
     for (auto &scanPathIter : bundleDirs) {
-        APP_LOGI("reboot scan bundle path: %{private}s ", scanPathIter.c_str());
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
-            APP_LOGE("obtain bundleInfo failed : %{private}s ", scanPathIter.c_str());
+            APP_LOGE("ParseHapFiles failed : %{private}s ", scanPathIter.c_str());
             continue;
         }
-
         auto bundleName = infos.begin()->second.GetBundleName();
         auto hapVersionCode = infos.begin()->second.GetVersionCode();
-
-        APP_LOGI("update bundle(%{public}s) by path(%{private}s).",
-            bundleName.c_str(), scanPathIter.c_str());
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
