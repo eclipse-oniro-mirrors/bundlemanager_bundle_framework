@@ -1295,6 +1295,7 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     appDetailAbility.labelId = applicationInfo.labelId;
     if (!info.GetIsNewVersion()) {
         appDetailAbility.labelId = 0;
+        appDetailAbility.label = info.GetBundleName();
     }
     appDetailAbility.iconId = applicationInfo.iconId;
     if ((appDetailAbility.iconId == 0) || !info.GetIsNewVersion()) {

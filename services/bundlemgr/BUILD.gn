@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/aot",
     "include/app_provision_info",
     "include/bundlemgr",
+    "include/bundle_resource",
     "include/common",
     "include/default_app",
     "include/free_install",
@@ -379,6 +380,12 @@ ohos_shared_library("libbms") {
     configs += [ ":app_control_config" ]
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += app_control
+  }
+
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    external_deps += [ "ability_base:configuration" ]
+    sources += bundle_resource
   }
 
   if (build_variant == "root") {

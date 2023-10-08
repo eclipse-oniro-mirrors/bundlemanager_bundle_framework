@@ -174,3 +174,8 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
 ]
+
+bundle_resource = [
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_rdb.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/resource_info.cpp",
+]
