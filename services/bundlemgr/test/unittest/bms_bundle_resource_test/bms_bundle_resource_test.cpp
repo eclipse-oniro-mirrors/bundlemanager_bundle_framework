@@ -25,6 +25,8 @@
 #include "bundle_permission_mgr.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_manager.h"
+#include "bundle_resource_process.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
 #endif
@@ -49,6 +51,10 @@ namespace OHOS {
 namespace {
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
+const std::string MODULE_NAME = "entry";
+const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
+const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -403,6 +409,478 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0008, Function | SmallTest
 
     ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0009
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfo, bundle not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0009, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    InnerBundleInfo bundleInfo;
+    // userId not exist
+    bool ans = manager->AddResourceInfo(bundleInfo, 103);
+    EXPECT_FALSE(ans);
+
+    // bundle not exist
+    ans = manager->AddResourceInfo(bundleInfo, USERID);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0010
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfo, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0010, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // bundle exist but userId not exist
+    bool ans = manager->AddResourceInfo(bundleInfo, USERID);
+    EXPECT_FALSE(ans);
+    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
+    EXPECT_FALSE(ans);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    // bundle exist, userId exist, SHARED resourceInfo is empty
+    ans = manager->AddResourceInfo(bundleInfo, USERID);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0011
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfo, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0011, Function | SmallTest | Level0)
+{
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    InnerBundleInfo bundleInfo;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // bundle exist but userId not exist
+    bool ans = manager->AddResourceInfo(bundleInfo, USERID);
+    EXPECT_FALSE(ans);
+    // bundle exist but userId not exist
+    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
+    EXPECT_FALSE(ans);
+
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    // bundle exist, userId  exist
+    ans = manager->AddResourceInfo(bundleInfo, USERID);
+    EXPECT_TRUE(ans);
+
+    manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
+    EXPECT_TRUE(ans);
+
+    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0012
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddAllResourceInfo, userId not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0012, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // userId not exist, no resourceInfo
+    bool ans = manager->AddAllResourceInfo(200);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0013
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName, bundle not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0013, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // bundle not exist
+    bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0014
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByBundleName, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0014, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // bundle exist, userId not exist
+    bool ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, 200);
+    EXPECT_FALSE(ans);
+
+    // bundle exist, userId exist
+    ans = manager->AddResourceInfoByBundleName(BUNDLE_NAME, USERID);
+    EXPECT_TRUE(ans);
+
+    // delete key
+    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ans);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0015
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByAbility, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0015, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    // bundle not exist
+    bool ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
+    EXPECT_FALSE(ans);
+
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    // bundle exist, moduleName or abilityName not exist
+    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, "xxx", "yyy", USERID);
+    EXPECT_FALSE(ans);
+
+    // bundle  moduleName exist, abilityName not exist
+    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, "yyy", USERID);
+    EXPECT_FALSE(ans);
+
+    // bundle  moduleName exist, abilityName exist
+    ans = manager->AddResourceInfoByAbility(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, USERID);
+    EXPECT_TRUE(ans);
+
+    // delete key
+    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ans);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0016
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    std::vector<std::string> keyNames;
+    ans = manager->GetAllResourceName(keyNames);
+    EXPECT_TRUE(ans);
+
+    EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) != keyNames.end());
+    // delete key
+    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0050
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0050, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    // bundleName empty
+    bool ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    // bundle type is shared
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    applicationInfo.bundleType = BundleType::APP;
+    applicationInfo.hideDesktopIcon = true;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    // hideDesktopIcon is true
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    applicationInfo.hideDesktopIcon = false;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    BundleInfo info;
+    info.entryInstallationFree = true;
+    bundleInfo.SetBaseBundleInfo(info);
+    // entryInstallationFree is true
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    info.entryInstallationFree = false;
+    bundleInfo.SetBaseBundleInfo(info);
+    // abilityInfos is empty
+    ans = BundleResourceProcess::GetLauncherAbilityResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0051
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0051, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    ResourceInfo resourceInfo;
+    // bundleName empty
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    // bundle type is shared
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    applicationInfo.bundleType = BundleType::APP;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0052
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0052, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    ResourceInfo resourceInfo;
+    // bundleName empty
+    bool ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    applicationInfo.bundleType = BundleType::SHARED;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    // bundle type is shared
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    applicationInfo.bundleType = BundleType::APP;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    ans = BundleResourceProcess::GetBundleResourceInfo(bundleInfo, USERID, resourceInfo);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0053
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0053, Function | SmallTest | Level0)
+{
+    InnerBundleInfo bundleInfo;
+    std::vector<ResourceInfo> resourceInfos;
+    // bundleName not exist
+    bool ans = BundleResourceProcess::GetResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    // bundleName not exist
+    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 0, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    // userId not exist
+    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, 200, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_NAME;
+    bundleInfo.SetBaseApplicationInfo(applicationInfo);
+    InnerBundleUserInfo userInfo;
+    userInfo.bundleUserInfo.userId = USERID;
+    userInfo.bundleName = BUNDLE_NAME;
+    bundleInfo.AddInnerBundleUserInfo(userInfo);
+    // bundle and userId exist
+    ans = BundleResourceProcess::GetResourceInfo(bundleInfo, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0054
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByBundleName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0054, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    // bundleName not exist
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    // userId exist
+    ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, 200, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0055
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByAbilityName
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0055, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    // bundle not exist
+    bool ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+        USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    // userId not exist
+    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+        200, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    // bundle exist, moduleName or abilityName not exist
+    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, "xxx", "yyy", USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    // bundle  moduleName exist, abilityName not exist
+    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, "yyy", USERID, resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.GetKey(), "");
+
+    // bundle  moduleName exist, abilityName exist
+    ans = BundleResourceProcess::GetResourceInfoByAbilityName(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME,
+        USERID, resourceInfo);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(resourceInfo.bundleName_, BUNDLE_NAME);
+    EXPECT_EQ(resourceInfo.moduleName_, MODULE_NAME);
+    EXPECT_EQ(resourceInfo.abilityName_, ABILITY_NAME);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0056
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    // userId not exist
+    bool ans = BundleResourceProcess::GetAllResourceInfo(200, resourceInfos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(resourceInfos.empty());
+
+    // userId exist
+    ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
 }
 #endif
 } // OHOS

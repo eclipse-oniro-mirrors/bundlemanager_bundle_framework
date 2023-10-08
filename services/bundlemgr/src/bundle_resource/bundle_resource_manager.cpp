@@ -63,7 +63,7 @@ bool BundleResourceManager::AddResourceInfoByAbility(const std::string &bundleNa
     if (!BundleResourceProcess::GetResourceInfoByAbilityName(bundleName, moduleName, abilityName,
         userId, resourceInfo)) {
         APP_LOGE("bundleName: %{public}s, moduleName: %{public}s, abilityName: %{public}s failed",
-            bundleName.c_str(), abilityName.c_str());
+            bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
         return false;
     }
     return AddResourceInfo(resourceInfo);

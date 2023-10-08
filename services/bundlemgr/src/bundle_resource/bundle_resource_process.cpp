@@ -32,7 +32,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo
     std::vector<ResourceInfo> &resourceInfos)
 {
     if (innerBundleInfo.GetBundleName().empty()) {
-        APP_LOGE("bundleName:%{public}s is empty");
+        APP_LOGE("bundleName is empty");
         return false;
     }
 
@@ -81,7 +81,7 @@ bool BundleResourceProcess::GetBundleResourceInfo(const InnerBundleInfo &innerBu
     ResourceInfo &resourceInfo)
 {
     if (innerBundleInfo.GetBundleName().empty()) {
-        APP_LOGE("bundleName:%{public}s is empty");
+        APP_LOGE("bundleName is empty");
         return false;
     }
     if (innerBundleInfo.GetApplicationBundleType() == BundleType::SHARED) {
@@ -122,6 +122,11 @@ bool BundleResourceProcess::GetAllResourceInfo(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    auto userIds = dataMgr->GetAllUser();
+    if (userIds.find(userId) == userIds.end()) {
+        APP_LOGE("userId: %{public}d is not exist", userId);
         return false;
     }
     const std::map<std::string, InnerBundleInfo> bundleInfos = dataMgr->GetAllInnerBundleInfos();
@@ -268,15 +273,9 @@ bool BundleResourceProcess::InnerGetResourceInfo(
 
 bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId)
 {
+    int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+    return responseUserId != Constants::INVALID_USERID;
     // get installTime from innerBundleUserInfo
-    std::string userIdKey = innerBundleInfo.GetBundleName() + "_" + std::to_string(userId);
-    std::string userZeroKey = innerBundleInfo.GetBundleName() + "_" + std::to_string(0);
-    auto iter = std::find_if(innerBundleInfo.GetInnerBundleUserInfos().begin(),
-        innerBundleInfo.GetInnerBundleUserInfos().end(),
-        [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {
-        return (infoMap.first == userIdKey || infoMap.first == userZeroKey);
-    });
-    return iter != innerBundleInfo.GetInnerBundleUserInfos().end();
 }
 
 int64_t BundleResourceProcess::GetUpdateTime(const InnerBundleInfo &innerBundleInfo, const int32_t userId)
