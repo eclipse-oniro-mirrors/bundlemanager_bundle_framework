@@ -194,7 +194,7 @@ struct AsyncInstallCallbackInfo : public AsyncWorkData {
     std::string param;
     OHOS::AppExecFwk::InstallParam installParam;
     InstallResult installResult;
-    int32_t err = 0;
+    int32_t errCode = 0;
 };
 
 struct AsyncGetBundleInstallerCallbackInfo : public AsyncWorkData {
@@ -336,7 +336,13 @@ napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
 napi_value GetBundleGids(napi_env env, napi_callback_info info);
 napi_value GetAbilityInfo(napi_env env, napi_callback_info info);
 napi_value GetAbilityLabel(napi_env env, napi_callback_info info);
+napi_value GetBundleInstaller(napi_env env, napi_callback_info info);
+napi_value Install(napi_env env, napi_callback_info info);
+napi_value Recover(napi_env env, napi_callback_info info);
+napi_value Uninstall(napi_env env, napi_callback_info info);
+napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info);
 bool UnwrapAbilityInfo(napi_env env, napi_value param, OHOS::AppExecFwk::AbilityInfo& abilityInfo);
+void CreateInstallErrorCodeObject(napi_env env, napi_value value);
 
 napi_value CreateAbilityTypeObject(napi_env env);
 napi_value CreateAbilitySubTypeObject(napi_env env);
@@ -348,7 +354,6 @@ napi_value CreateModuleRemoveFlagObject(napi_env env);
 napi_value CreateSignatureCompareResultObject(napi_env env);
 napi_value CreateShortcutExistenceObject(napi_env env);
 napi_value CreateQueryShortCutFlagObject(napi_env env);
-napi_value CreateInstallErrorCodeObject(napi_env env);
 napi_value CreateBundleFlagObject(napi_env env);
 napi_value GetAllApplicationInfo(napi_env env, napi_callback_info info);
 napi_value GetApplicationInfo(napi_env env, napi_callback_info info);
@@ -399,7 +404,6 @@ public:
         bool getCache = false;
     };
     static void Finalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info);
     std::string errMessage_;
 
 private:
@@ -438,7 +442,6 @@ private:
     static bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
     static bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
         BundleOptions &options, bool &unwarpBundleOptionsParamsResult);
-    NativeValue* JsBundleInstallInit(NativeEngine &engine);
     NativeValue* CreateBundlePackInfo(NativeEngine &engine, const int32_t &flags, const BundlePackInfo &bundlePackInfo);
     NativeValue* CreatePackages(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
     NativeValue* CreateSummary(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);

@@ -3190,121 +3190,134 @@ napi_value CreateBundleFlagObject(napi_env env)
     return value;
 }
 
-napi_value CreateInstallErrorCodeObject(napi_env env)
+
+void CreateInstallErrorCodeObject(napi_env env, napi_value value)
 {
-    APP_LOGD("enter");
-
-    napi_value value = nullptr;
-    NAPI_CALL(env, napi_create_object(env, &value));
-
-    napi_value nSuccess = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::SUCCESS), &nSuccess));
-    NAPI_CALL(env, napi_set_named_property(env, value, "SUCCESS", nSuccess));
-
-    napi_value nInFail = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nInFail));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nInFail));
-
-    napi_value nInFailAborted = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED), &nInFailAborted));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nInFailAborted));
-
-    napi_value nInFailInvalid = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID), &nInFailInvalid));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nInFailInvalid));
-
-    napi_value nInFailConflict = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT), &nInFailConflict));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nInFailConflict));
-
-    napi_value nInFailStorage = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE), &nInFailStorage));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nInFailStorage));
-
-    napi_value nInFailIncompatible = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE), &nInFailIncompatible));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nInFailIncompatible));
-
-    napi_value nUninFail = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nUninFail));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nUninFail));
-
-    napi_value nUninFailBlocked = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED), &nUninFailBlocked));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nUninFailBlocked));
-
-    napi_value nUninFailAborted = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED), &nUninFailAborted));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nUninFailAborted));
-
-    napi_value nUninFailConflict = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT), &nUninFailConflict));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nUninFailConflict));
-
-    napi_value nInFailDownloadTimeout = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT), &nInFailDownloadTimeout));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nInFailDownloadTimeout));
-
-    napi_value nInFailDownloadFailed = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED), &nInFailDownloadFailed));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nInFailDownloadFailed));
-
-    napi_value nAbilityNotFound = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND), &nAbilityNotFound));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_ABILITY_NOT_FOUND", nAbilityNotFound));
-
-    napi_value nBmsServiceError = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR), &nBmsServiceError));
-    NAPI_CALL(env, napi_set_named_property(env, value, "STATUS_BMS_SERVICE_ERROR", nBmsServiceError));
-
-    napi_value nGrantPermissionsFailed = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED), &nGrantPermissionsFailed));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED", nGrantPermissionsFailed));
-
-    napi_value nInstallPermissionDenied = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED), &nInstallPermissionDenied));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_INSTALL_PERMISSION_DENIED", nInstallPermissionDenied));
-
-    napi_value nUninstallPermissionDenied = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED), &nUninstallPermissionDenied));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_UNINSTALL_PERMISSION_DENIED", nUninstallPermissionDenied));
-    
-    napi_value nFailedNoSpaceLeft = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT), &nFailedNoSpaceLeft));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_FAILED_NO_SPACE_LEFT", nFailedNoSpaceLeft));
-    
-    napi_value nRecoverFailureInvalid = nullptr;
-    NAPI_CALL(env, napi_create_int32(env,
-        static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailureInvalid));
-    NAPI_CALL(env, napi_set_named_property(env, value,
-        "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailureInvalid));
-    
-    return value;
+    napi_value nSuccess;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::SUCCESS), &nSuccess));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SUCCESS", nSuccess));
+    napi_value nStatusInstallFailure;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(
+            env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE), &nStatusInstallFailure));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE", nStatusInstallFailure));
+    napi_value nStatusInstallFailureAborted;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_ABORTED),
+            &nStatusInstallFailureAborted));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_ABORTED", nStatusInstallFailureAborted));
+    napi_value nStatusInstallFailureInvalid;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID),
+            &nStatusInstallFailureInvalid));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INVALID", nStatusInstallFailureInvalid));
+    napi_value nStatusInstallFailureConflict;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT),
+            &nStatusInstallFailureConflict));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_CONFLICT", nStatusInstallFailureConflict));
+    napi_value nStatusInstallFailureStorage;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE),
+            &nStatusInstallFailureStorage));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_STORAGE", nStatusInstallFailureStorage));
+    napi_value nStatusInstallFailureIncompatible;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE),
+            &nStatusInstallFailureIncompatible));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "STATUS_INSTALL_FAILURE_INCOMPATIBLE", nStatusInstallFailureIncompatible));
+    napi_value nStatusUninstallFailure;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(
+            env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE), &nStatusUninstallFailure));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE", nStatusUninstallFailure));
+    napi_value nStatusUninstallFailureBlocked;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_BLOCKED),
+            &nStatusUninstallFailureBlocked));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_BLOCKED", nStatusUninstallFailureBlocked));
+    napi_value nStatusUninstallFailureAborted;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED),
+            &nStatusUninstallFailureAborted));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_UNINSTALL_FAILURE_ABORTED", nStatusUninstallFailureAborted));
+    napi_value nStatusUninstallFailureConflict;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT),
+            &nStatusUninstallFailureConflict));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(
+            env, value, "STATUS_UNINSTALL_FAILURE_CONFLICT", nStatusUninstallFailureConflict));
+    napi_value nStatusInstallFailureDownloadTimeout;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT),
+            &nStatusInstallFailureDownloadTimeout));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(
+            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_TIMEOUT", nStatusInstallFailureDownloadTimeout));
+    napi_value nStatusInstallFailureDownloadFailed;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED),
+            &nStatusInstallFailureDownloadFailed));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(
+            env, value, "STATUS_INSTALL_FAILURE_DOWNLOAD_FAILED", nStatusInstallFailureDownloadFailed));
+    napi_value nStatusAbilityNotFound;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(
+            env, static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND), &nStatusAbilityNotFound));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, value, "STATUS_ABILITY_NOT_FOUND", nStatusAbilityNotFound));
+    napi_value nBmsServiceError;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR), &nBmsServiceError));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_BMS_SERVICE_ERROR", nBmsServiceError));
+    napi_value nStatusGrantRequestPermissionsFailed;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED),
+                          &nStatusGrantRequestPermissionsFailed));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED",
+                          nStatusGrantRequestPermissionsFailed));
+    napi_value nStatusInstallPermissionDenied;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED),
+                          &nStatusInstallPermissionDenied));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_INSTALL_PERMISSION_DENIED",
+                          nStatusInstallPermissionDenied));
+    napi_value nStatusUnInstallPermissionDenied;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED),
+                          &nStatusUnInstallPermissionDenied));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_UNINSTALL_PERMISSION_DENIED",
+                          nStatusUnInstallPermissionDenied));
+    napi_value nNoSpaceLeft;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env, static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT), &nNoSpaceLeft));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "STATUS_FAILED_NO_SPACE_LEFT", nNoSpaceLeft));
+    napi_value nRecoverFailure;
+    NAPI_CALL_RETURN_VOID(env,
+        napi_create_int32(env,
+            static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID), &nRecoverFailure));
+    NAPI_CALL_RETURN_VOID(env,
+        napi_set_named_property(env, value, "STATUS_RECOVER_FAILURE_INVALID", nRecoverFailure));
 }
 
 static bool InnerGetApplicationInfo(
@@ -4958,12 +4971,6 @@ napi_value IsApplicationEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
-NativeValue* JsBundleMgr::GetBundleInstaller(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleMgr* me = CheckParamsAndGetThis<JsBundleMgr>(engine, info);
-    return (me != nullptr) ? me->OnGetBundleInstaller(*engine, *info) : nullptr;
-}
-
 void GetBundleInfoExec(napi_env env, void *data)
 {
     AsyncBundleInfoCallbackInfo* asyncCallbackInfo = reinterpret_cast<AsyncBundleInfoCallbackInfo*>(data);
@@ -5739,365 +5746,19 @@ napi_value SetAbilityEnabled(napi_env env, napi_callback_info info)
     return promise;
 }
 
-NativeValue* JsBundleMgr::OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info)
+static void ConvertInstallResult(InstallResult &installResult)
 {
-    APP_LOGI("%{public}s is called", __FUNCTION__);
-    if (info.argc > ARGS_SIZE_ONE) {
-        APP_LOGE("wrong number of arguments!");
-        return engine.CreateUndefined();
-    }
-
-    AsyncTask::CompleteCallback complete = [obj = this](NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (!VerifySystemApi()) {
-                APP_LOGE("GetBundleInstaller caller is not system app");
-                task.Reject(engine, CreateJsValue(engine, 1));
-                return;
-            }
-            if (!VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE)) {
-                APP_LOGE("GetBundleInstaller no permission!");
-                task.Reject(engine, CreateJsValue(engine, 1));
-                return;
-            }
-
-            auto ret = obj->JsBundleInstallInit(engine);
-            if (ret == nullptr) {
-                APP_LOGE("bind func failed");
-            }
-            task.Resolve(engine, ret);
-    };
-
-    NativeValue* lastParam = (info.argc == ARGS_SIZE_ONE) ? info.argv[PARAM0] : nullptr;
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleMgr::OnGetBundleInstaller",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleMgr::JsBundleInstallInit(NativeEngine &engine)
-{
-    APP_LOGD("JsBundleMgrInit is called");
-    auto objBundleInstall = engine.CreateObject();
-    if (objBundleInstall == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return nullptr;
-    }
-    auto object = ConvertNativeValueTo<NativeObject>(objBundleInstall);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return nullptr;
-    }
-
-    auto jsCalss = std::make_unique<JsBundleInstall>();
-    object->SetNativePointer(jsCalss.release(), JsBundleInstall::Finalizer, nullptr);
-    const char *moduleName = "JsBundleInstall";
-    BindNativeFunction(engine, *object, "install", moduleName, JsBundleInstall::Install);
-    BindNativeFunction(engine, *object, "recover", moduleName, JsBundleInstall::Recover);
-    BindNativeFunction(engine, *object, "uninstall", moduleName, JsBundleInstall::Uninstall);
-
-    return objBundleInstall;
-}
-
-void JsBundleInstall::Finalizer(NativeEngine *engine, void *data, void *hint)
-{
-    APP_LOGI("JsBundleInstall::Finalizer is called");
-    std::unique_ptr<JsBundleInstall>(static_cast<JsBundleInstall*>(data));
-}
-
-NativeValue* JsBundleInstall::Install(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
-    return (me != nullptr) ? me->OnInstall(*engine, *info) : nullptr;
-}
-
-NativeValue* JsBundleInstall::Recover(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
-    return (me != nullptr) ? me->OnRecover(*engine, *info) : nullptr;
-}
-
-NativeValue* JsBundleInstall::Uninstall(NativeEngine *engine, NativeCallbackInfo *info)
-{
-    JsBundleInstall* me = CheckParamsAndGetThis<JsBundleInstall>(engine, info);
-    return (me != nullptr) ? me->OnUninstall(*engine, *info) : nullptr;
-}
-
-NativeValue* JsBundleInstall::CreateInstallStatus(NativeEngine &engine,
-    const std::shared_ptr<BundleInstallResult> bundleInstallResult)
-{
-    APP_LOGD("CreateInstallStatus is called");
-    auto objContext = engine.CreateObject();
-    if (objContext == nullptr) {
-        APP_LOGE("CreateObject failed");
-        return engine.CreateUndefined();
-    }
-
-    auto object = ConvertNativeValueTo<NativeObject>(objContext);
-    if (object == nullptr) {
-        APP_LOGE("ConvertNativeValueTo object failed");
-        return engine.CreateUndefined();
-    }
-
-    object->SetProperty("status", CreateJsValue(engine, bundleInstallResult->resCode));
-    object->SetProperty("statusMessage", CreateJsValue(engine, bundleInstallResult->resMessage));
-
-    return objContext;
-}
-NativeValue* JsBundleInstall::OnInstall(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-
-    std::vector<std::string> bundleFilePaths;
-    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
-    InstallParam installParam;
-    if (info.argc != ARGS_SIZE_THREE) {
-        APP_LOGE("wrong number of arguments!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    }
-    if (!info.argv[PARAM0]->IsArray()) {
-        APP_LOGE("input params is not array!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!GetStringsValue(engine, info.argv[PARAM0], bundleFilePaths)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
-        APP_LOGE("input params is not array!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    AsyncTask::CompleteCallback complete = [obj = this, bundleFilePaths, installParam, resInstall = installResult]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (resInstall->resCode != 0) {
-                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
-                return;
-            }
-            auto iBundleMgr = GetBundleMgr();
-            if (iBundleMgr == nullptr) {
-                APP_LOGE("iBundleMgr is nullptr");
-                return;
-            }
-            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-                APP_LOGE("can not get iBundleInstaller");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-
-            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-            if (callback == nullptr) {
-                APP_LOGE("callback nullptr");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-            ErrCode res = iBundleInstaller->StreamInstall(bundleFilePaths, installParam, callback);
-            if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
-                APP_LOGE("install param error");
-                resInstall->resCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
-                resInstall->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
-            } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
-                APP_LOGE("install invalid path");
-                resInstall->resCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
-                resInstall->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
-            } else {
-                resInstall->resCode = callback->GetResultCode();
-                APP_LOGD("Install resultCode %{public}d", resInstall->resCode);
-                resInstall->resMessage = callback->GetResultMsg();
-                APP_LOGD("Install resultMsg %{public}s", resInstall->resMessage.c_str());
-            }
-            obj->ConvertInstallResult(resInstall);
-            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
-    };
-    NativeValue* lastParam = info.argv[PARAM2];
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleInstall::OnInstall",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleInstall::OnRecover(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    std::string bundleName;
-    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
-    InstallParam installParam;
-
-    if (info.argc != ARGS_SIZE_THREE) {
-        APP_LOGE("wrong number of arguments!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    }
-    if (info.argv[PARAM0]->TypeOf() != NATIVE_STRING) {
-        APP_LOGE("input params is not string!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
-        APP_LOGE("input params is not array!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    AsyncTask::CompleteCallback complete = [obj = this, bundleName, installParam, resInstall = installResult]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (resInstall->resCode != ERR_OK) {
-                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
-                return;
-            }
-            auto iBundleMgr = GetBundleMgr();
-            if (iBundleMgr == nullptr) {
-                APP_LOGE("iBundleMgr is nullptr");
-                return;
-            }
-            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-                APP_LOGE("can not get iBundleInstaller");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-            if (callback == nullptr) {
-                APP_LOGE("callback nullptr");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-
-            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-            iBundleInstaller->Recover(bundleName, installParam, callback);
-            resInstall->resCode = callback->GetResultCode();
-            APP_LOGD("Recover resultCode %{public}d", resInstall->resCode);
-            resInstall->resMessage = callback->GetResultMsg();
-            APP_LOGD("Recover resultMsg %{public}s", resInstall->resMessage.c_str());
-            obj->ConvertInstallResult(resInstall);
-            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
-    };
-    NativeValue* lastParam = info.argv[PARAM2];
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleInstall::OnRecover",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-
-NativeValue* JsBundleInstall::OnUninstall(NativeEngine &engine, NativeCallbackInfo &info)
-{
-    APP_LOGD("%{public}s is called", __FUNCTION__);
-    std::string bundleName;
-    std::shared_ptr<BundleInstallResult> installResult = std::make_shared<BundleInstallResult>();
-    InstallParam installParam;
-
-    if (info.argc != ARGS_SIZE_THREE) {
-        APP_LOGE("wrong number of arguments!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    }
-    if (info.argv[PARAM0]->TypeOf() != NATIVE_STRING) {
-        APP_LOGE("input params is not string!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!ConvertFromJsValue(engine, info.argv[PARAM0], bundleName)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    if (info.argv[PARAM1]->TypeOf() != NATIVE_OBJECT) {
-        APP_LOGE("input params is not array!");
-        installResult->resCode = PARAM_TYPE_ERROR;
-    } else if (!GetInstallParamValue(engine, info.argv[PARAM1], installParam)) {
-        APP_LOGE("conversion failed!");
-        installResult->resCode= PARAM_TYPE_ERROR;
-    }
-    installParam.installFlag = InstallFlag::NORMAL;
-    AsyncTask::CompleteCallback complete = [obj = this, bundleName, installParam, resInstall = installResult]
-        (NativeEngine &engine, AsyncTask &task, int32_t status) {
-            if (resInstall->resCode != ERR_OK) {
-                task.Reject(engine, CreateJsError(engine, resInstall->resCode));
-                return;
-            }
-            auto iBundleMgr = GetBundleMgr();
-            if (iBundleMgr == nullptr) {
-                APP_LOGE("iBundleMgr is nullptr");
-                return;
-            }
-            auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
-            if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
-                APP_LOGE("can not get iBundleInstaller");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-
-            OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
-            if (callback == nullptr) {
-                APP_LOGE("callback nullptr");
-                task.Reject(engine, CreateJsError(engine, OPERATION_FAILED));
-                return;
-            }
-            sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
-            iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
-            iBundleInstaller->Uninstall(bundleName, installParam, callback);
-            resInstall->resCode = callback->GetResultCode();
-            APP_LOGD("Uninstall resultCode %{public}d", resInstall->resCode);
-            resInstall->resMessage = callback->GetResultMsg();
-            APP_LOGD("Uninstall resultMsg %{public}s", resInstall->resMessage.c_str());
-            obj->ConvertInstallResult(resInstall);
-            task.Resolve(engine, obj->CreateInstallStatus(engine, resInstall));
-    };
-    NativeValue* lastParam = info.argv[PARAM2];
-    NativeValue* result = nullptr;
-    AsyncTask::Schedule("JsBundleInstall::OnUninstall",
-        engine, CreateAsyncTaskWithLastParam(engine, lastParam, nullptr, std::move(complete), &result));
-    return result;
-}
-bool JsBundleInstall::GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList)
-{
-    auto array = ConvertNativeValueTo<NativeArray>(object);
-    if (array == nullptr) {
-        APP_LOGE("input params error");
-        return false;
-    }
-
-    for (uint32_t i = 0; i < array->GetLength(); i++) {
-        std::string itemStr("");
-        if ((array->GetElement(i))->TypeOf() != NATIVE_STRING) {
-            APP_LOGE("GetElement is not string");
-            return false;
-        }
-        if (!ConvertFromJsValue(engine, array->GetElement(i), itemStr)) {
-            APP_LOGE("GetElement from to array [%{public}u] error", i);
-            return false;
-        }
-        strList.push_back(itemStr);
-    }
-
-    return true;
-}
-
-bool JsBundleInstall::GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam)
-{
-    auto env = reinterpret_cast<napi_env>(&engine);
-    auto param = reinterpret_cast<napi_value>(object);
-    if (!ParseInstallParam(env, installParam, param)) {
-        APP_LOGE("ParseInstallParam fail");
-        return false;
-    }
-    return true;
-}
-
-void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult)
-{
-    APP_LOGD("ConvertInstallResult = %{public}s.", installResult->resMessage.c_str());
-    switch (installResult->resCode) {
+    APP_LOGD("ConvertInstallResult = %{public}s.", installResult.resultMsg.c_str());
+    switch (installResult.resultCode) {
         case static_cast<int32_t>(IStatusReceiver::SUCCESS):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::SUCCESS);
-            installResult->resMessage = "SUCCESS";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::SUCCESS);
+            installResult.resultMsg = "SUCCESS";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INTERNAL_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_HOST_INSTALLER_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISALLOWED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE);
-            installResult->resMessage = "STATUS_INSTALL_FAILURE";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE);
+            installResult.resultMsg = "STATUS_INSTALL_FAILURE";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERIFICATION_FAILED):
@@ -6136,21 +5797,21 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_VERIFY_SOURCE_INIT_FAIL):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DEPENDENT_MODULE_NOT_EXIST):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_DEBUG_NOT_SAME):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
-            installResult->resMessage = "STATUS_INSTALL_FAILURE_INVALID";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INVALID);
+            installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PARSE_MISSING_ABILITY):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND);
-            installResult->resMessage = "STATUS_ABILITY_NOT_FOUND";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_ABILITY_NOT_FOUND);
+            installResult.resultMsg = "STATUS_ABILITY_NOT_FOUND";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_VERSION_DOWNGRADE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FAILED_INCONSISTENT_SIGNATURE):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
-            installResult->resMessage = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_INCOMPATIBLE);
+            installResult.resultMsg = "STATUS_INSTALL_FAILURE_INCOMPATIBLE";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_PERMISSION_DENIED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED);
-            installResult->resMessage = "STATUS_INSTALL_PERMISSION_DENIED";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_PERMISSION_DENIED);
+            installResult.resultMsg = "STATUS_INSTALL_PERMISSION_DENIED";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ENTRY_ALREADY_EXIST):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_ALREADY_EXIST):
@@ -6174,8 +5835,8 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_NOT_UNIQUE_DISTRO_MODULE_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_SINGLETON_INCOMPATIBLE):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INCONSISTENT_MODULE_NAME):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
-            installResult->resMessage = "STATUS_INSTALL_FAILURE_CONFLICT";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_CONFLICT);
+            installResult.resultMsg = "STATUS_INSTALL_FAILURE_CONFLICT";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_PARAM_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALLD_GET_PROXY_ERROR):
@@ -6190,26 +5851,26 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_STATE_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GENERATE_UID_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_INSTALLD_SERVICE_ERROR):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE);
-            installResult->resMessage = "STATUS_INSTALL_FAILURE_STORAGE";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_INSTALL_FAILURE_STORAGE);
+            installResult.resultMsg = "STATUS_INSTALL_FAILURE_STORAGE";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PERMISSION_DENIED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED);
-            installResult->resMessage = "STATUS_UNINSTALL_PERMISSION_DENIED";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_PERMISSION_DENIED);
+            installResult.resultMsg = "STATUS_UNINSTALL_PERMISSION_DENIED";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_INVALID_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_PARAM_ERROR):
             if (CheckIsSystemApp()) {
-                installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED);
-                installResult->resMessage = "STATUS_UNINSTALL_FAILURE_ABORTED";
+                installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_ABORTED);
+                installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_ABORTED";
                 break;
             }
             [[fallthrough]];
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_SYSTEM_APP_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_KILLING_APP_ERROR):
             if (CheckIsSystemApp()) {
-                installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT);
-                installResult->resMessage = "STATUS_UNINSTALL_FAILURE_CONFLICT";
+                installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE_CONFLICT);
+                installResult.resultMsg = "STATUS_UNINSTALL_FAILURE_CONFLICT";
                 break;
             }
             [[fallthrough]];
@@ -6218,46 +5879,707 @@ void JsBundleInstall::ConvertInstallResult(std::shared_ptr<BundleInstallResult> 
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_MISSING_INSTALLED_MODULE):
         case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_INSTALL_HAP):
         case static_cast<int32_t>(IStatusReceiver::ERR_UNINSTALL_DISALLOWED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE);
-            installResult->resMessage = "STATUS_UNINSTALL_FAILURE";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_UNINSTALL_FAILURE);
+            installResult.resultMsg = "STATUS_UNINSTALL_FAILURE";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_GET_BUNDLEPATH_ERROR):
         case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME):
         case static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_NOT_ALLOWED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID);
-            installResult->resMessage = "STATUS_RECOVER_FAILURE_INVALID";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_RECOVER_FAILURE_INVALID);
+            installResult.resultMsg = "STATUS_RECOVER_FAILURE_INVALID";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_SERVICE_DIED):
         case static_cast<int32_t>(IStatusReceiver::ERR_FAILED_GET_INSTALLER_PROXY):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
-            installResult->resMessage = "STATUS_BMS_SERVICE_ERROR";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
+            installResult.resultMsg = "STATUS_BMS_SERVICE_ERROR";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT);
-            installResult->resMessage = "STATUS_FAILED_NO_SPACE_LEFT";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_FAILED_NO_SPACE_LEFT);
+            installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_GRANT_REQUEST_PERMISSIONS_FAILED):
         case static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_UPDATE_HAP_TOKEN_FAILED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED);
-            installResult->resMessage = "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_GRANT_REQUEST_PERMISSIONS_FAILED);
+            installResult.resultMsg = "STATUS_GRANT_REQUEST_PERMISSIONS_FAILED";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_USER_NOT_EXIST):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
-            installResult->resMessage = "STATUS_USER_NOT_EXIST";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_NOT_EXIST);
+            installResult.resultMsg = "STATUS_USER_NOT_EXIST";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_USER_CREATE_FAILED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
-            installResult->resMessage = "STATUS_USER_CREATE_FAILED";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_CREATE_FAILED);
+            installResult.resultMsg = "STATUS_USER_CREATE_FAILED";
             break;
         case static_cast<int32_t>(IStatusReceiver::ERR_USER_REMOVE_FAILED):
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
-            installResult->resMessage = "STATUS_USER_REMOVE_FAILED";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_USER_REMOVE_FAILED);
+            installResult.resultMsg = "STATUS_USER_REMOVE_FAILED";
             break;
         default:
-            installResult->resCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
-            installResult->resMessage = "STATUS_BMS_SERVICE_ERROR";
+            installResult.resultCode = static_cast<int32_t>(InstallErrorCode::STATUS_BMS_SERVICE_ERROR);
+            installResult.resultMsg = "STATUS_BMS_SERVICE_ERROR";
             break;
     }
+}
+
+static void InnerInstall(napi_env env, const std::vector<std::string> &bundleFilePath, InstallParam &installParam,
+    InstallResult &installResult)
+{
+    if (bundleFilePath.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID);
+        return;
+    }
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return;
+    }
+
+    if (installParam.installFlag == InstallFlag::NORMAL) {
+        installParam.installFlag = InstallFlag::REPLACE_EXISTING;
+    }
+
+    OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    if (callback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return;
+    }
+
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    ErrCode res = iBundleInstaller->StreamInstall(bundleFilePath, installParam, callback);
+
+    if (res == ERR_APPEXECFWK_INSTALL_PARAM_ERROR) {
+        APP_LOGE("install param error");
+        installResult.resultCode = IStatusReceiver::ERR_INSTALL_PARAM_ERROR;
+        installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
+    } else if (res == ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID) {
+        APP_LOGE("install invalid path");
+        installResult.resultCode = IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID;
+        installResult.resultMsg = "STATUS_INSTALL_FAILURE_INVALID";
+    } else if (res == ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT) {
+        APP_LOGE("install failed due to no space left");
+        installResult.resultCode = IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT;
+        installResult.resultMsg = "STATUS_FAILED_NO_SPACE_LEFT";
+    } else {
+        installResult.resultCode = callback->GetResultCode();
+        APP_LOGD("InnerInstall resultCode %{public}d", installResult.resultCode);
+        installResult.resultMsg = callback->GetResultMsg();
+        APP_LOGD("InnerInstall resultMsg %{public}s", installResult.resultMsg.c_str());
+    }
+}
+
+/**
+ * Promise and async callback
+ */
+napi_value GetBundleInstaller(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("called");
+    size_t argc = ARGS_SIZE_ONE;
+    napi_value argv[ARGS_SIZE_ONE] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("argc = [%{public}zu]", argc);
+
+    AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+        new (std::nothrow) AsyncGetBundleInstallerCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (argc > (ARGS_SIZE_ONE - CALLBACK_SIZE)) {
+        APP_LOGI("GetBundleInstaller asyncCallback.");
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[PARAM0], &valuetype));
+        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
+        NAPI_CALL(env, napi_create_reference(env, argv[PARAM0], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {},
+            [](napi_env env, napi_status status, void *data) {
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result[ARGS_SIZE_TWO] = {0};
+                napi_value callback = 0;
+                napi_value undefined = 0;
+                napi_value callResult = 0;
+                napi_value m_classBundleInstaller = nullptr;
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, g_classBundleInstaller,
+                        &m_classBundleInstaller));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                    NAPI_CALL_RETURN_VOID(env, napi_new_instance(
+                        env, m_classBundleInstaller, 0, nullptr, &result[PARAM1]));
+
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_SUCCESS);
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(
+                        env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                        &result[PARAM0], &callResult));
+                } else {
+                    napi_value placeHolder = nullptr;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result[PARAM0]));
+                    NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                    NAPI_CALL_RETURN_VOID(env, napi_call_function(env, nullptr, callback,
+                        sizeof(result) / sizeof(result[0]), result, &placeHolder));
+                }
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        napi_value result;
+        napi_create_int32(env, NAPI_RETURN_ONE, &result);
+        return result;
+    } else {
+        napi_deferred deferred;
+        napi_value promise;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncCallbackInfo->deferred = deferred;
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "GetBundleInstaller", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {},
+            [](napi_env env, napi_status status, void *data) {
+                APP_LOGI("=================load=================");
+                AsyncGetBundleInstallerCallbackInfo *asyncCallbackInfo =
+                    reinterpret_cast<AsyncGetBundleInstallerCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncGetBundleInstallerCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result;
+                napi_value m_classBundleInstaller = nullptr;
+                if (VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) && VerifySystemApi()) {
+                    napi_get_reference_value(env, g_classBundleInstaller, &m_classBundleInstaller);
+                    napi_new_instance(env, m_classBundleInstaller, 0, nullptr, &result);
+                    napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred, result);
+                } else {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, 1, &result));
+                    NAPI_CALL_RETURN_VOID(env, napi_reject_deferred(env, asyncCallbackInfo->deferred, result));
+                }
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        return promise;
+    }
+}
+
+/**
+ * Promise and async callback
+ */
+napi_value Install(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("called");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+
+    std::vector<std::string> bundleFilePaths;
+    InstallParam installParam;
+    napi_value retFirst = nullptr;
+    bool retSecond = true;
+    retFirst = ParseStringArray(env, bundleFilePaths, argv[PARAM0]);
+    retSecond = ParseInstallParam(env, installParam, argv[PARAM1]);
+    if (retFirst == nullptr || !retSecond) {
+        APP_LOGE("Install installParam error.");
+        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+    }
+    asyncCallbackInfo->hapFiles = bundleFilePaths;
+    asyncCallbackInfo->installParam = installParam;
+    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
+        APP_LOGI("Install asyncCallback.");
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
+        if (valuetype != napi_function) {
+            APP_LOGE("Wrong argument type. Function expected.");
+            return nullptr;
+        }
+        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                if (!asyncCallbackInfo->errCode) {
+                    InnerInstall(env,
+                        asyncCallbackInfo->hapFiles,
+                        asyncCallbackInfo->installParam,
+                        asyncCallbackInfo->installResult);
+                }
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result[ARGS_SIZE_TWO] = {0};
+                napi_value callback = 0;
+                napi_value undefined = 0;
+                napi_value callResult = 0;
+                if (!asyncCallbackInfo->errCode) {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
+                    ConvertInstallResult(asyncCallbackInfo->installResult);
+                    napi_value nResultMsg;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
+                        nResultMsg));
+                    napi_value nResultCode;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                        &nResultCode));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
+                    result[PARAM0] = GetCallbackErrorValue(
+                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                } else {
+                    napi_value nResultMsg;
+                    std::string msg = "error param type.";
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
+                        &nResultMsg));
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
+                }
+                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                    &result[PARAM0], &callResult));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        napi_value result;
+        napi_create_int32(env, NAPI_RETURN_ONE, &result);
+        return result;
+    } else {
+        napi_deferred deferred;
+        napi_value promise;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncCallbackInfo->deferred = deferred;
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                InnerInstall(env,
+                    asyncCallbackInfo->hapFiles,
+                    asyncCallbackInfo->installParam,
+                    asyncCallbackInfo->installResult);
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                ConvertInstallResult(asyncCallbackInfo->installResult);
+                napi_value result;
+                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
+                napi_value nResultMsg;
+                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
+                napi_value nResultCode;
+                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                    &nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
+                    result));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        return promise;
+    }
+}
+
+static void InnerRecover(napi_env env, const std::string &bundleName, InstallParam &installParam,
+    InstallResult &installResult)
+{
+    if (bundleName.empty()) {
+        installResult.resultCode = static_cast<int32_t>(IStatusReceiver::ERR_RECOVER_INVALID_BUNDLE_NAME);
+        return;
+    }
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if (iBundleInstaller == nullptr) {
+        APP_LOGE("can not get iBundleInstaller");
+        return;
+    }
+
+    OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    if (callback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return;
+    }
+    iBundleInstaller->Recover(bundleName, installParam, callback);
+    installResult.resultMsg = callback->GetResultMsg();
+    APP_LOGD("InnerRecover resultMsg %{public}s.", installResult.resultMsg.c_str());
+    installResult.resultCode = callback->GetResultCode();
+    APP_LOGD("InnerRecover resultCode %{public}d.", installResult.resultCode);
+}
+
+napi_value Recover(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("called");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::string bundleName;
+    ParseString(env, bundleName, argv[PARAM0]);
+    InstallParam installParam;
+    if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
+        APP_LOGE("Recover installParam error.");
+        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+    }
+
+    asyncCallbackInfo->installParam = installParam;
+    asyncCallbackInfo->bundleName = bundleName;
+    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
+        APP_LOGD("Recover by bundleName asyncCallback.");
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
+        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
+        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Recover", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                if (!asyncCallbackInfo->errCode) {
+                    InnerRecover(env,
+                        asyncCallbackInfo->bundleName,
+                        asyncCallbackInfo->installParam,
+                        asyncCallbackInfo->installResult);
+                }
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result[ARGS_SIZE_TWO] = {0};
+                napi_value callback = 0;
+                napi_value undefined = 0;
+                napi_value callResult = 0;
+                if (!asyncCallbackInfo->errCode) {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
+                    ConvertInstallResult(asyncCallbackInfo->installResult);
+                    napi_value nResultMsg;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
+                        nResultMsg));
+                    napi_value nResultCode;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                        &nResultCode));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
+                    result[PARAM0] = GetCallbackErrorValue(
+                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                } else {
+                    napi_value nResultMsg;
+                    std::string msg = "error param type.";
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
+                        &nResultMsg));
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
+                }
+                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                    &result[PARAM0], &callResult));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        napi_value result;
+        napi_create_int32(env, NAPI_RETURN_ONE, &result);
+        return result;
+    } else {
+        napi_deferred deferred;
+        napi_value promise;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncCallbackInfo->deferred = deferred;
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Recover", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                InnerRecover(env,
+                    asyncCallbackInfo->bundleName,
+                    asyncCallbackInfo->installParam,
+                    asyncCallbackInfo->installResult);
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                ConvertInstallResult(asyncCallbackInfo->installResult);
+                napi_value result;
+                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
+                napi_value nResultMsg;
+                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
+                napi_value nResultCode;
+                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                    &nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
+                    result));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        return promise;
+    }
+}
+
+static void InnerUninstall(
+    napi_env env, const std::string &bundleName, InstallParam &installParam, InstallResult &installResult)
+{
+    auto iBundleMgr = GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("can not get iBundleMgr");
+        return;
+    }
+    auto iBundleInstaller = iBundleMgr->GetBundleInstaller();
+    if ((iBundleInstaller == nullptr) || (iBundleInstaller->AsObject() == nullptr)) {
+        APP_LOGE("can not get iBundleInstaller");
+        return;
+    }
+    installParam.installFlag = InstallFlag::NORMAL;
+    OHOS::sptr<InstallerCallback> callback = new (std::nothrow) InstallerCallback();
+    if (callback == nullptr) {
+        APP_LOGE("callback nullptr");
+        return;
+    }
+
+    sptr<BundleDeathRecipient> recipient(new (std::nothrow) BundleDeathRecipient(callback));
+    iBundleInstaller->AsObject()->AddDeathRecipient(recipient);
+    iBundleInstaller->Uninstall(bundleName, installParam, callback);
+    installResult.resultMsg = callback->GetResultMsg();
+    APP_LOGD("-----InnerUninstall resultMsg %{public}s-----", installResult.resultMsg.c_str());
+    installResult.resultCode = callback->GetResultCode();
+    APP_LOGD("-----InnerUninstall resultCode %{public}d-----", installResult.resultCode);
+}
+
+/**
+ * Promise and async callback
+ */
+napi_value Uninstall(napi_env env, napi_callback_info info)
+{
+    APP_LOGI("called");
+    size_t argc = ARGS_SIZE_THREE;
+    napi_value argv[ARGS_SIZE_THREE] = {nullptr};
+    NAPI_CALL(env, napi_get_cb_info(env, info, &argc, argv, NULL, NULL));
+    APP_LOGD("argc = [%{public}zu]", argc);
+    AsyncInstallCallbackInfo *asyncCallbackInfo = new (std::nothrow) AsyncInstallCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        return nullptr;
+    }
+    std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+    std::string bundleName;
+    ParseString(env, bundleName, argv[PARAM0]);
+    InstallParam installParam;
+    if (!ParseInstallParam(env, installParam, argv[PARAM1])) {
+        APP_LOGE("Uninstall installParam error.");
+        asyncCallbackInfo->errCode = PARAM_TYPE_ERROR;
+    }
+
+    asyncCallbackInfo->installParam = installParam;
+    asyncCallbackInfo->bundleName = bundleName;
+    if (argc > (ARGS_SIZE_THREE - CALLBACK_SIZE)) {
+        APP_LOGI("Uninstall asyncCallback.");
+        napi_valuetype valuetype = napi_undefined;
+        NAPI_CALL(env, napi_typeof(env, argv[ARGS_SIZE_TWO], &valuetype));
+        NAPI_ASSERT(env, valuetype == napi_function, "Wrong argument type. Function expected.");
+        NAPI_CALL(env, napi_create_reference(env, argv[ARGS_SIZE_TWO], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Uninstall", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                if (!asyncCallbackInfo->errCode) {
+                    InnerUninstall(env,
+                        asyncCallbackInfo->bundleName,
+                        asyncCallbackInfo->installParam,
+                        asyncCallbackInfo->installResult);
+                }
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                napi_value result[ARGS_SIZE_TWO] = {0};
+                napi_value callback = 0;
+                napi_value undefined = 0;
+                napi_value callResult = 0;
+                if (!asyncCallbackInfo->errCode) {
+                    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[PARAM1]));
+                    ConvertInstallResult(asyncCallbackInfo->installResult);
+                    napi_value nResultMsg;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                        env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "statusMessage",
+                        nResultMsg));
+                    napi_value nResultCode;
+                    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                        &nResultCode));
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM1], "status", nResultCode));
+                    result[PARAM0] = GetCallbackErrorValue(
+                        env, (asyncCallbackInfo->installResult.resultCode == 0) ? CODE_SUCCESS : CODE_FAILED);
+                } else {
+                    napi_value nResultMsg;
+                    std::string msg = "error param type.";
+                    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, msg.c_str(), NAPI_AUTO_LENGTH,
+                        &nResultMsg));
+                    result[PARAM0] = GetCallbackErrorValue(env, CODE_FAILED);
+                    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result[PARAM0], "message", nResultMsg));
+                }
+                NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &undefined));
+                NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, asyncCallbackInfo->callback, &callback));
+                NAPI_CALL_RETURN_VOID(env, napi_call_function(env, undefined, callback, ARGS_SIZE_TWO,
+                    &result[PARAM0], &callResult));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        napi_value result;
+        napi_create_int32(env, NAPI_RETURN_ONE, &result);
+        return result;
+    } else {
+        napi_deferred deferred;
+        napi_value promise;
+        NAPI_CALL(env, napi_create_promise(env, &deferred, &promise));
+        asyncCallbackInfo->deferred = deferred;
+
+        napi_value resourceName;
+        NAPI_CALL(env, napi_create_string_latin1(env, "Install", NAPI_AUTO_LENGTH, &resourceName));
+        NAPI_CALL(env, napi_create_async_work(
+            env,
+            nullptr,
+            resourceName,
+            [](napi_env env, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                InnerUninstall(
+                    env, asyncCallbackInfo->param, asyncCallbackInfo->installParam, asyncCallbackInfo->installResult);
+            },
+            [](napi_env env, napi_status status, void *data) {
+                AsyncInstallCallbackInfo *asyncCallbackInfo = reinterpret_cast<AsyncInstallCallbackInfo *>(data);
+                if (asyncCallbackInfo == nullptr) {
+                    return;
+                }
+                std::unique_ptr<AsyncInstallCallbackInfo> callbackPtr {asyncCallbackInfo};
+                ConvertInstallResult(asyncCallbackInfo->installResult);
+                napi_value result;
+                NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result));
+                napi_value nResultMsg;
+                NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+                    env, asyncCallbackInfo->installResult.resultMsg.c_str(), NAPI_AUTO_LENGTH, &nResultMsg));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "statusMessage", nResultMsg));
+                napi_value nResultCode;
+                NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, asyncCallbackInfo->installResult.resultCode,
+                    &nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, result, "status", nResultCode));
+                NAPI_CALL_RETURN_VOID(env, napi_resolve_deferred(asyncCallbackInfo->env, asyncCallbackInfo->deferred,
+                    result));
+            },
+            reinterpret_cast<void*>(asyncCallbackInfo),
+            &asyncCallbackInfo->asyncWork));
+        NAPI_CALL(env, napi_queue_async_work(env, asyncCallbackInfo->asyncWork));
+        callbackPtr.release();
+        return promise;
+    }
+}
+
+napi_value BundleInstallerConstructor(napi_env env, napi_callback_info info)
+{
+    napi_value jsthis = nullptr;
+    NAPI_CALL(env, napi_get_cb_info(env, info, nullptr, nullptr, &jsthis, nullptr));
+    return jsthis;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
