@@ -95,6 +95,7 @@ void BmsBundleQuickFixSwitcherTest::SetUp()
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
+        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
     }
     auto dataMgr = GetBundleDataMgr();
     if (dataMgr != nullptr) {

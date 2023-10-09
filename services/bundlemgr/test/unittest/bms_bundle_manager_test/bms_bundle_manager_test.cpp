@@ -216,6 +216,7 @@ void BmsBundleManagerTest::SetUp()
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
+        bundleMgrService_->GetDataMgr()->AddUserId(USERID);
         std::this_thread::sleep_for(std::chrono::seconds(WAIT_TIME));
     }
 }
