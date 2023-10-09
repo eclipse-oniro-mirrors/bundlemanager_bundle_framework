@@ -37,6 +37,7 @@ public:
     std::shared_ptr<BundleMgrExt> GetBundleMgrExt(const std::string &bundleExtName);
 private:
     static std::mutex mutex_;
+    mutable std::mutex BundleMgrExtMutex_;
     BundleMgrExtRegister() = default;
     std::unordered_map<std::string, CreateFunc> bundleMgrExts_;
 
