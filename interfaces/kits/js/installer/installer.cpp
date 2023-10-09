@@ -70,6 +70,8 @@ const std::string SPECIFIED_DISTRIBUTION_TYPE = "specifiedDistributionType";
 const std::string ADDITIONAL_INFO = "additionalInfo";
 const std::string VERIFY_CODE_PARAM = "verifyCodeParams";
 const std::string SIGNATURE_FILE_PATH = "signatureFilePath";
+const std::string PGO_PARAM = "pgoParams";
+const std::string PGO_FILE_PATH = "pgoFilePath";
 const std::string HAPS_FILE_NEEDED =
     "BusinessError 401: Parameter error. parameter hapFiles is needed for code signature";
 constexpr int32_t FIRST_PARAM = 0;
@@ -502,6 +504,55 @@ static bool ParseVerifyCodeParams(napi_env env, napi_value args, std::map<std::s
     return true;
 }
 
+static bool ParsePgoParam(napi_env env, napi_value args, std::string &key, std::string &value)
+{
+    APP_LOGD("start to parse moduleName");
+    bool ret = CommonFunc::ParseStringPropertyFromObject(env, args, MODULE_NAME, true, key);
+    if (!ret || key.empty()) {
+        APP_LOGE("param string moduleName is empty.");
+        return false;
+    }
+    APP_LOGD("ParsePgoParam moduleName is %{public}s.", key.c_str());
+
+    APP_LOGD("start to parse pgoFilePath");
+    ret = CommonFunc::ParseStringPropertyFromObject(env, args, PGO_FILE_PATH, true, value);
+    if (!ret || value.empty()) {
+        APP_LOGE("param string pgoFilePath is empty.");
+        return false;
+    }
+    APP_LOGD("ParsePgoParam pgoFilePath is %{public}s.", value.c_str());
+    return true;
+}
+
+static bool ParsePgoParams(napi_env env, napi_value args, std::map<std::string, std::string> &pgoParams)
+{
+    APP_LOGD("start to parse pgoParams");
+    std::vector<napi_value> valueVec;
+    bool res = CommonFunc::ParsePropertyArray(env, args, PGO_PARAM, valueVec);
+    if (!res) {
+        APP_LOGW("pgoParams type error, using default value.");
+        return true;
+    }
+    if (valueVec.empty()) {
+        APP_LOGW("pgoParams is empty, using default value.");
+        return true;
+    }
+    for (const auto &property : valueVec) {
+        std::string key;
+        std::string value;
+        if (!ParsePgoParam(env, property, key, value)) {
+            APP_LOGE("parse pgo param failed");
+            return false;
+        }
+        if (pgoParams.find(key) != pgoParams.end()) {
+            APP_LOGE("moduleName(%{public}s) is duplicate", key.c_str());
+            return false;
+        }
+        pgoParams.emplace(key, value);
+    }
+    return true;
+}
+
 static bool ParseBundleName(napi_env env, napi_value args, std::string &bundleName)
 {
     APP_LOGD("start to parse bundleName");
@@ -759,6 +810,9 @@ static bool ParseInstallParam(napi_env env, napi_value args, InstallParam &insta
     if (!ParseVerifyCodeParams(env, args, installParam.verifyCodeParams)) {
         return false;
     }
+    if (!ParsePgoParams(env, args, installParam.pgoParams)) {
+        return false;
+    }
     if (!ParseUserId(env, args, installParam.userId)) {
         APP_LOGW("Parse userId failed,using default value.");
     }
@@ -803,7 +857,8 @@ static void CreateProxyErrCode(std::unordered_map<int32_t, int32_t> &errCodeMap)
         { ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID, IStatusReceiver::ERR_INSTALL_FILE_PATH_INVALID },
         { ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT, IStatusReceiver::ERR_INSTALL_DISK_MEM_INSUFFICIENT },
         { ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID,
-            IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID}
+            IStatusReceiver::ERR_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID},
+        { ERR_BUNDLEMANAGER_INSTALL_PGO_FILE_IS_INVALID, IStatusReceiver::ERR_INSTALL_PGO_FILE_IS_INVALID}
     };
 }
 

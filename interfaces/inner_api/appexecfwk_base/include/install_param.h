@@ -89,6 +89,8 @@ struct InstallParam : public Parcelable {
     std::map<std::string, std::string> verifyCodeParams;
     // for MDM self update
     bool isSelfUpdate = false;
+    // the profile-guided optimization(PGO) file path
+    std::map<std::string, std::string> pgoParams;
     // the parcel object function is not const.
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

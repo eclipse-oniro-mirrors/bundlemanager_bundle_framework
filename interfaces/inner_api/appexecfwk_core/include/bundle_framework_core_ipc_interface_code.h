@@ -201,7 +201,8 @@ enum class BundleStreamInstallerInterfaceCode : uint32_t {
     CREATE_STREAM = 0,
     STREAM_INSTALL = 1,
     CREATE_SHARED_BUNDLE_STREAM = 2,
-    CREATE_SIGNATURE_FILE_STREAM = 3
+    CREATE_SIGNATURE_FILE_STREAM = 3,
+    CREATE_PGO_FILE_STREAM = 4
 };
 
 /* SAID: 401-26 Interface No.26 subservice also provides the following interfaces */

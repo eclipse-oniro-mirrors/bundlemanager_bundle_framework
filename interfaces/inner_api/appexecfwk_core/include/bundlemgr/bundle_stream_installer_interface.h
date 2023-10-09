@@ -37,6 +37,10 @@ public:
     {
         return Constants::DEFAULT_STREAM_FD;
     }
+    virtual int32_t CreatePgoFileStream(const std::string &moduleName, const std::string &fileName)
+    {
+        return Constants::DEFAULT_STREAM_FD;
+    }
     virtual bool Install()
     {
         return false;

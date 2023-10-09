@@ -39,6 +39,7 @@ private:
     ErrCode HandleCreateStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateSignatureFileStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleCreateSharedBundleStream(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleCreatePgoFileStream(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleInstall(MessageParcel &data, MessageParcel &reply);
 
     std::map<uint32_t, std::function<ErrCode(MessageParcel &data, MessageParcel &reply)>> funcMap_;
