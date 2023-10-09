@@ -340,7 +340,9 @@ ErrCode InnerSharedBundleInstaller::SavePreInstallInfo(const InstallParam &insta
     }
 
     PreInstallBundleInfo preInstallBundleInfo;
-    dataMgr->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
+    if (!dataMgr->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo)) {
+        preInstallBundleInfo.SetBundleName(bundleName_);
+    }
     preInstallBundleInfo.SetVersionCode(newBundleInfo_.GetBaseBundleInfo().versionCode);
     for (const auto &item : parsedBundles_) {
         preInstallBundleInfo.AddBundlePath(item.first);
