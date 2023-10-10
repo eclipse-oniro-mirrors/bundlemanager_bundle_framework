@@ -2028,6 +2028,10 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
             APP_LOGW("bundleName: %{public}s: hapVersionCode is less than old hap versionCode.", bundleName.c_str());
             continue;
         }
+        if (!hasInstalledInfo.isKeepAlive) {
+            APP_LOGW("bundleName: %{public}s: is not keep alive bundle", bundleName.c_str());
+            continue;
+        }
         InstallParam installParam;
         installParam.noSkipsKill = false;
         installParam.needSendEvent = false;

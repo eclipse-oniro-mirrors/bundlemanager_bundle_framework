@@ -1437,7 +1437,8 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0002,
         BundleInfo newInfo;
         result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
         EXPECT_TRUE(result);
-        EXPECT_NE(info.versionCode, newInfo.versionCode); // update success
+        EXPECT_EQ(info.versionCode, newInfo.versionCode); // update failed, keep alive is false
+        EXPECT_EQ(info.installTime, newInfo.updateTime);
 
         ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
         EXPECT_EQ(unInstallResult, ERR_OK);
@@ -1469,7 +1470,8 @@ HWTEST_F(BmsBundleAppProvisionInfoTest, ProcessRebootQuickFixBundleInstall_0003,
         BundleInfo newInfo;
         result = dataMgr->GetBundleInfo(BUNDLE_NAME, 0, newInfo, USERID);
         EXPECT_TRUE(result);
-        EXPECT_EQ(info.versionCode, newInfo.versionCode); // update failed
+        EXPECT_EQ(info.versionCode, newInfo.versionCode); // update failed, versionCode is same
+        EXPECT_EQ(info.installTime, newInfo.updateTime);
 
         ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
         EXPECT_EQ(unInstallResult, ERR_OK);
