@@ -39,6 +39,7 @@ using OHOS::AAFwk::Want;
 namespace OHOS {
 namespace {
 const uint32_t SDK_VERSION = 10;
+const uint32_t COMPATIBLE_VERSION = 11;
 const std::string BMS_EXTENSION_PATH = "/system/etc/app/bms-extensions.json";
 const std::string BMS_DATA_PATH = "data/data";
 const std::string BUNDLE_EXT_NAME = "bundleExtName";
@@ -147,13 +148,17 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0001, Function | SmallTest
 {
     BmsExtensionDataMgr bmsExtensionDataMgr;
     BundleInfo bundleInfo;
-    bundleInfo.compatibleVersion = 40000 * 1000 + 100;
+    bundleInfo.compatibleVersion = COMPATIBLE_VERSION;
     bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
+#ifdef USE_EXTENSION_DATA
+    EXPECT_EQ(res, true);
+#else
     EXPECT_EQ(res, false);
+#endif
 }
 
 /**
- * @tc.number: BmsExtensionDataMgr_0001
+ * @tc.number: BmsExtensionDataMgr_0002
  * @tc.name: CheckApiInfo
  * @tc.desc: CheckApiInfo
  */
