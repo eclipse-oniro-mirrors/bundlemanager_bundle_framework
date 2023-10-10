@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+const std::string INNER_UNDER_LINE = "_";
 }
 bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo &innerBundleInfo,
     const int32_t userId,
@@ -49,7 +50,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo
     if (innerBundleInfo.GetBaseBundleInfo().entryInstallationFree) {
         APP_LOGD("bundleName:%{public}s is atomic service, hide desktop icon", innerBundleInfo.GetBundleName().c_str());
         return false;
-    };
+    }
 
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
@@ -281,8 +282,8 @@ bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo
 int64_t BundleResourceProcess::GetUpdateTime(const InnerBundleInfo &innerBundleInfo, const int32_t userId)
 {
     // get installTime from innerBundleUserInfo
-    std::string userIdKey = innerBundleInfo.GetBundleName() + "_" + std::to_string(userId);
-    std::string userZeroKey = innerBundleInfo.GetBundleName() + "_" + std::to_string(0);
+    std::string userIdKey = innerBundleInfo.GetBundleName() + INNER_UNDER_LINE + std::to_string(userId);
+    std::string userZeroKey = innerBundleInfo.GetBundleName() + INNER_UNDER_LINE + std::to_string(0);
     auto iter = std::find_if(innerBundleInfo.GetInnerBundleUserInfos().begin(),
         innerBundleInfo.GetInnerBundleUserInfos().end(),
         [&userIdKey, &userZeroKey](const std::pair<std::string, InnerBundleUserInfo> &infoMap) {

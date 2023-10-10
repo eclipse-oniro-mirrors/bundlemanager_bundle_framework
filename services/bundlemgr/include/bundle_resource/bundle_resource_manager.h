@@ -16,14 +16,14 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_MANAGER_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_MANAGER_H
 
+#include <string>
+#include <vector>
+
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
 #include "inner_bundle_info.h"
 #include "resource_info.h"
 #include "singleton.h"
-
-#include <string>
-#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
