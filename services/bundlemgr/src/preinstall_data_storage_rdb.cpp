@@ -102,7 +102,7 @@ void PreInstallDataStorageRdb::UpdateDataBase(
     }
 
     for (const auto& item : infos) {
-        if (SavePreInstallStorageBundleInfo(item.second)) {
+        if (!SavePreInstallStorageBundleInfo(item.second)) {
             rdbDataManager_->DeleteData(item.first);
         }
     }
@@ -114,6 +114,11 @@ bool PreInstallDataStorageRdb::SavePreInstallStorageBundleInfo(
 {
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    if (preInstallBundleInfo.GetBundleName().empty()) {
+        APP_LOGE("Save failed due to key is empty");
         return false;
     }
 
@@ -131,6 +136,11 @@ bool PreInstallDataStorageRdb::DeletePreInstallStorageBundleInfo(
         return false;
     }
 
+    if (preInstallBundleInfo.GetBundleName().empty()) {
+        APP_LOGE("Delete failed due to key is empty");
+        return false;
+    }
+
     bool ret = rdbDataManager_->DeleteData(preInstallBundleInfo.GetBundleName());
     APP_LOGD("DeletePreInstallStorageBundleInfo %{public}d", ret);
     return ret;
@@ -143,6 +153,12 @@ bool PreInstallDataStorageRdb::LoadPreInstallBundleInfo(const std::string &bundl
         APP_LOGE("rdbDataManager is null");
         return false;
     }
+
+    if (bundleName.empty()) {
+        APP_LOGE("Query failed due to key is empty");
+        return false;
+    }
+
     std::string value;
     bool ret = rdbDataManager_->QueryData(bundleName, value);
     if (!ret) {
