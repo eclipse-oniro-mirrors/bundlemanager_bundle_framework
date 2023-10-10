@@ -144,6 +144,22 @@ public:
         removable_ = removable;
     }
     /**
+     * @brief Is uninstalled or not.
+     * @return Returns the isUninstalled.
+     */
+    bool IsUninstalled() const
+    {
+        return isUninstalled_;
+    }
+    /**
+     * @brief Set isUninstalled.
+     * @param appType Indicates the removable to be set.
+     */
+    void SetIsUninstalled(bool isUninstalled)
+    {
+        isUninstalled_ = isUninstalled;
+    }
+    /**
      * @brief operator.
      * @param PreInstallBundleInfo Indicates the PreInstallBundleInfo.
      */
@@ -156,6 +172,7 @@ private:
     uint32_t versionCode_;
     std::vector<std::string> bundlePaths_;
     bool removable_ = true;
+    bool isUninstalled_ = false;
     Constants::AppType appType_ = Constants::AppType::SYSTEM_APP;
 };
 }  // namespace AppExecFwk

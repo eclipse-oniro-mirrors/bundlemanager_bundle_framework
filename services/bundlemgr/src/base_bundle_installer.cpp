@@ -648,6 +648,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         dataMgr_->GetPreInstallBundleInfo(bundleName_, preInstallBundleInfo);
         preInstallBundleInfo.SetAppType(newInfos.begin()->second.GetAppType());
         preInstallBundleInfo.SetVersionCode(newInfos.begin()->second.GetVersionCode());
+        preInstallBundleInfo.SetIsUninstalled(false);
         for (const auto &item : newInfos) {
             preInstallBundleInfo.AddBundlePath(item.first);
         }
@@ -1237,6 +1238,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
     driverInstaller->RemoveDriverSoFile(oldInfo);
+    if (oldInfo.IsPreInstallApp()) {
+        MarkPreInstallState(bundleName, true);
+    }
     return ERR_OK;
 }
 
@@ -1358,6 +1362,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 return result;
             }
 
+            if (oldInfo.IsPreInstallApp()) {
+                MarkPreInstallState(bundleName, true);
+            }
+
             return ERR_OK;
         }
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
@@ -1387,6 +1395,24 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage));
     APP_LOGD("finish to process %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
+}
+
+void BaseBundleInstaller::MarkPreInstallState(const std::string &bundleName, bool isUninstalled)
+{
+    if (!dataMgr_) {
+        APP_LOGE("dataMgr is nullptr");
+        return;
+    }
+
+    PreInstallBundleInfo preInstallBundleInfo;
+    preInstallBundleInfo.SetBundleName(bundleName);
+    if (!dataMgr_->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGI("No PreInstallBundleInfo(%{public}s) in db", bundleName.c_str());
+        return;
+    }
+
+    preInstallBundleInfo.SetIsUninstalled(isUninstalled);
+    dataMgr_->SavePreInstallBundleInfo(bundleName, preInstallBundleInfo);
 }
 
 ErrCode BaseBundleInstaller::ProcessInstallBundleByBundleName(

@@ -23,6 +23,7 @@ const std::string VERSION_CODE = "versionCode";
 const std::string BUNDLE_PATHS = "bundlePaths";
 const std::string APP_TYPE = "appType";
 const std::string REMOVABLE = "removable";
+const std::string IS_UNINSTALLED = "isUninstalled";
 }  // namespace
 
 void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
@@ -32,6 +33,7 @@ void PreInstallBundleInfo::ToJson(nlohmann::json &jsonObject) const
     jsonObject[BUNDLE_PATHS] = bundlePaths_;
     jsonObject[APP_TYPE] = appType_;
     jsonObject[REMOVABLE] = removable_;
+    jsonObject[IS_UNINSTALLED] = isUninstalled_;
 }
 
 int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
@@ -78,6 +80,14 @@ int32_t PreInstallBundleInfo::FromJson(const nlohmann::json &jsonObject)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        IS_UNINSTALLED,
+        isUninstalled_,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     return parseResult;
 }
 
@@ -89,6 +99,7 @@ std::string PreInstallBundleInfo::ToString() const
     j[BUNDLE_PATHS] = bundlePaths_;
     j[APP_TYPE] = appType_;
     j[REMOVABLE] = removable_;
+    j[IS_UNINSTALLED] = isUninstalled_;
     return j.dump();
 }
 }  // namespace AppExecFwk

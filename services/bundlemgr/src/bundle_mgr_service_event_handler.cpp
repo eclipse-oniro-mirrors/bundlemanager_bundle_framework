@@ -1064,7 +1064,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         BundleInfo hasInstalledInfo;
         auto hasBundleInstalled = dataMgr->GetBundleInfo(
             bundleName, BundleFlag::GET_BUNDLE_DEFAULT, hasInstalledInfo, Constants::ANY_USERID);
-        if (!hasBundleInstalled) {
+        if (!hasBundleInstalled && mapIter->second.IsUninstalled()) {
             APP_LOGW("app(%{public}s) has been uninstalled and do not OTA install.",
                 bundleName.c_str());
             if (!removable) {
