@@ -253,7 +253,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     }
     bool ret = GetBundleNameForUid(uid, bundleName);
     if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
+        APP_LOGE("GetBundleNameForUid failed uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
@@ -1230,8 +1230,9 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
-        APP_LOGE("verify calling uid failed");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -1249,8 +1250,9 @@ bool BundleMgrHostImpl::UnregisterBundleEventCallback(const sptr<IBundleEventCal
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
-        APP_LOGE("verify calling uid failed");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
     auto dataMgr = GetDataMgrFromService();

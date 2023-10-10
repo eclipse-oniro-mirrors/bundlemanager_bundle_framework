@@ -185,7 +185,7 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGW("calling permission denied");
+        APP_LOGW("calling permission denied, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
@@ -196,7 +196,7 @@ ErrCode AppControlManagerHostImpl::ConfirmAppJumpControlRule(const std::string &
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
@@ -207,7 +207,7 @@ ErrCode AppControlManagerHostImpl::AddAppJumpControlRule(const std::vector<AppJu
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->AddAppJumpControlRule(controlRules, userId);
@@ -218,7 +218,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppJumpControlRule(const std::vector<Ap
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppJumpControlRule(controlRules, userId);
@@ -228,7 +228,7 @@ ErrCode AppControlManagerHostImpl::DeleteRuleByCallerBundleName(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteRuleByCallerBundleName(callerBundleName, userId);
@@ -238,7 +238,7 @@ ErrCode AppControlManagerHostImpl::DeleteRuleByTargetBundleName(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteRuleByTargetBundleName(targetBundleName, userId);
@@ -249,7 +249,7 @@ ErrCode AppControlManagerHostImpl::GetAppJumpControlRule(const std::string &call
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGW("calling permission denied");
+        APP_LOGW("calling permission denied, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppJumpControlRule(callerBundleName, targetBundleName, userId, controlRule);
@@ -260,7 +260,7 @@ std::string AppControlManagerHostImpl::GetCallingName()
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     auto item = callingNameMap_.find(uid);
     if (item == callingNameMap_.end()) {
-        APP_LOGW("calling uid is invalid");
+        APP_LOGW("calling uid is invalid, uid : %{public}d", uid);
         return "";
     }
     return item->second;
