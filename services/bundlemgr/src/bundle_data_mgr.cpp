@@ -2085,7 +2085,7 @@ bool BundleDataMgr::GetBundleNameForUid(const int uid, std::string &bundleName) 
 
 ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const
 {
-    if (uid < baseAppUid_) {
+    if (uid < Constants::BASE_APP_UID) {
         APP_LOGD("the uid(%{public}d) is not an application.", uid);
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
