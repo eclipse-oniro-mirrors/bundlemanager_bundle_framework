@@ -403,60 +403,9 @@ public:
         bool ret = false;
         bool getCache = false;
     };
-    static void Finalizer(NativeEngine *engine, void *data, void *hint);
     std::string errMessage_;
 
 private:
-    NativeValue* OnGetBundleInstaller(NativeEngine &engine, const NativeCallbackInfo &info);
-    NativeValue* CreateCustomizeMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<CustomizeData>> &metaData);
-    NativeValue* CreateInnerMetaDatas(
-        NativeEngine &engine, const std::map<std::string, std::vector<Metadata>> &metaData);
-    NativeValue* CreateInnerMetaDatas(NativeEngine &engine, const std::vector<Metadata> &metaData);
-    NativeValue* CreateCustomizeMetaData(NativeEngine &engine, const CustomizeData &customizeData);
-    NativeValue* CreateInnerMetaData(NativeEngine &engine, const Metadata &metadata);
-    NativeValue* CreateResource(NativeEngine &engine, const Resource &resource);
-    NativeValue* CreateModuleInfos(NativeEngine &engine, const std::vector<ModuleInfo> &moduleInfos);
-    NativeValue* CreateModuleInfo(NativeEngine &engine, const ModuleInfo &modInfo);
-    NativeValue* CreateAppInfo(NativeEngine &engine, const ApplicationInfo &appInfo);
-    static int32_t InitGetAbilityInfo(NativeEngine &engine, NativeCallbackInfo &info,
-        NativeValue *&lastParam, std::string &errMessage, std::shared_ptr<JsAbilityInfo> abilityInfo);
-    NativeValue* CreateAbilityInfo(NativeEngine &engine,  const AbilityInfo &abilityInfo);
-    NativeValue* CreateMetaData(NativeEngine &engine, const MetaData &metaData);
-    NativeValue* CreateUsedScene(NativeEngine &engine, const RequestPermissionUsedScene &usedScene);
-    NativeValue* CreateAppInfos(NativeEngine &engine, const std::vector<ApplicationInfo> &appInfos);
-    NativeValue* CreateBundleInfos(NativeEngine &engine, const std::vector<BundleInfo> &bundleInfos);
-    NativeValue* CreateBundleInfo(NativeEngine &engine, const BundleInfo &bundleInfo);
-    NativeValue* CreateAbilityInfos(NativeEngine &engine, const std::vector<AbilityInfo> &abilityInfos);
-    NativeValue* CreateHapModuleInfos(NativeEngine &engine, const std::vector<HapModuleInfo> &hapModuleInfos);
-    NativeValue* CreateHapModuleInfo(NativeEngine &engine, const HapModuleInfo &hapModuleInfo);
-    NativeValue* CreateRequestPermissions(NativeEngine &engine,
-        const std::vector<RequestPermission> &requestPermissions);
-    NativeValue* CreateRequestPermission(NativeEngine &engine, const RequestPermission &requestPermission);
-    NativeValue* CreateWant(NativeEngine &engine, const OHOS::AAFwk::Want &want);
-    NativeValue* CreatePermissionDef(NativeEngine &engine, const PermissionDef &permissionDef);
-    static NativeValue* UnwarpQueryAbilityInfoParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId,
-        int32_t &errCode);
-    static bool UnwarpUserIdThreeParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    static bool UnwarpUserIdFourParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    static bool UnwarpUserIdFiveParams(NativeEngine &engine, NativeCallbackInfo &info, int32_t &userId);
-    static bool UnwarpBundleOptionsParams(NativeEngine &engine, NativeCallbackInfo &info,
-        BundleOptions &options, bool &unwarpBundleOptionsParamsResult);
-    NativeValue* CreateBundlePackInfo(NativeEngine &engine, const int32_t &flags, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreatePackages(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreateSummary(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreateSummaryApp(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreateSummaryModules(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreateSummaryModule(NativeEngine &engine, const PackageModule &moduleInfo);
-    NativeValue* CreateSummaryAppVersion(NativeEngine &engine, const BundlePackInfo &bundlePackInfo);
-    NativeValue* CreateModulesApiVersion(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
-    NativeValue* CreateDistro(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
-    NativeValue* CreateAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
-    NativeValue* CreateAbility(NativeEngine &engine, const ModuleAbilityInfo &ability);
-    NativeValue* CreateFormsInfos(NativeEngine &engine, const std::vector<OHOS::AppExecFwk::AbilityFormInfo> &forms);
-    NativeValue* CreateFormsInfo(NativeEngine &engine, const AbilityFormInfo &form);
-    NativeValue* CreateExtensionAbilities(NativeEngine &engine, const OHOS::AppExecFwk::PackageModule &module);
-    NativeValue* CreateExtensionAbility(NativeEngine &engine, const ExtensionAbilities &extensionAbility);
 };
 
 class JsBundleInstall {
@@ -467,18 +416,7 @@ public:
         int32_t resCode = 0;
         std::string resMessage;
     };
-    static void Finalizer(NativeEngine *engine, void *data, void *hint);
-    static NativeValue* Install(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* Recover(NativeEngine *engine, NativeCallbackInfo *info);
-    static NativeValue* Uninstall(NativeEngine *engine, NativeCallbackInfo *info);
 private:
-    NativeValue* OnInstall(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnRecover(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* OnUninstall(NativeEngine &engine, NativeCallbackInfo &info);
-    NativeValue* CreateInstallStatus(NativeEngine &engine,
-        const std::shared_ptr<BundleInstallResult> bundleInstallResult);
-    bool GetStringsValue(NativeEngine &engine, NativeValue *object, std::vector<std::string> &strList);
-    static bool GetInstallParamValue(NativeEngine &engine, NativeValue *object, InstallParam &installParam);
     static void ConvertInstallResult(std::shared_ptr<BundleInstallResult> installResult);
 };
 

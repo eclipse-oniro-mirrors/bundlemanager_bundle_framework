@@ -29,42 +29,55 @@ EXTERN_C_START
 /*
  * function for module exports
  */
-static NativeValue* JsBundleMgrInit(NativeEngine* engine, NativeValue* exports)
-{
-    APP_LOGD("JsBundleMgrInit is called");
-    if (engine == nullptr || exports == nullptr) {
-        APP_LOGE("Invalid input parameters");
-        return nullptr;
-    }
-
-    NativeObject* object = ConvertNativeValueTo<NativeObject>(exports);
-    if (object == nullptr) {
-        APP_LOGE("object is nullptr");
-        return nullptr;
-    }
-
-    std::unique_ptr<JsBundleMgr> jsBundleMgr = std::make_unique<JsBundleMgr>();
-    object->SetNativePointer(jsBundleMgr.release(), JsBundleMgr::Finalizer, nullptr);
-    napi_env env = reinterpret_cast<napi_env>(engine);
-    object->SetProperty("AbilityType", reinterpret_cast<NativeValue*>(CreateAbilityTypeObject(env)));
-    object->SetProperty("AbilitySubType", reinterpret_cast<NativeValue*>(CreateAbilitySubTypeObject(env)));
-    object->SetProperty("DisplayOrientation", reinterpret_cast<NativeValue*>(CreateDisplayOrientationObject(env)));
-    object->SetProperty("LaunchMode", reinterpret_cast<NativeValue*>(CreateLaunchModeObject(env)));
-    object->SetProperty("ColorMode", reinterpret_cast<NativeValue*>(CreateColorModeObject(env)));
-    object->SetProperty("GrantStatus", reinterpret_cast<NativeValue*>(CreateGrantStatusObject(env)));
-    object->SetProperty("ModuleRemoveFlag", reinterpret_cast<NativeValue*>(CreateModuleRemoveFlagObject(env)));
-    object->SetProperty("SignatureCompareResult", reinterpret_cast<NativeValue*>(CreateSignatureCompareResultObject(env)));
-    object->SetProperty("ShortcutExistence", reinterpret_cast<NativeValue*>(CreateShortcutExistenceObject(env)));
-    object->SetProperty("QueryShortCutFlag", reinterpret_cast<NativeValue*>(CreateQueryShortCutFlagObject(env)));
-    object->SetProperty("BundleFlag", reinterpret_cast<NativeValue*>(CreateBundleFlagObject(env)));
-    return exports;
-}
-
 static napi_value Init(napi_env env, napi_value exports)
 {
     napi_value nInstallErrorCode = nullptr;
     NAPI_CALL(env, napi_create_object(env, &nInstallErrorCode));
     CreateInstallErrorCodeObject(env, nInstallErrorCode);
+
+    napi_value nAbilityType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAbilityType));
+    nAbilityType = CreateAbilityTypeObject(env);
+
+    napi_value nAbilitySubType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nAbilitySubType));
+    nAbilitySubType = CreateAbilitySubTypeObject(env);
+
+    napi_value nDisplayOrientation = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nDisplayOrientation));
+    nDisplayOrientation = CreateDisplayOrientationObject(env);
+
+    napi_value nLaunchMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nLaunchMode));
+    nLaunchMode = CreateLaunchModeObject(env);
+
+    napi_value nColorMode = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nColorMode));
+    nColorMode = CreateColorModeObject(env);
+
+    napi_value nGrantStatus = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nGrantStatus));
+    nGrantStatus = CreateGrantStatusObject(env);
+
+    napi_value nModuleRemoveFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nModuleRemoveFlag));
+    nModuleRemoveFlag = CreateModuleRemoveFlagObject(env);
+
+    napi_value nSignatureCompareResult = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nSignatureCompareResult));
+    nSignatureCompareResult = CreateSignatureCompareResultObject(env);
+
+    napi_value nShortcutExistence = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nShortcutExistence));
+    nShortcutExistence = CreateShortcutExistenceObject(env);
+
+    napi_value nQueryShortCutFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nQueryShortCutFlag));
+    nQueryShortCutFlag = CreateQueryShortCutFlagObject(env);
+
+    napi_value nBundleFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nBundleFlag));
+    nBundleFlag = CreateBundleFlagObject(env);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getApplicationInfos", GetApplicationInfos),
@@ -88,6 +101,17 @@ static napi_value Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setApplicationEnabled", SetApplicationEnabled),
         DECLARE_NAPI_FUNCTION("getBundleInstaller", GetBundleInstaller),
         DECLARE_NAPI_PROPERTY("InstallErrorCode", nInstallErrorCode),
+        DECLARE_NAPI_PROPERTY("AbilityType", nAbilityType),
+        DECLARE_NAPI_PROPERTY("AbilitySubType", nAbilitySubType),
+        DECLARE_NAPI_PROPERTY("DisplayOrientation", nDisplayOrientation),
+        DECLARE_NAPI_PROPERTY("LaunchMode", nLaunchMode),
+        DECLARE_NAPI_PROPERTY("ColorMode", nColorMode),
+        DECLARE_NAPI_PROPERTY("GrantStatus", nGrantStatus),
+        DECLARE_NAPI_PROPERTY("ModuleRemoveFlag", nModuleRemoveFlag),
+        DECLARE_NAPI_PROPERTY("SignatureCompareResult", nSignatureCompareResult),
+        DECLARE_NAPI_PROPERTY("ShortcutExistence", nShortcutExistence),
+        DECLARE_NAPI_PROPERTY("QueryShortCutFlag", nQueryShortCutFlag),
+        DECLARE_NAPI_PROPERTY("BundleFlag", nBundleFlag)
     };
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));
 
@@ -108,8 +132,7 @@ static napi_value Init(napi_env env, napi_value exports)
             &m_classBundleInstaller));
     napi_create_reference(env, m_classBundleInstaller, 1, &g_classBundleInstaller);
     APP_LOGI("Init end");
-    return reinterpret_cast<napi_value>(JsBundleMgrInit(reinterpret_cast<NativeEngine*>(env),
-        reinterpret_cast<NativeValue*>(exports)));
+    return exports;
 }
 EXTERN_C_END
 
