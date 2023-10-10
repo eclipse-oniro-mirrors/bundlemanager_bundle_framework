@@ -55,6 +55,7 @@ struct NotifyBundleEvents {
     bool isAgingUninstall = false;
     bool isBmsExtensionUninstalled = false;
     std::string appId;
+    bool isModuleUpdate = false;
 };
 
 class BundleCommonEventMgr {

@@ -162,7 +162,8 @@ ErrCode BaseBundleInstaller::InstallBundle(
             .resultCode = result,
             .type = GetNotifyType(),
             .uid = uid,
-            .accessTokenId = accessTokenId_
+            .accessTokenId = accessTokenId_,
+            .isModuleUpdate = isModuleUpdate_
         };
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
@@ -1621,8 +1622,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return result;
     }
 
-    APP_LOGD("ProcessBundleUpdateStatus with bundleName %{public}s and packageName %{public}s",
-        newInfo.GetBundleName().c_str(), modulePackage_.c_str());
+    APP_LOGD("bundleName %{public}s, packageName %{public}s", newInfo.GetBundleName().c_str(), modulePackage_.c_str());
     if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UPDATING_START)) {
         APP_LOGE("update already start");
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
@@ -1637,6 +1637,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     // 1. bundle exist, hap exist, update hap
     // 2. bundle exist, install new hap
     bool isModuleExist = oldInfo.FindModule(modulePackage_);
+    if (isModuleExist) {
+        isModuleUpdate_ = true;
+    }
     newInfo.RestoreFromOldInfo(oldInfo);
     result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
         isReplace, noSkipsKill) : ProcessNewModuleInstall(newInfo, oldInfo);
@@ -3443,6 +3446,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     signatureFileMap_.clear();
     hapPathRecords_.clear();
     uninstallBundleAppId_.clear();
+    isModuleUpdate_ = false;
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
