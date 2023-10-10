@@ -450,6 +450,8 @@ private:
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
+    void SavePreInstallException(const std::string &bundleDir);
+    void HandlePreInstallException();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);

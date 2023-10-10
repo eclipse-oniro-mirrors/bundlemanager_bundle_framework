@@ -44,6 +44,7 @@
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
 #include "quick_fix_manager_host_impl.h"
 #endif
+#include "pre_install_exception_mgr.h"
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_manager_host_impl.h"
 #endif
@@ -127,6 +128,8 @@ public:
 
     const std::shared_ptr<BmsParam> GetBmsParam() const;
 
+    const std::shared_ptr<PreInstallExceptionMgr> GetPreInstallExceptionMgr() const;
+
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     sptr<IOverlayManager> GetOverlayManagerProxy() const;
 #endif
@@ -143,6 +146,7 @@ private:
     void SelfClean();
 
     void InitBmsParam();
+    void InitPreInstallExceptionMgr();
     bool InitBundleMgrHost();
     bool InitBundleInstaller();
     void InitBundleDataMgr();
@@ -174,6 +178,7 @@ private:
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
     std::shared_ptr<BmsParam> bmsParam_;
+    std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr_;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<DefaultAppHostImpl> defaultAppHostImpl_;

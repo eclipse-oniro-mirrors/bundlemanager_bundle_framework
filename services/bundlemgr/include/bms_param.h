@@ -40,6 +40,13 @@ public:
      */
     bool SaveBmsParam(const std::string &paramKeyInfo, const std::string &paramValueInfo);
 
+    /**
+     * @brief Delete bms param.
+     * @param key Indicates the key.
+     * @return Returns true if this function is successfully called; returns false otherwise.
+     */
+    bool DeleteBmsParam(const std::string &key);
+
 private:
     std::shared_ptr<RdbDataManager> rdbDataManager_ = nullptr;
 };

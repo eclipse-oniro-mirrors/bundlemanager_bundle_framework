@@ -31,7 +31,7 @@ public:
      * @param appType Indicates the bundle type.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool InstallSystemBundle(
+    ErrCode InstallSystemBundle(
         const std::string &filePath,
         InstallParam &installParam,
         Constants::AppType appType);
@@ -50,7 +50,7 @@ public:
      * @param appType Indicates the bundle type.
      * @return Returns true if this function called successfully; returns false otherwise.
      */
-    bool OTAInstallSystemBundle(
+    ErrCode OTAInstallSystemBundle(
         const std::vector<std::string> &filePaths,
         InstallParam &installParam,
         Constants::AppType appType);

@@ -154,7 +154,8 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
+    return installer->InstallSystemBundle(
+        filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
 bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
@@ -170,7 +171,8 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP);
+    return installer->OTAInstallSystemBundle(
+        filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
