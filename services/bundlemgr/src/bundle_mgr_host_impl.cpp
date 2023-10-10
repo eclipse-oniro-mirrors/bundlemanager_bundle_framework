@@ -253,7 +253,7 @@ ErrCode BundleMgrHostImpl::GetBundleInfoForSelf(int32_t flags, BundleInfo &bundl
     }
     bool ret = GetBundleNameForUid(uid, bundleName);
     if (!ret) {
-        APP_LOGE("GetBundleNameForUid failed");
+        APP_LOGE("GetBundleNameForUid failed, uid is %{public}d", uid);
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     return dataMgr->GetBundleInfoV9(bundleName, flags, bundleInfo, userId);
