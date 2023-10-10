@@ -96,6 +96,7 @@ void BmsBundleUpdaterTest::SetUpTestCase()
 void BmsBundleUpdaterTest::TearDownTestCase()
 {
     bundleMgrService_->OnStop();
+    bundleMgrService_->GetDataMgr()->AddUserId(USERID);
 }
 
 void BmsBundleUpdaterTest::SetUp()

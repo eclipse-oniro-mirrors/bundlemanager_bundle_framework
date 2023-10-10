@@ -148,6 +148,7 @@ void BmsBundleKitServiceBaseTest::SetUp()
     }
     if (!bundleMgrService_->IsServiceReady()) {
         bundleMgrService_->OnStart();
+        bundleMgrService_->GetDataMgr()->AddUserId(DEFAULT_USERID);
     }
 }
 
