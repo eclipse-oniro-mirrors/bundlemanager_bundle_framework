@@ -2024,12 +2024,11 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
             APP_LOGW("obtain bundleInfo failed, bundleName :%{public}s not exist.", bundleName.c_str());
             continue;
         }
-        if (hasInstalledInfo.versionCode > hapVersionCode) {
+        if (hapVersionCode <= hasInstalledInfo.versionCode) {
             APP_LOGW("bundleName: %{public}s: hapVersionCode is less than old hap versionCode.", bundleName.c_str());
             continue;
         }
         InstallParam installParam;
-        installParam.isPreInstallApp = hasInstalledInfo.isPreInstallApp;
         installParam.noSkipsKill = false;
         installParam.needSendEvent = false;
         installParam.installFlag = InstallFlag::REPLACE_EXISTING;
