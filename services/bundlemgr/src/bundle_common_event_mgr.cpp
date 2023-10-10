@@ -30,6 +30,7 @@ namespace {
 constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
+constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -76,6 +77,7 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
     want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
     want.SetParam(APP_ID, installResult.appId);
+    want.SetParam(IS_MODULE_UPDATE, installResult.isModuleUpdate);
     EventFwk::CommonEventData commonData { want };
     // trigger BundleEventCallback first
     if (dataMgr != nullptr) {

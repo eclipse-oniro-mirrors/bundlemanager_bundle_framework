@@ -636,6 +636,7 @@ private:
     std::vector<std::string> bundlePaths_;
     std::unordered_map<std::string, std::string> signatureFileTmpMap_;
     std::string uninstallBundleAppId_;
+    bool isModuleUpdate_ = false;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
