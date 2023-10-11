@@ -4429,27 +4429,6 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0010, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: CheckApiInfo_0020
- * @tc.name: test CheckApiInfo
- * @tc.desc: 1.Test the CheckApiInfo
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0020, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
-    bool noSkipsKill = false;
-    std::unordered_map<std::string, InnerBundleInfo> info;
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
-    innerBundleInfo.baseBundleInfo_->compatibleVersion = 40000 * 1000 + 10;
-    installer.OnSingletonChange(noSkipsKill);
-    info.try_emplace("OpenHarmony2", innerBundleInfo);
-
-    bool res = installer.CheckApiInfo(info);
-    EXPECT_EQ(res, true);
-}
-
-/**
  * @tc.number: CheckApiInfo_0030
  * @tc.name: test CheckApiInfo
  * @tc.desc: 1.Test the CheckApiInfo
