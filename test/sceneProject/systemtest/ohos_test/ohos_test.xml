@@ -208,7 +208,7 @@
     <preparer>
     <option name="push" value="testOverlay/internal/test1/internalOverlayTest1.hsp -> /data/test/internalOverlayTest/test1/" src="res" />
     <option name="push" value="testOverlay/internal/test2/priority_0.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
-    <option name="push" value="testOverlay/internal/test2/priority_101.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
+    <option name="push" value="testOverlay/internal/test19/priority_101.hsp -> /data/test/internalOverlayTest/test2/" src="res" />
     <option name="push" value="testOverlay/internal/test3/internalOverlayTest3.hsp -> /data/test/internalOverlayTest/test3/" src="res" />
     <option name="push" value="testOverlay/internal/test4/internalOverlayTest4.hsp -> /data/test/internalOverlayTest/test4/" src="res" />
     <option name="push" value="testOverlay/internal/test5/internalOverlayTest5.hsp -> /data/test/internalOverlayTest/test5/" src="res" />
