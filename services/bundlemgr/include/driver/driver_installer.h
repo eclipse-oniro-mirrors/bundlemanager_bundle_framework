@@ -25,15 +25,24 @@ public:
     DriverInstaller() = default;
     ~DriverInstaller() = default;
 
-    ErrCode CopyDriverSoFile(const InnerBundleInfo &info, const std::string &srcPath) const;
+    ErrCode CopyAllDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo) const;
 
     ErrCode FilterDriverSoFile(const InnerBundleInfo &info, const Metadata &meta,
-        std::unordered_multimap<std::string, std::string> &dirMap) const;
+        std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted) const;
 
-    void RemoveDriverSoFile(const InnerBundleInfo &info, const std::string &moduleName = std::string()) const;
+    void RemoveDriverSoFile(const InnerBundleInfo &info, const std::string &moduleName, bool isModuleExisted) const;
 
     std::string CreateDriverSoDestinedDir(const std::string &bundleName, const std::string &moduleName,
-        const std::string &fileName, const std::string &destinedDir) const;
+        const std::string &fileName, const std::string &destinedDir, bool isModuleExisted) const;
+
+private:
+    ErrCode CopyDriverSoFile(const InnerBundleInfo &info, const std::string &srcPath, bool isModuleExisted) const;
+
+    void RemoveAndReNameDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        const InnerBundleInfo &oldInfo) const;
+
+    void RenameDriverFile(const InnerBundleInfo &info) const;
 };
 } // AppExecFwk
 } // OHOS

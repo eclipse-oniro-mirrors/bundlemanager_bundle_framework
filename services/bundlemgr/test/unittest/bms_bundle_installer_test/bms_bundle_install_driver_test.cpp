@@ -79,6 +79,7 @@ const std::string MODULE_NAME_FEATURE17 = "feature17";
 const std::string MODULE_NAME_FEATURE18 = "feature18";
 const std::string PATH_UNDERLIND = "_";
 const std::string DEVICE_TYPE_OF_DEFAULT = "default";
+const std::string TEMP_PREFIX = "temp_";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::vector<std::string> BUNDLE_DATA_DIR_PAGENAME = {
@@ -1660,6 +1661,49 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6300, Function | SmallTest | 
         DRIVER_FILE_NAME;
     bool fileExisted = IsFileExisted(filePath);
     EXPECT_TRUE(fileExisted);
+
+    result = UninstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(result, ERR_OK);
+    CheckBundleDirNonExist();
+    CheckModuleDirNonExist(BUNDLE_NAME);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6400
+ * @tc.name: test the installation of driver bundle
+ * @tc.desc: 1. install driver_feature18_hap.hap which is driver type with metadata name is saneBackend
+ *           3. install successfully.
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | Level0)
+{
+    std::vector<std::string> bundleFileVec = { RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE };
+    ErrCode result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_OK);
+    bool isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    // /data/service/el1/public/print_service/cups/datadir/model/com.example.driverTest_feature6_main_pages.json
+    std::string filePath = DRIVER_FILE_DIR + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 + PATH_UNDERLIND +
+        DRIVER_FILE_NAME;
+    bool fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    bundleFileVec.clear();
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE6_BUNDLE);
+    bundleFileVec.emplace_back(RESOURCE_ROOT_PATH + DRIVER_FEATURE5_BUNDLE);
+    result = InstallBundle(bundleFileVec);
+    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED);
+    isDirEmpty = IsDriverDirEmpty();
+    EXPECT_FALSE(isDirEmpty);
+    fileExisted = IsFileExisted(filePath);
+    EXPECT_TRUE(fileExisted);
+
+    // /data/service/el1/public/print_service/cups/datadir/model/temp_com.example.driverTest_feature6_main_pages.json
+    std::string tempFilePath = DRIVER_FILE_DIR + TEMP_PREFIX + BUNDLE_NAME + PATH_UNDERLIND + MODULE_NAME_FEATURE6 +
+        PATH_UNDERLIND + DRIVER_FILE_NAME;
+    fileExisted = IsFileExisted(tempFilePath);
+    EXPECT_FALSE(fileExisted);
 
     result = UninstallBundle(BUNDLE_NAME);
     EXPECT_EQ(result, ERR_OK);
