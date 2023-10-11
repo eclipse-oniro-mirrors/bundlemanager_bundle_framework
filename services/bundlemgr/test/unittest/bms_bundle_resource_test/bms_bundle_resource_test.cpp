@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -25,7 +27,10 @@
 #include "bundle_permission_mgr.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_configuration.h"
 #include "bundle_resource_manager.h"
+#include "bundle_resource_param.h"
+#include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
@@ -55,6 +60,7 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const std::string HAP_NOT_EXIST = "not exist";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -882,6 +888,107 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest
     ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_FALSE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0060
+ * Function: BundleResourceParam
+ * @tc.name: test BundleResourceParam
+ * @tc.desc: 1. system running normally
+ *           2. test GetSystemLanguage and GetSystemColorMode
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0060, Function | SmallTest | Level0)
+{
+    std::string language = BundleResourceParam::GetSystemLanguage();
+    EXPECT_FALSE(language.empty());
+
+    std::string colorMode = BundleResourceParam::GetSystemColorMode();
+    EXPECT_FALSE(colorMode.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0061
+ * Function: BundleResourceConfiguration
+ * @tc.name: test BundleResourceConfiguration
+ * @tc.desc: 1. system running normally
+ *           2. test InitResourceGlobalConfig
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0061, Function | SmallTest | Level0)
+{
+    bool ans = BundleResourceConfiguration::InitResourceGlobalConfig(nullptr);
+    EXPECT_FALSE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig("", nullptr);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager);
+    EXPECT_TRUE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_NOT_EXIST, resourceManager);
+    EXPECT_FALSE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, resourceManager);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0062
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 0;
+    resourceInfo.iconId_ = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.defaultIconHapPath_ = HAP_NOT_EXIST;
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.hapPath_ = HAP_NOT_EXIST;
+    resourceInfo.defaultIconHapPath_ = "";
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.hapPath_ = HAP_FILE_PATH1;
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.label_, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0063
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0063, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfos(resourceInfos);
+    EXPECT_FALSE(ans);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 0;
+    resourceInfo.iconId_ = 0;
+    resourceInfos.push_back(resourceInfo);
+
+    ans = parser.ParseResourceInfos(resourceInfos);
+    EXPECT_FALSE(ans);
 }
 #endif
 } // OHOS

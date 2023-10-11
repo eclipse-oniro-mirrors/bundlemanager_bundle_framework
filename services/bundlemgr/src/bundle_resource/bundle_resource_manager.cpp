@@ -16,6 +16,7 @@
 #include "bundle_resource_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 
 namespace OHOS {
@@ -88,16 +89,26 @@ bool BundleResourceManager::DeleteAllResourceInfo()
 bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
 {
     // need to parse label and icon
+    BundleResourceParser parser;
+    if (!parser.ParseResourceInfo(resourceInfo)) {
+        APP_LOGE("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey());
+        return false;
+    }
     return bundleResourceRdb_->AddResourceInfo(resourceInfo);
 }
 
 bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resourceInfos)
 {
     if (resourceInfos.empty()) {
-        APP_LOGW("resourceInfos is empty.");
+        APP_LOGE("resourceInfos is empty.");
         return false;
     }
     // need to parse label and icon
+    BundleResourceParser parser;
+    if (!parser.ParseResourceInfos(resourceInfos)) {
+        APP_LOGE("Parse ResourceInfos failed");
+        return false;
+    }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
 
