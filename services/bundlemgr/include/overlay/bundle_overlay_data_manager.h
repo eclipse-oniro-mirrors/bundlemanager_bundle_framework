@@ -79,6 +79,8 @@ public:
 
     void AddOverlayModuleStates(const InnerBundleInfo &innerBundleInfo, InnerBundleUserInfo &userInfo);
 
+    ErrCode UpdateOverlayModule(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
+
 private:
     ErrCode GetBundleDataMgr();
 

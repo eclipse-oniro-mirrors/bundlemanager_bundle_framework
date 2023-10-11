@@ -24,6 +24,44 @@ namespace {
 const std::string SHARED_TYPE = "shared";
 } // namespace
 
+ErrCode BundleOverlayInstallChecker::CheckOverlayInstallation(
+    std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId, int32_t &overlayType)
+{
+    APP_LOGD("Start to check overlay installation");
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    bool isInternalOverlayExisted = false;
+    bool isExternalOverlayExisted = false;
+    for (auto &info : newInfos) {
+        info.second.SetUserId(userId);
+        if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
+            APP_LOGW("the hap is not overlay hap");
+            continue;
+        }
+        if (isInternalOverlayExisted && isExternalOverlayExisted) {
+            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY;
+        }
+        ErrCode result = ERR_OK;
+        if (info.second.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
+            isInternalOverlayExisted = true;
+            result = CheckInternalBundle(newInfos, info.second);
+        }
+        if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
+            isExternalOverlayExisted = true;
+            result = CheckExternalBundle(info.second, userId);
+        }
+        if (result != ERR_OK) {
+            APP_LOGE("check overlay installation failed due to errcode %{public}d", result);
+            return result;
+        }
+    }
+    overlayType = (newInfos.begin()->second).GetOverlayType();
+    APP_LOGD("check overlay installation successfully and overlay type is %{public}d", overlayType);
+#else
+    APP_LOGD("overlay is not supported");
+#endif
+    return ERR_OK;
+}
+
 ErrCode BundleOverlayInstallChecker::CheckInternalBundle(
     const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     const InnerBundleInfo &innerBundleInfo) const
@@ -245,6 +283,37 @@ ErrCode BundleOverlayInstallChecker::CheckTargetModule(const std::string &bundle
             return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_TARGET_MODULE_IS_OVERLAY_MODULE;
         }
     }
+    return ERR_OK;
+}
+
+ErrCode BundleOverlayInstallChecker::CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
+    int32_t userId) const
+{
+#ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
+    if (((newInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (oldInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE)) ||
+        ((oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
+        (newInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE))) {
+        APP_LOGE("external overlay cannot update non-external overlay application");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    std::string newModuleName = newInfo.GetCurrentModulePackage();
+    if (!oldInfo.FindModule(newModuleName)) {
+        return ERR_OK;
+    }
+    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is non-overlay hap and new module is overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+
+    if ((newInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (oldInfo.isOverlayModule(newModuleName))) {
+        APP_LOGE("old module is overlay hap and new module is non-overlay hap");
+        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
+    }
+#else
+    APP_LOGD("overlay is not supported");
+#endif
     return ERR_OK;
 }
 } // AppExecFwk

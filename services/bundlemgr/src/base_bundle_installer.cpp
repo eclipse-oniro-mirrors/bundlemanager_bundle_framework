@@ -1013,10 +1013,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         RollBack(info.second, oldInfo);
     }
     // need delete definePermissions and requestPermissions
-    ErrCode ret = UpdateDefineAndRequestPermissions(preInfo, oldInfo);
-    if (ret != ERR_OK) {
-        return;
-    }
+    UpdateDefineAndRequestPermissions(preInfo, oldInfo);
     APP_LOGD("finish rollback due to install failed");
 }
 
@@ -1811,20 +1808,11 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         }
     }
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    if (newInfo.GetOverlayType() != NON_OVERLAY_TYPE) {
-        result = OverlayDataMgr::GetInstance()->RemoveOverlayModuleConnection(newInfo, oldInfo);
-        if (result != ERR_OK) {
-            APP_LOGE("remove overlay connection failed due to %{public}d", result);
-            return result;
-        }
-    }
-    // stage model to FA model
-    if (!newInfo.GetIsNewVersion() && oldInfo.GetIsNewVersion()) {
-        oldInfo.CleanAllOverlayModuleInfo();
-        oldInfo.CleanOverLayBundleInfo();
-    }
+    result = OverlayDataMgr::GetInstance()->UpdateOverlayModule(newInfo, oldInfo);
+    CHECK_RESULT(result, "UpdateOverlayModule failed %{public}d");
 #endif
-    APP_LOGE("ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
+
+    APP_LOGD("ProcessModuleUpdate noSkipsKill = %{public}d", noSkipsKill);
     // reboot scan case will not kill the bundle
     if (noSkipsKill) {
         // kill the bundle process during updating
@@ -1842,13 +1830,10 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
     }
 
     result = CheckArkProfileDir(newInfo, oldInfo);
-    if (result != ERR_OK) {
-        return result;
-    }
-    if ((result = ProcessAsanDirectory(newInfo)) != ERR_OK) {
-        APP_LOGE("process asan log directory failed!");
-        return result;
-    }
+    CHECK_RESULT(result, "CheckArkProfileDir failed %{public}d");
+
+    result = ProcessAsanDirectory(newInfo);
+    CHECK_RESULT(result, "process asan log directory failed %{public}d");
 
     moduleTmpDir_ = newInfo.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_ + Constants::TMP_SUFFIX;
     result = ExtractModule(newInfo, moduleTmpDir_);
@@ -1867,17 +1852,11 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
         APP_LOGE("update innerBundleInfo %{public}s failed", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    ErrCode ret = UpdateDefineAndRequestPermissions(noUpdateInfo, oldInfo);
-    if (ret != ERR_OK) {
-        APP_LOGE("UpdateDefineAndRequestPermissions %{public}s failed", bundleName_.c_str());
-        return ret;
-    }
+    result = UpdateDefineAndRequestPermissions(noUpdateInfo, oldInfo);
+    CHECK_RESULT(result, "UpdateDefineAndRequestPermissions failed %{public}d");
 
-    ret = SetDirApl(oldInfo);
-    if (ret != ERR_OK) {
-        APP_LOGE("SetDirApl failed");
-        return ret;
-    }
+    result = SetDirApl(oldInfo);
+    CHECK_RESULT(result, "SetDirApl failed %{public}d");
 
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
@@ -3063,9 +3042,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
     // need to delete lower version feature hap definePermissions and requestPermissions
     APP_LOGD("delete lower version feature hap definePermissions and requestPermissions");
     ErrCode ret = UpdateDefineAndRequestPermissions(oldInfo, info);
-    if (ret != ERR_OK) {
-        return ret;
-    }
+    CHECK_RESULT(ret, "UpdateDefineAndRequestPermissions failed %{public}d");
     needDeleteQuickFixInfo_ = true;
     APP_LOGD("finish to uninstall lower version feature hap");
     return ERR_OK;
@@ -3597,67 +3574,25 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
 ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
     int32_t userId)
 {
-    APP_LOGD("Start to check overlay installation");
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    bool isInternalOverlayExisted = false;
-    bool isExternalOverlayExisted = false;
-    for (auto &info : newInfos) {
-        info.second.SetUserId(userId);
-        if (info.second.GetOverlayType() == NON_OVERLAY_TYPE) {
-            APP_LOGW("the hap is not overlay hap");
-            continue;
-        }
-        if (isInternalOverlayExisted && isExternalOverlayExisted) {
-            return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_INTERNAL_EXTERNAL_OVERLAY_EXISTED_SIMULTANEOUSLY;
-        }
-        std::shared_ptr<BundleOverlayInstallChecker> overlayChecker = std::make_shared<BundleOverlayInstallChecker>();
-        ErrCode result = ERR_OK;
-        if (info.second.GetOverlayType() == OVERLAY_INTERNAL_BUNDLE) {
-            isInternalOverlayExisted = true;
-            result = overlayChecker->CheckInternalBundle(newInfos, info.second);
-        }
-        if (info.second.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) {
-            isExternalOverlayExisted = true;
-            result = overlayChecker->CheckExternalBundle(info.second, userId);
-        }
-        if (result != ERR_OK) {
-            APP_LOGE("check overlay installation failed due to errcode %{public}d", result);
-            return result;
-        }
-    }
-    overlayType_ = (newInfos.begin()->second).GetOverlayType();
-    APP_LOGD("check overlay installation successfully and overlay type is %{public}d", overlayType_);
-#endif
+    std::shared_ptr<BundleOverlayInstallChecker> overlayChecker = std::make_shared<BundleOverlayInstallChecker>();
+    return overlayChecker->CheckOverlayInstallation(newInfos, userId, overlayType_);
+#else
+    APP_LOGD("overlay is not supported");
     return ERR_OK;
+#endif
 }
 
 ErrCode BaseBundleInstaller::CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo,
     int32_t userId) const
 {
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
-    if (((newInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
-        (oldInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE)) ||
-        ((oldInfo.GetOverlayType() == OVERLAY_EXTERNAL_BUNDLE) &&
-        (newInfo.GetOverlayType() != OVERLAY_EXTERNAL_BUNDLE))) {
-        APP_LOGE("external overlay cannot update non-external overlay application");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
-    }
-
-    std::string newModuleName = newInfo.GetCurrentModulePackage();
-    if (!oldInfo.FindModule(newModuleName)) {
-        return ERR_OK;
-    }
-    if ((newInfo.GetOverlayType() != NON_OVERLAY_TYPE) && (!oldInfo.isOverlayModule(newModuleName))) {
-        APP_LOGE("old module is non-overlay hap and new module is overlay hap");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
-    }
-
-    if ((newInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (oldInfo.isOverlayModule(newModuleName))) {
-        APP_LOGE("old module is overlay hap and new module is non-overlay hap");
-        return ERR_BUNDLEMANAGER_OVERLAY_INSTALLATION_FAILED_OVERLAY_TYPE_NOT_SAME;
-    }
-#endif
+    std::shared_ptr<BundleOverlayInstallChecker> overlayChecker = std::make_shared<BundleOverlayInstallChecker>();
+    return overlayChecker->CheckOverlayUpdate(oldInfo, newInfo, userId);
+#else
+    APP_LOGD("overlay is not supported");
     return ERR_OK;
+#endif
 }
 
 NotifyType BaseBundleInstaller::GetNotifyType()

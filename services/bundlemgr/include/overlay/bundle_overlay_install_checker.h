@@ -28,11 +28,14 @@ public:
     BundleOverlayInstallChecker() = default;
     virtual ~BundleOverlayInstallChecker() = default;
 
+    ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId,
+        int32_t &overlayType);
     ErrCode CheckInternalBundle(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         const InnerBundleInfo &innerBundleInfo) const;
     ErrCode CheckExternalBundle(const InnerBundleInfo &innerBundleInfo, int32_t userId) const;
     ErrCode CheckTargetBundle(const std::string &targetBundleName, const std::string &targetModuleName,
         const std::string &fingerprint, int32_t userId) const;
+    ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
 
 private:
     ErrCode CheckHapType(const InnerBundleInfo &info) const;
