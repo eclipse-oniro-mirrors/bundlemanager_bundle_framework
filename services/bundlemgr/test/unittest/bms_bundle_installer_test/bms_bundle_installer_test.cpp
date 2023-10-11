@@ -84,6 +84,7 @@ const std::string CURRENT_PATH = "/data/service/el2/100/hmdfs/account/data/test_
 const size_t NUMBER_ONE = 1;
 const int32_t INVAILD_CODE = -1;
 const int32_t ZERO_CODE = 0;
+const uint32_t COMPATIBLE_VERSION = 11;
 const std::string LOG = "log";
 const int32_t EDM_UID = 3057;
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
@@ -4428,27 +4429,6 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0010, Function | SmallTest | Level
 }
 
 /**
- * @tc.number: CheckApiInfo_0020
- * @tc.name: test CheckApiInfo
- * @tc.desc: 1.Test the CheckApiInfo
-*/
-HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0020, Function | SmallTest | Level0)
-{
-    BaseBundleInstaller installer;
-    installer.singletonState_ = AppExecFwk::BaseBundleInstaller::SingletonState::NON_TO_SINGLETON;
-    bool noSkipsKill = false;
-    std::unordered_map<std::string, InnerBundleInfo> info;
-    InnerBundleInfo innerBundleInfo;
-    innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
-    innerBundleInfo.baseBundleInfo_->compatibleVersion = 40000 * 1000 + 10;
-    installer.OnSingletonChange(noSkipsKill);
-    info.try_emplace("OpenHarmony2", innerBundleInfo);
-
-    bool res = installer.CheckApiInfo(info);
-    EXPECT_EQ(res, true);
-}
-
-/**
  * @tc.number: CheckApiInfo_0030
  * @tc.name: test CheckApiInfo
  * @tc.desc: 1.Test the CheckApiInfo
@@ -4461,12 +4441,16 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
     std::unordered_map<std::string, InnerBundleInfo> info;
     InnerBundleInfo innerBundleInfo;
     innerBundleInfo.baseApplicationInfo_->compileSdkType = "OpenHarmony1";
-    innerBundleInfo.baseBundleInfo_->compatibleVersion = 40000 * 1000 + 100;
+    innerBundleInfo.baseBundleInfo_->compatibleVersion = COMPATIBLE_VERSION;
     installer.OnSingletonChange(noSkipsKill);
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
+#ifdef ON_64BIT_SYSTEM
+    EXPECT_EQ(res, true);
+#else
     EXPECT_EQ(res, false);
+#endif
 }
 
 /**
