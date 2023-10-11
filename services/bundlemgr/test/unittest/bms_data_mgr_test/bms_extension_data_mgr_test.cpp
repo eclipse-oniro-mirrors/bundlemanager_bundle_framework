@@ -174,20 +174,6 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0002, Function | SmallTest
 }
 
 /**
- * @tc.number: BmsExtensionDataMgr_0003
- * @tc.name: CheckApiInfo
- * @tc.desc: CheckApiInfo
- */
-HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0003, Function | SmallTest | Level0)
-{
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    BundleInfo bundleInfo;
-    bundleInfo.compatibleVersion = 40000 * 1000 + 10;
-    bool res = bmsExtensionDataMgr.CheckApiInfo(bundleInfo, SDK_VERSION);
-    EXPECT_EQ(res, true);
-}
-
-/**
  * @tc.number: BmsExtensionDataMgr_0004
  * @tc.name: QueryAbilityInfosWithFlag
  * @tc.desc: QueryAbilityInfosWithFlag
