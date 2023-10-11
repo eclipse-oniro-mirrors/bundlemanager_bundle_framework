@@ -91,7 +91,7 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfo(resourceInfo)) {
-        APP_LOGE("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey());
+        APP_LOGE("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
         return false;
     }
     return bundleResourceRdb_->AddResourceInfo(resourceInfo);

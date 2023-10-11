@@ -43,20 +43,20 @@ private:
     bool ParseResourceInfo(const std::string &hapPath, const std::string &defaultIconPath, ResourceInfo &resourceInfo);
 
     // parse label resource by hapPath
-    bool ParseLabelResource(const std::string &hapPath, const int32_t labelId, std::string &label);
+    bool ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label);
 
     // parse icon resource by hapPath
-    bool ParseIconResource(const std::string &hapPath, const int32_t iconId, std::string &icon);
+    bool ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon);
 
-    bool ParseResourceInfo(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+    bool ParseResourceInfoByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         ResourceInfo &resourceInfo);
 
     // parse label resource by resourceManager
-    bool ParseLabelResource(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+    bool ParseLabelResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         const int32_t labelId, std::string &label);
 
     // parse label resource by resourceManager
-    bool ParseIconResource(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+    bool ParseIconResourceByResourceManager(const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
         const int32_t iconId, std::string &icon);
 };
 } // AppExecFwk

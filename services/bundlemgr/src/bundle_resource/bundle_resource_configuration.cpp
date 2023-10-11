@@ -26,9 +26,11 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+const std::string RESOURCE_LIGHT = "";
+const std::string RESOURCE_DARK = "";
 static const std::unordered_map<std::string, Global::Resource::ColorMode> BUNDLE_COLOR_MODE = {
-    { "dark", Global::Resource::ColorMode::DARK},
-    { "light", Global::Resource::ColorMode::LIGHT}
+    {RESOURCE_LIGHT, Global::Resource::ColorMode::LIGHT},
+    {RESOURCE_DARK, Global::Resource::ColorMode::DARK},
 };
 
 Global::Resource::ColorMode ConvertColorMode(const std::string &colorMode)

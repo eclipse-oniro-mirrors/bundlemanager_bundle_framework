@@ -67,7 +67,7 @@ bool BundleResourceParser::ParseResourceInfo(const std::string &hapPath, Resourc
         APP_LOGE("InitResourceGlobalConfig failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
-    if (!ParseResourceInfo(resourceManager, resourceInfo)) {
+    if (!ParseResourceInfoByResourceManager(resourceManager, resourceInfo)) {
         APP_LOGE("ParseResourceInfo failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
@@ -79,18 +79,18 @@ bool BundleResourceParser::ParseResourceInfo(
     const std::string &defaultIconPath,
     ResourceInfo &resourceInfo)
 {
-    if (!ParseLabelResource(hapPath, resourceInfo.labelId_, resourceInfo.label_)) {
+    if (!ParseLabelResourceByPath(hapPath, resourceInfo.labelId_, resourceInfo.label_)) {
         APP_LOGE("bundleName: %{public}s ParseLabelResource failed", resourceInfo.bundleName_.c_str());
         return false;
     }
-    if (!ParseIconResource(defaultIconPath, resourceInfo.iconId_, resourceInfo.icon_)) {
+    if (!ParseIconResourceByPath(defaultIconPath, resourceInfo.iconId_, resourceInfo.icon_)) {
         APP_LOGE("bundleName: %{public}s ParseIconResource failed", resourceInfo.bundleName_.c_str());
         return false;
     }
     return true;
 }
 
-bool BundleResourceParser::ParseLabelResource(const std::string &hapPath, const int32_t labelId, std::string &label)
+bool BundleResourceParser::ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label)
 {
     if (hapPath.empty()) {
         APP_LOGE("hapPath is empty");
@@ -105,14 +105,14 @@ bool BundleResourceParser::ParseLabelResource(const std::string &hapPath, const 
         APP_LOGE("InitResourceGlobalConfig failed, key:%{private}s", hapPath.c_str());
         return false;
     }
-    if (!ParseLabelResource(resourceManager, labelId, label)) {
-        APP_LOGW("ParseLabelResource failed, label: %{public}d", labelId);
+    if (!ParseLabelResourceByResourceManager(resourceManager, labelId, label)) {
+        APP_LOGE("ParseLabelResource failed, label: %{public}d", labelId);
         return false;
     }
     return true;
 }
 
-bool BundleResourceParser::ParseIconResource(const std::string &hapPath, const int32_t iconId, std::string &icon)
+bool BundleResourceParser::ParseIconResourceByPath(const std::string &hapPath, const int32_t iconId, std::string &icon)
 {
     if (hapPath.empty()) {
         APP_LOGE("hapPath is empty");
@@ -127,14 +127,14 @@ bool BundleResourceParser::ParseIconResource(const std::string &hapPath, const i
         APP_LOGE("InitResourceGlobalConfig failed, hapPath:%{private}s", hapPath.c_str());
         return false;
     }
-    if (!ParseIconResource(resourceManager, iconId, icon)) {
-        APP_LOGE("wtt failed, iconId: %{public}d", iconId);
+    if (!ParseIconResourceByResourceManager(resourceManager, iconId, icon)) {
+        APP_LOGE("failed, iconId: %{public}d", iconId);
         return false;
     }
     return true;
 }
 
-bool BundleResourceParser::ParseResourceInfo(
+bool BundleResourceParser::ParseResourceInfoByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
     ResourceInfo &resourceInfo)
 {
@@ -143,12 +143,12 @@ bool BundleResourceParser::ParseResourceInfo(
         return false;
     }
 
-    if (!ParseLabelResource(resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
+    if (!ParseLabelResourceByResourceManager(resourceManager, resourceInfo.labelId_, resourceInfo.label_)) {
         APP_LOGE("ParseLabelResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
 
-    if (!ParseIconResource(resourceManager, resourceInfo.iconId_, resourceInfo.icon_)) {
+    if (!ParseIconResourceByResourceManager(resourceManager, resourceInfo.iconId_, resourceInfo.icon_)) {
         APP_LOGE("ParseIconResource failed, key: %{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
@@ -156,7 +156,7 @@ bool BundleResourceParser::ParseResourceInfo(
     return true;
 }
 
-bool BundleResourceParser::ParseLabelResource(
+bool BundleResourceParser::ParseLabelResourceByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
     const int32_t labelId, std::string &label)
 {
@@ -177,7 +177,7 @@ bool BundleResourceParser::ParseLabelResource(
     return true;
 }
 
-bool BundleResourceParser::ParseIconResource(
+bool BundleResourceParser::ParseIconResourceByResourceManager(
     const std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
     const int32_t iconId, std::string &icon)
 {
