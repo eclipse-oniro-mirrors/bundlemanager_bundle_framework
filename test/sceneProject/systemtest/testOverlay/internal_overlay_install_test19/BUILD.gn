@@ -14,17 +14,21 @@
 import("//build/ohos.gni")
 import("../../../../../appexecfwk.gni")
 
-ohos_hap("priority_0") {
-  hap_profile = "entry/src/main/module.json"
-  hap_name = "priority_0"
+ohos_hap("priority_101") {
+  hap_profile = "feature/src/main/module.json"
+  hap_name = "priority_101"
   subsystem_name = "bundlemanager"
-  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testOverlay/internal/test2/${hap_name}.hsp"
+  final_hap_path = "$root_out_dir/tests/systemtest/bundle_framework/bundlemgrsst/resource/testOverlay/internal/test19/${hap_name}.hsp"
   testonly = true
   deps = [
-    ":hjs_demo_js_assets",
-    ":hjs_demo_resources",
+    ":hjs_demo_feature_resources",
+    ":hjs_demo_js_feature_assets",
   ]
   certificate_profile = "${bundle_framework_path}/test/sceneProject/signature/com.example.internalOverlayTest1.p7b"
+}
+
+ohos_js_assets("hjs_demo_js_feature_assets") {
+  source_dir = "feature/src/main/ets"
 }
 
 ohos_app_scope("bmsstagedemoone_app_profile") {
@@ -32,12 +36,8 @@ ohos_app_scope("bmsstagedemoone_app_profile") {
   sources = [ "AppScope/resources" ]
 }
 
-ohos_js_assets("hjs_demo_js_assets") {
-  source_dir = "entry/src/main/ets"
-}
-
-ohos_resources("hjs_demo_resources") {
-  sources = [ "entry/src/main/resources" ]
+ohos_resources("hjs_demo_feature_resources") {
+  sources = [ "feature/src/main/resources" ]
   deps = [ ":bmsstagedemoone_app_profile" ]
-  hap_profile = "entry/src/main/module.json"
+  hap_profile = "feature/src/main/module.json"
 }
