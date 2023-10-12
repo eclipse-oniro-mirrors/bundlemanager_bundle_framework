@@ -4446,11 +4446,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
-#ifdef ON_64BIT_SYSTEM
     EXPECT_EQ(res, true);
-#else
-    EXPECT_EQ(res, false);
-#endif
 }
 
 /**
