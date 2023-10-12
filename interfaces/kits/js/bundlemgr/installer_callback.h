@@ -36,6 +36,8 @@ public:
 private:
     std::promise<int32_t> resultCodeSignal_;
     std::promise<std::string> resultMsgSignal_;
+    bool isSetValue_ = false;
+    std::mutex setValueMutex_;
     DISALLOW_COPY_AND_MOVE(InstallerCallback);
 };
 }  // namespace AppExecFwk
