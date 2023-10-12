@@ -37,10 +37,10 @@ public:
 
 private:
     // for defaultIconPath is empty, icon and label exist in same hap.
-    bool ParseResourceInfo(const std::string &hapPath, ResourceInfo &resourceInfo);
+    bool ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo);
 
     // for defaultIconPath is not empty, icon and label not exist in same hap.
-    bool ParseResourceInfo(const std::string &hapPath, const std::string &defaultIconPath, ResourceInfo &resourceInfo);
+    bool ParseResourceInfoWithDifferentHap(ResourceInfo &resourceInfo);
 
     // parse label resource by hapPath
     bool ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label);

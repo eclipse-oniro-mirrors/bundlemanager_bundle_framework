@@ -32,9 +32,9 @@ BundleResourceParser::~BundleResourceParser()
 bool BundleResourceParser::ParseResourceInfo(ResourceInfo &resourceInfo)
 {
     if (resourceInfo.defaultIconHapPath_.empty()) {
-        return ParseResourceInfo(resourceInfo.hapPath_, resourceInfo);
+        return ParseResourceInfoWithSameHap(resourceInfo);
     }
-    return ParseResourceInfo(resourceInfo.hapPath_, resourceInfo.defaultIconHapPath_, resourceInfo);
+    return ParseResourceInfoWithDifferentHap(resourceInfo);
 }
 
 bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourceInfos)
@@ -52,10 +52,10 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
     return true;
 }
 
-bool BundleResourceParser::ParseResourceInfo(const std::string &hapPath, ResourceInfo &resourceInfo)
+bool BundleResourceParser::ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo)
 {
-    if (hapPath.empty()) {
-        APP_LOGE("hapPath is empty");
+    if (resourceInfo.hapPath_.empty()) {
+        APP_LOGE("resourceInfo.hapPath_ is empty");
         return false;
     }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
@@ -63,7 +63,7 @@ bool BundleResourceParser::ParseResourceInfo(const std::string &hapPath, Resourc
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-    if (!BundleResourceConfiguration::InitResourceGlobalConfig(hapPath, resourceManager)) {
+    if (!BundleResourceConfiguration::InitResourceGlobalConfig(resourceInfo.hapPath_, resourceManager)) {
         APP_LOGE("InitResourceGlobalConfig failed, key:%{public}s", resourceInfo.GetKey().c_str());
         return false;
     }
@@ -74,23 +74,21 @@ bool BundleResourceParser::ParseResourceInfo(const std::string &hapPath, Resourc
     return true;
 }
 
-bool BundleResourceParser::ParseResourceInfo(
-    const std::string &hapPath,
-    const std::string &defaultIconPath,
-    ResourceInfo &resourceInfo)
+bool BundleResourceParser::ParseResourceInfoWithDifferentHap(ResourceInfo &resourceInfo)
 {
-    if (!ParseLabelResourceByPath(hapPath, resourceInfo.labelId_, resourceInfo.label_)) {
+    if (!ParseLabelResourceByPath(resourceInfo.hapPath_, resourceInfo.labelId_, resourceInfo.label_)) {
         APP_LOGE("bundleName: %{public}s ParseLabelResource failed", resourceInfo.bundleName_.c_str());
         return false;
     }
-    if (!ParseIconResourceByPath(defaultIconPath, resourceInfo.iconId_, resourceInfo.icon_)) {
+    if (!ParseIconResourceByPath(resourceInfo.defaultIconHapPath_, resourceInfo.iconId_, resourceInfo.icon_)) {
         APP_LOGE("bundleName: %{public}s ParseIconResource failed", resourceInfo.bundleName_.c_str());
         return false;
     }
     return true;
 }
 
-bool BundleResourceParser::ParseLabelResourceByPath(const std::string &hapPath, const int32_t labelId, std::string &label)
+bool BundleResourceParser::ParseLabelResourceByPath(
+    const std::string &hapPath, const int32_t labelId, std::string &label)
 {
     if (hapPath.empty()) {
         APP_LOGE("hapPath is empty");

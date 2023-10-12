@@ -634,7 +634,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
 
     EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) != keyNames.end());
     // delete key
-    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
 }
 
