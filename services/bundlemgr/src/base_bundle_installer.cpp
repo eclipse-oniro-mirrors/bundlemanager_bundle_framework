@@ -948,6 +948,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     result = sharedBundleInstaller.Install(sysEventInfo_);
     CHECK_RESULT_WITH_ROLLBACK(result, "install cross-app shared bundles failed %{public}d", newInfos, oldInfo);
 
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    result = driverInstaller->CopyAllDriverFile(newInfos, oldInfo);
+    CHECK_RESULT_WITH_ROLLBACK(result, "copy driver files failed due to error %{public}d", newInfos, oldInfo);
+
     UpdateInstallerState(InstallerState::INSTALL_SUCCESS);                         // ---- 100%
     APP_LOGD("finish ProcessBundleInstall bundlePath install touch off aging");
     moduleName_ = GetModuleNames(newInfos);
@@ -996,7 +1000,7 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         // remove driver file
         std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
         for (const auto &info : newInfos) {
-            driverInstaller->RemoveDriverSoFile(info.second);
+            driverInstaller->RemoveDriverSoFile(info.second, "", false);
         }
 
         // remove innerBundleInfo
@@ -1058,20 +1062,20 @@ ErrCode BaseBundleInstaller::UpdateDefineAndRequestPermissions(const InnerBundle
 void BaseBundleInstaller::RollBack(const InnerBundleInfo &info, InnerBundleInfo &oldInfo)
 {
     // rollback hap installed
-    if (installedModules_[info.GetCurrentModulePackage()]) {
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    auto modulePackage = info.GetCurrentModulePackage();
+    if (installedModules_[modulePackage]) {
         std::string createModulePath = info.GetAppCodePath() + Constants::PATH_SEPARATOR +
-            info.GetCurrentModulePackage() + Constants::TMP_SUFFIX;
+            modulePackage + Constants::TMP_SUFFIX;
         RemoveModuleDir(createModulePath);
-        oldInfo.SetCurrentModulePackage(info.GetCurrentModulePackage());
+        oldInfo.SetCurrentModulePackage(modulePackage);
         RollBackModuleInfo(bundleName_, oldInfo);
+        // remove driver file of installed module
+        driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), true);
     } else {
-        auto modulePackage = info.GetCurrentModulePackage();
         RemoveModuleDir(info.GetModuleDir(modulePackage));
-
         // remove driver file
-        std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
-        driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage));
-
+        driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(modulePackage), false);
         // remove module info
         RemoveInfo(bundleName_, modulePackage);
     }
@@ -1234,7 +1238,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     // remove drive so file
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
-    driverInstaller->RemoveDriverSoFile(oldInfo);
+    driverInstaller->RemoveDriverSoFile(oldInfo, "", false);
     if (oldInfo.IsPreInstallApp()) {
         MarkPreInstallState(bundleName, true);
     }
@@ -1389,7 +1393,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
-    driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage));
+    driverInstaller->RemoveDriverSoFile(oldInfo, oldInfo.GetModuleName(modulePackage), false);
     APP_LOGD("finish to process %{public}s in %{public}s uninstall", bundleName.c_str(), modulePackage.c_str());
     return ERR_OK;
 }
@@ -2454,9 +2458,6 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
     }
 
     ExtractResourceFiles(info, modulePath);
-    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
-    result = driverInstaller->CopyDriverSoFile(info, modulePath_);
-    CHECK_RESULT(result, "copy driver so files failed due to error code %{public}d");
 
     if (info.IsPreInstallApp()) {
         info.SetModuleHapPath(modulePath_);
@@ -3031,7 +3032,7 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
 
             // remove driver file
             std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
-            driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(package));
+            driverInstaller->RemoveDriverSoFile(info, info.GetModuleName(package), false);
 
             if (!dataMgr_->RemoveModuleInfo(bundleName_, package, info)) {
                 APP_LOGE("RemoveModuleInfo failed");

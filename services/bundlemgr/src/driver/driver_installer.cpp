@@ -24,11 +24,27 @@ namespace {
 const std::vector<std::string> DRIVER_PROPERTIES {
     "cupsFilter", "cupsBackend", "cupsPpd", "saneConfig", "saneBackend"
 };
+const std::string TEMP_PREFIX = "temp_";
 } // namespace
 
-ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std::string &srcPath) const
+ErrCode DriverInstaller::CopyAllDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo) const
 {
-    APP_LOGD("CopyDriverSoFile begin");
+    ErrCode result = ERR_OK;
+    for (const auto &info : newInfos) {
+        bool isModuleExisted = oldInfo.FindModule(info.second.GetCurrentModulePackage());
+        result = CopyDriverSoFile(info.second, info.first, isModuleExisted);
+        CHECK_RESULT(result, "copy all driver files failed due to error %{public}d");
+    }
+
+    RemoveAndReNameDriverFile(newInfos, oldInfo);
+    return result;
+}
+
+ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std::string &srcPath,
+    bool isModuleExisted) const
+{
+    APP_LOGD("begin");
     auto extensionAbilityInfos = info.GetInnerExtensionInfos();
     // key is the orignial dir in hap of driver so file
     // value is the destination dir of driver so file
@@ -41,8 +57,8 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
         }
 
         auto &metadata = extAbilityInfo.second.metadata;
-        auto filterFunc = [this, &result, &info, &dirMap](const Metadata &meta) {
-            result = FilterDriverSoFile(info, meta, dirMap);
+        auto filterFunc = [this, &result, &info, &dirMap, &isModuleExisted](const Metadata &meta) {
+            result = FilterDriverSoFile(info, meta, dirMap, isModuleExisted);
             return result != ERR_OK;
         };
         std::any_of(metadata.begin(), metadata.end(), filterFunc);
@@ -57,9 +73,9 @@ ErrCode DriverInstaller::CopyDriverSoFile(const InnerBundleInfo &info, const std
 }
 
 ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const Metadata &meta,
-    std::unordered_multimap<std::string, std::string> &dirMap) const
+    std::unordered_multimap<std::string, std::string> &dirMap, bool isModuleExisted) const
 {
-    APP_LOGD("FilterDriverSoFile begin");
+    APP_LOGD("begin");
     // find driver metadata name in driver properties
     if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), meta.name) ==
         DRIVER_PROPERTIES.cend()) {
@@ -87,15 +103,29 @@ ErrCode DriverInstaller::FilterDriverSoFile(const InnerBundleInfo &info, const M
     auto fileName = originalDirVec.back();
     APP_LOGD("fileName is %{public}s", fileName.c_str());
     const auto &moduleName = info.GetModuleName(info.GetCurrentModulePackage());
-    destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), moduleName, fileName, destinedDir);
+    destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), moduleName, fileName, destinedDir, isModuleExisted);
     APP_LOGD("metadata destined dir is %{public}s", destinedDir.c_str());
     dirMap.emplace(originalDir, destinedDir);
     return ERR_OK;
 }
 
-void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std::string &moduleName) const
+void DriverInstaller::RemoveAndReNameDriverFile(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    const InnerBundleInfo &oldInfo) const
 {
-    APP_LOGD("RemoveDriverSoFile begin");
+    for (const auto &info : newInfos) {
+        std::string packageName = info.second.GetCurrentModulePackage();
+        if (!oldInfo.FindModule(packageName)) {
+            continue;
+        }
+        RemoveDriverSoFile(oldInfo, info.second.GetModuleName(packageName), false);
+        RenameDriverFile(info.second);
+    }
+}
+
+void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std::string &moduleName,
+    bool isModuleExisted) const
+{
+    APP_LOGD("begin");
     auto extensionAbilityInfos = info.GetInnerExtensionInfos();
     for (const auto &extAbilityInfo : extensionAbilityInfos) {
         // find module name from the extAbilityInfo
@@ -123,17 +153,17 @@ void DriverInstaller::RemoveDriverSoFile(const InnerBundleInfo &info, const std:
             auto fileName = originalDirVec.back();
             APP_LOGD("fileName is %{public}s", fileName.c_str());
             std::string destinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
-                meta.value);
+                meta.value, isModuleExisted);
             APP_LOGD("Remove driver so file path is %{public}s", destinedDir.c_str());
             std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
             InstalldClient::GetInstance()->RemoveDir(systemServiceDir + destinedDir);
         }
     }
-    APP_LOGD("RemoveDriverSoFile end");
+    APP_LOGD("end");
 }
 
 std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundleName, const std::string &moduleName,
-    const std::string &fileName, const std::string &destinedDir) const
+    const std::string &fileName, const std::string &destinedDir, bool isModuleExisted) const
 {
     APP_LOGD("bundleName is %{public}s, moduleName is %{public}s, fileName is %{public}s, destinedDir is %{public}s",
         bundleName.c_str(), moduleName.c_str(), fileName.c_str(), destinedDir.c_str());
@@ -145,9 +175,53 @@ std::string DriverInstaller::CreateDriverSoDestinedDir(const std::string &bundle
     if (resStr.back() != Constants::PATH_SEPARATOR[0]) {
         resStr += Constants::PATH_SEPARATOR;
     }
+    if (isModuleExisted) {
+        resStr.append(TEMP_PREFIX);
+    }
     resStr.append(bundleName).append(Constants::FILE_UNDERLINE).append(moduleName)
         .append(Constants::FILE_UNDERLINE).append(fileName);
     return resStr;
+}
+
+void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
+{
+    APP_LOGD("begin");
+    auto extensionAbilityInfos = info.GetInnerExtensionInfos();
+    for (const auto &extAbilityInfo : extensionAbilityInfos) {
+        if (extAbilityInfo.second.type != ExtensionAbilityType::DRIVER) {
+            continue;
+        }
+        std::string extModuleName = extAbilityInfo.second.moduleName;
+        APP_LOGD("extModuleName is %{public}s", extModuleName.c_str());
+        auto &metadata = extAbilityInfo.second.metadata;
+        for (const auto &meta : metadata) {
+            if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), meta.name) ==
+                DRIVER_PROPERTIES.cend()) {
+                APP_LOGD("metadata name %{public}s is not existed in driver properties", meta.name.c_str());
+                continue;
+            }
+            std::vector<std::string> originalDirVec;
+            SplitStr(meta.resource, Constants::PATH_SEPARATOR, originalDirVec, false, false);
+            if (originalDirVec.empty()) {
+                APP_LOGW("invalid metadata resource %{public}s", meta.resource.c_str());
+                return;
+            }
+            auto fileName = originalDirVec.back();
+            APP_LOGD("fileName is %{public}s", fileName.c_str());
+            std::string tempDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
+                meta.value, true);
+            APP_LOGD("driver so file temp path is %{public}s", tempDestinedDir.c_str());
+
+            std::string realDestinedDir = CreateDriverSoDestinedDir(info.GetBundleName(), extModuleName, fileName,
+                meta.value, false);
+            APP_LOGD("driver so file real path is %{public}s", realDestinedDir.c_str());
+
+            std::string systemServiceDir = Constants::SYSTEM_SERVICE_DIR;
+            InstalldClient::GetInstance()->MoveFile(systemServiceDir + tempDestinedDir,
+                systemServiceDir + realDestinedDir);
+        }
+    }
+    APP_LOGD("end");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
