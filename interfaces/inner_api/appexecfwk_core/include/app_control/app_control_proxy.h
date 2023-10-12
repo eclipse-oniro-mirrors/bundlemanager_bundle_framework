@@ -56,9 +56,12 @@ public:
     virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
         int32_t userId, AppJumpControlRule &controlRule) override;
 
-    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
-    virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;
-    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;
+    virtual ErrCode SetDisposedStatus(
+        const std::string &appId, const Want &want, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode DeleteDisposedStatus(
+        const std::string &appId, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want,
+        int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);

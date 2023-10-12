@@ -281,7 +281,7 @@ int32_t AppControlManagerHostImpl::GetCallingUserId()
     return OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
 }
 
-ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want, int32_t userId)
 {
     APP_LOGD("host begin to SetDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -292,14 +292,17 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
     APP_LOGD("host begin to DeleteDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -310,14 +313,17 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host DeletetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want, int32_t userId)
 {
     APP_LOGD("host begin to GetDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -328,7 +334,10 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
     }
