@@ -162,8 +162,8 @@ bool BundleResourceParser::ParseLabelResourceByResourceManager(
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-    if (labelId == 0) {
-        APP_LOGD("ParseLabelResource labelId is 0, label is bundleName");
+    if (labelId <= 0) {
+        APP_LOGD("ParseLabelResource labelId is 0 or less than 0, label is bundleName");
         return true;
     }
     auto ret = resourceManager->GetStringById(static_cast<uint32_t>(labelId), label);
@@ -183,8 +183,8 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         APP_LOGE("resourceManager is nullptr");
         return false;
     }
-    if (iconId == 0) {
-        APP_LOGE("iconId is 0");
+    if (iconId <= 0) {
+        APP_LOGE("iconId is 0 or less than 0");
         return false;
     }
     // density 0

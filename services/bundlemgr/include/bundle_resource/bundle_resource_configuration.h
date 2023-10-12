@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CONFIGURATION_H
 
 #include <string>
+
 #include "resource_manager.h"
 
 namespace OHOS {
