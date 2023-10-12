@@ -1033,6 +1033,7 @@ protected:
                     "moduleName": ""
                 },
                 "fingerprint":"",
+                "fingerprints":"",
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
                 "isSystemApp": true,
@@ -1158,7 +1159,8 @@ protected:
                 ],
                 "signatureInfo": {
                     "appId": "",
-                    "fingerprint": ""
+                    "fingerprint": "",
+                    "appIdentifier": ""
                 },
                 "seInfo": "",
                 "singleton": false,

@@ -4064,7 +4064,7 @@ std::vector<std::string> InnerBundleInfo::GetFingerprints() const
     return baseApplicationInfo_->fingerprints;
 }
 
-void InnerBundleInfo::SetFingerprints(const std::string &fingerprint)
+void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
 {
     auto fingerprints = baseApplicationInfo_->fingerprints;
     if (std::find(fingerprints.begin(), fingerprints.end(), fingerprint) == fingerprints.end()) {

@@ -304,6 +304,7 @@ bool BundleDataMgr::AddNewModuleInfo(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -499,6 +500,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
@@ -5787,6 +5789,7 @@ bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<s
         APP_LOGE("bundleName is empty.");
         return false;
     }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto innerBundleInfo = bundleInfos_.find(bundleName);
     if (innerBundleInfo == bundleInfos_.end()) {
         APP_LOGE("can not find bundle %{public}s.", bundleName.c_str());

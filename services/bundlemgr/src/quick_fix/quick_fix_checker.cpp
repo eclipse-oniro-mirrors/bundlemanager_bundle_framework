@@ -231,17 +231,20 @@ ErrCode QuickFixChecker::CheckSignatureInfo(const BundleInfo &bundleInfo,
     const Security::Verify::ProvisionInfo &provisionInfo)
 {
     std::string quickFixAppId = bundleInfo.name + Constants::FILE_UNDERLINE + provisionInfo.appId;
-    if (bundleInfo.signatureInfo.appIdentifier.empty() || provisionInfo.bundleInfo.appIdentifier.empty()) {
-        if ((bundleInfo.appId != quickFixAppId) ||
-            (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl)) {
-                APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
-                    bundleInfo.name.c_str());
-                return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
-        }
-    } else if (bundleInfo.signatureInfo.appIdentifier != provisionInfo.bundleInfo.appIdentifier ||
-            (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl)) {
+    if (bundleInfo.applicationInfo.appPrivilegeLevel != provisionInfo.bundleInfo.apl) {
         APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
-                    bundleInfo.name.c_str());
+            bundleInfo.name.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
+    }
+    if (bundleInfo.signatureInfo.appIdentifier.empty() || provisionInfo.bundleInfo.appIdentifier.empty()) {
+        if (bundleInfo.appId != quickFixAppId) {
+            APP_LOGE("Quick fix signature info is different with installed bundle : %{public}s",
+                bundleInfo.name.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
+        }
+    } else if (bundleInfo.signatureInfo.appIdentifier != provisionInfo.bundleInfo.appIdentifier) {
+        APP_LOGE("Quick fix appIdentifier info is different with installed bundle : %{public}s",
+            bundleInfo.name.c_str());
         return ERR_BUNDLEMANAGER_QUICK_FIX_SIGNATURE_INFO_NOT_SAME;
     }
     if (bundleInfo.name != provisionInfo.bundleInfo.bundleName) {

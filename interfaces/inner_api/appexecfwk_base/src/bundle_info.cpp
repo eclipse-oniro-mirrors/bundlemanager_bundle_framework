@@ -491,7 +491,6 @@ void to_json(nlohmann::json &jsonObject, const SignatureInfo &signatureInfo)
         {SIGNATUREINFO_APPID, signatureInfo.appId},
         {SIGNATUREINFO_FINGERPRINT, signatureInfo.fingerprint},
         {APP_IDENTIFIER, signatureInfo.appIdentifier}
-
     };
 }
 
@@ -605,7 +604,6 @@ void from_json(const nlohmann::json &jsonObject, SignatureInfo &signatureInfo)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-
     if (parseResult != ERR_OK) {
         APP_LOGE("read SignatureInfo from database error, error code : %{public}d", parseResult);
     }

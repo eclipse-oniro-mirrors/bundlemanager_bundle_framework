@@ -629,7 +629,7 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
-    newInfo.SetFingerprints(provisionInfo.fingerprint);
+    newInfo.AddFingerprint(provisionInfo.fingerprint);
     newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
 }
 
@@ -1123,18 +1123,8 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        std::vector<std::string> fingerPrints;
-        std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-        dataMgr->GetFingerprints(bundleName, fingerPrints);
-        bool isExistSignature = false;
-        for (const auto &signature : configInfo.appSignature) {
-            if (std::find(fingerPrints.begin(), fingerPrints.end(), signature) != fingerPrints.end()) {
-                isExistSignature = true;
-                break;
-            }
-        }
-        if (!isExistSignature) {
-            APP_LOGE("bundleName: %{public}s signature verify failed.", bundleName.c_str());
+        if (!MatchOldFingerprints(bundleName, configInfo.appSignature)) {
+            APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
             return;
         }
     }
@@ -1175,6 +1165,26 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
     APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
+}
+
+bool BundleInstallChecker::MatchOldFingerprints(const std::string &bundleName,
+    const std::vector<std::string> &appSignatures)
+{
+    std::vector<std::string> fingerprints;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
+        APP_LOGE("Get fingerprints failed.");
+        return false;
+    }
+    bool isExistSignature = false;
+    for (const auto &signature : appSignatures) {
+        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
+            isExistSignature = true;
+            break;
+        }
+    }
+
+    return isExistSignature;
 }
 
 bool BundleInstallChecker::MatchSignature(

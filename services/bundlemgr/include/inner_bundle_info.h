@@ -2022,7 +2022,7 @@ public:
     void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
     void SetAppIdentifier(const std::string &appIdentifier);
     std::string GetAppIdentifier() const;
-    void SetFingerprints(const std::string &fingerprint);
+    void AddFingerprint(const std::string &fingerprint);
     std::vector<std::string> GetFingerprints() const;
 
 private:
