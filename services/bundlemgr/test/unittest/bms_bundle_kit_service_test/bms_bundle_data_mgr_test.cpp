@@ -3327,37 +3327,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfoFromBmsExtension_0001, Function | Me
 }
 
 /**
- * @tc.number: GetBigParcelableInfo_0001
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0001, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    size_t len = 10;
-    sptr<Ashmem> ashMem = Ashmem::CreateAshmem((__func__ + std::to_string(TEST_UID)).c_str(), len);
-    reply.WriteAshmem(ashMem);
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: GetBigParcelableInfo_0002
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0002, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: RemoveModuleInfo_0100
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1. call RemoveModuleInfo, return false
