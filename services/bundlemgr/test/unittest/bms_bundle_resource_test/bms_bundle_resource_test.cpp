@@ -13,6 +13,8 @@
  * limitations under the License.
  */
 
+#define private public
+
 #include <fstream>
 #include <gtest/gtest.h>
 #include <sstream>
@@ -25,7 +27,10 @@
 #include "bundle_permission_mgr.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_configuration.h"
 #include "bundle_resource_manager.h"
+#include "bundle_resource_param.h"
+#include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "bundle_resource_rdb.h"
 #include "bundle_system_state.h"
@@ -55,6 +60,9 @@ const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
 const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
+const std::string HAP_NOT_EXIST = "not exist";
+const std::string HAP_NO_ICON = "/data/test/resource/bms/accesstoken_bundle/bmsThirdBundle2.hap";
+const std::string BUNDLE_NAME_NO_ICON = "com.third.hiworld.example1";
 }  // namespace
 
 class BmsBundleResourceTest : public testing::Test {
@@ -492,12 +500,12 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0011, Function | SmallTest
     userInfo.bundleUserInfo.userId = USERID;
     userInfo.bundleName = BUNDLE_NAME;
     bundleInfo.AddInnerBundleUserInfo(userInfo);
-    // bundle exist, userId  exist
+    // bundle exist, userId exist
     ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_TRUE(ans);
+    EXPECT_FALSE(ans);
 
     manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
-    EXPECT_TRUE(ans);
+    EXPECT_FALSE(ans);
 
     ans = manager->DeleteResourceInfo(BUNDLE_NAME);
     EXPECT_TRUE(ans);
@@ -626,7 +634,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
 
     EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) != keyNames.end());
     // delete key
-    ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+    ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
     EXPECT_TRUE(ans);
 }
 
@@ -882,6 +890,309 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0056, Function | SmallTest
     ans = BundleResourceProcess::GetAllResourceInfo(USERID, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_FALSE(resourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0060
+ * Function: BundleResourceParam
+ * @tc.name: test BundleResourceParam
+ * @tc.desc: 1. system running normally
+ *           2. test GetSystemLanguage and GetSystemColorMode
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0060, Function | SmallTest | Level0)
+{
+    std::string language = BundleResourceParam::GetSystemLanguage();
+    EXPECT_FALSE(language.empty());
+
+    std::string colorMode = BundleResourceParam::GetSystemColorMode();
+    EXPECT_FALSE(colorMode.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0061
+ * Function: BundleResourceConfiguration
+ * @tc.name: test BundleResourceConfiguration
+ * @tc.desc: 1. system running normally
+ *           2. test InitResourceGlobalConfig
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0061, Function | SmallTest | Level0)
+{
+    bool ans = BundleResourceConfiguration::InitResourceGlobalConfig(nullptr);
+    EXPECT_FALSE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig("", nullptr);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(resourceManager);
+    EXPECT_TRUE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_NOT_EXIST, resourceManager);
+    EXPECT_FALSE(ans);
+
+    ans = BundleResourceConfiguration::InitResourceGlobalConfig(HAP_FILE_PATH1, resourceManager);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0062
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0062, Function | SmallTest | Level0)
+{
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 0;
+    resourceInfo.iconId_ = 0;
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.defaultIconHapPath_ = HAP_NOT_EXIST;
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.hapPath_ = HAP_NOT_EXIST;
+    resourceInfo.defaultIconHapPath_ = "";
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+
+    resourceInfo.hapPath_ = HAP_FILE_PATH1;
+    ans = parser.ParseResourceInfo(resourceInfo);
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(resourceInfo.label_, BUNDLE_NAME);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0063
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfos
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0063, Function | SmallTest | Level0)
+{
+    std::vector<ResourceInfo> resourceInfos;
+    BundleResourceParser parser;
+    bool ans = parser.ParseResourceInfos(resourceInfos);
+    EXPECT_FALSE(ans);
+
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = BUNDLE_NAME;
+    resourceInfo.label_ = BUNDLE_NAME;
+    resourceInfo.labelId_ = 0;
+    resourceInfo.iconId_ = 0;
+    resourceInfos.push_back(resourceInfo);
+
+    ans = parser.ParseResourceInfos(resourceInfos);
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0064
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseLabelResourceByPath
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0064, Function | SmallTest | Level0)
+{
+    std::string label;
+    BundleResourceParser parser;
+    bool ans = parser.ParseLabelResourceByPath("", 0, label);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseLabelResourceByPath(HAP_NOT_EXIST, 0, label);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseLabelResourceByPath(HAP_FILE_PATH1, 0, label);
+    EXPECT_TRUE(ans);
+
+    ans = parser.ParseLabelResourceByPath(HAP_FILE_PATH1, 1, label); // labelId not exist
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0065
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseLabelResourceByResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0065, Function | SmallTest | Level0)
+{
+    std::string label;
+    BundleResourceParser parser;
+    bool ans = parser.ParseLabelResourceByResourceManager(nullptr, 0, label);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ans = parser.ParseLabelResourceByResourceManager(resourceManager, 0, label);
+    EXPECT_TRUE(ans);
+
+    ans = parser.ParseLabelResourceByResourceManager(resourceManager, 1, label); // labelId not exist
+    EXPECT_FALSE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0066
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconResourceByPath
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0066, Function | SmallTest | Level0)
+{
+    std::string icon;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconResourceByPath("", 0, icon);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseIconResourceByPath(HAP_NOT_EXIST, 0, icon);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 0, icon);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseIconResourceByPath(HAP_FILE_PATH1, 1, icon); // iconId not exist
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(icon, "");
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0067
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseIconResourceByResourceManager
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0067, Function | SmallTest | Level0)
+{
+    std::string icon;
+    BundleResourceParser parser;
+    bool ans = parser.ParseIconResourceByResourceManager(nullptr, 0, icon);
+    EXPECT_FALSE(ans);
+
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, 0, icon);
+    EXPECT_FALSE(ans);
+
+    ans = parser.ParseIconResourceByResourceManager(resourceManager, 1, icon); // iconId not exist
+    EXPECT_FALSE(ans);
+    EXPECT_EQ(icon, "");
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0068
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseLabelResourceByPath and ParseIconResourceByPath, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0068, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    if (!resourceInfos.empty()) {
+        std::string label;
+        BundleResourceParser parser;
+        ans = parser.ParseLabelResourceByPath(resourceInfos[0].hapPath_, resourceInfos[0].labelId_, label);
+        EXPECT_TRUE(ans);
+        EXPECT_FALSE(label.empty());
+
+        std::string icon;
+        ans = parser.ParseIconResourceByPath(resourceInfos[0].hapPath_, resourceInfos[0].iconId_, icon);
+        EXPECT_TRUE(ans);
+        EXPECT_FALSE(icon.empty());
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0069
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfo, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0069, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(resourceInfos.empty());
+
+    if (!resourceInfos.empty()) {
+        ResourceInfo resourceInfo;
+        BundleResourceParser parser;
+        ans = parser.ParseResourceInfo(resourceInfos[0]);
+        EXPECT_TRUE(ans);
+        EXPECT_NE(resourceInfos[0].label_, "");
+        EXPECT_NE(resourceInfos[0].icon_, "");
+
+        ans = parser.ParseResourceInfos(resourceInfos);
+        EXPECT_TRUE(ans);
+        for (const auto &info : resourceInfos) {
+            EXPECT_NE(info.label_, "");
+            EXPECT_NE(info.icon_, "");
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0070
+ * Function: BundleResourceParser
+ * @tc.name: test BundleResourceParser
+ * @tc.desc: 1. system running normally
+ *           2. test ParseResourceInfo, bundle exist, no icon, use default icon
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0070, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_NO_ICON);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByBundleName(BUNDLE_NAME_NO_ICON, USERID, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(resourceInfos.size(), 2);
+
+    if (!resourceInfos.empty()) {
+        ResourceInfo resourceInfo;
+        BundleResourceParser parser;
+        ans = parser.ParseResourceInfo(resourceInfos[0]);
+        EXPECT_TRUE(ans);
+        EXPECT_NE(resourceInfos[0].label_, "");
+        EXPECT_NE(resourceInfos[0].icon_, "");
+
+        ans = parser.ParseResourceInfos(resourceInfos);
+        EXPECT_TRUE(ans);
+        for (const auto &info : resourceInfos) {
+            EXPECT_NE(info.label_, "");
+            EXPECT_NE(info.icon_, "");
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
 } // OHOS

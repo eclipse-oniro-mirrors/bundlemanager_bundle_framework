@@ -1311,6 +1311,11 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     }
     // not show in the mission list
     appDetailAbility.removeMissionAfterTerminate = true;
+    // set hapPath, for label resource
+    auto hapModuleInfo = info.FindHapModuleInfo(appDetailAbility.package);
+    if (hapModuleInfo) {
+        appDetailAbility.hapPath = hapModuleInfo->hapPath;
+    }
 
     std::string keyName;
     keyName.append(appDetailAbility.bundleName).append(".")
