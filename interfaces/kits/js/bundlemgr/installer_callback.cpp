@@ -19,8 +19,12 @@ namespace OHOS {
 namespace AppExecFwk {
 void InstallerCallback::OnFinished(const int32_t resultCode, [[maybe_unused]] const std::string &resultMsg)
 {
-    resultCodeSignal_.set_value(resultCode);
-    resultMsgSignal_.set_value(resultMsg);
+    std::lock_guard<std::mutex> lock(setValueMutex_);
+    if (!isSetValue_) {
+        isSetValue_ = true;
+        resultCodeSignal_.set_value(resultCode);
+        resultMsgSignal_.set_value(resultMsg);
+    }
 }
 
 void InstallerCallback::OnStatusNotify(const int32_t progress)
