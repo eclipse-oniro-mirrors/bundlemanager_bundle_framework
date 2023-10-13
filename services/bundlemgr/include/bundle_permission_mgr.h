@@ -148,6 +148,8 @@ private:
         Security::AccessToken::PermissionDef &permDef, const DefinePermission &defPermission,
         const std::string &bundleName);
 
+    static Security::AccessToken::ATokenAvailableTypeEnum GetAvailableType(const std::string &availableType);
+
     static std::vector<std::string> GetNeedDeleteDefinePermissionName(const InnerBundleInfo &oldInfo,
         const InnerBundleInfo &newInfo);
 

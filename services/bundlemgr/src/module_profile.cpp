@@ -1972,7 +1972,7 @@ bool ToExtensionInfo(
     return true;
 }
 
-void GetPermissions(
+bool GetPermissions(
     const Profile::ModuleJson &moduleJson,
     const TransformParam &transformParam,
     InnerModuleInfo &innerModuleInfo)
@@ -1989,6 +1989,11 @@ void GetPermissions(
                 == Profile::AVAILABLE_LEVEL_SET.end()) {
                 continue;
             }
+            if (!definePermission.availableType.empty() &&
+                definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
+                APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+                return false;
+            }
             innerModuleInfo.definePermissions.emplace_back(definePermission);
         }
     }
@@ -1998,6 +2003,7 @@ void GetPermissions(
         }
         innerModuleInfo.requestPermissions.emplace_back(requestPermission);
     }
+    return true;
 }
 
 bool ToInnerModuleInfo(
@@ -2038,7 +2044,10 @@ bool ToInnerModuleInfo(
 
     innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
     innerModuleInfo.pages = moduleJson.module.pages;
-    GetPermissions(moduleJson, transformParam, innerModuleInfo);
+    if (!GetPermissions(moduleJson, transformParam, innerModuleInfo)) {
+        APP_LOGE("GetPermissions failed");
+        return false;
+    }
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
     innerModuleInfo.compileMode = moduleJson.module.compileMode;
     innerModuleInfo.isModuleJson = true;
@@ -2107,7 +2116,10 @@ bool ToInnerBundleInfo(
     }
 
     InnerModuleInfo innerModuleInfo;
-    ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo);
+    if (!ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo)) {
+        APP_LOGE("To innerModuleInfo failed");
+        return false;
+    }
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

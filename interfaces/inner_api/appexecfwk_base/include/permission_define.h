@@ -34,6 +34,7 @@ struct PermissionDef : public Parcelable {
     int32_t labelId = 0;
     std::string description;
     int32_t descriptionId = 0;
+    int32_t availableType;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

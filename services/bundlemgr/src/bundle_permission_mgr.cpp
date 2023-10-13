@@ -86,6 +86,7 @@ void BundlePermissionMgr::ConvertPermissionDef(
     permissionDef.labelId = permDef.labelId;
     permissionDef.description = permDef.description;
     permissionDef.descriptionId = permDef.descriptionId;
+    permissionDef.availableType = permDef.availableType;
 }
 
 // Convert from the struct DefinePermission that parsed from config.json
@@ -109,6 +110,19 @@ void BundlePermissionMgr::ConvertPermissionDef(
     permDef.labelId = definePermission.labelId;
     permDef.description = definePermission.description;
     permDef.descriptionId = definePermission.descriptionId;
+    permDef.availableType = GetAvailableType(definePermission.availableType);
+}
+
+AccessToken::ATokenAvailableTypeEnum BundlePermissionMgr::GetAvailableType(
+    const std::string &availableType)
+{
+    if (availableType.empty() || availableType == Profile::DEFINEPERMISSION_AVAILABLE_TYPE_DEFAULT_VALUE) {
+        return AccessToken::ATokenAvailableTypeEnum::NORMAL;
+    }
+    if (availableType == Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
+        return AccessToken::ATokenAvailableTypeEnum::MDM;
+    }
+    return AccessToken::ATokenAvailableTypeEnum::NORMAL;
 }
 
 AccessToken::ATokenAplEnum BundlePermissionMgr::GetTokenApl(const std::string &apl)

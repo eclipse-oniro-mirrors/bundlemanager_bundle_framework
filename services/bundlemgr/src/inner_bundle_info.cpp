@@ -589,7 +589,8 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
         {Profile::LABEL, definePermission.label},
         {Profile::LABEL_ID, definePermission.labelId},
         {Profile::DESCRIPTION, definePermission.description},
-        {Profile::DESCRIPTION_ID, definePermission.descriptionId}
+        {Profile::DESCRIPTION_ID, definePermission.descriptionId},
+        {Profile::DEFINEPERMISSION_AVAILABLE_TYPE, definePermission.availableType}
     };
 }
 
@@ -1459,6 +1460,14 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         Profile::DESCRIPTION_ID,
         definePermission.descriptionId,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::DEFINEPERMISSION_AVAILABLE_TYPE,
+        definePermission.availableType,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
