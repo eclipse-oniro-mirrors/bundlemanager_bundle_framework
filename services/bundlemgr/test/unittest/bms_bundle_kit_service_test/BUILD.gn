@@ -24,6 +24,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
   sources = bundle_mgr_source
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
+    "${inner_api_path}/appexecfwk_core/src/bundlemgr/bundle_mgr_proxy.cpp",
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
