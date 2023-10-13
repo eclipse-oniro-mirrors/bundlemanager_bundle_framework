@@ -4882,4 +4882,122 @@ HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0010, Function | SmallTest 
     bundleInstaller.GetCallingEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.callingBundleName, EMPTY_STRING);
 }
+
+/**
+ * @tc.number: baseBundleInstaller_0100
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0100, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+ 
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0200
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0300
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0300, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0400
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0400, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
+    oldBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("E64B13B84E6D2167F73B46530C6E02E323DA43C9C2DA251D7C64D20E091B936F");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0500
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0500, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
 } // OHOS

@@ -622,8 +622,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0700, Function | SmallTest |
     info.name = "default";
     defaultPermission.grantPermission.emplace_back(info);
     std::string signature = "";
-    ret = BundlePermissionMgr::MatchSignature(
-        defaultPermission, signature);
+    std::vector<std::string> signatures;
+    signatures.insert(signatures.end(), signature);
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, signatures);
     EXPECT_EQ(ret, false);
 }
 

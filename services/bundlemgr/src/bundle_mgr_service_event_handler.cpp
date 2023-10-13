@@ -1829,7 +1829,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
         return;
     }
 
-    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
+    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetFingerprints())) {
         APP_LOGW("App(%{public}s) signature verify failed", bundleName.c_str());
         return;
     }
@@ -1838,15 +1838,22 @@ void BMSEventHandler::UpdatePrivilegeCapability(
 }
 
 bool BMSEventHandler::MatchSignature(
-    const PreBundleConfigInfo &configInfo, const std::string &signature)
+    const PreBundleConfigInfo &configInfo, const std::vector<std::string> &signatures)
 {
     if (configInfo.appSignature.empty()) {
         APP_LOGW("appSignature is empty");
         return false;
     }
 
-    return std::find(configInfo.appSignature.begin(),
-        configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
+    bool isExistSignature = false;
+    for (const auto &signature : configInfo.appSignature) {
+        if (std::find(signatures.begin(), signatures.end(), signature) != signatures.end()) {
+            isExistSignature = true;
+            break;
+        }
+    }
+
+    return isExistSignature;
 }
 
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(

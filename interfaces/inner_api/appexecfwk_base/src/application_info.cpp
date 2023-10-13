@@ -114,6 +114,7 @@ const std::string APPLICATION_APP_TYPE = "bundleType";
 const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
+const std::string APPLICATION_FINGERPRINTS = "fingerprints";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -408,6 +409,13 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < resourceApplySize; ++i) {
         resourcesApply.emplace_back(parcel.ReadInt32());
     }
+
+    int32_t fingerprintsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprintsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, fingerprintsSize, &fingerprints);
+    for (int32_t i = 0; i < fingerprintsSize; i++) {
+        fingerprints.emplace_back(parcel.ReadString());
+    }
     return true;
 }
 
@@ -554,6 +562,10 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, resourcesApply.size());
     for (auto &item : resourcesApply) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, item);
+    }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, fingerprints.size());
+    for (auto &fingerprint : fingerprints) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fingerprint);
     }
     return true;
 }
@@ -710,6 +722,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_META_DATA_CONFIG_JSON, applicationInfo.metaData},
         {APPLICATION_META_DATA_MODULE_JSON, applicationInfo.metadata},
         {APPLICATION_FINGERPRINT, applicationInfo.fingerprint},
+        {APPLICATION_FINGERPRINTS, applicationInfo.fingerprints},
         {APPLICATION_ICON, applicationInfo.icon},
         {APPLICATION_FLAGS, applicationInfo.flags},
         {APPLICATION_ENTRY_MODULE_NAME, applicationInfo.entryModuleName},
@@ -1146,6 +1159,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_FINGERPRINTS,
+        applicationInfo.fingerprints,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APPLICATION_ICON,

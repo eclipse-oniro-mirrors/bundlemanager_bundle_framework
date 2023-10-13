@@ -1655,8 +1655,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
 
-    if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
-        APP_LOGE("the signature of the new bundle is not the same as old one");
+    if (!CheckAppIdentifier(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
     APP_LOGD("ProcessBundleUpdateStatus noSkipsKill = %{public}d", noSkipsKill);
@@ -1677,6 +1676,21 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
     APP_LOGD("finish to call ProcessBundleUpdateStatus");
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
+    if (oldInfo.GetAppIdentifier().empty() || newInfo.GetAppIdentifier().empty()) {
+        if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
+            APP_LOGE("the signature of the new bundle is not the same as old one");
+            return false;
+        }
+        return true;
+    }
+    if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
+        APP_LOGE("the appIdentifier of the new bundle is not the same as old one");
+        return false;
+    }
+    return true;
 }
 
 ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)

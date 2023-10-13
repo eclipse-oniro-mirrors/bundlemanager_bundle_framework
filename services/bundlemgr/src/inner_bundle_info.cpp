@@ -4058,5 +4058,28 @@ std::string InnerBundleInfo::GetEntryModuleName() const
     }
     return Constants::EMPTY_STRING;
 }
+
+std::vector<std::string> InnerBundleInfo::GetFingerprints() const
+{
+    return baseApplicationInfo_->fingerprints;
+}
+
+void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
+{
+    auto fingerprints = baseApplicationInfo_->fingerprints;
+    if (std::find(fingerprints.begin(), fingerprints.end(), fingerprint) == fingerprints.end()) {
+        baseApplicationInfo_->fingerprints.emplace_back(fingerprint);
+    }
+}
+
+std::string InnerBundleInfo::GetAppIdentifier() const
+{
+    return baseBundleInfo_->signatureInfo.appIdentifier;
+}
+
+void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
+{
+    baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

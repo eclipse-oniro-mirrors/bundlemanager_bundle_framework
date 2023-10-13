@@ -629,6 +629,8 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
+    newInfo.AddFingerprint(provisionInfo.fingerprint);
+    newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
 }
 
 void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
@@ -660,15 +662,29 @@ void BundleInstallChecker::GetPrivilegeCapability(
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = false;
     if (!preBundleConfigInfo.appSignature.empty()) {
-        ret = std::find(
-            preBundleConfigInfo.appSignature.begin(),
-            preBundleConfigInfo.appSignature.end(),
-            newInfo.GetCertificateFingerprint()) !=
-            preBundleConfigInfo.appSignature.end();
+        if (std::find(preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(),
+            newInfo.GetCertificateFingerprint()) != preBundleConfigInfo.appSignature.end()) {
+            ret = true;
+        }
+        if (!ret) {
+            std::vector<std::string> fingerprints;
+            std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (!dataMgr->GetFingerprints(newInfo.GetBundleName(), fingerprints)) {
+                APP_LOGE("Get fingerprints failed.");
+                return;
+            }
+            for (auto &fingerprint : fingerprints) {
+                if (std::find(
+                    preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(), fingerprint) !=
+                    preBundleConfigInfo.appSignature.end()) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
     }
-
     if (!ret) {
-        APP_LOGW("appSignature is incompatible");
+        APP_LOGE("appSignature is incompatible");
         return;
     }
 
@@ -1121,8 +1137,10 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
-        return;
+        if (!MatchOldFingerprints(bundleName, configInfo.appSignature)) {
+            APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
+            return;
+        }
     }
     appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_USE_PRIVILEGE_EXTENSION,
@@ -1161,6 +1179,26 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
     APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
+}
+
+bool BundleInstallChecker::MatchOldFingerprints(const std::string &bundleName,
+    const std::vector<std::string> &appSignatures)
+{
+    std::vector<std::string> fingerprints;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
+        APP_LOGE("Get fingerprints failed.");
+        return false;
+    }
+    bool isExistSignature = false;
+    for (const auto &signature : appSignatures) {
+        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
+            isExistSignature = true;
+            break;
+        }
+    }
+
+    return isExistSignature;
 }
 
 bool BundleInstallChecker::MatchSignature(
@@ -1304,6 +1342,7 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.uuid = provisionInfo.uuid;
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
+    appProvisionInfo.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     return appProvisionInfo;
 }
 

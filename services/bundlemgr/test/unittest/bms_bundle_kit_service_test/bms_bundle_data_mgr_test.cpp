@@ -3777,4 +3777,44 @@ HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0002, Function | SmallTest | Level0)
     EXPECT_EQ(dir, EMPTY_STRING);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: GetFingerprints_0100
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0100, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints(BUNDLE_NAME_TEST, fingerPrints);
+    EXPECT_TRUE(res);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetFingerprints_0200
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints("com.example.baseApplication", fingerPrints);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetFingerprints_0300
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0300, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints("", fingerPrints);
+    EXPECT_FALSE(res);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
 }

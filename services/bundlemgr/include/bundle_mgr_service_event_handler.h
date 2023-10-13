@@ -464,7 +464,7 @@ private:
     void UpdateRemovable(const std::string &bundleName, bool removable);
     void UpdateAllPrivilegeCapability();
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
-    bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
+    bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::vector<std::string> &signatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;

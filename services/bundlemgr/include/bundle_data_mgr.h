@@ -856,7 +856,7 @@ public:
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
         std::string &profile) const;
-
+    bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
 private:
     /**
      * @brief Init transferStates.

@@ -243,6 +243,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
+    std::vector<std::string> fingerprints;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);
