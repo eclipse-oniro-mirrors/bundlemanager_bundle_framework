@@ -1180,6 +1180,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nIsSystemApp;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.isSystemApp, &nIsSystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "systemApp", nIsSystemApp));
+
+    napi_value ndataUnclearable;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, !appInfo.userDataClearable, &ndataUnclearable));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "dataUnclearable", ndataUnclearable));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
