@@ -39,7 +39,7 @@ public:
     bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId);
 
     // for ability enable or disable
-    bool OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
+    bool OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, bool enabled, const int32_t userId);
 };
 } // AppExecFwk

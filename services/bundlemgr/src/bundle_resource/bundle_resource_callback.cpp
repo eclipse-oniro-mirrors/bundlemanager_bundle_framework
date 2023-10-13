@@ -43,11 +43,11 @@ bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
         return false;
     }
     if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGE("DeleteAllResourceInfo userId : %{public}d failed.", userId);
+        APP_LOGE("DeleteAllResourceInfo userId : %{public}d failed", userId);
         return false;
     }
     if (!manager->AddAllResourceInfo(userId)) {
-        APP_LOGE("AddAllResourceInfo userId : %{public}d failed.", userId);
+        APP_LOGE("AddAllResourceInfo userId : %{public}d failed", userId);
         return false;
     }
     return true;
@@ -99,10 +99,10 @@ bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
     }
 
     if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed.", currentUserId);
+        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed", currentUserId);
     }
     if (!manager->AddAllResourceInfo(currentUserId)) {
-        APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed.", currentUserId);
+        APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed", currentUserId);
         return false;
     }
     return true;
@@ -133,19 +133,19 @@ bool BundleResourceCallback::OnBundleStatusChanged(
 
     if (enabled) {
         if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
-            APP_LOGE("add bundleName : %{public}s resource failed.", bundleName.c_str());
+            APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
             return false;
         }
     } else {
         if (!manager->DeleteResourceInfo(bundleName)) {
-            APP_LOGE("delete bundleName : %{public}s resource failed.", bundleName.c_str());
+            APP_LOGE("delete bundleName : %{public}s resource failed", bundleName.c_str());
             return false;
         }
     }
     return true;
 }
 
-bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
+bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleName, const std::string &moduleName,
     const std::string &abilityName, bool enabled, const int32_t userId)
 {
     APP_LOGI("start, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s",
@@ -171,7 +171,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
 
     if (enabled) {
         if (!manager->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId)) {
-            APP_LOGE("add bundleName : %{public}s resource failed.", bundleName.c_str());
+            APP_LOGE("add bundleName : %{public}s resource failed", bundleName.c_str());
             return false;
         }
     } else {
@@ -180,7 +180,7 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
         info.moduleName_ = moduleName;
         info.abilityName_ = abilityName;
         if (!manager->DeleteResourceInfo(info.GetKey())) {
-            APP_LOGE("delete key : %{public}s resource failed.", info.GetKey().c_str());
+            APP_LOGE("delete key : %{public}s resource failed", info.GetKey().c_str());
             return false;
         }
     }
