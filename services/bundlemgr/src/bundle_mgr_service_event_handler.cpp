@@ -1555,11 +1555,11 @@ void BMSEventHandler::HandlePreInstallException()
     APP_LOGI("HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
         exceptionPaths.size(), exceptionBundleNames.size());
     for (const auto &pathIter : exceptionPaths) {
-        APP_LOGI("HandlePreInstallException path: %{public}s", pathIter.c_str());
+        APP_LOGI("HandlePreInstallException path: %{private}s", pathIter.c_str());
         std::vector<std::string> filePaths { pathIter };
         bool removable = IsPreInstallRemovable(pathIter);
         if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
-            APP_LOGW("HandlePreInstallException path(%{public}s) error.", pathIter.c_str());
+            APP_LOGW("HandlePreInstallException path(%{private}s) error.", pathIter.c_str());
         }
 
         preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
