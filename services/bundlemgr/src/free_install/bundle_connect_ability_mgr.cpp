@@ -402,7 +402,7 @@ bool BundleConnectAbilityMgr::SendRequestToServiceCenter(int32_t flag, const Tar
 
 void BundleConnectAbilityMgr::LoadDownloadService() const
 {
-    APP_LOGD("LoadDownloadService start");
+    APP_LOGI("LoadDownloadService start");
     auto systemAbilityMgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (systemAbilityMgr == nullptr) {
         APP_LOGE("Failed to get SystemAbilityManager");
@@ -418,7 +418,7 @@ void BundleConnectAbilityMgr::LoadDownloadService() const
         APP_LOGE("Load system ability %{public}d failed with %{public}d.", Constants::DOWNLOAD_SERVICE_SA_ID, ret);
         return;
     }
-    APP_LOGD("LoadDownloadService end");
+    APP_LOGI("LoadDownloadService end");
 }
 
 void BundleConnectAbilityMgr::DisconnectAbility()
