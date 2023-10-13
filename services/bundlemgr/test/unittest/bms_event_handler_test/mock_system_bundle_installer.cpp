@@ -34,7 +34,7 @@ SystemBundleInstaller::~SystemBundleInstaller()
     APP_LOGI("system bundle installer instance is destroyed");
 }
 
-bool SystemBundleInstaller::InstallSystemBundle(
+ErrCode SystemBundleInstaller::InstallSystemBundle(
     const std::string &filePath,
     InstallParam &installParam,
     Constants::AppType appType)
@@ -42,22 +42,22 @@ bool SystemBundleInstaller::InstallSystemBundle(
     if (filePath.compare(CALL_MOCK_BUNDLE_DIR_SUCCESS) == 0) {
         auto mockFilePath = const_cast<std::string*>(&filePath);
         *mockFilePath = RETURN_MOCK_BUNDLE_DIR_SUCCESS;
-        return true;
+        return ERR_OK;
     } else if (filePath.compare(CALL_MOCK_BUNDLE_DIR_FAILED) == 0) {
         auto mockFilePath = const_cast<std::string*>(&filePath);
         *mockFilePath = RETURN_MOCK_BUNDLE_DIR_FAILED;
-        return false;
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     MarkPreBundleSyeEventBootTag(true);
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
-        return false;
+        return result;
     }
-    return true;
+    return ERR_OK;
 }
 
-bool SystemBundleInstaller::OTAInstallSystemBundle(
+ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     InstallParam &installParam,
     Constants::AppType appType)
@@ -65,7 +65,7 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
 
     for (auto allUserId : dataMgr->GetAllUser()) {
@@ -79,7 +79,7 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
         ResetInstallProperties();
     }
 
-    return true;
+    return ERR_OK;
 }
 
 bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)

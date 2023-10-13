@@ -111,6 +111,7 @@ bool BundleMgrService::Init()
     APP_LOGI("BundleMgrService Init begin");
     CreateBmsServiceDir();
     InitBmsParam();
+    InitPreInstallExceptionMgr();
     CHECK_INIT_RESULT(InitBundleMgrHost(), "Init bundleMgr fail");
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     InitBundleDataMgr();
@@ -130,6 +131,11 @@ bool BundleMgrService::Init()
 void BundleMgrService::InitBmsParam()
 {
     bmsParam_ = std::make_shared<BmsParam>();
+}
+
+void BundleMgrService::InitPreInstallExceptionMgr()
+{
+    preInstallExceptionMgr_ = std::make_shared<PreInstallExceptionMgr>();
 }
 
 bool BundleMgrService::InitBundleMgrHost()
@@ -336,6 +342,11 @@ sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 const std::shared_ptr<BmsParam> BundleMgrService::GetBmsParam() const
 {
     return bmsParam_;
+}
+
+const std::shared_ptr<PreInstallExceptionMgr> BundleMgrService::GetPreInstallExceptionMgr() const
+{
+    return preInstallExceptionMgr_;
 }
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP

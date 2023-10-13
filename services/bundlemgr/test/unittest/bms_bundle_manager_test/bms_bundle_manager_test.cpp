@@ -135,7 +135,8 @@ bool BmsBundleManagerTest::InstallSystemBundle(const std::string &filePath) cons
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
+    return installer->InstallSystemBundle(
+        filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
 ErrCode BmsBundleManagerTest::InstallThirdPartyBundle(const std::string &filePath) const

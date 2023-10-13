@@ -303,6 +303,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         SaveSystemFingerprint();
         AOTHandler::GetInstance().HandleOTA();
     } else {
+        HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     }
 
@@ -453,6 +454,7 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         if (!OTAInstallSystemBundle(
             filePaths, Constants::AppType::SYSTEM_APP, removable)) {
             APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
+            SavePreInstallException(preInstallDir);
             continue;
         }
     }
@@ -893,8 +895,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType)) {
+    ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
+        SavePreInstallException(preScanInfo.bundleDir);
     }
 }
 
@@ -911,8 +915,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(bundleDir, installParam, appType)) {
+    ErrCode ret = installer.InstallSystemBundle(bundleDir, installParam, appType);
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
+        SavePreInstallException(bundleDir);
     }
 }
 
@@ -1041,6 +1047,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            SavePreInstallException(scanPathIter);
             continue;
         }
 
@@ -1054,6 +1061,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
             }
 
             continue;
@@ -1071,6 +1079,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 std::vector<std::string> filePaths { scanPathIter };
                 if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                     APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                    SavePreInstallException(scanPathIter);
                 }
             }
             continue;
@@ -1082,6 +1091,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
             }
 
             continue;
@@ -1157,6 +1167,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+            SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
@@ -1513,6 +1524,72 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(
     return preInstallIter->second.HasBundlePath(bundlePath);
 }
 
+void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        APP_LOGE("preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
+}
+
+void BMSEventHandler::HandlePreInstallException()
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        APP_LOGE("preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        exceptionPaths, exceptionBundleNames)) {
+        return;
+    }
+
+    APP_LOGI("HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
+        exceptionPaths.size(), exceptionBundleNames.size());
+    for (const auto &pathIter : exceptionPaths) {
+        APP_LOGI("HandlePreInstallException path: %{private}s", pathIter.c_str());
+        std::vector<std::string> filePaths { pathIter };
+        bool removable = IsPreInstallRemovable(pathIter);
+        if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
+            APP_LOGW("HandlePreInstallException path(%{private}s) error.", pathIter.c_str());
+        }
+
+        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+    }
+
+    if (exceptionBundleNames.size() > 0) {
+        LoadAllPreInstallBundleInfos();
+    }
+
+    for (const auto &bundleNameIter : exceptionBundleNames) {
+        APP_LOGI("HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
+        auto iter = loadExistData_.find(bundleNameIter);
+        if (iter == loadExistData_.end()) {
+            APP_LOGW("HandlePreInstallException no bundleName(%{public}s) in PreInstallDb.",
+                bundleNameIter.c_str());
+            continue;
+        }
+
+        const auto &preInstallBundleInfo = iter->second;
+        if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
+            Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
+            APP_LOGW("HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
+        }
+
+        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+    }
+
+    preInstallExceptionMgr->ClearAll();
+}
+
 bool BMSEventHandler::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     Constants::AppType appType,
@@ -1533,7 +1610,11 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     SystemBundleInstaller installer;
-    return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    return ret == ERR_OK;
 }
 
 bool BMSEventHandler::OTAInstallSystemSharedBundle(
