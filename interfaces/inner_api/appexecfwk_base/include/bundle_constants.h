@@ -174,7 +174,7 @@ constexpr const char* LIB_FOLDER_NAME = "libs";
 constexpr const char* RES_FOLDER_NAME = "resources";
 
 constexpr uint8_t MAX_LABLE_LEN = 30;
-constexpr uint8_t MAX_BUNDLE_NAME = 127;
+constexpr uint8_t MAX_BUNDLE_NAME = 128;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_VENDOR = 255;
 constexpr uint8_t EQUAL_ZERO = 0;
