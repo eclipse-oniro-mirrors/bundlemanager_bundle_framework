@@ -662,15 +662,29 @@ void BundleInstallChecker::GetPrivilegeCapability(
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = false;
     if (!preBundleConfigInfo.appSignature.empty()) {
-        ret = std::find(
-            preBundleConfigInfo.appSignature.begin(),
-            preBundleConfigInfo.appSignature.end(),
-            newInfo.GetCertificateFingerprint()) !=
-            preBundleConfigInfo.appSignature.end();
+        if (std::find(preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(),
+            newInfo.GetCertificateFingerprint()) != preBundleConfigInfo.appSignature.end()) {
+            ret = true;
+        }
+        if (!ret) {
+            std::vector<std::string> fingerprints;
+            std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (!dataMgr->GetFingerprints(newInfo.GetBundleName(), fingerprints)) {
+                APP_LOGE("Get fingerprints failed.");
+                return;
+            }
+            for (auto &fingerprint : fingerprints) {
+                if (std::find(
+                    preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(), fingerprint) !=
+                    preBundleConfigInfo.appSignature.end()) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
     }
-
     if (!ret) {
-        APP_LOGW("appSignature is incompatible");
+        APP_LOGE("appSignature is incompatible");
         return;
     }
 

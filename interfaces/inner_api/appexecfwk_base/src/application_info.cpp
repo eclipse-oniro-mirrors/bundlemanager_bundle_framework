@@ -114,6 +114,7 @@ const std::string APPLICATION_APP_TYPE = "bundleType";
 const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
+const std::string APPLICATION_FINGERPRINTS = "fingerprints";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -721,6 +722,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_META_DATA_CONFIG_JSON, applicationInfo.metaData},
         {APPLICATION_META_DATA_MODULE_JSON, applicationInfo.metadata},
         {APPLICATION_FINGERPRINT, applicationInfo.fingerprint},
+        {APPLICATION_FINGERPRINTS, applicationInfo.fingerprints},
         {APPLICATION_ICON, applicationInfo.icon},
         {APPLICATION_FLAGS, applicationInfo.flags},
         {APPLICATION_ENTRY_MODULE_NAME, applicationInfo.entryModuleName},
@@ -1157,6 +1159,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::vector<std::string>>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_FINGERPRINTS,
+        applicationInfo.fingerprints,
+        JsonType::ARRAY,
+        false,
+        parseResult,
+        ArrayType::STRING);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         APPLICATION_ICON,

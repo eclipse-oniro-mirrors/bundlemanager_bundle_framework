@@ -305,6 +305,7 @@ bool BundleDataMgr::AddNewModuleInfo(
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
+        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -501,6 +502,7 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
+        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
