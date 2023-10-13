@@ -27,16 +27,21 @@
 #include "bundle_permission_mgr.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_callback.h"
 #include "bundle_resource_configuration.h"
+#include "bundle_resource_event_subscriber.h"
 #include "bundle_resource_manager.h"
+#include "bundle_resource_observer.h"
 #include "bundle_resource_param.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 #include "bundle_resource_rdb.h"
+#include "bundle_resource_register.h"
 #include "bundle_system_state.h"
 #endif
 
 #include "bundle_verify_mgr.h"
+#include "common_event_support.h"
 #include "inner_bundle_info.h"
 #include "installd/installd_service.h"
 #include "installd_client.h"
@@ -79,6 +84,7 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
+    bool OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data);
 
 private:
     static std::shared_ptr<InstalldService> installdService_;
@@ -202,6 +208,20 @@ void BmsBundleResourceTest::StartBundleService()
 const std::shared_ptr<BundleDataMgr> BmsBundleResourceTest::GetBundleDataMgr() const
 {
     return bundleMgrService_->GetDataMgr();
+}
+
+bool BmsBundleResourceTest::OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    OHOS::EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+
+    auto subscriberPtr = std::make_shared<BundleResourceEventSubscriber>(subscribeInfo);
+    subscriberPtr->OnReceiveEvent(data);
+#endif
+    std::string action = data.GetWant().GetAction();
+    return action == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED;
 }
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -1192,6 +1212,224 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0070, Function | SmallTest
     }
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME_NO_ICON);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0071
+ * Function: BundleResourceEventSubscriber
+ * @tc.name: test BundleResourceEventSubscriber
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceEventSubscriber
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0071, Function | SmallTest | Level0)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED);
+    OHOS::EventFwk::CommonEventData commonData { want };
+    bool ans = OnReceiveEvent(commonData);
+    EXPECT_FALSE(ans);
+
+    want.SetAction(OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED);
+    OHOS::EventFwk::CommonEventData commonData2 { want };
+    commonData2.SetCode(2000); // userId not exist
+    ans = OnReceiveEvent(commonData2);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0072
+ * Function: BundleResourceObserver
+ * @tc.name: test BundleResourceObserver
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceObserver
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0072, Function | SmallTest | Level0)
+{
+#ifdef ABILITY_RUNTIME_ENABLE
+    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
+    std::string oldLanguage = BundleSystemState::GetInstance().GetSystemLanguage();
+
+    BundleResourceObserver observer;
+    AppExecFwk::Configuration configuration;
+    observer.OnConfigurationUpdated(configuration);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemColorMode(), oldColorMode);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemLanguage(), oldLanguage);
+
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE, oldLanguage);
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE, oldColorMode);
+    observer.OnConfigurationUpdated(configuration);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemLanguage(), oldLanguage);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemColorMode(), oldColorMode);
+
+    std::string newLanguage = "test";
+    std::string newColorMode = "test";
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE, newLanguage);
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE, newColorMode);
+    observer.OnConfigurationUpdated(configuration);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemLanguage(), newLanguage);
+    EXPECT_EQ(BundleSystemState::GetInstance().GetSystemColorMode(), newColorMode);
+
+    BundleSystemState::GetInstance().SetSystemLanguage(oldLanguage);
+    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
+#endif
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0073
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnUserIdSwitched
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0073, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    bool ans = callback.OnUserIdSwitched(200);
+    EXPECT_FALSE(ans);
+
+    ans = callback.OnUserIdSwitched(100);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0074
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnSystemColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0074, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    std::string oldColorMode = BundleSystemState::GetInstance().GetSystemColorMode();
+
+    bool ans = callback.OnSystemColorModeChanged(oldColorMode);
+    EXPECT_TRUE(ans);
+
+    std::string colorMode = "test";
+    ans = callback.OnSystemColorModeChanged(oldColorMode);
+    EXPECT_TRUE(ans);
+
+    BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0075
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnSystemLanguageChange
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    std::string oldLanguage = BundleSystemState::GetInstance().GetSystemLanguage();
+
+    bool ans = callback.OnSystemLanguageChange(oldLanguage);
+    EXPECT_TRUE(ans);
+
+    std::string language = "test";
+    ans = callback.OnSystemLanguageChange(language);
+    EXPECT_TRUE(ans);
+
+    BundleSystemState::GetInstance().SetSystemColorMode(oldLanguage);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0076
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnBundleStatusChanged, bundle not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0076, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    std::string bundleName;
+    bool ans = callback.OnBundleStatusChanged(bundleName, true, USERID);
+    EXPECT_FALSE(ans);
+
+    bundleName = "bundleName";
+    ans = callback.OnBundleStatusChanged(bundleName, true, 200);
+    EXPECT_FALSE(ans);
+
+    ans = callback.OnBundleStatusChanged(bundleName, true, USERID); // bundleName not exist
+    EXPECT_FALSE(ans);
+
+    ans = callback.OnBundleStatusChanged(bundleName, false, USERID);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0077
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnBundleStatusChanged, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0077, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleResourceCallback callback;
+    bool ans = callback.OnBundleStatusChanged(BUNDLE_NAME, true, USERID);
+    EXPECT_TRUE(ans);
+
+    ans = callback.OnBundleStatusChanged(BUNDLE_NAME, false, USERID); // bundleName exist
+    EXPECT_TRUE(ans);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0078
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnAbilityStatusChanged bundle not exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0078, Function | SmallTest | Level0)
+{
+    BundleResourceCallback callback;
+    std::string bundleName;
+    std::string moduleName;
+    std::string abilityName;
+    bool ans = callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, true, USERID);
+    EXPECT_FALSE(ans);
+
+    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, 200);
+    EXPECT_FALSE(ans);
+    // bundleName not exist
+    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
+    EXPECT_FALSE(ans);
+
+    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0079
+ * Function: BundleResourceCallback
+ * @tc.name: test BundleResourceCallback
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceCallback.OnAbilityStatusChanged, bundle exist
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0079, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    BundleResourceCallback callback;
+    bool ans  = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
+    EXPECT_TRUE(ans);
+
+    ans = callback.OnAbilityStatusChanged(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
+    EXPECT_TRUE(ans);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif

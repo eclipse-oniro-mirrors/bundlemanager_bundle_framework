@@ -27,19 +27,19 @@ public:
     ~BundleResourceCallback() = default;
 
     // for userId switched
-    void OnUserIdSwitched(const int32_t userId);
+    bool OnUserIdSwitched(const int32_t userId);
 
     // for colorMode changed
-    void OnSystemColorModeChanged(const std::string &colorMode);
+    bool OnSystemColorModeChanged(const std::string &colorMode);
 
     // for system language changed
-    void OnSystemLanguageChange(const std::string &language);
+    bool OnSystemLanguageChange(const std::string &language);
 
     // for bundle enable or disable
-    void OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId);
+    bool OnBundleStatusChanged(const std::string &bundleName, bool enabled, const int32_t userId);
 
     // for ability enable or disable
-    void OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
+    bool OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
         const std::string &abilityName, bool enabled, const int32_t userId);
 };
 } // AppExecFwk

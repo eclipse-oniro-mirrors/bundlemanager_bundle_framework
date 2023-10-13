@@ -27,41 +27,44 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-void BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
+bool BundleResourceCallback::OnUserIdSwitched(const int32_t userId)
 {
     APP_LOGI("start");
-    if (userId != Constants::DEFAULT_USERID && userId != Constants::START_USERID) {
+    if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId <= 0) && (currentUserId != userId)) {
+        if (currentUserId != userId) {
             APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
-            return;
+            return false;
         }
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("switch userId : %{public}d failed, manager is nullptr", userId);
-        return;
+        return false;
     }
     if (!manager->DeleteAllResourceInfo()) {
         APP_LOGE("DeleteAllResourceInfo userId : %{public}d failed.", userId);
+        return false;
     }
     if (!manager->AddAllResourceInfo(userId)) {
         APP_LOGE("AddAllResourceInfo userId : %{public}d failed.", userId);
+        return false;
     }
+    return true;
 }
 
-void BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMode)
+bool BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMode)
 {
     APP_LOGI("start, colorMode: %{public}s", colorMode.c_str());
     if (colorMode == BundleSystemState::GetInstance().GetSystemColorMode()) {
         APP_LOGD("colorMode: %{public}s no change", colorMode.c_str());
-        return;
+        return true;
     }
     BundleSystemState::GetInstance().SetSystemColorMode(colorMode);
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");
-        return;
+        return false;
     }
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
     if (currentUserId <= 0) {
@@ -70,22 +73,24 @@ void BundleResourceCallback::OnSystemColorModeChanged(const std::string &colorMo
 
     if (!manager->AddResourceInfoByColorModeChanged(currentUserId)) {
         APP_LOGE("add colorMode : %{public}s failed, currentUserId :%{public}d", colorMode.c_str(), currentUserId);
+        return false;
     }
+    return true;
 }
 
-void BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
+bool BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
 {
     APP_LOGI("start, current language is %{public}s", language.c_str());
     if (language == BundleSystemState::GetInstance().GetSystemLanguage()) {
         APP_LOGD("current language is %{public}s no change", language.c_str());
-        return;
+        return true;
     }
     BundleSystemState::GetInstance().SetSystemLanguage(language);
     // need delete all and reload all
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");
-        return;
+        return false;
     }
 
     int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
@@ -94,14 +99,16 @@ void BundleResourceCallback::OnSystemLanguageChange(const std::string &language)
     }
 
     if (!manager->DeleteAllResourceInfo()) {
-        APP_LOGE("DeleteAllResourceInfo currentUserId : %{public}d failed.", currentUserId);
+        APP_LOGW("DeleteAllResourceInfo currentUserId : %{public}d failed.", currentUserId);
     }
     if (!manager->AddAllResourceInfo(currentUserId)) {
         APP_LOGE("AddAllResourceInfo currentUserId : %{public}d failed.", currentUserId);
+        return false;
     }
+    return true;
 }
 
-void BundleResourceCallback::OnBundleStatusChanged(
+bool BundleResourceCallback::OnBundleStatusChanged(
     const std::string &bundleName,
     bool enabled,
     const int32_t userId)
@@ -109,59 +116,63 @@ void BundleResourceCallback::OnBundleStatusChanged(
     APP_LOGI("start, bundleName: %{public}s", bundleName.c_str());
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty");
-        return;
+        return false;
     }
-    if (userId != Constants::DEFAULT_USERID && userId != Constants::START_USERID) {
+    if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId <= 0) && (currentUserId != userId)) {
+        if (currentUserId != userId) {
             APP_LOGE("userId: %{public}d, currentUserId :%{public}d", userId, currentUserId);
-            return;
+            return false;
         }
     }
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");
-        return;
+        return false;
     }
 
     if (enabled) {
         if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
             APP_LOGE("add bundleName : %{public}s resource failed.", bundleName.c_str());
+            return false;
         }
     } else {
         if (!manager->DeleteResourceInfo(bundleName)) {
             APP_LOGE("delete bundleName : %{public}s resource failed.", bundleName.c_str());
+            return false;
         }
     }
+    return true;
 }
 
-void BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
+bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleName,const std::string &moduleName,
     const std::string &abilityName, bool enabled, const int32_t userId)
 {
     APP_LOGI("start, bundleName: %{public}s, moduleName:%{public}s, abilityName:%{public}s",
         bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
     if (bundleName.empty() || moduleName.empty() || abilityName.empty()) {
         APP_LOGE("bundleName or moduleName or abilityName is empty");
-        return;
+        return false;
     }
 
-    if (userId != Constants::DEFAULT_USERID && userId != Constants::START_USERID) {
+    if (userId != Constants::START_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId <= 0) && (currentUserId != userId)) {
+        if (currentUserId != userId) {
             APP_LOGE("wtt userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
-            return;
+            return false;
         }
     }
 
     auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
     if (manager == nullptr) {
         APP_LOGE("manager is nullptr");
-        return;
+        return false;
     }
 
     if (enabled) {
         if (!manager->AddResourceInfoByAbility(bundleName, moduleName, abilityName, userId)) {
             APP_LOGE("add bundleName : %{public}s resource failed.", bundleName.c_str());
+            return false;
         }
     } else {
         ResourceInfo info;
@@ -170,8 +181,10 @@ void BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
         info.abilityName_ = abilityName;
         if (!manager->DeleteResourceInfo(info.GetKey())) {
             APP_LOGE("delete key : %{public}s resource failed.", info.GetKey().c_str());
+            return false;
         }
     }
+    return true;
 }
 } // AppExecFwk
 } // OHOS

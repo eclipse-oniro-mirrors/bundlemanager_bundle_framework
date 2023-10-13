@@ -40,13 +40,11 @@ void BundleResourceObserver::OnConfigurationUpdated(const AppExecFwk::Configurat
     if (!colorMode.empty() && (colorMode != BundleSystemState::GetInstance().GetSystemColorMode())) {
         APP_LOGD("OnSystemColorModeChanged colorMode:%{public}s", colorMode.c_str());
         callback.OnSystemColorModeChanged(colorMode);
-        return;
     }
     std::string language = configuration.GetItem(AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE);
     if (!language.empty() && (language != BundleSystemState::GetInstance().GetSystemLanguage())) {
         APP_LOGD("OnSystemLanguageChange language:%{public}s", language.c_str());
         callback.OnSystemLanguageChange(language);
-        return;
     }
 }
 #endif
