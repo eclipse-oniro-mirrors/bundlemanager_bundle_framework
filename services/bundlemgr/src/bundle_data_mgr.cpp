@@ -297,7 +297,7 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry()) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
@@ -485,14 +485,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
         bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
-        bool isOldInfoHasEntry = oldInfo.HasEntry();
         if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
@@ -5805,6 +5804,12 @@ bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<s
     }
     fingerPrints = innerBundleInfo->second.GetFingerprints();
     return true;
+}
+
+bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo,
+    const InnerBundleInfo &newInfo) const
+{
+    return !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

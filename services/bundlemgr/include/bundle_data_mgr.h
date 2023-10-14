@@ -977,6 +977,7 @@ private:
     ErrCode FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo, const std::string &moduleName,
         const std::string &abilityName, AbilityInfo &abilityInfo) const;
     void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
+    bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

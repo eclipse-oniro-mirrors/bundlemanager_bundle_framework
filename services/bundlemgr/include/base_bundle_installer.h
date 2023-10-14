@@ -597,6 +597,8 @@ private:
     void ExtractResourceFiles(const InnerBundleInfo &info, const std::string &targetPath) const;
     void RemoveTempSoDir(const std::string &tempSoDir);
     bool CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
+    ErrCode InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+        InnerBundleInfo &bundleInfo, const InnerBundleUserInfo &innerBundleUserInfo, const InstallParam &installParam);
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -639,6 +641,9 @@ private:
     std::unordered_map<std::string, std::string> signatureFileTmpMap_;
     std::string uninstallBundleAppId_;
     bool isModuleUpdate_ = false;
+    // utilize for install entry firstly from multi-installation
+    bool isEntryInstalled_ = false;
+    std::string entryModuleName_ = "";
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

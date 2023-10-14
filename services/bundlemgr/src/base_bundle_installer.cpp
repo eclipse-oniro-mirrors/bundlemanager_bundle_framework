@@ -768,6 +768,18 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     // update haps
     for (; it != newInfos.end(); ++it) {
+        // install entry module firstly
+        APP_LOGD("update module %{public}s, entry module packageName is %{public}s",
+            it->second.GetCurrentModulePackage().c_str(), entryModuleName_.c_str());
+        if ((result = InstallEntryMoudleFirst(newInfos, bundleInfo, innerBundleUserInfo,
+            installParam)) != ERR_OK) {
+            APP_LOGE("install entry module failed due to error %{public}d", result);
+            break;
+        }
+        if (it->second.GetCurrentModulePackage().compare(entryModuleName_) == 0) {
+            APP_LOGD("enrty has been installed");
+            continue;
+        }
         modulePath_ = it->first;
         InnerBundleInfo &newInfo = it->second;
         newInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
@@ -4106,6 +4118,35 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
     }
     std::string subTempSoDir = tempSoDir.substr(0, thirdPos);
     InstalldClient::GetInstance()->RemoveDir(subTempSoDir);
+}
+
+ErrCode BaseBundleInstaller::InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    InnerBundleInfo &bundleInfo, const InnerBundleUserInfo &innerBundleUserInfo, const InstallParam &installParam)
+{
+    APP_LOGD("start to install entry firstly");
+    if (!isAppExist_ || isEntryInstalled_) {
+        APP_LOGD("no need to install entry firstly");
+        return ERR_OK;
+    }
+    ErrCode result = ERR_OK;
+    for (auto &info : newInfos) {
+        if (info.second.HasEntry()) {
+            modulePath_ = info.first;
+            InnerBundleInfo &newInfo = info.second;
+            newInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+            bool isReplace = (installParam.installFlag == InstallFlag::REPLACE_EXISTING ||
+                installParam.installFlag == InstallFlag::FREE_INSTALL);
+            // app exist, but module may not
+            result = ProcessBundleUpdateStatus(bundleInfo, newInfo, isReplace, installParam.noSkipsKill);
+            if (result == ERR_OK) {
+                entryModuleName_ = info.second.GetCurrentModulePackage();
+                APP_LOGD("entry packageName is %{public}s", entryModuleName_.c_str());
+            }
+            break;
+        }
+    }
+    isEntryInstalled_ = true;
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
