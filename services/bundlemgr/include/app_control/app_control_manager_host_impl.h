@@ -48,7 +48,7 @@ public:
     virtual ErrCode GetAppRunningControlRule(int32_t userId, std::vector<std::string> &appIds) override;
     virtual ErrCode GetAppRunningControlRule(
         const std::string &bundleName, int32_t userId, AppRunningControlRuleResult &controlRule) override;
-    
+
     // for app jump control rule
     virtual ErrCode ConfirmAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
         int32_t userId) override;
@@ -60,11 +60,14 @@ public:
     virtual ErrCode GetAppJumpControlRule(const std::string &callerBundleName, const std::string &targetBundleName,
         int32_t userId, AppJumpControlRule &controlRule) override;
 
-    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want) override;
+    virtual ErrCode SetDisposedStatus(
+        const std::string &appId, const Want &want, int32_t userId) override;
 
-    virtual ErrCode DeleteDisposedStatus(const std::string &appId) override;
+    virtual ErrCode DeleteDisposedStatus(
+        const std::string &appId, int32_t userId) override;
 
-    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want) override;
+    virtual ErrCode GetDisposedStatus(
+        const std::string &appId, Want &want, int32_t userId) override;
 private:
     int32_t GetCallingUserId();
     std::string GetCallingName();

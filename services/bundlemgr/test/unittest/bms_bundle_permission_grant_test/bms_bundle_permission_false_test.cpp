@@ -1334,13 +1334,13 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Functi
 {
     AppControlManagerHostImpl impl;
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want);
+    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.GetDisposedStatus(APPID, want);
+    res = impl.GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.DeleteDisposedStatus(APPID);
+    res = impl.DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 

@@ -310,11 +310,12 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
 {
     std::string appId = data.ReadString();
     std::unique_ptr<Want> want(data.ReadParcelable<Want>());
+    int32_t userId = data.ReadInt32();
     if (want == nullptr) {
         APP_LOGE("ReadParcelable<Want> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    ErrCode ret = SetDisposedStatus(appId, *want);
+    ErrCode ret = SetDisposedStatus(appId, *want, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -325,7 +326,8 @@ ErrCode AppControlHost::HandleSetDisposedStatus(MessageParcel& data, MessageParc
 ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel &reply)
 {
     std::string appId = data.ReadString();
-    ErrCode ret = DeleteDisposedStatus(appId);
+    int32_t userId = data.ReadInt32();
+    ErrCode ret = DeleteDisposedStatus(appId, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -336,8 +338,9 @@ ErrCode AppControlHost::HandleDeleteDisposedStatus(MessageParcel& data, MessageP
 ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParcel &reply)
 {
     std::string appId = data.ReadString();
+    int32_t userId = data.ReadInt32();
     Want want;
-    ErrCode ret = GetDisposedStatus(appId, want);
+    ErrCode ret = GetDisposedStatus(appId, want, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

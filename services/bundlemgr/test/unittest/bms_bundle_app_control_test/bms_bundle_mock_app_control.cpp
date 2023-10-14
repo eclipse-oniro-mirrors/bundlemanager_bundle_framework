@@ -464,7 +464,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0070, Function |
 {
     AppControlManagerHostImpl impl;
     Want want;
-    auto res = impl.SetDisposedStatus("", want);
+    auto res = impl.SetDisposedStatus("", want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 
@@ -477,7 +477,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0080, Function |
 {
     AppControlManagerHostImpl impl;
     Want want;
-    auto res = impl.DeleteDisposedStatus("");
+    auto res = impl.DeleteDisposedStatus("", USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 
@@ -490,7 +490,7 @@ HWTEST_F(BmsBundleMockAppControlTest, AppControlManagerHostImpl_0090, Function |
 {
     AppControlManagerHostImpl impl;
     Want want;
-    auto res = impl.GetDisposedStatus("", want);
+    auto res = impl.GetDisposedStatus("", want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR);
 }
 } // OHOS

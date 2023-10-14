@@ -23,6 +23,7 @@
 #include "app_jump_control_rule.h"
 #include "app_running_control_rule_result.h"
 #include "app_running_control_rule.h"
+#include "bundle_constants.h"
 #include "iremote_broker.h"
 #include "want.h"
 
@@ -113,15 +114,17 @@ public:
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    virtual ErrCode SetDisposedStatus(const std::string &appId, const Want &want)
+    virtual ErrCode SetDisposedStatus(
+        const std::string &appId, const Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    virtual ErrCode DeleteDisposedStatus(const std::string &appId)
+    virtual ErrCode DeleteDisposedStatus(const std::string &appId, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
-    virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want)
+    virtual ErrCode GetDisposedStatus(
+        const std::string &appId, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
