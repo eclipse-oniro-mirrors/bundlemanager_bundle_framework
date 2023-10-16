@@ -5425,11 +5425,18 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         if (iter == dataGroupInfos.end()) {
             continue;
         }
-        for (const auto &dataGroupInfo : iter->second) {
-            if (dataGroupInfo.userId == userId && ++count > 1) {
-                APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
-                return true;
-            }
+
+        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+            [userId](const DataGroupInfo &dataGroupInfo) {
+            return dataGroupInfo.userId == userId;
+        });
+        if (dataGroupIter == std::end(iter->second)) {
+            continue;
+        }
+        count++;
+        if (count > 1) {
+            APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
+            return true;
         }
     }
     return false;
