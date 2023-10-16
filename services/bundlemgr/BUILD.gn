@@ -21,6 +21,7 @@ config("bundlemgr_common_config") {
     "include/aot",
     "include/app_provision_info",
     "include/bundlemgr",
+    "include/bms_extension",
     "include/bundle_resource",
     "include/common",
     "include/default_app",
