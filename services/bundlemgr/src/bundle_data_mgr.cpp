@@ -303,8 +303,11 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
-        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
+        if (!oldInfo.GetFingerprints().empty()) {
+            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
+        }
+        oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());

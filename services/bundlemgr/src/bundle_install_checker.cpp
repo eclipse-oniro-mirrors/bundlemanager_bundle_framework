@@ -212,11 +212,28 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 
 #ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
+    auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
     auto appDistributionType = hapVerifyRes[0].GetProvisionInfo().distributionType;
     auto appProvisionType = hapVerifyRes[0].GetProvisionInfo().type;
+    auto versionCode = hapVerifyRes[0].GetProvisionInfo().versionCode;
     bool isInvalid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(),
-        [appId, apl, appDistributionType, appProvisionType](const auto &hapVerifyResult) {
+        [appId, apl, appDistributionType, appProvisionType, appIdentifier, versionCode](const auto &hapVerifyResult) {
+            if (versionCode == hapVerifyResult.GetProvisionInfo().versionCode) {
+                if (appIdentifier != hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier) {
+                    APP_LOGE("same versionCode, appIdentifier is not same");
+                    return false;
+                }
+            }
+            if (appIdentifier.empty() || hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier.empty()) {
+                if (appId != hapVerifyResult.GetProvisionInfo().appId) {
+                    APP_LOGE("error: hap files have different appId");
+                    return true;
+                }
+            } else if (appIdentifier != hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier) {
+                APP_LOGE("error: hap files have different appIdentifier");
+                return true;    
+            }
             if (appId != hapVerifyResult.GetProvisionInfo().appId) {
                 APP_LOGE("error: hap files have different appId");
                 return true;
