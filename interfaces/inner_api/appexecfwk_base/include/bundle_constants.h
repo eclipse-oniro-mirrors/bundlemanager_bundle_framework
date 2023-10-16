@@ -33,6 +33,7 @@ constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* BUNDLE_RESOURCE = "/data/service/el1/public/bms/bundle_resources";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* ASSETS_DIR = "assets";
