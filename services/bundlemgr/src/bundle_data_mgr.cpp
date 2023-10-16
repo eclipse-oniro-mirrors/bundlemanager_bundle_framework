@@ -308,6 +308,7 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
         }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
@@ -503,9 +504,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
+        if (!oldInfo.GetFingerprints().empty()) {
+            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
+        }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
