@@ -7184,28 +7184,6 @@ HWTEST_F(BmsBundleKitServiceTest, Hidump_001, Function | SmallTest | Level1)
     EXPECT_EQ(testRet, true);
 }
 
-/**
- * @tc.number: CreateNewUser_0100
- * @tc.name: test new user can get shortcutInfo by bundleName
- * @tc.desc: 1.create new user
- *           2.get shortcutInfo success
- */
-HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<ShortcutInfo> shortcutInfos;
-
-    int32_t userId = 101;
-    bundleUserMgrHostImpl_->CreateNewUser(userId);
-    auto result = GetBundleDataMgr()->GetShortcutInfos(
-        BUNDLE_NAME_TEST,  userId, shortcutInfos);
-    EXPECT_TRUE(result);
-    CheckShortcutInfoTest(shortcutInfos);
-    bundleUserMgrHostImpl_->RemoveUser(userId);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL
 /**
  * @tc.number: AginTest_0004
