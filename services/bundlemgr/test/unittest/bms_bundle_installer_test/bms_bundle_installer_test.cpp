@@ -4936,12 +4936,14 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0300, Function | SmallTest |
 {
     BundleInfo oldBundleInfo;
     oldBundleInfo.name = "com.example.baseApplication";
+    oldBundleInfo.versionCode = 1000000;
     InnerBundleInfo oldInfo;
     oldInfo.SetBaseBundleInfo(oldBundleInfo);
     oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
 
     BundleInfo newBundleInfo;
     newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
+    newBundleInfo.versionCode = 2000000;
     newBundleInfo.name = "com.example.baseApplication";
     InnerBundleInfo newInfo;
     newInfo.SetBaseBundleInfo(newBundleInfo);
