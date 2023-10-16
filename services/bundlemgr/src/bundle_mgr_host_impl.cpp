@@ -1230,8 +1230,9 @@ bool BundleMgrHostImpl::RegisterBundleEventCallback(const sptr<IBundleEventCallb
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
-        APP_LOGE("verify calling uid failed");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
     auto dataMgr = GetDataMgrFromService();
@@ -1249,8 +1250,9 @@ bool BundleMgrHostImpl::UnregisterBundleEventCallback(const sptr<IBundleEventCal
         APP_LOGE("bundleEventCallback is null");
         return false;
     }
-    if (IPCSkeleton::GetCallingUid() != Constants::FOUNDATION_UID) {
-        APP_LOGE("verify calling uid failed");
+    auto uid = IPCSkeleton::GetCallingUid();
+    if (uid != Constants::FOUNDATION_UID) {
+        APP_LOGE("verify calling uid failed, uid : %{public}d", uid);
         return false;
     }
     auto dataMgr = GetDataMgrFromService();

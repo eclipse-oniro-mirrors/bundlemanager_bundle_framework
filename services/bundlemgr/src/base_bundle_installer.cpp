@@ -1187,7 +1187,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (installParam.noSkipsKill) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
-            APP_LOGE("can not kill process");
+            APP_LOGE("can not kill process, uid : %{public}d", uid);
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
@@ -1333,7 +1333,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (installParam.noSkipsKill) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
-            APP_LOGE("can not kill process");
+            APP_LOGE("can not kill process, uid : %{public}d", uid);
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
@@ -2224,7 +2224,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
-        APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d", err);
+        APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
     }
 #endif // STORAGE_SERVICE_ENABLE
 }

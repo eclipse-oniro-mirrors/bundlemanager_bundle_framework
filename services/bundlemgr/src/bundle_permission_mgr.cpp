@@ -695,7 +695,7 @@ int32_t BundlePermissionMgr::GetHapApiVersion()
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, bundleName);
     if (!ret) {
-        APP_LOGE("getBundleName failed");
+        APP_LOGE("getBundleName failed, uid : %{public}d", uid);
         return Constants::INVALID_API_VERSION;
     }
     ApplicationInfo applicationInfo;
@@ -795,7 +795,7 @@ bool BundlePermissionMgr::VerifyPreload(const AAFwk::Want &want)
     }
     auto ret = dataMgr->GetBundleNameForUid(uid, callingBundleName);
     if (!ret) {
-        APP_LOGE("getBundleName failed");
+        APP_LOGE("getBundleName failed, uid : %{public}d", uid);
         return false;
     }
     std::string bundleName = want.GetElement().GetBundleName();

@@ -396,7 +396,7 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
 
         if (access(subPath.c_str(), F_OK) == 0) {
             if (!ChangeFileAttr(subPath, uid, gid)) {
-                APP_LOGE("Failed to ChangeFileAttr %{public}s", subPath.c_str());
+                APP_LOGE("Failed to ChangeFileAttr %{public}s, uid=%{public}d", subPath.c_str(), uid);
                 closedir(dir);
                 return false;
             }
@@ -407,7 +407,7 @@ bool InstalldOperator::ChangeDirOwnerRecursively(const std::string &path, const 
     std::string currentPath = OHOS::ExcludeTrailingPathDelimiter(path);
     if (access(currentPath.c_str(), F_OK) == 0) {
         if (!ChangeFileAttr(currentPath, uid, gid)) {
-            APP_LOGE("Failed to ChangeFileAttr %{public}s", currentPath.c_str());
+            APP_LOGE("Failed to ChangeFileAttr %{public}s, uid=%{public}d", currentPath.c_str(), uid);
             return false;
         }
     }
@@ -419,7 +419,7 @@ bool InstalldOperator::ChangeFileAttr(const std::string &filePath, const int uid
 {
     APP_LOGD("begin to change %{private}s file attribute", filePath.c_str());
     if (chown(filePath.c_str(), uid, gid) != 0) {
-        APP_LOGE("fail to change %{private}s ownership", filePath.c_str());
+        APP_LOGE("fail to change %{private}s ownership, uid=%{public}d", filePath.c_str(), uid);
         return false;
     }
     APP_LOGD("change %{private}s file attribute successfully", filePath.c_str());
