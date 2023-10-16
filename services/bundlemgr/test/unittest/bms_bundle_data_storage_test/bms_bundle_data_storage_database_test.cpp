@@ -1033,7 +1033,7 @@ protected:
                     "moduleName": ""
                 },
                 "fingerprint":"",
-                "fingerprints":"",
+                "fingerprints":[],
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
                 "isSystemApp": true,
