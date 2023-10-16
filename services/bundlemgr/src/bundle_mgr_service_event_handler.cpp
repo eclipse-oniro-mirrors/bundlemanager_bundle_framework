@@ -1829,25 +1829,40 @@ void BMSEventHandler::UpdatePrivilegeCapability(
         return;
     }
 
-    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetFingerprints())) {
-        APP_LOGW("App(%{public}s) signature verify failed", bundleName.c_str());
-        return;
+    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
+        if (!MatchOldFingerprints(bundleName, preBundleConfigInfo.appSignature)) {
+            APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
+            return;
+        }
     }
 
     UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
 }
 
 bool BMSEventHandler::MatchSignature(
-    const PreBundleConfigInfo &configInfo, const std::vector<std::string> &signatures)
+    const PreBundleConfigInfo &configInfo, const std::string &signature)
 {
     if (configInfo.appSignature.empty()) {
         APP_LOGW("appSignature is empty");
         return false;
     }
 
+    return std::find(configInfo.appSignature.begin(),
+        configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
+}
+
+bool BMSEventHandler::MatchOldFingerprints(const std::string &bundleName,
+    const std::vector<std::string> &appSignatures)
+{
+    std::vector<std::string> fingerprints;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
+        APP_LOGE("Get fingerprints failed.");
+        return false;
+    }
     bool isExistSignature = false;
-    for (const auto &signature : configInfo.appSignature) {
-        if (std::find(signatures.begin(), signatures.end(), signature) != signatures.end()) {
+    for (const auto &signature : appSignatures) {
+        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
             isExistSignature = true;
             break;
         }

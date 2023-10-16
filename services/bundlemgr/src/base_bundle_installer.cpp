@@ -1691,6 +1691,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 }
 
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
+    if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
+        if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
+            APP_LOGE("same versionCode, appIdentifier is not same");
+            return false;
+        }
+    }
+
     if (oldInfo.GetAppIdentifier().empty() || newInfo.GetAppIdentifier().empty()) {
         if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
             APP_LOGE("the signature of the new bundle is not the same as old one");

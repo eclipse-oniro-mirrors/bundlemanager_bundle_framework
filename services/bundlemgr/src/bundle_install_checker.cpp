@@ -212,11 +212,12 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 
 #ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
+    auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
     auto appDistributionType = hapVerifyRes[0].GetProvisionInfo().distributionType;
     auto appProvisionType = hapVerifyRes[0].GetProvisionInfo().type;
     bool isInvalid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(),
-        [appId, apl, appDistributionType, appProvisionType](const auto &hapVerifyResult) {
+        [appId, apl, appDistributionType, appProvisionType, appIdentifier](const auto &hapVerifyResult) {
             if (appId != hapVerifyResult.GetProvisionInfo().appId) {
                 APP_LOGE("error: hap files have different appId");
                 return true;
@@ -231,6 +232,10 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
             }
             if (appProvisionType != hapVerifyResult.GetProvisionInfo().type) {
                 APP_LOGE("error: hap files have different appProvisionType");
+                return true;
+            }
+            if (appIdentifier != hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier) {
+                APP_LOGE("error: hap files have different appIdentifier");
                 return true;
             }
         return false;
