@@ -80,6 +80,9 @@ bool InstalldService::Init()
     if (!InitDir(Constants::HAP_COPY_PATH)) {
         APP_LOGI("HAP_COPY_PATH is already exists");
     }
+    if (!InitDir(Constants::BUNDLE_RESOURCE)) {
+        APP_LOGI("BUNDLE_RESOURCE is already exists");
+    }
     return true;
 }
 
