@@ -334,7 +334,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
         BundlePackInfo packInfo;
-        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();         
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
