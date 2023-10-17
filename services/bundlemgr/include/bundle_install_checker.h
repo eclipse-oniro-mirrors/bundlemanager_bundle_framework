@@ -127,6 +127,9 @@ public:
         return isContainEntry_;
     }
 
+    ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+        std::unordered_map<std::string, InnerBundleInfo> &infos);
+
     bool VaildInstallPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
@@ -154,6 +157,8 @@ public:
     ErrCode CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
+
+    ErrCode CheckDeveloperMode(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 

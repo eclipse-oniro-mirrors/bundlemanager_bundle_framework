@@ -869,6 +869,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    result = CheckInstallCondition(hapVerifyResults, newInfos);
+    CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
@@ -2801,21 +2803,6 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     }
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
-    ret = bundleInstallChecker_->CheckDeviceType(infos);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    ret = bundleInstallChecker_->CheckIsolationMode(infos);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    ret = bundleInstallChecker_->CheckAllowEnterpriseBundle(hapVerifyRes);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
     if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
@@ -2851,6 +2838,33 @@ void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &b
         }
         dataMgr->GenerateDataGroupInfos(infos[bundlePaths[i]], dataGroupGids, userId);
     }
+}
+
+ErrCode BaseBundleInstaller::CheckInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    ErrCode ret = bundleInstallChecker_->CheckDeviceType(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckIsolationMode(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckDeveloperMode(hapVerifyRes);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckDeveloperMode failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckAllowEnterpriseBundle(hapVerifyRes);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,

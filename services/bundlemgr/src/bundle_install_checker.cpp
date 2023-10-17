@@ -61,6 +61,7 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
+const std::string DEVELOPERMODE_STATE = "const.security.developermode.state";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
@@ -395,12 +396,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         infos.emplace(bundlePaths[i], newInfo);
     }
-    if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
-        APP_LOGE("install failed due to duplicated moduleName");
-        return result;
-    }
-    if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
-        APP_LOGE("install failed due to non-enterprise device");
+    if ((result = CheckInstallCondition(hapVerifyRes, infos)) != ERR_OK) {
+        APP_LOGE("install failed due to check install condition failed");
         return result;
     }
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
@@ -414,6 +411,26 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     }
     APP_LOGD("finish parse hap file");
     return result;
+}
+
+ErrCode BundleInstallChecker::CheckInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    ErrCode result = ERR_OK;
+    if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
+        APP_LOGE("install failed due to duplicated moduleName");
+        return result;
+    }
+    if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
+        APP_LOGE("install failed due to debug mode");
+        return result;
+    }
+    if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
+        APP_LOGE("install failed due to non-enterprise device");
+        return result;
+    }
+    return ERR_OK;
 }
 
 bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
@@ -1471,6 +1488,23 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
     if (signatureFileDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("signatureFileDir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckDeveloperMode(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (system::GetBoolParameter(DEVELOPERMODE_STATE, true)) {
+        APP_LOGI("check developer mode success");
+        return ERR_OK;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+            APP_LOGE("debug bundle can only be installed in developer mode");
+            return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
+        }
     }
     return ERR_OK;
 }
