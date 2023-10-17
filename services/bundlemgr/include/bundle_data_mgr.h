@@ -840,18 +840,6 @@ public:
         const std::vector<std::string> &dataGroupIdList, int32_t userId) const;
     void GetDataGroupIndexMap(std::map<std::string, std::pair<int32_t, std::string>> &dataGroupIndexMap) const;
     bool IsShareDataGroupId(const std::string &dataGroupId, int32_t userId) const;
-    ErrCode GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags, BundleInfo &bundleInfo,
-        int32_t userId, bool isNewVersion = false) const;
-    ErrCode GetBundleInfosFromBmsExtension(int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId,
-        bool isNewVersion = false) const;
-    ErrCode QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion = false) const;
-    ErrCode QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-        AbilityInfo &abilityInfo, bool isNewVersion = false) const;
-    ErrCode ImplicitQueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const;
-    ErrCode QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
-        std::vector<AbilityInfo> &abilityInfos) const;
     ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName, const std::string &moduleName,
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
@@ -969,7 +957,6 @@ private:
     void ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const;
     bool MatchPrivateType(const Want &want, const std::vector<std::string> &supportExtNames,
         const std::vector<std::string> &supportMimeTypes) const;
-    void ModifyLauncherAbilityInfoFromBmsExtension(AbilityInfo &abilityInfo) const;
     bool UpdateOverlayInfo(const InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo);
     void ResetExternalOverlayModuleState(const std::string &bundleName, const std::string &modulePackage);
     void BuildExternalOverlayConnection(const std::string &moduleName, InnerBundleInfo &oldInfo, int32_t userId);
