@@ -220,6 +220,7 @@ struct App {
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
+    bool gwpAsanEnabled = false;
 };
 
 struct Module {
@@ -1143,6 +1144,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_GWP_ASAN_ENABLED,
+        app.gwpAsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1794,6 +1803,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.compileSdkVersion = app.compileSdkVersion;
     applicationInfo.compileSdkType = app.compileSdkType;
+    applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     return true;
 }
 

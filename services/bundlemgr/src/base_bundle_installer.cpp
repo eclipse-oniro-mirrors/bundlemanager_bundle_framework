@@ -3339,6 +3339,9 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
         return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
     }
+    if (oldInfo.GetGwpAsanEnabled() != newInfo.GetGwpAsanEnabled()) {
+        return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
+    }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
 }

@@ -1107,7 +1107,8 @@ protected:
                 "targetBundleName": "",
                 "targetPriority": 0,
                 "overlayState": 0,
-                "resourcesApply":[]
+                "resourcesApply":[],
+                "GWPAsanEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [

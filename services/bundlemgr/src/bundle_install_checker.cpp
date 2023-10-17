@@ -865,6 +865,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
     bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
+    bool gwpAsanEnabled = (infos.begin()->second).GetGwpAsanEnabled();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -928,6 +929,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
             return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+        }
+        if (gwpAsanEnabled != info.second.GetGwpAsanEnabled()) {
+            return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
         }
     }
     APP_LOGD("finish check APP label");

@@ -115,6 +115,7 @@ const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
 const std::string APPLICATION_FINGERPRINTS = "fingerprints";
+const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -416,6 +417,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < fingerprintsSize; i++) {
         fingerprints.emplace_back(parcel.ReadString());
     }
+    gwpAsanEnabled = parcel.ReadBool();
     return true;
 }
 
@@ -567,6 +569,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     for (auto &fingerprint : fingerprints) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fingerprint);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, gwpAsanEnabled);
     return true;
 }
 
@@ -752,6 +755,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_COMPILE_SDK_VERSION, applicationInfo.compileSdkVersion},
         {APPLICATION_COMPILE_SDK_TYPE, applicationInfo.compileSdkType},
         {APPLICATION_RESOURCES_APPLY, applicationInfo.resourcesApply},
+        {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
     };
 }
 
@@ -1399,6 +1403,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         false,
         parseResult,
         ArrayType::NUMBER);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_GWP_ASAN_ENABLED,
+        applicationInfo.gwpAsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("from_json error, error code : %{public}d", parseResult);
     }
