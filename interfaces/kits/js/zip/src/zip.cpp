@@ -337,7 +337,7 @@ ErrCode ZipWithFilterCallback(const FilePath &srcDir, const FilePath &destFile,
     }
 }
 
-bool Zip(const std::string &srcPath, const std::string &destPath,
+bool Zip(const std::string &srcPath, const std::string &destPath, const OPTIONS &options,
     bool includeHiddenFiles, std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo)
 {
     if (zlibCallbackInfo == nullptr) {
@@ -357,8 +357,7 @@ bool Zip(const std::string &srcPath, const std::string &destPath,
         return false;
     }
 
-    auto innerTask = [srcDir, destFile, includeHiddenFiles, zlibCallbackInfo]() {
-        OPTIONS options;
+    auto innerTask = [srcDir, destFile, includeHiddenFiles, zlibCallbackInfo, options]() {
         if (includeHiddenFiles) {
             ErrCode err = ZipWithFilterCallback(srcDir, destFile, options, ExcludeNoFilesFilter);
             if (zlibCallbackInfo != nullptr) {

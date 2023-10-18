@@ -613,7 +613,7 @@ void CompressExcute(napi_env env, AsyncZipCallbackInfo *asyncZipCallbackInfo)
         return;
     }
 
-    Zip(asyncZipCallbackInfo->param.src, asyncZipCallbackInfo->param.dest,
+    Zip(asyncZipCallbackInfo->param.src, asyncZipCallbackInfo->param.dest, asyncZipCallbackInfo->param.options,
         false, asyncZipCallbackInfo->zlibCallbackInfo);
 }
 
