@@ -299,7 +299,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
     debug = parcel.ReadBool();
     deviceId = Str16ToStr8(parcel.ReadString16());
     distributedNotificationEnabled = parcel.ReadBool();
-    allowenablenotification = parcel.ReadBool();
+    allowEnableNotification = parcel.ReadBool();
     entityType = Str16ToStr8(parcel.ReadString16());
     process = Str16ToStr8(parcel.ReadString16());
     supportedModes = parcel.ReadInt32();
@@ -487,7 +487,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, debug);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(deviceId));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, distributedNotificationEnabled);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowenablenotification);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, allowEnableNotification);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(entityType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(process));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, supportedModes);
@@ -713,7 +713,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_DEBUG, applicationInfo.debug},
         {APPLICATION_DEVICE_ID, applicationInfo.deviceId},
         {APPLICATION_DISTRIBUTED_NOTIFICATION_ENABLED, applicationInfo.distributedNotificationEnabled},
-        {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowenablenotification},
+        {APPLICATION_ALLOW_ENABLE_NOTIFICATION, applicationInfo.allowEnableNotification},
         {APPLICATION_ENTITY_TYPE, applicationInfo.entityType},
         {APPLICATION_PROCESS, applicationInfo.process},
         {APPLICATION_SUPPORTED_MODES, applicationInfo.supportedModes},
@@ -1050,7 +1050,7 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
         APPLICATION_ALLOW_ENABLE_NOTIFICATION,
-        applicationInfo.allowenablenotification,
+        applicationInfo.allowEnableNotification,
         JsonType::BOOLEAN,
         false,
         parseResult,

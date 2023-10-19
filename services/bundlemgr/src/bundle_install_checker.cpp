@@ -1240,6 +1240,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     if (!appPrivilegeCapability.allowMultiProcess || applicationInfo.process.empty()) {
         applicationInfo.process = applicationInfo.bundleName;
     }
+    applicationInfo.allowEnableNotification = appPrivilegeCapability.allowEnableNotification;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
