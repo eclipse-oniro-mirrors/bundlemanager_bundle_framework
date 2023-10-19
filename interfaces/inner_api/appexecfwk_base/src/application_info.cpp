@@ -115,7 +115,7 @@ const std::string APPLICATION_COMPILE_SDK_VERSION = "compileSdkVersion";
 const std::string APPLICATION_COMPILE_SDK_TYPE = "compileSdkType";
 const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
 const std::string APPLICATION_FINGERPRINTS = "fingerprints";
-const std::string APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowenablenotification";
+const std::string APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 }
 
