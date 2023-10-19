@@ -458,6 +458,7 @@ bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &
     std::string srcPath = Str16ToStr8(data.ReadString16());
     int32_t size = data.ReadInt32();
     std::unordered_multimap<std::string, std::string> dirMap;
+    CONTAINER_SECURITY_VERIFY(data, size, &dirMap);
     for (int32_t index = 0; index < size; ++index) {
         std::string originalDir = Str16ToStr8(data.ReadString16());
         std::string destinedDir = Str16ToStr8(data.ReadString16());

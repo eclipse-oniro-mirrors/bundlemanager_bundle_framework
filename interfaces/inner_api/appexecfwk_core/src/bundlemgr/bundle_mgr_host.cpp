@@ -2817,7 +2817,8 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
     int32_t flags = data.ReadInt32();
     int32_t userId = data.ReadInt32();
     std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
-    ErrCode ret = QueryExtensionAbilityInfosWithTypeName(*want, extensionTypeName, flags, userId, extensionAbilityInfos);
+    ErrCode ret =
+        QueryExtensionAbilityInfosWithTypeName(*want, extensionTypeName, flags, userId, extensionAbilityInfos);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("Write result failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
