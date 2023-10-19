@@ -91,9 +91,6 @@ public:
      */
     ErrCode ParseExtTypeConfig(
         const std::string &configFile, std::set<std::string> &extensionTypeList) const;
-
-    ErrCode GetHapProfileString(
-        const std::string &hapPath, const std::string &profilePath, std::string &content) const;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

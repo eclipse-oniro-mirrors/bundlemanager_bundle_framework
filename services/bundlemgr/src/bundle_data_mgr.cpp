@@ -1754,7 +1754,6 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
 
-
     if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
         == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
         ProcessBundleMenu(bundleInfo, flags, true);
@@ -2098,9 +2097,12 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
-        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
-        if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+            auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+            if (ret == ERR_OK) {
+                bundleInfos.emplace_back(bundleInfo);
+            }
         }
     }
     if (bundleInfos.empty()) {
@@ -2129,9 +2131,12 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         BundleInfo bundleInfo;
         info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
-        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
-        if (ret == ERR_OK) {
-            bundleInfos.emplace_back(bundleInfo);
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+            auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+            if (ret == ERR_OK) {
+                bundleInfos.emplace_back(bundleInfo);
+            }
         }
     }
     if (bundleInfos.empty()) {
