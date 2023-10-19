@@ -2248,20 +2248,6 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_009, TestSize.Level1)
     impl.OnDeath();
 }
 
-/**
- * @tc.number: BundleMgrClientImpl_0010
- * @tc.name: GetBundleNameForUid
- * @tc.desc: 1.Test the interface of GetBundleNameForUid
- */
-HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImpl_0010, TestSize.Level1)
-{
-    BundleMgrClient client;
-    std::string bundleName;
-    auto impl = client.impl_;
-    EXPECT_NE(impl, nullptr);
-    ErrCode ret = impl->GetBundleNameForUid(DEFAULT_USERID, bundleName);
-    EXPECT_EQ(ret, ERR_OK);
-}
 
 /**
  * @tc.number: BundleMgrClientImpl_0011
@@ -2291,11 +2277,8 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     auto ret = client.GetNameForUid(DEFAULT_USERID, bundleName);
     EXPECT_NE(ret, ERR_OK);
 
-    auto res = client.GetBundleNameForUid(DEFAULT_USERID, bundleName);
-    EXPECT_FALSE(res);
-
     BundleInfo bundleInfo;
-    res = client.GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, DEFAULT_USERID);
+    auto res = client.GetBundleInfo(BUNDLE_NAME, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, DEFAULT_USERID);
     EXPECT_FALSE(res);
 
     BundlePackInfo bundlePackInfo;
