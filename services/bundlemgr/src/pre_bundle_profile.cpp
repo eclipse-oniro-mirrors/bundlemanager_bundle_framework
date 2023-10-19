@@ -50,6 +50,7 @@ const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string RESOURCES_APPLY = "resourcesApply";
 }
 
@@ -328,6 +329,14 @@ ErrCode PreBundleProfile::TransformTo(
             false,
             parseResult,
             ArrayType::NOT_ARRAY);
+        GetValueIfFindKey<bool>(array,
+            jsonObjectEnd,
+            ALLOW_ENABLE_NOTIFICATION,
+            preBundleConfigInfo.allowEnableNotification,
+            JsonType::BOOLEAN,
+            false,
+            parseResult,
+            ArrayType::NOT_ARRAY);
         GetValueIfFindKey<std::vector<int32_t>>(array,
             jsonObjectEnd,
             RESOURCES_APPLY,
@@ -363,6 +372,9 @@ ErrCode PreBundleProfile::TransformTo(
         }
         if (array.find(ALLOW_APP_SHARE_LIBRARY) != jsonObjectEnd) {
             preBundleConfigInfo.existInJsonFile.push_back(ALLOW_APP_SHARE_LIBRARY);
+        }
+        if (array.find(ALLOW_ENABLE_NOTIFICATION) != jsonObjectEnd) {
+            preBundleConfigInfo.existInJsonFile.push_back(ALLOW_ENABLE_NOTIFICATION);
         }
         if (parseResult == ERR_APPEXECFWK_PARSE_PROFILE_MISSING_PROP) {
             APP_LOGE("bundlename must exist, and it is empty here");
