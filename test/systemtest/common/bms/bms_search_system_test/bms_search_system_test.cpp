@@ -671,8 +671,8 @@ HWTEST_F(BmsSearchSystemTest, BMS_Search_1200, Function | MediumTest | Level1)
     int uid = bundleInfo.uid;
 
     std::string bundleName;
-    bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-    EXPECT_TRUE(getInfoResult);
+    ErrCode retCode = bundleMgrProxy->GetNameForUid(uid, bundleName);
+    EXPECT_EQ(retCode, ERR_OK);
     EXPECT_EQ(bundleName, appName);
     TearDownTestCase();
 

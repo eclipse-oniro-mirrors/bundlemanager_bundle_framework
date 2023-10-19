@@ -22,22 +22,6 @@ using namespace OHOS;
 using namespace OHOS::AppExecFwk;
 
 namespace {
-    /**
-     * @tc.name: BenchmarkTestForGetBundleNameForUid
-     * @tc.desc: Testcase for testing 'GetBundleNameForUid' function.
-     * @tc.type: FUNC
-     * @tc.require: Issue Number
-     */
-    static void BenchmarkTestForGetBundleNameForUid(benchmark::State &state)
-    {
-        BundleMgrClient client;
-        int uid = 100;
-        std::string bundleName = "ohos.global.systemres";
-        for (auto _ : state) {
-            /* @tc.steps: step1.call GetBundleNameForUid in loop */
-            client.GetBundleNameForUid(uid, bundleName);
-        }
-    }
 
     /**
      * @tc.name: BenchmarkTestForGetBundleInfo
@@ -138,7 +122,6 @@ namespace {
         }
     }
 
-    BENCHMARK(BenchmarkTestForGetBundleNameForUid)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetBundleInfo)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetHapModuleInfo)->Iterations(1000);
     BENCHMARK(BenchmarkTestForGetResConfigFile1)->Iterations(1000);

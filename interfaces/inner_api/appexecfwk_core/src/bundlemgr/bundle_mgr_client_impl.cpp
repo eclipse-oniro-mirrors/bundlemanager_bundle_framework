@@ -61,19 +61,6 @@ ErrCode BundleMgrClientImpl::GetNameForUid(const int uid, std::string &name)
     return bundleMgr_->GetNameForUid(uid, name);
 }
 
-bool BundleMgrClientImpl::GetBundleNameForUid(const int uid, std::string &bundleName)
-{
-    APP_LOGD("GetBundleNameForUid begin");
-
-    ErrCode result = Connect();
-    if (result != ERR_OK) {
-        APP_LOGE("failed to connect");
-        return false;
-    }
-
-    return bundleMgr_->GetBundleNameForUid(uid, bundleName);
-}
-
 bool BundleMgrClientImpl::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {

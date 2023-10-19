@@ -2325,9 +2325,6 @@ HWTEST_F(BmsBundleManagerTest, BundleMgrHostImpl_1000, Function | MediumTest | L
     retCode = hostImpl->GetBundleInfosV9(flags, bundleInfos, USERID);
     EXPECT_EQ(retCode, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
 
-    retBool = hostImpl->GetBundleNameForUid(uid, bundleName);
-    EXPECT_EQ(retBool, false);
-
     retBool = hostImpl->GetBundlesForUid(uid, bundleNames);
     EXPECT_EQ(retBool, false);
 

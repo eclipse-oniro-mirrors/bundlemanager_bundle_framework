@@ -27,7 +27,6 @@ namespace OHOS {
         sptr<IRemoteObject> object;
         BundleMgrProxy bundleMgrProxy(object);
         std::string bundleName (reinterpret_cast<const char*>(data), size);
-        bundleMgrProxy.GetBundleNameForUid(reinterpret_cast<uintptr_t>(data), bundleName);
         return true;
     }
 }
