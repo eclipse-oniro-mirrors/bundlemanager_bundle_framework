@@ -124,6 +124,7 @@ struct InnerModuleInfo {
     bool compressNativeLibs = true;
     std::vector<std::string> nativeLibraryFileNames;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    std::string fileContextMenu;
 };
 
 struct SkillUri {

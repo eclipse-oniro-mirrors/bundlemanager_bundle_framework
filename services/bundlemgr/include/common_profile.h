@@ -472,6 +472,9 @@ constexpr const char* BUNDLE_TYPE_SHARED = "shared";
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";
 constexpr const char* COMPILE_SDK_TYPE = "compileSdkType";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+
+// moduleMenu
+constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS
