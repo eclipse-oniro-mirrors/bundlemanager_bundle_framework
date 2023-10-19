@@ -400,15 +400,6 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
-    if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
-        // need vaild permission
-        APP_LOGE("install permission denied");
-        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
-    }
     APP_LOGD("finish parse hap file");
     return result;
 }
@@ -424,6 +415,21 @@ ErrCode BundleInstallChecker::CheckHspInstallCondition(
     if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
         APP_LOGE("install failed due to non-enterprise device");
         return result;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &checkParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        checkParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        !VaildInstallPermissionForShare(checkParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
     return ERR_OK;
 }

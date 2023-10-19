@@ -353,6 +353,9 @@ private:
 
     ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
         std::unordered_map<std::string, InnerBundleInfo> &infos);
+
+    ErrCode CheckInstallPermission(const InstallParam &installParam,
+        std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
     /**
      * @brief To check dependency whether or not exists.
      * @param infos Indicates all innerBundleInfo for all haps need to be installed.
