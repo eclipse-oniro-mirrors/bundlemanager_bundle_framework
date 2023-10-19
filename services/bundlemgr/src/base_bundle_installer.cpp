@@ -2854,14 +2854,9 @@ ErrCode BaseBundleInstaller::CheckInstallCondition(
         APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
         return ret;
     }
-    ret = bundleInstallChecker_->CheckDeveloperMode(hapVerifyRes);
+    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes);
     if (ret != ERR_OK) {
-        APP_LOGE("CheckDeveloperMode failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    ret = bundleInstallChecker_->CheckAllowEnterpriseBundle(hapVerifyRes);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
+        APP_LOGE("CheckInstallCondition failed due to errorCode : %{public}d", ret);
         return ret;
     }
     return ERR_OK;

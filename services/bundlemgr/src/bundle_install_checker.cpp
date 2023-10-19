@@ -396,8 +396,8 @@ ErrCode BundleInstallChecker::ParseHapFiles(
 
         infos.emplace(bundlePaths[i], newInfo);
     }
-    if ((result = CheckInstallCondition(hapVerifyRes, infos)) != ERR_OK) {
-        APP_LOGE("install failed due to check install condition failed");
+    if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
+        APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
@@ -413,15 +413,10 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     return result;
 }
 
-ErrCode BundleInstallChecker::CheckInstallCondition(
-    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-    std::unordered_map<std::string, InnerBundleInfo> &infos)
+ErrCode BundleInstallChecker::CheckHspInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
 {
     ErrCode result = ERR_OK;
-    if ((result = CheckModuleNameForMulitHaps(infos)) != ERR_OK) {
-        APP_LOGE("install failed due to duplicated moduleName");
-        return result;
-    }
     if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
         APP_LOGE("install failed due to debug mode");
         return result;

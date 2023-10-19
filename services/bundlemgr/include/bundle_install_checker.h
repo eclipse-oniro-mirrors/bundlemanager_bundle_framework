@@ -127,8 +127,7 @@ public:
         return isContainEntry_;
     }
 
-    ErrCode CheckInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
-        std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckHspInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
     bool VaildInstallPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
