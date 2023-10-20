@@ -367,6 +367,8 @@ enum {
 
     // bms extension adapter
     ERR_BUNDLE_MANAGER_UNINSTALL_FROM_BMS_EXTENSION_FAILED = 8521478,
+
+    ERR_BUNDLE_MANAGER_QUERY_MENU_FAILED = 8521500,
 };
 
 // Error code for Hidump

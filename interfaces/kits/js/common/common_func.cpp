@@ -1397,6 +1397,12 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPreloads, index, nPreload));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "preloads", nPreloads));
+    if (!hapModuleInfo.fileContextMenu.empty()) {
+        napi_value nMenu;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, hapModuleInfo.fileContextMenu.c_str(), NAPI_AUTO_LENGTH, &nMenu));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenu", nMenu));
+    }
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)

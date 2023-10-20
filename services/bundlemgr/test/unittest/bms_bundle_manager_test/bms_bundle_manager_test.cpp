@@ -78,6 +78,7 @@ const std::string TEST_BUNDLE_NAME = "bundleName";
 const std::string OVER_MAX_SIZE(300, 'x');
 const std::string ABILITY_NAME = "com.example.l3jsdemo.entry.EntryAbility";
 const std::string EMPTY_STRING = "";
+const std::string MENU_VALUE = "value";
 const size_t NUMBER_ONE = 1;
 }  // namespace
 
@@ -5483,6 +5484,150 @@ HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0006, Function | SmallTest | Level
 
     auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_PREVIEW_NAME, EMPTY_STRING, profile, USERID);
     EXPECT_EQ(ret, ERR_OK);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfoWithMenu_0001
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu successfully
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoWithMenu_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    BundleInfo info;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
+    auto ret = dataMgr->GetBundleInfoV9(BUNDLE_PREVIEW_NAME, flag, info, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    auto pos = info.hapModuleInfos[0].fileContextMenu.find(MENU_VALUE);
+    EXPECT_NE(pos, std::string::npos);
+
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfoWithMenu_0002
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu with menu, but no menu in bundleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoWithMenu_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    BundleInfo info;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
+    auto ret = dataMgr->GetBundleInfoV9(BUNDLE_BACKUP_NAME, flag, info, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(info.hapModuleInfos.empty());
+
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetBundleInfoWithMenu_0003
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu with menu, but no menu flag
+ */
+HWTEST_F(BmsBundleManagerTest, GetBundleInfoWithMenu_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    BundleInfo info;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    auto ret = dataMgr->GetBundleInfoV9(BUNDLE_PREVIEW_NAME, flag, info, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(info.hapModuleInfos[0].fileContextMenu.empty());
+
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoWithMenu_0001
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu successfully
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllBundleInfoWithMenu_0001, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::vector<BundleInfo> infos;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
+    auto ret = dataMgr->GetBundleInfosV9(flag, infos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(infos.size(), NUMBER_ONE);
+    auto pos = infos[0].hapModuleInfos[0].fileContextMenu.find(MENU_VALUE);
+    EXPECT_NE(pos, std::string::npos);
+
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoWithMenu_0001
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu with menu, but no menu in bundleInfo
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllBundleInfoWithMenu_0002, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_BACKUP_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::vector<BundleInfo> infos;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE) |
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
+    auto ret = dataMgr->GetBundleInfosV9(flag, infos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(infos.empty());
+    UnInstallBundle(BUNDLE_BACKUP_NAME);
+}
+
+/**
+ * @tc.number: GetAllBundleInfoWithMenu_0001
+ * @tc.name: GetBundleInfoWithMenu
+ * @tc.desc: 1. GetBundleMenu with menu, but no menu flag
+ */
+HWTEST_F(BmsBundleManagerTest, GetAllBundleInfoWithMenu_0003, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+
+    std::vector<BundleInfo> infos;
+    int32_t flag = static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE);
+    auto ret = dataMgr->GetBundleInfosV9(flag, infos, USERID);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(infos[0].hapModuleInfos[0].fileContextMenu.empty());
+
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
 } // OHOS

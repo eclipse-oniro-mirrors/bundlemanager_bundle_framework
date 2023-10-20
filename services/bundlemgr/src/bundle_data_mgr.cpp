@@ -63,6 +63,7 @@ namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t UUID_LENGTH = 36;
+constexpr int32_t PROFILE_PREFIX_LENGTH = 9;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
@@ -71,6 +72,10 @@ constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // profile path
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
+constexpr const char* PROFILE_PATH = "resources/base/profile/";
+constexpr const char* PROFILE_PREFIX = "$profile:";
+constexpr const char* JSON_SUFFIX = ".json";
+
 const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
 };
@@ -1721,6 +1726,10 @@ bool BundleDataMgr::GetBundleInfo(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId);
+
+    if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_MENU) == BundleFlag::GET_BUNDLE_WITH_MENU) {
+        ProcessBundleMenu(bundleInfo, flags, false);
+    }
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
     return true;
 }
@@ -1752,7 +1761,53 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
+
+    ProcessBundleMenu(bundleInfo, flags, true);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, bool clearData) const
+{
+    if (clearData) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+            return ERR_OK;
+        }
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU)) {
+            APP_LOGD("no GET_BUNDLE_INFO_WITH_MENU flag, remove menu content");
+            std::for_each(bundleInfo.hapModuleInfos.begin(), bundleInfo.hapModuleInfos.end(), [](auto &hapModuleInfo) {
+                hapModuleInfo.fileContextMenu = Constants::EMPTY_STRING;
+            });
+            return ERR_OK;
+        }
+        std::vector<HapModuleInfo>& hapModuleInfos = bundleInfo.hapModuleInfos;
+        hapModuleInfos.erase(std::remove_if(
+            hapModuleInfos.begin(), hapModuleInfos.end(), [](const auto& hapModuleInfo) {
+                return hapModuleInfo.fileContextMenu.empty();
+            }), hapModuleInfos.end());
+        if (hapModuleInfos.empty()) {
+            APP_LOGW("getBundleInfo with menu flag, but no module has menu");
+            BundleInfo emptyInfo;
+            bundleInfo = emptyInfo;
+            return ERR_BUNDLE_MANAGER_QUERY_MENU_FAILED;
+        }
+    }
+    for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string menuProfile = hapModuleInfo.fileContextMenu;
+        auto pos = menuProfile.find(PROFILE_PREFIX);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid menu profile");
+            continue;
+        }
+        std::string menuFileName = menuProfile.substr(pos + PROFILE_PREFIX_LENGTH);
+        std::string menuFilePath = PROFILE_PATH + menuFileName + JSON_SUFFIX;
+
+        std::string menuProfileContent;
+        GetJsonProfileByExtractor(hapModuleInfo.hapPath, menuFilePath, menuProfileContent);
+        hapModuleInfo.fileContextMenu = menuProfileContent;
+    }
     return ERR_OK;
 }
 
@@ -2051,8 +2106,13 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
-
-        bundleInfos.emplace_back(bundleInfo);
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (bundleInfos.empty()) {
+        APP_LOGW("bundleInfos is empty");
     }
     return ERR_OK;
 }
@@ -2077,7 +2137,13 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         BundleInfo bundleInfo;
         info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
-        bundleInfos.emplace_back(bundleInfo);
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (bundleInfos.empty()) {
+        APP_LOGW("bundleInfos is empty");
     }
     return ERR_OK;
 }

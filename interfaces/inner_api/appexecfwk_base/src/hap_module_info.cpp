@@ -80,6 +80,7 @@ const std::string HAP_MODULE_INFO_ISOLATION_MODE = "isolationMode";
 const std::string HAP_MODULE_INFO_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
+const std::string HAP_MODULE_INFO_FILE_CONTEXT_MENU = "fileContextMenu";
 const size_t MODULE_CAPACITY = 10240; // 10K
 }
 
@@ -445,6 +446,7 @@ bool HapModuleInfo::ReadFromParcel(Parcel &parcel)
     for (int32_t i = 0; i < nativeLibraryFileNamesSize; ++i) {
         nativeLibraryFileNames.emplace_back(Str16ToStr8(parcel.ReadString16()));
     }
+    fileContextMenu = Str16ToStr8(parcel.ReadString16());
     return true;
 }
 
@@ -558,6 +560,7 @@ bool HapModuleInfo::Marshalling(Parcel &parcel) const
     for (auto &fileName : nativeLibraryFileNames) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileName));
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(fileContextMenu));
     return true;
 }
 
@@ -614,7 +617,8 @@ void to_json(nlohmann::json &jsonObject, const HapModuleInfo &hapModuleInfo)
         {HAP_MODULE_INFO_ISOLATION_MODE, hapModuleInfo.isolationMode},
         {HAP_MODULE_INFO_AOT_COMPILE_STATUS, hapModuleInfo.aotCompileStatus},
         {HAP_MODULE_INFO_COMPRESS_NATIVE_LIBS, hapModuleInfo.compressNativeLibs},
-        {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames}
+        {HAP_MODULE_INFO_NATIVE_LIBRARY_FILE_NAMES, hapModuleInfo.nativeLibraryFileNames},
+        {HAP_MODULE_INFO_FILE_CONTEXT_MENU, hapModuleInfo.fileContextMenu}
     };
 }
 
@@ -1030,6 +1034,14 @@ void from_json(const nlohmann::json &jsonObject, HapModuleInfo &hapModuleInfo)
         false,
         parseResult,
         ArrayType::STRING);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        HAP_MODULE_INFO_FILE_CONTEXT_MENU,
+        hapModuleInfo.fileContextMenu,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGW("HapModuleInfo from_json error, error code : %{public}d", parseResult);
     }

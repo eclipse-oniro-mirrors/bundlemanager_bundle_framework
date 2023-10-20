@@ -52,6 +52,7 @@
                 "type": "preview"
             }
         ],
+        "fileContextMenu": "$profile:menu",
         "installationFree": false,
         "mainElement": "MainAbility",
         "name": "entry",
