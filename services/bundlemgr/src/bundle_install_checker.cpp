@@ -61,6 +61,7 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
+const std::string DEVELOPERMODE_STATE = "const.security.developermode.state";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
@@ -399,10 +400,28 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
+    APP_LOGD("finish parse hap file");
+    return result;
+}
+
+ErrCode BundleInstallChecker::CheckHspInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    ErrCode result = ERR_OK;
+    if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
+        APP_LOGE("install failed due to debug mode");
+        return result;
+    }
     if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
         APP_LOGE("install failed due to non-enterprise device");
         return result;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &checkParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
@@ -412,8 +431,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
-    APP_LOGD("finish parse hap file");
-    return result;
+    return ERR_OK;
 }
 
 bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
@@ -1471,6 +1489,23 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
     if (signatureFileDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("signatureFileDir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckDeveloperMode(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (system::GetBoolParameter(DEVELOPERMODE_STATE, true)) {
+        APP_LOGI("check developer mode success");
+        return ERR_OK;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+            APP_LOGE("debug bundle can only be installed in developer mode");
+            return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
+        }
     }
     return ERR_OK;
 }

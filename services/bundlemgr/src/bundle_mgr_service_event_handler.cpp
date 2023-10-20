@@ -1680,6 +1680,12 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         return false;
     }
 
+    ret = bundleInstallChecker->CheckHspInstallCondition(hapVerifyResults);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckHspInstallCondition failed %{public}d", ret);
+        return false;
+    }
+
     ret = bundleInstallChecker->CheckAppLabelInfo(infos);
     if (ret != ERR_OK) {
         APP_LOGE("Check APP label failed %{public}d", ret);

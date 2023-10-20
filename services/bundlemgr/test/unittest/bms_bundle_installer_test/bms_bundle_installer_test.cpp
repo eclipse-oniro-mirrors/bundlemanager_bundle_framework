@@ -3067,6 +3067,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_2000, Function | SmallTest | Lev
     Security::Verify::HapVerifyResult result;
     Security::Verify::ProvisionInfo info;
     info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
     info.bundleInfo.appFeature = "hos_system_app";
     info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
     result.SetProvisionInfo(info);
@@ -3105,6 +3106,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_2100, Function | SmallTest | Lev
     Security::Verify::HapVerifyResult result;
     Security::Verify::ProvisionInfo info;
     info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
     info.bundleInfo.appFeature = "hos_normal_app";
     info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
     result.SetProvisionInfo(info);
