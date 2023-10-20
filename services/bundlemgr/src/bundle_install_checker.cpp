@@ -41,6 +41,7 @@ const std::string PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared"
 const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
 const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
 const std::string PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
+const std::string PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
 const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
 const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
@@ -50,6 +51,7 @@ const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
@@ -116,6 +118,10 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
             { PRIVILEGE_ALLOW_APP_SHARE_LIBRARY,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
                     appPrivilegeCapability.appShareLibrary = true;
+                } },
+            { PRIVILEGE_ALLOW_ENABLE_NOTIFICATION,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowEnableNotification = true;
                 } },
         };
 
@@ -1204,6 +1210,9 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     appPrivilegeCapability.appShareLibrary = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_SHARE_LIBRARY,
         configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
+    appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_ENABLE_NOTIFICATION,
+        configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
     APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
 }
@@ -1249,6 +1258,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     if (!appPrivilegeCapability.allowMultiProcess || applicationInfo.process.empty()) {
         applicationInfo.process = applicationInfo.bundleName;
     }
+    applicationInfo.allowEnableNotification = appPrivilegeCapability.allowEnableNotification;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library

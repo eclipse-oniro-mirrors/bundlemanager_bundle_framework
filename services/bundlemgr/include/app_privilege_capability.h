@@ -30,6 +30,7 @@ struct AppPrivilegeCapability {
     bool hideDesktopIcon = false;
     bool formVisibleNotify = false;
     bool appShareLibrary = false;
+    bool allowEnableNotification = false;
 
     std::string ToString()
     {
@@ -41,7 +42,8 @@ struct AppPrivilegeCapability {
             + ", userDataClearable = " + BundleUtil::GetBoolStrVal(userDataClearable)
             + ", hideDesktopIcon = " + BundleUtil::GetBoolStrVal(hideDesktopIcon)
             + ", formVisibleNotify = " + BundleUtil::GetBoolStrVal(formVisibleNotify)
-            + ", appShareLibrary = " + BundleUtil::GetBoolStrVal(appShareLibrary) + "]";
+            + ", appShareLibrary = " + BundleUtil::GetBoolStrVal(appShareLibrary)
+            + ", allowEnableNotification = " + BundleUtil::GetBoolStrVal(allowEnableNotification) + "]";
     }
 };
 }  // namespace AppExecFwk
