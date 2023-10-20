@@ -1754,10 +1754,7 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
 
-    if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
-        == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
-        ProcessBundleMenu(bundleInfo, flags, true);
-    }
+    ProcessBundleMenu(bundleInfo, flags, true);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
     return ERR_OK;
 }
@@ -1765,6 +1762,10 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, bool clearData) const
 {
     if (clearData) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+            return ERR_OK;
+        }
         if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU))
             != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU)) {
             APP_LOGD("no GET_BUNDLE_INFO_WITH_MENU flag, remove menu content");
@@ -2097,12 +2098,9 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
-            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
-            auto ret = ProcessBundleMenu(bundleInfo, flags, true);
-            if (ret == ERR_OK) {
-                bundleInfos.emplace_back(bundleInfo);
-            }
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
         }
     }
     if (bundleInfos.empty()) {
@@ -2131,12 +2129,9 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         BundleInfo bundleInfo;
         info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
-        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
-            == static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
-            auto ret = ProcessBundleMenu(bundleInfo, flags, true);
-            if (ret == ERR_OK) {
-                bundleInfos.emplace_back(bundleInfo);
-            }
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
         }
     }
     if (bundleInfos.empty()) {
