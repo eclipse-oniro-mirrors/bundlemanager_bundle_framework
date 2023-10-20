@@ -193,7 +193,7 @@ void DriverInstaller::RenameDriverFile(const InnerBundleInfo &info) const
         }
         std::string extModuleName = extAbilityInfo.second.moduleName;
         APP_LOGD("extModuleName is %{public}s", extModuleName.c_str());
-        auto &metadata = extAbilityInfo.second.metadata;
+        const auto &metadata = extAbilityInfo.second.metadata;
         for (const auto &meta : metadata) {
             if (std::find(DRIVER_PROPERTIES.cbegin(), DRIVER_PROPERTIES.cend(), meta.name) ==
                 DRIVER_PROPERTIES.cend()) {

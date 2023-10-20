@@ -5306,9 +5306,9 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     if (moduleName.empty()) {
         APP_LOGW("moduleName is empty, try to get profile from entry module");
         std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
-        for (const auto &item : moduleInfos) {
-            if (item.second.isEntry) {
-                moduleNameTmp = item.first;
+        for (const auto &info : moduleInfos) {
+            if (info.second.isEntry) {
+                moduleNameTmp = info.first;
                 APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
                 break;
             }
