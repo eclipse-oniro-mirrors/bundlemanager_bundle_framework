@@ -655,6 +655,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
         EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
         EXPECT_EQ(abilityInfos.descriptionId, 16777219);
+        EXPECT_EQ(abilityInfos.specifiedProcess, true);
         EXPECT_EQ(hapModuleInfo.label, "Login");
 
         auto metadata = abilityInfos.metadata.front();
