@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -26,8 +26,8 @@ public:
     BundleResourceRdbCallback();
     ~BundleResourceRdbCallback();
     int32_t OnCreate(NativeRdb::RdbStore &rdbStore) override;
-    int32_t OnUpgrade(NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion) override;
-    int32_t OnDowngrade(NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion) override;
+    int32_t OnUpgrade(NativeRdb::RdbStore &rdbStore, int32_t currentVersion, int32_t targetVersion) override;
+    int32_t OnDowngrade(NativeRdb::RdbStore &rdbStore, int32_t currentVersion, int32_t targetVersion) override;
     int32_t OnOpen(NativeRdb::RdbStore &rdbStore) override;
     int32_t onCorruption(std::string databaseFile) override;
 };

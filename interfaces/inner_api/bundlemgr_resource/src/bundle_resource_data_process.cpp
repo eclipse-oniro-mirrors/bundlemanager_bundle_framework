@@ -38,7 +38,7 @@ ErrCode BundleResourceDataProcess::GetBundleResourceInfo(
 
     auto absSharedResultSet = QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("failed due rdb QueryData failed");
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryData failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto ret = absSharedResultSet->GoToFirstRow();
@@ -73,7 +73,7 @@ ErrCode BundleResourceDataProcess::GetLauncherAbilityResourceInfo(
 
     auto absSharedResultSet = QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("GetBundleResourceInfo failed due rdb QueryData failed");
+        APP_LOGE("bundleName:%{public}s failed due rdb QueryData failed", bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto ret = absSharedResultSet->GoToFirstRow();
@@ -92,10 +92,9 @@ ErrCode BundleResourceDataProcess::GetLauncherAbilityResourceInfo(
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
-            [](LauncherAbilityResourceInfo resourceA, LauncherAbilityResourceInfo resourceB) {
+            [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
                 return resourceA.label < resourceB.label;
-            }
-        );
+            });
     }
     return ERR_OK;
 }
@@ -114,12 +113,12 @@ ErrCode BundleResourceDataProcess::GetAllBundleResourceInfo(const uint32_t flags
 
     auto absSharedResultSet = QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("GetBundleResourceInfo failed due rdb QueryData failed");
+        APP_LOGE("failed due rdb QueryData failed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetAllBundleResourceInfo failed, no data");
+        APP_LOGE("failed, no data");
         absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -134,10 +133,9 @@ ErrCode BundleResourceDataProcess::GetAllBundleResourceInfo(const uint32_t flags
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         std::sort(bundleResourceInfos.begin(), bundleResourceInfos.end(),
-            [](BundleResourceInfo resourceA, BundleResourceInfo resourceB) {
+            [](BundleResourceInfo &resourceA, BundleResourceInfo &resourceB) {
                 return resourceA.label < resourceB.label;
-            }
-        );
+            });
     }
     return ERR_OK;
 }
@@ -157,12 +155,12 @@ ErrCode BundleResourceDataProcess::GetAllLauncherAbilityResourceInfo(const uint3
 
     auto absSharedResultSet = QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
-        APP_LOGE("GetBundleResourceInfo failed due rdb QueryData failed");
+        APP_LOGE("failed due rdb QueryData failed");
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
     auto ret = absSharedResultSet->GoToFirstRow();
     if (ret != NativeRdb::E_OK) {
-        APP_LOGE("GetAllBundleResourceInfo failed, no data");
+        APP_LOGE("failed, no data");
         absSharedResultSet->Close();
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
@@ -177,10 +175,9 @@ ErrCode BundleResourceDataProcess::GetAllLauncherAbilityResourceInfo(const uint3
     if ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) ==
         static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL)) {
         std::sort(launcherAbilityResourceInfos.begin(), launcherAbilityResourceInfos.end(),
-            [](LauncherAbilityResourceInfo resourceA, LauncherAbilityResourceInfo resourceB) {
+            [](LauncherAbilityResourceInfo &resourceA, LauncherAbilityResourceInfo &resourceB) {
                 return resourceA.label < resourceB.label;
-            }
-        );
+            });
     }
     return ERR_OK;
 }
@@ -262,9 +259,7 @@ bool BundleResourceDataProcess::ConvertToLauncherAbilityResourceInfo(
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {
     if (absSharedResultSet == nullptr) {
-        return false;
-    }
-        if (absSharedResultSet == nullptr) {
+        APP_LOGE("absSharedResultSet is nullptr");
         return false;
     }
     std::string key;

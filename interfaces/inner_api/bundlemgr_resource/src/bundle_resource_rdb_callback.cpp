@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -33,13 +33,13 @@ int32_t BundleResourceRdbCallback::OnCreate(NativeRdb::RdbStore &rdbStore)
 }
 
 int32_t BundleResourceRdbCallback::OnUpgrade(
-    NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
+    NativeRdb::RdbStore &rdbStore, int32_t currentVersion, int32_t targetVersion)
 {
     return NativeRdb::E_OK;
 }
 
 int32_t BundleResourceRdbCallback::OnDowngrade(
-    NativeRdb::RdbStore &rdbStore, int currentVersion, int targetVersion)
+    NativeRdb::RdbStore &rdbStore, int32_t currentVersion, int32_t targetVersion)
 {
     return NativeRdb::E_OK;
 }
