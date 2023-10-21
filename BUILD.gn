@@ -29,6 +29,9 @@ group("bms_target") {
   if (bundle_framework_graphics) {
     deps += [ "interfaces/inner_api/bundlemgr_graphics:bundlemgr_graphics" ]
   }
+  if (bundle_framework_bundle_resource) {
+    deps += [ "interfaces/inner_api/bundlemgr_resource:bundlemgr_resource" ]
+  }
 }
 
 group("test_target") {
