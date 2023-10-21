@@ -28,6 +28,7 @@
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_callback.h"
+#include "bundle_resource_client.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_event_subscriber.h"
 #include "bundle_resource_manager.h"
@@ -62,6 +63,7 @@ namespace {
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 const std::string BUNDLE_NAME = "com.example.bmsaccesstoken1";
+const std::string BUNDLE_NAME_NOT_EXIST = "com.example.not_exist";
 const std::string MODULE_NAME = "entry";
 const std::string ABILITY_NAME = "com.example.bmsaccesstoken1.MainAbility";
 const std::string HAP_FILE_PATH1 = "/data/test/resource/bms/accesstoken_bundle/bmsAccessTokentest1.hap";
@@ -1431,6 +1433,152 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0079, Function | SmallTest
 
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0080
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0080, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    BundleResourceInfo bundleResourceInfo;
+    auto ret = client.GetBundleResourceInfo("",
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(bundleResourceInfo.bundleName.empty());
+    EXPECT_TRUE(bundleResourceInfo.icon.empty());
+    EXPECT_TRUE(bundleResourceInfo.label.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0081
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0081, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    BundleResourceInfo bundleResourceInfo;
+    auto ret = client.GetBundleResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(bundleResourceInfo.bundleName.empty());
+    EXPECT_TRUE(bundleResourceInfo.icon.empty());
+    EXPECT_TRUE(bundleResourceInfo.label.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0082
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0082, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto ret = client.GetLauncherAbilityResourceInfo("",
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0083
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0083, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    std::vector<LauncherAbilityResourceInfo> infos;
+    // storage rdb path can not access
+    auto ret = client.GetLauncherAbilityResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(infos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0084
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0084, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    BundleResourceInfo bundleResourceInfo;
+    // storage rdb path can not access
+    auto ret = client.GetBundleResourceInfo(BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), bundleResourceInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0085
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0085, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    // storage rdb path can not access
+    auto ret = client.GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0086
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0086, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    std::vector<BundleResourceInfo> bundleResourceInfos;
+    // storage rdb path can not access
+    auto ret = client.GetAllBundleResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) &
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), bundleResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(bundleResourceInfos.empty());
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0087
+ * Function: BundleResourceClient
+ * @tc.name: test BundleResourceClient
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceClient.GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0087, Function | SmallTest | Level0)
+{
+    BundleResourceClient client;
+    std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
+    // storage rdb path can not access
+    auto ret = client.GetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) &
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), launcherAbilityResourceInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_TRUE(launcherAbilityResourceInfos.empty());
 }
 #endif
 } // OHOS
