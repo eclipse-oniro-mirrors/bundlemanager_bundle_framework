@@ -23,6 +23,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#include "bundle_resource/bundle_resource_constants.h"
 #include "installd/installd_operator.h"
 #include "system_ability_definition.h"
 #include "system_ability_helper.h"
@@ -80,8 +81,8 @@ bool InstalldService::Init()
     if (!InitDir(Constants::HAP_COPY_PATH)) {
         APP_LOGI("HAP_COPY_PATH is already exists");
     }
-    if (!InitDir(Constants::BUNDLE_RESOURCE)) {
-        APP_LOGI("BUNDLE_RESOURCE is already exists");
+    if (!InitDir(BundleResourceConstants::BUNDLE_RESOURCE_RDB_PATH)) {
+        APP_LOGI("BUNDLE_RESOURCE_RDB_PATH is already exists");
     }
     return true;
 }
