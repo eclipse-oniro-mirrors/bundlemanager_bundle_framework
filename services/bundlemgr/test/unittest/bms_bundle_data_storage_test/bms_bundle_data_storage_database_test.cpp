@@ -972,6 +972,7 @@ protected:
                 "accessTokenId": 0,
                 "accessTokenIdEx": 0,
                 "accessible": false,
+                "allowEnableNotification": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
