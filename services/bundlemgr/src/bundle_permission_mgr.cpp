@@ -116,9 +116,6 @@ void BundlePermissionMgr::ConvertPermissionDef(
 AccessToken::ATokenAvailableTypeEnum BundlePermissionMgr::GetAvailableType(
     const std::string &availableType)
 {
-    if (availableType.empty() || availableType == Profile::DEFINEPERMISSION_AVAILABLE_TYPE_DEFAULT_VALUE) {
-        return AccessToken::ATokenAvailableTypeEnum::NORMAL;
-    }
     if (availableType == Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
         return AccessToken::ATokenAvailableTypeEnum::MDM;
     }

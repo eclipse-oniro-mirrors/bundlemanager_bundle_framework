@@ -73,7 +73,7 @@ typedef enum TypeGrantMode {
 typedef enum TypeATokenAvailableTypeEnum {
     INVALID = 0,
     NORMAL = 1,
-    MDM,
+    MDM = 2,
 } ATokenAvailableTypeEnum;
 
 typedef enum TypePermissionFlag {
@@ -106,7 +106,7 @@ public:
     int labelId;
     std::string description;
     int descriptionId;
-    ATokenAvailableTypeEnum availableType;
+    ATokenAvailableTypeEnum availableType = ATokenAvailableTypeEnum::NORMAL;
 };
 
 class PermissionStateFull final {

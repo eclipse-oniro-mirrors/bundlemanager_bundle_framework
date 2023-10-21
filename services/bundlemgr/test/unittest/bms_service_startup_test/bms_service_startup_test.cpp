@@ -34,6 +34,9 @@ namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t TOKENID = 100;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
+const std::string AVAILABLE_TYPE_NORMAL = "normal";
+const std::string AVAILABLE_TYPE_MDM = "MDM";
+const std::string AVAILABLE_TYPE_EMPTY = "";
 } // namespace
 
 class BmsServiceStartupTest : public testing::Test {
@@ -634,6 +637,22 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0800, Function | SmallTest |
     EXPECT_EQ(ret, true);
     ret = BundlePermissionMgr::GetHapApiVersion();
     EXPECT_EQ(ret, Constants::INVALID_API_VERSION);
+}
+
+/**
+ * @tc.number: BundlePermissionMgr_0900
+ * @tc.name: test GetAvailableType
+ * @tc.desc: 1.test Get BundlePermissionMgr of AvailableType
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0900, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    auto result = BundlePermissionMgr::GetAvailableType(AVAILABLE_TYPE_EMPTY);
+    EXPECT_EQ(ret, AccessToken::ATokenAvailableTypeEnum::NORMAL);
+
+    result = BundlePermissionMgr::GetAvailableType(AVAILABLE_TYPE_NORMAL);
+    EXPECT_EQ(ret, AccessToken::ATokenAvailableTypeEnum::NORMAL);
 }
 
 /**
