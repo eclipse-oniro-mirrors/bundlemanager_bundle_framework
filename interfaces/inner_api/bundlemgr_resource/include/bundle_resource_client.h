@@ -16,14 +16,13 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACES_KITS_BUNDLE_RESOURCE_BUNDLE_RESOURCE_CLIENT_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACES_KITS_BUNDLE_RESOURCE_BUNDLE_RESOURCE_CLIENT_H
 
+#include <string>
+#include <vector>
+
 #include "appexecfwk_errors.h"
 #include "bundle_resource_data_process.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
-
-#include <string>
-#include <vector>
-
 
 namespace OHOS {
 namespace AppExecFwk {

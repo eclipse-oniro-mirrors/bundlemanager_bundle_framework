@@ -16,14 +16,14 @@
 #ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACES_KITS_BUNDLE_RESOURCE_BUNDLE_RESOURCE_DATA_PROCESS_H
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACES_KITS_BUNDLE_RESOURCE_BUNDLE_RESOURCE_DATA_PROCESS_H
 
+#include <string>
+#include <vector>
+
 #include "appexecfwk_errors.h"
 #include "app_log_wrapper.h"
 #include "bundle_resource_info.h"
 #include "launcher_ability_resource_info.h"
 #include "rdb_helper.h"
-
-#include <string>
-#include <vector>
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -51,12 +51,12 @@ private:
 
     bool ConvertToBundleResourceInfo(
         const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
-        const int32_t flags,
+        const uint32_t flags,
         BundleResourceInfo &bundleResourceInfo);
 
     bool ConvertToLauncherAbilityResourceInfo(
         const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
-        const int32_t flags,
+        const uint32_t flags,
         LauncherAbilityResourceInfo &launcherAbilityResourceInfo);
 
     void ParseKey(const std::string &key, LauncherAbilityResourceInfo &launcherAbilityResourceInfo);

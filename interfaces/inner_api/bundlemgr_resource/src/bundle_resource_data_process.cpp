@@ -223,7 +223,7 @@ std::shared_ptr<NativeRdb::RdbStore> BundleResourceDataProcess::GetRdbStore()
 
 bool BundleResourceDataProcess::ConvertToBundleResourceInfo(
     const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
-    const int32_t flags,
+    const uint32_t flags,
     BundleResourceInfo &bundleResourceInfo)
 {
     if (absSharedResultSet == nullptr) {
@@ -237,18 +237,18 @@ bool BundleResourceDataProcess::ConvertToBundleResourceInfo(
         return false;
     }
 
-    bool getAll = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
 
-    bool getLabel = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    bool getLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
     if (getAll || getLabel) {
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_LABEL, bundleResourceInfo.label);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label failed, ret: %{public}d");
     }
 
-    bool getIcon = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    bool getIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
     if (getAll || getIcon) {
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, bundleResourceInfo.icon);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
@@ -258,7 +258,7 @@ bool BundleResourceDataProcess::ConvertToBundleResourceInfo(
 
 bool BundleResourceDataProcess::ConvertToLauncherAbilityResourceInfo(
     const std::shared_ptr<NativeRdb::AbsSharedResultSet> &absSharedResultSet,
-    const int32_t flags,
+    const uint32_t flags,
     LauncherAbilityResourceInfo &launcherAbilityResourceInfo)
 {
     if (absSharedResultSet == nullptr) {
@@ -275,17 +275,17 @@ bool BundleResourceDataProcess::ConvertToLauncherAbilityResourceInfo(
         APP_LOGW("key:%{public}s not launcher ability resource info", key.c_str());
         return false;
     }
-    bool getAll = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
-    bool getLabel = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
+    bool getAll = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+    bool getLabel = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL);
     if (getAll || getLabel) {
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_LABEL, launcherAbilityResourceInfo.label);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label failed, ret: %{public}d");
     }
 
-    bool getIcon = (flags & static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
-        static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
+    bool getIcon = (flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON);
     if (getAll || getIcon) {
         ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, launcherAbilityResourceInfo.icon);
         CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString label icon, ret: %{public}d");
