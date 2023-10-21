@@ -1,0 +1,56 @@
+# Copyright (c) 2023 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("../../../../appexecfwk.gni")
+
+ohos_shared_library("bundleresourcemanager") {
+  include_dirs = [
+    "//third_party/node/src",
+    "${inner_api_path}/bundlemgr_resource/include",
+    "${kits_path}/js/common",
+  ]
+  defines = [
+    "APP_LOG_TAG = \"BundleMgrService\"",
+    "LOG_DOMAIN = 0xD001120",
+  ]
+  sources = [ "native_module.cpp" ]
+
+  deps = [
+    "${base_path}:appexecfwk_base",
+    "${common_path}:libappexecfwk_common",
+    "${core_path}:appexecfwk_core",
+    "../common:bundle_napi_common",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "napi:ace_napi",
+  ]
+
+  defines = []
+
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    deps += [ "${inner_api_path}/bundlemgr_resource:bundlemgr_resource" ]
+    external_deps += [ "relational_store:native_rdb" ]
+    sources += [ "bundle_resource.cpp" ]
+  } else {
+    sources += [ "bundle_resource_unsupported.cpp" ]
+  }
+
+  relative_install_dir = "module/bundle"
+  subsystem_name = "bundlemanager"
+  part_name = "bundle_framework"
+}
