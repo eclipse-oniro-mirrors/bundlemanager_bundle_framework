@@ -55,6 +55,7 @@ const std::vector<std::string> BUNDLE_DATA_DIR = {
     "/preferences",
     "/haps"
 };
+const std::string CLOUD_FILE_PATH = "/data/service/el2/%/hmdfs/cloud/data/";
 const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles/";
 const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
@@ -177,7 +178,7 @@ static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t 
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
-            APP_LOGW("CreateBundledatadir MkOwnerDir(backup's home dir) failed");
+            APP_LOGW("CreateBackupExtHomeDir MkOwnerDir(backup's home dir) failed");
         });
     }
 }
@@ -189,7 +190,19 @@ static void CreateShareDir(const std::string &bundleName, const int32_t userid, 
     if (!InstalldOperator::MkOwnerDir(bundleShareDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
         static std::once_flag logOnce;
         std::call_once(logOnce, []() {
-            APP_LOGW("CreateBundledatadir MkOwnerDir(share's home dir) failed");
+            APP_LOGW("CreateShareDir MkOwnerDir(share's home dir) failed");
+        });
+    }
+}
+
+static void CreateCloudDir(const std::string &bundleName, const int32_t userid, const int32_t uid, const int32_t gid)
+{
+    std::string bundleCloudDir = CLOUD_FILE_PATH + bundleName;
+    bundleCloudDir = bundleCloudDir.replace(bundleCloudDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::MkOwnerDir(bundleCloudDir, S_IRWXU | S_IRWXG | S_ISGID, uid, gid)) {
+        static std::once_flag logOnce;
+        std::call_once(logOnce, []() {
+            APP_LOGW("CreateCloudDir MkOwnerDir(cloud's home dir) failed");
         });
     }
 }
@@ -266,6 +279,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
     CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid);
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
+    CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, Constants::DFS_GID);
     return ERR_OK;
 }
 
@@ -308,6 +322,17 @@ static ErrCode RemoveShareDir(const std::string &bundleName, const int userid)
     return ERR_OK;
 }
 
+static ErrCode RemoveCloudDir(const std::string &bundleName, const int userid)
+{
+    std::string cloudFileDir = CLOUD_FILE_PATH + bundleName;
+    cloudFileDir = cloudFileDir.replace(cloudFileDir.find("%"), 1, std::to_string(userid));
+    if (!InstalldOperator::DeleteDir(cloudFileDir)) {
+        APP_LOGE("remove dir %{public}s failed", cloudFileDir.c_str());
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, const int userid)
 {
     APP_LOGD("InstalldHostImpl::RemoveBundleDataDir bundleName:%{public}s", bundleName.c_str());
@@ -333,6 +358,10 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
     }
     if (RemoveShareDir(bundleName, userid) != ERR_OK) {
         APP_LOGE("failed to remove share dir");
+        return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+    }
+    if (RemoveCloudDir(bundleName, userid) != ERR_OK) {
+        APP_LOGE("failed to remove cloud dir");
         return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
     }
     if (RemoveBackupExtHomeDir(bundleName, userid) != ERR_OK) {
