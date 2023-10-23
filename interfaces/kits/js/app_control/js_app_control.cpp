@@ -467,5 +467,107 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     APP_LOGD("call GetDisposedStatusSync done.");
     return nWant;
 }
+
+void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
+{
+    return;
+}
+
+bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
+{
+    return true;
+}
+
+napi_value GetDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetDisposedRule called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nullptr;
+    }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    DisposedRule disposedRule;
+    ErrCode ret = appControlProxy->GetDisposedRule(appId, disposedRule);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedStatusSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRule = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nRule));
+    ConvertRuleInfo(env, nRule, disposedRule);
+    return nRule;
+}
+
+napi_value SetDisposedRule(napi_env env, napi_callback_info info)
+{
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nRet;
+    }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    DisposedRule rule;
+    if (!ParseDiposedRule(env, args[ARGS_POS_ONE], rule)) {
+        APP_LOGE("rule invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
+        return nRet;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null.");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+    ErrCode ret = appControlProxy->SetDisposedRule(appId, rule);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+    }
+    return nRet;
+}
 }
 }

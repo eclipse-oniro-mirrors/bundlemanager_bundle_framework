@@ -33,7 +33,9 @@ public:
 private:
     template<typename T>
     ErrCode ReadParcelableVector(MessageParcel &data, std::vector<T> &parcelableInfos);
-    bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply);
+    bool WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &reply);
+    template<typename T>
+    bool WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply);
     ErrCode HandleAddAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleCleanAppInstallControlRule(MessageParcel& data, MessageParcel& reply);
@@ -55,6 +57,10 @@ private:
     ErrCode HandleGetDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleSetDisposedStatus(MessageParcel& data, MessageParcel& reply);
     ErrCode HandleDeleteDisposedStatus(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply);
+    ErrCode HandleGetAbilityRunningControlRule(MessageParcel& data, MessageParcel& reply);
+
     DISALLOW_COPY_AND_MOVE(AppControlHost);
 };
 } // namespace AppExecFwk

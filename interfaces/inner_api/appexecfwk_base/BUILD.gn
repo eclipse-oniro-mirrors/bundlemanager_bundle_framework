@@ -50,6 +50,7 @@ ohos_shared_library("appexecfwk_base") {
     "src/compatible_ability_info.cpp",
     "src/compatible_application_info.cpp",
     "src/data_group_info.cpp",
+    "src/disposed_rule.cpp",
     "src/distributed_ability_info.cpp",
     "src/distributed_bundle_info.cpp",
     "src/distributed_manager/rpc_id_result.cpp",

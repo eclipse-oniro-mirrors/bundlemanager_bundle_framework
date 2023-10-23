@@ -68,11 +68,22 @@ public:
 
     virtual ErrCode GetDisposedStatus(
         const std::string &appId, Want &want, int32_t userId) override;
+
+    virtual ErrCode SetDisposedRule(
+        const std::string &appId, const DisposedRule &DisposedRule, int32_t userId) override;
+
+    virtual ErrCode GetDisposedRule(
+        const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
+
+    virtual ErrCode GetAbilityRunningControlRule(
+        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
+
 private:
     int32_t GetCallingUserId();
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     void UpdateAppControlledInfo(int32_t userId) const;
+    void GetCallerByUid(int32_t uid, std::string &callerName);
 
     std::unordered_map<int32_t, std::string> callingNameMap_;
     std::unordered_map<AppInstallControlRuleType, std::string> ruleTypeMap_;

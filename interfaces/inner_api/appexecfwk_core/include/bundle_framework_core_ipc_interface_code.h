@@ -170,6 +170,9 @@ enum class AppControlManagerInterfaceCode : uint32_t {
     DELETE_APP_JUMP_CONTROL_RULE_BY_CALLER,
     DELETE_APP_JUMP_CONTROL_RULE_BY_TARGET,
     GET_APP_JUMP_CONTROL_RULE,
+    SET_DISPOSED_RULE,
+    GET_DISPOSED_RULE,
+    GET_ABILITY_RUNNING_CONTROL_RULE,
 };
 
 /* SAID: 401-96 Interface No.96 subservice also provides the following interfaces */

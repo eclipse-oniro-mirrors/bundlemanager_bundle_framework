@@ -20,6 +20,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_framework_core_ipc_interface_code.h"
 #include "bundle_memory_guard.h"
+#include "disposed_rule.h"
 #include "ipc_types.h"
 
 namespace OHOS {
@@ -83,6 +84,12 @@ int AppControlHost::OnRemoteRequest(
             return HandleGetDisposedStatus(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS):
             return HandleDeleteDisposedStatus(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE):
+            return HandleSetDisposedStatus(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE):
+            return HandleGetDisposedStatus(data, reply);
+        case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE):
+            return HandleGetAbilityRunningControlRule(data, reply);
         default:
             APP_LOGW("AppControlHost receive unknown code, code = %{public}d", code);
             return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
@@ -150,7 +157,7 @@ ErrCode AppControlHost::HandleGetAppInstallControlRule(MessageParcel& data, Mess
         APP_LOGE("HandleGetAppInstallControlRule failed");
         return ret;
     }
-    if (!WriteParcelableVector(appIds, reply)) {
+    if (!WriteStringVector(appIds, reply)) {
         APP_LOGE("write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -200,7 +207,7 @@ ErrCode AppControlHost::HandleGetAppRunningControlRule(MessageParcel& data, Mess
         APP_LOGE("HandleGetAppRunningControlRule failed");
         return ret;
     }
-    if (!WriteParcelableVector(appIds, reply)) {
+    if (!WriteStringVector(appIds, reply)) {
         APP_LOGE("write appIds failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
@@ -354,7 +361,62 @@ ErrCode AppControlHost::HandleGetDisposedStatus(MessageParcel& data, MessageParc
     return ERR_OK;
 }
 
-bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &reply)
+ErrCode AppControlHost::HandleGetDisposedRule(MessageParcel& data, MessageParcel &reply)
+{
+    std::string appId = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    DisposedRule rule;
+    ErrCode ret = GetDisposedRule(appId, rule, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!reply.WriteParcelable(&rule)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string appId = data.ReadString();
+    std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
+    int32_t userId = data.ReadInt32();
+    if (disposedRule == nullptr) {
+        APP_LOGE("ReadParcelable<disposedRule> failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = SetDisposedRule(appId, *disposedRule, userId);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlHost::HandleGetAbilityRunningControlRule(MessageParcel& data, MessageParcel& reply)
+{
+    std::string bundleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
+    std::vector<DisposedRule> rules;
+    ErrCode ret = GetAbilityRunningControlRule(bundleName, userId, rules);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write ret failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK) {
+        if (!WriteParcelableVector(rules, reply)) {
+            APP_LOGE("write failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
+    }
+    return ERR_OK;
+}
+
+bool AppControlHost::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &reply)
 {
     if (!reply.WriteInt32(stringVector.size())) {
         APP_LOGE("write ParcelableVector failed");
@@ -364,6 +426,23 @@ bool AppControlHost::WriteParcelableVector(const std::vector<std::string> &strin
     for (auto &string : stringVector) {
         if (!reply.WriteString(string)) {
             APP_LOGE("write string failed");
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T>
+bool AppControlHost::WriteParcelableVector(std::vector<T> &parcelableVector, MessageParcel &reply)
+{
+    if (!reply.WriteInt32(parcelableVector.size())) {
+        APP_LOGE("write ParcelableVector failed");
+        return false;
+    }
+
+    for (auto &parcelable : parcelableVector) {
+        if (!reply.WriteParcelable(&parcelable)) {
+            APP_LOGE("write ParcelableVector failed");
             return false;
         }
     }

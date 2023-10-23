@@ -26,6 +26,7 @@ namespace AppExecFwk {
 namespace {
     const std::string APP_CONTROL_RDB_TABLE_NAME = "app_control";
     const std::string RUNNING_CONTROL = "RunningControl";
+    const std::string DISPOSED_RULE = "DisposedRule";
     const std::string APP_CONTROL_EDM_DEFAULT_MESSAGE = "The app has been disabled by EDM";
     const std::string DEFAULT = "default";
     const int32_t CALLING_NAME_INDEX = 1;
@@ -436,6 +437,136 @@ ErrCode AppControlManagerRdb::DeleteOldControlRule(const std::string &callingNam
             callingName.c_str(), appId.c_str(), controlRuleType.c_str(), userId);
         return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
     }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
+    const std::string &appId, const DisposedRule &rule, int32_t userId)
+{
+    ErrCode code = DeleteDisposedRule(callingName, appId, userId);
+    if (code != ERR_OK) {
+        APP_LOGE("DeleteDisposedStatus failed.");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    int64_t timeStamp = BundleUtil::GetCurrentTime();
+    NativeRdb::ValuesBucket valuesBucket;
+    valuesBucket.PutString(CALLING_NAME, callingName);
+    valuesBucket.PutString(APP_CONTROL_LIST, DISPOSED_RULE);
+    valuesBucket.PutString(APP_ID, appId);
+    valuesBucket.PutString(DISPOSED_STATUS, rule.ToString());
+    valuesBucket.PutInt(PRIORITY, static_cast<int>(PRIORITY::APP_MARKET));
+    valuesBucket.PutInt(TIME_STAMP, timeStamp);
+    valuesBucket.PutString(USER_ID, std::to_string(userId));
+    bool ret = rdbDataManager_->InsertData(valuesBucket);
+    if (!ret) {
+        APP_LOGE("SetDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+            callingName.c_str(), appId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
+    const std::string &appId, int32_t userId)
+{
+    APP_LOGD("rdb begin to DeleteDisposedRule");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        APP_LOGE("DeleteDisposedStatus callingName:%{public}s appId:%{public}s failed.",
+            callingName.c_str(), appId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
+    const std::string &appId, DisposedRule &rule, int32_t userId)
+{
+    APP_LOGD("rdb begin to GetDisposedRule");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(CALLING_NAME, callingName);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("GetAppInstallControlRule failed.");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (count == 0) {
+        APP_LOGD("GetDisposedRule size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    std::string ruleString;
+    ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetString DisposedStatus failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    DisposedRule::FromString(ruleString, rule);
+    return ERR_OK;
+}
+
+ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
+    const std::string &appId, int32_t userId, std::vector<DisposedRule>& disposedRules)
+{
+    APP_LOGD("rdb begin to GetAbilityRunningControlRule");
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
+    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
+    if (absSharedResultSet == nullptr) {
+        APP_LOGE("GetAppInstallControlRule failed.");
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    ScopeGuard stateGuard([&] { absSharedResultSet->Close(); });
+    int32_t count;
+    int ret = absSharedResultSet->GetRowCount(count);
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GetRowCount failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    if (count == 0) {
+        APP_LOGD("GetDisposedRule size 0");
+        return ERR_OK;
+    }
+    ret = absSharedResultSet->GoToFirstRow();
+    if (ret != NativeRdb::E_OK) {
+        APP_LOGE("GoToFirstRow failed, ret: %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    do {
+        std::string ruleString;
+        ret = absSharedResultSet->GetString(DISPOSED_STATUS_INDEX, ruleString);
+        if (ret != NativeRdb::E_OK) {
+            APP_LOGE("GetString appId failed, ret: %{public}d", ret);
+            return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+        }
+        DisposedRule rule;
+        bool parseRet = DisposedRule::FromString(ruleString, rule);
+        if (!parseRet) {
+            APP_LOGW("parse DisposedRule failed");
+        }
+        disposedRules.push_back(rule);
+    } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);
     return ERR_OK;
 }
 }

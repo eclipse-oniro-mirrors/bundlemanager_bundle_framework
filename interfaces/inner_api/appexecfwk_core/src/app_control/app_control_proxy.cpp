@@ -461,6 +461,85 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want,
     return ERR_OK;
 }
 
+ErrCode AppControlProxy::SetDisposedRule(
+    const std::string &appId, const DisposedRule &disposedRule, int32_t userId)
+{
+    APP_LOGD("proxy begin to SetDisposedRule.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteParcelable(&disposedRule)) {
+        APP_LOGE("write disposedRule failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE, data, reply);
+    if (ret != ERR_OK) {
+        APP_LOGE("SendRequest failed.");
+        return ret;
+    }
+    ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
+{
+    APP_LOGD("proxy begin to GetDisposedRule.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(appId)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = GetParcelableInfo<DisposedRule>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE, data, rule);
+    if (ret != ERR_OK) {
+        APP_LOGE("host return error : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlProxy::GetAbilityRunningControlRule(
+    const std::string &bundleName, int32_t userId, std::vector<DisposedRule> &rules)
+{
+    APP_LOGD("begin to call GetAbilityRunningControlRule.");
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("WriteInterfaceToken failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfos(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE, data, rules);
+}
+
 bool AppControlProxy::WriteStringVector(const std::vector<std::string> &stringVector, MessageParcel &data)
 {
     if (!data.WriteInt32(stringVector.size())) {
@@ -534,6 +613,33 @@ int32_t AppControlProxy::GetParcelableInfos(
     }
     APP_LOGD("Read string vector success");
     return NO_ERROR;
+}
+
+template<typename T>
+bool AppControlProxy::GetParcelableInfos(
+    AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos)
+{
+    MessageParcel reply;
+    if (!SendRequest(code, data, reply)) {
+        return false;
+    }
+
+    if (!reply.ReadBool()) {
+        APP_LOGE("readParcelableInfo failed");
+        return false;
+    }
+
+    int32_t infoSize = reply.ReadInt32();
+    for (int32_t i = 0; i < infoSize; i++) {
+        std::unique_ptr<T> info(reply.ReadParcelable<T>());
+        if (info == nullptr) {
+            APP_LOGE("Read Parcelable infos failed");
+            return false;
+        }
+        parcelableInfos.emplace_back(*info);
+    }
+    APP_LOGD("get parcelable infos success");
+    return true;
 }
 
 int32_t AppControlProxy::SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply)

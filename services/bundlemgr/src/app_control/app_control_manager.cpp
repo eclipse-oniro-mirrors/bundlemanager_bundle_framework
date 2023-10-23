@@ -313,5 +313,50 @@ void AppControlManager::SetAppInstallControlStatus()
         isAppInstallControlEnabled_ = true;
     }
 }
+
+ErrCode AppControlManager::SetDisposedRule(
+    const std::string &callerName, const std::string &appId, const DisposedRule& rule, int32_t userId)
+{
+    auto ret = appControlManagerDb_->SetDisposedRule(callerName, appId, rule, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("SetDisposedStatus to rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::GetDisposedRule(
+    const std::string &callerName, const std::string &appId, DisposedRule& rule, int32_t userId)
+{
+    auto ret = appControlManagerDb_->GetDisposedRule(callerName, appId, rule, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedRule to rdb failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::GetAbilityRunningControlRule(
+    const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules)
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    BundleInfo bundleInfo;
+    ErrCode ret = dataMgr->GetBundleInfoV9(bundleName,
+        static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_DISABLE), bundleInfo, userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("DataMgr GetBundleInfoV9 failed");
+        return ret;
+    }
+    ret = appControlManagerDb_->GetAbilityRunningControlRule(bundleInfo.appId, userId, disposedRules);
+    if (ret != ERR_OK) {
+        APP_LOGW("GetAbilityRunningControlRule from rdb failed");
+        return ret;
+    }
+    return ret;
+}
 }
 }
