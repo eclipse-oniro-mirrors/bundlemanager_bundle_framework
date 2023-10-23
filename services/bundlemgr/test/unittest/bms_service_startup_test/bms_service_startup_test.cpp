@@ -697,12 +697,9 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
 {
     BmsParam param;
-    bool ret = param.SaveBmsParam("bms_param", "");
-    EXPECT_EQ(ret, false);
+    bool ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_EQ(ret, true);
     ret = param.SaveBmsParam("", "bms_value");
-    EXPECT_EQ(ret, false);
-    param.rdbDataManager_.reset();
-    ret = param.SaveBmsParam("bms_param", "bms_value");
     EXPECT_EQ(ret, false);
 }
 

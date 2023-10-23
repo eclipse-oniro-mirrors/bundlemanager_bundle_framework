@@ -24,6 +24,8 @@ ohos_unittest("BmsBundleAppProvisionInfoTest") {
     "//third_party/json/include",
   ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
