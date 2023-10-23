@@ -2188,6 +2188,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::SYS_COMMON_UI), &nSysCommonUI));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "SYS_COMMON_UI", nSysCommonUI));
+
+    napi_value nAdsService;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::ADS_SERVICE), &nAdsService));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ADS_SERVICE", nAdsService));
 }
 
 void CreateApplicationFlagObject(napi_env env, napi_value value)
