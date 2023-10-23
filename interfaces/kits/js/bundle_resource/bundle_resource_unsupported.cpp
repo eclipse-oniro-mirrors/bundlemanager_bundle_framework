@@ -40,5 +40,23 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     napi_throw(env, error);
     return nullptr;
 }
+
+napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "getAllBundleResourceInfo");
+    napi_throw(env, error);
+    return nullptr;
+}
+
+napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGE("SystemCapability.BundleManager.BundleFramework.Resource not supported.");
+    napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+        "getAllLauncherAbilityResourceInfo");
+    napi_throw(env, error);
+    return nullptr;
+}
 } // AppExecFwk
 } // OHOS

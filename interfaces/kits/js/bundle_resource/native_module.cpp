@@ -25,9 +25,15 @@ namespace OHOS {
 namespace AppExecFwk {
 static napi_value BundleResourceExport(napi_env env, napi_value exports)
 {
+    napi_value resourceFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &resourceFlag));
+    CreateBundleResourceFlagObject(env, resourceFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleResourceInfo", GetBundleResourceInfo),
         DECLARE_NAPI_FUNCTION("getLauncherAbilityResourceInfo", GetLauncherAbilityResourceInfo),
+        DECLARE_NAPI_FUNCTION("getAllBundleResourceInfo", GetAllBundleResourceInfo),
+        DECLARE_NAPI_FUNCTION("getAllLauncherAbilityResourceInfo", GetAllLauncherAbilityResourceInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

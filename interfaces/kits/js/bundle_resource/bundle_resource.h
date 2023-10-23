@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
 
 #include "base_cb_info.h"
 #include "napi/native_api.h"
@@ -31,19 +31,23 @@ namespace AppExecFwk {
 struct AllBundleResourceInfoCallback : public BaseCallbackInfo {
     explicit AllBundleResourceInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    uint32_t flags;
+    int32_t flags;
     std::vector<BundleResourceInfo> bundleResourceInfos;
 };
 
 struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     explicit AllLauncherAbilityResourceInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    uint32_t flags;
+    int32_t flags;
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
+
+void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 #endif
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
