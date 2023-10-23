@@ -58,5 +58,10 @@ napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info in
     napi_throw(env, error);
     return nullptr;
 }
+
+void CreateBundleResourceFlagObject(napi_env env, napi_value value)
+{
+    NAPI_CALL_RETURN_VOID(env, napi_get_undefined(env, &value));
+}
 } // AppExecFwk
 } // OHOS

@@ -236,7 +236,7 @@ bool HasGetInstalledBundleListPermission()
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    g_hasGetInstalledBundleListPermission = 
+    g_hasGetInstalledBundleListPermission =
         iBundleMgr->VerifyCallingPermission(PERMISSION_GET_INSTALLED_BUNDLE_LIST);
     return g_hasGetInstalledBundleListPermission;
 }
@@ -355,7 +355,8 @@ void GetAllLauncherAbilityResourceInfoComplete(napi_env env, napi_status status,
         result[0] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
             GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO, PERMISSION_GET_ALL_BUNDLE_RESOURCES);
     }
-    CommonFunc::NapiReturnDeferred<AllLauncherAbilityResourceInfoCallback>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+    CommonFunc::NapiReturnDeferred<AllLauncherAbilityResourceInfoCallback>(env, asyncCallbackInfo,
+        result, ARGS_SIZE_TWO);
 }
 
 napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)

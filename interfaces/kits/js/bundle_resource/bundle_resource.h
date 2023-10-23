@@ -42,12 +42,12 @@ struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
 
-void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 #endif
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
+void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
