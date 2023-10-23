@@ -47,7 +47,7 @@ constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
-bool g_hasGetInstalledBundleListPermission = false;
+bool g_hasPermission = false;
 
 static void ConvertBundleResourceInfo(
     napi_env env,
@@ -226,9 +226,9 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     return nLauncherAbilityResourceInfos;
 }
 
-bool HasGetInstalledBundleListPermission()
+bool HasPermission()
 {
-    if (g_hasGetInstalledBundleListPermission) {
+    if (g_hasPermission) {
         return true;
     }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
@@ -236,9 +236,9 @@ bool HasGetInstalledBundleListPermission()
         APP_LOGE("can not get iBundleMgr");
         return false;
     }
-    g_hasGetInstalledBundleListPermission =
+    g_hasPermission =
         iBundleMgr->VerifyCallingPermission(PERMISSION_GET_INSTALLED_BUNDLE_LIST);
-    return g_hasGetInstalledBundleListPermission;
+    return g_hasPermission;
 }
 
 void GetAllBundleResourceInfoExec(napi_env env, void *data)
@@ -248,7 +248,7 @@ void GetAllBundleResourceInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    if (!HasGetInstalledBundleListPermission()) {
+    if (!HasPermission()) {
         APP_LOGE("no permission GET_INSTALLED_BUNDLE_LIST");
         asyncCallbackInfo->err = ERROR_PERMISSION_DENIED_ERROR;
         return;
@@ -262,7 +262,7 @@ void GetAllBundleResourceInfoComplete(napi_env env, napi_status status, void *da
 {
     AllBundleResourceInfoCallback *asyncCallbackInfo = reinterpret_cast<AllBundleResourceInfoCallback *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<AllBundleResourceInfoCallback> callbackPtr {asyncCallbackInfo};
@@ -327,7 +327,7 @@ void GetAllLauncherAbilityResourceInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    if (!HasGetInstalledBundleListPermission()) {
+    if (!HasPermission()) {
         APP_LOGE("no permission GET_INSTALLED_BUNDLE_LIST");
         asyncCallbackInfo->err = ERROR_PERMISSION_DENIED_ERROR;
         return;
@@ -342,7 +342,7 @@ void GetAllLauncherAbilityResourceInfoComplete(napi_env env, napi_status status,
     AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
         reinterpret_cast<AllLauncherAbilityResourceInfoCallback *>(data);
     if (asyncCallbackInfo == nullptr) {
-        APP_LOGE("asyncCallbackInfo is null in %{public}s", __func__);
+        APP_LOGE("asyncCallbackInfo is null");
         return;
     }
     std::unique_ptr<AllLauncherAbilityResourceInfoCallback> callbackPtr {asyncCallbackInfo};

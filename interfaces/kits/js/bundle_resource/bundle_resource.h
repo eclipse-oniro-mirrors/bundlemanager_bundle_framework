@@ -41,7 +41,6 @@ struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     uint32_t flags;
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
-
 #endif
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
