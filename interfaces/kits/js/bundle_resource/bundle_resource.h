@@ -31,14 +31,14 @@ namespace AppExecFwk {
 struct AllBundleResourceInfoCallback : public BaseCallbackInfo {
     explicit AllBundleResourceInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    int32_t flags;
+    uint32_t flags;
     std::vector<BundleResourceInfo> bundleResourceInfos;
 };
 
 struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
     explicit AllLauncherAbilityResourceInfoCallback(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
 
-    int32_t flags;
+    uint32_t flags;
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
 };
 
