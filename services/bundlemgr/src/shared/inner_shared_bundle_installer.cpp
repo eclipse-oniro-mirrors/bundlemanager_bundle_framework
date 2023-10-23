@@ -290,7 +290,7 @@ ErrCode InnerSharedBundleInstaller::ExtractSharedBundles(const std::string &bund
     } else {
         // save hsp and so files to installation dir
         std::string realHspPath = moduleDir + Constants::PATH_SEPARATOR + moduleName +
-            Constants::INSTALL_SHARED_FILE_SUFFIX;
+            Constants::HSP_FILE_SUFFIX;
         result = SaveHspToRealInstallationDir(bundlePath, moduleDir, moduleName, realHspPath);
         CHECK_RESULT(result, "save hsp file failed %{public}d");
         newInfo.SetModuleHapPath(realHspPath);
@@ -461,7 +461,7 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
     if (inBundlePaths.size() == 1) {
-        if (!BundleUtil::EndWith(inBundlePaths[0], Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        if (!BundleUtil::EndWith(inBundlePaths[0], Constants::HSP_FILE_SUFFIX)) {
             APP_LOGE("invalid file in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
@@ -471,12 +471,12 @@ ErrCode InnerSharedBundleInstaller::ObtainHspFileAndSignatureFilePath(const std:
     int32_t numberOfHsp = 0;
     int32_t numberOfSignatureFile = 0;
     for (const auto &path : inBundlePaths) {
-        if ((path.find(Constants::INSTALL_SHARED_FILE_SUFFIX) == std::string::npos) &&
+        if ((path.find(Constants::HSP_FILE_SUFFIX) == std::string::npos) &&
             (path.find(Constants::CODE_SIGNATURE_FILE_SUFFIX) == std::string::npos)) {
             APP_LOGE("only hsp or sig file can be contained in shared bundle dir");
             return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
         }
-        if (BundleUtil::EndWith(path, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        if (BundleUtil::EndWith(path, Constants::HSP_FILE_SUFFIX)) {
             numberOfHsp++;
             bundlePaths.emplace_back(path);
         }
@@ -506,7 +506,7 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
 
     // 2. copy hsp to installation dir, and then to verify code signature of hsp
     std::string tempHspPath = tempHspDir + Constants::PATH_SEPARATOR + moduleName +
-        Constants::INSTALL_SHARED_FILE_SUFFIX;
+        Constants::HSP_FILE_SUFFIX;
     result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
 

@@ -26,6 +26,7 @@
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
+#include "app_service_fwk_installer.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -88,6 +89,7 @@ const std::string HSP_VERSION_PREFIX = "v";
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
+constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
 constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
@@ -96,6 +98,7 @@ constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.syste
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
 std::set<PreScanInfo> installList_;
+std::set<PreScanInfo> systemHspList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
@@ -574,6 +577,7 @@ void BMSEventHandler::ClearPreInstallCache()
 
     installList_.clear();
     uninstallList_.clear();
+    systemHspList_.clear();
     installListCapabilities_.clear();
     extensiontype_.clear();
     hasLoadPreInstallProFile_ = false;
@@ -610,6 +614,8 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
         dir + INSTALL_LIST_CONFIG, installList_);
+    bundleParser.ParsePreInstallConfig(
+        dir + APP_SERVICE_FWK_INSTALL_LIST_CONFIG, systemHspList_);
     bundleParser.ParsePreUnInstallConfig(
         dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
@@ -805,6 +811,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
         APP_LOGI("Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
+        InnerProcessBootSystemHspInstall();
         InnerProcessBootPreBundleProFileInstall(userId);
         return;
     }
@@ -852,6 +859,27 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
         if (iter == bundleDirs.end()) {
             bundleDirs.push_back(item);
         }
+    }
+}
+
+void BMSEventHandler::InnerProcessBootSystemHspInstall()
+{
+    for (const auto &systemHspPath : systemHspList_) {
+        APP_LOGD("Inner process install systemHsp %{private}s on boot",
+            systemHspPath.ToString().c_str());
+        ProcessSystemHspInstall(systemHspPath);
+    }
+}
+
+void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
+{
+    APP_LOGD("Install systemHsp by bundleDir(%{private}s)", preScanInfo.bundleDir.c_str());
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    AppServiceFwkInstaller installer;
+    ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
+    if (ret != ERR_OK) {
+        APP_LOGW("Install systemHsp %{private}s error", preScanInfo.bundleDir.c_str());
     }
 }
 
@@ -2098,7 +2126,7 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
                 Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
                 std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + Constants::PATH_SEPARATOR +
                 sharedBundleInfo.sharedModuleInfos[0].name + Constants::PATH_SEPARATOR +
-                sharedBundleInfo.sharedModuleInfos[0].name + Constants::INSTALL_SHARED_FILE_SUFFIX;
+                sharedBundleInfo.sharedModuleInfos[0].name + Constants::HSP_FILE_SUFFIX;
             AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
         }
     }

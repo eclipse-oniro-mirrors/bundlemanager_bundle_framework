@@ -26,7 +26,7 @@ namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
-constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
+constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";

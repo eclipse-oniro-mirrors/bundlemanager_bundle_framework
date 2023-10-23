@@ -20,6 +20,7 @@ config("bundlemgr_common_config") {
     "include",
     "include/aot",
     "include/app_provision_info",
+    "include/app_service_fwk",
     "include/bundlemgr",
     "include/bms_extension",
     "include/bundle_resource",

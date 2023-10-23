@@ -457,6 +457,9 @@ private:
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
 
+    void InnerProcessBootSystemHspInstall();
+    void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
+
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
         bool isPreInstall, bool debug);
