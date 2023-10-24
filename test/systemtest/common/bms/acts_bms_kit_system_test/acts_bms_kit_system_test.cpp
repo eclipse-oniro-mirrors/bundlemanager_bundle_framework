@@ -8126,5 +8126,56 @@ HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0300, Function | SmallTest 
     seteuid(originUid);
     APP_LOGI("ResetAOTCompileStatus_0300 end");
 }
+
+/**
+ * @tc.number: GetJsonProfile_0100
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetJsonProfile
+ *           2.return ERR_BUNDLE_MANAGER_PARAM_ERROR
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetJsonProfile_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string profile;
+    ErrCode ret = bundleMgrProxy->GetJsonProfile(ProfileType::INTENT_PROFILE, "", BASE_MODULE_NAME, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: GetJsonProfile_0200
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetJsonProfile
+ *           2.return ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetJsonProfile_0200, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    std::string profile;
+    ErrCode ret = bundleMgrProxy->GetJsonProfile(
+        ProfileType::INTENT_PROFILE, BASE_BUNDLE_NAME, BASE_MODULE_NAME, profile);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: QueryExtensionAbilityInfosWithTypeName_0100
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call QueryExtensionAbilityInfosWithTypeName
+ *           2.return ERR_APPEXECFWK_PARCEL_ERROR
+ */
+HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosWithTypeName_0100, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(bundleMgrProxy, nullptr);
+
+    Want want;
+    int32_t flag = 0;
+    std::vector<ExtensionAbilityInfo> extensionInfos;
+    ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosWithTypeName(want, "", flag, USERID, extensionInfos);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

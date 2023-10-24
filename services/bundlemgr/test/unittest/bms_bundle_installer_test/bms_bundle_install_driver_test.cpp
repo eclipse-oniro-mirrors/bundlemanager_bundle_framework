@@ -26,6 +26,7 @@
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
+#include "driver_installer.h"
 #include "directory_ex.h"
 #include "install_param.h"
 #include "installd/installd_service.h"
@@ -1711,5 +1712,78 @@ HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6400, Function | SmallTest | 
     CheckModuleDirNonExist(BUNDLE_NAME);
     isDirEmpty = IsDriverDirEmpty();
     EXPECT_TRUE(isDirEmpty);
+}
+
+/**
+ * @tc.number: InstallDriverTest_6500
+ * @tc.name: test the FilterDriverSoFile of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test FilterDriverSoFile
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6500, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    InnerBundleInfo info;
+    Metadata meta;
+    std::unordered_multimap<std::string, std::string> dirMap;
+
+    meta.name = "xcupsFilter";
+    ErrCode res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_TRUE(dirMap.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_6600
+ * @tc.name: test the FilterDriverSoFile of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test FilterDriverSoFile
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6600, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    InnerBundleInfo info;
+    Metadata meta;
+    std::unordered_multimap<std::string, std::string> dirMap;
+
+    meta.name = "cupsFilter";
+    meta.resource = "../";
+    meta.value = "../";
+    ErrCode res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(dirMap.empty());
+
+    meta.resource = "./";
+    res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(dirMap.empty());
+
+    meta.resource = "../";
+    meta.value = "./";
+    res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, false);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
+    EXPECT_TRUE(dirMap.empty());
+}
+
+/**
+ * @tc.number: InstallDriverTest_6700
+ * @tc.name: test the FilterDriverSoFile of driver bundle
+ * @tc.desc: 1. system running normally
+ *           2. test FilterDriverSoFile
+ */
+HWTEST_F(BmsDriverInstallerTest, InstallDriverTest_6700, Function | SmallTest | Level0)
+{
+    std::shared_ptr driverInstaller = std::make_shared<DriverInstaller>();
+    InnerBundleInfo info;
+    Metadata meta;
+    std::unordered_multimap<std::string, std::string> dirMap;
+    bool isModuleExisted = false;
+
+    meta.name = "cupsFilter";
+    meta.resource = "./";
+    meta.value = "./";
+    ErrCode res = driverInstaller->FilterDriverSoFile(info, meta, dirMap, isModuleExisted);
+    EXPECT_EQ(res, ERR_OK);
+    EXPECT_FALSE(dirMap.empty());
 }
 } // OHOS
