@@ -28,9 +28,7 @@ enum class ResourceFlag {
     //Used to obtained the icon resource info
     GET_RESOURCE_INFO_WITH_ICON = 0x00000004,
     //Used to obtain the resource info sorted by label
-    GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008,
-    // Used to obtain the resource info containing disabled resource info
-    GET_RESOURCE_INFO_WITH_DISABLE = 0x00000010
+    GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008
 };
 
 struct BundleResourceInfo {

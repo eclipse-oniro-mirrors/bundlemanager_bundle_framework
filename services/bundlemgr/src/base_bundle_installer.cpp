@@ -1696,8 +1696,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
     if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
-        if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
-            APP_LOGE("same versionCode, appIdentifier is not same");
+        if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
+            (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
+            APP_LOGE("same versionCode, appIdentifier or appId is not same");
             return false;
         }
     }
