@@ -73,6 +73,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "push", ExtensionAbilityType::PUSH },
     { "driver", ExtensionAbilityType::DRIVER },
     { "action", ExtensionAbilityType::ACTION },
+    { "adsService", ExtensionAbilityType::ADS_SERVICE },
     { "appAccountAuthorization", ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION },
     { "ui", ExtensionAbilityType::UI },
     { "remoteNotification", ExtensionAbilityType::REMOTE_NOTIFICATION },
@@ -91,8 +92,7 @@ const std::unordered_map<std::string, ExtensionAbilityType> EXTENSION_TYPE_MAP =
     { "sysDialog/meetimeMessage", ExtensionAbilityType::SYSDIALOG_MEETIMEMESSAGE },
     { "sysPicker/meetimeContact", ExtensionAbilityType::SYSPICKER_MEETIMECONTACT },
     { "sysPicker/meetimeCallLog", ExtensionAbilityType::SYSPICKER_MEETIMECALLLOG },
-    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI },
-    { "ohos.advertising.adsservice", ExtensionAbilityType::ADS_SERVICE }
+    { "sys/commonUI", ExtensionAbilityType::SYS_COMMON_UI }
 };
 
 bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndExtension> &skillUri)
