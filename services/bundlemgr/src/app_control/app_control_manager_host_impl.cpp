@@ -185,7 +185,7 @@ ErrCode AppControlManagerHostImpl::GetAppRunningControlRule(
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGW("calling permission denied");
+        APP_LOGW("calling permission denied, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppRunningControlRule(bundleName, userId, controlRuleResult);
@@ -196,7 +196,7 @@ ErrCode AppControlManagerHostImpl::ConfirmAppJumpControlRule(const std::string &
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->ConfirmAppJumpControlRule(callerBundleName, targetBundleName, userId);
@@ -207,7 +207,7 @@ ErrCode AppControlManagerHostImpl::AddAppJumpControlRule(const std::vector<AppJu
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->AddAppJumpControlRule(controlRules, userId);
@@ -218,7 +218,7 @@ ErrCode AppControlManagerHostImpl::DeleteAppJumpControlRule(const std::vector<Ap
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteAppJumpControlRule(controlRules, userId);
@@ -228,7 +228,7 @@ ErrCode AppControlManagerHostImpl::DeleteRuleByCallerBundleName(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteRuleByCallerBundleName(callerBundleName, userId);
@@ -238,7 +238,7 @@ ErrCode AppControlManagerHostImpl::DeleteRuleByTargetBundleName(const std::strin
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGE("callingName is invalid");
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->DeleteRuleByTargetBundleName(targetBundleName, userId);
@@ -249,7 +249,7 @@ ErrCode AppControlManagerHostImpl::GetAppJumpControlRule(const std::string &call
 {
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     if (uid != AppControlConstants::FOUNDATION_UID) {
-        APP_LOGW("calling permission denied");
+        APP_LOGW("calling permission denied, uid : %{public}d", uid);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     return appControlManager_->GetAppJumpControlRule(callerBundleName, targetBundleName, userId, controlRule);
@@ -260,7 +260,7 @@ std::string AppControlManagerHostImpl::GetCallingName()
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     auto item = callingNameMap_.find(uid);
     if (item == callingNameMap_.end()) {
-        APP_LOGW("calling uid is invalid");
+        APP_LOGW("calling uid is invalid, uid : %{public}d", uid);
         return "";
     }
     return item->second;
@@ -281,7 +281,7 @@ int32_t AppControlManagerHostImpl::GetCallingUserId()
     return OHOS::IPCSkeleton::GetCallingUid() / Constants::BASE_USER_RANGE;
 }
 
-ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want)
+ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, const Want &want, int32_t userId)
 {
     APP_LOGD("host begin to SetDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -292,14 +292,17 @@ ErrCode AppControlManagerHostImpl::SetDisposedStatus(const std::string &appId, c
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->SetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host SetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
     APP_LOGD("host begin to DeleteDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -310,14 +313,17 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->DeleteDisposedStatus(appId, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host DeletetDisposedStatus error:%{public}d", ret);
     }
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want)
+ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, Want &want, int32_t userId)
 {
     APP_LOGD("host begin to GetDisposedStatus");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -328,7 +334,10 @@ ErrCode AppControlManagerHostImpl::GetDisposedStatus(const std::string &appId, W
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, GetCallingUserId());
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ErrCode ret = appControlManager_->GetDisposedStatus(appId, want, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
     }

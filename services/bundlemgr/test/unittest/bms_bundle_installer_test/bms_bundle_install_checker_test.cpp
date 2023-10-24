@@ -1370,6 +1370,22 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest |
 }
 
 /**
+ * @tc.number: CheckAppLabel_0009
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. BundleInstallChecker
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0009, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    oldInfo.SetGwpAsanEnabled(false);
+    newInfo.SetGwpAsanEnabled(true);
+    BaseBundleInstaller baseBundleInstaller;
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME);
+}
+
+/**
  * @tc.number: CheckAppLabelInfo_0008
  * @tc.name: test the start function of CheckAppLabelInfo
  * @tc.desc: 1. CheckAppLabelInfo_0008
@@ -1449,6 +1465,25 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0011, Function | SmallTe
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_VENDOR_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0012
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. CheckAppLabelInfo_0012
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0012, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo1;
+    InnerBundleInfo innerBundleInfo2;
+    innerBundleInfo1.SetGwpAsanEnabled(true);
+    innerBundleInfo2.SetGwpAsanEnabled(false);
+    infos.emplace(HAP, innerBundleInfo1);
+    infos.emplace(HAP_ONE, innerBundleInfo2);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME);
 }
 
 /**

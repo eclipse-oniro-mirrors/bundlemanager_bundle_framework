@@ -52,6 +52,7 @@ enum class BundleType {
     APP = 0,
     ATOMIC_SERVICE = 1,
     SHARED = 2,
+    APP_SERVICE_FWK = 3,
 };
 
 enum class CompatiblePolicy {
@@ -184,10 +185,12 @@ struct ApplicationInfo : public Parcelable {
     bool debug = false;
     std::string deviceId;
     bool distributedNotificationEnabled = true;
+    bool allowEnableNotification = false;
     std::string entityType = DEFAULT_ENTITY_TYPE;
     std::string process;
     int32_t supportedModes = 0;  // returns 0 if the application does not support the driving mode
     std::string vendor;
+    bool gwpAsanEnabled = false;
 
     // apl
     std::string appPrivilegeLevel = AVAILABLELEVEL_NORMAL;
@@ -243,6 +246,7 @@ struct ApplicationInfo : public Parcelable {
 
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
+    std::vector<std::string> fingerprints;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

@@ -310,7 +310,7 @@ ResourceInfo BundleResourceProcess::ConvertToLauncherAbilityResourceInfo(const A
     resourceInfo.iconId_ = info.iconId;
     resourceInfo.hapPath_ = info.hapPath;
     resourceInfo.updateTime_ = info.installTime;
-    if ((resourceInfo.abilityName_ == Constants::APP_DETAIL_ABILITY) && (resourceInfo.hapPath_.empty())) {
+    if (resourceInfo.abilityName_ == Constants::APP_DETAIL_ABILITY) {
         if (!GetDefaultIconResource(resourceInfo.iconId_, resourceInfo.defaultIconHapPath_)) {
             APP_LOGW("GetDefaultIconResource failed bundleName:%{public}s", resourceInfo.bundleName_.c_str());
         }

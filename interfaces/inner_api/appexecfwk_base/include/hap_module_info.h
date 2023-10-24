@@ -147,6 +147,7 @@ struct HapModuleInfo : public Parcelable {
     std::string buildHash;
     IsolationMode isolationMode = IsolationMode::NONISOLATION_FIRST;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
+    std::string fileContextMenu;
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
     static HapModuleInfo *Unmarshalling(Parcel &parcel);

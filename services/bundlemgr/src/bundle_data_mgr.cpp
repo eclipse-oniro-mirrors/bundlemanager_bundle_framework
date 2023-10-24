@@ -63,6 +63,7 @@ namespace {
 constexpr int MAX_EVENT_CALL_BACK_SIZE = 100;
 constexpr int32_t DATA_GROUP_INDEX_START = 1;
 constexpr int32_t UUID_LENGTH = 36;
+constexpr int32_t PROFILE_PREFIX_LENGTH = 9;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
@@ -71,6 +72,10 @@ constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // profile path
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
+constexpr const char* PROFILE_PATH = "resources/base/profile/";
+constexpr const char* PROFILE_PREFIX = "$profile:";
+constexpr const char* JSON_SUFFIX = ".json";
+
 const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
 };
@@ -297,13 +302,19 @@ bool BundleDataMgr::AddNewModuleInfo(
     }
     if (statusItem->second == InstallState::UPDATING_SUCCESS) {
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
-        if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry()) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
+        oldInfo.SetProvisionId(newInfo.GetProvisionId());
+        if (oldInfo.GetFingerprints().empty()) {
+            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
+        }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
+        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -483,14 +494,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         APP_LOGD("begin to update, bundleName : %{public}s, moduleName : %{public}s",
             bundleName.c_str(), newInfo.GetCurrentModulePackage().c_str());
         bool needAppDetail = oldInfo.GetBaseApplicationInfo().needAppDetail;
-        bool isOldInfoHasEntry = oldInfo.HasEntry();
         if (newInfo.GetOverlayType() == NON_OVERLAY_TYPE) {
             oldInfo.KeepOldOverlayConnection(newInfo);
         }
         oldInfo.UpdateModuleInfo(newInfo);
         // 1.exist entry, update entry.
         // 2.only exist feature, update feature.
-        if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
+        if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
             oldInfo.UpdateRemovable(
@@ -498,7 +508,13 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
+        if (oldInfo.GetFingerprints().empty()) {
+            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
+        }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetProvisionId(newInfo.GetProvisionId());
+        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateAppDetailAbilityAttrs();
@@ -1311,6 +1327,11 @@ void BundleDataMgr::AddAppDetailAbilityInfo(InnerBundleInfo &info) const
     }
     // not show in the mission list
     appDetailAbility.removeMissionAfterTerminate = true;
+    // set hapPath, for label resource
+    auto hapModuleInfo = info.FindHapModuleInfo(appDetailAbility.package);
+    if (hapModuleInfo) {
+        appDetailAbility.hapPath = hapModuleInfo->hapPath;
+    }
 
     std::string keyName;
     keyName.append(appDetailAbility.bundleName).append(".")
@@ -1705,6 +1726,10 @@ bool BundleDataMgr::GetBundleInfo(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfo(flags, bundleInfo, responseUserId);
+
+    if ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_MENU) == BundleFlag::GET_BUNDLE_WITH_MENU) {
+        ProcessBundleMenu(bundleInfo, flags, false);
+    }
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
     return true;
 }
@@ -1736,7 +1761,53 @@ ErrCode BundleDataMgr::GetBundleInfoV9(
 
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(requestUserId);
     innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId);
+
+    ProcessBundleMenu(bundleInfo, flags, true);
     APP_LOGD("get bundleInfo(%{public}s) successfully in user(%{public}d)", bundleName.c_str(), userId);
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, bool clearData) const
+{
+    if (clearData) {
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE)) {
+            return ERR_OK;
+        }
+        if ((static_cast<uint32_t>(flags) & static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU))
+            != static_cast<uint32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU)) {
+            APP_LOGD("no GET_BUNDLE_INFO_WITH_MENU flag, remove menu content");
+            std::for_each(bundleInfo.hapModuleInfos.begin(), bundleInfo.hapModuleInfos.end(), [](auto &hapModuleInfo) {
+                hapModuleInfo.fileContextMenu = Constants::EMPTY_STRING;
+            });
+            return ERR_OK;
+        }
+        std::vector<HapModuleInfo>& hapModuleInfos = bundleInfo.hapModuleInfos;
+        hapModuleInfos.erase(std::remove_if(
+            hapModuleInfos.begin(), hapModuleInfos.end(), [](const auto& hapModuleInfo) {
+                return hapModuleInfo.fileContextMenu.empty();
+            }), hapModuleInfos.end());
+        if (hapModuleInfos.empty()) {
+            APP_LOGW("getBundleInfo with menu flag, but no module has menu");
+            BundleInfo emptyInfo;
+            bundleInfo = emptyInfo;
+            return ERR_BUNDLE_MANAGER_QUERY_MENU_FAILED;
+        }
+    }
+    for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
+        std::string menuProfile = hapModuleInfo.fileContextMenu;
+        auto pos = menuProfile.find(PROFILE_PREFIX);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid menu profile");
+            continue;
+        }
+        std::string menuFileName = menuProfile.substr(pos + PROFILE_PREFIX_LENGTH);
+        std::string menuFilePath = PROFILE_PATH + menuFileName + JSON_SUFFIX;
+
+        std::string menuProfileContent;
+        GetJsonProfileByExtractor(hapModuleInfo.hapPath, menuFilePath, menuProfileContent);
+        hapModuleInfo.fileContextMenu = menuProfileContent;
+    }
     return ERR_OK;
 }
 
@@ -2035,8 +2106,13 @@ ErrCode BundleDataMgr::GetBundleInfosV9(int32_t flags, std::vector<BundleInfo> &
         if (innerBundleInfo.GetBundleInfoV9(flags, bundleInfo, responseUserId) != ERR_OK) {
             continue;
         }
-
-        bundleInfos.emplace_back(bundleInfo);
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (bundleInfos.empty()) {
+        APP_LOGW("bundleInfos is empty");
     }
     return ERR_OK;
 }
@@ -2061,7 +2137,13 @@ ErrCode BundleDataMgr::GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo
         }
         BundleInfo bundleInfo;
         info.GetBundleInfoV9(flags, bundleInfo, Constants::ALL_USERID);
-        bundleInfos.emplace_back(bundleInfo);
+        auto ret = ProcessBundleMenu(bundleInfo, flags, true);
+        if (ret == ERR_OK) {
+            bundleInfos.emplace_back(bundleInfo);
+        }
+    }
+    if (bundleInfos.empty()) {
+        APP_LOGW("bundleInfos is empty");
     }
     return ERR_OK;
 }
@@ -5224,9 +5306,9 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     if (moduleName.empty()) {
         APP_LOGW("moduleName is empty, try to get profile from entry module");
         std::map<std::string, InnerModuleInfo> moduleInfos = bundleInfo.GetInnerModuleInfos();
-        for (const auto &item : moduleInfos) {
-            if (item.second.isEntry) {
-                moduleNameTmp = item.first;
+        for (const auto &info : moduleInfos) {
+            if (info.second.isEntry) {
+                moduleNameTmp = info.first;
                 APP_LOGW("try to get profile from entry module: %{public}s", moduleNameTmp.c_str());
                 break;
             }
@@ -5417,200 +5499,21 @@ bool BundleDataMgr::IsShareDataGroupId(const std::string &dataGroupId, int32_t u
         if (iter == dataGroupInfos.end()) {
             continue;
         }
-        for (const auto &dataGroupInfo : iter->second) {
-            if (dataGroupInfo.userId == userId && ++count > 1) {
-                APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
-                return true;
-            }
+
+        auto dataGroupIter = std::find_if(std::begin(iter->second), std::end(iter->second),
+            [userId](const DataGroupInfo &dataGroupInfo) {
+            return dataGroupInfo.userId == userId;
+        });
+        if (dataGroupIter == std::end(iter->second)) {
+            continue;
+        }
+        count++;
+        if (count > 1) {
+            APP_LOGW("dataGroupId: %{public}s is shared", dataGroupId.c_str());
+            return true;
         }
     }
     return false;
-}
-
-ErrCode BundleDataMgr::QueryLauncherAbilityFromBmsExtension(const Want &want, int32_t userId,
-    std::vector<AbilityInfo> &abilityInfos) const
-{
-    APP_LOGD("start to query launcher abilities from bms extension");
-    if (userId != Constants::ALL_USERID) {
-        int32_t requestUserId = GetUserId(userId);
-        if (requestUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-    }
-
-    {
-        std::string bundleName = want.GetElement().GetBundleName();
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        if (!bundleName.empty() && bundleInfos_.find(bundleName) != bundleInfos_.end()) {
-            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
-                bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-    }
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
-    if (res != ERR_OK) {
-        APP_LOGD("query ability infos failed due to error code %{public}d", res);
-        return res;
-    }
-    for_each(abilityInfos.begin(), abilityInfos.end(), [this](auto &info) {
-        // if labelId and label of abilityInfo is 0 or empty, replacing them by utilizing the corresponding
-        // elements of applicationInfo
-        ModifyLauncherAbilityInfoFromBmsExtension(info);
-    });
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::QueryAbilityInfosFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-    std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
-{
-    APP_LOGD("start to query abilityInfos from bms extension");
-    if (userId != Constants::ALL_USERID) {
-        int32_t requestUserId = GetUserId(userId);
-        if (requestUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-    }
-
-    {
-        std::string bundleName = want.GetElement().GetBundleName();
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        if (!bundleName.empty() && bundleInfos_.find(bundleName) != bundleInfos_.end()) {
-            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
-                bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-    }
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos, isNewVersion);
-    if (res != ERR_OK) {
-        APP_LOGD("query ability infos failed due to error code %{public}d", res);
-        return res;
-    }
-    if (abilityInfos.empty()) {
-        APP_LOGD("no ability info can be found from bms extension");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::QueryAbilityInfoFromBmsExtension(const Want &want, int32_t flags, int32_t userId,
-    AbilityInfo &abilityInfo, bool isNewVersion) const
-{
-    APP_LOGD("start to query abilityInfo from bms extension");
-    std::vector<AbilityInfo> abilityInfos;
-    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, isNewVersion);
-    if (res != ERR_OK) {
-        APP_LOGD("query ability info failed due to error code %{public}d", res);
-        return res;
-    }
-    if (abilityInfos.empty()) {
-        APP_LOGD("no ability info can be found from bms extension");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-
-    abilityInfo = abilityInfos[0];
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::GetBundleInfosFromBmsExtension(
-    int32_t flags, std::vector<BundleInfo> &bundleInfos, int32_t userId, bool isNewVersion) const
-{
-    APP_LOGD("start to query bundle infos from bms extension");
-    if (userId != Constants::ALL_USERID) {
-        int32_t requestUserId = GetUserId(userId);
-        if (requestUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-    }
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId, isNewVersion);
-    if (res != ERR_OK) {
-        APP_LOGD("query bundle infos failed due to error code %{public}d", res);
-        return res;
-    }
-
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::GetBundleInfoFromBmsExtension(const std::string &bundleName, int32_t flags,
-    BundleInfo &bundleInfo, int32_t userId, bool isNewVersion) const
-{
-    APP_LOGD("start to query bundle info from bms extension");
-    if (userId != Constants::ALL_USERID) {
-        int32_t requestUserId = GetUserId(userId);
-        if (requestUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-    }
-
-    {
-        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
-        if (bundleInfos_.find(bundleName) != bundleInfos_.end()) {
-            APP_LOGD("bundle %{public}s has been existed and does not need to find in bms extension",
-                bundleName.c_str());
-            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
-        }
-    }
-
-    BmsExtensionDataMgr bmsExtensionDataMgr;
-    ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo, isNewVersion);
-    if (res != ERR_OK) {
-        APP_LOGD("query bundle info failed due to error code %{public}d", res);
-        return res;
-    }
-
-    return ERR_OK;
-}
-
-ErrCode BundleDataMgr::ImplicitQueryAbilityInfosFromBmsExtension(
-    const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos, bool isNewVersion) const
-{
-    APP_LOGD("start to implicitly query ability info from bms extension");
-    if (userId != Constants::ALL_USERID) {
-        int32_t requestUserId = GetUserId(userId);
-        if (requestUserId == Constants::INVALID_USERID) {
-            return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
-        }
-    }
-
-    ElementName element = want.GetElement();
-    std::string bundleName = element.GetBundleName();
-    std::string abilityName = element.GetAbilityName();
-    // does not support explicit query
-    if (!bundleName.empty() && !abilityName.empty()) {
-        APP_LOGW("implicitly query failed due to bundleName:%{public}s, abilityName:%{public}s not empty",
-            bundleName.c_str(), abilityName.c_str());
-        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
-    }
-    ErrCode res = QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos, isNewVersion);
-    if (res != ERR_OK) {
-        APP_LOGE("query ability info failed due to error code %{public}d", res);
-        return res;
-    }
-    if (abilityInfos.empty()) {
-        APP_LOGE("no ability info can be found from bms extension");
-        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    }
-
-    return ERR_OK;
-}
-
-void BundleDataMgr::ModifyLauncherAbilityInfoFromBmsExtension(AbilityInfo &abilityInfo) const
-{
-    if (abilityInfo.labelId == 0) {
-        abilityInfo.labelId = abilityInfo.applicationInfo.labelId;
-    }
-
-    if (abilityInfo.label.empty()) {
-        abilityInfo.label = abilityInfo.applicationInfo.label;
-    }
-
-    if (abilityInfo.iconId == 0) {
-        abilityInfo.iconId = abilityInfo.applicationInfo.iconId;
-    }
 }
 
 ErrCode BundleDataMgr::FindAbilityInfoInBundleInfo(const InnerBundleInfo &innerBundleInfo,
@@ -5781,5 +5684,27 @@ void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerB
     }
 }
 #endif
+
+bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const
+{
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName is empty.");
+        return false;
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto innerBundleInfo = bundleInfos_.find(bundleName);
+    if (innerBundleInfo == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s.", bundleName.c_str());
+        return false;
+    }
+    fingerPrints = innerBundleInfo->second.GetFingerprints();
+    return true;
+}
+
+bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo,
+    const InnerBundleInfo &newInfo) const
+{
+    return !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

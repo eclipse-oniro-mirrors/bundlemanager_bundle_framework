@@ -831,7 +831,8 @@ protected:
                     "visible": true,
                     "writePermission": "",
                     "supportExtNames": [],
-                    "supportMimeTypes": []
+                    "supportMimeTypes": [],
+                    "specifiedProcess": false
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",
@@ -971,6 +972,7 @@ protected:
                 "accessTokenId": 0,
                 "accessTokenIdEx": 0,
                 "accessible": false,
+                "allowEnableNotification": false,
                 "apiCompatibleVersion": 8,
                 "apiReleaseType": "Beta1",
                 "apiTargetVersion": 8,
@@ -1033,6 +1035,7 @@ protected:
                     "moduleName": ""
                 },
                 "fingerprint":"",
+                "fingerprints":[],
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
                 "isSystemApp": true,
@@ -1106,7 +1109,8 @@ protected:
                 "targetBundleName": "",
                 "targetPriority": 0,
                 "overlayState": 0,
-                "resourcesApply":[]
+                "resourcesApply":[],
+                "GWPAsanEnabled": false
             },
             "baseBundleInfo": {
                 "abilityInfos": [
@@ -1158,7 +1162,8 @@ protected:
                 ],
                 "signatureInfo": {
                     "appId": "",
-                    "fingerprint": ""
+                    "fingerprint": "",
+                    "appIdentifier": ""
                 },
                 "seInfo": "",
                 "singleton": false,

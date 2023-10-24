@@ -41,7 +41,8 @@ const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
-    UserReceiverImpl() = default;
+    UserReceiverImpl(const std::string &bundleName, bool needReInstall)
+        : bundleName_(bundleName), needReInstall_(needReInstall) {};
     virtual ~UserReceiverImpl() override = default;
 
     void SetBundlePromise(const std::shared_ptr<BundlePromise>& bundlePromise)
@@ -54,6 +55,18 @@ public:
         totalHapNum_ = totalHapNum;
     }
 
+    void SavePreInstallException(const std::string &bundleName)
+    {
+        auto preInstallExceptionMgr =
+            DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+        if (preInstallExceptionMgr == nullptr) {
+            APP_LOGE("preInstallExceptionMgr is nullptr");
+            return;
+        }
+
+        preInstallExceptionMgr->SavePreInstallExceptionBundleName(bundleName);
+    }
+
     virtual void OnStatusNotify(const int progress) override {}
     virtual void OnFinished(const int32_t resultCode, const std::string &resultMsg) override
     {
@@ -63,10 +76,18 @@ public:
         if (static_cast<int32_t>(g_installedHapNum) >= totalHapNum_ && bundlePromise_ != nullptr) {
             bundlePromise_->NotifyAllTasksExecuteFinished();
         }
+
+        if (resultCode != ERR_OK && resultCode !=
+            ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON && needReInstall_) {
+            APP_LOGI("needReInstall bundleName: %{public}s", bundleName_.c_str());
+            SavePreInstallException(bundleName_);
+        }
     }
 private:
     std::shared_ptr<BundlePromise> bundlePromise_ = nullptr;
     int32_t totalHapNum_ = INT32_MAX;
+    std::string bundleName_;
+    bool needReInstall_ = false;
 };
 
 ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
@@ -120,13 +141,15 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
     std::string identity = IPCSkeleton::ResetCallingIdentity();
+    bool needReinstall = userId == Constants::START_USERID;
     // Read apps installed by other users that are visible to all users
     for (const auto &info : preInstallBundleInfos) {
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
         installParam.installFlag = InstallFlag::NORMAL;
-        sptr<UserReceiverImpl> userReceiverImpl(new (std::nothrow) UserReceiverImpl());
+        sptr<UserReceiverImpl> userReceiverImpl(
+            new (std::nothrow) UserReceiverImpl(info.GetBundleName(), needReinstall));
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->InstallByBundleName(info.GetBundleName(), installParam, userReceiverImpl);
@@ -261,7 +284,8 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         installParam.forceExecuted = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
-        sptr<UserReceiverImpl> userReceiverImpl(new (std::nothrow) UserReceiverImpl());
+        sptr<UserReceiverImpl> userReceiverImpl(
+            new (std::nothrow) UserReceiverImpl(info.name, false));
         userReceiverImpl->SetBundlePromise(bundlePromise);
         userReceiverImpl->SetTotalHapNum(totalHapNum);
         installer->Uninstall(info.name, installParam, userReceiverImpl);

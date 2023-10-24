@@ -34,7 +34,7 @@ bool AbilityManagerHelper::UninstallApplicationProcesses(const std::string &bund
 #ifdef ABILITY_RUNTIME_ENABLE
     APP_LOGI("uninstall kill running processes, app name is %{public}s", bundleName.c_str());
     if (SystemAbilityHelper::UninstallApp(bundleName, uid) != 0) {
-        APP_LOGE("kill application process failed");
+        APP_LOGE("kill application process failed uid : %{public}d", uid);
 
         return false;
     }

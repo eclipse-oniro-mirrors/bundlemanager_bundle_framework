@@ -450,10 +450,15 @@ private:
     std::string GetOldSystemFingerprint();
     bool GetSystemParameter(const std::string &key, std::string &value);
     void SaveSystemFingerprint();
+    void SavePreInstallException(const std::string &bundleDir);
+    void HandlePreInstallException();
 
     bool FetchInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &innerBundleInfo);
     void GetPreInstallDirFromLoadProFile(std::vector<std::string> &bundleDirs);
     void GetPreInstallDirFromScan(std::vector<std::string> &bundleDirs);
+
+    void InnerProcessBootSystemHspInstall();
+    void ProcessSystemHspInstall(const PreScanInfo &preScanInfo);
 
     void AddStockAppProvisionInfoByOTA(const std::string &bundleName, const std::string &filePath);
     void UpdateAppDataSelinuxLabel(const std::string &bundleName, const std::string &apl,
@@ -463,6 +468,7 @@ private:
     void UpdateAllPrivilegeCapability();
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
+    bool MatchOldFingerprints(const std::string &bundleName, const std::vector<std::string> &appSignatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;

@@ -155,7 +155,8 @@ bool BmsBundleInstallerTest::InstallSystemBundle(const std::string &filePath) co
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->InstallSystemBundle(filePath, installParam, Constants::AppType::SYSTEM_APP);
+    return installer->InstallSystemBundle(
+        filePath, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
 bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath) const
@@ -171,7 +172,8 @@ bool BmsBundleInstallerTest::OTAInstallSystemBundle(const std::string &filePath)
     installParam.needSendEvent = false;
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
-    return installer->OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP);
+    return installer->OTAInstallSystemBundle(
+        filePaths, installParam, Constants::AppType::SYSTEM_APP) == ERR_OK;
 }
 
 ErrCode BmsBundleInstallerTest::InstallThirdPartyBundle(const std::string &filePath) const
@@ -629,6 +631,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(info.minCompatibleVersionCode, 1);
         EXPECT_EQ(info.apiCompatibleVersion, 8);
         EXPECT_EQ(info.apiTargetVersion, 8);
+        EXPECT_EQ(info.gwpAsanEnabled, false);
         AbilityInfo abilityInfo;
         abilityInfo.bundleName = SYSTEMFIEID_NAME;
         abilityInfo.package = "module01";
@@ -652,6 +655,7 @@ HWTEST_F(BmsBundleInstallerTest, ParseModuleJson_0100, Function | SmallTest | Le
         EXPECT_EQ(abilityInfos.srcEntrance, "./login/MyLoginAbility.ts");
         EXPECT_EQ(abilityInfos.description, "$string:description_main_ability");
         EXPECT_EQ(abilityInfos.descriptionId, 16777219);
+        EXPECT_EQ(abilityInfos.specifiedProcess, true);
         EXPECT_EQ(hapModuleInfo.label, "Login");
 
         auto metadata = abilityInfos.metadata.front();
@@ -3064,6 +3068,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_2000, Function | SmallTest | Lev
     Security::Verify::HapVerifyResult result;
     Security::Verify::ProvisionInfo info;
     info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
     info.bundleInfo.appFeature = "hos_system_app";
     info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
     result.SetProvisionInfo(info);
@@ -3102,6 +3107,7 @@ HWTEST_F(BmsBundleInstallerTest, InstallChecker_2100, Function | SmallTest | Lev
     Security::Verify::HapVerifyResult result;
     Security::Verify::ProvisionInfo info;
     info.distributionType = Security::Verify::AppDistType::ENTERPRISE;
+    info.type = Security::Verify::ProvisionType::RELEASE;
     info.bundleInfo.appFeature = "hos_normal_app";
     info.bundleInfo.bundleName = BUNDLE_BACKUP_NAME;
     result.SetProvisionInfo(info);
@@ -4356,6 +4362,8 @@ HWTEST_F(BmsBundleInstallerTest, CreateBundleDataDir_0020, Function | SmallTest 
 
     ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_START);
     EXPECT_TRUE(ret3);
+    ret3 = dataMgr->UpdateBundleInstallState(BUNDLE_NAME_TEST, InstallState::UNINSTALL_SUCCESS);
+    EXPECT_TRUE(ret3);
 }
 
 /**
@@ -4446,11 +4454,7 @@ HWTEST_F(BmsBundleInstallerTest, CheckApiInfo_0030, Function | SmallTest | Level
     info.try_emplace("OpenHarmony2", innerBundleInfo);
 
     bool res = installer.CheckApiInfo(info);
-#ifdef ON_64BIT_SYSTEM
     EXPECT_EQ(res, true);
-#else
-    EXPECT_EQ(res, false);
-#endif
 }
 
 /**
@@ -4883,5 +4887,125 @@ HWTEST_F(BmsBundleInstallerTest, GetCallingEventInfo_0010, Function | SmallTest 
     ScopeGuard stateGuard([&] { ResetDataMgr(); });
     bundleInstaller.GetCallingEventInfo(eventInfo);
     EXPECT_EQ(eventInfo.callingBundleName, EMPTY_STRING);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0100
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0100, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+ 
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "appIdentifier";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0200
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0200, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: baseBundleInstaller_0300
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0300, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.name = "com.example.baseApplication";
+    oldBundleInfo.versionCode = 1000000;
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.signatureInfo.appIdentifier = "newappIdentifier";
+    newBundleInfo.versionCode = 2000000;
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0400
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0400, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.signatureInfo.appIdentifier = "oldappIdentifier";
+    oldBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("E64B13B84E6D2167F73B46530C6E02E323DA43C9C2DA251D7C64D20E091B936F");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: CheckAppIdentifier_0500
+ * @tc.name: test CheckAppIdentifier
+ * @tc.desc: 1.Test the CheckAppIdentifier
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0500, Function | SmallTest | Level0)
+{
+    BundleInfo oldBundleInfo;
+    oldBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo oldInfo;
+    oldInfo.SetBaseBundleInfo(oldBundleInfo);
+    oldInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BundleInfo newBundleInfo;
+    newBundleInfo.name = "com.example.baseApplication";
+    InnerBundleInfo newInfo;
+    newInfo.SetBaseBundleInfo(newBundleInfo);
+    newInfo.SetProvisionId("9AED2A79925ECA050CD2BB9D2A7F694E49E5E135D28EBDCE53836DE76B5080ED");
+
+    BaseBundleInstaller installer;
+    bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
+    EXPECT_TRUE(res);
 }
 } // OHOS

@@ -35,6 +35,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ability_manager_helper.cpp",
   "${services_path}/bundlemgr/src/aot/aot_args.cpp",
   "${services_path}/bundlemgr/src/aot/aot_handler.cpp",
+  "${services_path}/bundlemgr/src/app_service_fwk/app_service_fwk_installer.cpp",
   "${services_path}/bundlemgr/src/base_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/bundle_exception_handler.cpp",
   "${services_path}/bundlemgr/src/bundle_install_checker.cpp",
@@ -58,6 +59,7 @@ bundle_install_sources = [
   "${services_path}/bundlemgr/src/ipc/installd_host.cpp",
   "${services_path}/bundlemgr/src/ipc/installd_proxy.cpp",
   "${services_path}/bundlemgr/src/pre_install_bundle_info.cpp",
+  "${services_path}/bundlemgr/src/pre_install_exception_mgr.cpp",
   "${services_path}/bundlemgr/src/sandbox_app/bundle_sandbox_app_helper.cpp",
   "${services_path}/bundlemgr/src/shared/inner_shared_bundle_installer.cpp",
   "${services_path}/bundlemgr/src/shared/shared_bundle_installer.cpp",
@@ -157,6 +159,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/aot/charge_idle_listener.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_manager.cpp",
   "${services_path}/bundlemgr/src/app_provision_info/app_provision_info_rdb.cpp",
+  "${services_path}/bundlemgr/src/bms_extension/bms_extension_client.cpp",
   "${services_path}/bundlemgr/src/bms_param.cpp",
   "${services_path}/bundlemgr/src/bundle_common_event_mgr.cpp",
   "${services_path}/bundlemgr/src/bundle_data_mgr.cpp",
@@ -164,6 +167,7 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/bundle_mgr_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_mgr_service.cpp",
   "${services_path}/bundlemgr/src/bundle_mgr_service_event_handler.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource_helper.cpp",
   "${services_path}/bundlemgr/src/bundle_scanner.cpp",
   "${services_path}/bundlemgr/src/bundle_state_storage.cpp",
   "${services_path}/bundlemgr/src/bundle_status_callback_death_recipient.cpp",
@@ -176,8 +180,15 @@ bundle_mgr_source = [
 ]
 
 bundle_resource = [
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_callback.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_configuration.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_event_subscriber.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_manager.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_observer.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_param.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_parser.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_process.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_rdb.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_register.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/resource_info.cpp",
 ]

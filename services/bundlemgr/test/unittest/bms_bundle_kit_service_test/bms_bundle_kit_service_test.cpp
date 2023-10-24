@@ -3544,17 +3544,17 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0300, Function | SmallTes
  * @tc.number: CleanBundleDataFiles_0400
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
- *           2.userDataClearable is false, isSystemApp is false
- *           3.clean the cache files succeed
+ *           2.userDataClearable is false
+ *           3.clean the cache files failed
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0400, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
     CreateFileDir();
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID);
-    EXPECT_TRUE(testRet);
+    EXPECT_FALSE(testRet);
 
     CleanFileDir();
     CheckFileNonExist();
@@ -3565,12 +3565,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0400, Function | SmallTes
  * @tc.number: CleanBundleDataFiles_0500
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
- *           2.userDataClearable is true, isSystemApp is false
+ *           2.userDataClearable is true
  *           3.clean the cache files succeed
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0500, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, false);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
     CreateFileDir();
 
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
@@ -3586,54 +3586,9 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0500, Function | SmallTes
  * @tc.number: CleanBundleDataFiles_0600
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
- *           2.userDataClearable is false, isSystemApp is true
- *           3.clean the cache files failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0600, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
-    CreateFileDir();
-
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    bool testRet = hostImpl->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID);
-    EXPECT_FALSE(testRet);
-
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: CleanBundleDataFiles_0700
- * @tc.name: test can clean the bundle data files by bundle name
- * @tc.desc: 1.system run normally
- *           2.userDataClearable is true, isSystemApp is true
- *           3.clean the cache files failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0700, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, true);
-    CreateFileDir();
-
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    if (!bundleMgrProxy) {
-        APP_LOGE("bundle mgr proxy is nullptr.");
-        EXPECT_EQ(bundleMgrProxy, nullptr);
-    }
-    bool testRet = bundleMgrProxy->CleanBundleDataFiles(BUNDLE_NAME_TEST, DEFAULT_USERID);
-    EXPECT_FALSE(testRet);
-
-    CleanFileDir();
-    CheckFileNonExist();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: CleanBundleDataFiles_0800
- * @tc.name: test can clean the bundle data files by bundle name
- * @tc.desc: 1.system run normally
  *           2.clean the bundle data files successfully
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0600, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     CreateFileDir();
@@ -3648,12 +3603,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTes
 }
 
 /**
- * @tc.number: CleanBundleDataFiles_0900
+ * @tc.number: CleanBundleDataFiles_0700
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the bundle data files failed by empty bundle name
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0700, Function | SmallTest | Level1)
 {
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     if (!bundleMgrProxy) {
@@ -3665,13 +3620,13 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0900, Function | SmallTes
 }
 
 /**
- * @tc.number: CleanBundleDataFiles_1000
+ * @tc.number: CleanBundleDataFiles_0800
  * @tc.name: test can clean the bundle data files by bundle name
  * @tc.desc: 1.system run normally
  *           2.userDataClearable is false, userId is false
  *           3.clean the cache files failed
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_0800, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
     CreateFileDir();
@@ -3686,12 +3641,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanBundleDataFiles_1000, Function | SmallTes
 }
 
 /**
- * @tc.number: CleanCache_0200
+ * @tc.number: CleanCache_0100
  * @tc.name: test can clean the cache files by empty bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the cache files failed
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0100, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     CreateFileDir();
@@ -3707,12 +3662,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_0300
+ * @tc.number: CleanCache_0200
  * @tc.name: test can clean the cache files by no exist bundle name
  * @tc.desc: 1.system run normally
  *           2.clean the cache files failed
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0200, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
     CreateFileDir();
@@ -3728,21 +3683,42 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_0400
+ * @tc.number: CleanCache_0300
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
- *           2. userDataClearable is true, isSystemApp is false
+ *           2. userDataClearable is true
  *           3.clean the cache files succeed
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0300, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, false);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true);
     CreateFileDir();
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     auto hostImpl = std::make_unique<BundleMgrHostImpl>();
     auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
     EXPECT_TRUE(result == ERR_OK);
+
+    CleanFileDir();
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: CleanCache_0400
+ * @tc.name: test can clean the cache files
+ * @tc.desc: 1.system run normally
+ *           2. userDataClearable is false
+ *           3.clean the cache files failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
+    CreateFileDir();
+
+    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
+    EXPECT_FALSE(result == ERR_OK);
 
     CleanFileDir();
     MockUninstallBundle(BUNDLE_NAME_TEST);
@@ -3752,76 +3728,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0400, Function | SmallTest | Level1
  * @tc.number: CleanCache_0500
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
- *           2. userDataClearable is false, isSystemApp is false
- *           3.clean the cache files succeed
+ *           2. userDataClearable is false
+ *           3.clean the cache files failed
  */
 HWTEST_F(BmsBundleKitServiceTest, CleanCache_0500, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, false);
-    CreateFileDir();
-
-    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_TRUE(result == ERR_OK);
-
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: CleanCache_0600
- * @tc.name: test can clean the cache files
- * @tc.desc: 1.system run normally
- *           2. userDataClearable is true, isSystemApp is true
- *           3.clean the cache files succeed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0600, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, true, true);
-    CreateFileDir();
-
-    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_TRUE(result == ERR_OK);
-
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: CleanCache_0700
- * @tc.name: test can clean the cache files
- * @tc.desc: 1.system run normally
- *           2. userDataClearable is false, isSystemApp is true
- *           3.clean the cache files failed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
-    CreateFileDir();
-
-    sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
-    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
-    auto result = hostImpl->CleanBundleCacheFiles(BUNDLE_NAME_TEST, cleanCache);
-    EXPECT_FALSE(result == ERR_OK);
-    CheckCacheExist();
-
-    CleanFileDir();
-    MockUninstallBundle(BUNDLE_NAME_TEST);
-}
-
-/**
- * @tc.number: CleanCache_0800
- * @tc.name: test can clean the cache files
- * @tc.desc: 1.system run normally
- *           2. userDataClearable is false, isSystemApp is false
- *           3.clean the cache files succeed
- */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
     CreateFileDir();
 
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
@@ -3838,13 +3750,12 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_0900
+ * @tc.number: CleanCache_0600
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
- *           2.userDataClearable is false, isSystemApp is false
- *           3.clean the cache files failed by empty name
+ *           2.clean the cache files failed by empty name
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_0900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0600, Function | SmallTest | Level1)
 {
     sptr<MockCleanCache> cleanCache = new (std::nothrow) MockCleanCache();
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -3857,15 +3768,15 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_0900, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_1000
+ * @tc.number: CleanCache_0700
  * @tc.name: test can clean the cache files
  * @tc.desc: 1.system run normally
- *           2. userDataClearable is false, isSystemApp is false
+ *           2. userDataClearable is false
  *           3.clean the cache files failed by nullptr cleaCache
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_1000, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0700, Function | SmallTest | Level1)
 {
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false);
     CreateFileDir();
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -3881,13 +3792,13 @@ HWTEST_F(BmsBundleKitServiceTest, CleanCache_1000, Function | SmallTest | Level1
 }
 
 /**
- * @tc.number: CleanCache_1100
+ * @tc.number: CleanCache_0800
  * @tc.name: test can clean the cache files with failed userId
  * @tc.desc: 1.system run normally
  *           2. userDataClearable is false, isSystemApp is false
  *           3. clean the cache files failed by failed userId
  */
-HWTEST_F(BmsBundleKitServiceTest, CleanCache_1100, Function | SmallTest | Level1)
+HWTEST_F(BmsBundleKitServiceTest, CleanCache_0800, Function | SmallTest | Level1)
 {
     MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST, false, true);
     CreateFileDir();
@@ -7271,28 +7182,6 @@ HWTEST_F(BmsBundleKitServiceTest, Hidump_001, Function | SmallTest | Level1)
     args.emplace_back("3");
     testRet = bundleMgrService_->Hidump(args, result);
     EXPECT_EQ(testRet, true);
-}
-
-/**
- * @tc.number: CreateNewUser_0100
- * @tc.name: test new user can get shortcutInfo by bundleName
- * @tc.desc: 1.create new user
- *           2.get shortcutInfo success
- */
-HWTEST_F(BmsBundleKitServiceTest, CreateNewUser_0100, Function | SmallTest | Level1)
-{
-    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
-    std::vector<ShortcutInfo> shortcutInfos;
-
-    int32_t userId = 101;
-    bundleUserMgrHostImpl_->CreateNewUser(userId);
-    auto result = GetBundleDataMgr()->GetShortcutInfos(
-        BUNDLE_NAME_TEST,  userId, shortcutInfos);
-    EXPECT_TRUE(result);
-    CheckShortcutInfoTest(shortcutInfos);
-    bundleUserMgrHostImpl_->RemoveUser(userId);
-
-    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 #ifdef BUNDLE_FRAMEWORK_FREE_INSTALL

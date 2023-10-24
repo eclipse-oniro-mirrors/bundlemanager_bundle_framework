@@ -2521,122 +2521,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0500, Function | MediumTest | 
 }
 
 /**
- * @tc.number: GetBundleNameForUid_0100
- * @tc.name: test query bundlenames
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the hap
- *           3.query bundlename by uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0100, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleNameForUid_0100" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        std::vector<std::string> resvec;
-        std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-        std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
-
-        CommonTool commonTool;
-        std::string installResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(installResult, "Success") << "install fail!";
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        ASSERT_NE(bundleMgrProxy, nullptr);
-
-        BundleInfo bundleInfo;
-        bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-        int uid = bundleInfo.uid;
-
-        std::string bundleName;
-        bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-        EXPECT_TRUE(getInfoResult);
-        EXPECT_EQ(bundleName, appName);
-        resvec.clear();
-        Uninstall(appName, resvec);
-        std::string uninstallResult = commonTool.VectorToStr(resvec);
-        EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-
-        if (!getInfoResult) {
-            APP_LOGI("GetBundleNameForUid_0100 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleNameForUid_0100 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleNameForUid_0100" << std::endl;
-}
-
-/**
- * @tc.number: GetBundleNameForUid_0200
- * @tc.name: test query bundlenames
- * @tc.desc: 1.query bundlename by uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0200, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleNameForUid_0200" << std::endl;
-    CommonTool commonTool;
-    std::vector<std::string> resvec;
-    std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
-    std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
-    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-    ASSERT_NE(bundleMgrProxy, nullptr);
-
-    BundleInfo bundleInfo;
-    bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
-    int uid = bundleInfo.uid;
-
-    std::string bundleName;
-    bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-    EXPECT_TRUE(getInfoResult);
-    EXPECT_EQ(bundleName, appName);
-
-    resvec.clear();
-    Uninstall(appName, resvec);
-    std::string uninstallResult = commonTool.VectorToStr(resvec);
-    EXPECT_EQ(uninstallResult, "Success") << "uninstall fail!";
-    std::cout << "END GetBundleNameForUid_0200" << std::endl;
-}
-
-/**
- * @tc.number: GetBundleNameForUid_0300
- * @tc.name: test query bundlenames
- * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
- *           2.install the hap
- *           3.query bundlenames by wrong uid
- */
-HWTEST_F(ActsBmsKitSystemTest, GetBundleNameForUid_0300, Function | MediumTest | Level1)
-{
-    std::cout << "START GetBundleNameForUid_0300" << std::endl;
-    bool result = false;
-    for (int i = 1; i <= stLevel_.BMSLevel; i++) {
-        sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
-        ASSERT_NE(bundleMgrProxy, nullptr);
-
-        int uid = Constants::INVALID_UID;
-        std::string bundleName;
-        bool getInfoResult = bundleMgrProxy->GetBundleNameForUid(uid, bundleName);
-        EXPECT_FALSE(getInfoResult);
-
-        if (getInfoResult) {
-            APP_LOGI("GetBundleNameForUid_0300 failed - cycle count: %{public}d", i);
-            break;
-        }
-        result = true;
-    }
-
-    if (result && stLevel_.BMSLevel > 1) {
-        APP_LOGI("GetBundleNameForUid_0300 success - cycle count: %{public}d", stLevel_.BMSLevel);
-    }
-    EXPECT_TRUE(result);
-    std::cout << "END GetBundleNameForUid_0300" << std::endl;
-}
-
-/**
  * @tc.number: GetAppType_0100
  * @tc.name: test GetAppType interface
  * @tc.desc: 1.under '/data/test/bms_bundle',there is a hap
@@ -7212,7 +7096,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0100, Function | MediumTest | L
     bundleMgrProxy->GetBundleInfo(appName, BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo, USERID);
     int uid = bundleInfo.uid;
     std::string callingBundleName;
-    bundleMgrProxy->GetBundleNameForUid(uid, callingBundleName);
+    bundleMgrProxy->GetNameForUid(uid, callingBundleName);
     testRet = bundleMgrProxy->GetShortcutInfoV9(callingBundleName, shortcutInfos);
     EXPECT_EQ(testRet, ERR_OK);
 

@@ -50,6 +50,7 @@ constexpr const char* BUNDLE_APP_PROFILE_KEY_REMOVABLE = "removable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_USER_DATA_CLEARABLE = "userDataClearable";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_TARGETET_BUNDLE_LIST = "targetBundleList";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_ASAN_ENABLED = "asanEnabled";
+constexpr const char* BUNDLE_APP_PROFILE_KEY_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 // sub BUNDLE_APP_PROFILE_KEY_VERSION
 constexpr const char* BUNDLE_APP_PROFILE_KEY_CODE = "code";
 constexpr const char* BUNDLE_APP_PROFILE_KEY_MIN_COMPATIBLE_VERSION_CODE = "minCompatibleVersionCode";
@@ -343,6 +344,7 @@ constexpr const char* APP_MULTI_PROJECTS = "multiProjects";
 constexpr const char* APP_ASAN_ENABLED = "asanEnabled";
 constexpr const char* APP_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE = "bundleType";
+constexpr const char* APP_GWP_ASAN_ENABLED = "GWPAsanEnabled";
 // module
 constexpr const char* MODULE_NAME = "name";
 constexpr const char* MODULE_TYPE = "type";
@@ -410,6 +412,7 @@ constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 constexpr const char* ABILITY_UNCLEARABLE_MISSION = "unclearableMission";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
+constexpr const char* ABILITY_SPECIFIED_PROCESS = "specifiedProcess";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
@@ -475,6 +478,9 @@ constexpr const char* BUNDLE_TYPE_SHARED = "shared";
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";
 constexpr const char* COMPILE_SDK_TYPE = "compileSdkType";
 constexpr const char* COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+
+// moduleMenu
+constexpr const char* MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 }  // namespace Profile
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -136,6 +136,7 @@ const std::string MODULE_COMPRESS_NATIVE_LIBS = "compressNativeLibs";
 const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string DATA_GROUP_INFOS = "dataGroupInfos";
+const std::string MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -664,6 +665,7 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
         {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
+        {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu}
     };
 }
 
@@ -1195,6 +1197,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         MODULE_AOT_COMPILE_STATUS,
         info.aotCompileStatus,
         JsonType::NUMBER,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_FILE_CONTEXT_MENU,
+        info.fileContextMenu,
+        JsonType::STRING,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -1869,6 +1879,7 @@ std::optional<HapModuleInfo> InnerBundleInfo::FindHapModuleInfo(const std::strin
     hapInfo.compressNativeLibs = it->second.compressNativeLibs;
     hapInfo.nativeLibraryFileNames = it->second.nativeLibraryFileNames;
     hapInfo.aotCompileStatus = it->second.aotCompileStatus;
+    hapInfo.fileContextMenu = it->second.fileContextMenu;
     return hapInfo;
 }
 
@@ -4066,6 +4077,29 @@ std::string InnerBundleInfo::GetEntryModuleName() const
         }
     }
     return Constants::EMPTY_STRING;
+}
+
+std::vector<std::string> InnerBundleInfo::GetFingerprints() const
+{
+    return baseApplicationInfo_->fingerprints;
+}
+
+void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
+{
+    auto fingerprints = baseApplicationInfo_->fingerprints;
+    if (std::find(fingerprints.begin(), fingerprints.end(), fingerprint) == fingerprints.end()) {
+        baseApplicationInfo_->fingerprints.emplace_back(fingerprint);
+    }
+}
+
+std::string InnerBundleInfo::GetAppIdentifier() const
+{
+    return baseBundleInfo_->signatureInfo.appIdentifier;
+}
+
+void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
+{
+    baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

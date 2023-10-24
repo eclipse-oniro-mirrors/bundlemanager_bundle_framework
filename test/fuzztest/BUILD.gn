@@ -60,7 +60,6 @@ group("fuzztest") {
     "fuzztest_information/getbundlegidsbyuid_fuzzer:GetBundleGidsByUidFuzzTest",
     "fuzztest_information/getbundleinfo_fuzzer:GetBundleInfoFuzzTest",
     "fuzztest_information/getbundleinfos_fuzzer:GetBundleInfosFuzzTest",
-    "fuzztest_information/getbundlenameforuid_fuzzer:GetBundleNameForUidFuzzTest",
     "fuzztest_information/getbundlepackinfo_fuzzer:GetBundlePackInfoFuzzTest",
     "fuzztest_information/getbundlesforuid_fuzzer:GetBundlesForUidFuzzTest",
     "fuzztest_information/gethapmoduleinfo_fuzzer:GetHapModuleInfoFuzzTest",

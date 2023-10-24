@@ -98,7 +98,7 @@ std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleNam
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (moduleInfo && moduleInfo->distro.moduleType == Profile::MODULE_TYPE_SHARED) {
         APP_LOGD("The module(%{public}s) is shared.", moduleName.c_str());
-        fileSuffix = Constants::INSTALL_SHARED_FILE_SUFFIX;
+        fileSuffix = Constants::HSP_FILE_SUFFIX;
     }
 
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
@@ -768,6 +768,18 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 
     // update haps
     for (; it != newInfos.end(); ++it) {
+        // install entry module firstly
+        APP_LOGD("update module %{public}s, entry module packageName is %{public}s",
+            it->second.GetCurrentModulePackage().c_str(), entryModuleName_.c_str());
+        if ((result = InstallEntryMoudleFirst(newInfos, bundleInfo, innerBundleUserInfo,
+            installParam)) != ERR_OK) {
+            APP_LOGE("install entry module failed due to error %{public}d", result);
+            break;
+        }
+        if (it->second.GetCurrentModulePackage().compare(entryModuleName_) == 0) {
+            APP_LOGD("enrty has been installed");
+            continue;
+        }
         modulePath_ = it->first;
         InnerBundleInfo &newInfo = it->second;
         newInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
@@ -857,6 +869,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     std::unordered_map<std::string, InnerBundleInfo> newInfos;
     result = ParseHapFiles(bundlePaths, installParam, appType, hapVerifyResults, newInfos);
     CHECK_RESULT(result, "parse haps file failed %{public}d");
+    result = CheckInstallPermission(installParam, hapVerifyResults);
+    CHECK_RESULT(result, "check install permission failed %{public}d");
+    result = CheckInstallCondition(hapVerifyResults, newInfos);
+    CHECK_RESULT(result, "check install condition failed %{public}d");
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
@@ -1175,7 +1191,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (installParam.noSkipsKill) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
-            APP_LOGE("can not kill process");
+            APP_LOGE("can not kill process, uid : %{public}d", uid);
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
@@ -1321,7 +1337,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (installParam.noSkipsKill) {
         // kill the bundle process during uninstall.
         if (!AbilityManagerHelper::UninstallApplicationProcesses(oldInfo.GetApplicationName(), uid)) {
-            APP_LOGE("can not kill process");
+            APP_LOGE("can not kill process, uid : %{public}d", uid);
             return ERR_APPEXECFWK_UNINSTALL_KILLING_APP_ERROR;
         }
     }
@@ -1655,8 +1671,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
     }
 
-    if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
-        APP_LOGE("the signature of the new bundle is not the same as old one");
+    if (!CheckAppIdentifier(oldInfo, newInfo)) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCONSISTENT_SIGNATURE;
     }
     APP_LOGD("ProcessBundleUpdateStatus noSkipsKill = %{public}d", noSkipsKill);
@@ -1677,6 +1692,29 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
     APP_LOGD("finish to call ProcessBundleUpdateStatus");
     return ERR_OK;
+}
+
+bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
+    if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
+        if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
+            (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
+            APP_LOGE("same versionCode, appIdentifier or appId is not same");
+            return false;
+        }
+    }
+
+    if (oldInfo.GetAppIdentifier().empty() || newInfo.GetAppIdentifier().empty()) {
+        if (oldInfo.GetProvisionId() != newInfo.GetProvisionId()) {
+            APP_LOGE("the signature of the new bundle is not the same as old one");
+            return false;
+        }
+        return true;
+    }
+    if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
+        APP_LOGE("the appIdentifier of the new bundle is not the same as old one");
+        return false;
+    }
+    return true;
 }
 
 ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, InnerBundleInfo &oldInfo)
@@ -2198,7 +2236,7 @@ static void SendToStorageQuota(const std::string &bundleName, const int uid,
 
     int err = proxy->SetBundleQuota(bundleName, uid, bundleDataDirPath, limitSizeMb);
     if (err != ERR_OK) {
-        APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d", err);
+        APP_LOGW("SendToStorageQuota, SetBundleQuota error, err=%{public}d, uid=%{public}d", err, uid);
     }
 #endif // STORAGE_SERVICE_ENABLE
 }
@@ -2768,31 +2806,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     }
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
-    ret = bundleInstallChecker_->CheckDeviceType(infos);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    ret = bundleInstallChecker_->CheckIsolationMode(infos);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    ret = bundleInstallChecker_->CheckAllowEnterpriseBundle(hapVerifyRes);
-    if (ret != ERR_OK) {
-        APP_LOGE("CheckAllowEnterpriseBundle failed due to errorCode : %{public}d", ret);
-        return ret;
-    }
-    if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
-        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
-        !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
-        // need vaild permission
-        APP_LOGE("install permission denied");
-        ret = ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
-    }
+    
     return ret;
 }
 
@@ -2818,6 +2832,44 @@ void BaseBundleInstaller::ProcessDataGroupInfo(const std::vector<std::string> &b
         }
         dataMgr->GenerateDataGroupInfos(infos[bundlePaths[i]], dataGroupGids, userId);
     }
+}
+
+ErrCode BaseBundleInstaller::CheckInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes,
+    std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    ErrCode ret = bundleInstallChecker_->CheckDeviceType(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckDeviceType failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckIsolationMode(infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckIsolationMode failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    ret = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyRes);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckInstallCondition failed due to errorCode : %{public}d", ret);
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckInstallPermission(const InstallParam &installParam,
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    if ((installParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installEtpMdmBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
+        installParam.installUpdateSelfBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS) &&
+        !bundleInstallChecker_->VaildInstallPermission(installParam, hapVerifyRes)) {
+        // need vaild permission
+        APP_LOGE("install permission denied");
+        return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
+    }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::CheckDependency(std::unordered_map<std::string, InnerBundleInfo> &infos,
@@ -3305,6 +3357,9 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     }
     if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
         return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+    }
+    if (oldInfo.GetGwpAsanEnabled() != newInfo.GetGwpAsanEnabled()) {
+        return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
     }
     APP_LOGD("CheckAppLabel end");
     return ERR_OK;
@@ -3896,7 +3951,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 {
     std::string hapPath = GetHapPath(info);
     if (hapPath.empty() || (!BundleUtil::EndWith(hapPath, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::EndWith(hapPath, Constants::INSTALL_SHARED_FILE_SUFFIX))) {
+        !BundleUtil::EndWith(hapPath, Constants::HSP_FILE_SUFFIX))) {
         APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
         return "";
     }
@@ -4092,6 +4147,35 @@ void BaseBundleInstaller::RemoveTempSoDir(const std::string &tempSoDir)
     }
     std::string subTempSoDir = tempSoDir.substr(0, thirdPos);
     InstalldClient::GetInstance()->RemoveDir(subTempSoDir);
+}
+
+ErrCode BaseBundleInstaller::InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
+    InnerBundleInfo &bundleInfo, const InnerBundleUserInfo &innerBundleUserInfo, const InstallParam &installParam)
+{
+    APP_LOGD("start to install entry firstly");
+    if (!isAppExist_ || isEntryInstalled_) {
+        APP_LOGD("no need to install entry firstly");
+        return ERR_OK;
+    }
+    ErrCode result = ERR_OK;
+    for (auto &info : newInfos) {
+        if (info.second.HasEntry()) {
+            modulePath_ = info.first;
+            InnerBundleInfo &newInfo = info.second;
+            newInfo.AddInnerBundleUserInfo(innerBundleUserInfo);
+            bool isReplace = (installParam.installFlag == InstallFlag::REPLACE_EXISTING ||
+                installParam.installFlag == InstallFlag::FREE_INSTALL);
+            // app exist, but module may not
+            result = ProcessBundleUpdateStatus(bundleInfo, newInfo, isReplace, installParam.noSkipsKill);
+            if (result == ERR_OK) {
+                entryModuleName_ = info.second.GetCurrentModulePackage();
+                APP_LOGD("entry packageName is %{public}s", entryModuleName_.c_str());
+            }
+            break;
+        }
+    }
+    isEntryInstalled_ = true;
+    return result;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

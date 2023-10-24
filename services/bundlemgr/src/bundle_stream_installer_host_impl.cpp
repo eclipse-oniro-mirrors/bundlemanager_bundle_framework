@@ -97,7 +97,7 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
     }
 
     if (!BundleUtil::CheckFileType(fileName, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::CheckFileType(fileName, Constants::INSTALL_SHARED_FILE_SUFFIX)) {
+        !BundleUtil::CheckFileType(fileName, Constants::HSP_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
         return -1;
     }
@@ -183,7 +183,7 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
     }
 
     if (!BundleUtil::CheckFileType(hspName, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::CheckFileType(hspName, Constants::INSTALL_SHARED_FILE_SUFFIX) &&
+        !BundleUtil::CheckFileType(hspName, Constants::HSP_FILE_SUFFIX) &&
         !BundleUtil::CheckFileType(hspName, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
         return -1;

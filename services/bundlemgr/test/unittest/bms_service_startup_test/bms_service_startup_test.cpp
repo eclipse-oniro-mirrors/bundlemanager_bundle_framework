@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2021-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,6 +37,7 @@ const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
 const std::string AVAILABLE_TYPE_NORMAL = "normal";
 const std::string AVAILABLE_TYPE_MDM = "MDM";
 const std::string AVAILABLE_TYPE_EMPTY = "";
+const std::string BUNDLE_PATH = "test.hap";
 } // namespace
 
 class BmsServiceStartupTest : public testing::Test {
@@ -61,7 +62,10 @@ void BmsServiceStartupTest::TearDownTestCase()
 }
 
 void BmsServiceStartupTest::SetUp()
-{}
+{
+    bundleMgrService_->InitBmsParam();
+    bundleMgrService_->InitPreInstallExceptionMgr();
+}
 
 void BmsServiceStartupTest::TearDown()
 {
@@ -621,8 +625,9 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0700, Function | SmallTest |
     info.name = "default";
     defaultPermission.grantPermission.emplace_back(info);
     std::string signature = "";
-    ret = BundlePermissionMgr::MatchSignature(
-        defaultPermission, signature);
+    std::vector<std::string> signatures;
+    signatures.insert(signatures.end(), signature);
+    ret = BundlePermissionMgr::MatchSignature(defaultPermission, signatures);
     EXPECT_EQ(ret, false);
 }
 
@@ -711,12 +716,9 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
 {
     BmsParam param;
-    bool ret = param.SaveBmsParam("bms_param", "");
-    EXPECT_EQ(ret, false);
+    bool ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_EQ(ret, true);
     ret = param.SaveBmsParam("", "bms_value");
-    EXPECT_EQ(ret, false);
-    param.rdbDataManager_.reset();
-    ret = param.SaveBmsParam("bms_param", "bms_value");
     EXPECT_EQ(ret, false);
 }
 
@@ -785,5 +787,58 @@ HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTe
     std::vector<AccessToken::PermissionDef> newPermissionDef;
     auto ret = BundlePermissionMgr::GetNewPermissionDefList(tokenId, permissionDef, newPermissionDef);
     EXPECT_NE(ret, 0);
+}
+
+/**
+* @tc.number: PreInstallExceptionMgr_0001
+* @tc.name: test PreInstallExceptionMgr
+* @tc.desc: 1. test is valid input
+*/
+HWTEST_F(BmsServiceStartupTest, PreInstallExceptionMgr_0001, Function | SmallTest | Level0)
+{
+    if (bundleMgrService_ == nullptr) {
+        return;
+    }
+
+    auto preInstallExceptionMgr = bundleMgrService_->GetPreInstallExceptionMgr();
+    bool ret = preInstallExceptionMgr != nullptr;
+    EXPECT_EQ(ret, true);
+
+    ret = (bundleMgrService_->GetBmsParam() != nullptr);
+    EXPECT_EQ(ret, true);
+
+    std::set<std::string> oldExceptionPaths;
+    std::set<std::string> oldExceptionBundleNames;
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        oldExceptionPaths, oldExceptionBundleNames);
+
+    preInstallExceptionMgr->ClearAll();
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        exceptionPaths, exceptionBundleNames);
+    EXPECT_EQ(ret, false);
+
+    preInstallExceptionMgr->SavePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
+    preInstallExceptionMgr->SavePreInstallExceptionPath(BUNDLE_PATH);
+    preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        exceptionPaths, exceptionBundleNames);
+    preInstallExceptionMgr->DeletePreInstallExceptionBundleName(BUNDLE_TEMP_NAME);
+    preInstallExceptionMgr->DeletePreInstallExceptionPath(BUNDLE_PATH);
+    ret = preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        exceptionPaths, exceptionBundleNames);
+    EXPECT_EQ(ret, false);
+
+    if (oldExceptionPaths.size() > 0) {
+        for (const auto &pathIter : oldExceptionPaths) {
+            preInstallExceptionMgr->SavePreInstallExceptionPath(pathIter);
+        }
+    }
+
+    if (oldExceptionBundleNames.size() > 0) {
+        for (const auto &bundleNameIter : oldExceptionBundleNames) {
+            preInstallExceptionMgr->SavePreInstallExceptionPath(bundleNameIter);
+        }
+    }
 }
 } // OHOS

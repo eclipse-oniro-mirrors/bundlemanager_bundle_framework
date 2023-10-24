@@ -58,12 +58,28 @@ bool BmsParam::SaveBmsParam(const std::string &paramKeyInfo, const std::string &
         APP_LOGE("key or value is empty!");
         return false;
     }
+
     if (rdbDataManager_ == nullptr) {
         APP_LOGE("rdbDataManager is null");
         return false;
     }
 
     return rdbDataManager_->InsertData(paramKeyInfo, paramValueInfo);
+}
+
+bool BmsParam::DeleteBmsParam(const std::string &key)
+{
+    if (key.empty()) {
+        APP_LOGE("key is empty");
+        return false;
+    }
+
+    if (rdbDataManager_ == nullptr) {
+        APP_LOGE("rdbDataManager is null");
+        return false;
+    }
+
+    return rdbDataManager_->DeleteData(key);
 }
 
 }  // namespace AppExecFwk

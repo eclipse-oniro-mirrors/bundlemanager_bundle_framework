@@ -42,15 +42,6 @@ ErrCode BundleMgrClient::GetNameForUid(const int uid, std::string &name)
     return impl_->GetNameForUid(uid, name);
 }
 
-bool BundleMgrClient::GetBundleNameForUid(const int uid, std::string &bundleName)
-{
-    if (impl_ == nullptr) {
-        APP_LOGE("Bundle mgr client impl is nullptr");
-        return false;
-    }
-    return impl_->GetBundleNameForUid(uid, bundleName);
-}
-
 bool BundleMgrClient::GetBundleInfo(const std::string &bundleName, const BundleFlag flag, BundleInfo &bundleInfo,
     int32_t userId)
 {

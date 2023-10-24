@@ -567,7 +567,7 @@ sptr<IBundleStreamInstaller> BundleInstallerHost::CreateStreamInstaller(const In
     sptr<BundleStreamInstallerHostImpl> streamInstaller(new (std::nothrow) BundleStreamInstallerHostImpl(
         ++streamInstallerIds_, uid));
     if (streamInstaller == nullptr) {
-        APP_LOGE("streamInstaller is nullptr");
+        APP_LOGE("streamInstaller is nullptr, uid : %{public}d", uid);
         statusReceiver->OnFinished(ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR, "");
         return nullptr;
     }

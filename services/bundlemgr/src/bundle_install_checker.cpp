@@ -41,6 +41,7 @@ const std::string PRIVILEGE_ALLOW_MISSION_NOT_CLEARED = "AllowMissionNotCleared"
 const std::string PRIVILEGE_ALLOW_APP_USE_PRIVILEGE_EXTENSION = "AllowAppUsePrivilegeExtension";
 const std::string PRIVILEGE_ALLOW_FORM_VISIBLE_NOTIFY = "AllowFormVisibleNotify";
 const std::string PRIVILEGE_ALLOW_APP_SHARE_LIBRARY = "AllowAppShareLibrary";
+const std::string PRIVILEGE_ALLOW_ENABLE_NOTIFICATION = "AllowEnableNotification";
 const std::string ALLOW_APP_DATA_NOT_CLEARED = "allowAppDataNotCleared";
 const std::string ALLOW_APP_MULTI_PROCESS = "allowAppMultiProcess";
 const std::string ALLOW_APP_DESKTOP_ICON_HIDE = "allowAppDesktopIconHide";
@@ -50,6 +51,7 @@ const std::string ALLOW_MISSION_NOT_CLEARED = "allowMissionNotCleared";
 const std::string ALLOW_APP_USE_PRIVILEGE_EXTENSION = "allowAppUsePrivilegeExtension";
 const std::string ALLOW_FORM_VISIBLE_NOTIFY = "allowFormVisibleNotify";
 const std::string ALLOW_APP_SHARE_LIBRARY = "allowAppShareLibrary";
+const std::string ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string APP_TEST_BUNDLE_NAME = "com.OpenHarmony.app.test";
 const std::string BUNDLE_NAME_XTS_TEST = "com.acts.";
 const std::string APL_NORMAL = "normal";
@@ -61,6 +63,7 @@ const std::string VALUE_TRUE_BOOL = "1";
 const std::string VALUE_FALSE = "false";
 const std::string NONISOLATION_ONLY = "nonisolationOnly";
 const std::string ISOLATION_ONLY = "isolationOnly";
+const std::string DEVELOPERMODE_STATE = "const.security.developermode.state";
 const int32_t SLAH_OFFSET = 2;
 const int32_t THRESHOLD_VAL_LEN = 40;
 constexpr const char* SYSTEM_APP_SCAN_PATH = "/system/app";
@@ -115,6 +118,10 @@ const std::unordered_map<std::string, void (*)(AppPrivilegeCapability &appPrivil
             { PRIVILEGE_ALLOW_APP_SHARE_LIBRARY,
                 [] (AppPrivilegeCapability &appPrivilegeCapability) {
                     appPrivilegeCapability.appShareLibrary = true;
+                } },
+            { PRIVILEGE_ALLOW_ENABLE_NOTIFICATION,
+                [] (AppPrivilegeCapability &appPrivilegeCapability) {
+                    appPrivilegeCapability.allowEnableNotification = true;
                 } },
         };
 
@@ -212,11 +219,12 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
 
 #ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
+    auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
     auto appDistributionType = hapVerifyRes[0].GetProvisionInfo().distributionType;
     auto appProvisionType = hapVerifyRes[0].GetProvisionInfo().type;
     bool isInvalid = std::any_of(hapVerifyRes.begin(), hapVerifyRes.end(),
-        [appId, apl, appDistributionType, appProvisionType](const auto &hapVerifyResult) {
+        [appId, apl, appDistributionType, appProvisionType, appIdentifier](const auto &hapVerifyResult) {
             if (appId != hapVerifyResult.GetProvisionInfo().appId) {
                 APP_LOGE("error: hap files have different appId");
                 return true;
@@ -231,6 +239,10 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
             }
             if (appProvisionType != hapVerifyResult.GetProvisionInfo().type) {
                 APP_LOGE("error: hap files have different appProvisionType");
+                return true;
+            }
+            if (appIdentifier != hapVerifyResult.GetProvisionInfo().bundleInfo.appIdentifier) {
+                APP_LOGE("error: hap files have different appIdentifier");
                 return true;
             }
         return false;
@@ -329,7 +341,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
     for (uint32_t i = 0; i < bundlePaths.size(); ++i) {
         InnerBundleInfo newInfo;
         BundlePackInfo packInfo;
-        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();         
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
         bool isSystemApp = provisionInfo.bundleInfo.appFeature == Constants::HOS_SYSTEM_APP;
         if (isSystemApp) {
             newInfo.SetAppType(Constants::AppType::SYSTEM_APP);
@@ -394,10 +406,28 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install failed due to duplicated moduleName");
         return result;
     }
+    APP_LOGD("finish parse hap file");
+    return result;
+}
+
+ErrCode BundleInstallChecker::CheckHspInstallCondition(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
+    ErrCode result = ERR_OK;
+    if ((result = CheckDeveloperMode(hapVerifyRes)) != ERR_OK) {
+        APP_LOGE("install failed due to debug mode");
+        return result;
+    }
     if ((result = CheckAllowEnterpriseBundle(hapVerifyRes)) != ERR_OK) {
         APP_LOGE("install failed due to non-enterprise device");
         return result;
     }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckInstallPermission(const InstallCheckParam &checkParam,
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes)
+{
     if ((checkParam.installBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEnterpriseBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
         checkParam.installEtpNormalBundlePermissionStatus != PermissionStatus::NOT_VERIFIED_PERMISSION_STATUS ||
@@ -407,8 +437,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         APP_LOGE("install permission denied");
         return ERR_APPEXECFWK_INSTALL_PERMISSION_DENIED;
     }
-    APP_LOGD("finish parse hap file");
-    return result;
+    return ERR_OK;
 }
 
 bool BundleInstallChecker::VaildInstallPermissionForShare(const InstallCheckParam &checkParam,
@@ -629,6 +658,8 @@ void BundleInstallChecker::CollectProvisionInfo(
     newInfo.SetHideDesktopIcon(appPrivilegeCapability.hideDesktopIcon);
     newInfo.SetFormVisibleNotify(appPrivilegeCapability.formVisibleNotify);
 #endif
+    newInfo.AddFingerprint(provisionInfo.fingerprint);
+    newInfo.SetAppIdentifier(provisionInfo.bundleInfo.appIdentifier);
 }
 
 void BundleInstallChecker::SetAppProvisionMetadata(const std::vector<Security::Verify::Metadata> &provisionMetadatas,
@@ -660,15 +691,29 @@ void BundleInstallChecker::GetPrivilegeCapability(
     BMSEventHandler::GetPreInstallCapability(preBundleConfigInfo);
     bool ret = false;
     if (!preBundleConfigInfo.appSignature.empty()) {
-        ret = std::find(
-            preBundleConfigInfo.appSignature.begin(),
-            preBundleConfigInfo.appSignature.end(),
-            newInfo.GetCertificateFingerprint()) !=
-            preBundleConfigInfo.appSignature.end();
+        if (std::find(preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(),
+            newInfo.GetCertificateFingerprint()) != preBundleConfigInfo.appSignature.end()) {
+            ret = true;
+        }
+        if (!ret) {
+            std::vector<std::string> fingerprints;
+            std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+            if (!dataMgr->GetFingerprints(newInfo.GetBundleName(), fingerprints)) {
+                APP_LOGE("Get fingerprints failed.");
+                return;
+            }
+            for (auto &fingerprint : fingerprints) {
+                if (std::find(
+                    preBundleConfigInfo.appSignature.begin(), preBundleConfigInfo.appSignature.end(), fingerprint) !=
+                    preBundleConfigInfo.appSignature.end()) {
+                    ret = true;
+                    break;
+                }
+            }
+        }
     }
-
     if (!ret) {
-        APP_LOGW("appSignature is incompatible");
+        APP_LOGE("appSignature is incompatible");
         return;
     }
 
@@ -844,6 +889,7 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
     bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
+    bool gwpAsanEnabled = (infos.begin()->second).GetGwpAsanEnabled();
 
     for (const auto &info : infos) {
         // check bundleName
@@ -907,6 +953,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
             return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+        }
+        if (gwpAsanEnabled != info.second.GetGwpAsanEnabled()) {
+            return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
         }
     }
     APP_LOGD("finish check APP label");
@@ -1121,8 +1170,10 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
         return;
     }
     if (!MatchSignature(configInfo.appSignature, appSignature)) {
-        APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
-        return;
+        if (!MatchOldFingerprints(bundleName, configInfo.appSignature)) {
+            APP_LOGE("bundleName: %{public}s signature verify failed", bundleName.c_str());
+            return;
+        }
     }
     appPrivilegeCapability.allowUsePrivilegeExtension = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_USE_PRIVILEGE_EXTENSION,
@@ -1159,8 +1210,31 @@ void BundleInstallChecker::FetchPrivilegeCapabilityFromPreConfig(
     appPrivilegeCapability.appShareLibrary = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
         ALLOW_APP_SHARE_LIBRARY,
         configInfo.appShareLibrary, appPrivilegeCapability.appShareLibrary);
+    appPrivilegeCapability.allowEnableNotification = GetPrivilegeCapabilityValue(configInfo.existInJsonFile,
+        ALLOW_ENABLE_NOTIFICATION,
+        configInfo.allowEnableNotification, appPrivilegeCapability.allowEnableNotification);
     APP_LOGD("AppPrivilegeCapability %{public}s", appPrivilegeCapability.ToString().c_str());
 #endif
+}
+
+bool BundleInstallChecker::MatchOldFingerprints(const std::string &bundleName,
+    const std::vector<std::string> &appSignatures)
+{
+    std::vector<std::string> fingerprints;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
+        APP_LOGE("Get fingerprints failed.");
+        return false;
+    }
+    bool isExistSignature = false;
+    for (const auto &signature : appSignatures) {
+        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
+            isExistSignature = true;
+            break;
+        }
+    }
+
+    return isExistSignature;
 }
 
 bool BundleInstallChecker::MatchSignature(
@@ -1184,6 +1258,7 @@ ErrCode BundleInstallChecker::ProcessBundleInfoByPrivilegeCapability(
     if (!appPrivilegeCapability.allowMultiProcess || applicationInfo.process.empty()) {
         applicationInfo.process = applicationInfo.bundleName;
     }
+    applicationInfo.allowEnableNotification = appPrivilegeCapability.allowEnableNotification;
     innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
     BundleInfo bundleInfo = innerBundleInfo.GetBaseBundleInfo();
     // process allow app share library
@@ -1304,6 +1379,7 @@ AppProvisionInfo BundleInstallChecker::ConvertToAppProvisionInfo(
     appProvisionInfo.uuid = provisionInfo.uuid;
     appProvisionInfo.validity.notBefore = provisionInfo.validity.notBefore;
     appProvisionInfo.validity.notAfter = provisionInfo.validity.notAfter;
+    appProvisionInfo.appIdentifier = provisionInfo.bundleInfo.appIdentifier;
     return appProvisionInfo;
 }
 
@@ -1423,6 +1499,23 @@ ErrCode BundleInstallChecker::CheckSignatureFileDir(const std::string &signature
     if (signatureFileDir.find(Constants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("signatureFileDir is invalid");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleInstallChecker::CheckDeveloperMode(
+    const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const
+{
+    if (system::GetBoolParameter(DEVELOPERMODE_STATE, true)) {
+        APP_LOGI("check developer mode success");
+        return ERR_OK;
+    }
+    for (uint32_t i = 0; i < hapVerifyRes.size(); ++i) {
+        Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes[i].GetProvisionInfo();
+        if (provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+            APP_LOGE("debug bundle can only be installed in developer mode");
+            return ERR_APPEXECFWK_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED;
+        }
     }
     return ERR_OK;
 }

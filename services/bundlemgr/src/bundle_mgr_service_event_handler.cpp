@@ -26,6 +26,7 @@
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
 #include "app_privilege_capability.h"
+#include "app_service_fwk_installer.h"
 #include "bundle_install_checker.h"
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
@@ -88,6 +89,7 @@ const std::string HSP_VERSION_PREFIX = "v";
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
 constexpr const char* INSTALL_LIST_CONFIG = "/install_list.json";
+constexpr const char* APP_SERVICE_FWK_INSTALL_LIST_CONFIG = "/app_service_fwk_install_list.json";
 constexpr const char* UNINSTALL_LIST_CONFIG = "/uninstall_list.json";
 constexpr const char* INSTALL_LIST_CAPABILITY_CONFIG = "/install_list_capability.json";
 constexpr const char* EXTENSION_TYPE_LIST_CONFIG = "/extension_type_config.json";
@@ -96,6 +98,7 @@ constexpr const char* SYSTEM_RESOURCES_APP_PATH = "/system/app/ohos.global.syste
 constexpr const char* QUICK_FIX_APP_PATH = "/data/update/quickfix/app/temp/keepalive";
 
 std::set<PreScanInfo> installList_;
+std::set<PreScanInfo> systemHspList_;
 std::set<std::string> uninstallList_;
 std::set<PreBundleConfigInfo> installListCapabilities_;
 std::set<std::string> extensiontype_;
@@ -303,6 +306,7 @@ void BMSEventHandler::BundleRebootStartEvent()
         SaveSystemFingerprint();
         AOTHandler::GetInstance().HandleOTA();
     } else {
+        HandlePreInstallException();
         ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, false);
     }
 
@@ -453,6 +457,7 @@ ResultCode BMSEventHandler::ReInstallAllInstallDirApps()
         if (!OTAInstallSystemBundle(
             filePaths, Constants::AppType::SYSTEM_APP, removable)) {
             APP_LOGE("Reinstall bundle(%{public}s) error.", preInstallDir.c_str());
+            SavePreInstallException(preInstallDir);
             continue;
         }
     }
@@ -572,6 +577,7 @@ void BMSEventHandler::ClearPreInstallCache()
 
     installList_.clear();
     uninstallList_.clear();
+    systemHspList_.clear();
     installListCapabilities_.clear();
     extensiontype_.clear();
     hasLoadPreInstallProFile_ = false;
@@ -608,6 +614,8 @@ void BMSEventHandler::ParsePreBundleProFile(const std::string &dir)
     BundleParser bundleParser;
     bundleParser.ParsePreInstallConfig(
         dir + INSTALL_LIST_CONFIG, installList_);
+    bundleParser.ParsePreInstallConfig(
+        dir + APP_SERVICE_FWK_INSTALL_LIST_CONFIG, systemHspList_);
     bundleParser.ParsePreUnInstallConfig(
         dir + UNINSTALL_LIST_CONFIG, uninstallList_);
     bundleParser.ParsePreInstallAbilityConfig(
@@ -803,6 +811,7 @@ void BMSEventHandler::OnBundleBootStart(int32_t userId)
 #ifdef USE_PRE_BUNDLE_PROFILE
     if (LoadPreInstallProFile()) {
         APP_LOGI("Process boot bundle install from pre bundle proFile for userId:%{public}d", userId);
+        InnerProcessBootSystemHspInstall();
         InnerProcessBootPreBundleProFileInstall(userId);
         return;
     }
@@ -853,6 +862,27 @@ void BMSEventHandler::ProcessScanDir(const std::string &dir, std::list<std::stri
     }
 }
 
+void BMSEventHandler::InnerProcessBootSystemHspInstall()
+{
+    for (const auto &systemHspPath : systemHspList_) {
+        APP_LOGD("Inner process install systemHsp %{private}s on boot",
+            systemHspPath.ToString().c_str());
+        ProcessSystemHspInstall(systemHspPath);
+    }
+}
+
+void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
+{
+    APP_LOGD("Install systemHsp by bundleDir(%{private}s)", preScanInfo.bundleDir.c_str());
+    InstallParam installParam;
+    installParam.isPreInstallApp = true;
+    AppServiceFwkInstaller installer;
+    ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
+    if (ret != ERR_OK) {
+        APP_LOGW("Install systemHsp %{private}s error", preScanInfo.bundleDir.c_str());
+    }
+}
+
 void BMSEventHandler::InnerProcessBootPreBundleProFileInstall(int32_t userId)
 {
     std::list<std::string> hspDirs;
@@ -893,8 +923,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType)) {
+    ErrCode ret = installer.InstallSystemBundle(preScanInfo.bundleDir, installParam, appType);
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         APP_LOGW("Install System app:%{public}s error", preScanInfo.bundleDir.c_str());
+        SavePreInstallException(preScanInfo.bundleDir);
     }
 }
 
@@ -911,8 +943,10 @@ void BMSEventHandler::ProcessSystemBundleInstall(
     installParam.needSavePreInstallInfo = true;
     installParam.copyHapToInstallPath = false;
     SystemBundleInstaller installer;
-    if (!installer.InstallSystemBundle(bundleDir, installParam, appType)) {
+    ErrCode ret = installer.InstallSystemBundle(bundleDir, installParam, appType);
+    if (ret != ERR_OK && ret != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
         APP_LOGW("Install System app:%{public}s error", bundleDir.c_str());
+        SavePreInstallException(bundleDir);
     }
 }
 
@@ -1041,6 +1075,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
         std::unordered_map<std::string, InnerBundleInfo> infos;
         if (!ParseHapFiles(scanPathIter, infos) || infos.empty()) {
             APP_LOGE("obtain bundleinfo failed : %{public}s ", scanPathIter.c_str());
+            SavePreInstallException(scanPathIter);
             continue;
         }
 
@@ -1054,6 +1089,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 APP_LOGE("OTA Install new bundle(%{public}s) error.", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
             }
 
             continue;
@@ -1071,6 +1107,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
                 std::vector<std::string> filePaths { scanPathIter };
                 if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                     APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                    SavePreInstallException(scanPathIter);
                 }
             }
             continue;
@@ -1082,6 +1119,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
             std::vector<std::string> filePaths { scanPathIter };
             if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
                 APP_LOGE("OTA Install prefab bundle(%{public}s) error.", bundleName.c_str());
+                SavePreInstallException(scanPathIter);
             }
 
             continue;
@@ -1157,6 +1195,7 @@ void BMSEventHandler::InnerProcessRebootBundleInstall(
 
         if (!OTAInstallSystemBundle(filePaths, appType, removable)) {
             APP_LOGE("OTA bundle(%{public}s) failed", bundleName.c_str());
+            SavePreInstallException(scanPathIter);
 #ifdef USE_PRE_BUNDLE_PROFILE
             UpdateRemovable(bundleName, removable);
 #endif
@@ -1513,6 +1552,72 @@ bool BMSEventHandler::HasModuleSavedInPreInstalledDb(
     return preInstallIter->second.HasBundlePath(bundlePath);
 }
 
+void BMSEventHandler::SavePreInstallException(const std::string &bundleDir)
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        APP_LOGE("preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    preInstallExceptionMgr->SavePreInstallExceptionPath(bundleDir);
+}
+
+void BMSEventHandler::HandlePreInstallException()
+{
+    auto preInstallExceptionMgr =
+        DelayedSingleton<BundleMgrService>::GetInstance()->GetPreInstallExceptionMgr();
+    if (preInstallExceptionMgr == nullptr) {
+        APP_LOGE("preInstallExceptionMgr is nullptr");
+        return;
+    }
+
+    std::set<std::string> exceptionPaths;
+    std::set<std::string> exceptionBundleNames;
+    if (!preInstallExceptionMgr->GetAllPreInstallExceptionInfo(
+        exceptionPaths, exceptionBundleNames)) {
+        return;
+    }
+
+    APP_LOGI("HandlePreInstallExceptions pathSize: %{public}zu, bundleNameSize: %{public}zu",
+        exceptionPaths.size(), exceptionBundleNames.size());
+    for (const auto &pathIter : exceptionPaths) {
+        APP_LOGI("HandlePreInstallException path: %{private}s", pathIter.c_str());
+        std::vector<std::string> filePaths { pathIter };
+        bool removable = IsPreInstallRemovable(pathIter);
+        if (!OTAInstallSystemBundle(filePaths, Constants::AppType::SYSTEM_APP, removable)) {
+            APP_LOGW("HandlePreInstallException path(%{private}s) error.", pathIter.c_str());
+        }
+
+        preInstallExceptionMgr->DeletePreInstallExceptionPath(pathIter);
+    }
+
+    if (exceptionBundleNames.size() > 0) {
+        LoadAllPreInstallBundleInfos();
+    }
+
+    for (const auto &bundleNameIter : exceptionBundleNames) {
+        APP_LOGI("HandlePreInstallException bundleName: %{public}s", bundleNameIter.c_str());
+        auto iter = loadExistData_.find(bundleNameIter);
+        if (iter == loadExistData_.end()) {
+            APP_LOGW("HandlePreInstallException no bundleName(%{public}s) in PreInstallDb.",
+                bundleNameIter.c_str());
+            continue;
+        }
+
+        const auto &preInstallBundleInfo = iter->second;
+        if (!OTAInstallSystemBundle(preInstallBundleInfo.GetBundlePaths(),
+            Constants::AppType::SYSTEM_APP, preInstallBundleInfo.IsRemovable())) {
+            APP_LOGW("HandlePreInstallException bundleName(%{public}s) error.", bundleNameIter.c_str());
+        }
+
+        preInstallExceptionMgr->DeletePreInstallExceptionBundleName(bundleNameIter);
+    }
+
+    preInstallExceptionMgr->ClearAll();
+}
+
 bool BMSEventHandler::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     Constants::AppType appType,
@@ -1533,7 +1638,11 @@ bool BMSEventHandler::OTAInstallSystemBundle(
     installParam.copyHapToInstallPath = false;
     installParam.isOTA = true;
     SystemBundleInstaller installer;
-    return installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    ErrCode ret = installer.OTAInstallSystemBundle(filePaths, installParam, appType);
+    if (ret == ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON) {
+        ret = ERR_OK;
+    }
+    return ret == ERR_OK;
 }
 
 bool BMSEventHandler::OTAInstallSystemSharedBundle(
@@ -1596,6 +1705,12 @@ bool BMSEventHandler::CheckAndParseHapFiles(
         realPaths, checkParam, hapVerifyResults, infos);
     if (ret != ERR_OK) {
         APP_LOGE("parse haps file(%{public}s) failed", hapFilePath.c_str());
+        return false;
+    }
+
+    ret = bundleInstallChecker->CheckHspInstallCondition(hapVerifyResults);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckHspInstallCondition failed %{public}d", ret);
         return false;
     }
 
@@ -1749,8 +1864,10 @@ void BMSEventHandler::UpdatePrivilegeCapability(
     }
 
     if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
-        APP_LOGW("App(%{public}s) signature verify failed", bundleName.c_str());
-        return;
+        if (!MatchOldFingerprints(bundleName, preBundleConfigInfo.appSignature)) {
+            APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
+            return;
+        }
     }
 
     UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
@@ -1766,6 +1883,26 @@ bool BMSEventHandler::MatchSignature(
 
     return std::find(configInfo.appSignature.begin(),
         configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
+}
+
+bool BMSEventHandler::MatchOldFingerprints(const std::string &bundleName,
+    const std::vector<std::string> &appSignatures)
+{
+    std::vector<std::string> fingerprints;
+    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
+        APP_LOGE("Get fingerprints failed.");
+        return false;
+    }
+    bool isExistSignature = false;
+    for (const auto &signature : appSignatures) {
+        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
+            isExistSignature = true;
+            break;
+        }
+    }
+
+    return isExistSignature;
 }
 
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(
@@ -1989,7 +2126,7 @@ void BMSEventHandler::ProcessSharedBundleProvisionInfo(const std::unordered_set<
                 Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX +
                 std::to_string(sharedBundleInfo.sharedModuleInfos[0].versionCode) + Constants::PATH_SEPARATOR +
                 sharedBundleInfo.sharedModuleInfos[0].name + Constants::PATH_SEPARATOR +
-                sharedBundleInfo.sharedModuleInfos[0].name + Constants::INSTALL_SHARED_FILE_SUFFIX;
+                sharedBundleInfo.sharedModuleInfos[0].name + Constants::HSP_FILE_SUFFIX;
             AddStockAppProvisionInfoByOTA(sharedBundleInfo.name, hspPath);
         }
     }

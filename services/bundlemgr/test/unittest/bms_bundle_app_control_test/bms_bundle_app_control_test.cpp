@@ -1042,13 +1042,13 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2200, Function | Sma
 {
     AppControlManagerHostImpl impl;
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want);
+    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    res = impl.GetDisposedStatus(APPID, want);
+    res = impl.GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_OK);
 
-    res = impl.DeleteDisposedStatus(APPID);
+    res = impl.DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -1164,7 +1164,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2900, Function | Sma
     appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->AddAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-    
+
     appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
     res = appControlManager->AddAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1183,7 +1183,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3000, Function | Sma
     appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->DeleteAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-        
+
     appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
     res = appControlManager->DeleteAppJumpControlRule(controlRules, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1201,7 +1201,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3100, Function | Sma
     appControlManager->appJumpInterceptorManagerDb_ = nullptr;
     ErrCode res = appControlManager->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-        
+
     appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
     res = appControlManager->DeleteRuleByCallerBundleName(CALLER_BUNDLE_NAME, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -1221,7 +1221,7 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_3200, Function | Sma
     ErrCode res = appControlManager->GetAppJumpControlRule(
         CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INTERNAL_ERROR);
-        
+
     appControlManager->appJumpInterceptorManagerDb_ = std::make_shared<AppJumpInterceptorManagerRdb>();
     res = appControlManager->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_SET_JUMP_INTERCPTOR);

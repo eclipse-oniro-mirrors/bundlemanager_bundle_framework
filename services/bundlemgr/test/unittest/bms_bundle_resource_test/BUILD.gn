@@ -24,6 +24,8 @@ ohos_unittest("BmsBundleResourceTest") {
     "//third_party/json/include",
   ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -54,8 +56,10 @@ ohos_unittest("BmsBundleResourceTest") {
   }
   deps = [
     "${base_path}:appexecfwk_base",
+    "${bundle_framework_path}/interfaces/inner_api/bundlemgr_resource:bundlemgr_resource",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
+    "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
     "${core_path}:appexecfwk_core",
   ]
   deps += bundle_install_deps
@@ -111,6 +115,10 @@ ohos_unittest("BmsBundleResourceTest") {
   if (global_resmgr_enable) {
     defines += [ "GLOBAL_RESMGR_ENABLE" ]
     external_deps += [ "resource_management:global_resmgr" ]
+  }
+  if (global_i18n_enable) {
+    defines += [ "GLOBAL_I18_ENABLE" ]
+    external_deps += [ "i18n:intl_util" ]
   }
   if (hicollie_enable) {
     external_deps += [ "hicollie:libhicollie" ]

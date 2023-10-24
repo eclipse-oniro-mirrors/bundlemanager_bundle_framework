@@ -26,13 +26,14 @@ namespace Constants {
 constexpr const char* TYPE_ONLY_MATCH_WILDCARD = "reserved/wildcard";
 const std::string EMPTY_STRING = "";
 constexpr const char* INSTALL_FILE_SUFFIX = ".hap";
-constexpr const char* INSTALL_SHARED_FILE_SUFFIX = ".hsp";
+constexpr const char* HSP_FILE_SUFFIX = ".hsp";
 constexpr const char* QUICK_FIX_FILE_SUFFIX = ".hqf";
 const std::string PATH_SEPARATOR = "/";
 constexpr const char* FILE_UNDERLINE = "_";
 const char FILE_SEPARATOR_CHAR = '/';
 constexpr const char* CURRENT_DEVICE_ID = "PHONE-001";
 constexpr const char* HAP_COPY_PATH = "/data/service/el1/public/bms/bundle_manager_service";
+constexpr const char* BUNDLE_RESOURCE = "/data/service/el1/public/bms/bundle_resources";
 constexpr const char* CACHE_DIR = "cache";
 constexpr const char* TMP_SUFFIX = "_tmp";
 constexpr const char* ASSETS_DIR = "assets";
@@ -174,7 +175,7 @@ constexpr const char* LIB_FOLDER_NAME = "libs";
 constexpr const char* RES_FOLDER_NAME = "resources";
 
 constexpr uint8_t MAX_LABLE_LEN = 30;
-constexpr uint8_t MAX_BUNDLE_NAME = 127;
+constexpr uint8_t MAX_BUNDLE_NAME = 128;
 constexpr uint8_t MIN_BUNDLE_NAME = 7;
 constexpr uint8_t MAX_VENDOR = 255;
 constexpr uint8_t EQUAL_ZERO = 0;

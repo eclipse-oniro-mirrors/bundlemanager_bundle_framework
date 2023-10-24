@@ -310,25 +310,6 @@ static void BenchmarkTestGetAppIdByBundleName(benchmark::State &state)
 }
 
 /**
- * @tc.name: BenchmarkTestGetBundleNameForUid
- * @tc.desc: Testcase for testing GetBundleNameForUid.
- * @tc.type: FUNC
- * @tc.require: Issue Number
- */
-static void BenchmarkTestGetBundleNameForUid(benchmark::State &state)
-{
-    sptr<IBundleMgr> bundleMgrProxy = BundleMgrProxyTest::GetBundleMgrProxy();
-    std::string bundleName;
-    for (auto _ : state) {
-        if (bundleMgrProxy == nullptr) {
-            break;
-        }
-        /* @tc.steps: step1.call GetBundleNameForUid in loop */
-        bundleMgrProxy->GetBundleNameForUid(Constants::INVALID_UID, bundleName);
-    }
-}
-
-/**
  * @tc.name: BenchmarkTestGetBundlesForUid
  * @tc.desc: Testcase for testing GetBundlesForUid.
  * @tc.type: FUNC
@@ -1365,7 +1346,6 @@ BENCHMARK(BenchmarkTestGetBundleInfosByBundleFlag)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetBundleInfosByFlags)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetUidByBundleName)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAppIdByBundleName)->Iterations(BENCHMARK_TIMES);
-BENCHMARK(BenchmarkTestGetBundleNameForUid)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetBundlesForUid)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetNameForUid)->Iterations(BENCHMARK_TIMES);
 BENCHMARK(BenchmarkTestGetAppType)->Iterations(BENCHMARK_TIMES);

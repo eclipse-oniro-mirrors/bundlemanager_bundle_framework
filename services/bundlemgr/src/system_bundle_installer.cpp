@@ -30,7 +30,7 @@ SystemBundleInstaller::~SystemBundleInstaller()
     APP_LOGI("system bundle installer instance is destroyed");
 }
 
-bool SystemBundleInstaller::InstallSystemBundle(
+ErrCode SystemBundleInstaller::InstallSystemBundle(
     const std::string &filePath,
     InstallParam &installParam,
     Constants::AppType appType)
@@ -39,9 +39,8 @@ bool SystemBundleInstaller::InstallSystemBundle(
     ErrCode result = InstallBundle(filePath, installParam, appType);
     if (result != ERR_OK) {
         APP_LOGE("install system bundle fail, error: %{public}d", result);
-        return false;
     }
-    return true;
+    return result;
 }
 
 bool SystemBundleInstaller::InstallSystemSharedBundle(
@@ -59,7 +58,7 @@ bool SystemBundleInstaller::InstallSystemSharedBundle(
     return true;
 }
 
-bool SystemBundleInstaller::OTAInstallSystemBundle(
+ErrCode SystemBundleInstaller::OTAInstallSystemBundle(
     const std::vector<std::string> &filePaths,
     InstallParam &installParam,
     Constants::AppType appType)
@@ -67,9 +66,10 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         APP_LOGE("Get dataMgr shared_ptr nullptr");
-        return false;
+        return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
-    bool ret = true;
+
+    ErrCode result = ERR_OK;
     for (auto allUserId : dataMgr->GetAllUser()) {
         installParam.userId = allUserId;
         MarkPreBundleSyeEventBootTag(false);
@@ -77,12 +77,12 @@ bool SystemBundleInstaller::OTAInstallSystemBundle(
         ErrCode errCode = InstallBundle(filePaths, installParam, appType);
         if ((errCode != ERR_OK) && (errCode != ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON)) {
             APP_LOGE("install system bundle fail, error: %{public}d", errCode);
-            ret = false;
+            result = errCode;
         }
         ResetInstallProperties();
     }
 
-    return ret;
+    return result;
 }
 
 bool SystemBundleInstaller::UninstallSystemBundle(const std::string &bundleName)

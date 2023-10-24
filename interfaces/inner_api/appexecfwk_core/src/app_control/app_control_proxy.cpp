@@ -372,7 +372,8 @@ ErrCode AppControlProxy::GetAppJumpControlRule(const std::string &callerBundleNa
         AppControlManagerInterfaceCode::GET_APP_JUMP_CONTROL_RULE, data, controlRule);
 }
 
-ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want &want)
+ErrCode AppControlProxy::SetDisposedStatus(
+    const std::string &appId, const Want &want, int32_t userId)
 {
     APP_LOGD("proxy begin to SetDisposedStatus.");
     MessageParcel data;
@@ -386,6 +387,10 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
     }
     if (!data.WriteParcelable(&want)) {
         APP_LOGE("write want failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     MessageParcel reply;
@@ -402,7 +407,7 @@ ErrCode AppControlProxy::SetDisposedStatus(const std::string &appId, const Want 
     return ERR_OK;
 }
 
-ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
+ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId, int32_t userId)
 {
     APP_LOGD("proxy begin to DeleteDisposedStatus.");
     MessageParcel data;
@@ -414,7 +419,10 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
         APP_LOGE("write bundleName failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS, data, reply);
     if (ret != ERR_OK) {
@@ -429,7 +437,7 @@ ErrCode AppControlProxy::DeleteDisposedStatus(const std::string &appId)
     return ERR_OK;
 }
 
-ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
+ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want, int32_t userId)
 {
     APP_LOGD("proxy begin to GetDisposedStatus.");
     MessageParcel data;
@@ -439,6 +447,10 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want)
     }
     if (!data.WriteString(appId)) {
         APP_LOGE("write bundleName failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     ErrCode ret = GetParcelableInfo<Want>(AppControlManagerInterfaceCode::GET_DISPOSED_STATUS, data, want);

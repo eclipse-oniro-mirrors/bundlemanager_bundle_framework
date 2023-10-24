@@ -937,6 +937,11 @@ void CommonFunc::ConvertAppProvisionInfo(
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &validity));
     ConvertValidity(env, appProvisionInfo.validity, validity);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "validity", validity));
+
+    napi_value appIdentifier;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, appProvisionInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &appIdentifier));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppProvisionInfo, "appIdentifier", appIdentifier));
 }
 
 void CommonFunc::ConvertExtensionInfo(napi_env env, const ExtensionAbilityInfo &extensionInfo,
@@ -1180,6 +1185,10 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
     napi_value nIsSystemApp;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.isSystemApp, &nIsSystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "systemApp", nIsSystemApp));
+
+    napi_value ndataUnclearable;
+    NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, !appInfo.userDataClearable, &ndataUnclearable));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "dataUnclearable", ndataUnclearable));
 }
 
 void CommonFunc::ConvertPermissionDef(napi_env env, napi_value result, const PermissionDef &permissionDef)
@@ -1268,6 +1277,11 @@ void CommonFunc::ConvertSignatureInfo(napi_env env, const SignatureInfo &signatu
     NAPI_CALL_RETURN_VOID(
         env, napi_create_string_utf8(env, signatureInfo.fingerprint.c_str(), NAPI_AUTO_LENGTH, &nFingerprint));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "fingerprint", nFingerprint));
+
+    napi_value nAppIdentifier;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, signatureInfo.appIdentifier.c_str(), NAPI_AUTO_LENGTH, &nAppIdentifier));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "appIdentifier", nAppIdentifier));
 }
 
 void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModuleInfo, napi_value objHapModuleInfo)
@@ -1383,6 +1397,12 @@ void CommonFunc::ConvertHapModuleInfo(napi_env env, const HapModuleInfo &hapModu
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nPreloads, index, nPreload));
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "preloads", nPreloads));
+    if (!hapModuleInfo.fileContextMenu.empty()) {
+        napi_value nMenu;
+        NAPI_CALL_RETURN_VOID(
+            env, napi_create_string_utf8(env, hapModuleInfo.fileContextMenu.c_str(), NAPI_AUTO_LENGTH, &nMenu));
+        NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objHapModuleInfo, "fileContextMenu", nMenu));
+    }
 }
 
 void CommonFunc::ConvertDependency(napi_env env, const Dependency &dependency, napi_value value)

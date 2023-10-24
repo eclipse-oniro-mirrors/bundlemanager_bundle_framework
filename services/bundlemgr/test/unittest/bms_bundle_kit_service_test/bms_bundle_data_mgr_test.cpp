@@ -25,6 +25,7 @@
 #include "ability_info.h"
 #include "app_provision_info.h"
 #include "app_provision_info_manager.h"
+#include "bms_extension_client.h"
 #include "bundle_data_mgr.h"
 #include "bundle_info.h"
 #include "bundle_permission_mgr.h"
@@ -3264,65 +3265,73 @@ HWTEST_F(BmsBundleDataMgrTest, QueryAppGalleryBundleName_0002, Function | Medium
 }
 
 /**
- * @tc.number: QueryAbilityInfosFromBmsExtension_0001
- * @tc.name: test BundleDataMgr::QueryAbilityInfosFromBmsExtension
+ * @tc.number: QueryAbilityInfos_0001
+ * @tc.name: test BundleDataMgr::QueryAbilityInfos
  * @tc.desc: 1. system run normally
  *           2. enter if (res != ERR_OK)
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfosFromBmsExtension_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfos_0001, Function | MediumTest | Level1)
 {
     Want want;
     int32_t flags = 0;
     int32_t userId = USERID;
     std::vector<AbilityInfo> abilityInfos;
-    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfosFromBmsExtension(want, flags, userId, abilityInfos);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ErrCode ret = bmsExtensionClient->QueryAbilityInfos(want, flags, userId, abilityInfos);
     EXPECT_NE(ret, ERR_OK);
 }
 
 /**
- * @tc.number: QueryAbilityInfoFromBmsExtension_0001
- * @tc.name: test BundleDataMgr::QueryAbilityInfoFromBmsExtension
+ * @tc.number: QueryAbilityInfo_0001
+ * @tc.name: test BundleDataMgr::QueryAbilityInfo
  * @tc.desc: 1. system run normally
  *           2. enter if (res != ERR_OK)
  */
-HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfoFromBmsExtension_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, QueryAbilityInfo_0001, Function | MediumTest | Level1)
 {
     Want want;
     int32_t flags = 0;
     int32_t userId = USERID;
     AbilityInfo abilityInfo;
-    ErrCode ret = GetBundleDataMgr()->QueryAbilityInfoFromBmsExtension(want, flags, userId, abilityInfo);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ErrCode ret = bmsExtensionClient->QueryAbilityInfo(want, flags, userId, abilityInfo);
     EXPECT_NE(ret, ERR_OK);
 }
 
 /**
- * @tc.number: GetBundleInfosFromBmsExtension_0001
- * @tc.name: test BundleDataMgr::GetBundleInfosFromBmsExtension
+ * @tc.number: GetBundleInfos_0001
+ * @tc.name: test BundleDataMgr::GetBundleInfos
  * @tc.desc: 1. system run normally
  *           2. enter if (res != ERR_OK)
  */
-HWTEST_F(BmsBundleDataMgrTest, GetBundleInfosFromBmsExtension_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfos_0001, Function | MediumTest | Level1)
 {
     int32_t flags = 0;
     int32_t userId = USERID;
     std::vector<BundleInfo> bundleInfos;
-    ErrCode ret = GetBundleDataMgr()->GetBundleInfosFromBmsExtension(flags, bundleInfos, userId);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ErrCode ret = bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId);
     EXPECT_NE(ret, ERR_OK);
 }
 
 /**
- * @tc.number: GetBundleInfoFromBmsExtension_0001
- * @tc.name: test BundleDataMgr::GetBundleInfoFromBmsExtension
+ * @tc.number: GetBundleInfo_0001
+ * @tc.name: test BundleDataMgr::GetBundleInfo
  * @tc.desc: 1. system run normally
  *           2. enter if (res != ERR_OK)
  */
-HWTEST_F(BmsBundleDataMgrTest, GetBundleInfoFromBmsExtension_0001, Function | MediumTest | Level1)
+HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0001, Function | MediumTest | Level1)
 {
     std::string bundleName;
     int32_t flags = 0;
     int32_t userId = 0;
     BundleInfo bundleInfo;
-    ErrCode ret = GetBundleDataMgr()->GetBundleInfoFromBmsExtension(bundleName, flags, bundleInfo, userId);
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    EXPECT_NE(bmsExtensionClient, nullptr);
+    ErrCode ret = bmsExtensionClient->GetBundleInfo(bundleName, flags, bundleInfo, userId);
     EXPECT_NE(ret, ERR_OK);
 }
 
@@ -3775,6 +3784,46 @@ HWTEST_F(BmsBundleDataMgrTest, GetGroupDir_0002, Function | SmallTest | Level0)
         TEST_DATA_GROUP_ID, dir);
     EXPECT_EQ(res, false);
     EXPECT_EQ(dir, EMPTY_STRING);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetFingerprints_0100
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0100, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints(BUNDLE_NAME_TEST, fingerPrints);
+    EXPECT_TRUE(res);
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: GetFingerprints_0200
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0200, Function | SmallTest | Level0)
+{
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints("com.example.baseApplication", fingerPrints);
+    EXPECT_FALSE(res);
+}
+
+/**
+ * @tc.number: GetFingerprints_0300
+ * @tc.name: GetFingerprints
+ * @tc.desc: GetFingerprints
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0300, Function | SmallTest | Level0)
+{
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+    std::vector<std::string> fingerPrints;
+    auto res = GetBundleDataMgr()->GetFingerprints("", fingerPrints);
+    EXPECT_FALSE(res);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 }

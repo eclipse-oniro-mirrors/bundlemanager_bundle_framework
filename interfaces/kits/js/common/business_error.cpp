@@ -107,6 +107,8 @@ constexpr const char* ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME =
     "Failed to install the HAP because the bundleName is different from the bundleName of the caller application.";
 constexpr const char* ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED =
     "Failed to install the HAP because enterprise normal/mdm bundle cannot be installed on non-enterprise device.";
+constexpr const char* ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED =
+    "Failed to install the HAP because debug bundle cannot be installed under non-developer mode.";
 
 static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_PERMISSION_DENIED_ERROR, ERR_MSG_PERMISSION_DENIED_ERROR },
@@ -161,6 +163,7 @@ static std::unordered_map<int32_t, const char*> ERR_MSG_MAP = {
     { ERROR_INSTALL_SELF_UPDATE_NOT_MDM, ERR_MSG_SELF_UPDATE_NOT_MDM},
     { ERROR_INSTALL_SELF_UPDATE_BUNDLENAME_NOT_SAME, ERR_MSG_SELF_UPDATE_BUNDLENAME_NOT_SAME},
     { ERROR_INSTALL_ENTERPRISE_BUNDLE_NOT_ALLOWED, ERR_MSG_ENTERPRISE_BUNDLE_NOT_ALLOWED },
+    { ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED, ERR_MSG_DEBUG_BUNDLE_NOT_ALLOWED}
 };
 } // namespace
 

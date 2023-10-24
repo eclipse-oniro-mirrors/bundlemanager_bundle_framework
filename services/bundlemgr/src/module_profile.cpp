@@ -168,6 +168,7 @@ struct Ability {
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
+    bool specifiedProcess = false;
 };
 
 struct Extension {
@@ -220,6 +221,7 @@ struct App {
     std::string bundleType = Profile::BUNDLE_TYPE_APP;
     std::string compileSdkVersion;
     std::string compileSdkType = Profile::COMPILE_SDK_TYPE_OPEN_HARMONY;
+    bool gwpAsanEnabled = false;
 };
 
 struct Module {
@@ -250,6 +252,7 @@ struct Module {
     std::string buildHash;
     std::string isolationMode;
     bool compressNativeLibs = true;
+    std::string fileContextMenu;
 };
 
 struct ModuleJson {
@@ -564,6 +567,14 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         jsonObjectEnd,
         ABILITY_UNCLEARABLE_MISSION,
         ability.unclearableMission,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        ABILITY_SPECIFIED_PROCESS,
+        ability.specifiedProcess,
         JsonType::BOOLEAN,
         false,
         g_parseResult,
@@ -1143,6 +1154,14 @@ void from_json(const nlohmann::json &jsonObject, App &app)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        APP_GWP_ASAN_ENABLED,
+        app.gwpAsanEnabled,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, Module &module)
@@ -1379,6 +1398,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
             g_parseResult,
             ArrayType::NOT_ARRAY);
     }
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        MODULE_FILE_CONTEXT_MENU,
+        module.fileContextMenu,
+        JsonType::STRING,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
 }
 
 void from_json(const nlohmann::json &jsonObject, ModuleJson &moduleJson)
@@ -1794,6 +1821,7 @@ bool ToApplicationInfo(
     }
     applicationInfo.compileSdkVersion = app.compileSdkVersion;
     applicationInfo.compileSdkType = app.compileSdkType;
+    applicationInfo.gwpAsanEnabled = app.gwpAsanEnabled;
     return true;
 }
 
@@ -1888,6 +1916,7 @@ bool ToAbilityInfo(
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
+    abilityInfo.specifiedProcess = ability.specifiedProcess;
     abilityInfo.backgroundModes = GetBackgroundModes(ability.backgroundModes);
     GetMetadata(abilityInfo.metadata, ability.metadata);
     abilityInfo.package = moduleJson.module.name;
@@ -2067,7 +2096,8 @@ bool ToInnerModuleInfo(
     innerModuleInfo.buildHash = moduleJson.module.buildHash;
     innerModuleInfo.isolationMode = moduleJson.module.isolationMode;
     innerModuleInfo.compressNativeLibs = moduleJson.module.compressNativeLibs;
-    // abilities and extensionAbilities store in InnerBundleInfo
+    innerModuleInfo.fileContextMenu = moduleJson.module.fileContextMenu;
+    // abilities and fileContextMenu store in InnerBundleInfo
     return true;
 }
 

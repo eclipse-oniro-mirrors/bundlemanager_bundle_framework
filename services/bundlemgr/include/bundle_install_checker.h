@@ -127,6 +127,11 @@ public:
         return isContainEntry_;
     }
 
+    ErrCode CheckHspInstallCondition(std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
+    ErrCode CheckInstallPermission(const InstallCheckParam &checkParam,
+        const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
+
     bool VaildInstallPermission(const InstallParam &installParam,
         const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes);
 
@@ -154,6 +159,8 @@ public:
     ErrCode CheckIsolationMode(const std::unordered_map<std::string, InnerBundleInfo> &infos) const;
 
     ErrCode CheckSignatureFileDir(const std::string &signatureFileDir) const;
+
+    ErrCode CheckDeveloperMode(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
@@ -221,6 +228,7 @@ private:
         InnerBundleInfo &newInfo);
 
     bool CheckProxyPermissionLevel(const std::string &permissionName) const;
+    bool MatchOldFingerprints(const std::string &bundleName, const std::vector<std::string> &configInfo);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
