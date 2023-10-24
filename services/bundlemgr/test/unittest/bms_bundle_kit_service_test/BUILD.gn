@@ -22,6 +22,8 @@ ohos_unittest("BmsBundleDataMgrTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${inner_api_path}/appexecfwk_core/src/bundlemgr/bundle_mgr_proxy.cpp",
@@ -159,6 +161,8 @@ ohos_unittest("BmsBundleKitServiceTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
@@ -295,6 +299,8 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
   module_out_path = module_output_path
   include_dirs = [ "//third_party/jsoncpp/include" ]
   sources = bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_ability_helper.cpp" ]
   sources += [
     "${services_path}/bundlemgr/src/aot/aot_executor.cpp",

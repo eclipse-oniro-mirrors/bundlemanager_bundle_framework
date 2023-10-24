@@ -98,7 +98,7 @@ std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleNam
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (moduleInfo && moduleInfo->distro.moduleType == Profile::MODULE_TYPE_SHARED) {
         APP_LOGD("The module(%{public}s) is shared.", moduleName.c_str());
-        fileSuffix = Constants::INSTALL_SHARED_FILE_SUFFIX;
+        fileSuffix = Constants::HSP_FILE_SUFFIX;
     }
 
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
@@ -3950,7 +3950,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 {
     std::string hapPath = GetHapPath(info);
     if (hapPath.empty() || (!BundleUtil::EndWith(hapPath, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::EndWith(hapPath, Constants::INSTALL_SHARED_FILE_SUFFIX))) {
+        !BundleUtil::EndWith(hapPath, Constants::HSP_FILE_SUFFIX))) {
         APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
         return "";
     }
