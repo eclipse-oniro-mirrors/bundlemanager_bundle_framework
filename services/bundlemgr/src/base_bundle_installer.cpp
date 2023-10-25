@@ -3531,6 +3531,8 @@ void BaseBundleInstaller::ResetInstallProperties()
     hapPathRecords_.clear();
     uninstallBundleAppId_.clear();
     isModuleUpdate_ = false;
+    isEntryInstalled_ = false;
+    entryModuleName_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
