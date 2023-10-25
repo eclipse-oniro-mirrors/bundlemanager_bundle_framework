@@ -234,8 +234,7 @@ group("systemtest") {
   deps = [
     ":BmsInstallExternalHspSoTest",
     ":BmsInstallHapSoTest",
-
-    # ":BmsInstallMultiUserTest",
+    ":BmsInstallMultiUserTest",
     ":BmsInstallSystemTest",
   ]
 }
