@@ -2074,6 +2074,11 @@ void CreateExtensionAbilityTypeObject(napi_env env, napi_value value)
         static_cast<int32_t>(ExtensionAbilityType::ACTION), &nAction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ACTION", nAction));
 
+    napi_value nAdsService;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
+        static_cast<int32_t>(ExtensionAbilityType::ADS_SERVICE), &nAdsService));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ADS_SERVICE", nAdsService));
+
     napi_value nAuthorization;
     NAPI_CALL_RETURN_VOID(env, napi_create_int32(env,
         static_cast<int32_t>(ExtensionAbilityType::APP_ACCOUNT_AUTHORIZATION), &nAuthorization));
