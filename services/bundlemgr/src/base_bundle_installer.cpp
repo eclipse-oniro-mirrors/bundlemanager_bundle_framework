@@ -3355,13 +3355,38 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
     if (oldInfo.GetGwpAsanEnabled() != newInfo.GetGwpAsanEnabled()) {
         return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
     }
+
+    ErrCode ret = CheckDebugType(oldInfo, newInfo);
     APP_LOGD("CheckAppLabel end");
+    return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckDebugType(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    if (!oldInfo.HasEntry() && !newInfo.HasEntry()) {
+        return ERR_OK;
+    }
+
+    if (oldInfo.HasEntry() && newInfo.HasEntry()) {
+        if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
+            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+        }
+
+        return ERR_OK;
+    }
+
+    if (oldInfo.HasEntry() && !oldInfo.GetBaseApplicationInfo().debug && newInfo.GetBaseApplicationInfo().debug) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+    }
+
+    if (newInfo.HasEntry() && !newInfo.GetBaseApplicationInfo().debug && oldInfo.GetBaseApplicationInfo().debug) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+    }
+
     return ERR_OK;
 }
 
