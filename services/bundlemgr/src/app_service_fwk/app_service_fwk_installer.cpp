@@ -27,16 +27,6 @@ namespace AppExecFwk {
 namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 
-// #define CHECK_RESULT_WITH_ROLLBACK(errcode, errmsg)                               \
-//     do {                                                                          \
-//         if (errcode != ERR_OK) {                                                  \
-//             APP_LOGE(errmsg, errcode);                                            \
-//             RollBack();                                                           \
-//             return errcode;                                                       \
-//         }                                                                         \
-//     } while (0)
-// };
-
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
 {
@@ -119,8 +109,10 @@ ErrCode AppServiceFwkInstaller::ProcessInstall(
         dataMgr_->EnableBundle(bundleName_);
     });
     result = InnerProcessInstall(newInfos, installParam);
-    CHECK_RESULT(result, "CheckAndParseFiles failed %{public}d");
-
+    if (result != ERR_OK) {
+        APP_LOGE("InnerProcessInstall failed %{public}d", result);
+        RollBack();
+    }
     return result;
 }
 
@@ -128,51 +120,50 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     const std::vector<std::string> &hspPaths, InstallParam &installParam,
     std::unordered_map<std::string, InnerBundleInfo> &newInfos)
 {
+    APP_LOGI("CheckAndParseFiles Start");
     InstallCheckParam checkParam;
     BuildCheckParam(installParam, checkParam);
 
-    // 1、安装前解析
-    //   a、解析前校验
     std::vector<std::string> checkedHspPaths;
     // check hsp paths
     ErrCode result = BundleUtil::CheckFilePath(hspPaths, checkedHspPaths);
-    CHECK_RESULT(result, "Hap file check failed %{public}d");
+    CHECK_RESULT(result, "Hsp file check failed %{public}d");
 
     // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
-    CHECK_RESULT(result, "Hap syscap check failed %{public}d");
+    CHECK_RESULT(result, "Hsp syscap check failed %{public}d");
 
     // verify signature info for all haps
     std::vector<Security::Verify::HapVerifyResult> hapVerifyResults;
     result = bundleInstallChecker_->CheckMultipleHapsSignInfo(
         checkedHspPaths, hapVerifyResults);
-    CHECK_RESULT(result, "Hap files check signature info failed %{public}d");
+    CHECK_RESULT(result, "Hsp files check signature info failed %{public}d");
 
-    //   b、解析hsp
     result = bundleInstallChecker_->ParseHapFiles(
         checkedHspPaths, checkParam, hapVerifyResults, newInfos);
-    CHECK_RESULT(result, "Parse haps file failed %{public}d");
+    CHECK_RESULT(result, "Parse hsps file failed %{public}d");
 
     // check install permission
     result = bundleInstallChecker_->CheckInstallPermission(checkParam, hapVerifyResults);
-    CHECK_RESULT(result, "check install permission failed %{public}d");
+    CHECK_RESULT(result, "Check install permission failed %{public}d");
 
     // check hsp install condition
     result = bundleInstallChecker_->CheckHspInstallCondition(hapVerifyResults);
-    CHECK_RESULT(result, "check hsp install condition failed %{public}d");
+    CHECK_RESULT(result, "Check hsp install condition failed %{public}d");
 
     // check device type
     result = bundleInstallChecker_->CheckDeviceType(newInfos);
-    CHECK_RESULT(result, "check device type failed %{public}d");
+    CHECK_RESULT(result, "Check device type failed %{public}d");
 
     result = CheckAppLabelInfo(newInfos);
-    CHECK_RESULT(result, "Check install permission failed %{public}d");
+    CHECK_RESULT(result, "Check app label failed %{public}d");
 
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(newInfos);
-    CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
+    CHECK_RESULT(result, "Native so is incompatible in all hsps %{public}d");
 
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
+    APP_LOGI("CheckAndParseFiles End");
     return result;
 }
 
@@ -181,7 +172,7 @@ ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
 {
     for (const auto &info : infos) {
         if (info.second.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
-            APP_LOGE("Installing cross-app shared library");
+            APP_LOGE("BundleType is not AppServiceFwk");
             return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
         }
     }
@@ -203,20 +194,20 @@ void AppServiceFwkInstaller::AddAppProvisionInfo(
     AppProvisionInfo appProvisionInfo = bundleInstallChecker_->ConvertToAppProvisionInfo(provisionInfo);
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->AddAppProvisionInfo(
         bundleName, appProvisionInfo)) {
-        APP_LOGW("bundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
+        APP_LOGW("BundleName: %{public}s add appProvisionInfo failed.", bundleName.c_str());
     }
 
     if (!installParam.specifiedDistributionType.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetSpecifiedDistributionType(
             bundleName, installParam.specifiedDistributionType)) {
-            APP_LOGW("bundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
+            APP_LOGW("BundleName: %{public}s SetSpecifiedDistributionType failed.", bundleName.c_str());
         }
     }
 
     if (!installParam.additionalInfo.empty()) {
         if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->SetAdditionalInfo(
             bundleName, installParam.additionalInfo)) {
-            APP_LOGW("bundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
+            APP_LOGW("BundleName: %{public}s SetAdditionalInfo failed.", bundleName.c_str());
         }
     }
 }
@@ -226,7 +217,7 @@ ErrCode AppServiceFwkInstaller::InnerProcessInstall(
     InstallParam &installParam)
 {
     APP_LOGI("InnerProcessInstall start bundleName: %{public}s, size: %{public}zu",
-            bundleName_.c_str(), newInfos.size());
+        bundleName_.c_str(), newInfos.size());
     ErrCode result = ERR_OK;
     for (auto it = newInfos.begin(); it != newInfos.end(); ++it) {
         InnerBundleInfo &newInfo = it->second;
@@ -250,24 +241,24 @@ ErrCode AppServiceFwkInstaller::ExtractModule(
     std::string bundleDir =
         AppExecFwk::Constants::BUNDLE_CODE_DIR + AppExecFwk::Constants::PATH_SEPARATOR + bundleName_;
     result = MkdirIfNotExist(bundleDir);
-    CHECK_RESULT(result, "check bundle dir failed %{public}d");
+    CHECK_RESULT(result, "Check bundle dir failed %{public}d");
 
     newInfo.SetAppCodePath(bundleDir);
     uint32_t versionCode = newInfo.GetVersionCode();
     std::string versionDir = bundleDir
         + AppExecFwk::Constants::PATH_SEPARATOR + HSP_VERSION_PREFIX + std::to_string(versionCode);
     result = MkdirIfNotExist(versionDir);
-    CHECK_RESULT(result, "check version dir failed %{public}d");
+    CHECK_RESULT(result, "Check version dir failed %{public}d");
 
     auto &moduleName = newInfo.GetInnerModuleInfos().begin()->second.moduleName;
     std::string moduleDir = versionDir + AppExecFwk::Constants::PATH_SEPARATOR + moduleName;
     result = MkdirIfNotExist(moduleDir);
-    CHECK_RESULT(result, "check module dir failed %{public}d");
+    CHECK_RESULT(result, "Check module dir failed %{public}d");
 
     result = ProcessNativeLibrary(bundlePath, moduleDir, moduleName, versionDir, newInfo);
     CHECK_RESULT(result, "ProcessNativeLibrary failed %{public}d");
 
-    // preInstallApp does not need to copy hsp
+    // preInstallHsp does not need to copy
     newInfo.SetModuleHapPath(bundlePath);
     newInfo.AddModuleSrcDir(moduleDir);
     newInfo.AddModuleResPath(moduleDir);
@@ -278,11 +269,11 @@ ErrCode AppServiceFwkInstaller::MkdirIfNotExist(const std::string &dir)
 {
     bool isDirExist = false;
     ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
-    CHECK_RESULT(result, "check if dir exist failed %{public}d");
+    CHECK_RESULT(result, "Check if dir exist failed %{public}d");
 
     if (!isDirExist) {
         result = InstalldClient::GetInstance()->CreateBundleDir(dir);
-        CHECK_RESULT(result, "create dir failed %{public}d");
+        CHECK_RESULT(result, "Create dir failed %{public}d");
     }
     return result;
 }
@@ -308,19 +299,19 @@ ErrCode AppServiceFwkInstaller::ProcessNativeLibrary(
 
         std::string tempSoPath =
             versionDir + AppExecFwk::Constants::PATH_SEPARATOR + tempNativeLibraryPath;
-        APP_LOGD("tempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
+        APP_LOGD("TempSoPath=%{public}s,cpuAbi=%{public}s, bundlePath=%{public}s",
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(
             bundlePath, moduleDir, tempSoPath, cpuAbi);
-        CHECK_RESULT(result, "extract module files failed %{public}d");
+        CHECK_RESULT(result, "Extract module files failed %{public}d");
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir, nativeLibraryPath);
-        CHECK_RESULT(result, "move so to real path failed %{public}d");
+        CHECK_RESULT(result, "Move so to real path failed %{public}d");
     } else {
         std::vector<std::string> fileNames;
         auto result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(
             bundlePath, cpuAbi, fileNames);
-        CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
+        CHECK_RESULT(result, "Fail to GetNativeLibraryFileNames, error is %{public}d");
         newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
     }
     return ERR_OK;
@@ -338,14 +329,18 @@ void AppServiceFwkInstaller::MergeBundleInfos(InnerBundleInfo &info)
 
 ErrCode AppServiceFwkInstaller::SaveBundleInfoToStorage()
 {
-    dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_START);
+    if (!dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_START)) {
+        APP_LOGE("UpdateBundleInstallState failed");
+        return ERR_APPEXECFWK_INSTALL_STATE_ERROR;
+    }
+
     if (!dataMgr_->AddInnerBundleInfo(bundleName_, newInnerBundleInfo_)) {
-        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_FAIL);
+        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_START);
+        dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::UNINSTALL_SUCCESS);
         APP_LOGE("Save bundle failed : %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    dataMgr_->UpdateBundleInstallState(bundleName_, InstallState::INSTALL_SUCCESS);
     return ERR_OK;
 }
 
@@ -357,20 +352,20 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
     std::string realSoPath = versionDir + AppExecFwk::Constants::PATH_SEPARATOR
         + nativeLibraryPath + AppExecFwk::Constants::PATH_SEPARATOR;
     ErrCode result = MkdirIfNotExist(realSoPath);
-    CHECK_RESULT(result, "check module dir failed %{public}d");
+    CHECK_RESULT(result, "Check module dir failed %{public}d");
     std::string tempNativeLibraryPath = ObtainTempSoPath(moduleName, nativeLibraryPath);
     if (tempNativeLibraryPath.empty()) {
-        APP_LOGI("no so libs existed");
+        APP_LOGI("No so libs existed");
         return ERR_OK;
     }
 
     std::string tempSoPath =
         versionDir + AppExecFwk::Constants::PATH_SEPARATOR + tempNativeLibraryPath;
-    APP_LOGD("move so files from path %{public}s to path %{public}s",
+    APP_LOGD("Move so files from path %{public}s to path %{public}s",
         tempSoPath.c_str(), realSoPath.c_str());
     result = InstalldClient::GetInstance()->MoveFiles(tempSoPath, realSoPath);
     if (result != ERR_OK) {
-        APP_LOGE("move file to real path failed %{public}d", result);
+        APP_LOGE("Move file to real path failed %{public}d", result);
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
 
@@ -379,7 +374,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
         + moduleName + AppExecFwk::Constants::TMP_SUFFIX;
     result = InstalldClient::GetInstance()->RemoveDir(deleteTempDir);
     if (result != ERR_OK) {
-        APP_LOGW("remove hsp temp so dir %{public}s failed, error is %{public}d",
+        APP_LOGW("Remove hsp temp so dir %{public}s failed, error is %{public}d",
             deleteTempDir.c_str(), result);
     }
     return ERR_OK;
@@ -387,6 +382,7 @@ ErrCode AppServiceFwkInstaller::MoveSoToRealPath(
 
 void AppServiceFwkInstaller::RollBack()
 {
+    APP_LOGI("RollBack: %{public}s", bundleName_.c_str());
     // 1.RemoveBundleDir
     RemoveBundleCodeDir(newInnerBundleInfo_);
 
@@ -406,12 +402,9 @@ ErrCode AppServiceFwkInstaller::RemoveBundleCodeDir(const InnerBundleInfo &info)
 
 void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
 {
-    APP_LOGD("Remove innerBundleInfo due to rollback");
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("Delete inner info failed");
-        return;
     }
-    APP_LOGD("Finish to remove innerBundleInfo due to rollback");
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
