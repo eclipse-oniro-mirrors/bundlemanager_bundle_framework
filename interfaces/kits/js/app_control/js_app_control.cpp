@@ -23,6 +23,7 @@
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "disposed_rule.h"
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
@@ -42,6 +43,8 @@ const std::string DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 const std::string GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 const std::string APP_ID = "appId";
 const std::string DISPOSED_WANT = "disposedWant";
+const std::string DISPOSED_RULE = "disposedRule";
+const std::string DISPOSED_RULE_TYPE = "DisposedRule";
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -470,11 +473,106 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 
 void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
-    return;
+    napi_value nWant = nullptr;
+    CommonFunc::ConvertWantInfo(env, nWant, rule.want);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
+    napi_value nComponentType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "componentType", nComponentType));
+    napi_value nDisposedType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.disposedType), &nDisposedType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "disposedType", nDisposedType));
+    napi_value nControlType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.controlType), &nControlType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "controlType", nControlType));
+
+    napi_value nElementsList;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nElementsList));
+    for (size_t idx = 0; idx < rule.elementsList.size(); idx++) {
+        napi_value nElementName;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nElementName));
+        CommonFunc::ConvertElementName(env, nElementName, rule.elementsList[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nElementsList, idx, nElementName));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "elementsList", nElementsList));
+    napi_value nPriority;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, rule.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
 }
 
 bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
 {
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGW("nRule not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
+    CommonFunc::ParseWantWithoutVerification(env, prop, rule.want);
+    napi_get_named_property(env, nRule, "componentType", &prop);
+    int32_t componentType;
+    if (!CommonFunc::ParseInt(env, prop, componentType)) {
+        APP_LOGW("componentType parseInt failed");
+        return false;
+    }
+    if (componentType > static_cast<int32_t>(ComponentType::UI_EXTENSION) ||
+        componentType < static_cast<int32_t>(ComponentType::UI_ABILITY)) {
+        APP_LOGW("componentType not valid");
+        return false;
+    }
+    rule.componentType = static_cast<ComponentType>(componentType);
+    napi_get_named_property(env, nRule, "disposedType", &prop);
+    int32_t disposedType;
+    if (!CommonFunc::ParseInt(env, prop, disposedType)) {
+        APP_LOGW("disposedType parseInt failed");
+        return false;
+    }
+    if (disposedType > static_cast<int32_t>(DisposedType::NON_BLOCK) ||
+        disposedType < static_cast<int32_t>(DisposedType::BLOCK_APPLICATION)) {
+        APP_LOGW("disposedType not valid");
+        return false;
+    }
+    rule.disposedType = static_cast<DisposedType>(disposedType);
+    napi_get_named_property(env, nRule, "controlType", &prop);
+    int32_t controlType;
+    if (!CommonFunc::ParseInt(env, prop, controlType)) {
+        APP_LOGW("disposedType parseInt failed");
+        return false;
+    }
+    if (controlType > static_cast<int32_t>(ControlType::DISALLOWED_LIST) ||
+        controlType < static_cast<int32_t>(ControlType::ALLOWED_LIST)) {
+        APP_LOGW("ControlType not valid");
+        return false;
+    }
+    rule.controlType = static_cast<ControlType>(controlType);
+
+    napi_value nElementsList = nullptr;
+    napi_get_named_property(env, nRule, "elementsList", &nElementsList);
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, nElementsList, &isArray), false);
+    if (!isArray) {
+        APP_LOGW("nElementsList not array");
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, nElementsList, &arrayLength), false);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        napi_value value = nullptr;
+        NAPI_CALL_BASE(env, napi_get_element(env, nElementsList, j, &value), false);
+        ElementName name;
+        if (!CommonFunc::ParseElementName(env, value, name)) {
+            APP_LOGW("parse element name failed");
+            return false;
+        }
+        rule.elementsList.push_back(name);
+    }
+    napi_get_named_property(env, nRule, "priority", &prop);
+    if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
+        APP_LOGW("priority parseInt failed");
+        return false;
+    }
     return true;
 }
 
@@ -548,7 +646,7 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     DisposedRule rule;
     if (!ParseDiposedRule(env, args[ARGS_POS_ONE], rule)) {
         APP_LOGE("rule invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_WANT, TYPE_WANT);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
         return nRet;
     }
     auto appControlProxy = GetAppControlProxy();

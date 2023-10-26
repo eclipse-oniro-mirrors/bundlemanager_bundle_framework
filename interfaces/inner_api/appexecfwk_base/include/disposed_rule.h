@@ -25,13 +25,28 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+enum class ComponentType {
+    UI_ABILITY = 1,
+    UI_EXTENSION = 2,
+};
+
+enum class DisposedType {
+    BLOCK_APPLICATION = 1,
+    BLOCK_ABILITY = 2,
+    NON_BLOCK = 3,
+};
+
+enum class ControlType {
+    ALLOWED_LIST = 1,
+    DISALLOWED_LIST = 2,
+};
 
 struct DisposedRule : public Parcelable {
 public:
     AAFwk::Want want;
-    int32_t componentType;
-    int32_t disposedType;
-    int32_t controlType;
+    ComponentType componentType;
+    DisposedType disposedType;
+    ControlType controlType;
     std::vector<ElementName> elementsList;
     int32_t priority;
 

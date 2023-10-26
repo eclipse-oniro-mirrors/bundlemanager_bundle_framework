@@ -458,6 +458,38 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, Want &want)
     return true;
 }
 
+bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &elementName)
+{
+    APP_LOGD("begin to parse ElementName.");
+    napi_valuetype valueType = napi_undefined;
+    napi_typeof(env, args, &valueType);
+    if (valueType != napi_object) {
+        APP_LOGW("args not object type.");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, args, BUNDLE_NAME, &prop);
+    std::string bundleName = GetStringFromNAPI(env, prop);
+    elementName.SetBundleName(bundleName);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, MODULE_NAME, &prop);
+    std::string moduleName = GetStringFromNAPI(env, prop);
+    elementName.SetModuleName(moduleName);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, ABILITY_NAME, &prop);
+    std::string abilityName = GetStringFromNAPI(env, prop);
+    elementName.SetAbilityName(abilityName);
+
+    prop = nullptr;
+    napi_get_named_property(env, args, DEVICE_ID, &prop);
+    std::string deviceId = GetStringFromNAPI(env, prop);
+    elementName.SetDeviceID(deviceId);
+
+    return true;
+}
+
 void CommonFunc::ConvertElementName(napi_env env, napi_value elementInfo,
     const OHOS::AppExecFwk::ElementName &elementName)
 {

@@ -37,9 +37,9 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
 {
     std::unique_ptr<AAFwk::Want> wantPtr(parcel.ReadParcelable<AAFwk::Want>());
     want = *wantPtr;
-    componentType = parcel.ReadInt32();
-    disposedType = parcel.ReadInt32();
-    controlType = parcel.ReadInt32();
+    componentType = static_cast<ComponentType>(parcel.ReadInt32());
+    disposedType = static_cast<DisposedType>(parcel.ReadInt32());
+    controlType = static_cast<ControlType>(parcel.ReadInt32());
     int32_t elementSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, elementSize);
     CONTAINER_SECURITY_VERIFY(parcel, elementSize, &elementsList);
@@ -58,9 +58,9 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
 bool DisposedRule::Marshalling(Parcel &parcel) const
 {
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &want);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, componentType);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, disposedType);
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, controlType);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(componentType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(disposedType));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(controlType));
     for (auto &elementName: elementsList) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &elementName);
     }
@@ -166,7 +166,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         parseResult,
         ArrayType::NOT_ARRAY);
     disposedRule.want = *AAFwk::Want::FromString(wantString);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<ComponentType>(jsonObject,
         jsonObjectEnd,
         COMPONENT_TYPE,
         disposedRule.componentType,
@@ -174,7 +174,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<DisposedType>(jsonObject,
         jsonObjectEnd,
         DISPOSED_TYPE,
         disposedRule.disposedType,
@@ -182,7 +182,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    GetValueIfFindKey<int32_t>(jsonObject,
+    GetValueIfFindKey<ControlType>(jsonObject,
         jsonObjectEnd,
         CONTROL_TYPE,
         disposedRule.controlType,

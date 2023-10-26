@@ -85,9 +85,9 @@ int AppControlHost::OnRemoteRequest(
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::DELETE_DISPOSED_STATUS):
             return HandleDeleteDisposedStatus(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::SET_DISPOSED_RULE):
-            return HandleSetDisposedStatus(data, reply);
+            return HandleSetDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_DISPOSED_RULE):
-            return HandleGetDisposedStatus(data, reply);
+            return HandleGetDisposedRule(data, reply);
         case static_cast<uint32_t>(AppControlManagerInterfaceCode::GET_ABILITY_RUNNING_CONTROL_RULE):
             return HandleGetAbilityRunningControlRule(data, reply);
         default:

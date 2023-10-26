@@ -70,6 +70,8 @@ static void ConvertWantInfo(napi_env env, napi_value objWantInfo, const Want &wa
 
 static bool ParseElementName(napi_env env, napi_value args, Want &want);
 
+static bool ParseElementName(napi_env env, napi_value args, ElementName &elementName);
+
 static void ConvertElementName(napi_env env, napi_value elementInfo, const OHOS::AppExecFwk::ElementName &elementName);
 
 static bool ParseWant(napi_env env, napi_value args, Want &want);
