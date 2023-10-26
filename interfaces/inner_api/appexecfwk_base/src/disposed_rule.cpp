@@ -82,6 +82,7 @@ DisposedRule *DisposedRule::Unmarshalling(Parcel &parcel)
 
 void to_json(nlohmann::json &jsonObject, const ElementName &elementName)
 {
+    APP_LOGD("elementName to_json bundleName %{public}s", elementName.GetBundleName().c_str());
     jsonObject = nlohmann::json {
         {Constants::BUNDLE_NAME, elementName.GetBundleName()},
         {Constants::MODULE_NAME, elementName.GetModuleName()},
@@ -215,11 +216,13 @@ std::string DisposedRule::ToString() const
 {
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
+    APP_LOGD("disposedRule %{public}s", jsonObject.dump().c_str());
     return jsonObject.dump();
 }
 
 bool DisposedRule::FromString(const std::string &ruleString, DisposedRule &rule)
 {
+    APP_LOGD("FromString %{public}s", ruleString.c_str());
     nlohmann::json jsonObject = nlohmann::json::parse(ruleString, nullptr, false);
     if (jsonObject.is_discarded()) {
         APP_LOGE("failed to parse ruleString: %{public}s.", ruleString.c_str());

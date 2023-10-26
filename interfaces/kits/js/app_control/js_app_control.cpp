@@ -473,6 +473,7 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 
 void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
+    APP_LOGD("ConvertRuleInfo");
     napi_value nWant = nullptr;
     CommonFunc::ConvertWantInfo(env, nWant, rule.want);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));

@@ -35,6 +35,7 @@ bool PermissionDef::ReadFromParcel(Parcel &parcel)
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableType);
     return true;
 }
 
@@ -61,6 +62,7 @@ bool PermissionDef::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, grantMode);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, labelId);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, descriptionId);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, availableType);
     return true;
 }
 }  // namespace AppExecFwk

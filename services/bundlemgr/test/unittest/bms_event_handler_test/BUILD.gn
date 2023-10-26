@@ -24,6 +24,8 @@ ohos_unittest("BmsEventHandlerTest") {
 
   sources = bundle_install_sources
   sources += bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_bundle_installer.cpp" ]
   sources += [ "bms_event_handler_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]
@@ -120,6 +122,8 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
 
   sources = bundle_install_sources
   sources += bundle_mgr_source
+  sources -= [ "${services_path}/bundlemgr/src/bms_param.cpp" ]
+  sources += [ "${services_path}/bundlemgr/test/mock/src/bms_param.cpp" ]
   sources -= [ "${services_path}/bundlemgr/src/system_bundle_installer.cpp" ]
   sources += [ "bms_event_handler_unlocked_test.cpp" ]
   sources += [ "mock_system_bundle_installer.cpp" ]

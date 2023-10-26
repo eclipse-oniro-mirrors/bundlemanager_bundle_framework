@@ -397,6 +397,9 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     std::string callerName;
     GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
     auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
@@ -419,6 +422,9 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, con
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     std::string callerName;
     GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
     auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, userId);
     if (ret != ERR_OK) {
         APP_LOGW("host GetDisposedStatus error:%{public}d", ret);

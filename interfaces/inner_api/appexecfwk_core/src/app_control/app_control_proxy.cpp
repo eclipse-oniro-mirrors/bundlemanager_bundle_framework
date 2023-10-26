@@ -505,7 +505,7 @@ ErrCode AppControlProxy::GetDisposedRule(const std::string &appId, DisposedRule 
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(appId)) {
-        APP_LOGE("write bundleName failed.");
+        APP_LOGE("write appId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteInt32(userId)) {

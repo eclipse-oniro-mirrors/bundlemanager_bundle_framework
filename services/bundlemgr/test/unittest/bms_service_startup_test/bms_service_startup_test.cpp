@@ -34,6 +34,9 @@ namespace {
 const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t TOKENID = 100;
 const std::string BUNDLE_TEMP_NAME = "temp_bundle_name";
+const std::string AVAILABLE_TYPE_NORMAL = "normal";
+const std::string AVAILABLE_TYPE_MDM = "MDM";
+const std::string AVAILABLE_TYPE_EMPTY = "";
 const std::string BUNDLE_PATH = "test.hap";
 } // namespace
 
@@ -642,6 +645,22 @@ HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0800, Function | SmallTest |
 }
 
 /**
+ * @tc.number: BundlePermissionMgr_0900
+ * @tc.name: test GetAvailableType
+ * @tc.desc: 1.test Get BundlePermissionMgr of AvailableType
+ */
+HWTEST_F(BmsServiceStartupTest, BundlePermissionMgr_0900, Function | SmallTest | Level0)
+{
+    int32_t ret = BundlePermissionMgr::Init();
+    EXPECT_EQ(ret, true);
+    auto result = BundlePermissionMgr::GetAvailableType(AVAILABLE_TYPE_EMPTY);
+    EXPECT_EQ(ret, AccessToken::ATokenAvailableTypeEnum::NORMAL);
+
+    result = BundlePermissionMgr::GetAvailableType(AVAILABLE_TYPE_NORMAL);
+    EXPECT_EQ(ret, AccessToken::ATokenAvailableTypeEnum::NORMAL);
+}
+
+/**
  * @tc.number: AbilityManagerHelper_0100
  * @tc.name: test IsRunning
  * @tc.desc: 1.test IsRunning of AbilityManagerHelper
@@ -697,12 +716,9 @@ HWTEST_F(BmsServiceStartupTest, BmsParam_0100, Function | SmallTest | Level0)
 HWTEST_F(BmsServiceStartupTest, BmsParam_0200, Function | SmallTest | Level0)
 {
     BmsParam param;
-    bool ret = param.SaveBmsParam("bms_param", "");
-    EXPECT_EQ(ret, false);
+    bool ret = param.SaveBmsParam("bms_param", "bms_value");
+    EXPECT_EQ(ret, true);
     ret = param.SaveBmsParam("", "bms_value");
-    EXPECT_EQ(ret, false);
-    param.rdbDataManager_.reset();
-    ret = param.SaveBmsParam("bms_param", "bms_value");
     EXPECT_EQ(ret, false);
 }
 

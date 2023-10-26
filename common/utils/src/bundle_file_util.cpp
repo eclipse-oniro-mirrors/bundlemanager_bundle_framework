@@ -30,7 +30,7 @@
 
 namespace {
 const std::string INSTALL_FILE_SUFFIX = ".hap";
-const std::string INSTALL_SHARED_FILE_SUFFIX = ".hsp";
+const std::string HSP_FILE_SUFFIX = ".hsp";
 const std::string QUICK_FIX_FILE_SUFFIX = ".hqf";
 const std::string CODE_SIGNATURE_SUFFIX = ".sig";
 const std::string PATH_SEPARATOR = "/";
@@ -50,7 +50,7 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         return false;
     }
     if (!CheckFileType(bundlePath, INSTALL_FILE_SUFFIX) &&
-        !CheckFileType(bundlePath, INSTALL_SHARED_FILE_SUFFIX) &&
+        !CheckFileType(bundlePath, HSP_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, QUICK_FIX_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, CODE_SIGNATURE_SUFFIX)) {
         APP_LOGE("file is not hap, hsp or hqf or sig");

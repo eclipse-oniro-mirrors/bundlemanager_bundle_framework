@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
 
 #include "base_cb_info.h"
 #include "napi/native_api.h"
@@ -44,6 +44,9 @@ struct AllLauncherAbilityResourceInfoCallback : public BaseCallbackInfo {
 #endif
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info);
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info);
+napi_value GetAllLauncherAbilityResourceInfo(napi_env env, napi_callback_info info);
+void CreateBundleResourceFlagObject(napi_env env, napi_value value);
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK__INTERFACE_KITS_JS_BUNDLE_RESOURCE_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_INTERFACE_KITS_JS_BUNDLE_RESOURCE_H

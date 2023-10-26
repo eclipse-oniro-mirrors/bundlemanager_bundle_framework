@@ -26,6 +26,7 @@ config("third_page_demo1_config") {
   ]
 }
 ohos_shared_library("page_ability_native1") {
+  testonly = true
   sources = [ "${SUBDEMOSYSTEM_DIR}/src/pageAbilityDemo.cpp" ]
   configs = [ ":third_page_demo1_config" ]
   deps = [
@@ -42,5 +43,5 @@ ohos_shared_library("page_ability_native1") {
     "hilog:libhilog",
     "napi:ace_napi",
   ]
-  subsystem_name = "bmssystemtestability"
+  subsystem_name = "bundlemanager"
 }

@@ -2294,6 +2294,18 @@ uint32_t GetBackgroundModes(const std::vector<std::string>& backgroundModes)
     return backgroundMode;
 }
 
+bool CheckDefinePermissions(const std::vector<DefinePermission> &definePermissions)
+{
+    for (const auto &definePermission : definePermissions) {
+        if (!definePermission.availableType.empty() &&
+            definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
+            APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleInfo &innerModuleInfo)
 {
     if (configJson.module.name.substr(0, 1) == ".") {
@@ -2317,6 +2329,10 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
     if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
+        if (!CheckDefinePermissions(configJson.module.definePermissions)) {
+            APP_LOGE("CheckDefinePermissions failed");
+            return false;
+        }
         innerModuleInfo.definePermissions = configJson.module.definePermissions;
     }
     if (configJson.module.mainAbility.substr(0, 1) == ".") {

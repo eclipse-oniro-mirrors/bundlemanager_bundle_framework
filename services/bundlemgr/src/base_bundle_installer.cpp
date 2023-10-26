@@ -98,7 +98,7 @@ std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleNam
     auto moduleInfo = info.GetInnerModuleInfoByModuleName(moduleName);
     if (moduleInfo && moduleInfo->distro.moduleType == Profile::MODULE_TYPE_SHARED) {
         APP_LOGD("The module(%{public}s) is shared.", moduleName.c_str());
-        fileSuffix = Constants::INSTALL_SHARED_FILE_SUFFIX;
+        fileSuffix = Constants::HSP_FILE_SUFFIX;
     }
 
     return info.GetAppCodePath() + Constants::PATH_SEPARATOR + moduleName + fileSuffix;
@@ -1696,8 +1696,9 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
 
 bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
     if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
-        if (oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) {
-            APP_LOGE("same versionCode, appIdentifier is not same");
+        if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
+            (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
+            APP_LOGE("same versionCode, appIdentifier or appId is not same");
             return false;
         }
     }
@@ -3354,13 +3355,38 @@ ErrCode BaseBundleInstaller::CheckAppLabel(const InnerBundleInfo &oldInfo, const
     if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
         return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
     }
-    if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
-        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
-    }
     if (oldInfo.GetGwpAsanEnabled() != newInfo.GetGwpAsanEnabled()) {
         return ERR_APPEXECFWK_INSTALL_GWP_ASAN_ENABLED_NOT_SAME;
     }
+
+    ErrCode ret = CheckDebugType(oldInfo, newInfo);
     APP_LOGD("CheckAppLabel end");
+    return ret;
+}
+
+ErrCode BaseBundleInstaller::CheckDebugType(
+    const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const
+{
+    if (!oldInfo.HasEntry() && !newInfo.HasEntry()) {
+        return ERR_OK;
+    }
+
+    if (oldInfo.HasEntry() && newInfo.HasEntry()) {
+        if (oldInfo.GetBaseApplicationInfo().debug != newInfo.GetBaseApplicationInfo().debug) {
+            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+        }
+
+        return ERR_OK;
+    }
+
+    if (oldInfo.HasEntry() && !oldInfo.GetBaseApplicationInfo().debug && newInfo.GetBaseApplicationInfo().debug) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+    }
+
+    if (newInfo.HasEntry() && !newInfo.GetBaseApplicationInfo().debug && oldInfo.GetBaseApplicationInfo().debug) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+    }
+
     return ERR_OK;
 }
 
@@ -3505,6 +3531,8 @@ void BaseBundleInstaller::ResetInstallProperties()
     hapPathRecords_.clear();
     uninstallBundleAppId_.clear();
     isModuleUpdate_ = false;
+    isEntryInstalled_ = false;
+    entryModuleName_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -3950,7 +3978,7 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 {
     std::string hapPath = GetHapPath(info);
     if (hapPath.empty() || (!BundleUtil::EndWith(hapPath, Constants::INSTALL_FILE_SUFFIX) &&
-        !BundleUtil::EndWith(hapPath, Constants::INSTALL_SHARED_FILE_SUFFIX))) {
+        !BundleUtil::EndWith(hapPath, Constants::HSP_FILE_SUFFIX))) {
         APP_LOGE("invalid hapPath %{public}s", hapPath.c_str());
         return "";
     }
