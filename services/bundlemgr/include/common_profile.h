@@ -473,6 +473,7 @@ constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 constexpr const char* BUNDLE_TYPE_APP = "app";
 constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
+constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appServiceFwk";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";

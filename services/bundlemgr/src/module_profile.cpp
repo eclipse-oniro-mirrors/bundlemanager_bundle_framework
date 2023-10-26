@@ -115,7 +115,8 @@ const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
 const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"app", BundleType::APP},
     {"atomicService", BundleType::ATOMIC_SERVICE},
-    {"shared", BundleType::SHARED}
+    {"shared", BundleType::SHARED},
+    {"appServiceFwk", BundleType::APP_SERVICE_FWK}
 };
 
 struct DeviceConfig {
@@ -1651,6 +1652,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             bundleType = BundleType::ATOMIC_SERVICE;
         } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SHARED) {
             bundleType = BundleType::SHARED;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_APP_SERVICE_FWK) {
+            bundleType = BundleType::APP_SERVICE_FWK;
         }
     }
 
