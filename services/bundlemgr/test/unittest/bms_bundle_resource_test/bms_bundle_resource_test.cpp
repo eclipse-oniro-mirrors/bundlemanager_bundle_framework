@@ -1580,5 +1580,43 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0087, Function | SmallTest
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
     EXPECT_TRUE(launcherAbilityResourceInfos.empty());
 }
+
+/**
+ * @tc.number: BmsBundleResourceTest_0088
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0088, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    std::vector<std::string> resourceNames;
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_NE(resourceInfos.size(), 0);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0089
+ * Function: BundleResourceProcess
+ * @tc.name: test BundleResourceProcess
+ * @tc.desc: 1. system running normally
+ *           2. test GetResourceInfoByColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0089, Function | SmallTest | Level0)
+{
+    std::vector<std::string> resourceNames;
+    std::vector<ResourceInfo> resourceInfos;
+    bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
+    EXPECT_TRUE(ans);
+    EXPECT_NE(resourceInfos.size(), 0);
+}
 #endif
 } // OHOS
