@@ -1228,7 +1228,7 @@ public:
     }
 
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-        const std::string &moduleName, std::string &profile)
+        const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

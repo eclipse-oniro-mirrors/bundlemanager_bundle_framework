@@ -813,7 +813,7 @@ public:
     virtual ErrCode QueryExtensionAbilityInfosWithTypeName(const Want &want, const std::string &extensionTypeName,
         const int32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos) override;
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-        const std::string &moduleName, std::string &profile) override;
+        const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
