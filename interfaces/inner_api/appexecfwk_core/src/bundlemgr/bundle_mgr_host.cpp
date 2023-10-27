@@ -2853,8 +2853,9 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
     ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     std::string profile;
-    ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile);
+    ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

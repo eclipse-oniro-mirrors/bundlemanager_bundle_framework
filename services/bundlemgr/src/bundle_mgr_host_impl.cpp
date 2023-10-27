@@ -2948,10 +2948,10 @@ ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, 
 }
 
 ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-    const std::string &moduleName, std::string &profile)
+    const std::string &moduleName, std::string &profile, int32_t userId)
 {
-    APP_LOGD("GetJsonProfile profileType: %{public}d, bundleName: %{public}s, moduleName: %{public}s",
-        profileType, bundleName.c_str(), moduleName.c_str());
+    APP_LOGD("GetJsonProfile profileType: %{public}d, bundleName: %{public}s, moduleName: %{public}s"
+        "userId: %{public}d", profileType, bundleName.c_str(), moduleName.c_str(), userId);
     if (!VerifyQueryPermission(bundleName)) {
         APP_LOGE("verify permission failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
@@ -2965,8 +2965,6 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
         APP_LOGE("dataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    auto uid = IPCSkeleton::GetCallingUid();
-    int32_t userId = uid / Constants::BASE_USER_RANGE;
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
 }  // namespace AppExecFwk

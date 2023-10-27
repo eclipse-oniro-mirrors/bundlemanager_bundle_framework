@@ -3723,7 +3723,7 @@ ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, con
 }
 
 ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-    const std::string &moduleName, std::string &profile)
+    const std::string &moduleName, std::string &profile, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetJsonProfile");
@@ -3748,6 +3748,10 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     if (!data.WriteString(moduleName)) {
         APP_LOGE("fail to GetJsonProfile due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        return false;
     }
 
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
