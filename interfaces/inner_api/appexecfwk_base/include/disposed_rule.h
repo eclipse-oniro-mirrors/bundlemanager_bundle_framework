@@ -47,7 +47,7 @@ public:
     ComponentType componentType;
     DisposedType disposedType;
     ControlType controlType;
-    std::vector<ElementName> elementsList;
+    std::vector<ElementName> elementList;
     int32_t priority;
 
     bool ReadFromParcel(Parcel &parcel);

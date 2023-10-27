@@ -28,7 +28,7 @@ const std::string WANT = "want";
 const std::string COMPONENT_TYPE = "componentType";
 const std::string DISPOSED_TYPE = "disposedType";
 const std::string CONTROL_TYPE = "controlType";
-const std::string ELEMENTS_LIST = "elemnetsList";
+const std::string ELEMENT_LIST = "elementList";
 const std::string PRIORITY = "priority";
 const std::string DEVICE_ID = "deviceId";
 }  // namespace
@@ -42,14 +42,14 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
     controlType = static_cast<ControlType>(parcel.ReadInt32());
     int32_t elementSize;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, elementSize);
-    CONTAINER_SECURITY_VERIFY(parcel, elementSize, &elementsList);
+    CONTAINER_SECURITY_VERIFY(parcel, elementSize, &elementList);
     for (auto i = 0; i < elementSize; i++) {
-        std::unique_ptr<ElementName> elementNamePtr(parcel.ReadParcelable<ElementName>());
-        if (!elementNamePtr) {
-            APP_LOGE("ReadParcelable<ElementName> failed");
-            return false;
+        std::string elementUri = Str16ToStr8(parcel.ReadString16());
+        ElementName elementName;
+        if (!elementName.ParseURI(elementUri)) {
+            APP_LOGW("parse elementName failed");
         }
-        elementsList.emplace_back(*elementNamePtr);
+        elementList.emplace_back(elementName);
     }
     priority = parcel.ReadInt32();
     return true;
@@ -61,8 +61,10 @@ bool DisposedRule::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(componentType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(disposedType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(controlType));
-    for (auto &elementName: elementsList) {
-        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &elementName);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, elementList.size());
+    for (const auto &elementName: elementList) {
+        std::string elementUri = elementName.GetURI();
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(elementUri));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
 
@@ -148,7 +150,7 @@ void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule)
         {COMPONENT_TYPE, disposedRule.componentType},
         {DISPOSED_TYPE, disposedRule.disposedType},
         {CONTROL_TYPE, disposedRule.controlType},
-        {ELEMENTS_LIST, disposedRule.elementsList},
+        {ELEMENT_LIST, disposedRule.elementList},
         {PRIORITY, disposedRule.priority}
     };
 }
@@ -193,8 +195,8 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<ElementName>>(jsonObject,
         jsonObjectEnd,
-        ELEMENTS_LIST,
-        disposedRule.elementsList,
+        ELEMENT_LIST,
+        disposedRule.elementList,
         JsonType::ARRAY,
         false,
         parseResult,
@@ -216,7 +218,6 @@ std::string DisposedRule::ToString() const
 {
     nlohmann::json jsonObject;
     to_json(jsonObject, *this);
-    APP_LOGD("disposedRule %{public}s", jsonObject.dump().c_str());
     return jsonObject.dump();
 }
 

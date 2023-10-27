@@ -473,8 +473,8 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 
 void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
-    APP_LOGD("ConvertRuleInfo");
     napi_value nWant = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWant));
     CommonFunc::ConvertWantInfo(env, nWant, rule.want);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
     napi_value nComponentType;
@@ -487,15 +487,15 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.controlType), &nControlType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "controlType", nControlType));
 
-    napi_value nElementsList;
-    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nElementsList));
-    for (size_t idx = 0; idx < rule.elementsList.size(); idx++) {
+    napi_value nElementList;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nElementList));
+    for (size_t idx = 0; idx < rule.elementList.size(); idx++) {
         napi_value nElementName;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nElementName));
-        CommonFunc::ConvertElementName(env, nElementName, rule.elementsList[idx]);
-        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nElementsList, idx, nElementName));
+        CommonFunc::ConvertElementName(env, nElementName, rule.elementList[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nElementList, idx, nElementName));
     }
-    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "elementsList", nElementsList));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "elementList", nElementList));
     napi_value nPriority;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, rule.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
@@ -549,25 +549,25 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     }
     rule.controlType = static_cast<ControlType>(controlType);
 
-    napi_value nElementsList = nullptr;
-    napi_get_named_property(env, nRule, "elementsList", &nElementsList);
+    napi_value nElementList = nullptr;
+    napi_get_named_property(env, nRule, "elementList", &nElementList);
     bool isArray = false;
-    NAPI_CALL_BASE(env, napi_is_array(env, nElementsList, &isArray), false);
+    NAPI_CALL_BASE(env, napi_is_array(env, nElementList, &isArray), false);
     if (!isArray) {
-        APP_LOGW("nElementsList not array");
+        APP_LOGW("nElementList not array");
         return false;
     }
     uint32_t arrayLength = 0;
-    NAPI_CALL_BASE(env, napi_get_array_length(env, nElementsList, &arrayLength), false);
+    NAPI_CALL_BASE(env, napi_get_array_length(env, nElementList, &arrayLength), false);
     for (uint32_t j = 0; j < arrayLength; j++) {
         napi_value value = nullptr;
-        NAPI_CALL_BASE(env, napi_get_element(env, nElementsList, j, &value), false);
+        NAPI_CALL_BASE(env, napi_get_element(env, nElementList, j, &value), false);
         ElementName name;
         if (!CommonFunc::ParseElementName(env, value, name)) {
             APP_LOGW("parse element name failed");
             return false;
         }
-        rule.elementsList.push_back(name);
+        rule.elementList.push_back(name);
     }
     napi_get_named_property(env, nRule, "priority", &prop);
     if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
@@ -617,8 +617,11 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nRule = nullptr;
+    APP_LOGE("Parse rule 1");
     NAPI_CALL(env, napi_create_object(env, &nRule));
+    APP_LOGE("Parse rule 2");
     ConvertRuleInfo(env, nRule, disposedRule);
+    APP_LOGE("Parse rule 3");
     return nRule;
 }
 

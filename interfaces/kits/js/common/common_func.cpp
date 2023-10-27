@@ -486,6 +486,8 @@ bool CommonFunc::ParseElementName(napi_env env, napi_value args, ElementName &el
     napi_get_named_property(env, args, DEVICE_ID, &prop);
     std::string deviceId = GetStringFromNAPI(env, prop);
     elementName.SetDeviceID(deviceId);
+    APP_LOGI("ParseElementName, bundleName:%{public}s, moduleName: %{public}s, abilityName:%{public}s",
+        bundleName.c_str(), moduleName.c_str(), abilityName.c_str());
 
     return true;
 }
