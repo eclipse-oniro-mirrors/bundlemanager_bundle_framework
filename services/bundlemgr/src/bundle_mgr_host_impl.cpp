@@ -2967,5 +2967,14 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     }
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
+
+sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleResourceProxy();
+#else
+    return nullptr;
+#endif
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

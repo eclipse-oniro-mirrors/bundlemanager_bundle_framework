@@ -148,6 +148,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RESET_AOT_COMPILE_STATUS,
     QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
     GET_JSON_PROFILE,
+    GET_BUNDLE_RESOURCE_PROXY,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */

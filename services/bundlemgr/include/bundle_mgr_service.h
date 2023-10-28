@@ -48,6 +48,9 @@
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
 #include "bundle_overlay_manager_host_impl.h"
 #endif
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+#include "bundle_resource_host_impl.h"
+#endif
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService : public SystemAbility {
@@ -104,6 +107,9 @@ public:
 #ifdef BUNDLE_FRAMEWORK_QUICK_FIX
     sptr<QuickFixManagerHostImpl> GetQuickFixManagerProxy() const;
 #endif
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    sptr<IBundleResource> GetBundleResourceProxy() const;
+#endif
     /**
      * @brief Check all user.
      */
@@ -159,6 +165,7 @@ private:
     bool InitQuickFixManager();
     bool InitOverlayManager();
     void CreateBmsServiceDir();
+    bool InitBundleResourceMgr();
 
 private:
     bool ready_ = false;
@@ -195,6 +202,11 @@ private:
 #ifdef BUNDLE_FRAMEWORK_OVERLAY_INSTALLATION
     sptr<OverlayManagerHostImpl>  overlayManagerHostImpl_;
 #endif
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    sptr<BundleResourceHostImpl> bundleResourceHostImpl_;
+#endif
+
 
 #define CHECK_INIT_RESULT(result, errmsg)                                         \
     do {                                                                          \

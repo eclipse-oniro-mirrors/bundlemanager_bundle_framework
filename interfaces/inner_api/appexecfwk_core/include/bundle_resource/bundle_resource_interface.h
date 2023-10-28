@@ -17,9 +17,9 @@
 #define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_CORE_INCLUDE_BUNDLE_RESOURCE_INTERFACE_H
 
 #include "appexecfwk_errors.h"
-#include "bundle_resource_info.h"
+#include "bundle_resource/bundle_resource_info.h"
+#include "bundle_resource/launcher_ability_resource_info.h"
 #include "iremote_broker.h"
-#include "launcher_ability_resource_info.h"
 
 namespace OHOS {
 namespace AppExecFwk {

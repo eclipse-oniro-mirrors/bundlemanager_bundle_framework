@@ -815,6 +815,8 @@ public:
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
         const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID) override;
 
+    virtual sptr<IBundleResource> GetBundleResourceProxy() override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
