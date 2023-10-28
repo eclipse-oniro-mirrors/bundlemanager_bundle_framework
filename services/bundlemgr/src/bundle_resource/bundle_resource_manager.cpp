@@ -147,5 +147,33 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
     }
     return AddResourceInfos(resourceInfos);
 }
+
+bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+    BundleResourceInfo &bundleResourceInfo)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    return bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo);
+}
+
+bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+{
+    APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
+    return bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo);
+}
+
+bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
+    std::vector<BundleResourceInfo> &bundleResourceInfos)
+{
+    APP_LOGD("start");
+    return bundleResourceRdb_->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+}
+
+bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    APP_LOGD("start");
+    return bundleResourceRdb_->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+}
 } // AppExecFwk
 } // OHOS
