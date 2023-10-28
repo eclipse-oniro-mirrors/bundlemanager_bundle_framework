@@ -38,8 +38,8 @@ bool DoSomethingInterestingWithMyAPI(const uint8_t* data, size_t size)
     if (size % SIZE_FLAG == 0) {
         includeHiddenFiles = true;
     }
-    Zip(srcPath, destPath, includeHiddenFiles, zlibCallbackInfo);
     LIBZIP::OPTIONS options;
+    Zip(srcPath, destPath, options, includeHiddenFiles, zlibCallbackInfo);
     std::string srcFile (reinterpret_cast<const char*>(data), size);
     std::string destFile = "";
     Unzip(srcFile, destFile, options, zlibCallbackInfo);
