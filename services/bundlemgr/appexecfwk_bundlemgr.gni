@@ -183,6 +183,7 @@ bundle_resource = [
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_callback.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_configuration.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_event_subscriber.cpp",
+  "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_host_impl.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_manager.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_observer.cpp",
   "${services_path}/bundlemgr/src/bundle_resource/bundle_resource_param.cpp",
