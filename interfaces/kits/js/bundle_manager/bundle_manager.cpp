@@ -2551,6 +2551,11 @@ void CreateBundleFlagObject(napi_env env, napi_value value)
         GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_SIGNATURE_INFO), &nGetBundleInfoWithSignatureInfo));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_SIGNATURE_INFO",
         nGetBundleInfoWithSignatureInfo));
+    napi_value nGetBundleInfoWithMenu;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(
+        GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU), &nGetBundleInfoWithMenu));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "GET_BUNDLE_INFO_WITH_MENU",
+        nGetBundleInfoWithMenu));
 }
 
 static ErrCode InnerGetBundleInfo(const std::string &bundleName, int32_t flags,

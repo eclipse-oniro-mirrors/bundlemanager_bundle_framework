@@ -382,7 +382,10 @@ ErrCode BundleMgrHostImpl::GetBundleInfosV9(int32_t flags, std::vector<BundleInf
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     auto res = dataMgr->GetBundleInfosV9(flags, bundleInfos, userId);
-    if (isBrokerServiceExisted_) {
+    // menu profile is currently not supported in BrokerService
+    bool getMenu = ((static_cast<uint32_t>(flags) & BundleFlag::GET_BUNDLE_WITH_MENU)
+        == BundleFlag::GET_BUNDLE_WITH_MENU);
+    if (isBrokerServiceExisted_ && !getMenu) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
         if (bmsExtensionClient->GetBundleInfos(flags, bundleInfos, userId, true) == ERR_OK) {
             APP_LOGD("query bundle infos from bms extension successfully");
