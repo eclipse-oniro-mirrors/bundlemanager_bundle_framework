@@ -47,7 +47,7 @@ private:
     ErrCode GetVectorParcelInfo(
         BundleResourceInterfaceCode code, MessageParcel &data, std::vector<T> &parcelInfos);
 
-    int32_t SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    bool SendRequest(BundleResourceInterfaceCode code, MessageParcel &data, MessageParcel &reply);
 
     static inline BrokerDelegator<BundleResourceProxy> delegator_;
 };

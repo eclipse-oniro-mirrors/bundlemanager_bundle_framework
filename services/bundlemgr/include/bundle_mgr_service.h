@@ -207,7 +207,6 @@ private:
     sptr<BundleResourceHostImpl> bundleResourceHostImpl_;
 #endif
 
-
 #define CHECK_INIT_RESULT(result, errmsg)                                         \
     do {                                                                          \
         if (!(result)) {                                                          \

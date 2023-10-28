@@ -28,24 +28,25 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+constexpr size_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024;
 bool GetData(void *&buffer, size_t size, const void *data)
 {
     if (data == nullptr) {
-        APP_LOGE("GetData failed due to null data");
+        APP_LOGE("failed due to null data");
         return false;
     }
-    if (size == 0) {
-        APP_LOGE("GetData failed due to zero size");
+    if ((size == 0) || size > MAX_PARCEL_CAPACITY) {
+        APP_LOGE("failed due to wrong size");
         return false;
     }
     buffer = malloc(size);
     if (buffer == nullptr) {
-        APP_LOGE("GetData failed due to malloc buffer failed");
+        APP_LOGE("failed due to malloc buffer failed");
         return false;
     }
     if (memcpy_s(buffer, size, data, size) != EOK) {
         free(buffer);
-        APP_LOGE("GetData failed due to memcpy_s failed");
+        APP_LOGE("failed due to memcpy_s failed");
         return false;
     }
     return true;
@@ -67,15 +68,15 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to write InterfaceToken");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write bundleName fail");
+        APP_LOGE("fail to to write bundleName");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteUint32(flags)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write flags fail");
+        APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -95,15 +96,15 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to write InterfaceToken");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteString(bundleName)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write bundleName fail");
+        APP_LOGE("fail to write bundleName");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteUint32(flags)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write flags fail");
+        APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -118,11 +119,11 @@ ErrCode BundleResourceProxy::GetAllBundleResourceInfo(const uint32_t flags,
     APP_LOGD("start, flags:%{public}u", flags);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to write InterfaceToken");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteUint32(flags)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write flags fail");
+        APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -131,17 +132,17 @@ ErrCode BundleResourceProxy::GetAllBundleResourceInfo(const uint32_t flags,
 }
 
 ErrCode BundleResourceProxy::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
-     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("start, flags:%{public}u", flags);
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write InterfaceToken fail");
+        APP_LOGE("fail to write InterfaceToken");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteUint32(flags)) {
-        APP_LOGE("fail to GetBundleResourceInfo due to write flags fail");
+        APP_LOGE("fail to write flags");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -181,7 +182,6 @@ ErrCode BundleResourceProxy::GetParcelInfo(BundleResourceInterfaceCode code, Mes
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     parcelInfo = *info;
-    APP_LOGD("InnerGetParcelInfo success");
     return ERR_OK;
 }
 
@@ -234,7 +234,7 @@ ErrCode BundleResourceProxy::GetVectorParcelInfo(
 }
 
 
-int32_t BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
+bool BundleResourceProxy::SendRequest(BundleResourceInterfaceCode code,
     MessageParcel &data, MessageParcel &reply)
 {
     MessageOption option(MessageOption::TF_SYNC);

@@ -8221,7 +8221,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetLauncherAbilityResourceInfo_0001, Function | S
             ErrCode ret = proxy->GetLauncherAbilityResourceInfo(EMPTY_BUNDLE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
-            ret = proxy->GetLauncherAbilityResourceInfo(BASE_MODULE_NAME, 
+            ret = proxy->GetLauncherAbilityResourceInfo(BASE_MODULE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
         }
