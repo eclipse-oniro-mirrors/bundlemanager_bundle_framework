@@ -17,7 +17,8 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
-#include "bundle_resource_client.h"
+#include "bundle_mgr_interface.h"
+#include "bundle_mgr_proxy.h"
 #include "business_error.h"
 #include "common_func.h"
 #include "napi_arg.h"
@@ -35,7 +36,6 @@ constexpr const char* ABILITY_NAME = "abilityName";
 constexpr const char* LABEL = "label";
 constexpr const char* ICON = "icon";
 constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
-constexpr const char* PERMISSION_GET_INSTALLED_BUNDLE_LIST = "ohos.permission.GET_INSTALLED_BUNDLE_LIST";
 constexpr const char* PERMISSION_GET_ALL_BUNDLE_RESOURCES =
     "ohos.permission.GET_INSTALLED_BUNDLE_LIST and ohos.permission.GET_BUNDLE_RESOURCES";
 constexpr const char* GET_BUNDLE_RESOURCE_INFO = "GetBundleResourceInfo";
@@ -47,7 +47,6 @@ constexpr const char* GET_RESOURCE_INFO_ALL = "GET_RESOURCE_INFO_ALL";
 constexpr const char* GET_RESOURCE_INFO_WITH_LABEL = "GET_RESOURCE_INFO_WITH_LABEL";
 constexpr const char* GET_RESOURCE_INFO_WITH_ICON = "GET_RESOURCE_INFO_WITH_ICON";
 constexpr const char* GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = "GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL";
-bool g_hasPermission = false;
 
 static void ConvertBundleResourceInfo(
     napi_env env,
@@ -144,6 +143,27 @@ static void ConvertLauncherAbilityResourceInfos(
 }
 }
 
+static ErrCode InnerGetBundleResourceInfo(
+    const std::string &bundleName, uint32_t flags, BundleResourceInfo &resourceInfo)
+{
+    APP_LOGD("start");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetBundleResourceInfo(bundleName, flags, resourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI start");
@@ -169,8 +189,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
         flags = static_cast<int32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
     }
     BundleResourceInfo resourceInfo;
-    BundleResourceClient client;
-    auto ret = CommonFunc::ConvertErrCode(client.GetBundleResourceInfo(bundleName, flags, resourceInfo));
+    auto ret = InnerGetBundleResourceInfo(bundleName, flags, resourceInfo);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_BUNDLE_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
@@ -182,6 +201,29 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
     ConvertBundleResourceInfo(env, resourceInfo, nBundleResourceInfo);
     APP_LOGD("NAPI end");
     return nBundleResourceInfo;
+}
+
+static ErrCode InnerGetLauncherAbilityResourceInfo(
+    const std::string &bundleName, uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
+{
+    APP_LOGD("start");
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetLauncherAbilityResourceInfo(bundleName,
+        flags, launcherAbilityResourceInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
@@ -210,9 +252,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     }
 
     std::vector<LauncherAbilityResourceInfo> launcherAbilityResourceInfos;
-    BundleResourceClient client;
-    auto ret = CommonFunc::ConvertErrCode(client.GetLauncherAbilityResourceInfo(bundleName,
-        flags, launcherAbilityResourceInfos));
+    auto ret = InnerGetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfos);
     if (ret != ERR_OK) {
         napi_value businessError = BusinessError::CreateCommonError(
             env, ret, GET_LAUNCHER_ABILITY_RESOURCE_INFO, PERMISSION_GET_BUNDLE_RESOURCES);
@@ -226,19 +266,23 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
     return nLauncherAbilityResourceInfos;
 }
 
-bool HasPermission()
+static ErrCode InnerGetAllBundleResourceInfo(uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
-    if (g_hasPermission) {
-        return true;
-    }
     auto iBundleMgr = CommonFunc::GetBundleMgr();
     if (iBundleMgr == nullptr) {
-        APP_LOGE("can not get iBundleMgr");
-        return false;
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
     }
-    g_hasPermission =
-        iBundleMgr->VerifyCallingPermission(PERMISSION_GET_INSTALLED_BUNDLE_LIST);
-    return g_hasPermission;
+    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
 }
 
 void GetAllBundleResourceInfoExec(napi_env env, void *data)
@@ -248,14 +292,8 @@ void GetAllBundleResourceInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    if (!HasPermission()) {
-        APP_LOGE("no permission GET_INSTALLED_BUNDLE_LIST");
-        asyncCallbackInfo->err = ERROR_PERMISSION_DENIED_ERROR;
-        return;
-    }
-    BundleResourceClient client;
-    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(client.GetAllBundleResourceInfo(asyncCallbackInfo->flags,
-        asyncCallbackInfo->bundleResourceInfos));
+    asyncCallbackInfo->err = InnerGetAllBundleResourceInfo(asyncCallbackInfo->flags,
+        asyncCallbackInfo->bundleResourceInfos);
 }
 
 void GetAllBundleResourceInfoComplete(napi_env env, napi_status status, void *data)
@@ -319,6 +357,26 @@ napi_value GetAllBundleResourceInfo(napi_env env, napi_callback_info info)
     return promise;
 }
 
+static ErrCode InnerGetAllLauncherAbilityResourceInfo(uint32_t flags,
+    std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    auto bundleResourceProxy = iBundleMgr->GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = bundleResourceProxy->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    if (ret != ERR_OK) {
+        APP_LOGE("failed, errCode: %{public}d", ret);
+    }
+    return CommonFunc::ConvertErrCode(ret);
+}
+
 void GetAllLauncherAbilityResourceInfoExec(napi_env env, void *data)
 {
     AllLauncherAbilityResourceInfoCallback *asyncCallbackInfo =
@@ -327,14 +385,8 @@ void GetAllLauncherAbilityResourceInfoExec(napi_env env, void *data)
         APP_LOGE("asyncCallbackInfo is null");
         return;
     }
-    if (!HasPermission()) {
-        APP_LOGE("no permission GET_INSTALLED_BUNDLE_LIST");
-        asyncCallbackInfo->err = ERROR_PERMISSION_DENIED_ERROR;
-        return;
-    }
-    BundleResourceClient client;
-    asyncCallbackInfo->err = CommonFunc::ConvertErrCode(client.GetAllLauncherAbilityResourceInfo(
-        asyncCallbackInfo->flags, asyncCallbackInfo->launcherAbilityResourceInfos));
+    asyncCallbackInfo->err = InnerGetAllLauncherAbilityResourceInfo(
+        asyncCallbackInfo->flags, asyncCallbackInfo->launcherAbilityResourceInfos);
 }
 
 void GetAllLauncherAbilityResourceInfoComplete(napi_env env, napi_status status, void *data)

@@ -36,6 +36,7 @@ ohos_shared_library("bundleresourcemanager") {
   external_deps = [
     "c_utils:utils",
     "hilog:libhilog",
+    "ipc:ipc_core",
     "napi:ace_napi",
   ]
 
@@ -43,8 +44,6 @@ ohos_shared_library("bundleresourcemanager") {
 
   if (bundle_framework_bundle_resource) {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
-    deps += [ "${inner_api_path}/bundlemgr_resource:bundlemgr_resource" ]
-    external_deps += [ "relational_store:native_rdb" ]
     sources += [ "bundle_resource.cpp" ]
   } else {
     sources += [ "bundle_resource_unsupported.cpp" ]
