@@ -85,6 +85,7 @@ struct InstallParam : public Parcelable {
     std::string additionalInfo = "";
     // for AOT
     bool isOTA = false;
+    bool isRemoveUser = false;
     // utilizing for code-signature
     std::map<std::string, std::string> verifyCodeParams;
     // for MDM self update
