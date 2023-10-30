@@ -38,6 +38,8 @@ namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+const uint32_t FACTOR = 8;
+const uint32_t INTERVAL = 6;
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -315,8 +317,8 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
     auto task = [this] {
         HandleNotifyBundleEvents();
     };
-    std::thread t(task);
-    t.detach();
+    std::thread taskThread(task);
+    taskThread.detach();
 }
 
 void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
@@ -330,12 +332,10 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
     }
 
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    uint32_t factor = 8;
-    uint32_t interval = 6;
     for (auto i = 0; i < uninstallEvents_.size(); ++i) {
         commonEventMgr->NotifyBundleStatus(uninstallEvents_[i], dataMgr);
-        if ((i != 0) && (i % factor == 0)) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+        if ((i != 0) && (i % FACTOR == 0)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
         }
     }
 
