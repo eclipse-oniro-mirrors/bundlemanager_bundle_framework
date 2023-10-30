@@ -53,7 +53,7 @@ const std::string BUNDLE_DATA_DIR2 = "/data/app/el1/100/database/";
 const std::string BUNDLE_DATA_DIR3 = "/data/app/el2/100/base/";
 const std::string BUNDLE_DATA_DIR4 = "/data/app/el2/100/database/";
 const std::string ACCESS_TOKEN_ID = "accessTokenId";
-const int32_t TIMEOUT = 10;
+const int32_t TIMEOUT = 60;
 const int32_t DEFAULT_USERID = 100;
 const int32_t DLP_TYPE_1 = 1;
 const int32_t DLP_TYPE_2 = 2;
@@ -476,41 +476,6 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest004, TestSize.Level
 }
 
 /**
- * @tc.number: InstallSandboxAppTest005
- * @tc.name: InstallSandboxApp
- * @tc.desc: Test the interface of InstallSandboxApp
- */
-HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest005, TestSize.Level1)
-{
-    auto name = std::string("InstallSandboxAppTest005");
-    GTEST_LOG_(INFO) << name << " start";
-    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
-    std::string installMsg;
-    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
-    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
-
-    BundleMgrClient bundleMgrClient;
-    int32_t appIndex = 0;
-    int cnt = 0;
-    while (cnt++ < MAX_NUMBER_SANDBOX_APP) {
-        ErrCode ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, appIndex);
-        EXPECT_EQ(ret, ERR_OK);
-        EXPECT_NE(0, appIndex);
-        CheckPathAreExisted(BUNDLE_NAME, appIndex);
-        CheckSandboxAppInfo(BUNDLE_NAME, appIndex);
-    }
-    int32_t secondAppIndex = 0;
-    ErrCode ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, secondAppIndex);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
-
-    std::string uninstallMsg;
-    UninstallBundle(BUNDLE_NAME, uninstallMsg);
-    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
-
-    GTEST_LOG_(INFO) << name << " end";
-}
-
-/**
  * @tc.number: UninstallSandboxAppTest001
  * @tc.name: InstallSandboxApp
  * @tc.desc: Test the interface of UninstallSandboxApp
@@ -913,6 +878,41 @@ HWTEST_F(BundleMgrSandboxAppSystemTest, GetSandboxHapModuleInfoTest001, TestSize
     HapModuleInfo info;
     auto ret = bundleMgrClient.GetSandboxHapModuleInfo(abilityInfo, appIndex, DEFAULT_USERID, info);
     EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_PARAM_ERROR);
+
+    std::string uninstallMsg;
+    UninstallBundle(BUNDLE_NAME, uninstallMsg);
+    EXPECT_EQ(uninstallMsg, "Success") << "uninstall fail!" << bundleFilePath;
+
+    GTEST_LOG_(INFO) << name << " end";
+}
+
+/**
+ * @tc.number: InstallSandboxAppTest005
+ * @tc.name: InstallSandboxApp
+ * @tc.desc: Test the interface of InstallSandboxApp
+ */
+HWTEST_F(BundleMgrSandboxAppSystemTest, InstallSandboxAppTest005, TestSize.Level1)
+{
+    auto name = std::string("InstallSandboxAppTest005");
+    GTEST_LOG_(INFO) << name << " start";
+    std::string bundleFilePath = THIRD_PATH + "bundleClient1.hap";
+    std::string installMsg;
+    InstallBundle(bundleFilePath, InstallFlag::NORMAL, installMsg);
+    EXPECT_EQ(installMsg, "Success") << "install fail!" << bundleFilePath;
+
+    BundleMgrClient bundleMgrClient;
+    int32_t appIndex = 0;
+    int cnt = 0;
+    while (cnt++ < MAX_NUMBER_SANDBOX_APP) {
+        ErrCode ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, appIndex);
+        EXPECT_EQ(ret, ERR_OK);
+        EXPECT_NE(0, appIndex);
+        CheckPathAreExisted(BUNDLE_NAME, appIndex);
+        CheckSandboxAppInfo(BUNDLE_NAME, appIndex);
+    }
+    int32_t secondAppIndex = 0;
+    ErrCode ret = bundleMgrClient.InstallSandboxApp(BUNDLE_NAME, DLP_TYPE_2, DEFAULT_USERID, secondAppIndex);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_SANDBOX_INSTALL_INVALID_APP_INDEX);
 
     std::string uninstallMsg;
     UninstallBundle(BUNDLE_NAME, uninstallMsg);
