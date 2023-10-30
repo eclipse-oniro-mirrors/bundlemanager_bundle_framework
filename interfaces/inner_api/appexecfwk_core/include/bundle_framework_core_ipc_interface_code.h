@@ -148,6 +148,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     RESET_AOT_COMPILE_STATUS,
     QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
     GET_JSON_PROFILE,
+    GET_BUNDLE_RESOURCE_PROXY,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -258,6 +259,13 @@ enum class BundleUserMgrInterfaceCode : uint32_t {
     REMOVE_USER = 1,
 };
 
+/* SAID: 401-125 Interface No.125 subservice also provides the following interfaces */
+enum class BundleResourceInterfaceCode : uint32_t {
+    GET_BUNDLE_RESOURCE_INFO = 0,
+    GET_LAUNCHER_ABILITY_RESOURCE_INFO = 1,
+    GET_ALL_BUNDLE_RESOURCE_INFO = 2,
+    GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = 3,
+};
 } // namespace AppExecFwk
 } // namespace OHOS
 #endif // OHOS_BUNDLE_APPEXECFWK_CORE_IPC_INTERFACE_CODE_H

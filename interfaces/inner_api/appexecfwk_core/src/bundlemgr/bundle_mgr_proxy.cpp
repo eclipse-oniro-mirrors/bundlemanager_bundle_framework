@@ -3757,6 +3757,32 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
 }
 
+sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken failed.");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IBundleResource> bundleResourceProxy = iface_cast<IBundleResource>(object);
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is nullptr.");
+    }
+
+    return bundleResourceProxy;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
