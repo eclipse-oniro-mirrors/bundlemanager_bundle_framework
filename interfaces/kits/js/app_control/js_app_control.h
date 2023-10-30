@@ -37,6 +37,8 @@ napi_value DeleteDisposedStatus(napi_env env, napi_callback_info info);
 napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value SetDisposedStatusSync(napi_env env, napi_callback_info info);
 napi_value DeleteDisposedStatusSync(napi_env env, napi_callback_info info);
+napi_value GetDisposedRule(napi_env env, napi_callback_info info);
+napi_value SetDisposedRule(napi_env env, napi_callback_info info);
 }  // namespace AppExecFwk
 }  // namespace OHOS
 #endif /* JS_APP_CONTROL_H */
