@@ -1643,16 +1643,16 @@ HWTEST_F(BmsBundleFreeInstallTest, WriteFileToStream_0100, Function | SmallTest 
     BundleInstallerProxy installerProxy(remoteObject);
     sptr<IBundleStreamInstaller> streamInstaller;
     std::string path = "";
-    ErrCode ret = installerProxy.WriteFileToStream(streamInstaller, path);
+    ErrCode ret = installerProxy.WriteHapFileToStream(streamInstaller, path);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR);
 
     streamInstaller = iface_cast<IBundleStreamInstaller>(remoteObject);
     EXPECT_NE(streamInstaller, nullptr);
-    ret = installerProxy.WriteFileToStream(streamInstaller, path);
+    ret = installerProxy.WriteHapFileToStream(streamInstaller, path);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 
     path = "/";
-    ret = installerProxy.WriteFileToStream(streamInstaller, path);
+    ret = installerProxy.WriteHapFileToStream(streamInstaller, path);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID);
 }
 

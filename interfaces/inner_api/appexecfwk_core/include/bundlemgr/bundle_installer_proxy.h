@@ -114,14 +114,26 @@ private:
     bool SendInstallRequest(BundleInstallerInterfaceCode code, MessageParcel& data, MessageParcel& reply,
         MessageOption& option);
 
-    ErrCode WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
-        const std::string &moduleName = "");
+    ErrCode WriteFile(const std::string &path, int32_t outputFd);
+
+    ErrCode WriteHapFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path);
+    
+    ErrCode WriteSignatureFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
+        const std::string &moduleName);
 
     ErrCode WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
         const std::string &path, uint32_t index);
+    
+    ErrCode WritePgoFileToStream(sptr<IBundleStreamInstaller> &streamInstaller, const std::string &path,
+        const std::string &moduleName);
 
     ErrCode CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
         const InstallParam &installParam);
+
+    ErrCode CopyPgoFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
+        const InstallParam &installParam);
+
+    ErrCode GetFileNameByFilePath(const std::string &filePath, std::string &fileName);
 
     static inline BrokerDelegator<BundleInstallerProxy> delegator_;
 };

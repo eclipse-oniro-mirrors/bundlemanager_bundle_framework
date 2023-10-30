@@ -285,6 +285,10 @@ constexpr const char* CODE_SIGNATURE_HAP = "Hap";
 constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
 constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
 
+//pgo file
+constexpr const char* PGO_FILE_SUFFIX = ".ap";
+constexpr const char* PGO_FILE_PATH = "pgo_files";
+
 // system param
 const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";
 

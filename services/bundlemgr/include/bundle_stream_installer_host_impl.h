@@ -36,6 +36,7 @@ public:
     virtual int32_t CreateStream(const std::string &fileName) override;
     virtual int32_t CreateSignatureFileStream(const std::string &moduleName, const std::string &fileName) override;
     virtual int32_t CreateSharedBundleStream(const std::string &bundleName, uint32_t sharedBundleIdx) override;
+    virtual int32_t CreatePgoFileStream(const std::string &moduleName, const std::string &fileName) override;
     virtual bool Install() override;
 
     virtual uint32_t GetInstallerId() const override;
@@ -50,6 +51,7 @@ private:
     sptr<IStatusReceiver> receiver_ = nullptr;
     bool isInstallSharedBundlesOnly_ = true;
     std::string tempSignatureFileDir_;
+    std::string tempPgoFileDir_;
     std::mutex fdVecMutex_;
 };
 } // AppExecFwk

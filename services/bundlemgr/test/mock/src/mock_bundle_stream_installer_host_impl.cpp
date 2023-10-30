@@ -63,6 +63,11 @@ int BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::string &h
     return -1;
 }
 
+int BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &moduleName, const std::string &fileName)
+{
+    return -1;
+}
+
 bool BundleStreamInstallerHostImpl::Install()
 {
     return true;
