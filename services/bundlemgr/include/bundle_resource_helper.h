@@ -38,6 +38,11 @@ public:
         const int32_t userId);
 
     static void DeleteResourceInfo(const std::string &key, const int32_t userId = Constants::UNSPECIFIED_USERID);
+
+    static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId);
+
+    static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, bool enabled, const int32_t userId);
 };
 } // AppExecFwk
 } // OHOS

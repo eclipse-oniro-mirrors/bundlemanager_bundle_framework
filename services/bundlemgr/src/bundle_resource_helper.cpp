@@ -18,6 +18,7 @@
 #include "app_log_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "account_helper.h"
+#include "bundle_resource_callback.h"
 #include "bundle_resource_manager.h"
 #include "bundle_resource_param.h"
 #include "bundle_resource_register.h"
@@ -86,6 +87,27 @@ void BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int3
     if (!manager->DeleteResourceInfo(key)) {
         APP_LOGE("failed, key:%{public}s", key.c_str());
     }
+#endif
+}
+
+void BundleResourceHelper::SetApplicationEnabled(const std::string &bundleName,
+    bool enabled, const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("bundleName: %{public}s, enable: %{public}d, userId: %{public}d", bundleName.c_str(), enabled, userId);
+    BundleResourceCallback callback;
+    callback.OnBundleStatusChanged(bundleName, enabled, userId);
+#endif
+}
+
+void BundleResourceHelper::SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+    const std::string &abilityName, bool enabled, const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("bundleName: %{public}s, abilityName: %{public}s, enable: %{public}d, userId: %{public}d",
+        bundleName.c_str(), abilityName.c_str(), enabled, userId);
+    BundleResourceCallback callback;
+    callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, enabled, userId);
 #endif
 }
 } // AppExecFwk

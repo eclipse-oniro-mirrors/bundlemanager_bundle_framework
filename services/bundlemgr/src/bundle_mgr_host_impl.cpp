@@ -28,6 +28,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_util.h"
 #include "bundle_verify_mgr.h"
@@ -1574,6 +1575,7 @@ ErrCode BundleMgrHostImpl::SetApplicationEnabled(const std::string &bundleName, 
         EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, true);
         return ret;
     }
+    BundleResourceHelper::SetApplicationEnabled(bundleName, isEnable, userId);
 
     EventReport::SendComponentStateSysEvent(bundleName, "", userId, isEnable, false);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -1625,8 +1627,6 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
-
-    APP_LOGD("verify permission success, begin to SetAbilityEnabled");
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -1641,7 +1641,14 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
             abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return ret;
     }
-
+    std::string moduleName = abilityInfo.moduleName;
+    if (moduleName.empty()) {
+        AbilityInfo info;
+        if (GetAbilityInfo(abilityInfo.bundleName, abilityInfo.name, info)) {
+            moduleName = info.moduleName;
+        }
+    }
+    BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(
         abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
     InnerBundleUserInfo innerBundleUserInfo;
@@ -1649,13 +1656,8 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
         return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
     }
-
-    NotifyBundleEvents installRes = {
-        .bundleName = abilityInfo.bundleName,
-        .abilityName = abilityInfo.name,
-        .resultCode = ERR_OK,
-        .type = NotifyType::APPLICATION_ENABLE,
-        .uid = innerBundleUserInfo.uid,
+    NotifyBundleEvents installRes = {.bundleName = abilityInfo.bundleName, .abilityName = abilityInfo.name,
+        .resultCode = ERR_OK, .type = NotifyType::APPLICATION_ENABLE, .uid = innerBundleUserInfo.uid,
         .accessTokenId = innerBundleUserInfo.accessTokenId,
     };
     NotifyBundleStatus(installRes);
