@@ -292,7 +292,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         if (!oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-            oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdateBaseApplicationInfo(
+                newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
@@ -485,7 +486,8 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
         // 2.only exist feature, update feature.
         if (newInfo.HasEntry() || !isOldInfoHasEntry || oldInfo.GetEntryInstallationFree()) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-            oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo());
+            oldInfo.UpdateBaseApplicationInfo(
+                newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(
                 newInfo.IsPreInstallApp(), newInfo.IsRemovable());
             oldInfo.SetAppType(newInfo.GetAppType());

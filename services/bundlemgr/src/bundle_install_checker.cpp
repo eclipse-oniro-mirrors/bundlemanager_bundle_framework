@@ -835,6 +835,9 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
     BundleType bundleType = (infos.begin()->second).GetApplicationBundleType();
     bool isHmService = (infos.begin()->second).GetEntryInstallationFree();
     bool debug = (infos.begin()->second).GetBaseApplicationInfo().debug;
+    bool hasEntry = (infos.begin()->second).HasEntry();
+    bool isSameDebugType = true;
+    bool entryDebug = hasEntry ? debug : false;
 
     for (const auto &info : infos) {
         // check bundleName
@@ -897,8 +900,16 @@ ErrCode BundleInstallChecker::CheckAppLabelInfo(
             return ERR_APPEXECFWK_INSTALL_TYPE_ERROR;
         }
         if (debug != info.second.GetBaseApplicationInfo().debug) {
-            return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
+            isSameDebugType = false;
         }
+        if (!hasEntry) {
+            hasEntry = info.second.HasEntry();
+            entryDebug = info.second.GetBaseApplicationInfo().debug;
+        }
+    }
+
+    if (hasEntry && !entryDebug && (debug || !isSameDebugType)) {
+        return ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME;
     }
     APP_LOGD("finish check APP label");
     return ret;
