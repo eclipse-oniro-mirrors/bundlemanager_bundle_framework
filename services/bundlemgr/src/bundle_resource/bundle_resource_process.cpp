@@ -64,7 +64,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
 
     if (abilityInfos.empty()) {
-        APP_LOGE("abilityInfos is empty");
+        APP_LOGW("bundleName: %{public}s no launcher ability Info", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
 

@@ -35,6 +35,7 @@ ohos_unittest("BmsBundleResourceTest") {
 
   sources += [
     "${services_path}/bundlemgr/test/mock/src/accesstoken_kit.cpp",
+    "${services_path}/bundlemgr/test/mock/src/bundle_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_permission_mgr.cpp",
     "${services_path}/bundlemgr/test/mock/src/installd_service.cpp",
     "${services_path}/bundlemgr/test/mock/src/mock_bundle_status.cpp",
@@ -46,6 +47,7 @@ ohos_unittest("BmsBundleResourceTest") {
   sources += bundle_install_sources
   sources -= [ "${services_path}/bundlemgr/src/installd_client.cpp" ]
   sources += [ "${services_path}/bundlemgr/test/mock/src/installd_client.cpp" ]
+  sources -= [ "${services_path}/bundlemgr/src/bundle_permission_mgr.cpp" ]
 
   sources += [ "bms_bundle_resource_test.cpp" ]
 

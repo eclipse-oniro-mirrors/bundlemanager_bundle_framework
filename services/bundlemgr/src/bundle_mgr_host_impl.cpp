@@ -1623,22 +1623,19 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     }
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_CHANGE_ABILITY_ENABLED_STATE)) {
         APP_LOGE("verify permission failed");
-        EventReport::SendComponentStateSysEvent(
-            abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
+        EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
-        EventReport::SendComponentStateSysEvent(
-            abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
+        EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return ERR_APPEXECFWK_SERVICE_NOT_READY;
     }
     auto ret = dataMgr->SetAbilityEnabled(abilityInfo, isEnabled, userId);
     if (ret != ERR_OK) {
         APP_LOGE("Set ability(%{public}s) enabled value failed.", abilityInfo.bundleName.c_str());
-        EventReport::SendComponentStateSysEvent(
-            abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
+        EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, true);
         return ret;
     }
     std::string moduleName = abilityInfo.moduleName;
@@ -1649,8 +1646,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
         }
     }
     BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
-    EventReport::SendComponentStateSysEvent(
-        abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
+    EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
     InnerBundleUserInfo innerBundleUserInfo;
     if (!GetBundleUserInfo(abilityInfo.bundleName, userId, innerBundleUserInfo)) {
         APP_LOGE("Get calling userInfo in bundle(%{public}s) failed", abilityInfo.bundleName.c_str());
