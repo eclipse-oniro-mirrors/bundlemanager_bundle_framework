@@ -1182,6 +1182,11 @@ void CommonFunc::ConvertApplicationInfo(napi_env env, napi_value objAppInfo, con
         &nAppProvisionType));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "appProvisionType", nAppProvisionType));
 
+    napi_value nApplicationReservedFlag;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, appInfo.applicationReservedFlag, &nApplicationReservedFlag));
+    NAPI_CALL_RETURN_VOID(
+        env, napi_set_named_property(env, objAppInfo, "applicationReservedFlag", nApplicationReservedFlag));
+
     napi_value nIsSystemApp;
     NAPI_CALL_RETURN_VOID(env, napi_get_boolean(env, appInfo.isSystemApp, &nIsSystemApp));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objAppInfo, "systemApp", nIsSystemApp));

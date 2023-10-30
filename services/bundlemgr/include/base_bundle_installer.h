@@ -576,6 +576,7 @@ private:
     bool CheckDuplicateProxyData(const std::vector<ProxyData> &proxyDatas);
     bool CheckApiInfo(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     ErrCode InnerProcessNativeLibs(InnerBundleInfo &info, const std::string &modulePath);
+    ErrCode CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi, const std::string &targetSoPath);
     bool ExtractSoFiles(const std::string &soPath, const std::string &cpuAbi) const;
     void ProcessOldNativeLibraryPath(const std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         uint32_t oldVersionCode, const std::string &oldNativeLibraryPath) const;
@@ -586,6 +587,7 @@ private:
     ErrCode MoveFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     std::string GetTempHapPath(const InnerBundleInfo &info);
     ErrCode SaveHapToInstallPath(const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void UpdateAppInstallControlled(int32_t userId);
     ErrCode MoveSoFileToRealInstallationDir(const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void ProcessDataGroupInfo(const std::vector<std::string> &bundlePaths,

@@ -117,6 +117,7 @@ const std::string APPLICATION_RESOURCES_APPLY = "resourcesApply";
 const std::string APPLICATION_FINGERPRINTS = "fingerprints";
 const std::string APPLICATION_ALLOW_ENABLE_NOTIFICATION = "allowEnableNotification";
 const std::string APPLICATION_GWP_ASAN_ENABLED = "GWPAsanEnabled";
+const std::string APPLICATION_RESERVED_FLAG = "applicationReservedFlag";
 }
 
 Metadata::Metadata(const std::string &paramName, const std::string &paramValue, const std::string &paramResource)
@@ -420,6 +421,7 @@ bool ApplicationInfo::ReadFromParcel(Parcel &parcel)
         fingerprints.emplace_back(parcel.ReadString());
     }
     gwpAsanEnabled = parcel.ReadBool();
+    applicationReservedFlag = parcel.ReadUint32();
     return true;
 }
 
@@ -573,6 +575,7 @@ bool ApplicationInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String, parcel, fingerprint);
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, gwpAsanEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, applicationReservedFlag);
     return true;
 }
 
@@ -760,6 +763,7 @@ void to_json(nlohmann::json &jsonObject, const ApplicationInfo &applicationInfo)
         {APPLICATION_COMPILE_SDK_TYPE, applicationInfo.compileSdkType},
         {APPLICATION_RESOURCES_APPLY, applicationInfo.resourcesApply},
         {APPLICATION_GWP_ASAN_ENABLED, applicationInfo.gwpAsanEnabled},
+        {APPLICATION_RESERVED_FLAG, applicationInfo.applicationReservedFlag}
     };
 }
 
@@ -1420,6 +1424,14 @@ void from_json(const nlohmann::json &jsonObject, ApplicationInfo &applicationInf
         APPLICATION_GWP_ASAN_ENABLED,
         applicationInfo.gwpAsanEnabled,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<uint32_t>(jsonObject,
+        jsonObjectEnd,
+        APPLICATION_RESERVED_FLAG,
+        applicationInfo.applicationReservedFlag,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

@@ -156,6 +156,8 @@ private:
 
     bool HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleCheckEncryption(MessageParcel &data, MessageParcel &reply);
+
     bool HandMoveFiles(MessageParcel &data, MessageParcel &reply);
 
     bool HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &reply);

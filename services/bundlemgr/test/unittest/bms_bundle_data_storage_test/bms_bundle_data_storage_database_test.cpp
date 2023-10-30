@@ -998,6 +998,7 @@ protected:
                         "versionName": ""
                     }
                 },
+                "applicationReservedFlag": 0,
                 "arkNativeFileAbi": "",
                 "arkNativeFilePath": "",
                 "asanEnabled": false,

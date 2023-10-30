@@ -3543,7 +3543,13 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
     }
     APP_LOGD("copy hap to install path success");
 
-    // 2. move file from temp dir to real installation dir
+    // 2. check encryption of hap
+    if ((result = CheckHapEncryption(infos)) != ERR_OK) {
+        APP_LOGE("check encryption of hap failed %{public}d", result);
+        return result;
+    }
+
+    // 3. move file from temp dir to real installation dir
     if ((result = MoveFileToRealInstallationDir(infos)) != ERR_OK) {
         APP_LOGE("move file to real installation path failed %{public}d", result);
         return result;
@@ -3877,6 +3883,9 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         result = InstalldClient::GetInstance()->VerifyCodeSignature(modulePath_, cpuAbi, targetSoPath,
             signatureFileDir);
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        // check whether the hap or hsp is encrypted
+        result = CheckSoEncryption(info, cpuAbi, targetSoPath);
+        CHECK_RESULT(result, "fail to CheckSoEncryption, error is %{public}d");
     } else {
         auto result = InstalldClient::GetInstance()->CreateBundleDir(modulePath);
         CHECK_RESULT(result, "fail to create temp bundle dir, error is %{public}d");
@@ -3884,6 +3893,30 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         result = InstalldClient::GetInstance()->GetNativeLibraryFileNames(modulePath_, cpuAbi, fileNames);
         CHECK_RESULT(result, "fail to GetNativeLibraryFileNames, error is %{public}d");
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,
+    const std::string &targetSoPath)
+{
+    APP_LOGD("begin to check so encryption");
+    CheckEncryptionParam param;
+    param.modulePath = modulePath_;
+    param.cpuAbi = cpuAbi;
+    param.targetSoPath = targetSoPath;
+    int uid = info.GetUid(userId_);
+    param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
+    param.isCompressNativeLibrary = info.IsCompressNativeLibs(info.GetCurModuleName());
+    if (info.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
+        param.installBundleType = InstallBundleType::INTER_APP_HSP;
+    }
+    bool isEncrypted = false;
+    ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
+    CHECK_RESULT(result, "fail to CheckSoEncryption, error is %{public}d");
+    if (isEncrypted) {
+        APP_LOGD("module %{public}s is encrypted", modulePath_.c_str());
+        info.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
     return ERR_OK;
 }
@@ -4035,6 +4068,45 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
     }
 
     return tempDir.append(hapPath.substr(posOfPathSep));
+}
+
+ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos)
+{
+    InnerBundleInfo oldInfo;
+    bool isExist = false;
+    if (!GetInnerBundleInfo(oldInfo, isExist) || !isExist) {
+        APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    bool isEncryptionOld = oldInfo.GetApplicationReservedFlag() &
+        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
+    for (const auto &info : infos) {
+        if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
+            APP_LOGE("path %{public}s cannot be found in hapPathRecord", info.first.c_str());
+            return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+        }
+        std::string hapPath = hapPathRecords_.at(info.first);
+        CheckEncryptionParam param;
+        param.modulePath = hapPath;
+        int uid = info.second.GetUid(userId_);
+        param.bundleId = uid - userId_ * Constants::BASE_USER_RANGE;
+        param.isCompressNativeLibrary = info.second.IsCompressNativeLibs(info.second.GetCurModuleName());
+        if (info.second.GetModuleTypeByPackage(modulePackage_) == Profile::MODULE_TYPE_SHARED) {
+            param.installBundleType = InstallBundleType::INTER_APP_HSP;
+        }
+        bool isEncrypted = false;
+        ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
+        CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
+        if (!isEncryptionOld && isEncrypted) {
+            APP_LOGD("hap %{public}s is encrypted", hapPath.c_str());
+            oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+        }
+    }
+    if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
+        APP_LOGE("save UpdateInnerBundleInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::MoveFileToRealInstallationDir(

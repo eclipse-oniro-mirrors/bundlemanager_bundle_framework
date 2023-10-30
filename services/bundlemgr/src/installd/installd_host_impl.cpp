@@ -31,6 +31,9 @@
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
+#if defined(CODE_ENCRYPTION_ENABLE)
+#include "code_crypto_metadata_process.h"
+#endif
 #include "common_profile.h"
 #include "directory_ex.h"
 #ifdef WITH_SELINUX
@@ -780,6 +783,26 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, con
     if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    APP_LOGD("start to process check encryption");
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (checkEncryptionParam.modulePath.empty()) {
+        APP_LOGE("Calling the function CheckEncryption with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    if (!InstalldOperator::CheckEncryption(checkEncryptionParam, isEncryption)) {
+        APP_LOGE("check encryption failed");
+        // change the error code when CheckEncryption is ready
+        return ERR_OK;
     }
     return ERR_OK;
 }

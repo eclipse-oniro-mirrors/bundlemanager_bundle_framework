@@ -19,6 +19,9 @@
 #if defined(CODE_SIGNATURE_ENABLE)
 #include "code_sign_utils.h"
 #endif
+#if defined(CODE_ENCRYPTION_ENABLE)
+#include "code_crypto_metadata_process.h"
+#endif
 #include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
@@ -978,6 +981,85 @@ bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const 
     ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
     if (ret != ERR_OK) {
         APP_LOGE("VerifyCode failed due to %{public}d", ret);
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    APP_LOGD("process check encryption of src path %{public}s", checkEncryptionParam.modulePath.c_str());
+    if (checkEncryptionParam.cpuAbi.empty() && checkEncryptionParam.targetSoPath.empty()) {
+        return CheckHapEncryption(checkEncryptionParam, isEncryption);
+    }
+    const std::string cpuAbi = checkEncryptionParam.cpuAbi;
+    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
+    const int32_t bundleId = checkEncryptionParam.bundleId;
+    InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
+    const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
+    APP_LOGD("CheckEncryption: bundleId %{public}d, installBundleType %{public}d, isCompressNativeLibrary %{public}d",
+        bundleId, installBundleType, isCompressNativeLibrary);
+
+    BundleExtractor extractor(checkEncryptionParam.modulePath);
+    if (!extractor.Init()) {
+        return false;
+    }
+
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ObtainNativeSoFile failed");
+        return false;
+    }
+
+    if (soEntryFiles.empty()) {
+        APP_LOGD("no so file in installation file %{public}s", checkEncryptionParam.modulePath.c_str());
+        return true;
+    }
+
+#if defined(CODE_ENCRYPTION_ENABLE)
+    Security::CodeSign::EntryMap entryMap;
+    entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
+    if (!targetSoPath.empty()) {
+        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
+            std::string fileName = entry.substr(prefix.length());
+            std::string path = targetSoPath;
+            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+                path += Constants::FILE_SEPARATOR_CHAR;
+            }
+            entryMap.emplace(entry, path + fileName);
+            APP_LOGD("CheckEncryption the targetSoPath is %{public}s", (path + fileName).c_str());
+        });
+    }
+    ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
+        isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),
+        isCompressNativeLibrary);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckEncryption failed due to %{public}d", ret);
+        return false;
+    }
+#endif
+    return true;
+}
+
+bool InstalldOperator::CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    const std::string hapPath = checkEncryptionParam.modulePath;
+    const int32_t bundleId = checkEncryptionParam.bundleId;
+    InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
+    const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
+    APP_LOGD("CheckHapEncryption the hapPath is %{public}s, installBundleType is %{public}d, "
+        "bundleId is %{public}d, isCompressNativeLibrary is %{public}d", hapPath.c_str(),
+        installBundleType, bundleId, isCompressNativeLibrary);
+#if defined(CODE_ENCRYPTION_ENABLE)
+    Security::CodeSign::EntryMap entryMap;
+    entryMap.emplace(Constants::CODE_SIGNATURE_HAP, hapPath);
+    ErrCode ret = Security::CodeCrypto::CodeCryptoUtils::EnforceMetadataProcessForApp(entryMap, bundleId,
+        isEncryption, static_cast<Security::CodeCrypto::CodeCryptoUtils::InstallBundleType>(installBundleType),
+        isCompressNativeLibrary);
+    if (ret != ERR_OK) {
+        APP_LOGE("CheckEncryption failed due to %{public}d", ret);
         return false;
     }
 #endif
