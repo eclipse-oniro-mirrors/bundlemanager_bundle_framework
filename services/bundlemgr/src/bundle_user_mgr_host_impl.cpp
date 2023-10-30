@@ -38,6 +38,8 @@ namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
 const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+const uint32_t FACTOR = 8;
+const uint32_t INTERVAL = 6;
 
 class UserReceiverImpl : public StatusReceiverHost {
 public:
@@ -207,6 +209,11 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
         return ERR_OK;
     }
 
+    {
+        std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+        uninstallEvents_.clear();
+    }
+
     InnerUninstallBundle(userId, bundleInfos);
 
     RemoveArkProfile(userId);
@@ -216,6 +223,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     DefaultAppMgr::GetInstance().HandleRemoveUser(userId);
 #endif
     EventReport::SendUserSysEvent(UserEventType::REMOVE_END, userId);
+    HandleNotifyBundleEventsAsync();
     APP_LOGD("RemoveUser end userId: (%{public}d)", userId);
     return ERR_OK;
 }
@@ -282,6 +290,7 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
         InstallParam installParam;
         installParam.userId = userId;
         installParam.forceExecuted = true;
+        installParam.isRemoveUser = true;
         installParam.isPreInstallApp = info.isPreInstallApp;
         installParam.installFlag = InstallFlag::NORMAL;
         sptr<UserReceiverImpl> userReceiverImpl(
@@ -295,6 +304,42 @@ void BundleUserMgrHostImpl::InnerUninstallBundle(
     }
     IPCSkeleton::SetCallingIdentity(identity);
     APP_LOGD("InnerUninstallBundle for userId: %{public}d end", userId);
+}
+
+void BundleUserMgrHostImpl::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)
+{
+    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+    uninstallEvents_.emplace_back(notifyBundleEvents);
+}
+
+void BundleUserMgrHostImpl::HandleNotifyBundleEventsAsync()
+{
+    auto task = [this] {
+        HandleNotifyBundleEvents();
+    };
+    std::thread taskThread(task);
+    taskThread.detach();
+}
+
+void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
+{
+    APP_LOGI("HandleNotifyBundleEvents");
+    std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    for (auto i = 0; i < uninstallEvents_.size(); ++i) {
+        commonEventMgr->NotifyBundleStatus(uninstallEvents_[i], dataMgr);
+        if ((i != 0) && (i % FACTOR == 0)) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));
+        }
+    }
+
+    uninstallEvents_.clear();
 }
 
 void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const

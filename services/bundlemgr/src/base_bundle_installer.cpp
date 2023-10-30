@@ -279,7 +279,10 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
             .appId = uninstallBundleAppId_
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
+
+        if (installParam.isRemoveUser) {
+            AddNotifyBundleEvents(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
     }
@@ -3694,6 +3697,17 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)
+{
+    auto userMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleUserMgr();
+    if (userMgr == nullptr) {
+        APP_LOGE("userMgr is null");
+        return;
+    }
+
+    userMgr->AddNotifyBundleEvents(notifyBundleEvents);
 }
 
 ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
