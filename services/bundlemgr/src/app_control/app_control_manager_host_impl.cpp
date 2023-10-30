@@ -368,7 +368,7 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
     }
 }
 
-void AppControlManagerHostImpl::GetCallerByUid(int32_t uid, std::string &callerName)
+void AppControlManagerHostImpl::GetCallerByUid(const int32_t uid, std::string &callerName)
 {
     auto item = callingNameMap_.find(uid);
     if (item != callingNameMap_.end()) {
@@ -389,7 +389,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
@@ -414,7 +414,7 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, con
         APP_LOGE("non-system app calling system api");
         return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
     }
-    if (!BundlePermissionMgr::VerifyCallingPermission(PERMISSION_DISPOSED_STATUS)) {
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
         APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }

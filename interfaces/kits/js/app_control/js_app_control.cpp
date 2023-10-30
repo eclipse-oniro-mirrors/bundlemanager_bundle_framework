@@ -475,7 +475,7 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
     napi_value nWant = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWant));
-    CommonFunc::ConvertWantInfo(env, nWant, rule.want);
+    CommonFunc::ConvertWantInfo(env, nWant, *rule.want);
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
     napi_value nComponentType;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
@@ -511,7 +511,9 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     }
     napi_value prop = nullptr;
     napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
-    CommonFunc::ParseWantWithoutVerification(env, prop, rule.want);
+    AAFwk::Want want;
+    CommonFunc::ParseWantWithoutVerification(env, prop, want);
+    rule.want = std::make_shared<AAFwk::Want>(want);
     napi_get_named_property(env, nRule, "componentType", &prop);
     int32_t componentType;
     if (!CommonFunc::ParseInt(env, prop, componentType)) {
@@ -617,11 +619,8 @@ napi_value GetDisposedRule(napi_env env, napi_callback_info info)
         return nullptr;
     }
     napi_value nRule = nullptr;
-    APP_LOGE("Parse rule 1");
     NAPI_CALL(env, napi_create_object(env, &nRule));
-    APP_LOGE("Parse rule 2");
     ConvertRuleInfo(env, nRule, disposedRule);
-    APP_LOGE("Parse rule 3");
     return nRule;
 }
 

@@ -469,7 +469,6 @@ ErrCode AppControlManagerRdb::SetDisposedRule(const std::string &callingName,
 ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
     const std::string &appId, int32_t userId)
 {
-    APP_LOGI("rdb begin to DeleteDisposedRule");
     NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(CALLING_NAME, callingName);
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);

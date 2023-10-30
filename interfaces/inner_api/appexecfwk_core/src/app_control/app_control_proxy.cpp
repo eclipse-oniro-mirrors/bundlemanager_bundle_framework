@@ -482,7 +482,6 @@ ErrCode AppControlProxy::SetDisposedRule(
         APP_LOGE("write userId failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    APP_LOGI("userId is %{public}d", userId);
     MessageParcel reply;
     ErrCode ret = SendRequest(AppControlManagerInterfaceCode::SET_DISPOSED_RULE, data, reply);
     if (ret != ERR_OK) {

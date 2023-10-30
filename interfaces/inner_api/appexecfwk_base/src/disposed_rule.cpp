@@ -35,8 +35,7 @@ const std::string DEVICE_ID = "deviceId";
 
 bool DisposedRule::ReadFromParcel(Parcel &parcel)
 {
-    std::unique_ptr<AAFwk::Want> wantPtr(parcel.ReadParcelable<AAFwk::Want>());
-    want = *wantPtr;
+    want.reset(parcel.ReadParcelable<AAFwk::Want>());
     componentType = static_cast<ComponentType>(parcel.ReadInt32());
     disposedType = static_cast<DisposedType>(parcel.ReadInt32());
     controlType = static_cast<ControlType>(parcel.ReadInt32());
@@ -57,7 +56,7 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
 
 bool DisposedRule::Marshalling(Parcel &parcel) const
 {
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &want);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, want.get());
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(componentType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(disposedType));
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(controlType));
@@ -144,7 +143,7 @@ void from_json(const nlohmann::json &jsonObject, ElementName &elementName)
 
 void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule)
 {
-    std::string wantString = disposedRule.want.ToString();
+    std::string wantString = disposedRule.want->ToString();
     jsonObject = nlohmann::json {
         {WANT, wantString},
         {COMPONENT_TYPE, disposedRule.componentType},
@@ -168,7 +167,7 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
-    disposedRule.want = *AAFwk::Want::FromString(wantString);
+    disposedRule.want.reset(AAFwk::Want::FromString(wantString));
     GetValueIfFindKey<ComponentType>(jsonObject,
         jsonObjectEnd,
         COMPONENT_TYPE,

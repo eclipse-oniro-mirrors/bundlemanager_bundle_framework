@@ -385,8 +385,6 @@ ErrCode AppControlHost::HandleSetDisposedRule(MessageParcel& data, MessageParcel
     std::string appId = data.ReadString();
     std::unique_ptr<DisposedRule> disposedRule(data.ReadParcelable<DisposedRule>());
     int32_t userId = data.ReadInt32();
-    APP_LOGI("userId is %{public}d", userId);
-    APP_LOGI("rule is %{public}s", disposedRule->ToString().c_str());
     if (disposedRule == nullptr) {
         APP_LOGE("ReadParcelable<disposedRule> failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;

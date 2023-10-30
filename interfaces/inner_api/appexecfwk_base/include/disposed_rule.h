@@ -43,12 +43,12 @@ enum class ControlType {
 
 struct DisposedRule : public Parcelable {
 public:
-    AAFwk::Want want;
-    ComponentType componentType;
-    DisposedType disposedType;
-    ControlType controlType;
+    std::shared_ptr<AAFwk::Want> want = nullptr;
+    ComponentType componentType = ComponentType::UI_ABILITY;
+    DisposedType disposedType = DisposedType::BLOCK_APPLICATION;
+    ControlType controlType = ControlType::ALLOWED_LIST;
     std::vector<ElementName> elementList;
-    int32_t priority;
+    int32_t priority = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

@@ -83,7 +83,7 @@ private:
     std::string GetCallingName();
     std::string GetControlRuleType(const AppInstallControlRuleType controlRuleType);
     void UpdateAppControlledInfo(int32_t userId) const;
-    void GetCallerByUid(int32_t uid, std::string &callerName);
+    void GetCallerByUid(const int32_t uid, std::string &callerName);
 
     std::unordered_map<int32_t, std::string> callingNameMap_;
     std::unordered_map<AppInstallControlRuleType, std::string> ruleTypeMap_;
