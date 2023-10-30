@@ -94,6 +94,11 @@ bool BundleResourceParser::ParseLabelResourceByPath(
         APP_LOGE("hapPath is empty");
         return false;
     }
+    // allow label resource parse failed, then label is bundleName
+    if (labelId <= 0) {
+        APP_LOGW("labelId is 0");
+        return true;
+    }
     std::shared_ptr<Global::Resource::ResourceManager> resourceManager(Global::Resource::CreateResourceManager());
     if (resourceManager == nullptr) {
         APP_LOGE("resourceManager is nullptr");

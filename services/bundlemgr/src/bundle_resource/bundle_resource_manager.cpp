@@ -138,6 +138,10 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             APP_LOGE("GetResourceInfoByColorModeChanged failed");
             return false;
         }
+        if (resourceInfos.empty()) {
+            APP_LOGI("no need to add resource");
+            return true;
+        }
     } else {
         // not exist then update all resource info
         if (!BundleResourceProcess::GetAllResourceInfo(userId, resourceInfos)) {

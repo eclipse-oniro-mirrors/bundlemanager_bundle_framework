@@ -17,9 +17,11 @@
 
 #include "app_log_wrapper.h"
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
-#include "bundle_system_state.h"
+#include "account_helper.h"
+#include "bundle_resource_manager.h"
 #include "bundle_resource_param.h"
 #include "bundle_resource_register.h"
+#include "bundle_system_state.h"
 #endif
 
 
@@ -28,6 +30,7 @@ namespace AppExecFwk {
 void BundleResourceHelper::BundleSystemStateInit()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI("system state init start");
     // init language and colorMode
     BundleSystemState::GetInstance().SetSystemLanguage(BundleResourceParam::GetSystemLanguage());
     BundleSystemState::GetInstance().SetSystemColorMode(BundleResourceParam::GetSystemColorMode());
@@ -45,6 +48,44 @@ void BundleResourceHelper::RegisterCommonEventSubscriber()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
     BundleResourceRegister::RegisterCommonEventSubscriber();
+#endif
+}
+
+void BundleResourceHelper::AddResourceInfoByBundleName(const std::string &bundleName,
+    const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("start");
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    if (!manager->AddResourceInfoByBundleName(bundleName, userId)) {
+        APP_LOGE("failed, bundleName:%{public}s", bundleName.c_str());
+    }
+#endif
+}
+
+void BundleResourceHelper::DeleteResourceInfo(const std::string &key, const int32_t userId)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGD("start");
+    if (userId != Constants::UNSPECIFIED_USERID) {
+        int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
+        if (userId != currentUserId) {
+            APP_LOGD("currentUserId: %{public}d, userId: %{public}d is not same", currentUserId, userId);
+            return;
+        }
+    }
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    if (!manager->DeleteResourceInfo(key)) {
+        APP_LOGE("failed, key:%{public}s", key.c_str());
+    }
 #endif
 }
 } // AppExecFwk

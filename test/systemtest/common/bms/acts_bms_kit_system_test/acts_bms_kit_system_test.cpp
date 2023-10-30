@@ -8196,7 +8196,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleResourceInfo_0001, Function | SmallTest 
             BundleResourceInfo info;
             ErrCode ret = proxy->GetBundleResourceInfo(EMPTY_BUNDLE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
             ret = proxy->GetBundleResourceInfo(BASE_MODULE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
@@ -8220,7 +8220,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetLauncherAbilityResourceInfo_0001, Function | S
             std::vector<LauncherAbilityResourceInfo> infos;
             ErrCode ret = proxy->GetLauncherAbilityResourceInfo(EMPTY_BUNDLE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
-            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
             ret = proxy->GetLauncherAbilityResourceInfo(BASE_MODULE_NAME,
                 static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
             EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);

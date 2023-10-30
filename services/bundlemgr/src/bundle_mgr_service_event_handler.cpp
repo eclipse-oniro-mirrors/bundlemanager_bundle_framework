@@ -31,6 +31,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_parser.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "bundle_scanner.h"
 #include "bundle_util.h"
 #include "common_event_data.h"
@@ -265,6 +266,8 @@ void BMSEventHandler::AfterBmsStart()
     ListeningUserUnlocked();
     RemoveUnreservedSandbox();
     DelayedSingleton<BundleMgrService>::GetInstance()->RegisterChargeIdleListener();
+    BundleResourceHelper::RegisterCommonEventSubscriber();
+    BundleResourceHelper::RegisterConfigurationObserver();
     APP_LOGI("BMSEventHandler AfterBmsStart end");
 }
 

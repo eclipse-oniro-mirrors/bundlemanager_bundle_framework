@@ -46,6 +46,7 @@
 #include "bundle_mgr_service.h"
 #include "bundle_sandbox_app_helper.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "bundle_util.h"
 #include "data_group_info.h"
 #include "datetime_ex.h"
@@ -997,11 +998,12 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
-    sync();
     ProcessAOT(installParam.isOTA, newInfos);
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     RemoveOldGroupDirs();
+    BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
+    sync();
     return result;
 }
 
@@ -1205,6 +1207,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
 
     if (oldInfo.GetInnerBundleUserInfos().size() > 1) {
         APP_LOGD("only delete userinfo %{public}d", userId_);
+        BundleResourceHelper::DeleteResourceInfo(bundleName, userId_);
         return RemoveBundleUserData(oldInfo, installParam.isKeepData);
     }
 
@@ -1262,6 +1265,7 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (oldInfo.IsPreInstallApp()) {
         MarkPreInstallState(bundleName, true);
     }
+    BundleResourceHelper::DeleteResourceInfo(bundleName);
     return ERR_OK;
 }
 
@@ -3134,6 +3138,8 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
                 APP_LOGE("RemoveModuleInfo failed");
                 return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
             }
+            // delete resource info
+            BundleResourceHelper::DeleteResourceInfo(bundleName_ + Constants::PATH_SEPARATOR + package);
         }
     }
     // need to delete lower version feature hap definePermissions and requestPermissions

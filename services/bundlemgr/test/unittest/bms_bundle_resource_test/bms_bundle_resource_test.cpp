@@ -1335,7 +1335,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0064, Function | SmallTest
     EXPECT_FALSE(ans);
 
     ans = parser.ParseLabelResourceByPath(HAP_NOT_EXIST, 0, label);
-    EXPECT_FALSE(ans);
+    EXPECT_TRUE(ans); // allow labelId is 0, then label is bundleName
 
     ans = parser.ParseLabelResourceByPath(HAP_FILE_PATH1, 0, label);
     EXPECT_TRUE(ans);
@@ -1577,6 +1577,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0072, Function | SmallTest
     EXPECT_EQ(BundleSystemState::GetInstance().GetSystemLanguage(), newLanguage);
     EXPECT_EQ(BundleSystemState::GetInstance().GetSystemColorMode(), newColorMode);
 
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE, oldLanguage);
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE, oldColorMode);
+    observer.OnConfigurationUpdated(configuration);
     BundleSystemState::GetInstance().SetSystemLanguage(oldLanguage);
     BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
 #endif
@@ -1614,8 +1617,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0074, Function | SmallTest
     bool ans = callback.OnSystemColorModeChanged(oldColorMode);
     EXPECT_TRUE(ans);
 
-    std::string colorMode = "test";
-    ans = callback.OnSystemColorModeChanged(oldColorMode);
+    std::string colorMode = "dark";
+    ans = callback.OnSystemColorModeChanged(colorMode);
     EXPECT_TRUE(ans);
 
     BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
@@ -1640,6 +1643,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest
     ans = callback.OnSystemLanguageChange(language);
     EXPECT_TRUE(ans);
 
+    ans = callback.OnSystemLanguageChange(oldLanguage);
+    EXPECT_TRUE(ans);
     BundleSystemState::GetInstance().SetSystemColorMode(oldLanguage);
 }
 

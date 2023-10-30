@@ -276,7 +276,6 @@ bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo
 {
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     return responseUserId != Constants::INVALID_USERID;
-    // get installTime from innerBundleUserInfo
 }
 
 int64_t BundleResourceProcess::GetUpdateTime(const InnerBundleInfo &innerBundleInfo, const int32_t userId)

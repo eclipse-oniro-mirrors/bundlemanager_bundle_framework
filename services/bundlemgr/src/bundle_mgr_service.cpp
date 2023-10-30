@@ -24,6 +24,7 @@
 #include "bundle_distributed_manager.h"
 #include "bundle_memory_guard.h"
 #include "bundle_permission_mgr.h"
+#include "bundle_resource_helper.h"
 #include "common_event_data.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
@@ -124,6 +125,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
     CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
+    BundleResourceHelper::BundleSystemStateInit();
     ready_ = true;
     APP_LOGI("BundleMgrService Init success");
     return true;

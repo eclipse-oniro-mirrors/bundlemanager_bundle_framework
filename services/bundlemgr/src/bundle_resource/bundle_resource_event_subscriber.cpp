@@ -32,7 +32,12 @@ void BundleResourceEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventDa
     std::string action = data.GetWant().GetAction();
     BundleResourceCallback callback;
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED) {
-        callback.OnUserIdSwitched(data.GetCode());
+        // when reboot, user 0 switch to user 100, no need to flush resource rdb
+        static bool isFirstSwitch = true;
+        if (!isFirstSwitch) {
+            callback.OnUserIdSwitched(data.GetCode());
+        }
+        isFirstSwitch = false;
     }
     // for other event
 }
