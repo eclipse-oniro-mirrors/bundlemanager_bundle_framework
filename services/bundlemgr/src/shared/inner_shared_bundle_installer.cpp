@@ -318,7 +318,7 @@ void InnerSharedBundleInstaller::MergeBundleInfos()
         // update version
         if (newBundleInfo_.GetBaseBundleInfo().versionCode < currentBundle.GetBaseBundleInfo().versionCode) {
             newBundleInfo_.UpdateBaseBundleInfo(currentBundle.GetBaseBundleInfo(), false);
-            newBundleInfo_.UpdateBaseApplicationInfo(currentBundle.GetBaseApplicationInfo());
+            newBundleInfo_.UpdateBaseApplicationInfo(currentBundle.GetBaseApplicationInfo(), false);
         }
     }
 

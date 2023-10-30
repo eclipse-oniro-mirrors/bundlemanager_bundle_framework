@@ -2002,7 +2002,8 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     }
 }
 
-void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo)
+void InnerBundleInfo::UpdateBaseApplicationInfo(
+    const ApplicationInfo &applicationInfo, bool isEntry)
 {
     baseApplicationInfo_->name = applicationInfo.name;
     baseApplicationInfo_->bundleName = applicationInfo.bundleName;
@@ -2035,7 +2036,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     }
 
     baseApplicationInfo_->apiReleaseType = applicationInfo.apiReleaseType;
-    baseApplicationInfo_->debug = applicationInfo.debug;
     baseApplicationInfo_->deviceId = applicationInfo.deviceId;
     baseApplicationInfo_->distributedNotificationEnabled = applicationInfo.distributedNotificationEnabled;
     baseApplicationInfo_->entityType = applicationInfo.entityType;
@@ -2053,6 +2053,11 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
+    if (isEntry) {
+        baseApplicationInfo_->debug = applicationInfo.debug;
+    } else if (!HasEntry() && applicationInfo.debug) {
+        baseApplicationInfo_->debug = applicationInfo.debug;
+    }
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()

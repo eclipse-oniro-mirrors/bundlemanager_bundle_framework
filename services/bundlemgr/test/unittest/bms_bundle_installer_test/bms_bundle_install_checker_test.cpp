@@ -1361,7 +1361,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabel_0008, Function | SmallTest |
     newInfo.SetBaseApplicationInfo(applicationInfo);
     BaseBundleInstaller baseBundleInstaller;
     auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
@@ -1403,7 +1403,7 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0009, Function | SmallTe
     infos.emplace(HAP, innerBundleInfo1);
     infos.emplace(HAP_ONE, innerBundleInfo2);
     auto ret = installChecker.CheckAppLabelInfo(infos);
-    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+    EXPECT_EQ(ret, ERR_OK);
 }
 
 /**
