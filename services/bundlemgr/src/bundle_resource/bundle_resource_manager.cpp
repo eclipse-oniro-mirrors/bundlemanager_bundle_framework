@@ -156,28 +156,47 @@ bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName,
     BundleResourceInfo &bundleResourceInfo)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
-    return bundleResourceRdb_->GetBundleResourceInfo(bundleName, flags, bundleResourceInfo);
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    return bundleResourceRdb_->GetBundleResourceInfo(bundleName, resourceFlags, bundleResourceInfo);
 }
 
 bool BundleResourceManager::GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo)
 {
     APP_LOGD("start, bundleName:%{public}s", bundleName.c_str());
-    return bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, flags, launcherAbilityResourceInfo);
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    return bundleResourceRdb_->GetLauncherAbilityResourceInfo(bundleName, resourceFlags, launcherAbilityResourceInfo);
 }
 
 bool BundleResourceManager::GetAllBundleResourceInfo(const uint32_t flags,
     std::vector<BundleResourceInfo> &bundleResourceInfos)
 {
     APP_LOGD("start");
-    return bundleResourceRdb_->GetAllBundleResourceInfo(flags, bundleResourceInfos);
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    return bundleResourceRdb_->GetAllBundleResourceInfo(resourceFlags, bundleResourceInfos);
 }
 
 bool BundleResourceManager::GetAllLauncherAbilityResourceInfo(const uint32_t flags,
     std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos)
 {
     APP_LOGD("start");
-    return bundleResourceRdb_->GetAllLauncherAbilityResourceInfo(flags, launcherAbilityResourceInfos);
+    uint32_t resourceFlags = CheckResourceFlags(flags);
+    return bundleResourceRdb_->GetAllLauncherAbilityResourceInfo(resourceFlags, launcherAbilityResourceInfos);
+}
+
+uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
+{
+    APP_LOGD("flags:%{public}u", flags);
+    if (((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL)) ||
+        ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL)) ||
+        ((flags & static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON)) ==
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON))) {
+        return flags;
+    }
+    APP_LOGD("illegal flags");
+    return flags | static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
 }
 } // AppExecFwk
 } // OHOS

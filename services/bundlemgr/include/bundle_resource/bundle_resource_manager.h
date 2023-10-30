@@ -83,6 +83,8 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
+    uint32_t CheckResourceFlags(const uint32_t flags);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
 };
 } // AppExecFwk
