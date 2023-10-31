@@ -279,7 +279,10 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
             .isBmsExtensionUninstalled = isUninstalledFromBmsExtension,
             .appId = uninstallBundleAppId_
         };
-        if (NotifyBundleStatus(installRes) != ERR_OK) {
+
+        if (installParam.isRemoveUser) {
+            AddNotifyBundleEvents(installRes);
+        } else if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
     }
@@ -928,6 +931,7 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
 
     InnerBundleInfo oldInfo;
     verifyCodeParams_ = installParam.verifyCodeParams;
+    pgoParams_ = installParam.pgoParams;
     result = InnerProcessBundleInstall(newInfos, oldInfo, installParam, uid);
     CHECK_RESULT_WITH_ROLLBACK(result, "internal processing failed with result %{public}d", newInfos, oldInfo);
     UpdateInstallerState(InstallerState::INSTALL_INFO_SAVED);                      // ---- 80%
@@ -2488,9 +2492,9 @@ ErrCode BaseBundleInstaller::ExtractModule(InnerBundleInfo &info, const std::str
         return result;
     }
     if (info.GetIsNewVersion()) {
-        result = ExtractArkProfileFile(modulePath_, info.GetBundleName(), userId_);
+        result = CopyPgoFileToArkProfileDir(modulePackage_, modulePath_, info.GetBundleName(), userId_);
         if (result != ERR_OK) {
-            APP_LOGE("fail to ExtractArkProfileFile, error is %{public}d", result);
+            APP_LOGE("fail to CopyPgoFileToArkProfileDir, error is %{public}d", result);
             return result;
         }
     }
@@ -2575,12 +2579,52 @@ ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &old
     APP_LOGD("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
     const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
     for (auto iter = innerModuleInfos.cbegin(); iter != innerModuleInfos.cend(); ++iter) {
-        ErrCode ret = ExtractArkProfileFile(iter->second.hapPath, bundleName, userId_);
+        ErrCode ret = CopyPgoFileToArkProfileDir(iter->second.name, iter->second.hapPath, bundleName, userId_);
         if (ret != ERR_OK) {
+            APP_LOGE("fail to CopyPgoFileToArkProfileDir, error is %{public}d", ret);
             return ret;
         }
     }
     APP_LOGD("ExtractAllArkProfileFile succeed, bundleName : %{public}s", bundleName.c_str());
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CopyPgoFileToArkProfileDir(
+    const std::string &moduleName,
+    const std::string &modulePath,
+    const std::string &bundleName,
+    int32_t userId) const
+{
+    auto it = pgoParams_.find(moduleName);
+    if (it != pgoParams_.end()) {
+        return CopyPgoFile(it->second, bundleName, userId);
+    }
+    return ExtractArkProfileFile(modulePath, bundleName, userId);
+}
+
+ErrCode BaseBundleInstaller::CopyPgoFile(
+    const std::string &pgoPath,
+    const std::string &bundleName,
+    int32_t userId) const
+{
+    size_t pos = pgoPath.find_last_of(Constants::PATH_SEPARATOR);
+    if (pos == std::string::npos) {
+        APP_LOGE("copy pgo file failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    std::string fileName = pgoPath.substr(pos + 1);
+    if (fileName.empty()) {
+        APP_LOGE("copy pgo file failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    std::string targetPath;
+    targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
+        .append(Constants::PATH_SEPARATOR).append(bundleName)
+        .append(Constants::PATH_SEPARATOR).append(fileName);
+    if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
+        APP_LOGE("copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
+        return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
+    }
     return ERR_OK;
 }
 
@@ -3526,6 +3570,7 @@ void BaseBundleInstaller::ResetInstallProperties()
     sysEventInfo_.Reset();
     moduleName_.clear();
     verifyCodeParams_.clear();
+    pgoParams_.clear();
     otaInstall_ = false;
     signatureFileMap_.clear();
     hapPathRecords_.clear();
@@ -3652,6 +3697,17 @@ ErrCode BaseBundleInstaller::NotifyBundleStatus(const NotifyBundleEvents &instal
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
     commonEventMgr->NotifyBundleStatus(installRes, dataMgr_);
     return ERR_OK;
+}
+
+void BaseBundleInstaller::AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents)
+{
+    auto userMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleUserMgr();
+    if (userMgr == nullptr) {
+        APP_LOGE("userMgr is null");
+        return;
+    }
+
+    userMgr->AddNotifyBundleEvents(notifyBundleEvents);
 }
 
 ErrCode BaseBundleInstaller::CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos,

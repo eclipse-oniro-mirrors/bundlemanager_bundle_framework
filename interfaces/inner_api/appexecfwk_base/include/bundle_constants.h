@@ -155,6 +155,7 @@ constexpr const char* PERMISSION_GET_INSTALLED_BUNDLE_LIST = "ohos.permission.GE
 constexpr const char* PERMISSION_INSTALL_SELF_BUNDLE = "ohos.permission.INSTALL_SELF_BUNDLE";
 constexpr const char* PERMISSION_UNINSTALL_BUNDLE = "ohos.permission.UNINSTALL_BUNDLE";
 constexpr const char* PERMISSION_RECOVER_BUNDLE = "ohos.permission.RECOVER_BUNDLE";
+constexpr const char* PERMISSION_GET_BUNDLE_RESOURCES = "ohos.permission.GET_BUNDLE_RESOURCES";
 // install list permissions file
 constexpr const char* INSTALL_LIST_PERMISSIONS_FILE_PATH = "/system/etc/app/install_list_permissions.json";
 
@@ -284,6 +285,10 @@ constexpr const char* CODE_SIGNATURE_FILE_SUFFIX = ".sig";
 constexpr const char* CODE_SIGNATURE_HAP = "Hap";
 constexpr const char* SIGNATURE_FILE_PATH = "signature_files";
 constexpr const char* SECURITY_SIGNATURE_FILE_PATH = "security_signature_files";
+
+//pgo file
+constexpr const char* PGO_FILE_SUFFIX = ".ap";
+constexpr const char* PGO_FILE_PATH = "pgo_files";
 
 // system param
 const std::string ALLOW_ENTERPRISE_BUNDLE = "const.bms.allowenterprisebundle";

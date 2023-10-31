@@ -18,6 +18,8 @@
 
 #include <string>
 
+#include "parcel.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 enum class ResourceFlag {
@@ -31,10 +33,14 @@ enum class ResourceFlag {
     GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL = 0x00000008
 };
 
-struct BundleResourceInfo {
+struct BundleResourceInfo : Parcelable {
     std::string bundleName;
     std::string label;
     std::string icon;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static BundleResourceInfo *Unmarshalling(Parcel &parcel);
 };
 } // AppExecFwk
 } // OHOS

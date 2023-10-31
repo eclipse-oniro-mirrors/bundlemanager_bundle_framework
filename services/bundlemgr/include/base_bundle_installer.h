@@ -532,6 +532,7 @@ private:
     ErrCode CheckNativeSoWithOldInfo(
         const InnerBundleInfo &oldInfo, std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     ErrCode NotifyBundleStatus(const NotifyBundleEvents &installRes);
+    void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
     void ProcessHqfInfo(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
         const std::string &cpuAbi) const;
@@ -554,6 +555,9 @@ private:
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
     ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
+    ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
+        const std::string &bundleName, int32_t userId) const;
+    ErrCode CopyPgoFile(const std::string &pgoPath, const std::string &bundleName, int32_t userId) const;
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
@@ -651,6 +655,7 @@ private:
     // utilize for install entry firstly from multi-installation
     bool isEntryInstalled_ = false;
     std::string entryModuleName_ = "";
+    std::map<std::string, std::string> pgoParams_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 

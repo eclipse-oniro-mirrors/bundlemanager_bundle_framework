@@ -18,6 +18,7 @@ config("bundlemgr_sdk_config") {
   include_dirs = [
     "include",
     "include/app_control",
+    "include/bundle_resource",
     "include/bundlemgr",
     "include/default_app",
     "include/overlay",
@@ -120,6 +121,14 @@ ohos_shared_library("appexecfwk_core") {
     sources += [
       "src/overlay/overlay_manager_host.cpp",
       "src/overlay/overlay_manager_proxy.cpp",
+    ]
+  }
+
+  if (bundle_framework_bundle_resource) {
+    defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
+    sources += [
+      "src/bundle_resource/bundle_resource_host.cpp",
+      "src/bundle_resource/bundle_resource_proxy.cpp",
     ]
   }
 

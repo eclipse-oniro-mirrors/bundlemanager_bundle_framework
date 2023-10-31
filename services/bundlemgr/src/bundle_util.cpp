@@ -359,6 +359,8 @@ std::string BundleUtil::CreateInstallTempDir(uint32_t installerId, const DirType
         tempDir += Constants::PATH_SEPARATOR + Constants::QUICK_FIX_PATH;
     } else if (type == DirType::SIG_FILE_DIR) {
         tempDir += Constants::PATH_SEPARATOR + Constants::SIGNATURE_FILE_PATH;
+    } else if (type == DirType::PGO_FILE_DIR) {
+        tempDir += Constants::PATH_SEPARATOR + Constants::PGO_FILE_PATH;
     } else {
         return "";
     }

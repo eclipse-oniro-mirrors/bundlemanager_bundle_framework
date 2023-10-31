@@ -36,7 +36,7 @@ BundleStreamInstallerProxy:: ~BundleStreamInstallerProxy()
 int32_t BundleStreamInstallerProxy::CreateStream(const std::string &fileName)
 {
     APP_LOGD("bundle stream installer proxy create stream begin");
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (fileName.empty()) {
         APP_LOGE("BundleStreamInstallerProxy create stream faile due to empty fileName");
         return fd;
@@ -74,7 +74,7 @@ int32_t BundleStreamInstallerProxy::CreateSignatureFileStream(const std::string 
     const std::string &fileName)
 {
     APP_LOGD("bundle stream installer proxy create signature file stream begin");
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (moduleName.empty() || fileName.empty()) {
         APP_LOGE("BundleStreamInstallerProxy create stream faile due to empty fileName or moduleName");
         return fd;
@@ -114,7 +114,7 @@ int32_t BundleStreamInstallerProxy::CreateSignatureFileStream(const std::string 
 int32_t BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &hspName, uint32_t index)
 {
     APP_LOGD("bundle stream installer proxy create shared bundle stream begin");
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if (hspName.empty()) {
         APP_LOGE("BundleStreamInstallerProxy create shared bundle stream faile due to empty hspName");
         return fd;
@@ -149,6 +149,47 @@ int32_t BundleStreamInstallerProxy::CreateSharedBundleStream(const std::string &
     close(sharedFd);
 
     APP_LOGD("bundle stream installer proxy create shared bundle stream end");
+    return fd;
+}
+
+int32_t BundleStreamInstallerProxy::CreatePgoFileStream(const std::string &moduleName,
+    const std::string &fileName)
+{
+    APP_LOGD("create pgo file stream begin");
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
+    if (moduleName.empty() || fileName.empty()) {
+        APP_LOGE("create stream faile due to empty fileName or moduleName");
+        return fd;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(BundleStreamInstallerProxy::GetDescriptor())) {
+        APP_LOGE("fail to CreatePgoFileStream due to write interface token fail");
+        return fd;
+    }
+    if (!data.WriteString(moduleName)) {
+        APP_LOGE("fail to CreatePgoFileStream due to write moduleName fail");
+        return fd;
+    }
+    if (!data.WriteString(fileName)) {
+        APP_LOGE("fail to CreatePgoFileStream due to write fileName fail");
+        return fd;
+    }
+    MessageParcel reply;
+    if (!SendStreamInstallRequest(BundleStreamInstallerInterfaceCode::CREATE_PGO_FILE_STREAM, data, reply)) {
+        APP_LOGE("fail to SendStreamInstallRequest");
+        return fd;
+    }
+
+    int32_t sharedFd = reply.ReadFileDescriptor();
+    if (sharedFd < 0) {
+        APP_LOGE("fail to CreatePgoFileStream");
+        return fd;
+    }
+
+    fd = dup(sharedFd);
+    close(sharedFd);
+
+    APP_LOGD("create pgo file stream end");
     return fd;
 }
 

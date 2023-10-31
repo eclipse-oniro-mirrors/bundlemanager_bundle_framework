@@ -52,10 +52,6 @@ int BundleStreamInstallerHost::OnRemoteRequest(uint32_t code, MessageParcel &dat
 ErrCode BundleStreamInstallerHost::HandleCreateStream(MessageParcel &data, MessageParcel &reply)
 {
     std::string fileName = data.ReadString();
-    if (fileName.empty()) {
-        APP_LOGE("HandleCreateStream param fileName is empty");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
     int32_t fd = CreateStream(fileName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
@@ -68,10 +64,6 @@ ErrCode BundleStreamInstallerHost::HandleCreateSignatureFileStream(MessageParcel
 {
     std::string moduleName = data.ReadString();
     std::string fileName = data.ReadString();
-    if (moduleName.empty() || fileName.empty()) {
-        APP_LOGE("HandleCreateSignatureFileStream params are invalid");
-        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
-    }
     int32_t fd = CreateSignatureFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
@@ -85,6 +77,18 @@ ErrCode BundleStreamInstallerHost::HandleCreateSharedBundleStream(MessageParcel 
     std::string hspName = data.ReadString();
     uint32_t sharedBundleIdx = data.ReadUint32();
     int32_t fd = CreateSharedBundleStream(hspName, sharedBundleIdx);
+    if (!reply.WriteFileDescriptor(fd)) {
+        APP_LOGE("write fd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleStreamInstallerHost::HandleCreatePgoFileStream(MessageParcel &data, MessageParcel &reply)
+{
+    std::string moduleName = data.ReadString();
+    std::string fileName = data.ReadString();
+    int32_t fd = CreatePgoFileStream(moduleName, fileName);
     if (!reply.WriteFileDescriptor(fd)) {
         APP_LOGE("write fd failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -120,7 +124,11 @@ void BundleStreamInstallerHost::init()
     funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_SIGNATURE_FILE_STREAM),
         [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
             return this->HandleCreateSignatureFileStream(data, reply);
-    });
+        });
+    funcMap_.emplace(static_cast<uint32_t>(BundleStreamInstallerInterfaceCode::CREATE_PGO_FILE_STREAM),
+        [this](MessageParcel &data, MessageParcel &reply)->ErrCode {
+            return this->HandleCreatePgoFileStream(data, reply);
+        });
 }
 } // AppExecFwk
 } // OHOS

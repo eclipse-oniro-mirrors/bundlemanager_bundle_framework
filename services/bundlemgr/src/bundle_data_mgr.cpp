@@ -5280,6 +5280,10 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
 {
     APP_LOGD("profileType: %{public}d, bundleName: %{public}s, moduleName: %{public}s",
         profileType, bundleName.c_str(), moduleName.c_str());
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
     auto mapItem = PROFILE_TYPE_MAP.find(profileType);
     if (mapItem == PROFILE_TYPE_MAP.end()) {
         APP_LOGE("profileType: %{public}d is invalid", profileType);
@@ -5294,7 +5298,7 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     }
     const InnerBundleInfo &bundleInfo = item->second;
     bool isEnabled = false;
-    int32_t responseUserId = bundleInfo.GetResponseUserId(userId);
+    int32_t responseUserId = bundleInfo.GetResponseUserId(requestUserId);
     ErrCode res = bundleInfo.GetApplicationEnabledV9(responseUserId, isEnabled);
     if (res != ERR_OK) {
         APP_LOGE("check application enabled failed, bundleName: %{public}s", bundleName.c_str());
@@ -5321,8 +5325,7 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
         APP_LOGE("moduleName: %{public}s is not found", moduleNameTmp.c_str());
         return ERR_BUNDLE_MANAGER_MODULE_NOT_EXIST;
     }
-    std::string hapPath = moduleInfo->hapPath;
-    return GetJsonProfileByExtractor(hapPath, profilePath, profile);
+    return GetJsonProfileByExtractor(moduleInfo->hapPath, profilePath, profile);
 }
 
 ErrCode BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,

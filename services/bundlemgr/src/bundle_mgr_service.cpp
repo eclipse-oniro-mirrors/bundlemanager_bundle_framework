@@ -123,6 +123,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitAppControl(), "Init appControl fail");
     CHECK_INIT_RESULT(InitQuickFixManager(), "Init quickFixManager fail");
     CHECK_INIT_RESULT(InitOverlayManager(), "Init overlayManager fail");
+    CHECK_INIT_RESULT(InitBundleResourceMgr(), "Init BundleResourceMgr fail");
     ready_ = true;
     APP_LOGI("BundleMgrService Init success");
     return true;
@@ -284,6 +285,20 @@ void BundleMgrService::CreateBmsServiceDir()
     }
 }
 
+bool BundleMgrService::InitBundleResourceMgr()
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    if (bundleResourceHostImpl_ == nullptr) {
+        bundleResourceHostImpl_ = new (std::nothrow) BundleResourceHostImpl();
+        if (bundleResourceHostImpl_ == nullptr) {
+            APP_LOGE("create bundleResourceHostImpl failed.");
+            return false;
+        }
+    }
+#endif
+    return true;
+}
+
 sptr<IBundleInstaller> BundleMgrService::GetBundleInstaller() const
 {
     return installer_;
@@ -374,6 +389,13 @@ sptr<QuickFixManagerHostImpl> BundleMgrService::GetQuickFixManagerProxy() const
 sptr<IOverlayManager> BundleMgrService::GetOverlayManagerProxy() const
 {
     return overlayManagerHostImpl_;
+}
+#endif
+
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+sptr<IBundleResource> BundleMgrService::GetBundleResourceProxy() const
+{
+    return bundleResourceHostImpl_;
 }
 #endif
 

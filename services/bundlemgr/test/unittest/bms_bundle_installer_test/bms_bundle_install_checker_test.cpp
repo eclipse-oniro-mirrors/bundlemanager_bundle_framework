@@ -1487,6 +1487,361 @@ HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0012, Function | SmallTe
 }
 
 /**
+ * @tc.number: CheckAppLabelInfo_0013
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. Both newInfo and oldInfo are not Entry
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0013, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+    newInfo.innerModuleInfos_ = innerModuleInfos;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0013
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. Both newInfo and oldInfo are Entry
+ *           3. old is release, new is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0014, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+    newInfo.innerModuleInfos_ = innerModuleInfos;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0013
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. Both newInfo and oldInfo are Entry
+ *           3. Both old and new is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0015, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = true;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+    newInfo.innerModuleInfos_ = innerModuleInfos;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0016
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is entry, newInfo is not entry
+ *           3. oldInfo is release, newInfo is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0016, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = false;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0017
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is not entry, newInfo is entry
+ *           3. oldInfo is debug, newInfo is release
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0017, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = true;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = false;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = true;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_DEBUG_NOT_SAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0018
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is not entry, newInfo is entry
+ *           3. oldInfo is debug, newInfo is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0018, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = true;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = true;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0019
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is not entry, newInfo is not entry
+ *           3. oldInfo is release, newInfo is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0019, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = false;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = true;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0020
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is entry, newInfo is not entry
+ *           3. oldInfo is debug, newInfo is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0020, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = true;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = true;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = false;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0020
+ * @tc.name: test the start function of CheckAppLabel
+ * @tc.desc: 1. Same version
+ *           2. oldInfo is entry, newInfo is not entry
+ *           3. oldInfo is release, newInfo is release
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0021, Function | SmallTest | Level0)
+{
+    InnerBundleInfo oldInfo;
+    InnerBundleInfo newInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    oldInfo.SetBaseApplicationInfo(applicationInfo);
+    applicationInfo.debug = false;
+    newInfo.SetBaseApplicationInfo(applicationInfo);
+    BaseBundleInstaller baseBundleInstaller;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = true;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    oldInfo.innerModuleInfos_ = innerModuleInfos;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos2;
+    InnerModuleInfo innerModuleInfo2;
+    innerModuleInfo2.isEntry = false;
+    innerModuleInfos2.try_emplace(ENTRY, innerModuleInfo2);
+    newInfo.innerModuleInfos_ = innerModuleInfos2;
+
+    auto ret = baseBundleInstaller.CheckAppLabel(oldInfo, newInfo);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0022
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. Info HasEntry
+ *           2. entry is release
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0022, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = false;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    infos.emplace(HAP, innerBundleInfo);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0023
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. Info HasEntry
+ *           2. entry is debug
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0023, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+
+    std::map<std::string, InnerModuleInfo> innerModuleInfos;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.isEntry = false;
+    innerModuleInfos.try_emplace(ENTRY, innerModuleInfo);
+    innerBundleInfo.innerModuleInfos_ = innerModuleInfos;
+
+    ApplicationInfo applicationInfo;
+    applicationInfo.debug = true;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+
+    infos.emplace(HAP, innerBundleInfo);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0023
+ * @tc.name: test the start function of CheckAppLabelInfo
+ * @tc.desc: 1. Info no entry
+*/
+HWTEST_F(BmsBundleInstallCheckerTest, CheckAppLabelInfo_0024, Function | SmallTest | Level0)
+{
+    BundleInstallChecker installChecker;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    InnerBundleInfo innerBundleInfo;
+
+    infos.emplace(HAP, innerBundleInfo);
+    auto ret = installChecker.CheckAppLabelInfo(infos);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
  * @tc.number: CheckProxyDatas_0001
  * @tc.name: test the start function of CheckProxyDatas
  * @tc.desc: 1. test CheckProxyDatas

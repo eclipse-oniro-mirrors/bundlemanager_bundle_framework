@@ -31,6 +31,7 @@
 #include "common_event_info.h"
 #include "data_group_info.h"
 #include "../app_control/app_control_interface.h"
+#include "../bundle_resource/bundle_resource_interface.h"
 #include "../default_app/default_app_interface.h"
 #include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
@@ -1228,9 +1229,14 @@ public:
     }
 
     virtual ErrCode GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-        const std::string &moduleName, std::string &profile)
+        const std::string &moduleName, std::string &profile, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual sptr<IBundleResource> GetBundleResourceProxy()
+    {
+        return nullptr;
     }
 };
 
