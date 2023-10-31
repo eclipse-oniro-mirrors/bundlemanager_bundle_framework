@@ -65,7 +65,7 @@ public:
     virtual ErrCode GetDisposedRule(const std::string &appId,
         DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode SetDisposedRule(const std::string &appId,
-        const DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+        DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetAbilityRunningControlRule(
         const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
 

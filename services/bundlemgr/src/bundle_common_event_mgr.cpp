@@ -168,5 +168,34 @@ std::string BundleCommonEventMgr::GetCommonEventData(const NotifyType &type)
     }
     return iter->second;
 }
+
+void BundleCommonEventMgr::NotifySetDiposedRule(
+    const std::string &appId, int32_t userId, const std::string &data)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(DISPOSED_RULE_ADDED);
+
+    want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(Constants::APP_ID, appId);
+    EventFwk::CommonEventData commonData { want };
+    commonData.SetData(data);
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+}
+
+void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int32_t userId)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(DISPOSED_RULE_DELETED);
+    want.SetParam(Constants::USER_ID, userId);
+    want.SetParam(Constants::APP_ID, appId);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+}
 } // AppExecFwk
 } // OHOS

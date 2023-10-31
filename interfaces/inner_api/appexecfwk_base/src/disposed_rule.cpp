@@ -212,6 +212,14 @@ void from_json(const nlohmann::json &jsonObject, DisposedRule &disposedRule)
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        IS_EDM,
+        disposedRule.isEdm,
+        JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("read disposedRule error, error code : %{public}d", parseResult);
     }

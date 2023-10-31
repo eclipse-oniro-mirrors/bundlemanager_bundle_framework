@@ -70,7 +70,7 @@ public:
         const std::string &appId, Want &want, int32_t userId) override;
 
     virtual ErrCode SetDisposedRule(
-        const std::string &appId, const DisposedRule &DisposedRule, int32_t userId) override;
+        const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;
 
     virtual ErrCode GetDisposedRule(
         const std::string &appId, DisposedRule &DisposedRule, int32_t userId) override;

@@ -462,7 +462,7 @@ ErrCode AppControlProxy::GetDisposedStatus(const std::string &appId, Want &want,
 }
 
 ErrCode AppControlProxy::SetDisposedRule(
-    const std::string &appId, const DisposedRule &disposedRule, int32_t userId)
+    const std::string &appId, DisposedRule &disposedRule, int32_t userId)
 {
     APP_LOGD("proxy begin to SetDisposedRule.");
     MessageParcel data;
