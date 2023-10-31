@@ -557,7 +557,8 @@ private:
     ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
         const std::string &bundleName, int32_t userId) const;
-    ErrCode CopyPgoFile(const std::string &pgoPath, const std::string &bundleName, int32_t userId) const;
+    ErrCode CopyPgoFile(const std::string &moduleName, const std::string &pgoPath,
+        const std::string &bundleName, int32_t userId) const;
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();

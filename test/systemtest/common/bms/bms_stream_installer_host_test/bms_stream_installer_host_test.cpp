@@ -27,7 +27,7 @@ using testing::_;
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 4;
+const int32_t FUNCTION_SIZE_OF_STREAM_INSTALL_HOST = 5;
 const std::string TEST_FILE_NAME = "/data/test/test.hap";
 } // namespace
 
@@ -209,7 +209,7 @@ HWTEST_F(BmsStreamInstallerHostTest, StreamInstallerHost_007, TestSize.Level1)
     MessageOption option;
 
     auto result = streamInstallerHost_->OnRemoteRequest(code, data, reply, option);
-    EXPECT_EQ(result, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+    EXPECT_EQ(result, ERR_OK);
 }
 
 /**
