@@ -15,6 +15,7 @@
 
 #include "bundle_common_event_mgr.h"
 
+#include "account_helper.h"
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "bundle_common_event.h"
@@ -72,7 +73,8 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     element.SetAbilityName(installResult.abilityName);
     want.SetElement(element);
     want.SetParam(Constants::UID, installResult.uid);
-    want.SetParam(Constants::USER_ID, BundleUtil::GetUserIdByUid(installResult.uid));
+    int32_t bundleUserId = BundleUtil::GetUserIdByUid(installResult.uid);
+    want.SetParam(Constants::USER_ID, bundleUserId);
     want.SetParam(Constants::ABILITY_NAME, installResult.abilityName);
     want.SetParam(ACCESS_TOKEN_ID, static_cast<int32_t>(installResult.accessTokenId));
     want.SetParam(IS_AGING_UNINSTALL, installResult.isAgingUninstall);
@@ -106,7 +108,10 @@ void BundleCommonEventMgr::NotifyBundleStatus(const NotifyBundleEvents &installR
     if (installResult.resultCode != ERR_OK || installResult.isBmsExtensionUninstalled) {
         return;
     }
-    EventFwk::CommonEventManager::PublishCommonEvent(commonData);
+
+    int32_t publishUserId = (bundleUserId == Constants::DEFAULT_USERID) ?
+        AccountHelper::GetCurrentActiveUserId() : bundleUserId;
+    EventFwk::CommonEventManager::PublishCommonEventAsUser(commonData, publishUserId);
 }
 
 ErrCode BundleCommonEventMgr::NotifySandboxAppStatus(const InnerBundleInfo &info, int32_t uid, int32_t userId,
