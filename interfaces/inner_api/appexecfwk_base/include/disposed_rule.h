@@ -49,6 +49,7 @@ public:
     ControlType controlType = ControlType::ALLOWED_LIST;
     std::vector<ElementName> elementList;
     int32_t priority = 0;
+    bool isEdm = false;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;

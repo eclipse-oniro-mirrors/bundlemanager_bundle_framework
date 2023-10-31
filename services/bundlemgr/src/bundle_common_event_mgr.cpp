@@ -52,6 +52,8 @@ void BundleCommonEventMgr::Init()
         { NotifyType::BUNDLE_CACHE_CLEARED, EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_CACHE_CLEARED },
         { NotifyType::OVERLAY_INSTALL, OVERLAY_ADD_ACTION},
         { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
+        { NotifyType::DISPOSED_RULE_ADDED, DISPOSED_RULE_ADDED},
+        { NotifyType::DISPOSED_RULE_DELETED, DISPOSED_RULE_DELETED},
     };
 }
 

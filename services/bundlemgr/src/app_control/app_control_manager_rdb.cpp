@@ -531,6 +531,7 @@ ErrCode AppControlManagerRdb::GetAbilityRunningControlRule(
     absRdbPredicates.EqualTo(APP_CONTROL_LIST, DISPOSED_RULE);
     absRdbPredicates.EqualTo(APP_ID, appId);
     absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    absRdbPredicates.OrderByAsc(PRIORITY); // ascending
     auto absSharedResultSet = rdbDataManager_->QueryData(absRdbPredicates);
     if (absSharedResultSet == nullptr) {
         APP_LOGE("GetAppInstallControlRule failed.");

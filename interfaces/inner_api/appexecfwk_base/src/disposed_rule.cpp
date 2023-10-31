@@ -31,6 +31,7 @@ const std::string CONTROL_TYPE = "controlType";
 const std::string ELEMENT_LIST = "elementList";
 const std::string PRIORITY = "priority";
 const std::string DEVICE_ID = "deviceId";
+const std::string IS_EDM = "isEdm";
 }  // namespace
 
 bool DisposedRule::ReadFromParcel(Parcel &parcel)
@@ -51,6 +52,7 @@ bool DisposedRule::ReadFromParcel(Parcel &parcel)
         elementList.emplace_back(elementName);
     }
     priority = parcel.ReadInt32();
+    isEdm = parcel.ReadBool();
     return true;
 }
 
@@ -66,6 +68,7 @@ bool DisposedRule::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(elementUri));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, priority);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isEdm);
 
     return true;
 }
@@ -150,7 +153,8 @@ void to_json(nlohmann::json &jsonObject, const DisposedRule &disposedRule)
         {DISPOSED_TYPE, disposedRule.disposedType},
         {CONTROL_TYPE, disposedRule.controlType},
         {ELEMENT_LIST, disposedRule.elementList},
-        {PRIORITY, disposedRule.priority}
+        {PRIORITY, disposedRule.priority},
+        {IS_EDM, disposedRule.isEdm},
     };
 }
 

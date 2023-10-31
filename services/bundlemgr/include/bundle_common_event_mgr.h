@@ -37,6 +37,8 @@ enum class NotifyType {
     OVERLAY_INSTALL,
     OVERLAY_UPDATE,
     OVERLAY_STATE_CHANGED,
+    DISPOSED_RULE_ADDED,
+    DISPOSED_RULE_DELETED,
 };
 
 enum class SandboxInstallType : uint32_t {
