@@ -60,6 +60,10 @@ enum class CompatiblePolicy {
     BACKWARD_COMPATIBILITY = 1,
 };
 
+enum class ApplicationReservedFlag {
+    ENCRYPTED_APPLICATION = 0x00000001,
+};
+
 struct Metadata : public Parcelable {
     std::string name;
     std::string value;
@@ -247,6 +251,8 @@ struct ApplicationInfo : public Parcelable {
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
     std::vector<std::string> fingerprints;
+
+    uint32_t applicationReservedFlag = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     bool ReadMetaDataFromParcel(Parcel &parcel);

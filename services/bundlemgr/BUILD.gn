@@ -426,6 +426,13 @@ ohos_shared_library("installs") {
     defines += [ "CODE_SIGNATURE_ENABLE" ]
   }
 
+  if (code_signature_enable && code_encryption_enable) {
+    external_deps += [ "ability_base:extractortool" ]
+    external_deps +=
+        [ "code_crypto_metadata_process:libcode_crypto_metadata_process_utils" ]
+    defines += [ "CODE_ENCRYPTION_ENABLE" ]
+  }
+
   if (build_selinux) {
     external_deps += [ "selinux_adapter:libhap_restorecon" ]
     cflags += [ "-DWITH_SELINUX" ]

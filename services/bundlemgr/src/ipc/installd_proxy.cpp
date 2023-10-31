@@ -463,6 +463,25 @@ ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const 
     return ERR_OK;
 }
 
+ErrCode InstalldProxy::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    if (!data.WriteParcelable(&checkEncryptionParam)) {
+        APP_LOGE("WriteParcelable checkEncryptionParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::CHECK_ENCRYPTION, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    isEncryption = reply.ReadBool();
+    return ERR_OK;
+}
+
 ErrCode InstalldProxy::MoveFiles(const std::string &srcDir, const std::string &desDir)
 {
     MessageParcel data;

@@ -153,6 +153,8 @@ public:
     virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir) override;
 
+    virtual ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) override;
+
     virtual ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir) override;
 
     virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,

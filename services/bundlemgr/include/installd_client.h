@@ -160,6 +160,8 @@ public:
     ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
         const std::string &targetSoPath, const std::string &signatureFileDir);
 
+    ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
+
     ErrCode MoveFiles(const std::string &srcDir, const std::string &desDir);
 
     ErrCode ExtractDriverSoFiles(const std::string &srcPath,

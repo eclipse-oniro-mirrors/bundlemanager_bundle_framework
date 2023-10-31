@@ -24,6 +24,7 @@
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
 #include "installd/installd_constants.h"
+#include "ipc/check_encryption_param.h"
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
@@ -195,6 +196,10 @@ public:
 
     static bool VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
         const std::string &targetSoPath, const std::string &signatureFileDir);
+
+    static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
+
+    static bool CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
     static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
 

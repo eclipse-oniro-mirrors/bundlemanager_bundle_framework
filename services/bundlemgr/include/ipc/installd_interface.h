@@ -23,6 +23,7 @@
 
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
+#include "ipc/check_encryption_param.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
@@ -273,6 +274,11 @@ public:
 
     virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
         const std::string &targetSoPath, const std::string &signatureFileDir)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
     {
         return ERR_OK;
     }

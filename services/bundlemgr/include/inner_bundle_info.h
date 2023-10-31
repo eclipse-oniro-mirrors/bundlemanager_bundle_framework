@@ -1957,6 +1957,16 @@ public:
         return baseApplicationInfo_->gwpAsanEnabled;
     }
 
+    void SetApplicationReservedFlag(uint32_t flag)
+    {
+        baseApplicationInfo_->applicationReservedFlag |= flag;
+    }
+
+    uint32_t GetApplicationReservedFlag() const
+    {
+        return baseApplicationInfo_->applicationReservedFlag;
+    }
+
     void SetAppDistributionType(const std::string &appDistributionType);
 
     std::string GetAppDistributionType() const;

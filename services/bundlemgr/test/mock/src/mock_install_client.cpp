@@ -177,6 +177,11 @@ ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const
     return ERR_OK;
 }
 
+ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
 {
     return ERR_OK;

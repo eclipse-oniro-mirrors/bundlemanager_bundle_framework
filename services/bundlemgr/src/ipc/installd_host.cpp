@@ -88,6 +88,8 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
         &InstalldHost::HandVerifyCodeSignature);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CHECK_ENCRYPTION),
+        &InstalldHost::HandleCheckEncryption);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE),
         &InstalldHost::HandExtractDriverSoFiles);
@@ -439,6 +441,24 @@ bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &r
 
     ErrCode result = VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandleCheckEncryption(MessageParcel &data, MessageParcel &reply)
+{
+    std::unique_ptr<CheckEncryptionParam> info(data.ReadParcelable<CheckEncryptionParam>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
+
+    bool isEncryption = false;
+    ErrCode result = CheckEncryption(*info, isEncryption);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isEncryption)) {
+        APP_LOGE("write isEncryption failed");
+        return false;
+    }
     return true;
 }
 

@@ -295,6 +295,14 @@ ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const
         signatureFileDir);
 }
 
+ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
+{
+    if (checkEncryptionParam.modulePath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::CheckEncryption, checkEncryptionParam, isEncryption);
+}
+
 ErrCode InstalldClient::MoveFiles(const std::string &srcDir, const std::string &desDir)
 {
     if (srcDir.empty() || desDir.empty()) {
