@@ -2103,11 +2103,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
-    if (isEntry) {
-        baseApplicationInfo_->debug = applicationInfo.debug;
-    } else if (!HasEntry() && applicationInfo.debug) {
-        baseApplicationInfo_->debug = applicationInfo.debug;
-    }
+    UpdateDebug(applicationInfo.debug, isEntry);
+    baseApplicationInfo_->gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
@@ -4143,6 +4140,15 @@ std::string InnerBundleInfo::GetAppIdentifier() const
 void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
 {
     baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
+}
+
+void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
+{
+    if (isEntry) {
+        baseApplicationInfo_->debug = debug;
+    } else if (!HasEntry() && debug) {
+        baseApplicationInfo_->debug = debug;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
