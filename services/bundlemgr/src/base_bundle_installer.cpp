@@ -2601,30 +2601,22 @@ ErrCode BaseBundleInstaller::CopyPgoFileToArkProfileDir(
 {
     auto it = pgoParams_.find(moduleName);
     if (it != pgoParams_.end()) {
-        return CopyPgoFile(it->second, bundleName, userId);
+        return CopyPgoFile(moduleName, it->second, bundleName, userId);
     }
     return ExtractArkProfileFile(modulePath, bundleName, userId);
 }
 
 ErrCode BaseBundleInstaller::CopyPgoFile(
+    const std::string &moduleName,
     const std::string &pgoPath,
     const std::string &bundleName,
     int32_t userId) const
 {
-    size_t pos = pgoPath.find_last_of(Constants::PATH_SEPARATOR);
-    if (pos == std::string::npos) {
-        APP_LOGE("copy pgo file failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    std::string fileName = pgoPath.substr(pos + 1);
-    if (fileName.empty()) {
-        APP_LOGE("copy pgo file failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
     std::string targetPath;
     targetPath.append(ARK_PROFILE_PATH).append(std::to_string(userId))
         .append(Constants::PATH_SEPARATOR).append(bundleName)
-        .append(Constants::PATH_SEPARATOR).append(fileName);
+        .append(Constants::PATH_SEPARATOR).append(moduleName)
+        .append(Constants::AP_SUFFIX);
     if (InstalldClient::GetInstance()->CopyFile(pgoPath, targetPath) != ERR_OK) {
         APP_LOGE("copy file from %{public}s to %{public}s failed", pgoPath.c_str(), targetPath.c_str());
         return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
