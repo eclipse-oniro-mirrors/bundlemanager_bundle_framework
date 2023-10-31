@@ -30,16 +30,10 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
 const int32_t THRESHOLD_VAL_LEN = 40;
 bool IsSupportCompressNativeLibs()
 {
     char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    int32_t ret = GetParameter(COMPRESS_NATIVE_LIBS.c_str(), "", compressNativeLibs, THRESHOLD_VAL_LEN);
-    if (ret <= 0) {
-        APP_LOGE("GetParameter %{public}s failed.", COMPRESS_NATIVE_LIBS.c_str());
-        return false;
-    }
     if (std::strcmp(compressNativeLibs, "true") == 0) {
         return true;
     }

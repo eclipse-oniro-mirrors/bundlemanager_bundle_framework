@@ -8141,6 +8141,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetJsonProfile_0100, Function | SmallTest | Level
     std::string profile;
     ErrCode ret = bundleMgrProxy->GetJsonProfile(ProfileType::INTENT_PROFILE, "", BASE_MODULE_NAME, profile);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+    EXPECT_EQ(profile, "");
 }
 
 /**
