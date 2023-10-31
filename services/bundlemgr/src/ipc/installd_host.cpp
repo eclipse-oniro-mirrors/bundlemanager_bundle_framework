@@ -93,6 +93,8 @@ void InstalldHost::Init()
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::MOVE_FILES), &InstalldHost::HandMoveFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE),
         &InstalldHost::HandExtractDriverSoFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE),
+        &InstalldHost::HandExtractEncryptedSoFiles);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -351,7 +353,9 @@ bool InstalldHost::HandleApplyDiffPatch(MessageParcel &data, MessageParcel &repl
     std::string oldSoPath = Str16ToStr8(data.ReadString16());
     std::string diffFilePath = Str16ToStr8(data.ReadString16());
     std::string newSoPath = Str16ToStr8(data.ReadString16());
-    ErrCode result = ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    int32_t uid = data.ReadInt32();
+
+    ErrCode result = ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -486,6 +490,19 @@ bool InstalldHost::HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &
     }
 
     ErrCode result = ExtractDriverSoFiles(srcPath, dirMap);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandExtractEncryptedSoFiles(MessageParcel &data, MessageParcel &reply)
+{
+    std::string hapPath = Str16ToStr8(data.ReadString16());
+    std::string realSoFilesPath = Str16ToStr8(data.ReadString16());
+    std::string cpuAbi = Str16ToStr8(data.ReadString16());
+    std::string tmpSoPath = Str16ToStr8(data.ReadString16());
+    int32_t uid = data.ReadInt32();
+
+    ErrCode result = ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

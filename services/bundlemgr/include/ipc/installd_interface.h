@@ -236,7 +236,7 @@ public:
     }
 
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
     {
         return ERR_OK;
     }
@@ -290,6 +290,12 @@ public:
 
     virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+        const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
     {
         return ERR_OK;
     }

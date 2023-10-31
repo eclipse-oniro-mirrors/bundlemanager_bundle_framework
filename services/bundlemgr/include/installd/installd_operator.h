@@ -30,6 +30,13 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+struct app_crypto_arg {
+    unsigned long long arg1_len;
+    unsigned long long arg2_len;
+    unsigned char *arg1;
+    unsigned char *arg2;
+};
+
 class InstalldOperator {
 public:
     /**
@@ -185,7 +192,7 @@ public:
         const std::string &cpuAbi);
 
     static bool ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-        const std::string &newSoPath);
+        const std::string &newSoPath, int32_t uid);
 
     static bool ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &fileVec);
 
@@ -209,6 +216,20 @@ public:
     static bool CopyDriverSoFiles(const BundleExtractor &extractor, const std::string &originalDir,
         const std::string &destinedDir);
 
+#if defined(CODE_ENCRYPTION_ENABLE)
+    static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
+        const std::string &tmpSoPath, int32_t uid);
+
+    static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
+        const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
+
+    static ErrCode DecryptSoFile(const std::string &hapPath, const std::string &tmpHapPath, int32_t uid);
+
+    static ErrCode RemoveEncryptedKey(int32_t uid, const std::vector<std::string> &soList);
+
+    static int32_t CallIoctl(int32_t flag, int32_t uid, int32_t &fd);
+#endif
+
 private:
     static bool OpenHandle(void **handle);
 
@@ -221,6 +242,12 @@ private:
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
+
+    static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
+        const std::string &tmpSoPath);
+
+    static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
+        const std::string &cpuAbi, const std::string &tmpSoPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

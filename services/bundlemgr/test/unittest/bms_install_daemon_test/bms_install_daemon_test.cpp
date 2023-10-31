@@ -704,14 +704,14 @@ HWTEST_F(BmsInstallDaemonTest, InstalldClient_0900, Function | SmallTest | Level
         service->Start();
     }
     std::string TEST_STRING = "test.string";
-    ErrCode ret = InstalldClient::GetInstance()->ApplyDiffPatch("", TEST_STRING, TEST_STRING);
+    ErrCode ret = InstalldClient::GetInstance()->ApplyDiffPatch("", TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, "", TEST_STRING);
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, "", TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
-    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, TEST_STRING, "");
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(TEST_STRING, TEST_STRING, "", 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     ret = InstalldClient::GetInstance()->ApplyDiffPatch(
-        TEST_STRING, TEST_STRING, TEST_STRING);
+        TEST_STRING, TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_OK);
 }
 

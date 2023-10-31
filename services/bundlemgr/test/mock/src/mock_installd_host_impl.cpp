@@ -127,7 +127,7 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
 }
 
 ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
 {
     return ERR_OK;
 }
@@ -191,6 +191,12 @@ ErrCode InstalldHostImpl::MoveFiles(const std::string &srcDir, const std::string
 
 ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
     const std::unordered_multimap<std::string, std::string> &dirMap)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+    const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {
     return ERR_OK;
 }

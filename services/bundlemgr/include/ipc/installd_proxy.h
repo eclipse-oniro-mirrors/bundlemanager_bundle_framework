@@ -137,7 +137,7 @@ public:
         const std::string &cpuAbi) override;
 
     virtual ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-        const std::string &newSoPath) override;
+        const std::string &newSoPath, int32_t uid) override;
 
     virtual ErrCode IsExistDir(const std::string &dir, bool &isExist) override;
 
@@ -162,6 +162,9 @@ public:
 
     virtual ErrCode ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap) override;
+
+    virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+        const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid) override;
 
 private:
     ErrCode TransactInstalldCmd(InstalldInterfaceCode code, MessageParcel &data, MessageParcel &reply,

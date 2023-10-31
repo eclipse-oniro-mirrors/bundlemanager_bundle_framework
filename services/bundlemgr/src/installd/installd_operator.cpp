@@ -25,10 +25,12 @@
 #include <cstdio>
 #include <dirent.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -47,6 +49,13 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
+#if defined(CODE_ENCRYPTION_ENABLE)
+static std::string APP_CRYPTO = "/dev/app_crypto";
+static int32_t APP_CRYPTO_CMD_SET_ASSOCIATE_KEY = 0x10007;
+static int32_t APP_CRYPTO_CMD_REMOVE_ASSOCIATE_KEY = 0x10008;
+static int32_t INVALID_RETURN_VALUE = -1;
+static int32_t INVALID_FILE_DESCRIPTOR = -1;
+#endif
 using ApplyPatch = int32_t (*)(const std::string, const std::string, const std::string);
 
 static std::string HandleScanResult(
@@ -776,7 +785,7 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
 }
 
 bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
 {
     APP_LOGI("ApplyDiffPatch start");
     std::vector<std::string> oldSoFileNames;
@@ -827,6 +836,9 @@ bool InstalldOperator::ApplyDiffPatch(const std::string &oldSoPath, const std::s
         }
     }
     CloseHandle(&handle);
+#if defined(CODE_ENCRYPTION_ENABLE)
+    RemoveEncryptedKey(uid, newSoList);
+#endif
     APP_LOGI("ApplyDiffPatch end");
     return true;
 }
@@ -1270,5 +1282,222 @@ bool InstalldOperator::CopyDriverSoFiles(const BundleExtractor &extractor, const
     APP_LOGD("CopyDriverSoFiles end");
     return true;
 }
+
+#if defined(CODE_ENCRYPTION_ENABLE)
+ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
+    const std::string &tmpSoPath, int32_t uid)
+{
+    APP_LOGD("start to obtain decoded so files from hapPath %{public}s", hapPath.c_str());
+    /* cal the tmp hap path */
+    auto pos = hapPath.rfind(Constants::PATH_SEPARATOR[0]);
+    if (pos == std::string::npos) {
+        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
+
+    std::string hapName = hapPath.substr(pos + 1);
+    if (hapName.empty()) {
+        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
+
+    std::string innerTmpSoPath = tmpSoPath;
+    if (innerTmpSoPath.back() != Constants::PATH_SEPARATOR[0]) {
+        innerTmpSoPath += Constants::PATH_SEPARATOR;
+    }
+
+    /* create innerTmpSoPath */
+    if (!IsExistDir(innerTmpSoPath)) {
+        if (!MkRecursiveDir(innerTmpSoPath, true)) {
+            APP_LOGE("create innerTmpSoPath %{private}s failed", innerTmpSoPath.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+
+    std::string tmpHapPath = innerTmpSoPath + hapName;
+    APP_LOGD("tmp hap path is %{public}s", tmpHapPath.c_str());
+
+    /* mmap hap to ram and write the hap to tmpHapPath */
+    ErrCode res = ERR_OK;
+    if ((res = DecryptSoFile(hapPath, tmpHapPath, uid)) != ERR_OK) {
+        APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", hapPath.c_str(),
+            tmpHapPath.c_str());
+        return res;
+    }
+    if (!ExtractFiles(tmpHapPath, innerTmpSoPath, cpuAbi)) {
+        APP_LOGE("extract %{private}s to %{private}s failed", tmpHapPath.c_str(), innerTmpSoPath.c_str());
+        DeleteFiles(innerTmpSoPath);
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INSTALL_DISK_MEM_INSUFFICIENT;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
+    const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    APP_LOGD("start to obtain decoded so files from so path");
+    BundleExtractor extractor(hapPath);
+    if (!extractor.Init()) {
+        APP_LOGE("init bundle extractor failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+    /* obtain the so list in the hap */
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ExtractFiles obtain native so file entryName failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+    }
+
+    std::string innerTmpSoPath = tmpSoPath;
+    if (innerTmpSoPath.back() != Constants::PATH_SEPARATOR[0]) {
+        innerTmpSoPath += Constants::PATH_SEPARATOR;
+    }
+    // create innerTmpSoPath
+    if (!IsExistDir(innerTmpSoPath)) {
+        if (!MkRecursiveDir(innerTmpSoPath, true)) {
+            APP_LOGE("create innerTmpSoPath %{private}s failed", innerTmpSoPath.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
+        }
+    }
+
+    for (const auto &entry : soEntryFiles) {
+        auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            continue;
+        }
+        std::string soFileName = entry.substr(pos + 1);
+        if (soFileName.empty()) {
+            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            continue;
+        }
+
+        std::string soPath = realSoFilesPath + soFileName;
+        APP_LOGD("real path of the so file %{public}s is %{public}s", soFileName.c_str(), soPath.c_str());
+
+        if (IsExistFile(soPath)) {
+            /* mmap so file to ram and write to innerTmpSoPath */
+            ErrCode res = ERR_OK;
+            APP_LOGD("tmp so path is %{public}s", (innerTmpSoPath + soFileName).c_str());
+            if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid)) != ERR_OK) {
+                APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", soPath.c_str(),
+                    (innerTmpSoPath + soFileName).c_str());
+                return res;
+            }
+        } else {
+            APP_LOGW("so file %{public}s is not existed", soPath.c_str());
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::string &tmpPath, int32_t uid)
+{
+    APP_LOGD("src file is %{public}s, temp path is %{public}s, bundle uid is %{public}d", filePath.c_str(),
+        tmpPath.c_str(), uid);
+    ErrCode result = ERR_BUNDLEMANAGER_QUICK_FIX_DECRYPTO_SO_FAILED;
+
+    /* call CallIoctl */
+    int32_t dev_fd = INVALID_FILE_DESCRIPTOR;
+    auto ret = CallIoctl(APP_CRYPTO_CMD_SET_ASSOCIATE_KEY, uid, dev_fd);
+    if (ret != 0) {
+        APP_LOGE("CallIoctl failed");
+        return result;
+    }
+
+    /* mmap hap or so file to ram */
+    auto fd = open(filePath.c_str(), O_RDONLY);
+    if (fd < 0) {
+        APP_LOGE("open hap failed");
+        close(dev_fd);
+        return result;
+    }
+    struct stat st;
+    if (fstat(fd, &st) == INVALID_RETURN_VALUE) {
+        APP_LOGE("obtain hap file status faield");
+        close(dev_fd);
+        close(fd);
+        return result;
+    }
+    off_t fileSize = st.st_size;
+    void *addr = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (addr == MAP_FAILED) {
+        APP_LOGE("mmap hap file status faield");
+        close(dev_fd);
+        close(fd);
+        return result;
+    }
+
+    /* write hap file to the temp path */
+    auto outPutFd = BundleUtil::CreateFileDescriptor(tmpPath, 0);
+    if (outPutFd < 0) {
+        APP_LOGE("create fd for tmp hap file failed");
+        close(dev_fd);
+        close(fd);
+        munmap(addr, fileSize);
+        return result;
+    }
+    if (write(outPutFd, addr, fileSize) != INVALID_RETURN_VALUE) {
+        result = ERR_OK;
+        APP_LOGD("write hap to temp path successfully");
+    }
+    close(dev_fd);
+    close(fd);
+    close(outPutFd);
+    munmap(addr, fileSize);
+    return result;
+}
+
+ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std::string> &soList)
+{
+    if (uid == Constants::INVALID_UID) {
+        APP_LOGD("invalid uid and no need to remove encrypted key");
+        return ERR_OK;
+    }
+    if (soList.empty()) {
+        APP_LOGD("no new so generated and no need to remove encrypted key");
+        return ERR_OK;
+    }
+    ErrCode result = ERR_BUNDLEMANAGER_QUICK_FIX_DECRYPTO_SO_FAILED;
+
+    /* call CallIoctl */
+    int32_t dev_fd = INVALID_FILE_DESCRIPTOR;
+    auto ret = CallIoctl(APP_CRYPTO_CMD_REMOVE_ASSOCIATE_KEY, uid, dev_fd);
+    if (ret == 0) {
+        APP_LOGD("ioctl successfully");
+        result = ERR_OK;
+    }
+    close(dev_fd);
+    return result;
+}
+
+int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t uid, int32_t &fd)
+{
+    unsigned long long installdUid = getuid();
+    unsigned long long bundleUid = uid;
+    APP_LOGD("current process uid is %{public}llu and bundle uid is %{public}llu", installdUid, bundleUid);
+    /* build ioctl args */
+    struct app_crypto_arg arg;
+    arg.arg1_len = sizeof(installdUid);
+    arg.arg1 = reinterpret_cast<unsigned char *>(&installdUid);
+    arg.arg2_len = sizeof(bundleUid);
+    arg.arg2 = reinterpret_cast<unsigned char *>(&bundleUid);
+
+    /* open app_crypto */
+    fd = open(APP_CRYPTO.c_str(), O_RDONLY);
+    if (fd < 0) {
+        APP_LOGE("call open failed");
+        return INVALID_RETURN_VALUE;
+    }
+
+    /* call ioctl */
+    auto ret = ioctl(fd, flag, &arg);
+    if (ret != 0) {
+        APP_LOGE("call ioctl failed");
+        close(fd);
+    }
+    return ret;
+}
+#endif
 }  // namespace AppExecFwk
 }  // namespace OHOS

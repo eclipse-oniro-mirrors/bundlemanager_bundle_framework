@@ -902,7 +902,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0100, TestS
     std::string oldSoPath = EMPTY_STRING;
     std::string diffFilePath = DIFF_FILE_PATH;
     std::string newSoPath = NEW_SO_PATH;
-    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, 0);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0100 end";
 }
@@ -918,7 +918,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0200, TestS
     std::string oldSoPath = OLD_SO_PATH;
     std::string diffFilePath = EMPTY_STRING;
     std::string newSoPath = NEW_SO_PATH;
-    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, 0);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0200 end";
 }
@@ -934,7 +934,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0300, TestS
     std::string oldSoPath = OLD_SO_PATH;
     std::string diffFilePath = DIFF_FILE_PATH;
     std::string newSoPath = EMPTY_STRING;
-    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, 0);
     EXPECT_EQ(result, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0300 end";
 }
@@ -951,7 +951,7 @@ HWTEST_F(BmsInstalldClientTest, BmsInstalldClientTest_ApplyDiffPatch_0400, TestS
     std::string diffFilePath = DIFF_FILE_PATH;
     std::string newSoPath = NEW_SO_PATH;
     ErrCode result = installClient_->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
-    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath));
+    EXPECT_EQ(result, installClient_->CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath, 0));
     GTEST_LOG_(INFO) << "BmsInstalldClientTest_ApplyDiffPatch_0400 end";
 }
 

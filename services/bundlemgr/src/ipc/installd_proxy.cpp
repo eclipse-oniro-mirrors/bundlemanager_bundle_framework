@@ -321,13 +321,14 @@ ErrCode InstalldProxy::ExtractDiffFiles(const std::string &filePath, const std::
 }
 
 ErrCode InstalldProxy::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(oldSoPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(diffFilePath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(newSoPath));
+    INSTALLD_PARCEL_WRITE(data, Int32, uid);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -513,6 +514,27 @@ ErrCode InstalldProxy::ExtractDriverSoFiles(const std::string &srcPath,
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_DRIVER_SO_FILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+    const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(hapPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realSoFilesPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(tmpSoPath));
+    INSTALLD_PARCEL_WRITE(data, Int32, uid);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;
