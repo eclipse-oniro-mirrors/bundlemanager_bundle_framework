@@ -92,8 +92,9 @@ ClearCacheListener::ClearCacheListener(const EventFwk::CommonEventSubscribeInfo 
 
 void ClearCacheListener::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
-    APP_LOGD("clear bms cache");
+    APP_LOGI("clear bms cache");
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    APP_LOGI("clear bms cache locked");
     cache.clear();
 }
 
@@ -2318,10 +2319,11 @@ static void CheckToCache(napi_env env, int32_t uid, int32_t callingUid, const Qu
         APP_LOGD("uid %{public}d and callingUid %{public}d not equal", uid, callingUid);
         return;
     }
-    APP_LOGD("put applicationInfo to cache");
+    APP_LOGI("put applicationInfo to cache");
     napi_ref cacheApplicationInfo = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_reference(env, jsObject, NAPI_RETURN_ONE, &cacheApplicationInfo));
     std::unique_lock<std::shared_mutex> lock(g_cacheMutex);
+    APP_LOGI("put applicationInfo to cache locked");
     cache[query] = cacheApplicationInfo;
 }
 
@@ -2637,10 +2639,12 @@ void GetBundleInfoComplete(napi_env env, napi_status status, void *data)
             auto item = cache.find(Query(
                 asyncCallbackInfo->bundleName, GET_BUNDLE_INFO,
                 asyncCallbackInfo->flags, asyncCallbackInfo->userId, env));
+            APP_LOGI("query cache %{public}s", __func__);
             if (item == cache.end()) {
                 APP_LOGE("cannot find result in cache in %{public}s", __func__);
                 return;
             }
+            APP_LOGI("cache exsit %{public}s", __func__);
             NAPI_CALL_RETURN_VOID(env, napi_get_reference_value(env, item->second, &result[ARGS_POS_ONE]));
         } else {
             NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &result[ARGS_POS_ONE]));
