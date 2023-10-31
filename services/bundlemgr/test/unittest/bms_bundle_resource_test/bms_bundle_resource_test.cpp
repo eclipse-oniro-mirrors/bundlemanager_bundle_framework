@@ -23,6 +23,7 @@
 #include "application_info.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
+#include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
 #include "bundle_permission_mgr.h"
 
@@ -31,6 +32,7 @@
 #include "bundle_resource_client.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_event_subscriber.h"
+#include "bundle_resource_host_impl.h"
 #include "bundle_resource_info.h"
 #include "bundle_resource_manager.h"
 #include "bundle_resource_observer.h"
@@ -53,6 +55,8 @@
 #include "permission_define.h"
 #include "remote_ability_info.h"
 #include "scope_guard.h"
+#include "system_ability_definition.h"
+#include "system_ability_helper.h"
 
 using namespace testing::ext;
 using namespace std::chrono_literals;
@@ -89,6 +93,7 @@ public:
     void StartInstalldService() const;
     void StartBundleService();
     bool OnReceiveEvent(const OHOS::EventFwk::CommonEventData &data);
+    sptr<BundleMgrProxy> GetBundleMgrProxy();
 
 private:
     static std::shared_ptr<InstalldService> installdService_;
@@ -226,6 +231,25 @@ bool BmsBundleResourceTest::OnReceiveEvent(const OHOS::EventFwk::CommonEventData
 #endif
     std::string action = data.GetWant().GetAction();
     return action == OHOS::EventFwk::CommonEventSupport::COMMON_EVENT_USER_SWITCHED;
+}
+
+sptr<BundleMgrProxy> BmsBundleResourceTest::GetBundleMgrProxy()
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (!systemAbilityManager) {
+        APP_LOGE("fail to get system ability mgr.");
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    if (!remoteObject) {
+        APP_LOGE("fail to get bundle manager proxy.");
+        return nullptr;
+    }
+
+    APP_LOGI("get bundle manager proxy success.");
+    return iface_cast<BundleMgrProxy>(remoteObject);
 }
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -1335,7 +1359,7 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0064, Function | SmallTest
     EXPECT_FALSE(ans);
 
     ans = parser.ParseLabelResourceByPath(HAP_NOT_EXIST, 0, label);
-    EXPECT_FALSE(ans);
+    EXPECT_TRUE(ans); // allow labelId is 0, then label is bundleName
 
     ans = parser.ParseLabelResourceByPath(HAP_FILE_PATH1, 0, label);
     EXPECT_TRUE(ans);
@@ -1577,6 +1601,9 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0072, Function | SmallTest
     EXPECT_EQ(BundleSystemState::GetInstance().GetSystemLanguage(), newLanguage);
     EXPECT_EQ(BundleSystemState::GetInstance().GetSystemColorMode(), newColorMode);
 
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_LANGUAGE, oldLanguage);
+    configuration.AddItem(OHOS::AAFwk::GlobalConfigurationKey::SYSTEM_COLORMODE, oldColorMode);
+    observer.OnConfigurationUpdated(configuration);
     BundleSystemState::GetInstance().SetSystemLanguage(oldLanguage);
     BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
 #endif
@@ -1614,8 +1641,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0074, Function | SmallTest
     bool ans = callback.OnSystemColorModeChanged(oldColorMode);
     EXPECT_TRUE(ans);
 
-    std::string colorMode = "test";
-    ans = callback.OnSystemColorModeChanged(oldColorMode);
+    std::string colorMode = "dark";
+    ans = callback.OnSystemColorModeChanged(colorMode);
     EXPECT_TRUE(ans);
 
     BundleSystemState::GetInstance().SetSystemColorMode(oldColorMode);
@@ -1640,6 +1667,8 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0075, Function | SmallTest
     ans = callback.OnSystemLanguageChange(language);
     EXPECT_TRUE(ans);
 
+    ans = callback.OnSystemLanguageChange(oldLanguage);
+    EXPECT_TRUE(ans);
     BundleSystemState::GetInstance().SetSystemColorMode(oldLanguage);
 }
 
@@ -1922,6 +1951,415 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0089, Function | SmallTest
     bool ans = BundleResourceProcess::GetResourceInfoByColorModeChanged(resourceNames, resourceInfos);
     EXPECT_TRUE(ans);
     EXPECT_NE(resourceInfos.size(), 0);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0090
+ * Function: BundleResourceInfo
+ * @tc.name: test BundleResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test BundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0090, Function | SmallTest | Level0)
+{
+    BundleResourceInfo info;
+    info.bundleName = "bundleName";
+    info.label = "label";
+    info.icon = "icon";
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    BundleResourceInfo info_2;
+    ret = info_2.ReadFromParcel(parcel);
+    EXPECT_EQ(info_2.bundleName, info.bundleName);
+    EXPECT_EQ(info_2.label, info.label);
+    EXPECT_EQ(info_2.icon, info.icon);
+
+    Parcel parcel_2;
+    ret = info.Marshalling(parcel_2);
+    EXPECT_TRUE(ret);
+    std::shared_ptr<BundleResourceInfo> infoPtr(BundleResourceInfo::Unmarshalling(parcel_2));
+    EXPECT_NE(infoPtr, nullptr);
+    if (infoPtr != nullptr) {
+        EXPECT_EQ(infoPtr->bundleName, info.bundleName);
+        EXPECT_EQ(infoPtr->label, info.label);
+        EXPECT_EQ(infoPtr->icon, info.icon);
+    }
+
+    Parcel parcel_3;
+    ret = info_2.ReadFromParcel(parcel_3);
+    EXPECT_FALSE(ret);
+    std::shared_ptr<BundleResourceInfo> infoPtr_2(BundleResourceInfo::Unmarshalling(parcel_3));
+    EXPECT_EQ(infoPtr_2, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0091
+ * Function: LauncherAbilityResourceInfo
+ * @tc.name: test LauncherAbilityResourceInfo
+ * @tc.desc: 1. system running normally
+ *           2. test LauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0091, Function | SmallTest | Level0)
+{
+    LauncherAbilityResourceInfo info;
+    info.bundleName = "bundleName";
+    info.moduleName = "moduleName";
+    info.abilityName = "abilityName";
+    info.label = "label";
+    info.icon = "icon";
+
+    Parcel parcel;
+    bool ret = info.Marshalling(parcel);
+    EXPECT_TRUE(ret);
+
+    LauncherAbilityResourceInfo info_2;
+    ret = info_2.ReadFromParcel(parcel);
+    EXPECT_EQ(info_2.bundleName, info.bundleName);
+    EXPECT_EQ(info_2.moduleName, info.moduleName);
+    EXPECT_EQ(info_2.abilityName, info.abilityName);
+    EXPECT_EQ(info_2.label, info.label);
+    EXPECT_EQ(info_2.icon, info.icon);
+
+    Parcel parcel_2;
+    ret = info.Marshalling(parcel_2);
+    EXPECT_TRUE(ret);
+
+    std::shared_ptr<LauncherAbilityResourceInfo> infoPtr(LauncherAbilityResourceInfo::Unmarshalling(parcel_2));
+    EXPECT_NE(infoPtr, nullptr);
+    if (infoPtr != nullptr) {
+        EXPECT_EQ(infoPtr->bundleName, info.bundleName);
+        EXPECT_EQ(infoPtr->moduleName, info.moduleName);
+        EXPECT_EQ(infoPtr->abilityName, info.abilityName);
+        EXPECT_EQ(infoPtr->label, info.label);
+        EXPECT_EQ(infoPtr->icon, info.icon);
+    }
+
+    Parcel parcel_3;
+    ret = info_2.ReadFromParcel(parcel_3);
+    EXPECT_FALSE(ret);
+    std::shared_ptr<LauncherAbilityResourceInfo> infoPtr_2(LauncherAbilityResourceInfo::Unmarshalling(parcel_3));
+    EXPECT_EQ(infoPtr_2, nullptr);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0092
+ * Function: Install
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0092, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info.bundleName, BUNDLE_NAME);
+        EXPECT_FALSE(info.label.empty());
+        EXPECT_FALSE(info.icon.empty());
+
+        BundleResourceInfo info2;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info2);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info2.bundleName, BUNDLE_NAME);
+        EXPECT_FALSE(info2.label.empty());
+        EXPECT_FALSE(info2.icon.empty());
+
+        BundleResourceInfo info3;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), info3);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info3.bundleName, BUNDLE_NAME);
+        EXPECT_FALSE(info3.label.empty());
+        EXPECT_TRUE(info3.icon.empty());
+
+        BundleResourceInfo info4;
+        ret = manager->GetBundleResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info4);
+        EXPECT_TRUE(ret);
+        EXPECT_EQ(info4.bundleName, BUNDLE_NAME);
+        EXPECT_TRUE(info4.label.empty());
+        EXPECT_FALSE(info4.icon.empty());
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        bool ret = manager->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+        EXPECT_FALSE(ret);
+        EXPECT_TRUE(info.bundleName.empty());
+        EXPECT_TRUE(info.label.empty());
+        EXPECT_TRUE(info.icon.empty());
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0093
+ * Function: Install
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test Install
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0093, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        std::vector<LauncherAbilityResourceInfo> info;
+        bool ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(info.size() == 1);
+        if (!info.empty()) {
+            EXPECT_EQ(info[0].bundleName, BUNDLE_NAME);
+            EXPECT_EQ(info[0].moduleName, MODULE_NAME);
+            EXPECT_EQ(info[0].abilityName, ABILITY_NAME);
+            EXPECT_FALSE(info[0].label.empty());
+            EXPECT_FALSE(info[0].icon.empty());
+        }
+
+        std::vector<LauncherAbilityResourceInfo> info2;
+        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), info2);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(info.size() == 1);
+        if (!info.empty()) {
+            EXPECT_EQ(info2[0].bundleName, BUNDLE_NAME);
+            EXPECT_EQ(info2[0].moduleName, MODULE_NAME);
+            EXPECT_EQ(info2[0].abilityName, ABILITY_NAME);
+            EXPECT_FALSE(info2[0].label.empty());
+            EXPECT_TRUE(info2[0].icon.empty());
+        }
+
+        std::vector<LauncherAbilityResourceInfo> info3;
+        ret = manager->GetLauncherAbilityResourceInfo(BUNDLE_NAME,
+            static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info3);
+        EXPECT_TRUE(ret);
+        EXPECT_TRUE(info.size() == 1);
+        if (!info.empty()) {
+            EXPECT_EQ(info3[0].bundleName, BUNDLE_NAME);
+            EXPECT_EQ(info3[0].moduleName, MODULE_NAME);
+            EXPECT_EQ(info3[0].abilityName, ABILITY_NAME);
+            EXPECT_TRUE(info3[0].label.empty());
+            EXPECT_FALSE(info3[0].icon.empty());
+        }
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0094
+ * Function: GetBundleResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0094, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            BundleResourceInfo info;
+            auto ret = resourceProxy->GetBundleResourceInfo("", 0, info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+            ret = resourceProxy->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0095
+ * Function: GetLauncherAbilityResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0095, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            std::vector<LauncherAbilityResourceInfo> info;
+            auto ret = resourceProxy->GetLauncherAbilityResourceInfo("", 0, info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+            EXPECT_TRUE(info.size() == 0);
+
+            ret = resourceProxy->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_TRUE(info.size() == 0);
+        }
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0096
+ * Function: GetAllBundleResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0096, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            std::vector<BundleResourceInfo> infos;
+            auto ret = resourceProxy->GetAllBundleResourceInfo(0, infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_TRUE(infos.empty());
+        }
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0097
+ * Function: GetAllLauncherAbilityResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0097, Function | SmallTest | Level0)
+{
+    auto bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto resourceProxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(resourceProxy, nullptr);
+        if (resourceProxy != nullptr) {
+            std::vector<LauncherAbilityResourceInfo> infos;
+            auto ret = resourceProxy->GetAllLauncherAbilityResourceInfo(0, infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+            EXPECT_TRUE(infos.empty());
+        }
+    }
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0098
+ * Function: GetBundleResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0098, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    BundleResourceInfo info;
+    auto ret = bundleResourceHostImpl->GetBundleResourceInfo("", 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.bundleName, BUNDLE_NAME);
+    EXPECT_FALSE(info.icon.empty());
+    EXPECT_FALSE(info.label.empty());
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0099
+ * Function: GetLauncherAbilityResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0099, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> info;
+    auto ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo("", 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(info.size() == 0);
+
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+    EXPECT_TRUE(info.size() == 0);
+
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(info.size() == 1);
+    if (!info.empty()) {
+        EXPECT_EQ(info[0].bundleName, BUNDLE_NAME);
+        EXPECT_EQ(info[0].moduleName, MODULE_NAME);
+        EXPECT_EQ(info[0].abilityName, ABILITY_NAME);
+        EXPECT_FALSE(info[0].label.empty());
+        EXPECT_FALSE(info[0].icon.empty());
+    }
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0100
+ * Function: GetAllBundleResourceInfo
+ * @tc.name: test Install
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_00100, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<BundleResourceInfo> infos;
+    auto ret = bundleResourceHostImpl->GetAllBundleResourceInfo(0, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(infos.empty());
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0101
+ * Function: GetAllLauncherAbilityResourceInfo
+ * @tc.name: test
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0101, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> infos;
+    auto ret = bundleResourceHostImpl->GetAllLauncherAbilityResourceInfo(0, infos);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_FALSE(infos.empty());
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
 }
 #endif
 } // OHOS

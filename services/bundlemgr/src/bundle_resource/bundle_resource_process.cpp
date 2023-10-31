@@ -64,7 +64,7 @@ bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo
     dataMgr->GetMatchLauncherAbilityInfos(want, innerBundleInfo, abilityInfos, time, userId);
 
     if (abilityInfos.empty()) {
-        APP_LOGE("abilityInfos is empty");
+        APP_LOGW("bundleName: %{public}s no launcher ability Info", innerBundleInfo.GetBundleName().c_str());
         return false;
     }
 
@@ -276,7 +276,6 @@ bool BundleResourceProcess::IsBundleExist(const InnerBundleInfo &innerBundleInfo
 {
     int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
     return responseUserId != Constants::INVALID_USERID;
-    // get installTime from innerBundleUserInfo
 }
 
 int64_t BundleResourceProcess::GetUpdateTime(const InnerBundleInfo &innerBundleInfo, const int32_t userId)

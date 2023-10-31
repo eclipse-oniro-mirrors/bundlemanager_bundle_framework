@@ -64,7 +64,7 @@ ErrCode BundleResourceProxy::GetBundleResourceInfo(const std::string &bundleName
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty.");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {
@@ -92,7 +92,7 @@ ErrCode BundleResourceProxy::GetLauncherAbilityResourceInfo(const std::string &b
     APP_LOGD("start, bundleName:%{public}s, flags:%{public}u", bundleName.c_str(), flags);
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty.");
-        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
     }
     MessageParcel data;
     if (!data.WriteInterfaceToken(GetDescriptor())) {

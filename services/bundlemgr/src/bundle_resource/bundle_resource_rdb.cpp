@@ -291,7 +291,7 @@ bool BundleResourceRdb::ConvertToBundleResourceInfo(
     auto ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_NAME, bundleResourceInfo.bundleName);
     CHECK_RDB_RESULT_RETURN_IF_FAIL(ret, "GetString name failed, ret: %{public}d");
     if (bundleResourceInfo.bundleName.find_first_of(BundleResourceConstants::SEPARATOR) != std::string::npos) {
-        APP_LOGW("key:%{public}s not bundle resource info", bundleResourceInfo.bundleName.c_str());
+        APP_LOGD("key:%{public}s not bundle resource info, continue", bundleResourceInfo.bundleName.c_str());
         return false;
     }
 

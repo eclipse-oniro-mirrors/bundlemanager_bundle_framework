@@ -18,6 +18,9 @@
 
 #include <string>
 
+#include "bundle_constants.h"
+#include "inner_bundle_info.h"
+
 namespace OHOS {
 namespace AppExecFwk {
 class BundleResourceHelper {
@@ -30,6 +33,16 @@ public:
 
     // Register subscriber to monitor userId changes
     static void RegisterCommonEventSubscriber();
+
+    static void AddResourceInfoByBundleName(const std::string &bundleName,
+        const int32_t userId);
+
+    static void DeleteResourceInfo(const std::string &key, const int32_t userId = Constants::UNSPECIFIED_USERID);
+
+    static void SetApplicationEnabled(const std::string &bundleName, bool enabled, const int32_t userId);
+
+    static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
+        const std::string &abilityName, bool enabled, const int32_t userId);
 };
 } // AppExecFwk
 } // OHOS
