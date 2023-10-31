@@ -67,6 +67,17 @@ public:
      */
     bool AddResourceInfoByColorModeChanged(const int32_t userId);
 
+    bool GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
+        BundleResourceInfo &bundleResourceInfo);
+
+    bool GetLauncherAbilityResourceInfo(const std::string &bundleName, const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfo);
+
+    bool GetAllBundleResourceInfo(const uint32_t flags, std::vector<BundleResourceInfo> &bundleResourceInfos);
+
+    bool GetAllLauncherAbilityResourceInfo(const uint32_t flags,
+        std::vector<LauncherAbilityResourceInfo> &launcherAbilityResourceInfos);
+
 private:
     bool AddResourceInfo(ResourceInfo &resourceInfo);
 

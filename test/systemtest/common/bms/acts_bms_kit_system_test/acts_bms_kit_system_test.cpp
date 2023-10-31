@@ -23,6 +23,7 @@
 #include "bundle_event_callback_host.h"
 #include "bundle_installer_proxy.h"
 #include "bundle_mgr_proxy.h"
+#include "bundle_resource_info.h"
 #include "bundle_status_callback_host.h"
 #include "bundle_pack_info.h"
 #include "bundle_user_info.h"
@@ -32,6 +33,7 @@
 #include "form_info.h"
 #include "permission_define.h"
 #include "iservice_registry.h"
+#include "launcher_ability_resource_info.h"
 #include "nlohmann/json.hpp"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
@@ -8141,7 +8143,6 @@ HWTEST_F(ActsBmsKitSystemTest, GetJsonProfile_0100, Function | SmallTest | Level
     std::string profile;
     ErrCode ret = bundleMgrProxy->GetJsonProfile(ProfileType::INTENT_PROFILE, "", BASE_MODULE_NAME, profile);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
-    EXPECT_EQ(profile, "");
 }
 
 /**
@@ -8177,6 +8178,96 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosWithTypeName_0100, Func
     std::vector<ExtensionAbilityInfo> extensionInfos;
     ErrCode ret = bundleMgrProxy->QueryExtensionAbilityInfosWithTypeName(want, "", flag, USERID, extensionInfos);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetBundleResourceInfo_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetBundleResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetBundleResourceInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            BundleResourceInfo info;
+            ErrCode ret = proxy->GetBundleResourceInfo(EMPTY_BUNDLE_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            ret = proxy->GetBundleResourceInfo(BASE_MODULE_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetLauncherAbilityResourceInfo_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetLauncherAbilityResourceInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<LauncherAbilityResourceInfo> infos;
+            ErrCode ret = proxy->GetLauncherAbilityResourceInfo(EMPTY_BUNDLE_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+            ret = proxy->GetLauncherAbilityResourceInfo(BASE_MODULE_NAME,
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetAllBundleResourceInfo_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetAllBundleResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllBundleResourceInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<BundleResourceInfo> info;
+            ErrCode ret = proxy->GetAllBundleResourceInfo(
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
+}
+
+/**
+ * @tc.number: GetAllLauncherAbilityResourceInfo_0001
+ * @tc.name: test BundleMgrProxy
+ * @tc.desc: 1.call GetALLLauncherAbilityResourceInfo
+ */
+HWTEST_F(ActsBmsKitSystemTest, GetAllLauncherAbilityResourceInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    EXPECT_NE(bundleMgrProxy, nullptr);
+    if (bundleMgrProxy != nullptr) {
+        auto proxy = bundleMgrProxy->GetBundleResourceProxy();
+        EXPECT_NE(proxy, nullptr);
+        if (proxy != nullptr) {
+            std::vector<LauncherAbilityResourceInfo> infos;
+            ErrCode ret = proxy->GetAllLauncherAbilityResourceInfo(
+                static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+            EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+        }
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

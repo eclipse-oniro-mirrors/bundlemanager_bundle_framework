@@ -12,6 +12,8 @@
 # limitations under the License.
 import("../../../../appexecfwk.gni")
 group("bms_system_test_app") {
+  testonly = true
+
   if (bundle_framework_graphics && ability_runtime_enable) {
     deps = [
       "thirdPageDemo1:page_ability_native1",

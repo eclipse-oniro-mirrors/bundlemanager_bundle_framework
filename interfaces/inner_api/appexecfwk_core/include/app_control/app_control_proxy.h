@@ -62,6 +62,12 @@ public:
         const std::string &appId, int32_t userId = Constants::UNSPECIFIED_USERID) override;
     virtual ErrCode GetDisposedStatus(const std::string &appId, Want &want,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetDisposedRule(const std::string &appId,
+        DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode SetDisposedRule(const std::string &appId,
+        const DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID) override;
+    virtual ErrCode GetAbilityRunningControlRule(
+        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) override;
 
 private:
     bool WriteParcelableVector(const std::vector<std::string> &stringVector, MessageParcel &data);
@@ -73,6 +79,9 @@ private:
     int32_t GetParcelableInfos(
         AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<std::string> &stringVector);
     int32_t SendRequest(AppControlManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
+    template <typename T>
+    bool GetParcelableInfos(
+        AppControlManagerInterfaceCode code, MessageParcel &data, std::vector<T> &parcelableInfos);
     static inline BrokerDelegator<AppControlProxy> delegator_;
 };
 } // namespace AppExecFwk

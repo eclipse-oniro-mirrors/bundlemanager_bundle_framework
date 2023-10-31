@@ -29,18 +29,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const int32_t THRESHOLD_VAL_LEN = 40;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
-}
-}
-
 namespace Profile {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
@@ -109,7 +97,8 @@ const std::unordered_map<std::string, SupportWindowMode> WINDOW_MODE_MAP = {
 const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"app", BundleType::APP},
     {"atomicService", BundleType::ATOMIC_SERVICE},
-    {"shared", BundleType::SHARED}
+    {"shared", BundleType::SHARED},
+    {"appServiceFwk", BundleType::APP_SERVICE_FWK}
 };
 
 struct DeviceConfig {
@@ -1382,16 +1371,14 @@ void from_json(const nlohmann::json &jsonObject, Module &module)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    if (IsSupportCompressNativeLibs()) {
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            MODULE_COMPRESS_NATIVE_LIBS,
-            module.compressNativeLibs,
-            JsonType::BOOLEAN,
-            false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
-    }
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_COMPRESS_NATIVE_LIBS,
+        module.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::string>(jsonObject,
         jsonObjectEnd,
         MODULE_FILE_CONTEXT_MENU,
@@ -1645,6 +1632,8 @@ bool ParserAtomicConfig(const nlohmann::json &jsonObject, InnerBundleInfo &inner
             bundleType = BundleType::ATOMIC_SERVICE;
         } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_SHARED) {
             bundleType = BundleType::SHARED;
+        } else if (appJson.at(Profile::BUNDLE_TYPE) == Profile::BUNDLE_TYPE_APP_SERVICE_FWK) {
+            bundleType = BundleType::APP_SERVICE_FWK;
         }
     }
 
@@ -1995,7 +1984,7 @@ bool ToExtensionInfo(
     return true;
 }
 
-void GetPermissions(
+bool GetPermissions(
     const Profile::ModuleJson &moduleJson,
     const TransformParam &transformParam,
     InnerModuleInfo &innerModuleInfo)
@@ -2012,6 +2001,11 @@ void GetPermissions(
                 == Profile::AVAILABLE_LEVEL_SET.end()) {
                 continue;
             }
+            if (!definePermission.availableType.empty() &&
+                definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
+                APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+                return false;
+            }
             innerModuleInfo.definePermissions.emplace_back(definePermission);
         }
     }
@@ -2021,6 +2015,7 @@ void GetPermissions(
         }
         innerModuleInfo.requestPermissions.emplace_back(requestPermission);
     }
+    return true;
 }
 
 bool ToInnerModuleInfo(
@@ -2061,7 +2056,10 @@ bool ToInnerModuleInfo(
 
     innerModuleInfo.uiSyntax = Profile::MODULE_UI_SYNTAX_DEFAULT_VALUE;
     innerModuleInfo.pages = moduleJson.module.pages;
-    GetPermissions(moduleJson, transformParam, innerModuleInfo);
+    if (!GetPermissions(moduleJson, transformParam, innerModuleInfo)) {
+        APP_LOGE("GetPermissions failed");
+        return false;
+    }
     innerModuleInfo.dependencies = moduleJson.module.dependencies;
     innerModuleInfo.compileMode = moduleJson.module.compileMode;
     innerModuleInfo.isModuleJson = true;
@@ -2131,7 +2129,10 @@ bool ToInnerBundleInfo(
     }
 
     InnerModuleInfo innerModuleInfo;
-    ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo);
+    if (!ToInnerModuleInfo(moduleJson, transformParam, overlayMsg, innerModuleInfo)) {
+        APP_LOGE("To innerModuleInfo failed");
+        return false;
+    }
     SetInstallationFree(innerModuleInfo, applicationInfo.bundleType);
 
     BundleInfo bundleInfo;

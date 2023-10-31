@@ -31,11 +31,6 @@ namespace OHOS {
 namespace AppExecFwk {
 class AppServiceFwkInstaller {
 public:
-    /**
-     * @brief Cross-app shared bundle installer.
-     * @param installParam Indicates the install param.
-     * @param appType Indicates the type of the application.
-     */
     AppServiceFwkInstaller();
     virtual ~AppServiceFwkInstaller();
 
@@ -52,9 +47,35 @@ private:
     ErrCode InnerProcessInstall(
         std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InstallParam &installParam);
+    ErrCode CheckAppLabelInfo(
+        const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode ExtractModule(
+        InnerBundleInfo &newInfo, const std::string &bundlePath);
+    ErrCode MkdirIfNotExist(const std::string &dir);
+    ErrCode ProcessNativeLibrary(
+        const std::string &bundlePath,
+        const std::string &moduleDir,
+        const std::string &moduleName,
+        const std::string &versionDir,
+        InnerBundleInfo &newInfo);
+    ErrCode MoveSoToRealPath(
+        const std::string &moduleName, const std::string &versionDir,
+        const std::string &nativeLibraryPath);
+    void MergeBundleInfos(InnerBundleInfo &info);
+    ErrCode SaveBundleInfoToStorage();
+    void AddAppProvisionInfo(
+        const std::string &bundleName,
+        const Security::Verify::ProvisionInfo &provisionInfo,
+        const InstallParam &installParam) const;
+
+    void RollBack();
+    ErrCode RemoveBundleCodeDir(const InnerBundleInfo &info) const;
+    void RemoveInfo(const std::string &bundleName);
 
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
+    std::string bundleName_;
+    InnerBundleInfo newInnerBundleInfo_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 };
 }  // namespace AppExecFwk

@@ -59,6 +59,7 @@ struct DefinePermission {
     int32_t labelId = 0;
     std::string description;
     int32_t descriptionId = 0;
+    std::string availableType;
 };
 
 struct InnerModuleInfo {
@@ -477,8 +478,9 @@ public:
     /**
      * @brief Update baseApplicationInfo.
      * @param applicationInfo Indicates the ApplicationInfo object.
+     * @param isEntry Indicates the isEntry.
      */
-    void UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo);
+    void UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo, bool isEntry);
     /**
      * @brief Get application enabled.
      * @param userId Indicates the user ID.

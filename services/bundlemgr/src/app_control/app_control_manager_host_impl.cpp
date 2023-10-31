@@ -367,5 +367,80 @@ void AppControlManagerHostImpl::UpdateAppControlledInfo(int32_t userId) const
         dataMgr_->AddInnerBundleUserInfo(info.first, userInfo);
     }
 }
+
+void AppControlManagerHostImpl::GetCallerByUid(const int32_t uid, std::string &callerName)
+{
+    auto item = callingNameMap_.find(uid);
+    if (item != callingNameMap_.end()) {
+        callerName = item->second;
+        return;
+    }
+    auto ret = dataMgr_->GetNameForUid(uid, callerName);
+    if (ret != ERR_OK) {
+        APP_LOGW("caller not recognized");
+        callerName = std::to_string(uid);
+    }
+}
+
+ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
+{
+    APP_LOGD("host begin to GetDisposedRule");
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    auto ret = appControlManager_->GetDisposedRule(callerName, appId, rule, userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, const DisposedRule &rule, int32_t userId)
+{
+    APP_LOGD("host begin to SetDisposedRule");
+    if (!BundlePermissionMgr::VerifySystemApp()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermissionForAll(PERMISSION_DISPOSED_STATUS)) {
+        APP_LOGW("verify permission ohos.permission.MANAGE_DISPOSED_STATUS failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    auto ret = appControlManager_->SetDisposedRule(callerName, appId, rule, userId);
+    if (ret != ERR_OK) {
+        APP_LOGW("host GetDisposedStatus error:%{public}d", ret);
+    }
+    return ret;
+}
+
+ErrCode AppControlManagerHostImpl::GetAbilityRunningControlRule(
+    const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules)
+{
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    if (uid != AppControlConstants::FOUNDATION_UID) {
+        APP_LOGE("callingName is invalid, uid : %{public}d", uid);
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    return appControlManager_->GetAbilityRunningControlRule(bundleName, userId, disposedRules);
+}
 } // AppExecFwk
 } // OHOS

@@ -114,7 +114,6 @@ void BmsBundleAccessTokenIdTest::SetUp()
 {
     StartInstalldService();
     StartBundleService();
-    // set "persist.bms.supportCompressNativeLibs"
 }
 
 void BmsBundleAccessTokenIdTest::TearDown()

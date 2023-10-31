@@ -18,14 +18,20 @@
 
 #include <string>
 
+#include "parcel.h"
+
 namespace OHOS {
 namespace AppExecFwk {
-struct LauncherAbilityResourceInfo {
+struct LauncherAbilityResourceInfo : Parcelable {
     std::string bundleName;
     std::string moduleName;
     std::string abilityName;
     std::string label;
     std::string icon;
+
+    bool ReadFromParcel(Parcel &parcel);
+    virtual bool Marshalling(Parcel &parcel) const override;
+    static LauncherAbilityResourceInfo *Unmarshalling(Parcel &parcel);
 };
 } // AppExecFwk
 } // OHOS

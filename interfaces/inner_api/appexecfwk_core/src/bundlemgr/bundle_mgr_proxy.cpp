@@ -3723,7 +3723,7 @@ ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, con
 }
 
 ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::string &bundleName,
-    const std::string &moduleName, std::string &profile)
+    const std::string &moduleName, std::string &profile, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to GetJsonProfile");
@@ -3749,8 +3749,38 @@ ErrCode BundleMgrProxy::GetJsonProfile(ProfileType profileType, const std::strin
         APP_LOGE("fail to GetJsonProfile due to write moduleName fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("fail to GetBundleInfo due to write userId fail");
+        return false;
+    }
 
     return GetBigString(BundleMgrInterfaceCode::GET_JSON_PROFILE, data, profile);
+}
+
+sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("write InterfaceToken failed.");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("reply failed.");
+        return nullptr;
+    }
+    sptr<IBundleResource> bundleResourceProxy = iface_cast<IBundleResource>(object);
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is nullptr.");
+    }
+
+    return bundleResourceProxy;
 }
 
 template<typename T>

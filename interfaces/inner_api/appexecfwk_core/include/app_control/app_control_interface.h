@@ -24,6 +24,7 @@
 #include "app_running_control_rule_result.h"
 #include "app_running_control_rule.h"
 #include "bundle_constants.h"
+#include "disposed_rule.h"
 #include "iremote_broker.h"
 #include "want.h"
 
@@ -125,6 +126,21 @@ public:
     }
     virtual ErrCode GetDisposedStatus(
         const std::string &appId, Want &want, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetDisposedRule(
+        const std::string &appId, DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode SetDisposedRule(
+        const std::string &appId, const DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    virtual ErrCode GetAbilityRunningControlRule(
+        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }

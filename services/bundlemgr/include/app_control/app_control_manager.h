@@ -73,6 +73,15 @@ public:
 
     void SetAppInstallControlStatus();
 
+    ErrCode SetDisposedRule(const std::string &callerName,
+        const std::string &appId, const DisposedRule &DisposedRule, int32_t userId);
+
+    ErrCode GetDisposedRule(const std::string &callerName,
+        const std::string &appId, DisposedRule &DisposedRule, int32_t userId);
+
+    ErrCode GetAbilityRunningControlRule(
+        const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules);
+
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
 

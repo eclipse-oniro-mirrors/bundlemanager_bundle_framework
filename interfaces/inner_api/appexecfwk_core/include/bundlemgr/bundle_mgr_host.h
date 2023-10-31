@@ -668,6 +668,8 @@ private:
 
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
+    ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
+
 private:
     /**
      * @brief Write a parcelabe vector objects to the proxy node.

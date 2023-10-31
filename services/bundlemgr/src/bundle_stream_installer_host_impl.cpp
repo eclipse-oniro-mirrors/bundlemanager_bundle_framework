@@ -63,6 +63,11 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
     if (tempSignatureFileDir_.empty()) {
         return false;
     }
+
+    tempPgoFileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::PGO_FILE_DIR);
+    if (tempPgoFileDir_.empty()) {
+        return false;
+    }
     return true;
 }
 
@@ -77,37 +82,43 @@ void BundleStreamInstallerHostImpl::UnInit()
         BundleUtil::DeleteDir(path);
     }
     BundleUtil::DeleteDir(tempSignatureFileDir_);
+    BundleUtil::DeleteDir(tempPgoFileDir_);
 }
 
 int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
 {
+    if (fileName.empty()) {
+        APP_LOGE("CreateStream param fileName is empty");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_SELF_BUNDLE)) {
         APP_LOGE("CreateStream permission denied");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != installedUid_) {
         APP_LOGE("calling uid is inconsistent");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     if (!BundleUtil::CheckFileType(fileName, Constants::INSTALL_FILE_SUFFIX) &&
         !BundleUtil::CheckFileType(fileName, Constants::HSP_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
     // to prevent the hap copied to relevant path
     if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
     std::string filePath = tempDir_ + fileName;
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
@@ -122,38 +133,43 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
 int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::string &moduleName,
     const std::string &fileName)
 {
+    if (moduleName.empty() || fileName.empty()) {
+        APP_LOGE("CreateSignatureFileStream params are invalid");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
     if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
-        APP_LOGE("CreateStream permission denied");
-        return -1;
+        APP_LOGE("CreateSignatureFileStream permission denied");
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != installedUid_) {
         APP_LOGE("calling uid is inconsistent");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     if (!BundleUtil::CheckFileType(fileName, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not sig");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     auto iterator = installParam_.verifyCodeParams.find(moduleName);
     if (iterator == installParam_.verifyCodeParams.end()) {
         APP_LOGE("module name cannot be found");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     // to prevent the sig copied to relevant path
     if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
     std::string filePath = tempSignatureFileDir_ + fileName;
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
@@ -173,41 +189,93 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
         !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
         APP_LOGE("CreateSharedBundleStream permission denied");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     int32_t callingUid = IPCSkeleton::GetCallingUid();
     if (callingUid != installedUid_) {
         APP_LOGE("calling uid is inconsistent");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     if (!BundleUtil::CheckFileType(hspName, Constants::INSTALL_FILE_SUFFIX) &&
         !BundleUtil::CheckFileType(hspName, Constants::HSP_FILE_SUFFIX) &&
         !BundleUtil::CheckFileType(hspName, Constants::CODE_SIGNATURE_FILE_SUFFIX)) {
         APP_LOGE("file is not hap or hsp");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     // to prevent the hsp copied to relevant path
     if (hspName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateSharedBundleStream failed due to invalid hapName");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     if (index >= installParam_.sharedBundleDirPaths.size()) {
         APP_LOGE("invalid shared bundle index");
-        return -1;
+        return Constants::DEFAULT_STREAM_FD;
     }
 
     std::string bundlePath = installParam_.sharedBundleDirPaths[index] + hspName;
-    int32_t fd = -1;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
     if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
         std::lock_guard<std::mutex> lock(fdVecMutex_);
         streamFdVec_.emplace_back(fd);
+    }
+    return fd;
+}
+
+int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &moduleName,
+    const std::string &fileName)
+{
+    if (moduleName.empty() || fileName.empty()) {
+        APP_LOGE("CreatePgoFileStream params are invalid");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_NORMAL_BUNDLE) &&
+        !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_INSTALL_ENTERPRISE_MDM_BUNDLE)) {
+        APP_LOGE("CreatePgoFileStream permission denied");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    if (callingUid != installedUid_) {
+        APP_LOGE("calling uid is inconsistent");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    if (!BundleUtil::CheckFileType(fileName, Constants::PGO_FILE_SUFFIX)) {
+        APP_LOGE("file is not pgo");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    auto iterator = installParam_.pgoParams.find(moduleName);
+    if (iterator == installParam_.pgoParams.end()) {
+        APP_LOGE("module name cannot be found");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+
+    // to prevent the pgo copied to relevant path
+    if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
+        APP_LOGE("CreateStream failed due to invalid fileName");
+        return Constants::DEFAULT_STREAM_FD;
+    }
+    std::string filePath = tempPgoFileDir_ + fileName;
+    int32_t fd = Constants::DEFAULT_STREAM_FD;
+    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
+        APP_LOGE("stream installer create file descriptor failed");
+    }
+
+    if (fd > 0) {
+        std::lock_guard<std::mutex> lock(fdVecMutex_);
+        streamFdVec_.emplace_back(fd);
+        installParam_.pgoParams.at(moduleName) = filePath;
     }
     return fd;
 }

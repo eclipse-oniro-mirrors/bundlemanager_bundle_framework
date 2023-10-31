@@ -318,6 +318,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleResetAOTCompileStatus);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE),
         &BundleMgrHost::HandleGetJsonProfile);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY),
+        &BundleMgrHost::HandleGetBundleResourceProxy);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2853,8 +2855,9 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
     ProfileType profileType = static_cast<ProfileType>(data.ReadInt32());
     std::string bundleName = data.ReadString();
     std::string moduleName = data.ReadString();
+    int32_t userId = data.ReadInt32();
     std::string profile;
-    ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile);
+    ErrCode ret = GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
@@ -2864,6 +2867,22 @@ ErrCode BundleMgrHost::HandleGetJsonProfile(MessageParcel &data, MessageParcel &
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ret;
+}
+
+ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IBundleResource> bundleResourceProxy = GetBundleResourceProxy();
+    if (bundleResourceProxy == nullptr) {
+        APP_LOGE("bundleResourceProxy is nullptr.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(bundleResourceProxy->AsObject())) {
+        APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
 }
 
 template<typename T>

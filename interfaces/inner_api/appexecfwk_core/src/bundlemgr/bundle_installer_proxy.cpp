@@ -358,10 +358,10 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     ErrCode res = ERR_OK;
     // copy hap or hsp file to bms service
     for (const auto &path : realPaths) {
-        res = WriteFileToStream(streamInstaller, path);
+        res = WriteHapFileToStream(streamInstaller, path);
         if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            APP_LOGE("WriteFileToStream failed due to %{public}d", res);
+            APP_LOGE("WriteHapFileToStream failed due to %{public}d", res);
             return res;
         }
     }
@@ -372,7 +372,13 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
     }
     if ((res = CopySignatureFileToService(streamInstaller, installParam)) != ERR_OK) {
-        APP_LOGE("WriteFileToStream failed due to %{public}d", res);
+        APP_LOGE("CopySignatureFileToService failed due to %{public}d", res);
+        return res;
+    }
+    // copy pgo file to bms service
+    res = CopyPgoFileToService(streamInstaller, installParam);
+    if (res != ERR_OK) {
+        APP_LOGE("CopyPgoFileToService failed due to %{public}d", res);
         return res;
     }
 
@@ -405,43 +411,12 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     return ERR_OK;
 }
 
-ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
-    const std::string &path, const std::string &moduleName)
+ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputFd)
 {
     APP_LOGD("write file stream to service terminal start");
-    if (streamInstaller == nullptr) {
-        APP_LOGE("write file to stream failed due to nullptr stream installer");
-        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
-    }
-
-    // find hap file name
-    size_t pos = path.find_last_of(SEPARATOR);
-    if (pos == std::string::npos) {
-        APP_LOGE("write file to stream failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    std::string fileName = path.substr(pos + 1);
-    if (fileName.empty()) {
-        APP_LOGE("write file to stream failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-
-    APP_LOGD("write file stream of bundle path %{public}s and hap name %{public}s", path.c_str(), fileName.c_str());
-    int32_t outputFd = -1;
-    if (moduleName.empty()) {
-        outputFd = streamInstaller->CreateStream(fileName);
-    } else {
-        outputFd = streamInstaller->CreateSignatureFileStream(moduleName, fileName);
-    }
-
-    if (outputFd < 0) {
-        APP_LOGE("write file to stream failed due to invalid file descriptor");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
 
     int32_t inputFd = open(path.c_str(), O_RDONLY);
     if (inputFd < 0) {
-        close(outputFd);
         APP_LOGE("write file to stream failed due to open the hap file");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
@@ -450,7 +425,6 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
     while ((offset = read(inputFd, buffer, sizeof(buffer))) > 0) {
         if (write(outputFd, buffer, offset) < 0) {
             close(inputFd);
-            close(outputFd);
             APP_LOGE("write file to the temp dir failed");
             return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
         }
@@ -458,63 +432,123 @@ ErrCode BundleInstallerProxy::WriteFileToStream(sptr<IBundleStreamInstaller> &st
 
     close(inputFd);
     fsync(outputFd);
-    close(outputFd);
 
     APP_LOGD("write file stream to service terminal end");
     return ERR_OK;
 }
 
+ErrCode BundleInstallerProxy::WriteHapFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
+    const std::string &path)
+{
+    if (streamInstaller == nullptr) {
+        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    std::string fileName;
+    ErrCode ret = ERR_OK;
+    ret = GetFileNameByFilePath(path, fileName);
+    if (ret != ERR_OK) {
+        APP_LOGE("invalid file path");
+        return ret;
+    }
+    APP_LOGD("write file stream of hap path %{public}s", path.c_str());
+
+    int32_t outputFd = streamInstaller->CreateStream(fileName);
+    if (outputFd < 0) {
+        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    ret = WriteFile(path, outputFd);
+    close(outputFd);
+
+    return ret;
+}
+
+ErrCode BundleInstallerProxy::WriteSignatureFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
+    const std::string &path, const std::string &moduleName)
+{
+    if (streamInstaller == nullptr) {
+        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    std::string fileName;
+    ErrCode ret = ERR_OK;
+    ret = GetFileNameByFilePath(path, fileName);
+    if (ret != ERR_OK) {
+        APP_LOGE("invalid file path");
+        return ret;
+    }
+    APP_LOGD("write file stream of signature path %{public}s", path.c_str());
+
+    int32_t outputFd = streamInstaller->CreateSignatureFileStream(moduleName, fileName);
+    if (outputFd < 0) {
+        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    ret = WriteFile(path, outputFd);
+    close(outputFd);
+
+    return ret;
+}
+
 ErrCode BundleInstallerProxy::WriteSharedFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
     const std::string &path, uint32_t index)
 {
-    APP_LOGD("write shared file stream to service terminal start");
     if (streamInstaller == nullptr) {
         APP_LOGE("write file to stream failed due to nullptr stream installer");
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
 
-    // find hap file name
-    size_t pos = path.find_last_of(SEPARATOR);
-    if (pos == std::string::npos) {
-        APP_LOGE("write file to stream failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    std::string hspName = path.substr(pos + 1);
-    if (hspName.empty()) {
-        APP_LOGE("write file to stream failed due to invalid file path");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    std::string hspName;
+    ErrCode ret = ERR_OK;
+    ret = GetFileNameByFilePath(path, hspName);
+    if (ret != ERR_OK) {
+        APP_LOGE("invalid file path");
+        return ret;
     }
 
-    APP_LOGD("write file stream of bundle path %{public}s and hsp name %{public}s", path.c_str(), hspName.c_str());
+    APP_LOGD("write file stream of shared path %{public}s", path.c_str());
     int32_t outputFd = streamInstaller->CreateSharedBundleStream(hspName, index);
     if (outputFd < 0) {
         APP_LOGE("write file to stream failed due to invalid file descriptor");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
     }
 
-    int32_t inputFd = open(path.c_str(), O_RDONLY);
-    if (inputFd < 0) {
-        close(outputFd);
-        APP_LOGE("write file to stream failed due to open the hap file");
-        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
-    }
-    char buffer[DEFAULT_BUFFER_SIZE] = {0};
-    int offset = -1;
-    while ((offset = read(inputFd, buffer, sizeof(buffer))) > 0) {
-        if (write(outputFd, buffer, offset) < 0) {
-            close(inputFd);
-            close(outputFd);
-            APP_LOGE("write file to the temp dir failed");
-            return ERR_APPEXECFWK_INSTALL_DISK_MEM_INSUFFICIENT;
-        }
-    }
-
-    close(inputFd);
-    fsync(outputFd);
+    ret = WriteFile(path, outputFd);
     close(outputFd);
 
-    APP_LOGD("write file stream to service terminal end");
-    return ERR_OK;
+    return ret;
+}
+
+ErrCode BundleInstallerProxy::WritePgoFileToStream(sptr<IBundleStreamInstaller> &streamInstaller,
+    const std::string &path, const std::string &moduleName)
+{
+    if (streamInstaller == nullptr) {
+        APP_LOGE("write file to stream failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+
+    std::string fileName;
+    ErrCode ret = ERR_OK;
+    ret = GetFileNameByFilePath(path, fileName);
+    if (ret != ERR_OK) {
+        APP_LOGE("invalid file path");
+        return ret;
+    }
+    APP_LOGD("write file stream of pgo path %{public}s", path.c_str());
+    
+    int32_t outputFd = streamInstaller->CreatePgoFileStream(moduleName, fileName);
+    if (outputFd < 0) {
+        APP_LOGE("write file to stream failed due to invalid file descriptor");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+
+    ret = WriteFile(path, outputFd);
+    close(outputFd);
+
+    return ret;
 }
 
 ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
@@ -535,14 +569,57 @@ ErrCode BundleInstallerProxy::CopySignatureFileToService(sptr<IBundleStreamInsta
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
             return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
         }
-        ErrCode res = WriteFileToStream(streamInstaller, realPath, param.first);
+        ErrCode res = WriteSignatureFileToStream(streamInstaller, realPath, param.first);
         if (res != ERR_OK) {
             DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            APP_LOGE("WriteFileToStream failed due to %{public}d", res);
+            APP_LOGE("WriteSignatureFileToStream failed due to %{public}d", res);
             return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FILE_IS_INVALID;
         }
     }
 
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> &streamInstaller,
+    const InstallParam &installParam)
+{
+    if (streamInstaller == nullptr) {
+        APP_LOGE("copy file failed due to nullptr stream installer");
+        return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
+    }
+    if (installParam.pgoParams.empty()) {
+        return ERR_OK;
+    }
+    for (const auto &param : installParam.pgoParams) {
+        std::string realPath;
+        if (param.first.empty() || !BundleFileUtil::CheckFilePath(param.second, realPath)) {
+            APP_LOGE("CheckFilePath pgo file path %{public}s failed", param.second.c_str());
+            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
+            return ERR_BUNDLEMANAGER_INSTALL_PGO_FILE_IS_INVALID;
+        }
+        ErrCode res = WritePgoFileToStream(streamInstaller, realPath, param.first);
+        if (res != ERR_OK) {
+            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
+            APP_LOGE("WritePgoFileToStream failed due to %{public}d", res);
+            return ERR_BUNDLEMANAGER_INSTALL_PGO_FILE_IS_INVALID;
+        }
+    }
+
+    return ERR_OK;
+}
+
+ErrCode BundleInstallerProxy::GetFileNameByFilePath(const std::string &filePath, std::string &fileName)
+{
+    size_t pos = filePath.find_last_of(SEPARATOR);
+    if (pos == std::string::npos) {
+        APP_LOGE("write file to stream failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    fileName = filePath.substr(pos + 1);
+    if (fileName.empty()) {
+        APP_LOGE("write file to stream failed due to invalid file path");
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
     return ERR_OK;
 }
 

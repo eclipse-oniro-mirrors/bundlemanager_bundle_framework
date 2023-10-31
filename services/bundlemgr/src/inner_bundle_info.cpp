@@ -590,7 +590,8 @@ void to_json(nlohmann::json &jsonObject, const DefinePermission &definePermissio
         {Profile::LABEL, definePermission.label},
         {Profile::LABEL_ID, definePermission.labelId},
         {Profile::DESCRIPTION, definePermission.description},
-        {Profile::DESCRIPTION_ID, definePermission.descriptionId}
+        {Profile::DESCRIPTION_ID, definePermission.descriptionId},
+        {Profile::DEFINEPERMISSION_AVAILABLE_TYPE, definePermission.availableType}
     };
 }
 
@@ -1472,6 +1473,14 @@ void from_json(const nlohmann::json &jsonObject, DefinePermission &definePermiss
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        Profile::DEFINEPERMISSION_AVAILABLE_TYPE,
+        definePermission.availableType,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
     if (parseResult != ERR_OK) {
         APP_LOGE("DefinePermission from_json error, error code : %{public}d", parseResult);
     }
@@ -2033,7 +2042,8 @@ void InnerBundleInfo::UpdateBaseBundleInfo(const BundleInfo &bundleInfo, bool is
     }
 }
 
-void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicationInfo)
+void InnerBundleInfo::UpdateBaseApplicationInfo(
+    const ApplicationInfo &applicationInfo, bool isEntry)
 {
     baseApplicationInfo_->name = applicationInfo.name;
     baseApplicationInfo_->bundleName = applicationInfo.bundleName;
@@ -2066,7 +2076,6 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     }
 
     baseApplicationInfo_->apiReleaseType = applicationInfo.apiReleaseType;
-    baseApplicationInfo_->debug = applicationInfo.debug;
     baseApplicationInfo_->deviceId = applicationInfo.deviceId;
     baseApplicationInfo_->distributedNotificationEnabled = applicationInfo.distributedNotificationEnabled;
     baseApplicationInfo_->entityType = applicationInfo.entityType;
@@ -2084,6 +2093,11 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(const ApplicationInfo &applicati
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
+    if (isEntry) {
+        baseApplicationInfo_->debug = applicationInfo.debug;
+    } else if (!HasEntry() && applicationInfo.debug) {
+        baseApplicationInfo_->debug = applicationInfo.debug;
+    }
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()

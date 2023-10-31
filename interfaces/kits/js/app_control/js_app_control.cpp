@@ -23,6 +23,7 @@
 #include "bundle_errors.h"
 #include "business_error.h"
 #include "common_func.h"
+#include "disposed_rule.h"
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
 #include "napi_constants.h"
@@ -42,6 +43,8 @@ const std::string DELETE_DISPOSED_STATUS_SYNC = "DeleteDisposedStatusSync";
 const std::string GET_DISPOSED_STATUS_SYNC = "GetDisposedStatusSync";
 const std::string APP_ID = "appId";
 const std::string DISPOSED_WANT = "disposedWant";
+const std::string DISPOSED_RULE = "disposedRule";
+const std::string DISPOSED_RULE_TYPE = "DisposedRule";
 }
 static OHOS::sptr<OHOS::AppExecFwk::IAppControlMgr> GetAppControlProxy()
 {
@@ -466,6 +469,206 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
     CommonFunc::ConvertWantInfo(env, nWant, disposedWant);
     APP_LOGD("call GetDisposedStatusSync done.");
     return nWant;
+}
+
+void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
+{
+    napi_value nWant = nullptr;
+    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWant));
+    CommonFunc::ConvertWantInfo(env, nWant, *rule.want);
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
+    napi_value nComponentType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "componentType", nComponentType));
+    napi_value nDisposedType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.disposedType), &nDisposedType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "disposedType", nDisposedType));
+    napi_value nControlType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.controlType), &nControlType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "controlType", nControlType));
+
+    napi_value nElementList;
+    NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nElementList));
+    for (size_t idx = 0; idx < rule.elementList.size(); idx++) {
+        napi_value nElementName;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nElementName));
+        CommonFunc::ConvertElementName(env, nElementName, rule.elementList[idx]);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, nElementList, idx, nElementName));
+    }
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "elementList", nElementList));
+    napi_value nPriority;
+    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, rule.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
+}
+
+bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
+{
+    napi_valuetype valueType;
+    NAPI_CALL_BASE(env, napi_typeof(env, nRule, &valueType), false);
+    if (valueType != napi_object) {
+        APP_LOGW("nRule not object type");
+        return false;
+    }
+    napi_value prop = nullptr;
+    napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
+    AAFwk::Want want;
+    CommonFunc::ParseWantWithoutVerification(env, prop, want);
+    rule.want = std::make_shared<AAFwk::Want>(want);
+    napi_get_named_property(env, nRule, "componentType", &prop);
+    int32_t componentType;
+    if (!CommonFunc::ParseInt(env, prop, componentType)) {
+        APP_LOGW("componentType parseInt failed");
+        return false;
+    }
+    if (componentType > static_cast<int32_t>(ComponentType::UI_EXTENSION) ||
+        componentType < static_cast<int32_t>(ComponentType::UI_ABILITY)) {
+        APP_LOGW("componentType not valid");
+        return false;
+    }
+    rule.componentType = static_cast<ComponentType>(componentType);
+    napi_get_named_property(env, nRule, "disposedType", &prop);
+    int32_t disposedType;
+    if (!CommonFunc::ParseInt(env, prop, disposedType)) {
+        APP_LOGW("disposedType parseInt failed");
+        return false;
+    }
+    if (disposedType > static_cast<int32_t>(DisposedType::NON_BLOCK) ||
+        disposedType < static_cast<int32_t>(DisposedType::BLOCK_APPLICATION)) {
+        APP_LOGW("disposedType not valid");
+        return false;
+    }
+    rule.disposedType = static_cast<DisposedType>(disposedType);
+    napi_get_named_property(env, nRule, "controlType", &prop);
+    int32_t controlType;
+    if (!CommonFunc::ParseInt(env, prop, controlType)) {
+        APP_LOGW("disposedType parseInt failed");
+        return false;
+    }
+    if (controlType > static_cast<int32_t>(ControlType::DISALLOWED_LIST) ||
+        controlType < static_cast<int32_t>(ControlType::ALLOWED_LIST)) {
+        APP_LOGW("ControlType not valid");
+        return false;
+    }
+    rule.controlType = static_cast<ControlType>(controlType);
+
+    napi_value nElementList = nullptr;
+    napi_get_named_property(env, nRule, "elementList", &nElementList);
+    bool isArray = false;
+    NAPI_CALL_BASE(env, napi_is_array(env, nElementList, &isArray), false);
+    if (!isArray) {
+        APP_LOGW("nElementList not array");
+        return false;
+    }
+    uint32_t arrayLength = 0;
+    NAPI_CALL_BASE(env, napi_get_array_length(env, nElementList, &arrayLength), false);
+    for (uint32_t j = 0; j < arrayLength; j++) {
+        napi_value value = nullptr;
+        NAPI_CALL_BASE(env, napi_get_element(env, nElementList, j, &value), false);
+        ElementName name;
+        if (!CommonFunc::ParseElementName(env, value, name)) {
+            APP_LOGW("parse element name failed");
+            return false;
+        }
+        rule.elementList.push_back(name);
+    }
+    napi_get_named_property(env, nRule, "priority", &prop);
+    if (!CommonFunc::ParseInt(env, prop, rule.priority)) {
+        APP_LOGW("priority parseInt failed");
+        return false;
+    }
+    return true;
+}
+
+napi_value GetDisposedRule(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI GetDisposedRule called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_ONE, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nullptr;
+    }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            GET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nullptr;
+    }
+    DisposedRule disposedRule;
+    ErrCode ret = appControlProxy->GetDisposedRule(appId, disposedRule);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedStatusSync failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, GET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRule = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nRule));
+    ConvertRuleInfo(env, nRule, disposedRule);
+    return nRule;
+}
+
+napi_value SetDisposedRule(napi_env env, napi_callback_info info)
+{
+    NapiArg args(env, info);
+    napi_value nRet;
+    napi_get_undefined(env, &nRet);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nRet;
+    }
+    std::string appId;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], appId)) {
+        APP_LOGE("appId %{public}s invalid!", appId.c_str());
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, APP_ID, TYPE_STRING);
+        return nRet;
+    }
+    if (appId.size() == 0) {
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ERROR_INVALID_APPID, SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    DisposedRule rule;
+    if (!ParseDiposedRule(env, args[ARGS_POS_ONE], rule)) {
+        APP_LOGE("rule invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, DISPOSED_RULE, DISPOSED_RULE_TYPE);
+        return nRet;
+    }
+    auto appControlProxy = GetAppControlProxy();
+    if (appControlProxy == nullptr) {
+        APP_LOGE("AppControlProxy is null.");
+        napi_value error = BusinessError::CreateCommonError(env, ERROR_SYSTEM_ABILITY_NOT_FOUND,
+            SET_DISPOSED_STATUS_SYNC);
+        napi_throw(env, error);
+        return nRet;
+    }
+    ErrCode ret = appControlProxy->SetDisposedRule(appId, rule);
+    ret = CommonFunc::ConvertErrCode(ret);
+    if (ret != NO_ERROR) {
+        APP_LOGE("SetDisposedStatusSync err = %{public}d", ret);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, SET_DISPOSED_STATUS_SYNC, PERMISSION_DISPOSED_STATUS);
+        napi_throw(env, businessError);
+    }
+    return nRet;
 }
 }
 }

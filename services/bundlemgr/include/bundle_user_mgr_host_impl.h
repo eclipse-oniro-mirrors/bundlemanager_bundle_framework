@@ -37,6 +37,8 @@ public:
      */
     virtual ErrCode RemoveUser(int32_t userId) override;
 
+    void AddNotifyBundleEvents(const NotifyBundleEvents &notifyBundleEvents);
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
     const sptr<IBundleInstaller> GetBundleInstaller();
@@ -48,8 +50,13 @@ private:
     void RemoveArkProfile(int32_t userId);
     void RemoveAsanLogDirectory(int32_t userId);
     void HandleSceneBoard(int32_t userId) const;
+    void HandleNotifyBundleEventsAsync();
+    void HandleNotifyBundleEvents();
 
     std::mutex bundleUserMgrMutex_;
+
+    std::mutex uninstallEventMgrMutex_;
+    std::vector<NotifyBundleEvents> uninstallEvents_;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -72,7 +72,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0100_8file, Function | MediumTest | Leve
     std::string dest = BASE_PATH + APP_PATH + "result/8file.zip";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -88,7 +89,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0200_1file, Function | MediumTest | Leve
     std::string dest = BASE_PATH + APP_PATH + "result/1file.zip";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -104,7 +106,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_zip_0100_zip1file, Function | MediumTest | L
     std::string dest = BASE_PATH + APP_PATH + "result/zip1file.zip";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -170,7 +173,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0100, Function | MediumTest | Level
     FilePath destFile(dest);
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     destFile.CheckDestDirTail();
     FilePath newDestFile(destFile.CheckDestDirTail());
     std::cout << newDestFile.Value() << std::endl;
@@ -189,7 +193,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0200, Function | MediumTest | Level
     std::string dest = BASE_PATH + APP_PATH + "error/check.zip";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 }
@@ -207,9 +212,10 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0300, Function | MediumTest | Level
     std::string dest = BASE_PATH + APP_PATH + "/check.zip";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret1 = Zip(src, dest, false, zlibCallbackInfo);
-    auto ret2 = Zip(src1, dest, false, zlibCallbackInfo);
-    auto ret3 = Zip(src2, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret1 = Zip(src, dest, options, false, zlibCallbackInfo);
+    auto ret2 = Zip(src1, dest, options, false, zlibCallbackInfo);
+    auto ret3 = Zip(src2, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret1);
     EXPECT_TRUE(ret2);
     EXPECT_TRUE(ret3);
@@ -228,7 +234,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0400, Function | MediumTest | Level
     FilePath srcFile1(src1);
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src1, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src1, dest, options, false, zlibCallbackInfo);
     EXPECT_TRUE(ret);
     std::cout << "srcFile1  DirName: " << srcFile1.DirName().Value() << std::endl;
     std::cout << "srcFile1  Value:   " << srcFile1.Value() << std::endl;
@@ -263,7 +270,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0600, Function | MediumTest | Level
     std::string dest = "";
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_FALSE(ret);
     std::cout << dest << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(5000));
@@ -281,7 +289,8 @@ HWTEST_F(ZipTest, APPEXECFWK_LIBZIP_Checkzip_0700, Function | MediumTest | Level
     FilePath destFile(dest);
 
     std::shared_ptr<ZlibCallbackInfo> zlibCallbackInfo = std::make_shared<ZlibCallbackInfo>();
-    auto ret = Zip(src, dest, false, zlibCallbackInfo);
+    OPTIONS options;
+    auto ret = Zip(src, dest, options, false, zlibCallbackInfo);
     EXPECT_FALSE(ret);
     destFile.CheckDestDirTail();
     FilePath newDestFile(destFile.CheckDestDirTail());

@@ -30,17 +30,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-const int32_t THRESHOLD_VAL_LEN = 40;
-bool IsSupportCompressNativeLibs()
-{
-    char compressNativeLibs[THRESHOLD_VAL_LEN] = {0};
-    if (std::strcmp(compressNativeLibs, "true") == 0) {
-        return true;
-    }
-    return false;
-}
-}
 namespace ProfileReader {
 int32_t g_parseResult = ERR_OK;
 std::mutex g_mutex;
@@ -725,16 +714,14 @@ void from_json(const nlohmann::json &jsonObject, Device &device)
         false,
         g_parseResult,
         ArrayType::NOT_ARRAY);
-    if (IsSupportCompressNativeLibs()) {
-        GetValueIfFindKey<bool>(jsonObject,
-            jsonObjectEnd,
-            BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
-            device.compressNativeLibs,
-            JsonType::BOOLEAN,
-            false,
-            g_parseResult,
-            ArrayType::NOT_ARRAY);
-    }
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        BUNDLE_DEVICE_CONFIG_PROFILE_KEY_COMPRESS_NATIVE_LIBS,
+        device.compressNativeLibs,
+        JsonType::BOOLEAN,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<Network>(jsonObject,
         jsonObjectEnd,
         BUNDLE_DEVICE_CONFIG_PROFILE_KEY_NETWORK,
@@ -2288,6 +2275,18 @@ uint32_t GetBackgroundModes(const std::vector<std::string>& backgroundModes)
     return backgroundMode;
 }
 
+bool CheckDefinePermissions(const std::vector<DefinePermission> &definePermissions)
+{
+    for (const auto &definePermission : definePermissions) {
+        if (!definePermission.availableType.empty() &&
+            definePermission.availableType != Profile::DEFINEPERMISSION_AVAILABLE_TYPE_MDM) {
+            APP_LOGE("availableType(%{public}s) is invalid", definePermission.availableType.c_str());
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleInfo &innerModuleInfo)
 {
     if (configJson.module.name.substr(0, 1) == ".") {
@@ -2311,6 +2310,10 @@ bool ToInnerModuleInfo(const ProfileReader::ConfigJson &configJson, InnerModuleI
     innerModuleInfo.reqCapabilities = configJson.module.reqCapabilities;
     innerModuleInfo.requestPermissions = configJson.module.requestPermissions;
     if (configJson.app.bundleName == Profile::SYSTEM_RESOURCES_APP) {
+        if (!CheckDefinePermissions(configJson.module.definePermissions)) {
+            APP_LOGE("CheckDefinePermissions failed");
+            return false;
+        }
         innerModuleInfo.definePermissions = configJson.module.definePermissions;
     }
     if (configJson.module.mainAbility.substr(0, 1) == ".") {

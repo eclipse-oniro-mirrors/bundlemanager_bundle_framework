@@ -65,6 +65,15 @@ bool InstallParam::ReadFromParcel(Parcel &parcel)
         verifyCodeParams.emplace(moduleName, signatureFilePath);
     }
     isSelfUpdate = parcel.ReadBool();
+
+    int32_t pgoParamsSize;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, pgoParamsSize);
+    CONTAINER_SECURITY_VERIFY(parcel, pgoParamsSize, &pgoParams);
+    for (int32_t i = 0; i < pgoParamsSize; ++i) {
+        std::string moduleName = Str16ToStr8(parcel.ReadString16());
+        std::string pgoPath = Str16ToStr8(parcel.ReadString16());
+        pgoParams.emplace(moduleName, pgoPath);
+    }
     return true;
 }
 
@@ -106,6 +115,12 @@ bool InstallParam::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(verifyCodeParam.second));
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isSelfUpdate);
+    
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, static_cast<int32_t>(pgoParams.size()));
+    for (const auto &pgoParam : pgoParams) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.first));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(pgoParam.second));
+    }
     return true;
 }
 

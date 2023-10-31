@@ -31,6 +31,7 @@
 #include "bundle_resource_client.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_event_subscriber.h"
+#include "bundle_resource_info.h"
 #include "bundle_resource_manager.h"
 #include "bundle_resource_observer.h"
 #include "bundle_resource_param.h"
@@ -39,6 +40,7 @@
 #include "bundle_resource_rdb.h"
 #include "bundle_resource_register.h"
 #include "bundle_system_state.h"
+#include "launcher_ability_resource_info.h"
 #endif
 
 #include "bundle_verify_mgr.h"
@@ -657,6 +659,309 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0016, Function | SmallTest
     EXPECT_TRUE(std::find(keyNames.begin(), keyNames.end(), resourceInfo.GetKey()) != keyNames.end());
     // delete key
     ans = manager->DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0017
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0017, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    BundleResourceInfo info;
+    ans = resourceRdb.GetBundleResourceInfo("", 0, info);
+    EXPECT_FALSE(ans);
+
+    ans = resourceRdb.GetBundleResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info);
+    EXPECT_FALSE(ans);
+
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), info);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info.label, resourceInfo.label_);
+    EXPECT_TRUE(info.icon.empty());
+
+    BundleResourceInfo info2;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info2);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info2.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info2.icon, resourceInfo.icon_);
+    EXPECT_TRUE(info2.label.empty());
+
+    BundleResourceInfo info3;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), info3);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info3.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info3.icon, resourceInfo.icon_);
+    EXPECT_EQ(info3.label, resourceInfo.label_);
+
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0018
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0018, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    BundleResourceInfo info;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), info);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info.label, resourceInfo.label_);
+    EXPECT_EQ(info.icon, resourceInfo.icon_);
+
+    BundleResourceInfo info2;
+    ans = resourceRdb.GetBundleResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), info2);
+    EXPECT_TRUE(ans);
+    EXPECT_EQ(info2.bundleName, resourceInfo.bundleName_);
+    EXPECT_EQ(info2.icon, resourceInfo.icon_);
+    EXPECT_EQ(info2.label, resourceInfo.label_);
+
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0019
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0019, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetLauncherAbilityResourceInfo("", 0, infos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(infos.empty());
+
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(BUNDLE_NAME_NOT_EXIST,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL), infos);
+    EXPECT_FALSE(ans);
+    EXPECT_TRUE(infos.empty());
+
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].label, resourceInfo.label_);
+        EXPECT_TRUE(infos[0].icon.empty());
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0020
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0020, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].icon, resourceInfo.icon_);
+        EXPECT_TRUE(infos[0].label.empty());
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0021
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0021, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.moduleName_ = "moduleName";
+    resourceInfo.abilityName_ = "abilityName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetLauncherAbilityResourceInfo(resourceInfo.bundleName_,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON) |
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_SORTED_BY_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_TRUE(infos.size() == 1);
+    if (!infos.empty()) {
+        EXPECT_EQ(infos[0].bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(infos[0].moduleName, resourceInfo.moduleName_);
+        EXPECT_EQ(infos[0].abilityName, resourceInfo.abilityName_);
+        EXPECT_EQ(infos[0].icon, resourceInfo.icon_);
+        EXPECT_EQ(infos[0].label, resourceInfo.label_);
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0022
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0022, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+    ResourceInfo resourceInfo2;
+    resourceInfo2.bundleName_ = "bundleName";
+    resourceInfo2.moduleName_ = "moduleName";
+    resourceInfo2.abilityName_ = "abilityName";
+    resourceInfo2.label_ = "label2";
+    resourceInfo2.icon_ = "icon2";
+    ans = resourceRdb.AddResourceInfo(resourceInfo2);
+    EXPECT_TRUE(ans);
+
+    std::vector<BundleResourceInfo> infos;
+    ans = resourceRdb.GetAllBundleResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(infos.empty());
+    auto iter = std::find_if(infos.begin(), infos.end(), [resourceInfo](BundleResourceInfo info) {
+        return resourceInfo.bundleName_ == info.bundleName;
+    });
+    EXPECT_TRUE(iter != infos.end());
+
+    if (iter != infos.end()) {
+        EXPECT_EQ(iter->bundleName, resourceInfo.bundleName_);
+        EXPECT_EQ(iter->label, resourceInfo.label_);
+        EXPECT_TRUE(iter->icon.empty());
+    }
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo2.GetKey());
+    EXPECT_TRUE(ans);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0023
+ * Function: BundleResourceRdb
+ * @tc.name: test BundleResourceRdb
+ * @tc.desc: 1. system running normally
+ *           2. test GetAllLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0023, Function | SmallTest | Level0)
+{
+    BundleResourceRdb resourceRdb;
+    ResourceInfo resourceInfo;
+    resourceInfo.bundleName_ = "bundleName";
+    resourceInfo.label_ = "label";
+    resourceInfo.icon_ = "icon";
+    bool ans = resourceRdb.AddResourceInfo(resourceInfo);
+    EXPECT_TRUE(ans);
+    ResourceInfo resourceInfo2;
+    resourceInfo2.bundleName_ = "bundleName";
+    resourceInfo2.moduleName_ = "moduleName";
+    resourceInfo2.abilityName_ = "abilityName";
+    resourceInfo2.label_ = "label2";
+    resourceInfo2.icon_ = "icon2";
+    ans = resourceRdb.AddResourceInfo(resourceInfo2);
+    EXPECT_TRUE(ans);
+
+    std::vector<LauncherAbilityResourceInfo> infos;
+    ans = resourceRdb.GetAllLauncherAbilityResourceInfo(
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_LABEL), infos);
+    EXPECT_TRUE(ans);
+    EXPECT_FALSE(infos.empty());
+    auto iter = std::find_if(infos.begin(), infos.end(), [resourceInfo2](LauncherAbilityResourceInfo info) {
+        return resourceInfo2.bundleName_ == info.bundleName;
+    });
+    EXPECT_TRUE(iter != infos.end());
+
+    if (iter != infos.end()) {
+        EXPECT_EQ(iter->bundleName, resourceInfo2.bundleName_);
+        EXPECT_EQ(iter->moduleName, resourceInfo2.moduleName_);
+        EXPECT_EQ(iter->abilityName, resourceInfo2.abilityName_);
+        EXPECT_EQ(iter->label, resourceInfo2.label_);
+        EXPECT_TRUE(iter->icon.empty());
+    }
+
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo.GetKey());
+    EXPECT_TRUE(ans);
+    ans = resourceRdb.DeleteResourceInfo(resourceInfo2.GetKey());
     EXPECT_TRUE(ans);
 }
 

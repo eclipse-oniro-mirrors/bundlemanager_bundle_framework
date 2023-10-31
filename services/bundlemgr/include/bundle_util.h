@@ -28,6 +28,7 @@ enum class DirType {
     STREAM_INSTALL_DIR = 0,
     QUICK_FIX_DIR = 1,
     SIG_FILE_DIR = 2,
+    PGO_FILE_DIR = 3,
     UNKNOWN
 };
 

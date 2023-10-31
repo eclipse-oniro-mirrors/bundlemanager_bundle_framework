@@ -434,6 +434,9 @@ constexpr const char* DEFINEPERMISSION_PROVISION_ENABLE = "provisionEnable";
 constexpr const char* DEFINEPERMISSION_DISTRIBUTED_SCENE_ENABLE = "distributedSceneEnable";
 constexpr const char* DEFINEPERMISSION_GRANT_MODE_SYSTEM_GRANT = "system_grant";
 constexpr const char* DEFINEPERMISSION_AVAILABLE_LEVEL_DEFAULT_VALUE = "normal";
+constexpr const char* DEFINEPERMISSION_AVAILABLE_TYPE = "availableType";
+constexpr const char* DEFINEPERMISSION_AVAILABLE_TYPE_DEFAULT_VALUE = "normal";
+constexpr const char* DEFINEPERMISSION_AVAILABLE_TYPE_MDM = "MDM";
 // apl
 constexpr const char* AVAILABLELEVEL_NORMAL = "normal";
 constexpr const char* AVAILABLELEVEL_SYSTEM_BASIC = "system_basic";
@@ -470,6 +473,7 @@ constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 constexpr const char* BUNDLE_TYPE_APP = "app";
 constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
+constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appServiceFwk";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";
