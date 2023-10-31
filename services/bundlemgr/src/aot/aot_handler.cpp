@@ -112,6 +112,16 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
         return std::nullopt;
     }
     installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
+
+    InnerBundleUserInfo newInnerBundleUserInfo;
+    if (!installedInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, newInnerBundleUserInfo)){
+        APP_LOGE("bundle(%{public}s) get user (%{public}d) failed.",
+            installedInfo.GetBundleName().c_str(), Constants::ALL_USERID);
+        return std::nullopt;
+    }
+    aotArgs.bundleUid = newInnerBundleUserInfo.uid;
+    aotArgs.appIdentifier = "";
+
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }

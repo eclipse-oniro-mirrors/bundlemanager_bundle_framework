@@ -42,6 +42,9 @@ constexpr const char* PKG_PATH = "pkgPath";
 constexpr const char* ABC_NAME = "abcName";
 constexpr const char* ABC_OFFSET = "abcOffset";
 constexpr const char* ABC_SIZE = "abcSize";
+constexpr const char* PROCESS_UID = "processUid";
+constexpr const char* BUNDLE_UID = "bundleUid";
+constexpr const char* APP_IDENTIFIER = "appIdentifier";
 }
 
 AOTExecutor& AOTExecutor::GetInstance()
@@ -111,6 +114,10 @@ ErrCode AOTExecutor::PrepareArgs(const AOTArgs &aotArgs, AOTArgs &completeArgs) 
 void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
 {
     APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
+
+    /* obtain the uid of current process */
+    int32_t currentProcessUid = getuid();
+
     nlohmann::json subject;
     subject[BUNDLE_NAME] = aotArgs.bundleName;
     subject[MODULE_NAME] = aotArgs.moduleName;
@@ -118,6 +125,9 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     subject[ABC_NAME] = ABC_RELATIVE_PATH;
     subject[ABC_OFFSET] = DecToHex(aotArgs.offset);
     subject[ABC_SIZE] = DecToHex(aotArgs.length);
+    subject[PROCESS_UID] = DecToHex(currentProcessUid);
+    subject[BUNDLE_UID] = DecToHex(aotArgs.bundleUid);
+    subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
 
     nlohmann::json objectArray = nlohmann::json::array();
     for (const auto &hspInfo : aotArgs.hspVector) {
