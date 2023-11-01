@@ -3130,8 +3130,6 @@ ErrCode BaseBundleInstaller::UninstallLowerVersionFeature(const std::vector<std:
                 APP_LOGE("RemoveModuleInfo failed");
                 return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
             }
-            // delete resource info
-            BundleResourceHelper::DeleteResourceInfo(bundleName_ + Constants::PATH_SEPARATOR + package);
         }
     }
     // need to delete lower version feature hap definePermissions and requestPermissions

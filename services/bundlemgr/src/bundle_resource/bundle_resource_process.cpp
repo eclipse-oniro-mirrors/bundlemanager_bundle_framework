@@ -99,9 +99,9 @@ bool BundleResourceProcess::GetResourceInfo(
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfo)
 {
-    if (userId != Constants::DEFAULT_USERID && userId != Constants::START_USERID) {
+    if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if ((currentUserId <= 0) && (currentUserId != userId)) {
+        if ((currentUserId > 0) && (currentUserId != userId)) {
             APP_LOGW("userId not same, userId: %{public}d, currentUserId :%{public}d", userId, currentUserId);
             return false;
         }
