@@ -58,7 +58,6 @@ ohos_unittest("BmsBundleResourceTest") {
   }
   deps = [
     "${base_path}:appexecfwk_base",
-    "${bundle_framework_path}/interfaces/inner_api/bundlemgr_resource:bundlemgr_resource",
     "${bundle_framework_path}/test/sceneProject/unittest/ohos_test:copy_ohos_test",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsAccessTokentest1:bmsAccessTokentest1",
     "${bundle_framework_path}/test/sceneProject/unittest/test_bundle/bmsThirdBundle2:bmsThirdBundle2",
