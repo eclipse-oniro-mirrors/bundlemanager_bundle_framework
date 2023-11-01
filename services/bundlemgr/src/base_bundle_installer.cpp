@@ -1254,6 +1254,13 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
     if (!DelayedSingleton<AppProvisionInfoManager>::GetInstance()->DeleteAppProvisionInfo(bundleName)) {
         APP_LOGW("bundleName: %{public}s delete appProvisionInfo failed.", bundleName.c_str());
     }
+#ifdef BUNDLE_FRAMEWORK_APP_CONTROL
+    std::shared_ptr<AppControlManager> appControlMgr = DelayedSingleton<AppControlManager>::GetInstance();
+    if (appControlMgr != nullptr) {
+        APP_LOGD("Delete disposed rule when bundleName :%{public}s uninstall", bundleName.c_str());
+        appControlMgr->DeleteAllDisposedRuleByBundle(oldInfo.GetAppId(), userId_);
+    }
+#endif
     APP_LOGD("finish to process %{public}s bundle uninstall", bundleName.c_str());
 
     // remove drive so file

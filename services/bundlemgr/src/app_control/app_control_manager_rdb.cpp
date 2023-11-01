@@ -483,6 +483,21 @@ ErrCode AppControlManagerRdb::DeleteDisposedRule(const std::string &callingName,
     return ERR_OK;
 }
 
+ErrCode AppControlManagerRdb::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId)
+{
+    NativeRdb::AbsRdbPredicates absRdbPredicates(APP_CONTROL_RDB_TABLE_NAME);
+    std::vector<std::string> controlList = {DISPOSED_RULE, DISPOSED_STATUS};
+    absRdbPredicates.In(APP_CONTROL_LIST, controlList);
+    absRdbPredicates.EqualTo(APP_ID, appId);
+    absRdbPredicates.EqualTo(USER_ID, std::to_string(userId));
+    bool ret = rdbDataManager_->DeleteData(absRdbPredicates);
+    if (!ret) {
+        APP_LOGE("DeleteAllDisposedRuleByBundle appId:%{public}s failed.", appId.c_str());
+        return ERR_BUNDLE_MANAGER_APP_CONTROL_INTERNAL_ERROR;
+    }
+    return ERR_OK;
+}
+
 ErrCode AppControlManagerRdb::GetDisposedRule(const std::string &callingName,
     const std::string &appId, DisposedRule &rule, int32_t userId)
 {

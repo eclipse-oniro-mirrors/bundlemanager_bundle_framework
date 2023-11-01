@@ -85,6 +85,8 @@ public:
     ErrCode GetAbilityRunningControlRule(
         const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules);
 
+    ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId);
+    
 private:
     void KillRunningApp(const std::vector<AppRunningControlRule> &rules, int32_t userId) const;
 
