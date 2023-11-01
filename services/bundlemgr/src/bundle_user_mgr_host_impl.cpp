@@ -332,7 +332,7 @@ void BundleUserMgrHostImpl::HandleNotifyBundleEvents()
     }
 
     std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
-    for (auto i = 0; i < uninstallEvents_.size(); ++i) {
+    for (size_t i = 0; i < uninstallEvents_.size(); ++i) {
         commonEventMgr->NotifyBundleStatus(uninstallEvents_[i], dataMgr);
         if ((i != 0) && (i % FACTOR == 0)) {
             std::this_thread::sleep_for(std::chrono::milliseconds(INTERVAL));

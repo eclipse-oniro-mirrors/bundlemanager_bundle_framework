@@ -304,10 +304,8 @@ bool BundleDataMgr::AddNewModuleInfo(
         APP_LOGD("save bundle:%{public}s info", bundleName.c_str());
         if (IsUpdateInnerBundleInfoSatisified(oldInfo, newInfo)) {
             oldInfo.UpdateBaseBundleInfo(newInfo.GetBaseBundleInfo(), newInfo.HasEntry());
-            oldInfo.UpdateBaseApplicationInfo(
-                newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
-            oldInfo.UpdateRemovable(
-                newInfo.IsPreInstallApp(), newInfo.IsRemovable());
+            oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
+            oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
         if (oldInfo.GetFingerprints().empty()) {
@@ -331,7 +329,6 @@ bool BundleDataMgr::AddNewModuleInfo(
         if ((oldInfo.GetOverlayType() == NON_OVERLAY_TYPE) && (newInfo.GetOverlayType() != NON_OVERLAY_TYPE)) {
             oldInfo.SetOverlayType(newInfo.GetOverlayType());
         }
-
         if (!UpdateOverlayInfo(newInfo, oldInfo)) {
             APP_LOGD("bundleName: %{public}s : update overlay info failed", bundleName.c_str());
             return false;
