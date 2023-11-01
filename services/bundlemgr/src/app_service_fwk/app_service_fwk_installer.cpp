@@ -130,6 +130,10 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     CHECK_RESULT(result, "Hsp file check failed %{public}d");
 
     // check syscap
+    result = CheckFileType(checkedHspPaths);
+    CHECK_RESULT(result, "Hsp suffix check failed %{public}d");
+
+    // check syscap
     result = bundleInstallChecker_->CheckSysCap(checkedHspPaths);
     CHECK_RESULT(result, "Hsp syscap check failed %{public}d");
 
@@ -167,12 +171,35 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     return result;
 }
 
+ErrCode AppServiceFwkInstaller::CheckFileType(const std::vector<std::string> &bundlePaths)
+{
+    if (bundlePaths.empty()) {
+        APP_LOGE("check hsp suffix failed due to empty bundlePaths!");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    for (const auto &bundlePath : bundlePaths) {
+        if (!BundleUtil::CheckFileType(bundlePath, Constants::HSP_FILE_SUFFIX)) {
+            APP_LOGE("Hsp %{public}s suffix check failed", bundlePath.c_str());
+            return ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME;
+        }
+    }
+
+    return ERR_OK;
+}
+
 ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
     const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
     for (const auto &info : infos) {
         if (info.second.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
-            APP_LOGE("BundleType is not AppServiceFwk");
+            APP_LOGE("App BundleType is not AppServiceFwk");
+            return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
+        }
+
+        auto moduleInfo = info.second.GetInnerModuleInfoByModuleName(info.second.GetCurModuleName());
+        if (moduleInfo && moduleInfo->bundleType != BundleType::SHARED) {
+            APP_LOGE("Module BundleType is not Shared");
             return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
         }
     }

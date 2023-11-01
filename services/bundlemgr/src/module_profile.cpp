@@ -116,7 +116,7 @@ const std::unordered_map<std::string, BundleType> BUNDLE_TYPE_MAP = {
     {"app", BundleType::APP},
     {"atomicService", BundleType::ATOMIC_SERVICE},
     {"shared", BundleType::SHARED},
-    {"appServiceFwk", BundleType::APP_SERVICE_FWK}
+    {"appService", BundleType::APP_SERVICE_FWK}
 };
 
 struct DeviceConfig {

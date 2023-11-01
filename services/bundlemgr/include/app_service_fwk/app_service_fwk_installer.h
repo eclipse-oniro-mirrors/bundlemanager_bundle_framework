@@ -49,6 +49,7 @@ private:
         InstallParam &installParam);
     ErrCode CheckAppLabelInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath);
     ErrCode MkdirIfNotExist(const std::string &dir);
