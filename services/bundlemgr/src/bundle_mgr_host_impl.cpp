@@ -2985,5 +2985,99 @@ sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
     return nullptr;
 #endif
 }
+
+bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
+    BundleInfo &bundleInfo)
+{
+    if (hapPaths.empty()) {
+        return false;
+    }
+    for (auto hapPath: hapPaths) {
+        BundleInfo resultBundleInfo;
+        if (!GetBundleArchiveInfo(hapPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+            return false;
+        }
+        bundleInfo = resultBundleInfo;
+        if (!resultBundleInfo.hapModuleInfos.empty() &&
+            resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+            return true;
+        }
+    }
+    return true;
+}
+
+ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
+    std::vector<RecoverableApplicationInfo> &recoverableApplicaitons)
+{
+    APP_LOGD("begin to GetRecoverableApplicationInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
+    for (auto recoverableBundleInfo: recoverableBundleInfos) {
+        BundleInfo bundleInfo;
+        if (GetPreferableBundleInfoFromHapPaths(
+            recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
+            RecoverableApplicationInfo recoverableApplication;
+            recoverableApplication.bundleName = bundleInfo.name;
+            recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
+            recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
+            if (!bundleInfo.hapModuleInfos.empty()) {
+                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].name;
+            }
+            recoverableApplicaitons.emplace_back(recoverableApplication);
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
+{
+    APP_LOGD("begin to GetUninstalledBundleInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::NOT_EXIST_USERID) {
+        APP_LOGE("userId %{public}d is not exist", userId);
+        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    }
+    if (dataMgr->HasUserInstallInBundle(bundleName, Constants::DEFAULT_USERID) ||
+        dataMgr->HasUserInstallInBundle(bundleName, userId)) {
+        APP_LOGE("bundle has installed");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("get preinstallBundleInfo failed");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    if (!GetPreferableBundleInfoFromHapPaths(
+        preInstallBundleInfo.GetBundlePaths(), bundleInfo)) {
+        APP_LOGE("prefect bundle is not found");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

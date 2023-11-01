@@ -822,6 +822,11 @@ public:
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
+    virtual ErrCode GetRecoverableApplicationInfo(
+        std::vector<RecoverableApplicationInfo> &recoverableApplicaitons) override;
+    
+    virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK
@@ -850,6 +855,8 @@ private:
     ErrCode GetBundleArchiveInfoBySandBoxPath(
         const std::string &hapFilePath, int32_t flags, BundleInfo &bundleInfo, bool fromV9 = false);
     bool IsPreInstallApp(const std::string &bundleName);
+    bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
+        BundleInfo &bundleInfo);
 
     bool isBrokerServiceExisted_ = false;
 };

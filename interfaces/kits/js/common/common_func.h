@@ -155,6 +155,10 @@ static void ConvertSharedModuleInfo(napi_env env, napi_value value, const Shared
 static void ConvertSharedBundleInfo(napi_env env, napi_value value, const SharedBundleInfo &bundleInfo);
 static void ConvertAllSharedBundleInfo(napi_env env, napi_value value,
     const std::vector<SharedBundleInfo> &sharedBundles);
+static void ConvertRecoverableApplicationInfo(
+    napi_env env, napi_value value, const RecoverableApplicationInfo &recoverableApplication);
+static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
+    const std::vector<RecoverableApplicationInfo> &recoverableApplications);
 
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,

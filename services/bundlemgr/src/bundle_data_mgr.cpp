@@ -2199,9 +2199,34 @@ ErrCode BundleDataMgr::GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &i
     return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
 }
 
+const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallBundleInfos()
+{
+    std::vector<PreInstallBundleInfo> recoverablePreInstallBundleInfos;
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::NOT_EXIST_USERID) {
+        APP_LOGW("userId %{public}d is not exist", userId);
+        return recoverablePreInstallBundleInfos;
+    }
+    std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
+    for (auto preInstallBundleInfo: preInstallBundleInfos) {
+        std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+        auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
+        if (infoItem == bundleInfos_.end()) {
+            recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
+            continue;
+        }
+        if (!infoItem->second.HasInnerBundleUserInfo(Constants::DEFAULT_USERID) &&
+            !infoItem->second.HasInnerBundleUserInfo(userId)) {
+            recoverablePreInstallBundleInfos.emplace_back(preInstallBundleInfo);
+        }
+    }
+    return recoverablePreInstallBundleInfos;
+}
+
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {
+    std::unique_lock<std::shared_mutex> lock(bundleInfoMutex_);
     auto infoItem = bundleInfos_.find(bundleName);
     if (infoItem == bundleInfos_.end()) {
         return false;

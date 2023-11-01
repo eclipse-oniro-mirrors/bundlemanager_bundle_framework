@@ -76,6 +76,7 @@ const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifi
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
+const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3650,6 +3651,85 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, profile.c_str(), NAPI_AUTO_LENGTH, &nProfile);
     APP_LOGD("call GetJsonProfile done.");
     return nProfile;
+}
+
+static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetRecoverableApplicationInfo(recoverableApplications);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetRecoverableApplicationInfoExec(napi_env env, void *data)
+{
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<RecoverableApplicationCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetRecoverableApplicationInfo(asyncCallbackInfo->recoverableApplicationInfos);
+}
+
+void GetRecoverableApplicationInfoExecComplete(napi_env env, napi_status status, void *data)
+{
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<RecoverableApplicationCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        return;
+    }
+    std::unique_ptr<RecoverableApplicationCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertRecoverableApplicationInfos(
+            env, result[ARGS_POS_ONE], asyncCallbackInfo->recoverableApplicationInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_RECOVERABLE_APPLICATION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<RecoverableApplicationCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetRecoverableApplicationInfo called");
+    NapiArg args(env, info);
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo = new (std::nothrow) RecoverableApplicationCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        return nullptr;
+    }
+    std::unique_ptr<RecoverableApplicationCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<RecoverableApplicationCallbackInfo>(
+        env, asyncCallbackInfo, GET_RECOVERABLE_APPLICATION_INFO,
+        GetRecoverableApplicationInfoExec, GetRecoverableApplicationInfoExecComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetRecoverableApplicationInfo done.");
+    return promise;
 }
 }
 }

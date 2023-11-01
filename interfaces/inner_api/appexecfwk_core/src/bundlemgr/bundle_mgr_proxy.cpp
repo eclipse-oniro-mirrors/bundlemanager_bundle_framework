@@ -3809,6 +3809,49 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     return bundleResourceProxy;
 }
 
+ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
+    std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetRecoverableApplicationInfo");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetRecoverableApplicationInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<RecoverableApplicationInfo>(
+        BundleMgrInterfaceCode::GET_RECOVERABLE_APPLICATION_INFO, data, recoverableApplications);
+}
+
+ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetUninstalledBundleInfo of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetUninstalledBundleInfo from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
