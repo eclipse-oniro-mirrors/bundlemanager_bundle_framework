@@ -475,7 +475,9 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
     napi_value nWant = nullptr;
     NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWant));
-    CommonFunc::ConvertWantInfo(env, nWant, *rule.want);
+    if (rule.want != nullptr) {
+        CommonFunc::ConvertWantInfo(env, nWant, *rule.want);
+    }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
     napi_value nComponentType;
     NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, static_cast<int32_t>(rule.componentType), &nComponentType));
