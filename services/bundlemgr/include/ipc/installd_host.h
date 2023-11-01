@@ -162,6 +162,8 @@ private:
 
     bool HandExtractDriverSoFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandExtractEncryptedSoFiles(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

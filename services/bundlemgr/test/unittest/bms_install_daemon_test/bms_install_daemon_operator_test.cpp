@@ -656,10 +656,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3700, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | SmallTest | Level0)
 {
     bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH);
+        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
     EXPECT_EQ(ret, false);
     ret = InstalldOperator::ApplyDiffPatch(
-        TEST_STRING, TEST_STRING, TEST_STRING);
+        TEST_STRING, TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, true);
 }
 
@@ -671,7 +671,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3900, Function | SmallTest | Level0)
 {
-    bool ret = InstalldOperator::ApplyDiffPatch("", "", TEST_PATH);
+    bool ret = InstalldOperator::ApplyDiffPatch("", "", TEST_PATH, 0);
     EXPECT_EQ(ret, true);
 }
 
@@ -684,7 +684,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_3900, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_4000, Function | SmallTest | Level0)
 {
     bool ret = InstalldOperator::ApplyDiffPatch(
-        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH);
+        TEST_QUICK_FIX_FILE_PATH_FIRST, TEST_QUICK_FIX_FILE_PATH_SECOND, TEST_PATH, 0);
     EXPECT_EQ(ret, false);
 }
 
@@ -939,11 +939,11 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5600, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5700, Function | SmallTest | Level0)
 {
-    bool ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH);
+    bool ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
     EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, "");
+    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, "", 0);
     EXPECT_FALSE(ret);
-    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH);
+    ret = InstalldOperator::ApplyDiffPatch(TEST_FILE_PATH, TEST_FILE_PATH, TEST_FILE_PATH, 0);
     EXPECT_FALSE(ret);
 }
 

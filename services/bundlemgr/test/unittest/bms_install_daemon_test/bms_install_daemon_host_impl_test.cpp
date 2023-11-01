@@ -358,7 +358,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1800, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ApplyDiffPatch(TEST_STRING, TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ApplyDiffPatch(TEST_STRING, TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -756,11 +756,11 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4200, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->ApplyDiffPatch("", TEST_STRING, TEST_STRING);
+    auto ret = hostImpl->ApplyDiffPatch("", TEST_STRING, TEST_STRING, 0);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ApplyDiffPatch(TEST_STRING, "", TEST_STRING);
+    ret = hostImpl->ApplyDiffPatch(TEST_STRING, "", TEST_STRING, 0);
     EXPECT_NE(ret, ERR_OK);
-    ret = hostImpl->ApplyDiffPatch("", "", TEST_STRING);
+    ret = hostImpl->ApplyDiffPatch("", "", TEST_STRING, 0);
     EXPECT_NE(ret, ERR_OK);
 }
 

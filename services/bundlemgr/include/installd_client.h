@@ -25,6 +25,7 @@
 #include "singleton.h"
 
 #include "appexecfwk_errors.h"
+#include "bundle_constants.h"
 #include "ipc/installd_interface.h"
 
 namespace OHOS {
@@ -138,7 +139,7 @@ public:
         const std::string &cpuAbi);
 
     ErrCode ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-        const std::string &newSoPath);
+        const std::string &newSoPath, int32_t uid = Constants::INVALID_UID);
 
     ErrCode IsExistDir(const std::string &dir, bool &isExist);
 
@@ -172,6 +173,9 @@ public:
     void OnLoadSystemAbilityFail();
 
     bool StartInstalldService();
+
+    ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+        const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
 private:
     /**

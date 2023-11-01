@@ -293,12 +293,12 @@ ErrCode InstalldClient::ExtractDiffFiles(const std::string &filePath, const std:
 }
 
 ErrCode InstalldClient::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
 {
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath);
+    return CallService(&IInstalld::ApplyDiffPatch, oldSoPath, diffFilePath, newSoPath, uid);
 }
 
 ErrCode InstalldClient::IsExistDir(const std::string &dir, bool &isExist)
@@ -399,6 +399,16 @@ void InstalldClient::OnLoadSystemAbilityFail()
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();
+}
+
+ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+    const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    if (hapPath.empty() || tmpSoPath.empty() || cpuAbi.empty()) {
+        APP_LOGE("params are invalid");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

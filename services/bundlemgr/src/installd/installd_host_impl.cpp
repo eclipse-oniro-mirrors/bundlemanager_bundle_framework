@@ -685,7 +685,7 @@ ErrCode InstalldHostImpl::ExtractDiffFiles(const std::string &filePath, const st
 }
 
 ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std::string &diffFilePath,
-    const std::string &newSoPath)
+    const std::string &newSoPath, int32_t uid)
 {
     if (oldSoPath.empty() || diffFilePath.empty() || newSoPath.empty()) {
         APP_LOGE("Calling the function ExtractDiffFiles with invalid param");
@@ -695,7 +695,7 @@ ErrCode InstalldHostImpl::ApplyDiffPatch(const std::string &oldSoPath, const std
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath)) {
+    if (!InstalldOperator::ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid)) {
         return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
     return ERR_OK;
@@ -843,6 +843,46 @@ ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
         return ERR_APPEXECFWK_INSTALLD_COPY_FILE_FAILED;
     }
     return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
+    const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    APP_LOGD("start to obtain decoded so files");
+#if defined(CODE_ENCRYPTION_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (!CheckPathValid(hapPath, Constants::BUNDLE_CODE_DIR) ||
+        !CheckPathValid(realSoFilesPath, Constants::BUNDLE_CODE_DIR) ||
+        !CheckPathValid(tmpSoPath, Constants::HAP_COPY_PATH)) {
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
+    if (realSoFilesPath.empty()) {
+        /* obtain the decoded so files from hapPath*/
+        return InstalldOperator::ExtractSoFilesToTmpHapPath(hapPath, cpuAbi, tmpSoPath, uid);
+    } else {
+        /* obtain the decoded so files from realSoFilesPath*/
+        return InstalldOperator::ExtractSoFilesToTmpSoPath(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
+    }
+#else
+    APP_LOGD("code encryption is not supported");
+    return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_SUPPORT_CODE_ENCRYPTION;
+#endif
+}
+
+bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string &prefix)
+{
+    if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
+        APP_LOGE("path(%{public}s) contain relevant path", path.c_str());
+        return false;
+    }
+    if (path.find(prefix) == std::string::npos) {
+        APP_LOGE("prefix(%{public}s) cannot be found", prefix.c_str());
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
