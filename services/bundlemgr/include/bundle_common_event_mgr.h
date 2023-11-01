@@ -21,6 +21,7 @@
 
 #include "appexecfwk_errors.h"
 #include "bundle_data_mgr.h"
+#include "disposed_rule.h"
 #include "inner_bundle_info.h"
 
 namespace OHOS {
@@ -37,6 +38,8 @@ enum class NotifyType {
     OVERLAY_INSTALL,
     OVERLAY_UPDATE,
     OVERLAY_STATE_CHANGED,
+    DISPOSED_RULE_ADDED,
+    DISPOSED_RULE_DELETED,
 };
 
 enum class SandboxInstallType : uint32_t {
@@ -68,6 +71,8 @@ public:
         const SandboxInstallType &type);
     void NotifyOverlayModuleStateStatus(const std::string &bundleName, const std::string &moduleName, bool isEnabled,
         int32_t userId, int32_t uid);
+    void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data);
+    void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);

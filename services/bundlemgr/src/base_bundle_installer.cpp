@@ -2846,7 +2846,7 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     }
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
-    
+
     return ret;
 }
 

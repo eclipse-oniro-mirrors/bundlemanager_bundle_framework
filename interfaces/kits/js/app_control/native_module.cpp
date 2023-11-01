@@ -27,6 +27,12 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
 {
     napi_value applicationType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &applicationType));
+    napi_value componentType = nullptr;
+    CreateComponentType(env, componentType);
+    napi_value disposedType = nullptr;
+    CreateDisposedType(env, disposedType);
+    napi_value controlType = nullptr;
+    CreateControlType(env, controlType);
 
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getDisposedStatus", GetDisposedStatus),
@@ -37,6 +43,9 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("deleteDisposedStatusSync", DeleteDisposedStatusSync),
         DECLARE_NAPI_FUNCTION("getDisposedRule", GetDisposedRule),
         DECLARE_NAPI_FUNCTION("setDisposedRule", SetDisposedRule),
+        DECLARE_NAPI_PROPERTY("ComponentType", componentType),
+        DECLARE_NAPI_PROPERTY("DisposedType", disposedType),
+        DECLARE_NAPI_PROPERTY("ControlType", controlType),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

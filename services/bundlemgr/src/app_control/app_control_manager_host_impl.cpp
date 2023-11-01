@@ -320,6 +320,14 @@ ErrCode AppControlManagerHostImpl::DeleteDisposedStatus(const std::string &appId
     if (ret != ERR_OK) {
         APP_LOGW("host DeletetDisposedStatus error:%{public}d", ret);
     }
+    int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
+    std::string callerName;
+    GetCallerByUid(uid, callerName);
+    if (userId == Constants::UNSPECIFIED_USERID) {
+        userId = GetCallingUserId();
+    }
+    ret = appControlManager_->DeleteDisposedRule(callerName, appId, userId);
+    
     return ret;
 }
 
@@ -407,7 +415,7 @@ ErrCode AppControlManagerHostImpl::GetDisposedRule(const std::string &appId, Dis
     return ret;
 }
 
-ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, const DisposedRule &rule, int32_t userId)
+ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, DisposedRule &rule, int32_t userId)
 {
     APP_LOGD("host begin to SetDisposedRule");
     if (!BundlePermissionMgr::VerifySystemApp()) {
@@ -422,6 +430,9 @@ ErrCode AppControlManagerHostImpl::SetDisposedRule(const std::string &appId, con
     int32_t uid = OHOS::IPCSkeleton::GetCallingUid();
     std::string callerName;
     GetCallerByUid(uid, callerName);
+    if (uid == AppControlConstants::EDM_UID) {
+        rule.isEdm = true;
+    }
     if (userId == Constants::UNSPECIFIED_USERID) {
         userId = GetCallingUserId();
     }

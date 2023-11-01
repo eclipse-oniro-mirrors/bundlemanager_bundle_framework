@@ -670,5 +670,52 @@ napi_value SetDisposedRule(napi_env env, napi_callback_info info)
     }
     return nRet;
 }
+
+void CreateComponentType(napi_env env, napi_value value)
+{
+    napi_value nUiAbilityType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ComponentType::UI_ABILITY),
+        &nUiAbilityType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_ABILITY",
+        nUiAbilityType));
+    napi_value nExtensionAbilityType;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ComponentType::UI_EXTENSION),
+        &nExtensionAbilityType));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "UI_EXTENSION",
+        nExtensionAbilityType));
+}
+
+void CreateDisposedType(napi_env env, napi_value value)
+{
+    napi_value nBlockApplication;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisposedType::BLOCK_APPLICATION),
+        &nBlockApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BLOCK_APPLICATION",
+        nBlockApplication));
+    napi_value nBlockAbility;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisposedType::BLOCK_ABILITY),
+        &nBlockAbility));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "BLOCK_ABILITY",
+        nBlockApplication));
+    napi_value nNonBlock;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(DisposedType::NON_BLOCK),
+        &nNonBlock));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "NON_BLOCK",
+        nNonBlock));
+}
+
+void CreateControlType(napi_env env, napi_value value)
+{
+    napi_value nAllowedList;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ControlType::ALLOWED_LIST),
+        &nAllowedList));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ALLOWED_LIST",
+        nAllowedList));
+    napi_value nDisAllowedList;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, static_cast<int32_t>(ControlType::DISALLOWED_LIST),
+        &nDisAllowedList));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "DISALLOWED_LIST",
+        nDisAllowedList));
+}
 }
 }

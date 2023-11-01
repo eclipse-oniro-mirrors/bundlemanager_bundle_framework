@@ -21,6 +21,7 @@
 
 #include "app_control_manager_db_interface.h"
 #include "app_jump_interceptor_manager_db_interface.h"
+#include "bundle_common_event_mgr.h"
 #include "singleton.h"
 #include "want.h"
 
@@ -79,6 +80,8 @@ public:
     ErrCode GetDisposedRule(const std::string &callerName,
         const std::string &appId, DisposedRule &DisposedRule, int32_t userId);
 
+    ErrCode DeleteDisposedRule(const std::string &callerName, const std::string &appId, int32_t userId);
+
     ErrCode GetAbilityRunningControlRule(
         const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules);
 
@@ -89,6 +92,7 @@ private:
     std::shared_ptr<IAppControlManagerDb> appControlManagerDb_;
     std::shared_ptr<IAppJumpInterceptorlManagerDb> appJumpInterceptorManagerDb_;
     std::unordered_map<std::string, AppRunningControlRuleResult> appRunningControlRuleResult_;
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr_;
     std::mutex appRunningControlMutex_;
 };
 } // AppExecFwk

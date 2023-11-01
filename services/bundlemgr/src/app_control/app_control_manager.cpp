@@ -23,6 +23,7 @@
 #include "app_log_wrapper.h"
 #include "appexecfwk_errors.h"
 #include "application_info.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_constants.h"
 #include "bundle_info.h"
 #include "bundle_mgr_service.h"
@@ -48,6 +49,7 @@ AppControlManager::AppControlManager()
     } else {
         APP_LOGI("App jump intercetor disabled");
     }
+    commonEventMgr_ = std::make_shared<BundleCommonEventMgr>();
 }
 
 AppControlManager::~AppControlManager()
@@ -212,6 +214,7 @@ ErrCode AppControlManager::SetDisposedStatus(const std::string &appId, const Wan
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
+    commonEventMgr_->NotifySetDiposedRule(appId, userId, want.ToString());
     return ERR_OK;
 }
 
@@ -228,6 +231,7 @@ ErrCode AppControlManager::DeleteDisposedStatus(const std::string &appId, int32_
     if (iter != appRunningControlRuleResult_.end()) {
         appRunningControlRuleResult_.erase(iter);
     }
+    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
     return ERR_OK;
 }
 
@@ -322,6 +326,7 @@ ErrCode AppControlManager::SetDisposedRule(
         APP_LOGE("SetDisposedStatus to rdb failed");
         return ret;
     }
+    commonEventMgr_->NotifySetDiposedRule(appId, userId, rule.ToString());
     return ERR_OK;
 }
 
@@ -333,6 +338,18 @@ ErrCode AppControlManager::GetDisposedRule(
         APP_LOGE("GetDisposedRule to rdb failed");
         return ret;
     }
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::DeleteDisposedRule(
+    const std::string &callerName, const std::string &appId, int32_t userId)
+{
+    auto ret = appControlManagerDb_->DeleteDisposedRule(callerName, appId, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDisposedRule to rdb failed");
+        return ret;
+    }
+    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
     return ERR_OK;
 }
 

@@ -135,7 +135,7 @@ public:
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
     virtual ErrCode SetDisposedRule(
-        const std::string &appId, const DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
+        const std::string &appId, DisposedRule& disposedRule, int32_t userId = Constants::UNSPECIFIED_USERID)
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
