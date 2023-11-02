@@ -31,6 +31,7 @@
 #include "bundle_resource_callback.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_resource_event_subscriber.h"
+#include "bundle_resource_helper.h"
 #include "bundle_resource_host_impl.h"
 #include "bundle_resource_info.h"
 #include "bundle_resource_manager.h"
@@ -2211,6 +2212,70 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0101, Function | SmallTest
     auto ret = bundleResourceHostImpl->GetAllLauncherAbilityResourceInfo(0, infos);
     EXPECT_EQ(ret, ERR_OK);
     EXPECT_FALSE(infos.empty());
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0102
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test GetBundleResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0102, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    BundleResourceInfo info;
+    auto ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_EQ(info.bundleName, BUNDLE_NAME);
+    EXPECT_FALSE(info.icon.empty());
+    EXPECT_FALSE(info.label.empty());
+
+    // disable
+    BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, false, USERID);
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    // enable
+    BundleResourceHelper::SetApplicationEnabled(BUNDLE_NAME, true, USERID);
+    ret = bundleResourceHostImpl->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: BmsBundleResourceTest_0103
+ * Function: GetBundleResourceInfo
+ * @tc.name: test disable and enable
+ * @tc.desc: 1. system running normally
+ *           2. test GetLauncherAbilityResourceInfo
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest | Level0)
+{
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    std::shared_ptr<BundleResourceHostImpl> bundleResourceHostImpl = std::make_shared<BundleResourceHostImpl>();
+    std::vector<LauncherAbilityResourceInfo> info;
+    auto ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+    EXPECT_TRUE(info.size() == 1);
+
+    // disable
+    BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, false, USERID);
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+
+    // enable
+    BundleResourceHelper::SetAbilityEnabled(BUNDLE_NAME, MODULE_NAME, ABILITY_NAME, true, USERID);
+    ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
+    EXPECT_EQ(ret, ERR_OK);
+
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }
