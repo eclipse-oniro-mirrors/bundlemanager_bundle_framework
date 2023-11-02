@@ -805,7 +805,7 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
 ErrCode BaseBundleInstaller::CheckAppService(
     const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist)
 {
-    if (!isAppExist && (newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK)) {
+    if ((newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) && !isAppExist) {
         APP_LOGW("Not alloweded instal appService hap(%{public}s) due to the hsp does not exist.",
             newInfo.GetBundleName().c_str());
         return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
@@ -1522,6 +1522,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             versionCode_ = oldInfo.GetVersionCode();
+            if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+                APP_LOGD("Appservice (%{public}s) only install in U0", bundleName.c_str());
+                return ERR_OK;
+            }
+
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 APP_LOGE("App is exist in user(%{public}d).", userId_);
                 return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;

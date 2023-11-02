@@ -26,6 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string HSP_VERSION_PREFIX = "v";
+const std::string HSP_PATH = ", path: ";
 
 std::string ObtainTempSoPath(
     const std::string &moduleName, const std::string &nativeLibPath)
@@ -78,12 +79,25 @@ ErrCode AppServiceFwkInstaller::Install(
 {
     ErrCode result = BeforeInstall(hspPaths, installParam);
     CHECK_RESULT(result, "BeforeInstall check failed %{public}d");
-    return ProcessInstall(hspPaths, installParam);
+    result = ProcessInstall(hspPaths, installParam);
+    SendBundleSystemEvent(
+        GenerateEventMsg(),
+        BundleEventType::INSTALL,
+        installParam,
+        InstallScene::BOOT,
+        result);
+    return result;
 }
 
 ErrCode AppServiceFwkInstaller::BeforeInstall(
     const std::vector<std::string> &hspPaths, InstallParam &installParam)
 {
+    if (hspPaths.empty()) {
+        APP_LOGE("HspPaths is empty");
+        return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
+    }
+
+    bundleMsg_ = hspPaths[0];
     dataMgr_ = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr_ == nullptr) {
         APP_LOGE("DataMgr is nullptr");
@@ -129,7 +143,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
     ErrCode result = BundleUtil::CheckFilePath(hspPaths, checkedHspPaths);
     CHECK_RESULT(result, "Hsp file check failed %{public}d");
 
-    // check syscap
+    // check file type
     result = CheckFileType(checkedHspPaths);
     CHECK_RESULT(result, "Hsp suffix check failed %{public}d");
 
@@ -174,7 +188,7 @@ ErrCode AppServiceFwkInstaller::CheckAndParseFiles(
 ErrCode AppServiceFwkInstaller::CheckFileType(const std::vector<std::string> &bundlePaths)
 {
     if (bundlePaths.empty()) {
-        APP_LOGE("check hsp suffix failed due to empty bundlePaths!");
+        APP_LOGE("check hsp suffix failed due to empty bundlePaths");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
 
@@ -193,7 +207,7 @@ ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
 {
     for (const auto &info : infos) {
         if (info.second.GetApplicationBundleType() != BundleType::APP_SERVICE_FWK) {
-            APP_LOGE("App BundleType is not AppServiceFwk");
+            APP_LOGE("App BundleType is not AppService");
             return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
         }
 
@@ -210,6 +224,7 @@ ErrCode AppServiceFwkInstaller::CheckAppLabelInfo(
     }
 
     bundleName_ = (infos.begin()->second).GetBundleName();
+    versionCode_ = (infos.begin()->second).GetVersionCode();
     return ERR_OK;
 }
 
@@ -432,6 +447,32 @@ void AppServiceFwkInstaller::RemoveInfo(const std::string &bundleName)
     if (!dataMgr_->UpdateBundleInstallState(bundleName, InstallState::UNINSTALL_SUCCESS)) {
         APP_LOGE("Delete inner info failed");
     }
+}
+
+std::string AppServiceFwkInstaller::GenerateEventMsg()
+{
+    std::string msg(bundleName_);
+    if (!bundleMsg_.empty()) {
+        if (!msg.empty()) {
+            msg.append(HSP_PATH);
+        }
+        msg.append(bundleMsg_);
+    }
+    return msg;
+}
+
+void AppServiceFwkInstaller::SendBundleSystemEvent(
+    const std::string &bundleName, BundleEventType bundleEventType,
+    const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode)
+{
+    EventInfo sysEventInfo;
+    sysEventInfo.bundleName = bundleName;
+    sysEventInfo.isPreInstallApp = installParam.isPreInstallApp;
+    sysEventInfo.errCode = errCode;
+    sysEventInfo.userId = Constants::ALL_USERID;
+    sysEventInfo.versionCode = versionCode_;
+    sysEventInfo.preBundleScene = preBundleScene;
+    EventReport::SendBundleSystemEvent(bundleEventType, sysEventInfo);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
