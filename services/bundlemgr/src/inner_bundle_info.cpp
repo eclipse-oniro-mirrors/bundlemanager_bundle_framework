@@ -137,6 +137,7 @@ const std::string MODULE_NATIVE_LIBRARY_FILE_NAMES = "nativeLibraryFileNames";
 const std::string MODULE_AOT_COMPILE_STATUS = "aotCompileStatus";
 const std::string DATA_GROUP_INFOS = "dataGroupInfos";
 const std::string MODULE_FILE_CONTEXT_MENU = "fileContextMenu";
+const std::string MODULE_IS_ENCRYPTED = "isEncrypted";
 const int32_t SINGLE_HSP_VERSION = 1;
 const std::map<std::string, IsolationMode> ISOLATION_MODE_MAP = {
     {"isolationOnly", IsolationMode::ISOLATION_ONLY},
@@ -665,7 +666,8 @@ void to_json(nlohmann::json &jsonObject, const InnerModuleInfo &info)
         {MODULE_COMPRESS_NATIVE_LIBS, info.compressNativeLibs},
         {MODULE_NATIVE_LIBRARY_FILE_NAMES, info.nativeLibraryFileNames},
         {MODULE_AOT_COMPILE_STATUS, info.aotCompileStatus},
-        {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu}
+        {MODULE_FILE_CONTEXT_MENU, info.fileContextMenu},
+        {MODULE_IS_ENCRYPTED, info.isEncrypted},
     };
 }
 
@@ -1205,6 +1207,14 @@ void from_json(const nlohmann::json &jsonObject, InnerModuleInfo &info)
         MODULE_FILE_CONTEXT_MENU,
         info.fileContextMenu,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<bool>(jsonObject,
+        jsonObjectEnd,
+        MODULE_IS_ENCRYPTED,
+        info.isEncrypted,
+        JsonType::BOOLEAN,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -4087,6 +4097,24 @@ std::string InnerBundleInfo::GetEntryModuleName() const
 std::vector<std::string> InnerBundleInfo::GetFingerprints() const
 {
     return baseApplicationInfo_->fingerprints;
+}
+
+void InnerBundleInfo::SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted)
+{
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        return;
+    }
+    it->second.isEncrypted = isEncrypted;
+}
+
+bool InnerBundleInfo::IsEncryptedMoudle(const std::string &packageName) const
+{
+    auto it = innerModuleInfos_.find(packageName);
+    if (it == innerModuleInfos_.end()) {
+        return false;
+    }
+    return it->second.isEncrypted;
 }
 
 void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)

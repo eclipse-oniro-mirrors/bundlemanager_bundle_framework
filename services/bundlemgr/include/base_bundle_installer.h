@@ -612,6 +612,9 @@ private:
     bool CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo);
     ErrCode InstallEntryMoudleFirst(std::unordered_map<std::string, InnerBundleInfo> &newInfos,
         InnerBundleInfo &bundleInfo, const InnerBundleUserInfo &innerBundleUserInfo, const InstallParam &installParam);
+    void ProcessQuickFixWhenInstallNewModule(const InstallParam &installParam,
+        const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
+    bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called

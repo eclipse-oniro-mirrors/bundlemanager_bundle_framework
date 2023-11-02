@@ -1002,6 +1002,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     UpdateAppInstallControlled(userId_);
     groupDirGuard.Dismiss();
     RemoveOldGroupDirs();
+    /* process quick fix when install new moudle */
+    ProcessQuickFixWhenInstallNewModule(installParam, newInfos);
     BundleResourceHelper::AddResourceInfoByBundleName(bundleName_, userId_);
     sync();
     return result;
@@ -1809,10 +1811,6 @@ ErrCode BaseBundleInstaller::ProcessNewModuleInstall(InnerBundleInfo &newInfo, I
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     moduleGuard.Dismiss();
-#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
-    // hqf extract diff file or apply diff patch failed does not affect the hap installation
-    ProcessHqfInfo(oldInfo, newInfo);
-#endif
     return ERR_OK;
 }
 
@@ -1910,6 +1908,29 @@ ErrCode BaseBundleInstaller::ProcessModuleUpdate(InnerBundleInfo &newInfo,
 
     needDeleteQuickFixInfo_ = true;
     return ERR_OK;
+}
+
+void BaseBundleInstaller::ProcessQuickFixWhenInstallNewModule(const InstallParam &installParam,
+    const std::unordered_map<std::string, InnerBundleInfo> &newInfos)
+{
+#ifdef BUNDLE_FRAMEWORK_QUICK_FIX
+    // hqf extract diff file or apply diff patch failed does not affect the hap installation
+    InnerBundleInfo bundleInfo;
+    bool isBundleExist = false;
+    if (!GetInnerBundleInfo(bundleInfo, isBundleExist) || !isBundleExist) {
+        return;
+    }
+    for (auto &info : newInfos) {
+        modulePackage_ = info.second.GetCurrentModulePackage();
+        if (!installedModules_[modulePackage_]) {
+            modulePath_ = info.first;
+            if (bundleInfo.IsEncryptedMoudle(modulePackage_) && installParam.copyHapToInstallPath) {
+                modulePath_ = GetHapPath(info.second);
+            }
+            ProcessHqfInfo(bundleInfo, info.second);
+        }
+    }
+#endif
 }
 
 void BaseBundleInstaller::ProcessHqfInfo(
@@ -2112,6 +2133,26 @@ bool BaseBundleInstaller::ExtractSoFiles(const std::string &soPath, const std::s
     return true;
 }
 
+bool BaseBundleInstaller::ExtractEncryptedSoFiles(const InnerBundleInfo &info,
+    const std::string &tmpSoPath, int32_t uid) const
+{
+    APP_LOGD("start to extract decoded so files to tmp path");
+    std::string cpuAbi = "";
+    std::string nativeLibraryPath = "";
+    bool isSoExisted = info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
+    std::string realSoFilesPath;
+    if (info.IsCompressNativeLibs(info.GetCurModuleName())) {
+        realSoFilesPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+            .append(bundleName_).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath);
+        if (realSoFilesPath.back() != Constants::PATH_SEPARATOR[0]) {
+            realSoFilesPath += Constants::PATH_SEPARATOR;
+        }
+    }
+    APP_LOGD("real so files path is %{public}s, tmpSoPath is %{public}s", realSoFilesPath.c_str(), tmpSoPath.c_str());
+    return InstalldClient::GetInstance()->ExtractEncryptedSoFiles(modulePath_, realSoFilesPath, cpuAbi,
+        tmpSoPath, uid) == ERR_OK;
+}
+
 ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const std::string &nativeLibraryPath,
     const std::string &cpuAbi) const
 {
@@ -2125,8 +2166,29 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
             bundleName_ + Constants::TMP_SUFFIX + Constants::LIBS;
         ScopeGuard guardRemoveOldSoPath([oldSoPath] {InstalldClient::GetInstance()->RemoveDir(oldSoPath);});
-        if (!ExtractSoFiles(oldSoPath, cpuAbi)) {
-            return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+
+        InnerBundleInfo innerBundleInfo;
+        if (dataMgr_ == nullptr || !dataMgr_->FetchInnerBundleInfo(bundleName_, innerBundleInfo)) {
+            APP_LOGE("Fetch bundleInfo(%{public}s) failed.", bundleName_.c_str());
+            return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+        }
+
+        int32_t bundleUid = 0;
+        if (innerBundleInfo.IsEncryptedMoudle(modulePackage_)) {
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
+                APP_LOGE("no user info of bundle %{public}s", bundleName_.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+            }
+            bundleUid = innerBundleUserInfo.uid;
+            if (!ExtractEncryptedSoFiles(innerBundleInfo, oldSoPath, bundleUid)) {
+                APP_LOGW("module:%{public}s has no so file", moduleName.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+            }
+        } else {
+            if (!ExtractSoFiles(oldSoPath, cpuAbi)) {
+                return ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED;
+            }
         }
 
         const std::string tempDiffPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
@@ -2141,7 +2203,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
         std::string newSoPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + bundleName_ +
             Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
             std::to_string(appQfInfo.versionCode) + Constants::PATH_SEPARATOR + nativeLibraryPath;
-        ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath);
+        ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, tempDiffPath, newSoPath, bundleUid);
         if (ret != ERR_OK) {
             APP_LOGE("error: ApplyDiffPatch failed errcode :%{public}d", ret);
             return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
@@ -4121,6 +4183,7 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
             APP_LOGD("hap %{public}s is encrypted", hapPath.c_str());
             oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
         }
+        oldInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
     }
     if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
         APP_LOGE("save UpdateInnerBundleInfo failed");
