@@ -63,6 +63,7 @@ public:
         const std::string &appId, int32_t userId) = 0;
     virtual ErrCode GetAbilityRunningControlRule(
         const std::string &bundleName, int32_t userId, std::vector<DisposedRule>& disposedRules) = 0;
+    virtual ErrCode DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId) = 0;
 };
 } // namespace AppExecFwk
 } // namespace OHOS

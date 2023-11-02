@@ -346,7 +346,18 @@ ErrCode AppControlManager::DeleteDisposedRule(
 {
     auto ret = appControlManagerDb_->DeleteDisposedRule(callerName, appId, userId);
     if (ret != ERR_OK) {
-        APP_LOGE("GetDisposedRule to rdb failed");
+        APP_LOGE("DeleteDisposedRule to rdb failed");
+        return ret;
+    }
+    commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);
+    return ERR_OK;
+}
+
+ErrCode AppControlManager::DeleteAllDisposedRuleByBundle(const std::string &appId, int32_t userId)
+{
+    auto ret = appControlManagerDb_->DeleteAllDisposedRuleByBundle(appId, userId);
+    if (ret != ERR_OK) {
+        APP_LOGE("DeleteAllDisposedRuleByBundle to rdb failed");
         return ret;
     }
     commonEventMgr_->NotifyDeleteDiposedRule(appId, userId);

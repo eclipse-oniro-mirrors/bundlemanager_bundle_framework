@@ -28,10 +28,13 @@ static napi_value AppControlExport(napi_env env, napi_value exports)
     napi_value applicationType = nullptr;
     NAPI_CALL(env, napi_create_object(env, &applicationType));
     napi_value componentType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &componentType));
     CreateComponentType(env, componentType);
     napi_value disposedType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &disposedType));
     CreateDisposedType(env, disposedType);
     napi_value controlType = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &controlType));
     CreateControlType(env, controlType);
 
     napi_property_descriptor desc[] = {
