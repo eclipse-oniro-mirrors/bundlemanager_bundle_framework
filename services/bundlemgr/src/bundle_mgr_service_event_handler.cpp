@@ -2188,7 +2188,7 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
     APP_LOGI("end");
 }
 
-void BMSEventHandler:ProcessBundleResourceInfo()
+void BMSEventHandler::ProcessBundleResourceInfo()
 {
     APP_LOGI("start");
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();

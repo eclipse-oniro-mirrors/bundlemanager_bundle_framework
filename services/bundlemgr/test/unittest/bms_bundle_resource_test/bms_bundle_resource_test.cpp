@@ -25,6 +25,7 @@
 #include "bundle_installer_host.h"
 #include "bundle_mgr_proxy.h"
 #include "bundle_mgr_service.h"
+#include "bundle_mgr_service_event_handler.h"
 #include "bundle_permission_mgr.h"
 
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -2276,6 +2277,40 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
     ret = bundleResourceHostImpl->GetLauncherAbilityResourceInfo(BUNDLE_NAME, 0, info);
     EXPECT_EQ(ret, ERR_OK);
 
+    ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
+    EXPECT_EQ(unInstallResult, ERR_OK);
+}
+
+/**
+ * @tc.number: ProcessBundleResourceInfo_0001
+ * @tc.name: test the start function of ProcessBundleResourceInfo
+ * @tc.desc: 1. test ProcessBundleResourceInfo
+ *           2. all bundleName exist
+ */
+HWTEST_F(BmsBundleResourceTest, ProcessBundleResourceInfo_0001, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    EXPECT_NE(handler, nullptr);
+    ErrCode installResult = InstallBundle(HAP_FILE_PATH1);
+    EXPECT_EQ(installResult, ERR_OK);
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    if (manager != nullptr) {
+        BundleResourceInfo info;
+        bool ans = manager->GetBundleResourceInfo(BUNDLE_NAME, 0, info);
+        EXPECT_TRUE(ans);
+        ans = manager->DeleteResourceInfo(BUNDLE_NAME);
+        EXPECT_TRUE(ans);
+    }
+    if ((handler != nullptr) && (manager != nullptr)) {
+        handler->ProcessBundleResourceInfo();
+        BundleResourceInfo info2;
+        bool ans = manager->GetBundleResourceInfo(BUNDLE_NAME, 0, info2);
+        EXPECT_TRUE(ans);
+        EXPECT_EQ(info2.bundleName, BUNDLE_NAME);
+        EXPECT_FALSE(info2.icon.empty());
+        EXPECT_FALSE(info2.label.empty());
+    }
     ErrCode unInstallResult = UnInstallBundle(BUNDLE_NAME);
     EXPECT_EQ(unInstallResult, ERR_OK);
 }

@@ -81,19 +81,20 @@ bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
         return false;
     }
     APP_LOGD("need delete resource info, key: %{public}s", key.c_str());
-    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     /**
      * begin with bundle name, like:
      * 1. bundleName
      * 2. bundleName/moduleName/abilityName
      */
     if (key.find(Constants::SEPARATOR) == std::string::npos) {
+        NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
         // need delete both bundle resource and launcher ability resource
         absRdbPredicates.BeginsWith(BundleResourceConstants::NAME, key + Constants::SEPARATOR);
         if (!rdbDataManager_->DeleteData(absRdbPredicates)) {
             APP_LOGW("delete key:%{public}s failed", key.c_str());
         }
     }
+    NativeRdb::AbsRdbPredicates absRdbPredicates(BundleResourceConstants::BUNDLE_RESOURCE_RDB_TABLE_NAME);
     absRdbPredicates.EqualTo(BundleResourceConstants::NAME, key);
     return rdbDataManager_->DeleteData(absRdbPredicates);
 }
