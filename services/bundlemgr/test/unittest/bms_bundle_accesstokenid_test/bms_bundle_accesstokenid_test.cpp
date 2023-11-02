@@ -68,6 +68,7 @@ const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_01 =
     "/data/test/resource/bms/bundle_so/compressNativeLibsTrue01.hap";
 const std::string HAP_COMPRESS_NATIVE_LIBS_TRUE_02 =
     "/data/test/resource/bms/bundle_so/compressNativeLibsTrue02.hap";
+const std::string COMPRESS_NATIVE_LIBS = "persist.bms.supportCompressNativeLibs";
 }  // namespace
 
 class BmsBundleAccessTokenIdTest : public testing::Test {
@@ -114,6 +115,8 @@ void BmsBundleAccessTokenIdTest::SetUp()
 {
     StartInstalldService();
     StartBundleService();
+    // set "persist.bms.supportCompressNativeLibs"
+    SetParameter(COMPRESS_NATIVE_LIBS.c_str(), "true");
 }
 
 void BmsBundleAccessTokenIdTest::TearDown()
