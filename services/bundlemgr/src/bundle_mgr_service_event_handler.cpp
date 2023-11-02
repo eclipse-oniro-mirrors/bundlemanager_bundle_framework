@@ -992,6 +992,7 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleInstall();
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
+    ProcessBundleResourceInfo();
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
@@ -2182,6 +2183,33 @@ void BMSEventHandler::ProcessRebootQuickFixBundleInstall(const std::string &path
         std::vector<std::string> filePaths { scanPathIter };
         if (!installer.OTAInstallSystemBundle(filePaths, installParam, Constants::AppType::SYSTEM_APP)) {
             APP_LOGW("bundleName: %{public}s: install failed.", bundleName.c_str());
+        }
+    }
+    APP_LOGI("end");
+}
+
+void BMSEventHandler:ProcessBundleResourceInfo()
+{
+    APP_LOGI("start");
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<std::string> bundleNames = dataMgr->GetAllBundleName();
+    if (bundleNames.empty()) {
+        APP_LOGE("bundleNames is empty");
+        return;
+    }
+    std::vector<std::string> resourceNames;
+    BundleResourceHelper::GetAllBundleResourceName(resourceNames);
+    if (resourceNames.empty()) {
+        APP_LOGI("rdb has no resource info, need add all");
+    }
+    for (const auto &bundleName : bundleNames) {
+        if (std::find(resourceNames.begin(), resourceNames.end(), bundleName) == resourceNames.end()) {
+            APP_LOGD("need add bundleName: %{public}s resource", bundleName.c_str());
+            BundleResourceHelper::AddResourceInfoByBundleName(bundleName, Constants::START_USERID);
         }
     }
     APP_LOGI("end");
