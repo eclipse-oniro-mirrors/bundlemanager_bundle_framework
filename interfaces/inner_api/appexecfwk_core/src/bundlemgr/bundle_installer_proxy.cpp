@@ -378,8 +378,7 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
     // copy pgo file to bms service
     res = CopyPgoFileToService(streamInstaller, installParam);
     if (res != ERR_OK) {
-        APP_LOGE("CopyPgoFileToService failed due to %{public}d", res);
-        return res;
+        APP_LOGW("CopyPgoFileToService failed due to %{public}d", res);
     }
 
     // write shared bundles
@@ -593,15 +592,13 @@ ErrCode BundleInstallerProxy::CopyPgoFileToService(sptr<IBundleStreamInstaller> 
     for (const auto &param : installParam.pgoParams) {
         std::string realPath;
         if (param.first.empty() || !BundleFileUtil::CheckFilePath(param.second, realPath)) {
-            APP_LOGE("CheckFilePath pgo file path %{public}s failed", param.second.c_str());
-            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            return ERR_BUNDLEMANAGER_INSTALL_PGO_FILE_IS_INVALID;
+            APP_LOGW("CheckFilePath pgo file path %{public}s failed", param.second.c_str());
+            continue;
         }
         ErrCode res = WritePgoFileToStream(streamInstaller, realPath, param.first);
         if (res != ERR_OK) {
-            DestoryBundleStreamInstaller(streamInstaller->GetInstallerId());
-            APP_LOGE("WritePgoFileToStream failed due to %{public}d", res);
-            return ERR_BUNDLEMANAGER_INSTALL_PGO_FILE_IS_INVALID;
+            APP_LOGW("WritePgoFileToStream failed due to %{public}d", res);
+            continue;
         }
     }
 

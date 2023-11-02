@@ -59,6 +59,8 @@ bool BundleStreamInstallerHostImpl::Init(const InstallParam &installParam, const
         installParam_.sharedBundleDirPaths.emplace_back(tempDir);
     }
 
+    installParam_.pgoParams.clear();
+
     tempSignatureFileDir_ = BundleUtil::CreateInstallTempDir(installerId_, DirType::SIG_FILE_DIR);
     if (tempSignatureFileDir_.empty()) {
         return false;
@@ -255,12 +257,6 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
         return Constants::DEFAULT_STREAM_FD;
     }
 
-    auto iterator = installParam_.pgoParams.find(moduleName);
-    if (iterator == installParam_.pgoParams.end()) {
-        APP_LOGE("module name cannot be found");
-        return Constants::DEFAULT_STREAM_FD;
-    }
-
     // to prevent the pgo copied to relevant path
     if (fileName.find(ILLEGAL_PATH_FIELD) != std::string::npos) {
         APP_LOGE("CreateStream failed due to invalid fileName");
@@ -275,7 +271,7 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
     if (fd > 0) {
         std::lock_guard<std::mutex> lock(fdVecMutex_);
         streamFdVec_.emplace_back(fd);
-        installParam_.pgoParams.at(moduleName) = filePath;
+        installParam_.pgoParams[moduleName] = filePath;
     }
     return fd;
 }
