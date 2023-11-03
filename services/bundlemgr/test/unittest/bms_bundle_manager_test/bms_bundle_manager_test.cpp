@@ -5488,6 +5488,28 @@ HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0006, Function | SmallTest | Level
 }
 
 /**
+ * @tc.number: GetJsonProfile_0007
+ * @tc.name: GetJsonProfile
+ * @tc.desc: 1. GetJsonProfile with empty module name
+ *           2. GetJsonProfile successfully, get profile in entry module
+ */
+HWTEST_F(BmsBundleManagerTest, GetJsonProfile_0007, Function | SmallTest | Level0)
+{
+    std::string bundlePath = RESOURCE_ROOT_PATH + BUNDLE_PREVIEW_TEST;
+    ErrCode installResult = InstallThirdPartyBundle(bundlePath);
+    EXPECT_EQ(installResult, ERR_OK);
+
+    auto dataMgr = GetBundleDataMgr();
+    EXPECT_NE(dataMgr, nullptr);
+    ProfileType profileType = AppExecFwk::ProfileType::ADDITION_PROFILE;
+    std::string profile;
+
+    auto ret = dataMgr->GetJsonProfile(profileType, BUNDLE_PREVIEW_NAME, EMPTY_STRING, profile, USERID);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PROFILE_NOT_EXIST);
+    UnInstallBundle(BUNDLE_PREVIEW_NAME);
+}
+
+/**
  * @tc.number: GetBundleInfoWithMenu_0001
  * @tc.name: GetBundleInfoWithMenu
  * @tc.desc: 1. GetBundleMenu successfully

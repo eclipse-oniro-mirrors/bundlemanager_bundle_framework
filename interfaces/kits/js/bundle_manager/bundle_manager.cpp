@@ -83,6 +83,7 @@ static std::unordered_map<Query, napi_ref, QueryHash> cache;
 static std::string g_ownBundleName;
 static std::mutex g_ownBundleNameMutex;
 static std::shared_mutex g_cacheMutex;
+static std::set<int32_t> g_supportedProfileList = { 1 };
 namespace {
 const std::string PARAMETER_BUNDLE_NAME = "bundleName";
 }
@@ -3585,6 +3586,11 @@ bool ParamsProcessGetJsonProfile(napi_env env, napi_callback_info info,
     if (!CommonFunc::ParseInt(env, args[ARGS_POS_ZERO], profileType)) {
         APP_LOGE("profileType invalid");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, PROFILE_TYPE, TYPE_NUMBER);
+        return false;
+    }
+    if (g_supportedProfileList.find(profileType) == g_supportedProfileList.end()) {
+        APP_LOGE("JS request profile error, type is %{public}d, profile not exist", profileType);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PROFILE_NOT_EXIST, PROFILE_TYPE, TYPE_NUMBER);
         return false;
     }
     if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], bundleName)) {
