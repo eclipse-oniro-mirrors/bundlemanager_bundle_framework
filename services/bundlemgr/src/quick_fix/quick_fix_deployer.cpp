@@ -349,11 +349,32 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
     for (const auto &hqf : appQfInfo.hqfInfos) {
         // if hap has no so file then continue
         std::string tmpSoPath = oldSoPath;
-        if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
-            APP_LOGW("module:%{public}s has no so file", hqf.moduleName.c_str());
-            continue;
+
+        InnerBundleInfo innerBundleInfo;
+        if (!FetchInnerBundleInfo(appQuickFix.bundleName, innerBundleInfo)) {
+            APP_LOGE("Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
+            return false;
         }
-        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath);
+        int32_t bundleUid = 0;
+        if (innerBundleInfo.IsEncryptedMoudle(hqf.moduleName)) {
+            InnerBundleUserInfo innerBundleUserInfo;
+            if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
+                APP_LOGE("no user info of bundle %{public}s", appQuickFix.bundleName.c_str());
+                return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
+            }
+            bundleUid = innerBundleUserInfo.uid;
+            if (!ExtractEncryptedSoFiles(bundleInfo, hqf.moduleName, bundleUid, tmpSoPath)) {
+                APP_LOGW("module:%{public}s has no so file", hqf.moduleName.c_str());
+                continue;
+            }
+        } else {
+            if (!ExtractSoFiles(bundleInfo, hqf.moduleName, tmpSoPath)) {
+                APP_LOGW("module:%{public}s has no so file", hqf.moduleName.c_str());
+                continue;
+            }
+        }
+
+        auto result = ProcessApplyDiffPatch(appQuickFix, hqf, tmpSoPath, patchPath, bundleUid);
         if (result != ERR_OK) {
             APP_LOGE("bundleName: %{public}s ProcessApplyDiffPatch failed.", appQuickFix.bundleName.c_str());
             return result;
@@ -736,7 +757,7 @@ bool QuickFixDeployer::ExtractSoFiles(
 }
 
 ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
-    const std::string &oldSoPath, const std::string &patchPath)
+    const std::string &oldSoPath, const std::string &patchPath, int32_t uid)
 {
     std::string libraryPath;
     std::string cpuAbi;
@@ -756,13 +777,47 @@ ErrCode QuickFixDeployer::ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, 
     }
     // apply diff patch
     std::string newSoPath = patchPath + Constants::PATH_SEPARATOR + libraryPath;
-    ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath);
+    ret = InstalldClient::GetInstance()->ApplyDiffPatch(oldSoPath, diffFilePath, newSoPath, uid);
     if (ret != ERR_OK) {
         APP_LOGE("ApplyDiffPatch failed, bundleName:%{public}s, errcode: %{public}d",
             appQuickFix.bundleName.c_str(), ret);
         return ERR_BUNDLEMANAGER_QUICK_FIX_APPLY_DIFF_PATCH_FAILED;
     }
     return ERR_OK;
+}
+
+bool QuickFixDeployer::ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName,
+    int32_t uid, std::string &tmpSoPath)
+{
+    APP_LOGD("start to extract decoded so files to tmp path");
+    auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
+        [&moduleName](const HapModuleInfo &info) {
+            return info.moduleName == moduleName;
+        });
+    if (iter == bundleInfo.hapModuleInfos.end()) {
+        return false;
+    }
+    std::string cpuAbi = bundleInfo.applicationInfo.cpuAbi;
+    std::string nativeLibraryPath = bundleInfo.applicationInfo.nativeLibraryPath;
+    if (!iter->nativeLibraryPath.empty()) {
+        cpuAbi = iter->cpuAbi;
+        nativeLibraryPath = iter->nativeLibraryPath;
+    }
+    if (nativeLibraryPath.empty()) {
+        return false;
+    }
+    std::string hapPath = iter->hapPath;
+    std::string realSoFilesPath;
+    if (iter->compressNativeLibs) {
+        realSoFilesPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+            .append(bundleInfo.name).append(Constants::PATH_SEPARATOR).append(nativeLibraryPath)
+            .append(Constants::PATH_SEPARATOR);
+    }
+    tmpSoPath = (tmpSoPath.back() == Constants::PATH_SEPARATOR[0]) ? (tmpSoPath + moduleName) :
+        (tmpSoPath + Constants::PATH_SEPARATOR + moduleName + Constants::PATH_SEPARATOR);
+    APP_LOGD("real so files path is %{public}s, tmpSoPath is %{public}s", realSoFilesPath.c_str(), tmpSoPath.c_str());
+    return InstalldClient::GetInstance()->ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid) ==
+        ERR_OK;
 }
 } // AppExecFwk
 } // OHOS

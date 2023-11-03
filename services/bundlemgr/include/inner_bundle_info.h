@@ -126,6 +126,7 @@ struct InnerModuleInfo {
     std::vector<std::string> nativeLibraryFileNames;
     AOTCompileStatus aotCompileStatus = AOTCompileStatus::NOT_COMPILED;
     std::string fileContextMenu;
+    bool isEncrypted = false;
 };
 
 struct SkillUri {
@@ -2047,6 +2048,8 @@ public:
     std::string GetAppIdentifier() const;
     void AddFingerprint(const std::string &fingerprint);
     std::vector<std::string> GetFingerprints() const;
+    void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
+    bool IsEncryptedMoudle(const std::string &packageName) const;
 
 private:
     bool IsExistLauncherAbility() const;

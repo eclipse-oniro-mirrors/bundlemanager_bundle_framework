@@ -1704,7 +1704,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_1500, Function | SmallTest 
     std::string cpuAbi = "arm";
     ErrCode ret = installer.ProcessDiffFiles(
         appQfInfo, nativeLibraryPath, cpuAbi);
-    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+    EXPECT_EQ(ret, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
 }
 
 /**
@@ -2047,7 +2047,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_3000, Function | SmallTest 
     oldAppQuickFix.deployedAppqfInfo.hqfInfos.push_back(hqfInfo);
 
     auto res = installer.ProcessDeployedHqfInfo(nativeLibraryPath, cpuAbi, newInfo, oldAppQuickFix);
-    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_EXTRACT_DIFF_FILES_FAILED);
+    EXPECT_EQ(res, ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST);
 
     hqfInfo.moduleName = MODULE_NAME;
     installer.modulePackage_ = "123";

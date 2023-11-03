@@ -103,7 +103,10 @@ private:
     bool ExtractSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName, std::string &tmpSoPath);
 
     ErrCode ProcessApplyDiffPatch(const AppQuickFix &appQuickFix, const HqfInfo &hqf,
-        const std::string &oldSoPath, const std::string &patchPath);
+        const std::string &oldSoPath, const std::string &patchPath, int32_t uid = Constants::INVALID_UID);
+
+    bool ExtractEncryptedSoFiles(const BundleInfo &bundleInfo, const std::string &moduleName,
+        int32_t uid, std::string &tmpSoPath);
 
     std::vector<std::string> patchPaths_;
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
