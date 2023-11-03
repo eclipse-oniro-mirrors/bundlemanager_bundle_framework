@@ -124,5 +124,20 @@ void BundleResourceHelper::SetAbilityEnabled(const std::string &bundleName, cons
     callback.OnAbilityStatusChanged(bundleName, moduleName, abilityName, enabled, userId);
 #endif
 }
+
+void BundleResourceHelper::GetAllBundleResourceName(std::vector<std::string> &resourceNames)
+{
+#ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
+    APP_LOGI("start");
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    if (manager == nullptr) {
+        APP_LOGE("failed, manager is nullptr");
+        return;
+    }
+    if (!manager->GetAllResourceName(resourceNames)) {
+        APP_LOGE("failed");
+    }
+#endif
+}
 } // AppExecFwk
 } // OHOS
