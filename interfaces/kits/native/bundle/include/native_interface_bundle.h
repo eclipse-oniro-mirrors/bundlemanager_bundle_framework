@@ -38,9 +38,36 @@
 extern "C" {
 #endif
 struct OH_NativeBundle_ApplicationInfo {
+    /**
+     * Indicates the name of application
+     * @syscap SystemCapability.BundleManager.BundleFramework.Core
+     * @since 9
+     */
     char* bundleName;
 
+    /**
+     * Indicates the fingerprint of application
+     * @syscap SystemCapability.BundleManager.BundleFramework.Core
+     * @since 9
+     */
     char* fingerprint;
+
+    /**
+     * Indicates the ID of the application to which this bundle belongs
+     * The application ID uniquely identifies an application. It is determined by the bundle name and signature
+     * @syscap SystemCapability.BundleManager.BundleFramework.Core
+     * @since 11
+     */
+    char* appId;
+
+    /**
+     * Globally unique identifier of an application.
+     * AppIdentifier does not change along the application lifecycle, including version updates, certificate changes,
+     * public and private key changes, and application transfer.
+     * @syscap SystemCapability.BundleManager.BundleFramework.Core
+     * @since 11
+     */
+    char* appIdentifier;
 };
 
 /**
