@@ -608,4 +608,44 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2900, Function | SmallTest |
     auto ret = installdProxy->GetNativeLibraryFileNames("data/test", apuAbi, fileNames);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
+
+/**
+ * @tc.number: InstalldProxyTest_3000
+ * @tc.name: test Marshalling function of CheckEncryptionParam
+ * @tc.desc: 1. calling CheckEncryption of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3000, Function | SmallTest | Level0)
+{
+    auto proxy = GetInstallProxy();
+    EXPECT_NE(proxy, nullptr);
+
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = TEST_STRING;
+    checkEncryptionParam.cpuAbi = TEST_STRING;
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    auto ret = proxy->CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldProxyTest_3100
+ * @tc.name: test Marshalling function of CheckEncryptionParam
+ * @tc.desc: 1. calling CheckEncryption of proxy
+*/
+HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_3100, Function | SmallTest | Level0)
+{
+    sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
+    EXPECT_NE(installdProxy, nullptr);
+
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = TEST_STRING;
+    checkEncryptionParam.cpuAbi = TEST_STRING;
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    auto ret = installdProxy->CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
+}
 } // OHOS

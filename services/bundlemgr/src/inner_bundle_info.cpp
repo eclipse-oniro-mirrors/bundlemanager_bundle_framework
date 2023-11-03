@@ -4117,6 +4117,16 @@ bool InnerBundleInfo::IsEncryptedMoudle(const std::string &packageName) const
     return it->second.isEncrypted;
 }
 
+bool InnerBundleInfo::IsContainEncryptedModule() const
+{
+    for (const auto &info : innerModuleInfos_) {
+        if (info.second.isEncrypted) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void InnerBundleInfo::AddFingerprint(const std::string &fingerprint)
 {
     auto fingerprints = baseApplicationInfo_->fingerprints;

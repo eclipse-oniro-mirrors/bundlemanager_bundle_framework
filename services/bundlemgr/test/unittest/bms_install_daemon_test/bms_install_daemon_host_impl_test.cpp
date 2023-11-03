@@ -808,7 +808,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4500, Function | Sma
 }
 
 /**
- * @tc.number: InstalldHostImplTest_4500
+ * @tc.number: InstalldHostImplTest_4600
  * @tc.name: test RegisterBundleStatusCallback
  * @tc.desc: 1.system run normally
  *           2.RegisterBundleStatusCallback failed
@@ -818,6 +818,26 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4600, Function | Sma
     InstalldHostImpl impl;
     bool isExist = false;
     auto ret = impl.IsExistFile(TEST_STRING, isExist);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4700
+ * @tc.name: test function of InstallHostImpl
+ * @tc.desc: 1. calling CheckEncryption of hostImpl
+*/
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4700, Function | SmallTest | Level0)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    EXPECT_NE(hostImpl, nullptr);
+
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = TEST_STRING;
+    checkEncryptionParam.cpuAbi = TEST_STRING;
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    auto ret = hostImpl->CheckEncryption(checkEncryptionParam, isEncrypted);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

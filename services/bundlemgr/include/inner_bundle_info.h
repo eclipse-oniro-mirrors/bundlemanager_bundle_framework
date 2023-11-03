@@ -1963,6 +1963,11 @@ public:
         baseApplicationInfo_->applicationReservedFlag |= flag;
     }
 
+    void ClearApplicationReservedFlag(uint32_t flag)
+    {
+        baseApplicationInfo_->applicationReservedFlag &= ~flag;
+    }
+
     uint32_t GetApplicationReservedFlag() const
     {
         return baseApplicationInfo_->applicationReservedFlag;
@@ -2050,6 +2055,7 @@ public:
     std::vector<std::string> GetFingerprints() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
+    bool IsContainEncryptedModule() const;
 
 private:
     bool IsExistLauncherAbility() const;

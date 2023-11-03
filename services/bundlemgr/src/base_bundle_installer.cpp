@@ -4151,14 +4151,13 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    APP_LOGD("begin to check hap encryption");
     InnerBundleInfo oldInfo;
     bool isExist = false;
     if (!GetInnerBundleInfo(oldInfo, isExist) || !isExist) {
         APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    bool isEncryptionOld = oldInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
     for (const auto &info : infos) {
         if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
             APP_LOGE("path %{public}s cannot be found in hapPathRecord", info.first.c_str());
@@ -4176,11 +4175,14 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         bool isEncrypted = false;
         ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
         CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
-        if (!isEncryptionOld && isEncrypted) {
-            APP_LOGD("hap %{public}s is encrypted", hapPath.c_str());
-            oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-        }
         oldInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
+    }
+    if (oldInfo.IsContainEncryptedModule()) {
+        APP_LOGD("application contains encrypted module");
+        oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    } else {
+        APP_LOGD("application does not contain encrypted module");
+        oldInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
     if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
         APP_LOGE("save UpdateInnerBundleInfo failed");

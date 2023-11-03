@@ -1104,4 +1104,21 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7000, Function | Sma
     bool res = InstalldOperator::VerifyCodeSignature("", "", "", "/");
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_7100
+ * @tc.name: test function of CheckEncryption
+ * @tc.desc: 1. calling CheckEncryption
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7100, Function | SmallTest | Level0)
+{
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    checkEncryptionParam.cpuAbi = TEST_STRING;
+    checkEncryptionParam.targetSoPath = TEST_STRING;
+    checkEncryptionParam.bundleId = -1;
+    bool isEncrypted = false;
+    bool res = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(res, false);
+}
 } // OHOS
