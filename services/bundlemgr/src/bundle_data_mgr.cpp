@@ -4384,7 +4384,7 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 }
 
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
     // step1 : find default infos, current only support default file types
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
@@ -4407,10 +4407,12 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
             if (ret == ERR_OK && bundleInfo.abilityInfos.size() == 1) {
                 abilityInfos = bundleInfo.abilityInfos;
                 APP_LOGD("find default ability.");
+                findDefaultApp = true;
                 return true;
             } else if (ret == ERR_OK && bundleInfo.extensionInfos.size() == 1) {
                 extensionInfos = bundleInfo.extensionInfos;
                 APP_LOGD("find default extension.");
+                findDefaultApp = true;
                 return true;
             } else if (ret == ERR_OK) {
                 APP_LOGD("GetDefaultApplication failed.");

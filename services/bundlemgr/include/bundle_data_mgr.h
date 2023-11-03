@@ -689,7 +689,8 @@ public:
         AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
 
     bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos);
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
+        bool &findDefaultApp);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.

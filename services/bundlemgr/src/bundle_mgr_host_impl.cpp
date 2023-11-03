@@ -2264,7 +2264,13 @@ bool BundleMgrHostImpl::ImplicitQueryInfos(const Want &want, int32_t flags, int3
         APP_LOGE("DataMgr is nullptr");
         return false;
     }
-    auto ret = dataMgr->ImplicitQueryInfos(want, flags, userId, withDefault, abilityInfos, extensionInfos);
+    bool findDefaultApp = false;
+    auto ret = dataMgr->ImplicitQueryInfos(
+        want, flags, userId, withDefault, abilityInfos, extensionInfos, findDefaultApp);
+    if (ret && findDefaultApp) {
+        APP_LOGD("default app has been found and unnecessary to find from bms extension");
+        return ret;
+    }
     auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
     if (isBrokerServiceExisted_ &&
         bmsExtensionClient->ImplicitQueryAbilityInfos(want, flags, userId, abilityInfos, false) == ERR_OK) {
