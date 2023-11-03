@@ -412,7 +412,7 @@ constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 constexpr const char* ABILITY_UNCLEARABLE_MISSION = "unclearableMission";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
-constexpr const char* ABILITY_SPECIFIED_PROCESS = "specifiedProcess";
+constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";

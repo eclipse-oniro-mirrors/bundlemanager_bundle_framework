@@ -151,7 +151,7 @@ struct Ability {
     bool excludeFromMissions = false;
     bool recoverable = false;
     bool unclearableMission = false;
-    bool specifiedProcess = false;
+    bool isolationProcess = false;
 };
 
 struct Extension {
@@ -556,8 +556,8 @@ void from_json(const nlohmann::json &jsonObject, Ability &ability)
         ArrayType::NOT_ARRAY);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
-        ABILITY_SPECIFIED_PROCESS,
-        ability.specifiedProcess,
+        ABILITY_ISOLATION_PROCESS,
+        ability.isolationProcess,
         JsonType::BOOLEAN,
         false,
         g_parseResult,
@@ -1899,7 +1899,7 @@ bool ToAbilityInfo(
     abilityInfo.permissions = ability.permissions;
     abilityInfo.visible = ability.visible;
     abilityInfo.continuable = ability.continuable;
-    abilityInfo.specifiedProcess = ability.specifiedProcess;
+    abilityInfo.isolationProcess = ability.isolationProcess;
     abilityInfo.backgroundModes = GetBackgroundModes(ability.backgroundModes);
     GetMetadata(abilityInfo.metadata, ability.metadata);
     abilityInfo.package = moduleJson.module.name;
