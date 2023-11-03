@@ -210,7 +210,7 @@ ErrCode BundleUserMgrHostImpl::RemoveUser(int32_t userId)
     }
 
     {
-        std::lock_guard<std::mutex> lock(uninstallEventMgrMutex_);
+        std::lock_guard<std::mutex> uninstallEventLock(uninstallEventMgrMutex_);
         uninstallEvents_.clear();
     }
 
