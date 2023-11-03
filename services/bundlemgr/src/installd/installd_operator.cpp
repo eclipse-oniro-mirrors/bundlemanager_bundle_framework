@@ -21,6 +21,7 @@
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
 #include "code_crypto_metadata_process.h"
+#include "linux/code_decrypt.h"
 #endif
 #include <cstdio>
 #include <dirent.h>
@@ -50,9 +51,7 @@ static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
 #if defined(CODE_ENCRYPTION_ENABLE)
-static std::string APP_CRYPTO = "/dev/app_crypto";
-static int32_t APP_CRYPTO_CMD_SET_ASSOCIATE_KEY = 0x10007;
-static int32_t APP_CRYPTO_CMD_REMOVE_ASSOCIATE_KEY = 0x10008;
+static std::string CODE_DECRYPT = "/dev/code_decrypt";
 static int32_t INVALID_RETURN_VALUE = -1;
 static int32_t INVALID_FILE_DESCRIPTOR = -1;
 #endif
@@ -1399,7 +1398,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
 
     /* call CallIoctl */
     int32_t dev_fd = INVALID_FILE_DESCRIPTOR;
-    auto ret = CallIoctl(APP_CRYPTO_CMD_SET_ASSOCIATE_KEY, uid, dev_fd);
+    auto ret = CallIoctl(CODE_DECRYPT_CMD_SET_KEY, CODE_DECRYPT_CMD_SET_ASSOCIATE_KEY, uid, dev_fd);
     if (ret != 0) {
         APP_LOGE("CallIoctl failed");
         return result;
@@ -1462,7 +1461,7 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
 
     /* call CallIoctl */
     int32_t dev_fd = INVALID_FILE_DESCRIPTOR;
-    auto ret = CallIoctl(APP_CRYPTO_CMD_REMOVE_ASSOCIATE_KEY, uid, dev_fd);
+    auto ret = CallIoctl(CODE_DECRYPT_CMD_REMOVE_KEY, CODE_DECRYPT_CMD_REMOVE_KEY, uid, dev_fd);
     if (ret == 0) {
         APP_LOGD("ioctl successfully");
         result = ERR_OK;
@@ -1471,27 +1470,37 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
     return result;
 }
 
-int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t uid, int32_t &fd)
+int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd)
 {
-    unsigned long long installdUid = getuid();
-    unsigned long long bundleUid = uid;
-    APP_LOGD("current process uid is %{public}llu and bundle uid is %{public}llu", installdUid, bundleUid);
-    /* build ioctl args */
-    struct app_crypto_arg arg;
-    arg.arg1_len = sizeof(installdUid);
-    arg.arg1 = reinterpret_cast<unsigned char *>(&installdUid);
-    arg.arg2_len = sizeof(bundleUid);
-    arg.arg2 = reinterpret_cast<unsigned char *>(&bundleUid);
+    int32_t installdUid = getuid();
+    int32_t bundleUid = uid;
+    APP_LOGD("current process uid is %{public}d and bundle uid is %{public}d", installdUid, bundleUid);
 
-    /* open app_crypto */
-    fd = open(APP_CRYPTO.c_str(), O_RDONLY);
+    /* open CODE_DECRYPT */
+    fd = open(CODE_DECRYPT.c_str(), O_RDONLY);
     if (fd < 0) {
         APP_LOGE("call open failed");
         return INVALID_RETURN_VALUE;
     }
 
-    /* call ioctl */
-    auto ret = ioctl(fd, flag, &arg);
+    /* build ioctl args to set key or remove key*/
+    struct code_decrypt_arg firstArg;
+    firstArg.arg1_len = sizeof(bundleUid);
+    firstArg.arg1 = reinterpret_cast<void *>(&bundleUid);
+    auto ret = ioctl(fd, flag, &firstArg);
+    if (ret != 0) {
+        APP_LOGE("call ioctl failed");
+        close(fd);
+    }
+
+    struct code_decrypt_arg secondArg;
+    secondArg.arg1_len = sizeof(installdUid);
+    secondArg.arg1 = reinterpret_cast<void *>(&installdUid);
+    if (associatedFlag == CODE_DECRYPT_CMD_SET_ASSOCIATE_KEY) {
+        secondArg.arg2_len = sizeof(bundleUid);
+        secondArg.arg2 = reinterpret_cast<void *>(&bundleUid);
+    }
+    ret = ioctl(fd, associatedFlag, &secondArg);
     if (ret != 0) {
         APP_LOGE("call ioctl failed");
         close(fd);

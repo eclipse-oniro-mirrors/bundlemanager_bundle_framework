@@ -2173,7 +2173,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
         }
 
-        int32_t bundleUid = 0;
+        int32_t bundleUid = Constants::INVALID_UID;
         if (innerBundleInfo.IsEncryptedMoudle(modulePackage_)) {
             InnerBundleUserInfo innerBundleUserInfo;
             if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
