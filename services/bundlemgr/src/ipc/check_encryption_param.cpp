@@ -45,8 +45,10 @@ bool CheckEncryptionParam::Marshalling(Parcel &parcel) const
 CheckEncryptionParam *CheckEncryptionParam::Unmarshalling(Parcel &parcel)
 {
     CheckEncryptionParam *info = new (std::nothrow) CheckEncryptionParam();
-    if (info) {
-        info->ReadFromParcel(parcel);
+    if (info && !info->ReadFromParcel(parcel)) {
+        APP_LOGW("read from parcel failed");
+        delete info;
+        info = nullptr;
     }
     return info;
 }

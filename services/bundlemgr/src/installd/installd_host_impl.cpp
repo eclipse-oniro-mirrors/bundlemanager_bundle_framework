@@ -801,8 +801,7 @@ ErrCode InstalldHostImpl::CheckEncryption(const CheckEncryptionParam &checkEncry
     }
     if (!InstalldOperator::CheckEncryption(checkEncryptionParam, isEncryption)) {
         APP_LOGE("check encryption failed");
-        // change the error code when CheckEncryption is ready
-        return ERR_OK;
+        return ERR_APPEXECFWK_INSTALL_CHECK_ENCRYPTION_FAILED;
     }
     return ERR_OK;
 }
