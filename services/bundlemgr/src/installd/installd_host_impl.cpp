@@ -853,6 +853,12 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
+
+    if (hapPath.empty() || tmpSoPath.empty()) {
+        APP_LOGE("hapPath %{public}s or tmpSoPath %{public}s is empty", hapPath.c_str(), tmpSoPath.c_str());
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
+
     if (!CheckPathValid(hapPath, Constants::BUNDLE_CODE_DIR) ||
         !CheckPathValid(realSoFilesPath, Constants::BUNDLE_CODE_DIR) ||
         !CheckPathValid(tmpSoPath, Constants::HAP_COPY_PATH)) {
@@ -873,6 +879,9 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
 
 bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string &prefix)
 {
+    if (path.empty()) {
+        return true;
+    }
     if (path.find(Constants::RELATIVE_PATH) != std::string::npos) {
         APP_LOGE("path(%{public}s) contain relevant path", path.c_str());
         return false;

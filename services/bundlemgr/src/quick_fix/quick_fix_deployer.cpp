@@ -355,7 +355,7 @@ ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, 
             APP_LOGE("Fetch bundleInfo(%{public}s) failed.", appQuickFix.bundleName.c_str());
             return false;
         }
-        int32_t bundleUid = 0;
+        int32_t bundleUid = Constants::INVALID_UID;
         if (innerBundleInfo.IsEncryptedMoudle(hqf.moduleName)) {
             InnerBundleUserInfo innerBundleUserInfo;
             if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
