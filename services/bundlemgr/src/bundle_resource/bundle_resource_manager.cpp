@@ -21,6 +21,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
+}
 BundleResourceManager::BundleResourceManager()
 {
     bundleResourceRdb_ = std::make_shared<BundleResourceRdb>();
@@ -91,8 +94,8 @@ bool BundleResourceManager::AddResourceInfo(ResourceInfo &resourceInfo)
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfo(resourceInfo)) {
-        APP_LOGE("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
-        return false;
+        APP_LOGW("key: %{public}s ParseResourceInfo failed", resourceInfo.GetKey().c_str());
+        ProcessResourceInfoWhenParseFailed(resourceInfo);
     }
     return bundleResourceRdb_->AddResourceInfo(resourceInfo);
 }
@@ -106,8 +109,10 @@ bool BundleResourceManager::AddResourceInfos(std::vector<ResourceInfo> &resource
     // need to parse label and icon
     BundleResourceParser parser;
     if (!parser.ParseResourceInfos(resourceInfos)) {
-        APP_LOGE("Parse ResourceInfos failed");
-        return false;
+        APP_LOGW("Parse ResourceInfos failed, need to modify label and icon");
+        for (auto &resourceInfo : resourceInfos) {
+            ProcessResourceInfoWhenParseFailed(resourceInfo);
+        }
     }
     return bundleResourceRdb_->AddResourceInfos(resourceInfos);
 }
@@ -197,6 +202,28 @@ uint32_t BundleResourceManager::CheckResourceFlags(const uint32_t flags)
     }
     APP_LOGD("illegal flags");
     return flags | static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_ALL);
+}
+
+void BundleResourceManager::ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo)
+{
+    if (resourceInfo.label_.empty()) {
+        resourceInfo.label_ = resourceInfo.bundleName_;
+    }
+    if (resourceInfo.icon_.empty()) {
+        resourceInfo.icon_ = GetDefaultIcon();
+    }
+}
+
+std::string BundleResourceManager::GetDefaultIcon()
+{
+    BundleResourceInfo bundleResourceInfo;
+    if (!GetBundleResourceInfo(GLOBAL_RESOURCE_BUNDLE_NAME,
+        static_cast<uint32_t>(ResourceFlag::GET_RESOURCE_INFO_WITH_ICON),
+        bundleResourceInfo)) {
+        APP_LOGE("get default icon failed");
+        return std::string();
+    }
+    return bundleResourceInfo.icon;
 }
 } // AppExecFwk
 } // OHOS
