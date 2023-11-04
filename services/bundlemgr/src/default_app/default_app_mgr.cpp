@@ -25,37 +25,46 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-namespace {
-    constexpr int32_t INITIAL_USER_ID = -1;
-    constexpr int32_t TYPE_PART_COUNT = 2;
-    constexpr int32_t INDEX_ZERO = 0;
-    constexpr int32_t INDEX_ONE = 1;
-    const std::string SPLIT = "/";
-    const std::string ENTITY_BROWSER = "entity.system.browsable";
-    const std::string HTTP = "http";
-    const std::string HTTPS = "https";
-    const std::string WILDCARD = "*";
-    const std::string IMAGE_TYPE = "image/*";
-    const std::string AUDIO_TYPE = "audio/*";
-    const std::string VIDEO_TYPE = "video/*";
-    const std::string PDF_TYPE = "application/pdf";
-    const std::string DOC_TYPE = "application/msword";
-    const std::string DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-    const std::string XLS_TYPE = "application/vnd.ms-excel";
-    const std::string XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-    const std::string PPT_TYPE = "application/vnd.ms-powerpoint";
-    const std::string PPTX_TYPE = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
-    const std::string BROWSER = "BROWSER";
-    const std::string IMAGE = "IMAGE";
-    const std::string AUDIO = "AUDIO";
-    const std::string VIDEO = "VIDEO";
-    const std::string PDF = "PDF";
-    const std::string WORD = "WORD";
-    const std::string EXCEL = "EXCEL";
-    const std::string PPT = "PPT";
-}
+using Want = OHOS::AAFwk::Want;
 
-std::set<std::string> DefaultAppMgr::supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT};
+namespace {
+constexpr int32_t INITIAL_USER_ID = -1;
+constexpr int32_t TYPE_PART_COUNT = 2;
+constexpr int32_t INDEX_ZERO = 0;
+constexpr int32_t INDEX_ONE = 1;
+const std::string SPLIT = "/";
+const std::string ENTITY_BROWSER = "entity.system.browsable";
+const std::string HTTP = "http";
+const std::string HTTPS = "https";
+const std::string HTTP_SCHEME = "http://";
+const std::string HTTPS_SCHEME = "https://";
+const std::string WILDCARD = "*";
+const std::string BROWSER = "BROWSER";
+const std::string IMAGE = "IMAGE";
+const std::string AUDIO = "AUDIO";
+const std::string VIDEO = "VIDEO";
+const std::string PDF = "PDF";
+const std::string WORD = "WORD";
+const std::string EXCEL = "EXCEL";
+const std::string PPT = "PPT";
+const std::map<std::string, std::set<std::string>> APP_TYPES = {
+    {IMAGE, {"image/*"}},
+    {AUDIO, {"audio/*"}},
+    {VIDEO, {"video/*"}},
+    {PDF, {"application/pdf"}},
+    {WORD, {"application/msword",
+        "application/vnd.ms-word.document",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template"}},
+    {EXCEL, {"application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template"}},
+    {PPT, {"application/vnd.ms-powerpoint",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "application/vnd.openxmlformats-officedocument.presentationml.template"}},
+};
+const std::set<std::string> supportAppTypes = {BROWSER, IMAGE, AUDIO, VIDEO, PDF, WORD, EXCEL, PPT};
+}
 
 DefaultAppMgr& DefaultAppMgr::GetInstance()
 {
@@ -273,6 +282,88 @@ void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
     defaultAppDb_->DeleteDefaultApplicationInfos(userId);
 }
 
+bool DefaultAppMgr::IsBrowserWant(const Want& want) const
+{
+    bool matchAction = want.GetAction() == Constants::ACTION_VIEW_DATA;
+    if (!matchAction) {
+        APP_LOGD("Action does not match, not browser want");
+        return false;
+    }
+    bool matchEntity = false;
+    for (const auto& entity : want.GetEntities()) {
+        if (entity == ENTITY_BROWSER) {
+            matchEntity = true;
+            break;
+        }
+    }
+    if (!matchEntity) {
+        APP_LOGD("Entity does not match, not browser want");
+        return false;
+    }
+    std::string uri = want.GetUriString();
+    bool matchUri = uri.rfind(HTTP_SCHEME, 0) == 0 || uri.rfind(HTTPS_SCHEME, 0);
+    if (!matchUri) {
+        APP_LOGD("Uri does not match, not browser want");
+        return false;
+    }
+    APP_LOGD("is browser want");
+    return true;
+}
+
+std::string DefaultAppMgr::GetType(const Want& want) const
+{
+    if (IsBrowserWant(want)) {
+        return BROWSER;
+    }
+    if (want.GetAction() == Constants::ACTION_VIEW_DATA) {
+        std::string type = want.GetType();
+        if (!type.empty()) {
+            return type;
+        }
+        std::string uri = want.GetUriString();
+        if (uri.empty()) {
+            return Constants::EMPTY_STRING;
+        }
+        std::string convertType;
+        if (MimeTypeMgr::GetMimeTypeByUri(uri, convertType)) {
+            APP_LOGD("get type by uri success, convertType : %{public}s", convertType.c_str());
+            return convertType;
+        }
+        return Constants::EMPTY_STRING;
+    }
+    return Constants::EMPTY_STRING;
+}
+
+bool DefaultAppMgr::GetDefaultApplication(const Want& want, const int32_t userId,
+    std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos) const
+{
+    APP_LOGD("begin");
+    std::string type = GetType(want);
+    APP_LOGD("type : %{public}s", type.c_str());
+    if (type.empty()) {
+        APP_LOGE("GetType failed");
+        return false;
+    }
+    BundleInfo bundleInfo;
+    ErrCode ret = GetDefaultApplication(userId, type, bundleInfo);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetDefaultApplication failed");
+        return false;
+    }
+    if (bundleInfo.abilityInfos.size() == 1) {
+        abilityInfos = bundleInfo.abilityInfos;
+        APP_LOGD("find default ability");
+        return true;
+    } else if (bundleInfo.extensionInfos.size() == 1) {
+        extensionInfos = bundleInfo.extensionInfos;
+        APP_LOGD("find default extension");
+        return true;
+    } else {
+        APP_LOGE("invalid bundleInfo");
+        return false;
+    }
+}
+
 ErrCode DefaultAppMgr::GetBundleInfoByAppType(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
     Element element;
@@ -310,9 +401,16 @@ ErrCode DefaultAppMgr::GetBundleInfoByFileType(int32_t userId, const std::string
     }
     // match default app type
     for (const auto& item : defaultAppTypeInfos) {
-        if (GetBundleInfo(userId, type, item.second, bundleInfo)) {
-            APP_LOGD("match default app type success.");
-            return ERR_OK;
+        const auto iter = APP_TYPES.find(item.first);
+        if (iter == APP_TYPES.end()) {
+            continue;
+        }
+        Skill skill;
+        for (const auto& mimeType : iter->second) {
+            if (skill.MatchType(type, mimeType) && GetBundleInfo(userId, type, item.second, bundleInfo)) {
+                APP_LOGD("match default app type success");
+                return ERR_OK;
+            }
         }
     }
     // match default file type
@@ -370,6 +468,25 @@ bool DefaultAppMgr::GetBundleInfo(int32_t userId, const std::string& type, const
     return true;
 }
 
+bool DefaultAppMgr::MatchActionAndType(
+    const std::string& action, const std::string& type, const std::vector<Skill>& skills) const
+{
+    APP_LOGD("begin, action : %{public}s, type : %{public}s", action.c_str(), type.c_str());
+    for (const Skill& skill : skills) {
+        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), action);
+        if (item == skill.actions.cend()) {
+            continue;
+        }
+        for (const SkillUri& skillUri : skill.uris) {
+            if (skill.MatchType(type, skillUri.type)) {
+                return true;
+            }
+        }
+    }
+    APP_LOGW("MatchActionAndType failed");
+    return false;
+}
+
 bool DefaultAppMgr::IsMatch(const std::string& type, const std::vector<Skill>& skills) const
 {
     if (IsAppType(type)) {
@@ -387,197 +504,49 @@ bool DefaultAppMgr::MatchAppType(const std::string& type, const std::vector<Skil
     APP_LOGW("begin to match app type, type : %{public}s.", type.c_str());
     if (type == BROWSER) {
         return IsBrowserSkillsValid(skills);
-    } else if (type == IMAGE) {
-        return IsImageSkillsValid(skills);
-    } else if (type == AUDIO) {
-        return IsAudioSkillsValid(skills);
-    } else if (type == VIDEO) {
-        return IsVideoSkillsValid(skills);
-    } else if (type == PDF) {
-        return IsPdfSkillsValid(skills);
-    } else if (type == WORD) {
-        return IsWordSkillsValid(skills);
-    } else if (type == EXCEL) {
-        return IsExcelSkillsValid(skills);
-    } else if (type == PPT) {
-        return IsPptSkillsValid(skills);
-    } else {
+    }
+    auto item = APP_TYPES.find(type);
+    if (item == APP_TYPES.end()) {
+        APP_LOGE("invalid app type : %{public}s.", type.c_str());
         return false;
     }
+    for (const std::string& mimeType : item->second) {
+        if (MatchActionAndType(Constants::ACTION_VIEW_DATA, mimeType, skills)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool DefaultAppMgr::IsBrowserSkillsValid(const std::vector<Skill>& skills) const
 {
     APP_LOGD("begin to verify browser skills.");
+    Want httpWant;
+    httpWant.SetAction(Constants::ACTION_VIEW_DATA);
+    httpWant.AddEntity(ENTITY_BROWSER);
+    httpWant.SetUri(HTTP);
+
+    Want httpsWant;
+    httpsWant.SetAction(Constants::ACTION_VIEW_DATA);
+    httpsWant.AddEntity(ENTITY_BROWSER);
+    httpsWant.SetUri(HTTPS);
     for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        item = std::find(skill.entities.cbegin(), skill.entities.cend(), ENTITY_BROWSER);
-        if (item == skill.entities.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skillUri.scheme == HTTP || skillUri.scheme == HTTPS) {
-                APP_LOGD("browser skills is valid.");
-                return true;
-            }
+        if (skill.Match(httpsWant) || skill.Match(httpWant)) {
+            APP_LOGD("browser skills is valid");
+            return true;
         }
     }
     APP_LOGW("browser skills is invalid.");
     return false;
 }
 
-bool DefaultAppMgr::IsImageSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify image skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skill.MatchType(IMAGE_TYPE, skillUri.type)) {
-                APP_LOGD("image skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("image skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsAudioSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify audio skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skill.MatchType(AUDIO_TYPE, skillUri.type)) {
-                APP_LOGD("audio skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("audio skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsVideoSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify video skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skill.MatchType(VIDEO_TYPE, skillUri.type)) {
-                APP_LOGD("video skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("video skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsPdfSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify pdf skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skillUri.type == PDF_TYPE) {
-                APP_LOGD("pdf skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("pdf skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsWordSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify word skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skillUri.type == DOC_TYPE || skillUri.type == DOCX_TYPE) {
-                APP_LOGD("word skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("word skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsExcelSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify excel skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skillUri.type == XLS_TYPE || skillUri.type == XLSX_TYPE) {
-                APP_LOGD("excel skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("excel skills is invalid.");
-    return false;
-}
-
-bool DefaultAppMgr::IsPptSkillsValid(const std::vector<Skill>& skills) const
-{
-    APP_LOGD("begin to verify ppt skills.");
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skillUri.type == PPT_TYPE || skillUri.type == PPTX_TYPE) {
-                APP_LOGD("ppt skills is valid.");
-                return true;
-            }
-        }
-    }
-    APP_LOGW("ppt skills is invalid.");
-    return false;
-}
-
 bool DefaultAppMgr::MatchFileType(const std::string& type, const std::vector<Skill>& skills) const
 {
-    APP_LOGW("begin to match file type, type : %{public}s.", type.c_str());
-    for (const Skill& skill : skills) {
-        auto item = std::find(skill.actions.cbegin(), skill.actions.cend(), Constants::ACTION_VIEW_DATA);
-        if (item == skill.actions.cend()) {
-            continue;
-        }
-        for (const SkillUri& skillUri : skill.uris) {
-            if (skill.MatchType(type, skillUri.type)) {
-                APP_LOGW("match file type success.");
-                return true;
-            }
-        }
+    APP_LOGD("type : %{public}s", type.c_str());
+    if (MatchActionAndType(Constants::ACTION_VIEW_DATA, type, skills)) {
+        return true;
     }
-    APP_LOGW("match file type failed.");
+    APP_LOGE("MatchFileType failed");
     return false;
 }
 
@@ -697,7 +666,7 @@ bool DefaultAppMgr::IsElementValid(int32_t userId, const std::string& type, cons
     return true;
 }
 
-void DefaultAppMgr::ConvertTypeBySuffix(std::string &suffix) const
+void DefaultAppMgr::ConvertTypeBySuffix(std::string& suffix) const
 {
     if (suffix.empty() || suffix.find('.') != 0) {
         APP_LOGD("default app type is not suffix form");
