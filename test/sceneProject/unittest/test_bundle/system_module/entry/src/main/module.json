@@ -47,7 +47,7 @@
             "label": "Login",
             "labelId": 16777216,
             "permissions":["ext","sql"],
-            "specifiedProcess": true,
+            "isolationProcess": true,
             "metadata":[
                 {
                     "name":"a01",

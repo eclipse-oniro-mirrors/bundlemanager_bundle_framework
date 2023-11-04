@@ -832,7 +832,7 @@ protected:
                     "writePermission": "",
                     "supportExtNames": [],
                     "supportMimeTypes": [],
-                    "specifiedProcess": false
+                    "isolationProcess": false
                 },
                 "com.ohos.launcher.com.ohos.launcher.recents.com.ohos.launcher.recents.MainAbility": {
                     "applicationName": "com.ohos.launcher",

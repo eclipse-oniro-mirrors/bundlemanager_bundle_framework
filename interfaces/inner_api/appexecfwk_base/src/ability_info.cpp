@@ -102,7 +102,7 @@ const std::string JOSN_KEY_UNCLEARABLE_MISSION = "unclearableMission";
 const std::string JSON_KEY_RECOVERABLE = "recoverable";
 const std::string JSON_KEY_SUPPORT_EXT_NAMES = "supportExtNames";
 const std::string JSON_KEY_SUPPORT_MIME_TYPES = "supportMimeTypes";
-const std::string JSON_KEY_SPECIFIED_PROCESS = "specifiedProcess";
+const std::string JSON_KEY_ISOLATION_PROCESS = "isolationProcess";
 const size_t ABILITY_CAPACITY = 10240; // 10K
 }  // namespace
 
@@ -281,7 +281,7 @@ bool AbilityInfo::ReadFromParcel(Parcel &parcel)
         stctUri.type = Str16ToStr8(parcel.ReadString16());
         skillUri.emplace_back(stctUri);
     }
-    specifiedProcess = parcel.ReadBool();
+    isolationProcess = parcel.ReadBool();
     return true;
 }
 
@@ -432,7 +432,7 @@ bool AbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
     }
-    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, specifiedProcess);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isolationProcess);
     return true;
 }
 
@@ -559,7 +559,7 @@ void to_json(nlohmann::json &jsonObject, const AbilityInfo &abilityInfo)
         {JSON_KEY_RECOVERABLE, abilityInfo.recoverable},
         {JSON_KEY_SUPPORT_EXT_NAMES, abilityInfo.supportExtNames},
         {JSON_KEY_SUPPORT_MIME_TYPES, abilityInfo.supportMimeTypes},
-        {JSON_KEY_SPECIFIED_PROCESS, abilityInfo.specifiedProcess},
+        {JSON_KEY_ISOLATION_PROCESS, abilityInfo.isolationProcess},
     };
     if (abilityInfo.maxWindowRatio == 0) {
         // maxWindowRatio in json string will be 0 instead of 0.0
@@ -1211,8 +1211,8 @@ void from_json(const nlohmann::json &jsonObject, AbilityInfo &abilityInfo)
         ArrayType::STRING);
     GetValueIfFindKey<bool>(jsonObject,
         jsonObjectEnd,
-        JSON_KEY_SPECIFIED_PROCESS,
-        abilityInfo.specifiedProcess,
+        JSON_KEY_ISOLATION_PROCESS,
+        abilityInfo.isolationProcess,
         JsonType::BOOLEAN,
         false,
         parseResult,

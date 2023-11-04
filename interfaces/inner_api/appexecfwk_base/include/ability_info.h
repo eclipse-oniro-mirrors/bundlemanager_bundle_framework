@@ -240,7 +240,7 @@ struct AbilityInfo : public Parcelable {
     bool unclearableMission = false;
     // whether to support recover UI interface
     bool recoverable = false;
-    bool specifiedProcess = false;
+    bool isolationProcess = false;
 
     // support windows mode
     std::vector<SupportWindowMode> windowModes;
