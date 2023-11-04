@@ -551,10 +551,10 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0011, Function | SmallTest
     bundleInfo.AddInnerBundleUserInfo(userInfo);
     // bundle exist, userId exist
     ans = manager->AddResourceInfo(bundleInfo, USERID);
-    EXPECT_FALSE(ans);
+    EXPECT_TRUE(ans);
 
-    manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
-    EXPECT_FALSE(ans);
+    ans = manager->AddResourceInfo(bundleInfo, USERID, HAP_FILE_PATH1);
+    EXPECT_TRUE(ans);
 
     ans = manager->DeleteResourceInfo(BUNDLE_NAME);
     EXPECT_TRUE(ans);

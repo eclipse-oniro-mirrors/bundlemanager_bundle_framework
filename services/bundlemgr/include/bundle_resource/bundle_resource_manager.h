@@ -83,6 +83,10 @@ private:
 
     bool AddResourceInfos(std::vector<ResourceInfo> &resourceInfos);
 
+    void ProcessResourceInfoWhenParseFailed(ResourceInfo &resourceInfo);
+
+    std::string GetDefaultIcon();
+
     uint32_t CheckResourceFlags(const uint32_t flags);
 
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
