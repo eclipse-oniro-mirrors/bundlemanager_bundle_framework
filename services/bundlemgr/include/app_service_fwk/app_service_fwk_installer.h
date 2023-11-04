@@ -49,6 +49,11 @@ private:
         InstallParam &installParam);
     ErrCode CheckAppLabelInfo(
         const std::unordered_map<std::string, InnerBundleInfo> &infos);
+    ErrCode CheckFileType(const std::vector<std::string> &bundlePaths);
+    std::string GenerateEventMsg();
+    void SendBundleSystemEvent(
+        const std::string &bundleName, BundleEventType bundleEventType,
+        const InstallParam &installParam, InstallScene preBundleScene, ErrCode errCode);
     ErrCode ExtractModule(
         InnerBundleInfo &newInfo, const std::string &bundlePath);
     ErrCode MkdirIfNotExist(const std::string &dir);
@@ -75,6 +80,8 @@ private:
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;
     std::string bundleName_;
+    std::string bundleMsg_;
+    uint32_t versionCode_ = 0;
     InnerBundleInfo newInnerBundleInfo_;
     DISALLOW_COPY_AND_MOVE(AppServiceFwkInstaller);
 };

@@ -879,6 +879,7 @@ void BMSEventHandler::ProcessSystemHspInstall(const PreScanInfo &preScanInfo)
     APP_LOGD("Install systemHsp by bundleDir(%{private}s)", preScanInfo.bundleDir.c_str());
     InstallParam installParam;
     installParam.isPreInstallApp = true;
+    installParam.removable = false;
     AppServiceFwkInstaller installer;
     ErrCode ret = installer.Install({preScanInfo.bundleDir}, installParam);
     if (ret != ERR_OK) {
