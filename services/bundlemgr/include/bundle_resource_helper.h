@@ -17,6 +17,7 @@
 #define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_HELPER_H
 
 #include <string>
+#include <vector>
 
 #include "bundle_constants.h"
 #include "inner_bundle_info.h"
@@ -43,6 +44,8 @@ public:
 
     static void SetAbilityEnabled(const std::string &bundleName, const std::string &moduleName,
         const std::string &abilityName, bool enabled, const int32_t userId);
+
+    static void GetAllBundleResourceName(std::vector<std::string> &resourceNames);
 };
 } // AppExecFwk
 } // OHOS

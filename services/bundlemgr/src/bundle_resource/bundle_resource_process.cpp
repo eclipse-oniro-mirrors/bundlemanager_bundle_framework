@@ -329,7 +329,6 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(
         resourceInfo.label_ = innerBundleInfo.GetBundleName();
     }
     resourceInfo.iconId_ = innerBundleInfo.GetBaseApplicationInfo().iconResource.id;
-    resourceInfo.icon_ = innerBundleInfo.GetBaseApplicationInfo().icon;
     resourceInfo.updateTime_ = GetUpdateTime(innerBundleInfo, userId);
     if (resourceInfo.iconId_ == 0) {
         if (!GetDefaultIconResource(resourceInfo.iconId_, resourceInfo.defaultIconHapPath_)) {

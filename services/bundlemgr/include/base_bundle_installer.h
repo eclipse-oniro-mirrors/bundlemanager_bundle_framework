@@ -562,6 +562,9 @@ private:
     ErrCode CheckOverlayInstallation(std::unordered_map<std::string, InnerBundleInfo> &newInfos, int32_t userId);
     ErrCode CheckOverlayUpdate(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo, int32_t userId) const;
     NotifyType GetNotifyType();
+    ErrCode CheckAppService(
+        const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist);
+    ErrCode CheckSingleton(const InnerBundleInfo &newInfo, const int32_t userId);
     void GetCallingEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(EventInfo &eventInfo);
     void GetInstallEventInfo(const InnerBundleInfo &bundleInfo, EventInfo &eventInfo);
@@ -631,6 +634,7 @@ private:
     bool isContainEntry_ = false;
     uint32_t versionCode_ = 0;
     uint32_t accessTokenId_ = 0;
+    bool isAppService_ = false;
     // value is packageName for uninstalling
     bool isFeatureNeedUninstall_ = false;
     std::vector<std::string> uninstallModuleVec_;

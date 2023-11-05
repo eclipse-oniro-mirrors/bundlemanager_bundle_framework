@@ -664,24 +664,22 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         dataMgr_->SavePreInstallBundleInfo(bundleName_, preInstallBundleInfo);
     }
 
-    // singleton app can only be installed in U0 and U0 can only install singleton app.
-    bool isSingleton = newInfos.begin()->second.IsSingleton();
-    if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
-        (!isSingleton && (userId_ == Constants::DEFAULT_USERID))) {
-        APP_LOGW("singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched.",
-            isSingleton, bundleName_.c_str(), userId_);
-        return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
-    }
-
     // try to get the bundle info to decide use install or update. Always keep other exceptions below this line.
     if (!GetInnerBundleInfo(oldInfo, isAppExist_)) {
         return ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR;
     }
     APP_LOGI("flag:%{public}d, userId:%{public}d, isAppExist:%{public}d",
         installParam.installFlag, userId_, isAppExist_);
+
+    ErrCode result = ERR_OK;
+    result = CheckAppService(newInfos.begin()->second, oldInfo, isAppExist_);
+    CHECK_RESULT(result, "Check appService failed %{public}d");
+
+    result = CheckSingleton(newInfos.begin()->second, userId_);
+    CHECK_RESULT(result, "Check singleton failed %{public}d");
+
     bool isFreeInstallFlag = (installParam.installFlag == InstallFlag::FREE_INSTALL);
     CheckEnableRemovable(newInfos, oldInfo, userId_, isFreeInstallFlag, isAppExist_);
-    ErrCode result = ERR_OK;
     // check MDM self update
     result = CheckMDMUpdateBundleForSelf(installParam, oldInfo, newInfos, isAppExist_);
     CHECK_RESULT(result, "update MDM app failed %{public}d");
@@ -803,6 +801,48 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
     uid = bundleInfo.GetUid(userId_);
     mainAbility_ = bundleInfo.GetMainAbility();
     return result;
+}
+
+ErrCode BaseBundleInstaller::CheckAppService(
+    const InnerBundleInfo &newInfo, const InnerBundleInfo &oldInfo, bool isAppExist)
+{
+    if ((newInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) && !isAppExist) {
+        APP_LOGW("Not alloweded instal appService hap(%{public}s) due to the hsp does not exist.",
+            newInfo.GetBundleName().c_str());
+        return ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED;
+    }
+
+    if (isAppExist) {
+        if (oldInfo.GetApplicationBundleType() != newInfo.GetApplicationBundleType()) {
+            APP_LOGW("Bundle(%{public}s) type is not same.", newInfo.GetBundleName().c_str());
+            return ERR_APPEXECFWK_BUNDLE_TYPE_NOT_SAME;
+        }
+
+        isAppService_ = oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK;
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::CheckSingleton(const InnerBundleInfo &info, const int32_t userId)
+{
+    if (isAppService_) {
+        if (userId != Constants::DEFAULT_USERID) {
+            APP_LOGW("appService(%{public}s) only install U0.", info.GetBundleName().c_str());
+            return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
+        }
+
+        return ERR_OK;
+    }
+    // singleton app can only be installed in U0 and U0 can only install singleton app.
+    bool isSingleton = info.IsSingleton();
+    if ((isSingleton && (userId != Constants::DEFAULT_USERID)) ||
+        (!isSingleton && (userId == Constants::DEFAULT_USERID))) {
+        APP_LOGW("singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched.",
+            isSingleton, info.GetBundleName().c_str(), userId);
+        return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
+    }
+
+    return ERR_OK;
 }
 
 Security::AccessToken::AccessTokenIDEx BaseBundleInstaller::CreateAccessTokenIdEx(const InnerBundleInfo &info)
@@ -1496,6 +1536,11 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
             }
 
             versionCode_ = oldInfo.GetVersionCode();
+            if (oldInfo.GetApplicationBundleType() == BundleType::APP_SERVICE_FWK) {
+                APP_LOGD("Appservice (%{public}s) only install in U0", bundleName.c_str());
+                return ERR_OK;
+            }
+
             if (oldInfo.HasInnerBundleUserInfo(userId_)) {
                 APP_LOGE("App is exist in user(%{public}d).", userId_);
                 return ERR_APPEXECFWK_INSTALL_ALREADY_EXIST;
@@ -1507,13 +1552,8 @@ ErrCode BaseBundleInstaller::InnerProcessInstallByPreInstallInfo(
                 return ret;
             }
 
-            bool isSingleton = oldInfo.IsSingleton();
-            if ((isSingleton && (userId_ != Constants::DEFAULT_USERID)) ||
-                (!isSingleton && (userId_ == Constants::DEFAULT_USERID))) {
-                APP_LOGW("singleton(%{public}d) app(%{public}s) and user(%{public}d) are not matched.",
-                    isSingleton, bundleName.c_str(), userId_);
-                return ERR_APPEXECFWK_INSTALL_ZERO_USER_WITH_NO_SINGLETON;
-            }
+            ret = CheckSingleton(oldInfo, userId_);
+            CHECK_RESULT(ret, "Check singleton failed %{public}d");
 
             InnerBundleUserInfo curInnerBundleUserInfo;
             curInnerBundleUserInfo.bundleUserInfo.userId = userId_;
@@ -2180,7 +2220,7 @@ ErrCode BaseBundleInstaller::ProcessDiffFiles(const AppqfInfo &appQfInfo, const 
             return ERR_BUNDLEMANAGER_QUICK_FIX_BUNDLE_NAME_NOT_EXIST;
         }
 
-        int32_t bundleUid = 0;
+        int32_t bundleUid = Constants::INVALID_UID;
         if (innerBundleInfo.IsEncryptedMoudle(modulePackage_)) {
             InnerBundleUserInfo innerBundleUserInfo;
             if (!innerBundleInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, innerBundleUserInfo)) {
@@ -4151,14 +4191,13 @@ std::string BaseBundleInstaller::GetTempHapPath(const InnerBundleInfo &info)
 
 ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::string, InnerBundleInfo> &infos)
 {
+    APP_LOGD("begin to check hap encryption");
     InnerBundleInfo oldInfo;
     bool isExist = false;
     if (!GetInnerBundleInfo(oldInfo, isExist) || !isExist) {
         APP_LOGE("Get innerBundleInfo failed, bundleName: %{public}s", bundleName_.c_str());
         return ERR_APPEXECFWK_INSTALL_INTERNAL_ERROR;
     }
-    bool isEncryptionOld = oldInfo.GetApplicationReservedFlag() &
-        static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION);
     for (const auto &info : infos) {
         if (hapPathRecords_.find(info.first) == hapPathRecords_.end()) {
             APP_LOGE("path %{public}s cannot be found in hapPathRecord", info.first.c_str());
@@ -4176,11 +4215,14 @@ ErrCode BaseBundleInstaller::CheckHapEncryption(const std::unordered_map<std::st
         bool isEncrypted = false;
         ErrCode result = InstalldClient::GetInstance()->CheckEncryption(param, isEncrypted);
         CHECK_RESULT(result, "fail to CheckHapEncryption, error is %{public}d");
-        if (!isEncryptionOld && isEncrypted) {
-            APP_LOGD("hap %{public}s is encrypted", hapPath.c_str());
-            oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
-        }
         oldInfo.SetMoudleIsEncrpted(info.second.GetCurrentModulePackage(), isEncrypted);
+    }
+    if (oldInfo.IsContainEncryptedModule()) {
+        APP_LOGD("application contains encrypted module");
+        oldInfo.SetApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
+    } else {
+        APP_LOGD("application does not contain encrypted module");
+        oldInfo.ClearApplicationReservedFlag(static_cast<uint32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION));
     }
     if (!dataMgr_->UpdateInnerBundleInfo(oldInfo)) {
         APP_LOGE("save UpdateInnerBundleInfo failed");

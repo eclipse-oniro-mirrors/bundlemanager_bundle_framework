@@ -34,6 +34,9 @@ public:
     void HandleUninstallBundle(int32_t userId, const std::string& bundleName) const;
     void HandleCreateUser(int32_t userId) const;
     void HandleRemoveUser(int32_t userId) const;
+
+    bool GetDefaultApplication(const AAFwk::Want& want, const int32_t userId,
+        std::vector<AbilityInfo>& abilityInfos, std::vector<ExtensionAbilityInfo>& extensionInfos) const;
 private:
     DefaultAppMgr();
     ~DefaultAppMgr();
@@ -53,17 +56,12 @@ private:
     bool IsUserIdExist(int32_t userId) const;
     ErrCode VerifyUserIdAndType(int32_t userId, const std::string& type) const;
     bool IsBrowserSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsImageSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsAudioSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsVideoSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsPdfSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsWordSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsExcelSkillsValid(const std::vector<Skill>& skills) const;
-    bool IsPptSkillsValid(const std::vector<Skill>& skills) const;
-    void ConvertTypeBySuffix(std::string &suffix) const;
+    void ConvertTypeBySuffix(std::string& suffix) const;
+    bool IsBrowserWant(const AAFwk::Want& want) const;
+    std::string GetType(const AAFwk::Want& want) const;
+    bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
-    static std::set<std::string> supportAppTypes;
 };
 }
 }

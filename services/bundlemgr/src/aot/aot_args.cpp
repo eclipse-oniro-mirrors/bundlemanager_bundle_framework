@@ -110,6 +110,10 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
         }
         hspVector.emplace_back(*hspInfoPtr);
     }
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
+    std::u16string appIdentifilerVal;
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, appIdentifilerVal);
+    appIdentifier = Str16ToStr8(appIdentifilerVal);
     return true;
 }
 
@@ -128,6 +132,8 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     for (const auto &hspInfo : hspVector) {
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Parcelable, parcel, &hspInfo);
     }
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
     return true;
 }
 
@@ -152,7 +158,9 @@ std::string AOTArgs::ToString() const
         + ", outputPath = " + outputPath
         + ", arkProfilePath = " + arkProfilePath
         + ", offset = " + std::to_string(offset)
-        + ", length = " + std::to_string(length) + "]";
+        + ", length = " + std::to_string(length)
+        + ", bundleUid = " + std::to_string(bundleUid)
+        + ", appIdentifier = " + appIdentifier + "]";
     ret.append(" hspVector = ");
     for (const auto &hspInfo : hspVector) {
         ret.append(hspInfo.ToString());

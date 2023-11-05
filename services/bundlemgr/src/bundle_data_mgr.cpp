@@ -4386,38 +4386,14 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
-    // step1 : find default infos, current only support default file types
+    APP_LOGD("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
+        want.ToString().c_str(), flags, userId, withDefault);
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
-    if (withDefault) {
-        std::string action = want.GetAction();
-        std::string uri = want.GetUriString();
-        std::string type = want.GetType();
-        APP_LOGD("action : %{public}s, uri : %{public}s, type : %{public}s", action.c_str(), uri.c_str(), type.c_str());
-        if (!uri.empty() && type.empty()) {
-            if (!MimeTypeMgr::GetMimeTypeByUri(uri, type)) {
-                APP_LOGW("GetMimeTypeByUri failed");
-            } else {
-                APP_LOGD("get type %{public}s by uri suffix", type.c_str());
-                uri = Constants::EMPTY_STRING;
-            }
-        }
-        if (action == Constants::ACTION_VIEW_DATA && !type.empty() && want.GetEntities().empty() && uri.empty()) {
-            BundleInfo bundleInfo;
-            ErrCode ret = DefaultAppMgr::GetInstance().GetDefaultApplication(userId, type, bundleInfo);
-            if (ret == ERR_OK && bundleInfo.abilityInfos.size() == 1) {
-                abilityInfos = bundleInfo.abilityInfos;
-                APP_LOGD("find default ability.");
-                findDefaultApp = true;
-                return true;
-            } else if (ret == ERR_OK && bundleInfo.extensionInfos.size() == 1) {
-                extensionInfos = bundleInfo.extensionInfos;
-                APP_LOGD("find default extension.");
-                findDefaultApp = true;
-                return true;
-            } else if (ret == ERR_OK) {
-                APP_LOGD("GetDefaultApplication failed.");
-            }
-        }
+    // step1 : find default infos
+    if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
+        APP_LOGD("find target default application");
+        findDefaultApp = true;
+        return true;
     }
 #endif
     // step2 : implicit query infos

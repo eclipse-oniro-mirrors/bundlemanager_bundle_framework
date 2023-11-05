@@ -30,13 +30,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-struct app_crypto_arg {
-    unsigned long long arg1_len;
-    unsigned long long arg2_len;
-    unsigned char *arg1;
-    unsigned char *arg2;
-};
-
 class InstalldOperator {
 public:
     /**
@@ -227,7 +220,7 @@ public:
 
     static ErrCode RemoveEncryptedKey(int32_t uid, const std::vector<std::string> &soList);
 
-    static int32_t CallIoctl(int32_t flag, int32_t uid, int32_t &fd);
+    static int32_t CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd);
 #endif
 
 private:

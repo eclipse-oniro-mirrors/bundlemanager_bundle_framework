@@ -174,7 +174,7 @@ napi_value GetBundleResourceInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;
@@ -236,7 +236,7 @@ napi_value GetLauncherAbilityResourceInfo(napi_env env, napi_callback_info info)
         return nullptr;
     }
     std::string bundleName;
-    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName) || bundleName.empty()) {
         APP_LOGE("parse bundleName failed");
         BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
         return nullptr;

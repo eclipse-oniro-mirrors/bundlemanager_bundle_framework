@@ -412,7 +412,7 @@ constexpr const char* ABILITY_MIN_WINDOW_HEIGHT = "minWindowHeight";
 constexpr const char* ABILITY_EXCLUDE_FROM_MISSIONS = "excludeFromMissions";
 constexpr const char* ABILITY_UNCLEARABLE_MISSION = "unclearableMission";
 constexpr const char* ABILITY_RECOVERABLE = "recoverable";
-constexpr const char* ABILITY_SPECIFIED_PROCESS = "specifiedProcess";
+constexpr const char* ABILITY_ISOLATION_PROCESS = "isolationProcess";
 // extension ability
 constexpr const char* EXTENSION_ABILITY_NAME = "name";
 constexpr const char* EXTENSION_ABILITY_TYPE = "type";
@@ -473,7 +473,7 @@ constexpr const char* PRELOADS_MODULE_NAME = "moduleName";
 constexpr const char* BUNDLE_TYPE_APP = "app";
 constexpr const char* BUNDLE_TYPE_ATOMIC_SERVICE = "atomicService";
 constexpr const char* BUNDLE_TYPE_SHARED = "shared";
-constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appServiceFwk";
+constexpr const char* BUNDLE_TYPE_APP_SERVICE_FWK = "appService";
 
 // compileSdkType
 constexpr const char* COMPILE_SDK_VERSION = "compileSdkVersion";

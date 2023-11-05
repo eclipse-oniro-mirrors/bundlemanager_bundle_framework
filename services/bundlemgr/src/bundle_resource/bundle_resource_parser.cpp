@@ -43,13 +43,14 @@ bool BundleResourceParser::ParseResourceInfos(std::vector<ResourceInfo> &resourc
         APP_LOGE("resourceInfos is empty");
         return false;
     }
+    bool result = true;
     for (auto &info : resourceInfos) {
         if (!ParseResourceInfo(info)) {
-            APP_LOGE("ParseResource failed, key: %{public}s", info.GetKey().c_str());
-            return false;
+            APP_LOGW("ParseResource failed, key: %{public}s", info.GetKey().c_str());
+            result = false;
         }
     }
-    return true;
+    return result;
 }
 
 bool BundleResourceParser::ParseResourceInfoWithSameHap(ResourceInfo &resourceInfo)
