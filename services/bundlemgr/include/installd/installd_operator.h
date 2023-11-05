@@ -216,7 +216,8 @@ public:
     static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
-    static ErrCode DecryptSoFile(const std::string &hapPath, const std::string &tmpHapPath, int32_t uid);
+    static ErrCode DecryptSoFile(const std::string &hapPath, const std::string &tmpHapPath, int32_t uid,
+        uint32_t fileSize, uint32_t offset);
 
     static ErrCode RemoveEncryptedKey(int32_t uid, const std::vector<std::string> &soList);
 
@@ -235,12 +236,6 @@ private:
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
-
-    static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
-        const std::string &tmpSoPath);
-
-    static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
-        const std::string &cpuAbi, const std::string &tmpSoPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

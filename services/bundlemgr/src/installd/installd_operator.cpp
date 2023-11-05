@@ -1287,17 +1287,17 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
     const std::string &tmpSoPath, int32_t uid)
 {
     APP_LOGD("start to obtain decoded so files from hapPath %{public}s", hapPath.c_str());
-    /* cal the tmp hap path */
-    auto pos = hapPath.rfind(Constants::PATH_SEPARATOR[0]);
-    if (pos == std::string::npos) {
-        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    BundleExtractor extractor(hapPath);
+    if (!extractor.Init()) {
+        APP_LOGE("init bundle extractor failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
-    std::string hapName = hapPath.substr(pos + 1);
-    if (hapName.empty()) {
-        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    /* obtain the so list in the hap */
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ExtractFiles obtain native so file entryName failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     std::string innerTmpSoPath = tmpSoPath;
@@ -1313,21 +1313,36 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
         }
     }
 
-    std::string tmpHapPath = innerTmpSoPath + hapName;
-    APP_LOGD("tmp hap path is %{public}s", tmpHapPath.c_str());
+    for (const auto &entry : soEntryFiles) {
+        APP_LOGD("entryName is %{public}s", entry.c_str());
+        auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            continue;
+        }
+        std::string soFileName = entry.substr(pos + 1);
+        if (soFileName.empty()) {
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            continue;
+        }
+        APP_LOGD("so file is %{public}s", soFileName.c_str());
+        uint32_t offset = 0;
+        uint32_t length = 0;
+        if (!extractor.GetFileInfo(entry, offset, length) || length == 0) {
+            APP_LOGW("GetFileInfo failed or invalid so file");
+            continue;
+        }
+        APP_LOGD("so file %{public}s has offset %{public}d and file size %{public}d", entry.c_str(), offset, length);
 
-    /* mmap hap to ram and write the hap to tmpHapPath */
-    ErrCode res = ERR_OK;
-    if ((res = DecryptSoFile(hapPath, tmpHapPath, uid)) != ERR_OK) {
-        APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", hapPath.c_str(),
-            tmpHapPath.c_str());
-        return res;
+        /* mmap so to ram and write so file to temp path */
+        ErrCode res = ERR_OK;
+        if ((res = DecryptSoFile(hapPath, innerTmpSoPath + soFileName, uid, length, offset)) != ERR_OK) {
+            APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", hapPath.c_str(),
+                (innerTmpSoPath + soFileName).c_str());
+            return res;
+        }
     }
-    if (!ExtractFiles(tmpHapPath, innerTmpSoPath, cpuAbi)) {
-        APP_LOGE("extract %{private}s to %{private}s failed", tmpHapPath.c_str(), innerTmpSoPath.c_str());
-        DeleteFiles(innerTmpSoPath);
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
+
     return ERR_OK;
 }
 
@@ -1335,6 +1350,10 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {
     APP_LOGD("start to obtain decoded so files from so path");
+    if (realSoFilesPath.empty()) {
+        APP_LOGE("real so file path is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
     BundleExtractor extractor(hapPath);
     if (!extractor.Init()) {
         APP_LOGE("init bundle extractor failed");
@@ -1362,12 +1381,12 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     for (const auto &entry : soEntryFiles) {
         auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
             continue;
         }
         std::string soFileName = entry.substr(pos + 1);
         if (soFileName.empty()) {
-            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
             continue;
         }
 
@@ -1378,19 +1397,20 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
             /* mmap so file to ram and write to innerTmpSoPath */
             ErrCode res = ERR_OK;
             APP_LOGD("tmp so path is %{public}s", (innerTmpSoPath + soFileName).c_str());
-            if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid)) != ERR_OK) {
-                APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", soPath.c_str(),
+            if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid, 0, 0)) != ERR_OK) {
+                APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", soPath.c_str(),
                     (innerTmpSoPath + soFileName).c_str());
                 return res;
             }
         } else {
-            APP_LOGW("so file %{public}s is not existed", soPath.c_str());
+            APP_LOGW("so file %{private}s is not existed", soPath.c_str());
         }
     }
     return ERR_OK;
 }
 
-ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::string &tmpPath, int32_t uid)
+ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::string &tmpPath, int32_t uid,
+    uint32_t fileSize, uint32_t offset)
 {
     APP_LOGD("src file is %{public}s, temp path is %{public}s, bundle uid is %{public}d", filePath.c_str(),
         tmpPath.c_str(), uid);
@@ -1418,8 +1438,11 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         close(fd);
         return result;
     }
-    off_t fileSize = st.st_size;
-    void *addr = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    off_t innerFileSize = fileSize
+    if (fileSize == 0) {
+        innerFileSize = st.st_size;
+    }
+    void *addr = mmap(NULL, innerFileSize, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == MAP_FAILED) {
         APP_LOGE("mmap hap file status faield");
         close(dev_fd);
@@ -1433,17 +1456,17 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         APP_LOGE("create fd for tmp hap file failed");
         close(dev_fd);
         close(fd);
-        munmap(addr, fileSize);
+        munmap(addr, innerFileSize);
         return result;
     }
-    if (write(outPutFd, addr, fileSize) != INVALID_RETURN_VALUE) {
+    if (write(outPutFd, addr, innerFileSize) != INVALID_RETURN_VALUE) {
         result = ERR_OK;
         APP_LOGD("write hap to temp path successfully");
     }
     close(dev_fd);
     close(fd);
     close(outPutFd);
-    munmap(addr, fileSize);
+    munmap(addr, innerFileSize);
     return result;
 }
 
