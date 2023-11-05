@@ -1781,17 +1781,6 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
             });
             return ERR_OK;
         }
-        std::vector<HapModuleInfo>& hapModuleInfos = bundleInfo.hapModuleInfos;
-        hapModuleInfos.erase(std::remove_if(
-            hapModuleInfos.begin(), hapModuleInfos.end(), [](const auto& hapModuleInfo) {
-                return hapModuleInfo.fileContextMenu.empty();
-            }), hapModuleInfos.end());
-        if (hapModuleInfos.empty()) {
-            APP_LOGW("getBundleInfo with menu flag, but no module has menu");
-            BundleInfo emptyInfo;
-            bundleInfo = emptyInfo;
-            return ERR_BUNDLE_MANAGER_QUERY_MENU_FAILED;
-        }
     }
     for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
         std::string menuProfile = hapModuleInfo.fileContextMenu;

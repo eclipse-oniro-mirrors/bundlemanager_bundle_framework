@@ -5531,7 +5531,6 @@ HWTEST_F(BmsBundleManagerTest, GetBundleInfoWithMenu_0002, Function | SmallTest 
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
     auto ret = dataMgr->GetBundleInfoV9(BUNDLE_BACKUP_NAME, flag, info, USERID);
     EXPECT_EQ(ret, ERR_OK);
-    EXPECT_TRUE(info.hapModuleInfos.empty());
 
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
@@ -5604,7 +5603,6 @@ HWTEST_F(BmsBundleManagerTest, GetAllBundleInfoWithMenu_0002, Function | SmallTe
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_MENU);
     auto ret = dataMgr->GetBundleInfosV9(flag, infos, USERID);
     EXPECT_EQ(ret, ERR_OK);
-    EXPECT_TRUE(infos.empty());
     UnInstallBundle(BUNDLE_BACKUP_NAME);
 }
 
