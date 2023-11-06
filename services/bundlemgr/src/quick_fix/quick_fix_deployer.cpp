@@ -28,7 +28,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug) :
+    patchPaths_(bundleFilePaths), isDebug_(isDebug)
 {}
 
 ErrCode QuickFixDeployer::Execute()

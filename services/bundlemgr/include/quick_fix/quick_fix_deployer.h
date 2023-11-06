@@ -26,7 +26,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class QuickFixDeployer final : public IQuickFix {
 public:
-    explicit QuickFixDeployer(const std::vector<std::string> &bundleFilePaths);
+    QuickFixDeployer(const std::vector<std::string> &bundleFilePaths, bool isDebug = false);
 
     virtual ~QuickFixDeployer() = default;
 
@@ -112,6 +112,7 @@ private:
     std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = nullptr;
     DeployQuickFixResult deployQuickFixResult_;
     std::string appDistributionType_ = Constants::APP_DISTRIBUTION_TYPE_NONE;
+    bool isDebug_ = false;
 };
 } // AppExecFwk
 } // OHOS
