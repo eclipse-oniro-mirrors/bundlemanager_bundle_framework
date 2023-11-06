@@ -4373,7 +4373,7 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 }
 
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
     APP_LOGD("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
         want.ToString().c_str(), flags, userId, withDefault);
@@ -4381,6 +4381,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
         APP_LOGD("find target default application");
+        findDefaultApp = true;
         return true;
     }
 #endif
