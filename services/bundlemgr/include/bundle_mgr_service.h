@@ -51,6 +51,7 @@
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
 #include "bundle_resource_host_impl.h"
 #endif
+#include "verify_manager_host_impl.h"
 namespace OHOS {
 namespace AppExecFwk {
 class BundleMgrService : public SystemAbility {
@@ -95,6 +96,11 @@ public:
      * @return Returns the pointer of IBundleUserMgr object.
      */
     sptr<BundleUserMgrHostImpl> GetBundleUserMgr() const;
+    /**
+     * @brief Get a IVerifyManager object for IPC
+     * @return Returns the pointer of IVerifyManager object.
+     */
+    sptr<IVerifyManager> GetVerifyManager() const;
 
 #ifdef BUNDLE_FRAMEWORK_DEFAULT_APP
     sptr<IDefaultApp> GetDefaultAppProxy() const;
@@ -157,6 +163,7 @@ private:
     bool InitBundleInstaller();
     void InitBundleDataMgr();
     bool InitBundleUserMgr();
+    bool InitVerifyManager();
     bool InitBundleEventHandler();
     void InitHidumpHelper();
     void InitFreeInstall();
@@ -184,6 +191,7 @@ private:
     sptr<BundleMgrHostImpl> host_;
     sptr<BundleInstallerHost> installer_;
     sptr<BundleUserMgrHostImpl> userMgrHost_;
+    sptr<IVerifyManager> verifyManager_;
     std::shared_ptr<BmsParam> bmsParam_;
     std::shared_ptr<PreInstallExceptionMgr> preInstallExceptionMgr_;
 

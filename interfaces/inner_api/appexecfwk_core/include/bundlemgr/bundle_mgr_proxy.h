@@ -553,6 +553,11 @@ public:
      */
     virtual sptr<IBundleUserMgr> GetBundleUserMgr() override;
     /**
+     * @brief Obtains the VerifyManager.
+     * @return Returns a pointer to VerifyManager class if exist; returns nullptr otherwise.
+     */
+    virtual sptr<IVerifyManager> GetVerifyManager() override;
+    /**
      * @brief  Obtains the FormInfo objects provided by all applications on the device.
      * @param  formInfos List of FormInfo objects if obtained; returns an empty List if no FormInfo is available on the
      * device.

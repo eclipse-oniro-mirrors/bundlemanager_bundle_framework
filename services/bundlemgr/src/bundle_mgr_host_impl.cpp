@@ -1680,6 +1680,11 @@ sptr<IBundleUserMgr> BundleMgrHostImpl::GetBundleUserMgr()
     return DelayedSingleton<BundleMgrService>::GetInstance()->GetBundleUserMgr();
 }
 
+sptr<IVerifyManager> BundleMgrHostImpl::GetVerifyManager()
+{
+    return DelayedSingleton<BundleMgrService>::GetInstance()->GetVerifyManager();
+}
+
 bool BundleMgrHostImpl::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 {
     APP_LOGD("start GetAllFormsInfo");

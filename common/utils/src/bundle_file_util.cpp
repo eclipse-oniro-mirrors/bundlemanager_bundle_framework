@@ -33,6 +33,7 @@ const std::string INSTALL_FILE_SUFFIX = ".hap";
 const std::string HSP_FILE_SUFFIX = ".hsp";
 const std::string QUICK_FIX_FILE_SUFFIX = ".hqf";
 const std::string CODE_SIGNATURE_SUFFIX = ".sig";
+const std::string ABC_FILE_SUFFIX = ".abc";
 const std::string PGO_SUFFIX = ".ap";
 const std::string PATH_SEPARATOR = "/";
 constexpr int64_t ONE_GB = 1024 * 1024 * 1024;
@@ -54,6 +55,7 @@ bool BundleFileUtil::CheckFilePath(const std::string &bundlePath, std::string &r
         !CheckFileType(bundlePath, HSP_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, QUICK_FIX_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, CODE_SIGNATURE_SUFFIX) &&
+        !CheckFileType(bundlePath, ABC_FILE_SUFFIX) &&
         !CheckFileType(bundlePath, PGO_SUFFIX)) {
         APP_LOGE("file is not hap, hsp or hqf or sig or ap");
         return false;
@@ -198,6 +200,47 @@ bool BundleFileUtil::GetHapFilesFromBundlePath(const std::string &currentBundleP
     }
     closedir(dir);
     return true;
+}
+
+bool BundleFileUtil::DeleteDir(const std::string &path)
+{
+    if (IsExistFile(path)) {
+        return OHOS::RemoveFile(path);
+    }
+
+    if (IsExistDir(path)) {
+        return OHOS::ForceRemoveDirectory(path);
+    }
+
+    return true;
+}
+
+bool BundleFileUtil::IsExistFile(const std::string &filePath)
+{
+    if (filePath.empty()) {
+        return false;
+    }
+
+    struct stat result = {};
+    if (stat(filePath.c_str(), &result) != 0) {
+        return false;
+    }
+
+    return S_ISREG(result.st_mode);
+}
+
+bool BundleFileUtil::IsExistDir(const std::string &dirPath)
+{
+    if (dirPath.empty()) {
+        return false;
+    }
+
+    struct stat result = {};
+    if (stat(dirPath.c_str(), &result) != 0) {
+        return false;
+    }
+
+    return S_ISDIR(result.st_mode);
 }
 } // AppExecFwk
 } // OHOS

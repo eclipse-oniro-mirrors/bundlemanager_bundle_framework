@@ -114,6 +114,12 @@ struct LaunchWantCallbackInfo : public BaseCallbackInfo {
     OHOS::AAFwk::Want want;
 };
 
+struct VerifyCallbackInfo : public BaseCallbackInfo {
+    explicit VerifyCallbackInfo(napi_env napiEnv) : BaseCallbackInfo(napiEnv) {}
+    std::vector<std::string> abcPaths;
+    bool flag = false;
+};
+
 enum AbilityProfileType : uint32_t {
     ABILITY_PROFILE = 0,
     EXTENSION_PROFILE,
@@ -245,6 +251,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
 napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
 napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
+napi_value Verify(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);

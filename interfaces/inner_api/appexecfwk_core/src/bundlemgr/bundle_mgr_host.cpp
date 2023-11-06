@@ -320,6 +320,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetJsonProfile);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_BUNDLE_RESOURCE_PROXY),
         &BundleMgrHost::HandleGetBundleResourceProxy);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_VERIFY_MANAGER),
+        &BundleMgrHost::HandleGetVerifyManager);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -1548,6 +1550,22 @@ ErrCode BundleMgrHost::HandleGetBundleUserMgr(MessageParcel &data, MessageParcel
     }
 
     if (!reply.WriteObject<IRemoteObject>(bundleUserMgr->AsObject())) {
+        APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetVerifyManager(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    sptr<IVerifyManager> verifyManager = GetVerifyManager();
+    if (verifyManager == nullptr) {
+        APP_LOGE("verifyManager is nullptr");
+        return ERR_BUNDLE_MANAGER_VERIFY_GET_VERIFY_MGR_FAILED;
+    }
+
+    if (!reply.WriteObject<IRemoteObject>(verifyManager->AsObject())) {
         APP_LOGE("failed to reply bundle installer to client, for write MessageParcel error");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }

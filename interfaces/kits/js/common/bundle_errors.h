@@ -74,6 +74,9 @@ constexpr ErrCode ERROR_INSTALL_DEBUG_BUNDLE_NOT_ALLOWED = 17700052;
 // bundle service exception
 constexpr ErrCode ERROR_BUNDLE_SERVICE_EXCEPTION = 17700101;
 
+// verify abc
+constexpr ErrCode ERROR_VERIFY_ABC = 17700201;
+
 // zlib errCode
 constexpr ErrCode ERR_ZLIB_SRC_FILE_INVALID = 900001;
 constexpr ErrCode ERR_ZLIB_DEST_FILE_INVALID = 900002;

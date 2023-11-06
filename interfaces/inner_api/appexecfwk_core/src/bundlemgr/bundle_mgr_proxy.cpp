@@ -2133,6 +2133,32 @@ sptr<IBundleUserMgr> BundleMgrProxy::GetBundleUserMgr()
     return bundleUserMgr;
 }
 
+sptr<IVerifyManager> BundleMgrProxy::GetVerifyManager()
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    MessageParcel data;
+    MessageParcel reply;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to get VerifyManager due to write InterfaceToken fail");
+        return nullptr;
+    }
+    if (!SendTransactCmd(BundleMgrInterfaceCode::GET_VERIFY_MANAGER, data, reply)) {
+        return nullptr;
+    }
+
+    sptr<IRemoteObject> object = reply.ReadObject<IRemoteObject>();
+    if (object == nullptr) {
+        APP_LOGE("read failed");
+        return nullptr;
+    }
+    sptr<IVerifyManager> verifyManager = iface_cast<IVerifyManager>(object);
+    if (verifyManager == nullptr) {
+        APP_LOGE("VerifyManager is nullptr");
+    }
+
+    return verifyManager;
+}
+
 bool BundleMgrProxy::GetAllFormsInfo(std::vector<FormInfo> &formInfos)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);

@@ -149,6 +149,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME,
     GET_JSON_PROFILE,
     GET_BUNDLE_RESOURCE_PROXY,
+    GET_VERIFY_MANAGER,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
@@ -268,6 +269,12 @@ enum class BundleResourceInterfaceCode : uint32_t {
     GET_LAUNCHER_ABILITY_RESOURCE_INFO = 1,
     GET_ALL_BUNDLE_RESOURCE_INFO = 2,
     GET_ALL_LAUNCHER_ABILITY_RESOURCE_INFO = 3,
+};
+
+/* SAID: 401-126 Interface No.126 subservice also provides the following interfaces */
+enum class VerifyManagerInterfaceCode : uint32_t {
+    VERIFY = 0,
+    CREATE_FD = 1,
 };
 } // namespace AppExecFwk
 } // namespace OHOS
