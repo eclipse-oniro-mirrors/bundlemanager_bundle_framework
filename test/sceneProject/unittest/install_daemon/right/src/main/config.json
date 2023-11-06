@@ -5,7 +5,7 @@
         "apiVersion": {
             "compatible": 4,
             "target": 4,
-            "releaseType": "Beta1"
+            "releaseType": "Release"
         },
         "version": {
             "code": 1,

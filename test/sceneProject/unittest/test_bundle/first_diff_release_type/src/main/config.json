@@ -3,7 +3,7 @@
         "iconId":33554436,
         "apiVersion":{
             "compatible":4,
-            "releaseType":"debug",
+            "releaseType":"Release",
             "target":5
         },
         "labelId":33554432,
