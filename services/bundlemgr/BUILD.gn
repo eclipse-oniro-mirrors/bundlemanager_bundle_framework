@@ -34,6 +34,7 @@ config("bundlemgr_common_config") {
     "include/sandbox_app",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/verify",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]

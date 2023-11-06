@@ -35,6 +35,7 @@
 #include "../default_app/default_app_interface.h"
 #include "../overlay/overlay_manager_interface.h"
 #include "../quick_fix/quick_fix_manager_interface.h"
+#include "../verify/verify_manager_interface.h"
 #include "distributed_bundle_info.h"
 #include "form_info.h"
 #include "hap_module_info.h"
@@ -837,6 +838,14 @@ public:
      * @return Returns a pointer to IBundleUserMgr class if exist; returns nullptr otherwise.
      */
     virtual sptr<IBundleUserMgr> GetBundleUserMgr()
+    {
+        return nullptr;
+    }
+    /**
+     * @brief Obtains the VerifyManager.
+     * @return Returns a pointer to VerifyManager class if exist; returns nullptr otherwise.
+     */
+    virtual sptr<IVerifyManager> GetVerifyManager()
     {
         return nullptr;
     }

@@ -179,6 +179,8 @@ bundle_mgr_source = [
   "${services_path}/bundlemgr/src/mime_type_mgr.cpp",
   "${services_path}/bundlemgr/src/system_ability_helper.cpp",
   "${services_path}/bundlemgr/src/user_unlocked_event_subscriber.cpp",
+  "${services_path}/bundlemgr/src/verify/verify_manager_host_impl.cpp",
+  "${services_path}/bundlemgr/src/verify/verify_util.cpp",
 ]
 
 bundle_resource = [

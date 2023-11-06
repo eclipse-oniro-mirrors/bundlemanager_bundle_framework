@@ -23,6 +23,7 @@ config("bundlemgr_sdk_config") {
     "include/default_app",
     "include/overlay",
     "include/quick_fix",
+    "include/verify",
   ]
 }
 
@@ -54,6 +55,8 @@ ohos_shared_library("appexecfwk_core") {
     "src/bundlemgr/clean_cache_callback_proxy.cpp",
     "src/bundlemgr/launcher_service.cpp",
     "src/bundlemgr/status_receiver_host.cpp",
+    "src/verify/verify_manager_host.cpp",
+    "src/verify/verify_manager_proxy.cpp",
   ]
 
   public_configs = [

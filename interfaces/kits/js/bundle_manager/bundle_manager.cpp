@@ -49,6 +49,7 @@ constexpr const char* ABILITY_FLAGS = "abilityFlags";
 constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
+constexpr const char* VERIFY = "Verify";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -1618,6 +1619,102 @@ napi_value CleanBundleCacheFiles(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "CleanBundleCacheFiles", CleanBundleCacheFilesExec, CleanBundleCacheFilesComplete);
     callbackPtr.release();
     APP_LOGD("napi call CleanBundleCacheFiles done");
+    return promise;
+}
+
+ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
+{
+    auto verifyManager = CommonFunc::GetVerifyManager();
+    if (verifyManager == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+
+    std::vector<std::string> destFiles;
+    ErrCode ret = verifyManager->CopyFiles(abcPaths, destFiles);
+    if (ret != ERR_OK) {
+        APP_LOGE("CopyFiles failed");
+        return CommonFunc::ConvertErrCode(ret);
+    }
+
+    ret = verifyManager->Verify(destFiles, flag);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void VerifyExec(napi_env env, void *data)
+{
+    VerifyCallbackInfo* asyncCallbackInfo = reinterpret_cast<VerifyCallbackInfo*>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("error VerifyCallbackInfo is nullptr");
+        return;
+    }
+
+    asyncCallbackInfo->err = InnerVerify(asyncCallbackInfo->abcPaths, asyncCallbackInfo->flag);
+}
+
+void VerifyComplete(napi_env env, napi_status status, void *data)
+{
+    VerifyCallbackInfo *asyncCallbackInfo = reinterpret_cast<VerifyCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null");
+        return;
+    }
+
+    std::unique_ptr<VerifyCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[ARGS_POS_TWO] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
+    } else {
+        result[0] = BusinessError::CreateCommonError(
+            env, asyncCallbackInfo->err, VERIFY, Constants::PERMISSION_VERIFY_ABC);
+    }
+
+    CommonFunc::NapiReturnDeferred<VerifyCallbackInfo>(
+        env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
+}
+
+napi_value Verify(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("napi call Verify called");
+    NapiArg args(env, info);
+    VerifyCallbackInfo *asyncCallbackInfo = new (std::nothrow) VerifyCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("VerifyCallbackInfo asyncCallbackInfo is null.");
+        return nullptr;
+    }
+
+    std::unique_ptr<VerifyCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_THREE)) {
+        APP_LOGE("VerifyCallbackInfo napi func init failed");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseStringArray(env, asyncCallbackInfo->abcPaths, args[ARGS_POS_ZERO])) {
+        APP_LOGE("ParseStringArray invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY, TYPE_ARRAY);
+        return nullptr;
+    }
+
+    if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], asyncCallbackInfo->flag)) {
+        APP_LOGE("ParseBool invalid!");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY, TYPE_BOOLEAN);
+        return nullptr;
+    }
+
+    size_t maxArgc = args.GetMaxArgc();
+    if (maxArgc > ARGS_SIZE_TWO) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[ARGS_SIZE_TWO], &valueType);
+        if (valueType == napi_function) {
+            NAPI_CALL(env, napi_create_reference(env, args[ARGS_SIZE_TWO],
+                NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<VerifyCallbackInfo>(
+        env, asyncCallbackInfo, "Verify", VerifyExec, VerifyComplete);
+    callbackPtr.release();
+    APP_LOGD("napi call Verify done");
     return promise;
 }
 
