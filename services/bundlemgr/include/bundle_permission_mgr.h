@@ -180,6 +180,9 @@ private:
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
         std::vector<std::string> &newRequestPermName);
 
+    static bool CheckPermissionAvailableType(const std::string &appDistributionType,
+        const Security::AccessToken::PermissionDef &permDef);
+
     static std::map<std::string, DefaultPermission> defaultPermissions_;
 };
 }  // namespace AppExecFwk
