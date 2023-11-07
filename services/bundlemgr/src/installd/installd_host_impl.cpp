@@ -250,6 +250,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
             }
+            std::string logDir = GetBundleDataDir(el, createDirParam.userId) +
+                Constants::LOG + createDirParam.bundleName;
+            if (!InstalldOperator::MkOwnerDir(
+                logDir, S_IRWXU | S_IRGRP | S_IXGRP, createDirParam.uid, Constants::LOG_DIR_GID)) {
+                APP_LOGE("create log dir failed");
+                return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
+            }
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl,
             createDirParam.isPreInstallApp, createDirParam.debug);
@@ -369,6 +376,13 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         if (!InstalldOperator::DeleteDir(databaseDir)) {
             APP_LOGE("remove dir %{public}s failed", databaseDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+        if (el == Constants::BUNDLE_EL[1]) {
+            std::string logDir = GetBundleDataDir(el, userid) + Constants::LOG + bundleName;
+            if (!InstalldOperator::DeleteDir(logDir)) {
+                APP_LOGE("remove dir %{public}s failed", logDir.c_str());
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
         }
     }
     if (RemoveShareDir(bundleName, userid) != ERR_OK) {

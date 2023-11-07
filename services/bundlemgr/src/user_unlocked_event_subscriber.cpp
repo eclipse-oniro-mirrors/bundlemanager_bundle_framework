@@ -15,6 +15,7 @@
 
 #include "user_unlocked_event_subscriber.h"
 
+#include <sys/stat.h>
 #include <thread>
 
 #include "app_control_manager.h"
@@ -107,6 +108,7 @@ void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
     ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL3);
     ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL4);
 #endif
+    ProcessUpdateAppLogDir(bundleInfos, userId);
 }
 
 void UpdateAppDataMgr::ProcessUpdateAppDataDir(
@@ -133,6 +135,39 @@ void UpdateAppDataMgr::ProcessUpdateAppDataDir(
             APP_LOGW("failed to SetDirApl baseDataDir dir");
         }
     }
+}
+
+void UpdateAppDataMgr::ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId)
+{
+    for (const auto &bundleInfo : bundleInfos) {
+        if (userId != Constants::DEFAULT_USERID && bundleInfo.singleton) {
+            continue;
+        }
+        if (!CreateBundleLogDir(bundleInfo, userId)) {
+            APP_LOGW("ProcessUpdateAppLogDir failed");
+        }
+    }
+}
+
+bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId)
+{
+    std::string bundleLogDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+        Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::LOG + bundleInfo.name;
+    bool isExist = false;
+    if (InstalldClient::GetInstance()->IsExistDir(bundleLogDir, isExist) != ERR_OK) {
+        APP_LOGE("path: %{private}s IsExistDir failed", bundleLogDir.c_str());
+        return false;
+    }
+    if (isExist) {
+        APP_LOGD("path: %{private}s is exist", bundleLogDir.c_str());
+        return false;
+    }
+    if (InstalldClient::GetInstance()->Mkdir(
+        bundleLogDir, S_IRWXU | S_IRGRP | S_IXGRP, bundleInfo.uid, Constants::LOG_DIR_GID) != ERR_OK) {
+        APP_LOGE("CreateBundleLogDir failed");
+        return false;
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
