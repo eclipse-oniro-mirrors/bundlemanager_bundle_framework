@@ -382,6 +382,11 @@ ohos_shared_library("libbms") {
     defines += [ "QUOTA_PARAM_SET_ENABLE" ]
   }
 
+  if (verify_abc_enabled) {
+    defines += [ "VERIFY_ABC_ENABLED" ]
+    external_deps += [ "runtime_core:libarkverifier" ]
+  }
+
   subsystem_name = "bundlemanager"
   part_name = "bundle_framework"
 }

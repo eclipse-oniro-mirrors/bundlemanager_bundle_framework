@@ -25,15 +25,22 @@ public:
     VerifyManagerHostImpl();
     virtual ~VerifyManagerHostImpl();
 
-    ErrCode Verify(const std::vector<std::string> &abcPaths, bool flag) override;
+    ErrCode Verify(const std::vector<std::string> &abcPaths,
+        const std::vector<std::string> &abcNames, bool flag) override;
 
     ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
 
 private:
+    ErrCode InnerVerify(const std::vector<std::string> &abcPaths,
+        const std::vector<std::string> &abcNames, bool flag);
     bool VerifyAbc(const std::vector<std::string> &abcPaths);
-    bool MoveAbc(const std::vector<std::string> &abcPaths, const std::string &pathDir);
+    bool MoveAbc(const std::vector<std::string> &abcPaths,
+        const std::vector<std::string> &abcNames, const std::string &pathDir);
     void Rollback(const std::vector<std::string> &paths);
     bool GetFileName(const std::string &sourcePath, std::string &fileName);
+    bool GetFileDir(const std::string &sourcePath, std::string &fileDir);
+    void RemoveTempFiles(const std::vector<std::string> &paths);
+    ErrCode MkdirIfNotExist(const std::string &dir);
 
     std::atomic<uint32_t> id_ = 0;
 };

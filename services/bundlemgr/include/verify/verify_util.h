@@ -22,7 +22,7 @@ namespace OHOS {
 namespace AppExecFwk {
 class VerifyUtil {
 public:
-    static bool Verify(const std::string &abcPaths);
+    static bool VerifyAbc(const std::string &abcPath);
 };
 } // AppExecFwk
 } // OHOS

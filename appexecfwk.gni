@@ -65,6 +65,7 @@ declare_args() {
   code_signature_enable = true
   code_encryption_enable = true
   ecologic_rule_mgr_enabled = true
+  verify_abc_enabled = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -157,6 +158,11 @@ declare_args() {
       !defined(global_parts_info.multimedia_image_framework)) {
     bundle_framework_graphics = false
   }
+
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.arkcompiler_runtime_core)) {
+    verify_abc_enabled = false
+  }
 }
 
 print("bundle_framework_power_mgr_enable = " +
@@ -180,3 +186,4 @@ print(
     "bundle_framework_overlay_install = " + "$bundle_framework_overlay_install")
 print(
     "bundle_framework_bundle_resource = " + "$bundle_framework_bundle_resource")
+print("verify_abc_enabled = " + "$verify_abc_enabled")

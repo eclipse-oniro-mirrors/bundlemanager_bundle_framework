@@ -251,7 +251,7 @@ napi_value GetAppProvisionInfo(napi_env env, napi_callback_info info);
 napi_value GetSpecifiedDistributionType(napi_env env, napi_callback_info info);
 napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
-napi_value Verify(napi_env env, napi_callback_info info);
+napi_value VerifyAbc(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);

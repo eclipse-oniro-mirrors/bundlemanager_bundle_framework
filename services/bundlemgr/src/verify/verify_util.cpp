@@ -16,12 +16,21 @@
 #include "verify_util.h"
 
 #include "app_log_wrapper.h"
+#ifdef VERIFY_ABC_ENABLED
+#include "verify.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
-bool VerifyUtil::Verify(const std::string &abcPaths)
+bool VerifyUtil::VerifyAbc(const std::string &abcPath)
 {
-    return true;
+#ifdef VERIFY_ABC_ENABLED
+    APP_LOGD("Verify %{private}s", abcPath.c_str());
+    return Verify(abcPath);
+#else
+    APP_LOGI("VERIFY_ABC_ENABLED is false");
+    return false;
+#endif
 }
 } // AppExecFwk
 } // namespace OHOS
