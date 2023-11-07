@@ -1438,7 +1438,7 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         close(fd);
         return result;
     }
-    off_t innerFileSize = fileSize
+    off_t innerFileSize = fileSize;
     if (fileSize == 0) {
         innerFileSize = st.st_size;
     }
