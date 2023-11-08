@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -90,7 +90,7 @@ private:
     bool needReInstall_ = false;
 };
 
-ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
@@ -101,7 +101,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    OnCreateNewUser(userId);
+    OnCreateNewUser(userId, disallowList);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
@@ -115,7 +115,7 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
     }
 }
 
-void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
+void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -144,6 +144,11 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
     bool needReinstall = userId == Constants::START_USERID;
     // Read apps installed by other users that are visible to all users
     for (const auto &info : preInstallBundleInfos) {
+        if (std::find(disallowList.begin(), disallowList.end(), info.GetBundleName()) != disallowList.end()) {
+            APP_LOGD("BundleName is same as black list");
+            totalHapNum--;
+            continue;
+        }
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;

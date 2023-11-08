@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -28,8 +28,9 @@ public:
     /**
      * @brief Create new user.
      * @param userId Indicates the userId.
+     * @param disallowList Pass in the provisioned disallowList.
      */
-    virtual ErrCode CreateNewUser(int32_t userId)
+    virtual ErrCode CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList = {})
     {
         return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
