@@ -34,7 +34,7 @@ QuickFixManagerHostImpl::~QuickFixManagerHostImpl()
 }
 
 ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
 {
     APP_LOGI("QuickFixManagerHostImpl::DeployQuickFix start");
     if (bundleFilePaths.empty() || (statusCallback == nullptr)) {
@@ -55,7 +55,7 @@ ErrCode QuickFixManagerHostImpl::DeployQuickFix(const std::vector<std::string> &
         APP_LOGE("QuickFixManagerHostImpl::CopyHqfToSecurityDir copy file to secure dir failed %{public}d", result);
         return result;
     }
-    return quickFixMgr_->DeployQuickFix(securityFilePaths, statusCallback);
+    return quickFixMgr_->DeployQuickFix(securityFilePaths, statusCallback, isDebug);
 }
 
 ErrCode QuickFixManagerHostImpl::SwitchQuickFix(const std::string &bundleName, bool enable,
