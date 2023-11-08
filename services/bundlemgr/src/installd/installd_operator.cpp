@@ -69,7 +69,15 @@ static std::string HandleScanResult(
 
 static bool StartsWith(const std::string &sourceString, const std::string &targetPrefix)
 {
-    return sourceString.rfind(targetPrefix, 0) == 0;
+    return sourceString.find(targetPrefix) == 0;
+}
+
+static bool EndsWith(const std::string &sourceString, const std::string &targetSuffix)
+{
+    if (sourceString.length() < targetSuffix.length()) {
+        return false;
+    }
+    return sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length());
 }
 } // namespace
 
@@ -232,14 +240,14 @@ bool InstalldOperator::IsNativeFile(
         }
     }
 
-    if (entryName.find(prefix) == std::string::npos) {
+    if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
 
     bool checkSuffix = false;
     for (const auto &suffix : suffixs) {
-        if (entryName.find(suffix) != std::string::npos) {
+        if (EndsWith(entryName, suffix)) {
             checkSuffix = true;
             break;
         }
@@ -263,7 +271,7 @@ bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::strin
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (entryName.find(Constants::SO_SUFFIX) == std::string::npos) {
+    if (!EndsWith(entryName, Constants::SO_SUFFIX)) {
         APP_LOGD("file name not so format.");
         return false;
     }
@@ -280,11 +288,11 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         return false;
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    if (entryName.find(prefix) == std::string::npos) {
+    if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (entryName.find(Constants::DIFF_SUFFIX) == std::string::npos) {
+    if (!EndsWith(entryName, Constants::DIFF_SUFFIX)) {
         APP_LOGD("file name not diff format.");
         return false;
     }
@@ -304,22 +312,9 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
 
     std::string prefix;
-    switch (extractFileType) {
-        case ExtractFileType::SO: {
-            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-            break;
-        }
-        case ExtractFileType::AN: {
-            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
-            break;
-        }
-        case ExtractFileType::AP: {
-            prefix = Constants::AP;
-            break;
-        }
-        default: {
-            return;
-        }
+    if (!DeterminePrefix(extractFileType, cpuAbi, prefix)) {
+        APP_LOGE("determine prefix failed");
+        return;
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
@@ -327,6 +322,13 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         path += Constants::FILE_SEPARATOR_CHAR;
     }
     path += targetName;
+    if (targetName.find(Constants::PATH_SEPARATOR) != std::string::npos) {
+        std::string dir = GetPathDir(path);
+        if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
+            APP_LOGE("create dir %{private}s failed", dir.c_str());
+            return;
+        }
+    }
     bool ret = extractor.ExtractFile(entryName, path);
     if (!ret) {
         APP_LOGE("extract file failed, entryName : %{public}s", entryName.c_str());
@@ -345,6 +347,29 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         return;
     }
     APP_LOGD("extract file success, path : %{private}s", path.c_str());
+}
+
+bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
+    std::string &prefix)
+{
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            break;
+        }
+        default: {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &newPath)
@@ -658,6 +683,54 @@ bool InstalldOperator::ScanDir(
     return true;
 }
 
+bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::string &originPath,
+    const std::string &currentPath, std::vector<std::string> &paths)
+{
+    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
+        APP_LOGE("ScanSoFiles current path invalid");
+        return false;
+    }
+    std::string filePath = "";
+    if (!PathToRealPath(currentPath, filePath)) {
+        APP_LOGE("file is not real path, file path: %{private}s", currentPath.c_str());
+        return false;
+    }
+    DIR* dir = opendir(filePath.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("ScanSoFiles open dir(%{private}s) fail", filePath.c_str());
+        return false;
+    }
+    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        if (ptr->d_type == DT_DIR) {
+            std::string currentDir = filePath + std::string(ptr->d_name);
+            if (!ScanSoFiles(newSoPath, originPath, currentDir, paths)) {
+                closedir(dir);
+                return false;
+            }
+        }
+        if (ptr->d_type == DT_REG) {
+            std::string currentFile = filePath + std::string(ptr->d_name);
+            std::string relativePath = currentFile.substr(originPath.size() + 1);
+            paths.emplace_back(relativePath);
+            std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
+            if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
+                APP_LOGE("ScanSoFiles create subNewSoPath (%{private}s) failed", filePath.c_str());
+                closedir(dir);
+                return false;
+            }
+        }
+    }
+    closedir(dir);
+    return true;
+}
+
 bool InstalldOperator::CopyFile(
     const std::string &sourceFile, const std::string &destinationFile)
 {
@@ -757,13 +830,13 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
         return false;
     }
 
-    if (!ScanDir(oldSoPath, ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, oldSoFileNames)) {
-        APP_LOGE("ProcessApplyDiffPatchPath ScanDir oldSoPath failed");
+    if (!ScanSoFiles(newSoPath, oldSoPath, oldSoPath, oldSoFileNames)) {
+        APP_LOGE("ProcessApplyDiffPatchPath ScanSoFiles oldSoPath failed");
         return false;
     }
 
-    if (!ScanDir(diffFilePath, ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, diffFileNames)) {
-        APP_LOGE("ProcessApplyDiffPatchPath ScanDir diffFilePath failed");
+    if (!ScanSoFiles(newSoPath, diffFilePath, diffFilePath, diffFileNames)) {
+        APP_LOGE("ProcessApplyDiffPatchPath ScanSoFiles diffFilePath failed");
         return false;
     }
 
@@ -940,8 +1013,7 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     for (const auto &entryName : entryNames) {
-        if ((entryName.find(prefix) == 0) &&
-            (entryName.find(Constants::SO_SUFFIX) != std::string::npos)) {
+        if (StartsWith(entryName, prefix) && EndsWith(entryName, Constants::SO_SUFFIX)) {
             fileNames.push_back(entryName.substr(prefix.length(), entryName.length()));
         }
     }

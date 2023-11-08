@@ -82,6 +82,10 @@ public:
         const std::string &targetPath,
         const std::string &cpuAbi,
         const ExtractFileType &extractFileType = ExtractFileType::SO);
+
+    static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
+        std::string &prefix);
+
     static bool IsNativeFile(
         const std::string &entryName, const ExtractParam &extractParam);
 
@@ -173,6 +177,9 @@ public:
 
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
+
+    static bool ScanSoFiles(const std::string &newSoPath, const std::string &originPath,
+        const std::string &currentPath, std::vector<std::string> &paths);
 
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
 
