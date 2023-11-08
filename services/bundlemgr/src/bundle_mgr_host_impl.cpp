@@ -2977,6 +2977,39 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
 
+ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+{
+    APP_LOGD("Called. BundleName: %{public}s.", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    std::string appGalleryBundleName;
+    QueryAppGalleryBundleName(appGalleryBundleName);
+
+    std::string callingBundleName;
+    ObtainCallingBundleName(callingBundleName);
+
+    if (appGalleryBundleName.empty() || callingBundleName.empty() || appGalleryBundleName != callingBundleName) {
+        APP_LOGE("Failed, appGalleryBundleName: %{public}s. callingBundleName: %{public}s",
+            appGalleryBundleName.c_str(), callingBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE

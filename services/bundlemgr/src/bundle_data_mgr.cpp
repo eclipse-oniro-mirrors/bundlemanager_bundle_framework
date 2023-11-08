@@ -86,6 +86,7 @@ constexpr const char* UTD_SDT_PROFILE_PATH = "resources/rawfile/arkdata/utd/utd-
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
+const std::string BMS_EVENT_ADDITIONAL_INFO_CHANGED = "bms.event.ADDITIONAL_INFO_CHANGED";
 
 const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
@@ -5855,6 +5856,46 @@ std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
         return std::string();
     }
     return abilityInfo->moduleName;
+}
+
+ErrCode BundleDataMgr::SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const
+{
+    APP_LOGD("Called. BundleName: %{public}s", bundleName.c_str());
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto infoItem = bundleInfos_.find(bundleName);
+    if (infoItem == bundleInfos_.end()) {
+        APP_LOGE("BundleName: %{public}s does not exist", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    if (infoItem->second.GetApplicationBundleType() != BundleType::SHARED) {
+        int32_t userId = AccountHelper::GetCurrentActiveUserId();
+        int32_t responseUserId = infoItem->second.GetResponseUserId(userId);
+        if (responseUserId == Constants::INVALID_USERID) {
+            APP_LOGE("BundleName: %{public}s does not exist in current userId", bundleName.c_str());
+            return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+        }
+    }
+
+    auto appProvisionInfoManager = DelayedSingleton<AppProvisionInfoManager>::GetInstance();
+    if (appProvisionInfoManager == nullptr) {
+        APP_LOGE("Failed, appProvisionInfoManager is nullptr.");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    if (!appProvisionInfoManager->SetAdditionalInfo(bundleName, additionalInfo)) {
+        APP_LOGE("BundleName: %{public}s set additional info failed.", bundleName.c_str());
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+
+    ElementName element;
+    element.SetBundleName(bundleName);
+    OHOS::AAFwk::Want want;
+    want.SetAction(BMS_EVENT_ADDITIONAL_INFO_CHANGED);
+    want.SetElement(element);
+    EventFwk::CommonEventData commonData { want };
+    NotifyBundleEventCallback(commonData);
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

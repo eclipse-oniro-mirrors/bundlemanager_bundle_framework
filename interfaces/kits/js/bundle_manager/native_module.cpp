@@ -147,6 +147,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
         DECLARE_NAPI_FUNCTION("getRecoverableApplicationInfo", GetRecoverableApplicationInfo),
         DECLARE_NAPI_PROPERTY("ApplicationReservedFlag", nApplicationReservedFlag),
+        DECLARE_NAPI_FUNCTION("setAdditionalInfo", SetAdditionalInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

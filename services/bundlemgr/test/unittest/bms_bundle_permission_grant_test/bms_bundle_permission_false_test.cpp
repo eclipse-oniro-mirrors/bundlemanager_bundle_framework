@@ -1673,4 +1673,17 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_20000, Funct
     bool result = bundleMgrHostImpl_->VerifyPrivilegedPermission("");
     EXPECT_EQ(result, false);
 }
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_21000
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.SetAdditionalInfo failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_21000, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "abc";
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
 } // OHOS

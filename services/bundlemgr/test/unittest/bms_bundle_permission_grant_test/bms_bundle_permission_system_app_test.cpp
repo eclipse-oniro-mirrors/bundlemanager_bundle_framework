@@ -1265,4 +1265,17 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8200
     res = impl.GetDisposedRule(APPID, rule, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8300
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: 1. system running normally
+ *           2. SetAdditionalInfo false by not system api.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8300, Function | SmallTest | Level1)
+{
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 } // OHOS
