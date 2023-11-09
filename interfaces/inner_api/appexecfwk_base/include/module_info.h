@@ -25,6 +25,7 @@ namespace OHOS {
 namespace AppExecFwk {
 enum ProfileType {
     INTENT_PROFILE = 1,
+    ADDITION_PROFILE = 2,
 };
 
 // stores module information about an application
