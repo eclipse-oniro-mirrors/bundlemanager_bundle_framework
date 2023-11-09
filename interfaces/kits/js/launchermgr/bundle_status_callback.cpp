@@ -14,6 +14,7 @@
  */
 #include <uv.h>
 
+#include "app_log_wrapper.h"
 #include "bundle_status_callback.h"
 
 #include "napi/native_common.h"
@@ -71,6 +72,7 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
     napi_get_uv_event_loop(env_, &loop);
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleAdded work is nullptr bundleName : %{public}s", bundleName.c_str());
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow)AsyncCallbackInfo {
@@ -80,10 +82,17 @@ void BundleStatusCallback::OnBundleAdded(const std::string& bundleName, const in
         .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleAdded asyncCallbackInfo is nullptr bundleName : %{public}s",
+            bundleName.c_str());
         delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
+    if (loop == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleAdded loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete work;
+        return;
+    }
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -125,6 +134,7 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
     napi_get_uv_event_loop(env_, &loop);
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleUpdated work is nullptr bundleName : %{public}s", bundleName.c_str());
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
@@ -134,10 +144,17 @@ void BundleStatusCallback::OnBundleUpdated(const std::string& bundleName, const 
         .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
+            bundleName.c_str());
         delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
+    if (loop == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleUpdated loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete work;
+        return;
+    }
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
@@ -182,6 +199,7 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
     napi_get_uv_event_loop(env_, &loop);
     uv_work_t* work = new (std::nothrow) uv_work_t;
     if (work == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleRemoved work is nullptr bundleName : %{public}s", bundleName.c_str());
         return;
     }
     AsyncCallbackInfo* asyncCallbackInfo = new (std::nothrow) AsyncCallbackInfo {
@@ -191,10 +209,17 @@ void BundleStatusCallback::OnBundleRemoved(const std::string& bundleName, const 
         .userId_ = userId,
     };
     if (asyncCallbackInfo == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleUpdated asyncCallbackInfo is nullptr bundleName : %{public}s",
+            bundleName.c_str());
         delete work;
         return;
     }
     work->data = reinterpret_cast<void*>(asyncCallbackInfo);
+    if (loop == nullptr) {
+        APP_LOGW("BundleStatusCallback OnBundleRemoved loop is nullptr bundleName : %{public}s", bundleName.c_str());
+        delete work;
+        return;
+    }
     int ret = uv_queue_work(
         loop, work, [](uv_work_t* work) {},
         [](uv_work_t* work, int status) {
