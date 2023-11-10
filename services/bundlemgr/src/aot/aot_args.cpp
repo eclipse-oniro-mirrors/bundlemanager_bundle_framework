@@ -114,6 +114,7 @@ bool AOTArgs::ReadFromParcel(Parcel &parcel)
     std::u16string appIdentifilerVal;
     READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, appIdentifilerVal);
     appIdentifier = Str16ToStr8(appIdentifilerVal);
+    READ_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
     return true;
 }
 
@@ -134,6 +135,7 @@ bool AOTArgs::Marshalling(Parcel &parcel) const
     }
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, bundleUid);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(appIdentifier));
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Uint32, parcel, isEncryptedBundle);
     return true;
 }
 
@@ -160,7 +162,8 @@ std::string AOTArgs::ToString() const
         + ", offset = " + std::to_string(offset)
         + ", length = " + std::to_string(length)
         + ", bundleUid = " + std::to_string(bundleUid)
-        + ", appIdentifier = " + appIdentifier + "]";
+        + ", appIdentifier = " + appIdentifier
+        + ", isEncryptedBundle = " + std::to_string(isEncryptedBundle) + "]";
     ret.append(" hspVector = ");
     for (const auto &hspInfo : hspVector) {
         ret.append(hspInfo.ToString());
