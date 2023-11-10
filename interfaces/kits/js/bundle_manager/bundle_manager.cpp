@@ -49,7 +49,7 @@ constexpr const char* ABILITY_FLAGS = "abilityFlags";
 constexpr const char* PROFILE_TYPE = "profileType";
 constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
-constexpr const char* VERIFY = "Verify";
+constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
@@ -1638,7 +1638,10 @@ ErrCode InnerVerify(const std::vector<std::string> &abcPaths, bool flag)
         return CommonFunc::ConvertErrCode(ret);
     }
 
-    ret = verifyManager->Verify(destFiles, flag);
+    ret = verifyManager->Verify(destFiles, abcPaths, flag);
+    if (ret == ERR_OK && flag) {
+        verifyManager->RemoveFiles(abcPaths);
+    }
     return CommonFunc::ConvertErrCode(ret);
 }
 
@@ -1667,16 +1670,16 @@ void VerifyComplete(napi_env env, napi_status status, void *data)
         NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[0]));
     } else {
         result[0] = BusinessError::CreateCommonError(
-            env, asyncCallbackInfo->err, VERIFY, Constants::PERMISSION_VERIFY_ABC);
+            env, asyncCallbackInfo->err, VERIFY_ABC, Constants::PERMISSION_RUN_DYN_CODE);
     }
 
     CommonFunc::NapiReturnDeferred<VerifyCallbackInfo>(
         env, asyncCallbackInfo, result, ARGS_SIZE_ONE);
 }
 
-napi_value Verify(napi_env env, napi_callback_info info)
+napi_value VerifyAbc(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("napi call Verify called");
+    APP_LOGD("napi call VerifyAbc called");
     NapiArg args(env, info);
     VerifyCallbackInfo *asyncCallbackInfo = new (std::nothrow) VerifyCallbackInfo(env);
     if (asyncCallbackInfo == nullptr) {
@@ -1693,13 +1696,13 @@ napi_value Verify(napi_env env, napi_callback_info info)
 
     if (!CommonFunc::ParseStringArray(env, asyncCallbackInfo->abcPaths, args[ARGS_POS_ZERO])) {
         APP_LOGE("ParseStringArray invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY, TYPE_ARRAY);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY_ABC, TYPE_ARRAY);
         return nullptr;
     }
 
     if (!CommonFunc::ParseBool(env, args[ARGS_POS_ONE], asyncCallbackInfo->flag)) {
         APP_LOGE("ParseBool invalid!");
-        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY, TYPE_BOOLEAN);
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, VERIFY_ABC, TYPE_BOOLEAN);
         return nullptr;
     }
 
@@ -1713,9 +1716,9 @@ napi_value Verify(napi_env env, napi_callback_info info)
         }
     }
     auto promise = CommonFunc::AsyncCallNativeMethod<VerifyCallbackInfo>(
-        env, asyncCallbackInfo, "Verify", VerifyExec, VerifyComplete);
+        env, asyncCallbackInfo, "VerifyAbc", VerifyExec, VerifyComplete);
     callbackPtr.release();
-    APP_LOGD("napi call Verify done");
+    APP_LOGD("napi call VerifyAbc done");
     return promise;
 }
 

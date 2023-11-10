@@ -27,14 +27,16 @@ public:
     explicit VerifyManagerProxy(const sptr<IRemoteObject> &object);
     virtual ~VerifyManagerProxy();
 
-    virtual ErrCode Verify(const std::vector<std::string> &abcPaths, bool flag) override;
+    virtual ErrCode Verify(const std::vector<std::string> &abcPaths,
+        const std::vector<std::string> &abcNames, bool flag) override;
+
+    virtual ErrCode RemoveFiles(const std::vector<std::string> &abcPaths) override;
 
 private:
     virtual ErrCode CopyFiles(
         const std::vector<std::string> &sourceFiles, std::vector<std::string> &destFiles) override;
     virtual ErrCode CreateFd(const std::string &fileName, int32_t &fd, std::string &path) override;
     bool SendRequest(VerifyManagerInterfaceCode code, MessageParcel &data, MessageParcel &reply);
-    void RemoveFiles(const std::vector<std::string> &paths);
 
     static inline BrokerDelegator<VerifyManagerProxy> delegator_;
 };

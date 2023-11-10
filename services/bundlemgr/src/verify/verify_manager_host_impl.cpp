@@ -31,6 +31,7 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string SEPARATOR = "/";
+const std::string ABCS_DIR = "abcs";
 
 bool IsFileNameValid(const std::string &fileName)
 {
@@ -53,9 +54,18 @@ VerifyManagerHostImpl::~VerifyManagerHostImpl()
     APP_LOGI("destroy VerifyManagerHostImpl.");
 }
 
-ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths, bool flag)
+ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths,
+    const std::vector<std::string> &abcNames, bool flag)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_VERIFY_ABC)) {
+    ErrCode ret = InnerVerify(abcPaths, abcNames, flag);
+    RemoveTempFiles(abcPaths);
+    return ret;
+}
+
+ErrCode VerifyManagerHostImpl::InnerVerify(const std::vector<std::string> &abcPaths,
+    const std::vector<std::string> &abcNames, bool flag)
+{
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }
@@ -73,16 +83,17 @@ ErrCode VerifyManagerHostImpl::Verify(const std::vector<std::string> &abcPaths, 
         return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
     }
 
-    std::string pathDir;
-    pathDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
-        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR);
+    std::string rootDir;
+    rootDir.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
+        .append(innerBundleInfo.GetBundleName()).append(Constants::PATH_SEPARATOR)
+        .append(ABCS_DIR).append(Constants::PATH_SEPARATOR);
     if (!VerifyAbc(abcPaths)) {
         APP_LOGE("verify abc failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
     }
 
-    if (!MoveAbc(abcPaths, pathDir)) {
-        APP_LOGE("verify abc failed.");
+    if (!MoveAbc(abcPaths, abcNames, rootDir)) {
+        APP_LOGE("move abc failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_VERIFY_ABC_FAILED;
     }
 
@@ -98,13 +109,23 @@ bool VerifyManagerHostImpl::VerifyAbc(const std::vector<std::string> &abcPaths)
             return false;
         }
 
-        if (!VerifyUtil::Verify(abcPath)) {
+        if (!VerifyUtil::VerifyAbc(abcPath)) {
             APP_LOGE("verify abc failed.");
             return false;
         }
     }
 
     return true;
+}
+
+void VerifyManagerHostImpl::RemoveTempFiles(const std::vector<std::string> &paths)
+{
+    APP_LOGI("RemoveTempFiles.");
+    for (const auto &path : paths) {
+        if (!BundleUtil::DeleteDir(path)) {
+            APP_LOGW("RemoveFile %{private}s failed.", path.c_str());
+        }
+    }
 }
 
 bool VerifyManagerHostImpl::GetFileName(const std::string &sourcePath, std::string &fileName)
@@ -119,20 +140,65 @@ bool VerifyManagerHostImpl::GetFileName(const std::string &sourcePath, std::stri
     return !fileName.empty();
 }
 
-bool VerifyManagerHostImpl::MoveAbc(
-    const std::vector<std::string> &abcPaths, const std::string &pathDir)
+bool VerifyManagerHostImpl::GetFileDir(const std::string &sourcePath, std::string &fileDir)
 {
+    size_t pos = sourcePath.find_last_of(SEPARATOR);
+    if (pos == std::string::npos) {
+        APP_LOGE("invalid sourcePath.");
+        return false;
+    }
+
+    fileDir = sourcePath.substr(0, pos);
+    return !fileDir.empty();
+}
+
+ErrCode VerifyManagerHostImpl::MkdirIfNotExist(const std::string &dir)
+{
+    bool isDirExist = false;
+    ErrCode result = InstalldClient::GetInstance()->IsExistDir(dir, isDirExist);
+    if (result != ERR_OK) {
+        APP_LOGE("Check if dir exist failed %{public}d", result);
+        return result;
+    }
+
+    if (!isDirExist) {
+        result = InstalldClient::GetInstance()->CreateBundleDir(dir);
+        if (result != ERR_OK) {
+            APP_LOGE("Create dir failed %{public}d", result);
+            return result;
+        }
+    }
+    return result;
+}
+
+bool VerifyManagerHostImpl::MoveAbc(const std::vector<std::string> &abcPaths,
+    const std::vector<std::string> &abcNames, const std::string &rootDir)
+{
+    if (abcPaths.size() != abcNames.size()) {
+        APP_LOGE("The number %{public}zu of abcPaths is different from that of abcNames",
+            abcPaths.size());
+        return false;
+    }
+
     std::vector<std::string> hasMovePaths;
-    for (const auto &abcPath : abcPaths) {
-        std::string fileName;
-        if (!GetFileName(abcPath, fileName)) {
-            APP_LOGE("GetFileName failed %{public}s", abcPath.c_str());
+    ErrCode result = ERR_OK;
+    for (size_t i = 0; i < abcPaths.size(); ++i) {
+        std::string targetPath = rootDir + abcNames[i];
+        std::string fileDir;
+        if (!GetFileDir(targetPath, fileDir)) {
+            APP_LOGE("GetFileDir failed %{public}s", targetPath.c_str());
             Rollback(hasMovePaths);
             return false;
         }
 
-        std::string targetPath = pathDir + fileName;
-        auto result = InstalldClient::GetInstance()->MoveFile(abcPath, targetPath);
+        result = MkdirIfNotExist(fileDir);
+        if (result != ERR_OK) {
+            APP_LOGE("mkdir fileDir %{public}s faild %{public}d", fileDir.c_str(), result);
+            Rollback(hasMovePaths);
+            return false;
+        }
+
+        auto result = InstalldClient::GetInstance()->MoveFile(abcPaths[i], targetPath);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
             Rollback(hasMovePaths);
@@ -158,7 +224,7 @@ void VerifyManagerHostImpl::Rollback(const std::vector<std::string> &paths)
 
 ErrCode VerifyManagerHostImpl::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
 {
-    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_VERIFY_ABC)) {
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_RUN_DYN_CODE)) {
         APP_LOGE("verify install permission failed.");
         return ERR_BUNDLE_MANAGER_VERIFY_PERMISSION_DENIED;
     }

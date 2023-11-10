@@ -42,7 +42,8 @@ VerifyManagerProxy::~VerifyManagerProxy()
     APP_LOGI("destroy VerifyManagerProxy.");
 }
 
-ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths, bool flag)
+ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths,
+    const std::vector<std::string> &abcNames, bool flag)
 {
     APP_LOGI("begin to call Verify.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -57,11 +58,15 @@ ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths, boo
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteStringVector(abcPaths)) {
-        APP_LOGE("write bundleFilePaths failed.");
+        APP_LOGE("write abcPaths failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteStringVector(abcNames)) {
+        APP_LOGE("write abcNames failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteBool(flag)) {
-        APP_LOGE("write bundleFilePaths failed.");
+        APP_LOGE("write flag failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
@@ -71,24 +76,25 @@ ErrCode VerifyManagerProxy::Verify(const std::vector<std::string> &abcPaths, boo
         return ERR_BUNDLE_MANAGER_VERIFY_SEND_REQUEST_FAILED;
     }
 
-    ErrCode ret = reply.ReadInt32();
-    if (ret != ERR_OK) {
-        return ret;
+    return reply.ReadInt32();
+}
+
+ErrCode VerifyManagerProxy::RemoveFiles(const std::vector<std::string> &abcPaths)
+{
+    APP_LOGI("RemoveFiles.");
+    std::vector<std::string> realPaths;
+    if (!BundleFileUtil::CheckFilePath(abcPaths, realPaths)) {
+        APP_LOGE("RemoveFiles CheckFilePath failed");
+        return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
     }
 
-    if (flag) {
-        RemoveFiles(abcPaths);
+    for (const auto &path : realPaths) {
+        if (!BundleFileUtil::DeleteDir(path)) {
+            APP_LOGW("RemoveFile %{private}s failed.", path.c_str());
+        }
     }
 
     return ERR_OK;
-}
-
-void VerifyManagerProxy::RemoveFiles(const std::vector<std::string> &paths)
-{
-    APP_LOGI("RemoveFiles.");
-    for (const auto &path : paths) {
-        BundleFileUtil::DeleteDir(path);
-    }
 }
 
 ErrCode VerifyManagerProxy::CreateFd(const std::string &fileName, int32_t &fd, std::string &path)
@@ -140,12 +146,12 @@ ErrCode VerifyManagerProxy::CopyFiles(
         APP_LOGE("sourceFiles empty.");
         return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
     }
-    std::vector<std::string> hqfFilePaths;
-    if (!BundleFileUtil::CheckFilePath(sourceFiles, hqfFilePaths)) {
+    std::vector<std::string> filePaths;
+    if (!BundleFileUtil::CheckFilePath(sourceFiles, filePaths)) {
         APP_LOGE("CopyFiles CheckFilePath failed");
         return ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR;
     }
-    for (const std::string &sourcePath : hqfFilePaths) {
+    for (const std::string &sourcePath : filePaths) {
         size_t pos = sourcePath.find_last_of(SEPARATOR);
         if (pos == std::string::npos) {
             APP_LOGE("invalid sourcePath.");

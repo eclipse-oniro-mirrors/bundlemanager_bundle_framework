@@ -72,6 +72,7 @@
                 "window_manager",
                 "distributed_bundle_framework",
                 "relational_store",
+                "runtime_core",
                 "dlp_permission_service",
                 "code_signature"
             ],

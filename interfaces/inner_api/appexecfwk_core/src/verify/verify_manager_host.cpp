@@ -70,8 +70,14 @@ ErrCode VerifyManagerHost::HandleVerify(MessageParcel& data, MessageParcel& repl
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
+    std::vector<std::string> abcNames;
+    if (!data.ReadStringVector(&abcNames)) {
+        APP_LOGE("read abcNames failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
     bool flag = data.ReadBool();
-    auto ret = Verify(abcPaths, flag);
+    auto ret = Verify(abcPaths, abcNames, flag);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
