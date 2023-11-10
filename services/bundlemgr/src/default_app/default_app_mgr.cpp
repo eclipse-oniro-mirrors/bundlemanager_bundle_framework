@@ -284,7 +284,7 @@ void DefaultAppMgr::HandleCreateUser(int32_t userId) const
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(INITIAL_USER_ID, infos);
     if (!ret) {
-        APP_LOGW("GetDefaultApplicationInfos failed.");
+        APP_LOGW("GetDefaultApplicationInfos failed");
         return;
     }
     defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
