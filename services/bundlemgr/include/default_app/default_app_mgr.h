@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -16,7 +16,8 @@
 #ifndef FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 #define FOUNDATION_DEFAULT_APPLICATION_FRAMEWORK_DEFAULT_APP_MGR
 
-#include<set>
+#include <mutex>
+#include <set>
 
 #include "default_app_db_interface.h"
 #include "nocopyable.h"
@@ -62,6 +63,7 @@ private:
     bool MatchActionAndType(const std::string& action, const std::string& type, const std::vector<Skill>& skills) const;
 
     std::shared_ptr<IDefaultAppDb> defaultAppDb_;
+    mutable std::mutex mutex_;
 };
 }
 }
