@@ -26,6 +26,7 @@ namespace AppExecFwk {
 enum ProfileType {
     INTENT_PROFILE = 1,
     ADDITION_PROFILE = 2,
+    NETWORK_PROFILE = 3,
 };
 
 // stores module information about an application
