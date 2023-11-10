@@ -28,6 +28,8 @@ public:
     ~MimeTypeMgr() = default;
     static bool GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes);
     static bool GetMimeTypeByUri(const std::string &uri, std::string &mimeType);
+    static bool MatchUriWithUtd(const std::string &uri, const std::string &utd);
+    static bool GetUriSuffix(const std::string &uri, std::string &suffix);
 
 private:
     static std::multimap<std::string, std::string> mimeTypeMap_;

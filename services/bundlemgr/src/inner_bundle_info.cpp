@@ -366,6 +366,12 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
     }
 }
 
+bool Skill::MatchUtd(const OHOS::AAFwk::Want &want)
+{
+    std::vector<std::string> utds = want.GetStringArrayParam(WANT_PARAM_UTDS);
+
+}
+
 bool Skill::StartsWith(const std::string &sourceString, const std::string &targetPrefix) const
 {
     return sourceString.rfind(targetPrefix, 0) == 0;

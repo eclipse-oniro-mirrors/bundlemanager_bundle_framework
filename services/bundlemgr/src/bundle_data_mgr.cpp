@@ -67,6 +67,10 @@ constexpr int32_t PROFILE_PREFIX_LENGTH = 9;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 // freeInstall action
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
+// share action
+constexpr const char* SHARE_ACTION = "ohos.want.action.sendData";
+const std::string WANT_PARAM_UTDS = "ability.picker.utds";
+const std::string WANT_PARAM_RECORD_COUNT = "ability.picker.recordCount";
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
@@ -1157,6 +1161,7 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, A
             skillinfo.pathStartWith = uri.pathStartWith;
             skillinfo.pathRegex = uri.pathRegex;
             skillinfo.type = uri.type;
+            skillinfo.utd = uri.utd;
             skillUriTmp.emplace_back(skillinfo);
         }
         abilityInfo.skillUri = skillUriTmp;
@@ -1214,6 +1219,15 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
             }
         }
     }
+}
+
+bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skills) const
+{
+    if (want.GetAction() != SHARE_ACTION) {
+        return false;
+    }
+    std::vector<std::string> utds = want.GetStringArrayParam(WANT_PARAM_UTDS);
+    
 }
 
 void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const
@@ -4115,6 +4129,7 @@ void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
             skillinfo.pathStartWith = uri.pathStartWith;
             skillinfo.pathRegex = uri.pathRegex;
             skillinfo.type = uri.type;
+            skillinfo.utd = uri.utd;
             skillUriTmp.emplace_back(skillinfo);
         }
         extensionAbilityInfo.skillUri = skillUriTmp;

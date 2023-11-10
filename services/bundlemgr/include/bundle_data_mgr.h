@@ -966,6 +966,7 @@ private:
     void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
+    bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

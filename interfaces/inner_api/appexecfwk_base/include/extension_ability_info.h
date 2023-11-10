@@ -94,6 +94,7 @@ struct SkillUriForAbilityAndExtension {
     std::string pathStartWith;
     std::string pathRegex;
     std::string type;
+    std::string utd;
 };
 
 struct ExtensionAbilityInfo : public Parcelable {

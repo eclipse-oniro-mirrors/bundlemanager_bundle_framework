@@ -16,6 +16,7 @@
 #include "mime_type_mgr.h"
 
 #include "app_log_wrapper.h"
+#include "utd_client.h"
 
 namespace OHOS {
 namespace AppExecFwk {
@@ -344,14 +345,11 @@ std::multimap<std::string, std::string> MimeTypeMgr::mimeTypeMap_ = {
 
 bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::vector<std::string> &mimeTypes)
 {
-    auto suffixIndex = uri.rfind('.');
-    if (suffixIndex == std::string::npos) {
+    std::string suffix;
+    if (!GetUriSuffix(uri, suffix)) {
         APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
         return false;
     }
-    std::string suffix = uri.substr(suffixIndex + 1);
-    std::transform(suffix.begin(), suffix.end(), suffix.begin(),
-                [](unsigned char c) { return std::tolower(c); });
 
     auto range = mimeTypeMap_.equal_range(suffix);
     for (auto it = range.first; it != range.second; ++it) {
@@ -373,6 +371,35 @@ bool MimeTypeMgr::GetMimeTypeByUri(const std::string &uri, std::string &mimeType
     }
     mimeType = mimeTypes[0];
     return true;
+}
+
+bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
+{
+    auto suffixIndex = uri.rfind('.');
+    if (suffixIndex == std::string::npos) {
+        APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
+        return false;
+    }
+    suffix = uri.substr(suffixIndex + 1);
+    std::transform(suffix.begin(), suffix.end(), suffix.begin(),
+                [](unsigned char c) { return std::tolower(c); });
+    return true;
+}
+
+bool MimeTypeMgr::MatchUriWithUtd(const std::string &uri, const std::string &utd)
+{
+    std::string suffix;
+    if (!GetUriSuffix(uri, suffix)) {
+        APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
+        return false;
+    }
+    std::string matchedUtd;
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByFilenameExtension(suffix, utd, matchedUtd);
+    if (ret != ERR_OK) {
+        APP_LOGE("Match uri with udmf failed");
+        return false;
+    }
+    return matchedUtd.empty();
 }
 }
 }

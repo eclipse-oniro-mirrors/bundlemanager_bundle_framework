@@ -137,6 +137,7 @@ struct SkillUri {
     std::string pathStartWith;
     std::string pathRegex;
     std::string type;
+    std::string utd;
 };
 
 struct Skill {
@@ -154,6 +155,7 @@ private:
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
+    bool MatchUtd(const OHOS::AAFwk::Want &want);
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 
