@@ -4411,9 +4411,6 @@ bool BundleDataMgr::HandlePreview(const Want &want, const int32_t flags, const i
     if (want.GetAction() != Constants::ACTION_VIEW_DATA) {
         return false;
     }
-    if (abilityInfos.size() + extensionInfos.size() <= 1) {
-        return false;
-    }
 
     AbilityInfo abilityInfo;
     ExtensionAbilityInfo extensionInfo;
