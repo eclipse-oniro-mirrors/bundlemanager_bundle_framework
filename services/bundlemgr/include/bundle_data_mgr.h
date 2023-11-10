@@ -968,7 +968,7 @@ private:
     void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
-    void HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
+    bool HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const;
 
 private:

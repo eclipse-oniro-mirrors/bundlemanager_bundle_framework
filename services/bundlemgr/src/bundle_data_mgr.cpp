@@ -4404,7 +4404,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     return abilityRet || extensionRet;
 }
 
-void BundleDataMgr::HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
+bool BundleDataMgr::HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
     std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const
 {
     APP_LOGD("begin");
