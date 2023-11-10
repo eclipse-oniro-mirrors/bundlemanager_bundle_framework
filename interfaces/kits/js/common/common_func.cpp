@@ -432,6 +432,11 @@ void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Wan
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, want.GetAction().c_str(), NAPI_AUTO_LENGTH, &naction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "action", naction));
 
+    napi_value nmoduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &nmoduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "moduleName", nmoduleName));
+
     auto entities = want.GetEntities();
     napi_value nGetEntities;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nGetEntities));
