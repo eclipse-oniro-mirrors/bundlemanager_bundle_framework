@@ -1,6 +1,6 @@
 {
     "app": {
-        "apiReleaseType": "Beta1",
+        "apiReleaseType": "Release",
         "bundleName": "com.example.previewtest",
         "debug": true,
         "icon": "$media:app_icon",

@@ -14,7 +14,7 @@
         "minCompatibleVersionCode":1,
         "minAPIVersion": 8,
         "targetAPIVersion":8,
-        "apiReleaseType":"Beta2",
+        "apiReleaseType":"Release",
         "keepAlive":true,
         "removable":false,
         "userDataClearable":false,
