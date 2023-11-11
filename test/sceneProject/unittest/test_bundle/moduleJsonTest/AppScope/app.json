@@ -5,6 +5,7 @@
       "iconId": 16777217,
       "label": "$string:app_name",
       "labelId": 16777216,
+      "apiReleaseType": "Release",
       "minAPIVersion": 8,
       "targetAPIVersion": 8,
       "vendor": "huawei",

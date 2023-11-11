@@ -686,10 +686,11 @@ public:
     bool RemoveInnerBundleUserInfo(const std::string &bundleName, int32_t userId);
 
     bool ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
-        AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo);
+        AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) const;
 
     bool ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos);
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos,
+        bool &findDefaultApp);
 
     /**
      * @brief Sets whether to enable isRemovable based on given bundle name, module name and isEnable.
@@ -845,6 +846,8 @@ public:
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
         std::string &profile) const;
     bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
+    ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+
 private:
     /**
      * @brief Init transferStates.
@@ -900,7 +903,6 @@ private:
         int32_t appIndex = 0) const;
     bool GenerateBundleId(const std::string &bundleName, int32_t &bundleId);
     int32_t GetUserIdByUid(int32_t uid) const;
-    ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     bool GetAllBundleInfos(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     ErrCode GetAllBundleInfosV9(int32_t flags, std::vector<BundleInfo> &bundleInfos) const;
     bool ExplicitQueryExtensionInfo(const Want &want, int32_t flags, int32_t userId,
@@ -967,6 +969,8 @@ private:
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
+    bool HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
+        std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

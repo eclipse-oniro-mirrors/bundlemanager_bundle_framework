@@ -73,17 +73,23 @@ const std::string WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
 const std::string SUMMARY_TOTAL_COUNT = "totalCount";
 const std::string WANT_PARAM_SUMMARY = "summary";
 constexpr int32_t DEFAULT_SUMMARY_COUNT = 0;
+// preview action
+constexpr const char* PREVIEW_ACTION = "ohos.want.action.hapPreview";
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 // profile path
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
+constexpr const char* ADDITION_PROFILE_PATH = "resources/base/profile/addition.json";
+constexpr const char* NETWORK_PROFILE_PATH = "resources/base/profile/network_config.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
 
 const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
+    { ProfileType::ADDITION_PROFILE, ADDITION_PROFILE_PATH},
+    { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH }
 };
 }
 
@@ -1818,17 +1824,6 @@ ErrCode BundleDataMgr::ProcessBundleMenu(BundleInfo &bundleInfo, int32_t flags, 
                 hapModuleInfo.fileContextMenu = Constants::EMPTY_STRING;
             });
             return ERR_OK;
-        }
-        std::vector<HapModuleInfo>& hapModuleInfos = bundleInfo.hapModuleInfos;
-        hapModuleInfos.erase(std::remove_if(
-            hapModuleInfos.begin(), hapModuleInfos.end(), [](const auto& hapModuleInfo) {
-                return hapModuleInfo.fileContextMenu.empty();
-            }), hapModuleInfos.end());
-        if (hapModuleInfos.empty()) {
-            APP_LOGW("getBundleInfo with menu flag, but no module has menu");
-            BundleInfo emptyInfo;
-            bundleInfo = emptyInfo;
-            return ERR_BUNDLE_MANAGER_QUERY_MENU_FAILED;
         }
     }
     for (auto &hapModuleInfo : bundleInfo.hapModuleInfos) {
@@ -4383,7 +4378,7 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetAllPreInstallBundleInf
 }
 
 bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags, int32_t userId,
-    AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo)
+    AbilityInfo &abilityInfo, ExtensionAbilityInfo &extensionInfo) const
 {
     int32_t requestUserId = GetUserId(userId);
     if (requestUserId == Constants::INVALID_USERID) {
@@ -4424,7 +4419,7 @@ bool BundleDataMgr::ImplicitQueryInfoByPriority(const Want &want, int32_t flags,
 }
 
 bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t userId, bool withDefault,
-    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos)
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos, bool &findDefaultApp)
 {
     APP_LOGD("want : %{public}s, flags : %{public}d, userId : %{public}d, withDefault(bool) : %{public}d",
         want.ToString().c_str(), flags, userId, withDefault);
@@ -4432,6 +4427,7 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     // step1 : find default infos
     if (withDefault && DefaultAppMgr::GetInstance().GetDefaultApplication(want, userId, abilityInfos, extensionInfos)) {
         APP_LOGD("find target default application");
+        findDefaultApp = true;
         return true;
     }
 #endif
@@ -4443,7 +4439,59 @@ bool BundleDataMgr::ImplicitQueryInfos(const Want &want, int32_t flags, int32_t 
     bool extensionRet =
         ImplicitQueryExtensionInfos(want, flags, userId, extensionInfos) && (extensionInfos.size() > 0);
     APP_LOGD("extensionRet: %{public}d, extensionInfos size: %{public}zu", extensionRet, extensionInfos.size());
+    // step3 : handle preview, if preview exist, only return preview
+    if (withDefault) {
+        findDefaultApp = HandlePreview(want, flags, userId, abilityInfos, extensionInfos);
+    }
     return abilityRet || extensionRet;
+}
+
+bool BundleDataMgr::HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
+    std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const
+{
+    APP_LOGD("begin");
+    if (want.GetAction() != Constants::ACTION_VIEW_DATA) {
+        return false;
+    }
+
+    AbilityInfo abilityInfo;
+    ExtensionAbilityInfo extensionInfo;
+    Want previewWant;
+    previewWant.SetAction(PREVIEW_ACTION);
+    if (!ImplicitQueryInfoByPriority(previewWant, flags, userId, abilityInfo, extensionInfo)) {
+        APP_LOGD("preview not exist");
+        return false;
+    }
+
+    if (!abilityInfo.name.empty()) {
+        for (const auto &info : abilityInfos) {
+            if (info.bundleName == abilityInfo.bundleName &&
+                info.moduleName == abilityInfo.moduleName &&
+                info.name == abilityInfo.name) {
+                abilityInfos.clear();
+                extensionInfos.clear();
+                abilityInfos.emplace_back(abilityInfo);
+                APP_LOGD("only return ability preview");
+                return true;
+            }
+        }
+    }
+
+    if (!extensionInfo.name.empty()) {
+        for (const auto &info : extensionInfos) {
+            if (info.bundleName == extensionInfo.bundleName &&
+                info.moduleName == extensionInfo.moduleName &&
+                info.name == extensionInfo.name) {
+                abilityInfos.clear();
+                extensionInfos.clear();
+                extensionInfos.emplace_back(extensionInfo);
+                APP_LOGD("only return extension preview");
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 bool BundleDataMgr::GetAllDependentModuleNames(const std::string &bundleName, const std::string &moduleName,

@@ -28,7 +28,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths) : patchPaths_(bundleFilePaths)
+QuickFixDeployer::QuickFixDeployer(const std::vector<std::string> &bundleFilePaths,
+    bool isDebug) : patchPaths_(bundleFilePaths), isDebug_(isDebug)
 {}
 
 ErrCode QuickFixDeployer::Execute()
@@ -329,17 +330,18 @@ void QuickFixDeployer::ProcessNativeLibraryPath(
 ErrCode QuickFixDeployer::ProcessPatchDeployEnd(const AppQuickFix &appQuickFix, std::string &patchPath)
 {
     patchPath = Constants::BUNDLE_CODE_DIR + Constants::PATH_SEPARATOR + appQuickFix.bundleName +
-        Constants::PATH_SEPARATOR + Constants::PATCH_PATH +
-        std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
-    ErrCode ret = InstalldClient::GetInstance()->CreateBundleDir(patchPath);
-    if (ret != ERR_OK) {
-        APP_LOGE("error: creat patch path failed, errcode %{public}d", ret);
+        Constants::PATH_SEPARATOR + Constants::PATCH_PATH + std::to_string(appQuickFix.deployingAppqfInfo.versionCode);
+    if (InstalldClient::GetInstance()->CreateBundleDir(patchPath) != ERR_OK) {
+        APP_LOGE("error: creat patch path failed");
         return ERR_BUNDLEMANAGER_QUICK_FIX_CREATE_PATCH_PATH_FAILED;
     }
     BundleInfo bundleInfo;
-    ret = GetBundleInfo(appQuickFix.bundleName, bundleInfo);
+    ErrCode ret = GetBundleInfo(appQuickFix.bundleName, bundleInfo);
     if (ret != ERR_OK) {
         return ret;
+    }
+    if (isDebug_ && (bundleInfo.applicationInfo.appProvisionType == Constants::APP_PROVISION_TYPE_DEBUG)) {
+        return ExtractQuickFixSoFile(appQuickFix, patchPath, bundleInfo);
     }
     std::string oldSoPath = Constants::HAP_COPY_PATH + Constants::PATH_SEPARATOR +
         appQuickFix.bundleName + Constants::TMP_SUFFIX + Constants::LIBS;
@@ -717,6 +719,47 @@ void QuickFixDeployer::SendQuickFixSystemEvent(const InnerBundleInfo &innerBundl
     }
     sysEventInfo.applyQuickFixFrequency = innerBundleInfo.GetApplyQuickFixFrequency();
     EventReport::SendBundleSystemEvent(BundleEventType::QUICK_FIX, sysEventInfo);
+}
+
+ErrCode QuickFixDeployer::ExtractQuickFixSoFile(
+    const AppQuickFix &appQuickFix, const std::string &hqfSoPath, const BundleInfo &bundleInfo)
+{
+    APP_LOGD("start, bundleName:%{public}s", appQuickFix.bundleName.c_str());
+    auto &appQfInfo = appQuickFix.deployingAppqfInfo;
+    if (appQfInfo.hqfInfos.empty()) {
+        APP_LOGE("hqfInfos is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_PROFILE_PARSE_FAILED;
+    }
+    for (const auto &hqf : appQfInfo.hqfInfos) {
+        auto iter = std::find_if(std::begin(bundleInfo.hapModuleInfos), std::end(bundleInfo.hapModuleInfos),
+            [hqf](const HapModuleInfo &info) {
+                return info.moduleName == hqf.moduleName;
+            });
+        if (iter == bundleInfo.hapModuleInfos.end()) {
+            APP_LOGW("moduleName:%{public}s not exist", hqf.moduleName.c_str());
+            continue;
+        }
+
+        std::string libraryPath;
+        std::string cpuAbi;
+        bool isLibIsolated = IsLibIsolated(appQuickFix.bundleName, hqf.moduleName);
+        if (!FetchPatchNativeSoAttrs(appQuickFix.deployingAppqfInfo, hqf, isLibIsolated, libraryPath, cpuAbi)) {
+            APP_LOGD("no so file");
+            continue;
+        }
+        std::string soPath = hqfSoPath + Constants::PATH_SEPARATOR + libraryPath;
+        ExtractParam extractParam;
+        extractParam.extractFileType = ExtractFileType::SO;
+        extractParam.srcPath = hqf.hqfFilePath;
+        extractParam.targetPath = soPath;
+        extractParam.cpuAbi = cpuAbi;
+        if (InstalldClient::GetInstance()->ExtractFiles(extractParam) != ERR_OK) {
+            APP_LOGW("moduleName: %{public}s extract so failed", hqf.moduleName.c_str());
+            continue;
+        }
+    }
+    return ERR_OK;
+    APP_LOGD("end");
 }
 
 bool QuickFixDeployer::ExtractSoFiles(

@@ -117,6 +117,7 @@ bool BundleMgrService::Init()
     CHECK_INIT_RESULT(InitBundleInstaller(), "Init bundleInstaller fail");
     InitBundleDataMgr();
     CHECK_INIT_RESULT(InitBundleUserMgr(), "Init bundleUserMgr fail");
+    CHECK_INIT_RESULT(InitVerifyManager(), "Init verifyManager fail");
     CHECK_INIT_RESULT(InitBundleEventHandler(), "Init bundleEventHandler fail");
     InitHidumpHelper();
     InitFreeInstall();
@@ -179,6 +180,15 @@ bool BundleMgrService::InitBundleUserMgr()
     }
 
     return userMgrHost_ != nullptr;
+}
+
+bool BundleMgrService::InitVerifyManager()
+{
+    if (verifyManager_ == nullptr) {
+        verifyManager_ = new (std::nothrow) VerifyManagerHostImpl();
+    }
+
+    return verifyManager_ != nullptr;
 }
 
 bool BundleMgrService::InitBundleEventHandler()
@@ -354,6 +364,11 @@ void BundleMgrService::SelfClean()
 sptr<BundleUserMgrHostImpl> BundleMgrService::GetBundleUserMgr() const
 {
     return userMgrHost_;
+}
+
+sptr<IVerifyManager> BundleMgrService::GetVerifyManager() const
+{
+    return verifyManager_;
 }
 
 const std::shared_ptr<BmsParam> BundleMgrService::GetBmsParam() const

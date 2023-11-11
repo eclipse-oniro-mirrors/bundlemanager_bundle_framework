@@ -34,6 +34,7 @@ config("bundlemgr_common_config") {
     "include/sandbox_app",
     "include/shared",
     "include/quick_fix/state/include",
+    "include/verify",
     "../../interfaces/inner_api/appexecfwk_base/include",
     "../../interfaces/inner_api/bundlemgr_extension/include",
   ]
@@ -380,6 +381,11 @@ ohos_shared_library("libbms") {
 
   if (build_variant == "root") {
     defines += [ "QUOTA_PARAM_SET_ENABLE" ]
+  }
+
+  if (verify_abc_enabled) {
+    defines += [ "VERIFY_ABC_ENABLED" ]
+    external_deps += [ "runtime_core:libarkverifier" ]
   }
 
   subsystem_name = "bundlemanager"

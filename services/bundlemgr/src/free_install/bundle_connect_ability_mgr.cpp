@@ -808,6 +808,9 @@ int32_t GetTargetInfoFlag(const Want &want, const std::string &deviceId, const s
 void BundleConnectAbilityMgr::GetTargetAbilityInfo(const Want &want, int32_t userId,
     const InnerBundleInfo &innerBundleInfo, sptr<TargetAbilityInfo> &targetAbilityInfo)
 {
+    if (targetAbilityInfo == nullptr) {
+        return;
+    }
     ElementName element = want.GetElement();
     std::string bundleName = element.GetBundleName();
     std::string moduleName = element.GetModuleName();

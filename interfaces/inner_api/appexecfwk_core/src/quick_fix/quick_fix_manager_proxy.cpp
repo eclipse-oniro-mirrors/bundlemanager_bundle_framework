@@ -43,7 +43,7 @@ QuickFixManagerProxy::~QuickFixManagerProxy()
 }
 
 ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bundleFilePaths,
-    const sptr<IQuickFixStatusCallback> &statusCallback)
+    const sptr<IQuickFixStatusCallback> &statusCallback, bool isDebug)
 {
     APP_LOGI("begin to call DeployQuickFix.");
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
@@ -60,6 +60,10 @@ ErrCode QuickFixManagerProxy::DeployQuickFix(const std::vector<std::string> &bun
     }
     if (!data.WriteStringVector(bundleFilePaths)) {
         APP_LOGE("write bundleFilePaths failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteBool(isDebug)) {
+        APP_LOGE("write isDebug failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (!data.WriteObject<IRemoteObject>(statusCallback->AsObject())) {

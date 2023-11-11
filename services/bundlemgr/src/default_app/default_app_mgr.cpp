@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -92,6 +92,7 @@ void DefaultAppMgr::Init()
 
 ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& type, bool& isDefaultApp) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
     if (VerifyUserIdAndType(userId, mimeType) != ERR_OK) {
@@ -131,6 +132,7 @@ ErrCode DefaultAppMgr::IsDefaultApplication(int32_t userId, const std::string& t
 
 ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& type, BundleInfo& bundleInfo) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
 
@@ -160,6 +162,7 @@ ErrCode DefaultAppMgr::GetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& type, const Element& element) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
 
@@ -205,6 +208,7 @@ ErrCode DefaultAppMgr::SetDefaultApplication(int32_t userId, const std::string& 
 
 ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string& type) const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     std::string mimeType = type;
     ConvertTypeBySuffix(mimeType);
 
@@ -247,30 +251,40 @@ ErrCode DefaultAppMgr::ResetDefaultApplication(int32_t userId, const std::string
 
 void DefaultAppMgr::HandleUninstallBundle(int32_t userId, const std::string& bundleName) const
 {
-    APP_LOGD("begin to HandleUninstallBundle.");
-    std::map<std::string, Element> infos;
-    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, infos);
+    std::lock_guard<std::mutex> lock(mutex_);
+    APP_LOGD("begin");
+    std::map<std::string, Element> currentInfos;
+    bool ret = defaultAppDb_->GetDefaultApplicationInfos(userId, currentInfos);
     if (!ret) {
-        APP_LOGW("GetDefaultApplicationInfos failed.");
+        APP_LOGW("GetDefaultApplicationInfos failed");
         return;
     }
-    for (auto item = infos.begin(); item != infos.end();) {
-        if (item->second.bundleName == bundleName) {
-            item = infos.erase(item);
+    // if type exist in default_app.json, use it
+    std::map<std::string, Element> newInfos;
+    for (const auto& item : currentInfos) {
+        if (item.second.bundleName == bundleName) {
+            Element element;
+            if (defaultAppDb_->GetDefaultApplicationInfo(INITIAL_USER_ID, item.first, element)) {
+                APP_LOGD("set default application to preset, type : %{public}s", item.first.c_str());
+                newInfos.emplace(item.first, element);
+            } else {
+                APP_LOGD("erase uninstalled default application, type : %{public}s", item.first.c_str());
+            }
         } else {
-            item++;
+            newInfos.emplace(item.first, item.second);
         }
     }
-    defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
+    defaultAppDb_->SetDefaultApplicationInfos(userId, newInfos);
 }
 
 void DefaultAppMgr::HandleCreateUser(int32_t userId) const
 {
-    APP_LOGD("begin to HandleCreateUser.");
+    std::lock_guard<std::mutex> lock(mutex_);
+    APP_LOGD("begin");
     std::map<std::string, Element> infos;
     bool ret = defaultAppDb_->GetDefaultApplicationInfos(INITIAL_USER_ID, infos);
     if (!ret) {
-        APP_LOGW("GetDefaultApplicationInfos failed.");
+        APP_LOGW("GetDefaultApplicationInfos failed");
         return;
     }
     defaultAppDb_->SetDefaultApplicationInfos(userId, infos);
@@ -278,7 +292,8 @@ void DefaultAppMgr::HandleCreateUser(int32_t userId) const
 
 void DefaultAppMgr::HandleRemoveUser(int32_t userId) const
 {
-    APP_LOGD("begin to HandleRemoveUser.");
+    std::lock_guard<std::mutex> lock(mutex_);
+    APP_LOGD("begin");
     defaultAppDb_->DeleteDefaultApplicationInfos(userId);
 }
 

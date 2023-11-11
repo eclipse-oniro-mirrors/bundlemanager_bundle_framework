@@ -29,6 +29,7 @@ enum class DirType {
     QUICK_FIX_DIR = 1,
     SIG_FILE_DIR = 2,
     PGO_FILE_DIR = 3,
+    ABC_FILE_DIR = 4,
     UNKNOWN
 };
 

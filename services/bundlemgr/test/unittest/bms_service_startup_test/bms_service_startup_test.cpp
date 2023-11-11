@@ -790,6 +790,21 @@ HWTEST_F(BmsServiceStartupTest, GetNewPermissionDefList_0100, Function | SmallTe
 }
 
 /**
+ * @tc.number: CheckPermissionAvailableType_0100
+ * @tc.name: test CheckPermissionAvailableType
+ * @tc.desc: 1.test CheckPermissionAvailableType of BundlePermissionMgr
+ */
+HWTEST_F(BmsServiceStartupTest, CheckPermissionAvailableType_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+    AccessToken::PermissionDef permissionDef;
+    std::string appDistributionType = AppExecFwk::Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM;
+    bool result = BundlePermissionMgr::CheckPermissionAvailableType(appDistributionType, permissionDef);
+    EXPECT_TRUE(result);
+}
+
+/**
 * @tc.number: PreInstallExceptionMgr_0001
 * @tc.name: test PreInstallExceptionMgr
 * @tc.desc: 1. test is valid input

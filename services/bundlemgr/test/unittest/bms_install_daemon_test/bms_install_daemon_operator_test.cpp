@@ -887,6 +887,7 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5300, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5400, Function | SmallTest | Level0)
 {
+    DeleteQuickFileDir(TEST_DIR_PATH);
     CreateQuickFileDir(TEST_DIR_PATH);
     
     std::vector<std::string> oldSoFileNames;

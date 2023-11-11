@@ -82,6 +82,10 @@ public:
         const std::string &targetPath,
         const std::string &cpuAbi,
         const ExtractFileType &extractFileType = ExtractFileType::SO);
+
+    static bool DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
+        std::string &prefix);
+
     static bool IsNativeFile(
         const std::string &entryName, const ExtractParam &extractParam);
 
@@ -174,6 +178,9 @@ public:
     static bool ScanDir(
         const std::string &dirPath, ScanMode scanMode, ResultMode resultMode, std::vector<std::string> &paths);
 
+    static bool ScanSoFiles(const std::string &newSoPath, const std::string &originPath,
+        const std::string &currentPath, std::vector<std::string> &paths);
+
     static bool CopyFile(const std::string &sourceFile, const std::string &destinationFile);
 
     static bool ChangeDirOwnerRecursively(const std::string &path, const int uid, const int gid);
@@ -216,7 +223,8 @@ public:
     static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
-    static ErrCode DecryptSoFile(const std::string &hapPath, const std::string &tmpHapPath, int32_t uid);
+    static ErrCode DecryptSoFile(const std::string &hapPath, const std::string &tmpHapPath, int32_t uid,
+        uint32_t fileSize, uint32_t offset);
 
     static ErrCode RemoveEncryptedKey(int32_t uid, const std::vector<std::string> &soList);
 
@@ -235,12 +243,6 @@ private:
         const std::string &newSoPath, std::vector<std::string> &oldSoFileNames,
         std::vector<std::string> &diffFileNames);
     static bool ExtractResourceFiles(const ExtractParam &extractParam, const BundleExtractor &extractor);
-
-    static ErrCode ExtractSoFilesToTmpHapPath(const std::string &hapPath, const std::string &cpuAbi,
-        const std::string &tmpSoPath);
-
-    static ErrCode ExtractSoFilesToTmpSoPath(const std::string &hapPath, const std::string &realSoFilesPath,
-        const std::string &cpuAbi, const std::string &tmpSoPath);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

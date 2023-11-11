@@ -173,10 +173,11 @@ ErrCode InstalldHostImpl::RenameModuleDir(const std::string &oldPath, const std:
     return ERR_OK;
 }
 
-static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid)
+static void CreateBackupExtHomeDir(const std::string &bundleName, const int32_t userid, const int32_t uid,
+    std::string &bundleBackupDir)
 {
     // Setup BackupExtensionAbility's home directory in a harmless way
-    std::string bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
+    bundleBackupDir = BUNDLE_BACKUP_HOME_PATH + bundleName;
     bundleBackupDir = bundleBackupDir.replace(bundleBackupDir.find("%"), 1, std::to_string(userid));
     if (!InstalldOperator::MkOwnerDir(bundleBackupDir, S_IRWXU | S_IRWXG | S_ISGID, uid, Constants::BACKU_HOME_GID)) {
         static std::once_flag logOnce;
@@ -280,7 +281,14 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
         APP_LOGE("Failed to mk dir for non account distributedfile");
     }
 
-    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid);
+    std::string bundleBackupDir;
+    CreateBackupExtHomeDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, bundleBackupDir);
+    ErrCode ret = SetDirApl(bundleBackupDir, createDirParam.bundleName, createDirParam.apl,
+        createDirParam.isPreInstallApp, createDirParam.debug);
+    if (ret != ERR_OK) {
+        APP_LOGE("CreateBackupExtHomeDir SetDirApl failed, errno is %{public}d", ret);
+    }
+
     CreateShareDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, createDirParam.gid);
     CreateCloudDir(createDirParam.bundleName, createDirParam.userId, createDirParam.uid, Constants::DFS_GID);
     return ERR_OK;

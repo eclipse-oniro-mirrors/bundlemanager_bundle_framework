@@ -1,6 +1,6 @@
 {
     "app": {
-        "apiReleaseType": "Canary1",
+        "apiReleaseType": "Release",
         "bundleName": "com.example.codeSignature2",
         "debug": true,
         "icon": "$media:app_icon",

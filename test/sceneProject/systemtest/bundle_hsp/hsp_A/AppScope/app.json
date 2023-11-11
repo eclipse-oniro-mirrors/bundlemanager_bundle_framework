@@ -1,6 +1,6 @@
 {
     "app": {
-        "apiReleaseType": "Canary1",
+        "apiReleaseType": "Release",
         "bundleName": "com.example.hspsotest",
         "debug": true,
         "icon": "$media:app_icon",

@@ -1014,24 +1014,6 @@ HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2600, Function | SmallTes
 }
 
 /**
- * @tc.number: MultipleHapsInstall_2700
- * @tc.name: test to install haps with different releaseType in the input file path array
- * @tc.desc: 1.the releaseType is differnet in the input file path array
- *           2.the installation result is fail
- */
-HWTEST_F(BmsMultipleInstallerTest, MultipleHapsInstall_2700, Function | SmallTest | Level1)
-{
-    std::vector<std::string> filePaths;
-    std::string firstBundleFile = RESOURCE_ROOT_PATH + RIGHT_BUNDLE_FIRST;
-    std::string secondBundleFile = RESOURCE_ROOT_PATH + RIGHT_DIFFERENT_RELEASE_TYPE;
-    filePaths.emplace_back(firstBundleFile);
-    filePaths.emplace_back(secondBundleFile);
-    ErrCode installRes = InstallThirdPartyMultipleBundles(filePaths, true);
-    EXPECT_EQ(installRes, ERR_APPEXECFWK_INSTALL_RELEASETYPE_NOT_SAME);
-    CheckFileNonExist();
-}
-
-/**
  * @tc.number: MultipleHapsInstall_4700
  * @tc.name: test to install haps with different version name in the different input file path array
  * @tc.desc: 1.the version name is differnet in the different input file path array

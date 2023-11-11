@@ -73,6 +73,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
         APP_LOGE("read bundleFilePaths failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
+    bool isDebug = data.ReadBool();
     sptr<IRemoteObject> object = data.ReadObject<IRemoteObject>();
     if (object == nullptr) {
         APP_LOGE("read statusCallback failed.");
@@ -80,7 +81,7 @@ ErrCode QuickFixManagerHost::HandleDeployQuickFix(MessageParcel& data, MessagePa
     }
     sptr<IQuickFixStatusCallback> statusCallback = iface_cast<IQuickFixStatusCallback>(object);
 
-    auto ret = DeployQuickFix(bundleFilePaths, statusCallback);
+    auto ret = DeployQuickFix(bundleFilePaths, statusCallback, isDebug);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write ret failed.");
         return ERR_APPEXECFWK_PARCEL_ERROR;

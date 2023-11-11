@@ -29,14 +29,14 @@ QuickFixer::QuickFixer(const sptr<IQuickFixStatusCallback> &statusCallback) : st
     APP_LOGI("enter QuickFixer");
 }
 
-void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths)
+void QuickFixer::DeployQuickFix(const std::vector<std::string> &bundleFilePaths, bool isDebug)
 {
     APP_LOGI("DeployQuickFix start");
     if (statusCallback_ == nullptr) {
         APP_LOGE("DeployQuickFix failed due to nullptr statusCallback");
     }
 
-    std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(bundleFilePaths);
+    std::unique_ptr<QuickFixDeployer> deployer = std::make_unique<QuickFixDeployer>(bundleFilePaths, isDebug);
     auto ret = deployer->Execute();
 
     // callback operation

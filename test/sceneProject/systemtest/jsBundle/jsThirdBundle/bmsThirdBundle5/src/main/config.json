@@ -2,7 +2,7 @@
     "app": {
         "apiVersion": {
             "compatible": 4,
-            "releaseType": "Beta1",
+            "releaseType": "Release",
             "target": 5
         },
         "vendor": "example",

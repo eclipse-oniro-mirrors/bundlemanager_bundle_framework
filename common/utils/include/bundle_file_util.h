@@ -29,6 +29,9 @@ public:
     static bool CheckFileName(const std::string &fileName);
     static bool CheckFileSize(const std::string &bundlePath, const int64_t fileSize);
     static bool GetHapFilesFromBundlePath(const std::string &currentBundlePath, std::vector<std::string> &hapFileList);
+    static bool DeleteDir(const std::string &path);
+    static bool IsExistFile(const std::string &filePath);
+    static bool IsExistDir(const std::string &dirPath);
 };
 } // AppExecFwk
 } // OHOS

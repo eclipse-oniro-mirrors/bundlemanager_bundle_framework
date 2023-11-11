@@ -406,6 +406,18 @@ bool BundlePermissionMgr::GrantPermission(
     return true;
 }
 
+bool BundlePermissionMgr::CheckPermissionAvailableType(
+    const std::string &appDistributionType, const Security::AccessToken::PermissionDef &permDef)
+{
+    if (appDistributionType != Constants::APP_DISTRIBUTION_TYPE_ENTERPRISE_MDM &&
+        permDef.availableType == Security::AccessToken::ATokenAvailableTypeEnum::MDM) {
+        APP_LOGE("%{public}s is a mdm permission, which is not available for not mdm application",
+            permDef.permissionName.c_str());
+        return false;
+    }
+    return true;
+}
+
 bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
     const std::vector<RequestPermission> &reqPermissions,
     const InnerBundleInfo &innerBundleInfo)
@@ -431,6 +443,11 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::Ac
                 userGrantPermList.emplace_back(reqPermission.name);
             }
         } else {
+            return false;
+        }
+        if (!CheckPermissionAvailableType(innerBundleInfo.GetBaseApplicationInfo().appDistributionType, permDef)) {
+            APP_LOGE("CheckPermissionAvailableType failed, request permission name: %{public}s",
+                reqPermission.name.c_str());
             return false;
         }
     }

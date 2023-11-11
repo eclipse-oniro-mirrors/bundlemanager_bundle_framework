@@ -69,7 +69,15 @@ static std::string HandleScanResult(
 
 static bool StartsWith(const std::string &sourceString, const std::string &targetPrefix)
 {
-    return sourceString.rfind(targetPrefix, 0) == 0;
+    return sourceString.find(targetPrefix) == 0;
+}
+
+static bool EndsWith(const std::string &sourceString, const std::string &targetSuffix)
+{
+    if (sourceString.length() < targetSuffix.length()) {
+        return false;
+    }
+    return sourceString.rfind(targetSuffix) == (sourceString.length() - targetSuffix.length());
 }
 } // namespace
 
@@ -232,14 +240,14 @@ bool InstalldOperator::IsNativeFile(
         }
     }
 
-    if (entryName.find(prefix) == std::string::npos) {
+    if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
 
     bool checkSuffix = false;
     for (const auto &suffix : suffixs) {
-        if (entryName.find(suffix) != std::string::npos) {
+        if (EndsWith(entryName, suffix)) {
             checkSuffix = true;
             break;
         }
@@ -263,7 +271,7 @@ bool InstalldOperator::IsNativeSo(const std::string &entryName, const std::strin
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (entryName.find(Constants::SO_SUFFIX) == std::string::npos) {
+    if (!EndsWith(entryName, Constants::SO_SUFFIX)) {
         APP_LOGD("file name not so format.");
         return false;
     }
@@ -280,11 +288,11 @@ bool InstalldOperator::IsDiffFiles(const std::string &entryName,
         return false;
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-    if (entryName.find(prefix) == std::string::npos) {
+    if (!StartsWith(entryName, prefix)) {
         APP_LOGD("entryName not start with %{public}s", prefix.c_str());
         return false;
     }
-    if (entryName.find(Constants::DIFF_SUFFIX) == std::string::npos) {
+    if (!EndsWith(entryName, Constants::DIFF_SUFFIX)) {
         APP_LOGD("file name not diff format.");
         return false;
     }
@@ -304,22 +312,9 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
     }
 
     std::string prefix;
-    switch (extractFileType) {
-        case ExtractFileType::SO: {
-            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-            break;
-        }
-        case ExtractFileType::AN: {
-            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
-            break;
-        }
-        case ExtractFileType::AP: {
-            prefix = Constants::AP;
-            break;
-        }
-        default: {
-            return;
-        }
+    if (!DeterminePrefix(extractFileType, cpuAbi, prefix)) {
+        APP_LOGE("determine prefix failed");
+        return;
     }
     std::string targetName = entryName.substr(prefix.length());
     std::string path = targetPath;
@@ -327,6 +322,13 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         path += Constants::FILE_SEPARATOR_CHAR;
     }
     path += targetName;
+    if (targetName.find(Constants::PATH_SEPARATOR) != std::string::npos) {
+        std::string dir = GetPathDir(path);
+        if (!IsExistDir(dir) && !MkRecursiveDir(dir, true)) {
+            APP_LOGE("create dir %{private}s failed", dir.c_str());
+            return;
+        }
+    }
     bool ret = extractor.ExtractFile(entryName, path);
     if (!ret) {
         APP_LOGE("extract file failed, entryName : %{public}s", entryName.c_str());
@@ -345,6 +347,29 @@ void InstalldOperator::ExtractTargetFile(const BundleExtractor &extractor, const
         return;
     }
     APP_LOGD("extract file success, path : %{private}s", path.c_str());
+}
+
+bool InstalldOperator::DeterminePrefix(const ExtractFileType &extractFileType, const std::string &cpuAbi,
+    std::string &prefix)
+{
+    switch (extractFileType) {
+        case ExtractFileType::SO: {
+            prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AN: {
+            prefix = Constants::AN + cpuAbi + Constants::PATH_SEPARATOR;
+            break;
+        }
+        case ExtractFileType::AP: {
+            prefix = Constants::AP;
+            break;
+        }
+        default: {
+            return false;
+        }
+    }
+    return true;
 }
 
 bool InstalldOperator::RenameDir(const std::string &oldPath, const std::string &newPath)
@@ -658,6 +683,54 @@ bool InstalldOperator::ScanDir(
     return true;
 }
 
+bool InstalldOperator::ScanSoFiles(const std::string &newSoPath, const std::string &originPath,
+    const std::string &currentPath, std::vector<std::string> &paths)
+{
+    if (currentPath.empty() || (currentPath.size() > Constants::PATH_MAX_SIZE)) {
+        APP_LOGE("ScanSoFiles current path invalid");
+        return false;
+    }
+    std::string filePath = "";
+    if (!PathToRealPath(currentPath, filePath)) {
+        APP_LOGE("file is not real path, file path: %{private}s", currentPath.c_str());
+        return false;
+    }
+    DIR* dir = opendir(filePath.c_str());
+    if (dir == nullptr) {
+        APP_LOGE("ScanSoFiles open dir(%{private}s) fail", filePath.c_str());
+        return false;
+    }
+    if (filePath.back() != Constants::FILE_SEPARATOR_CHAR) {
+        filePath.push_back(Constants::FILE_SEPARATOR_CHAR);
+    }
+    struct dirent *ptr = nullptr;
+    while ((ptr = readdir(dir)) != nullptr) {
+        if (strcmp(ptr->d_name, ".") == 0 || strcmp(ptr->d_name, "..") == 0) {
+            continue;
+        }
+        if (ptr->d_type == DT_DIR) {
+            std::string currentDir = filePath + std::string(ptr->d_name);
+            if (!ScanSoFiles(newSoPath, originPath, currentDir, paths)) {
+                closedir(dir);
+                return false;
+            }
+        }
+        if (ptr->d_type == DT_REG) {
+            std::string currentFile = filePath + std::string(ptr->d_name);
+            std::string relativePath = currentFile.substr(originPath.size() + 1);
+            paths.emplace_back(relativePath);
+            std::string subNewSoPath = GetPathDir(newSoPath + Constants::PATH_SEPARATOR + relativePath);
+            if (!IsExistDir(subNewSoPath) && !MkRecursiveDir(subNewSoPath, true)) {
+                APP_LOGE("ScanSoFiles create subNewSoPath (%{private}s) failed", filePath.c_str());
+                closedir(dir);
+                return false;
+            }
+        }
+    }
+    closedir(dir);
+    return true;
+}
+
 bool InstalldOperator::CopyFile(
     const std::string &sourceFile, const std::string &destinationFile)
 {
@@ -757,13 +830,13 @@ bool InstalldOperator::ProcessApplyDiffPatchPath(
         return false;
     }
 
-    if (!ScanDir(oldSoPath, ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, oldSoFileNames)) {
-        APP_LOGE("ProcessApplyDiffPatchPath ScanDir oldSoPath failed");
+    if (!ScanSoFiles(newSoPath, oldSoPath, oldSoPath, oldSoFileNames)) {
+        APP_LOGE("ProcessApplyDiffPatchPath ScanSoFiles oldSoPath failed");
         return false;
     }
 
-    if (!ScanDir(diffFilePath, ScanMode::SUB_FILE_FILE, ResultMode::RELATIVE_PATH, diffFileNames)) {
-        APP_LOGE("ProcessApplyDiffPatchPath ScanDir diffFilePath failed");
+    if (!ScanSoFiles(newSoPath, diffFilePath, diffFilePath, diffFileNames)) {
+        APP_LOGE("ProcessApplyDiffPatchPath ScanSoFiles diffFilePath failed");
         return false;
     }
 
@@ -940,8 +1013,7 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     }
     std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
     for (const auto &entryName : entryNames) {
-        if ((entryName.find(prefix) == 0) &&
-            (entryName.find(Constants::SO_SUFFIX) != std::string::npos)) {
+        if (StartsWith(entryName, prefix) && EndsWith(entryName, Constants::SO_SUFFIX)) {
             fileNames.push_back(entryName.substr(prefix.length(), entryName.length()));
         }
     }
@@ -1287,17 +1359,17 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
     const std::string &tmpSoPath, int32_t uid)
 {
     APP_LOGD("start to obtain decoded so files from hapPath %{public}s", hapPath.c_str());
-    /* cal the tmp hap path */
-    auto pos = hapPath.rfind(Constants::PATH_SEPARATOR[0]);
-    if (pos == std::string::npos) {
-        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    BundleExtractor extractor(hapPath);
+    if (!extractor.Init()) {
+        APP_LOGE("init bundle extractor failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
-    std::string hapName = hapPath.substr(pos + 1);
-    if (hapName.empty()) {
-        APP_LOGE("invalid hap path %{public}s", hapPath.c_str());
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    /* obtain the so list in the hap */
+    std::vector<std::string> soEntryFiles;
+    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+        APP_LOGE("ExtractFiles obtain native so file entryName failed");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INTERNAL_ERROR;
     }
 
     std::string innerTmpSoPath = tmpSoPath;
@@ -1313,21 +1385,36 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpHapPath(const std::string &hapPath,
         }
     }
 
-    std::string tmpHapPath = innerTmpSoPath + hapName;
-    APP_LOGD("tmp hap path is %{public}s", tmpHapPath.c_str());
+    for (const auto &entry : soEntryFiles) {
+        APP_LOGD("entryName is %{public}s", entry.c_str());
+        auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
+        if (pos == std::string::npos) {
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            continue;
+        }
+        std::string soFileName = entry.substr(pos + 1);
+        if (soFileName.empty()) {
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
+            continue;
+        }
+        APP_LOGD("so file is %{public}s", soFileName.c_str());
+        uint32_t offset = 0;
+        uint32_t length = 0;
+        if (!extractor.GetFileInfo(entry, offset, length) || length == 0) {
+            APP_LOGW("GetFileInfo failed or invalid so file");
+            continue;
+        }
+        APP_LOGD("so file %{public}s has offset %{public}d and file size %{public}d", entry.c_str(), offset, length);
 
-    /* mmap hap to ram and write the hap to tmpHapPath */
-    ErrCode res = ERR_OK;
-    if ((res = DecryptSoFile(hapPath, tmpHapPath, uid)) != ERR_OK) {
-        APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", hapPath.c_str(),
-            tmpHapPath.c_str());
-        return res;
+        /* mmap so to ram and write so file to temp path */
+        ErrCode res = ERR_OK;
+        if ((res = DecryptSoFile(hapPath, innerTmpSoPath + soFileName, uid, length, offset)) != ERR_OK) {
+            APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", hapPath.c_str(),
+                (innerTmpSoPath + soFileName).c_str());
+            return res;
+        }
     }
-    if (!ExtractFiles(tmpHapPath, innerTmpSoPath, cpuAbi)) {
-        APP_LOGE("extract %{private}s to %{private}s failed", tmpHapPath.c_str(), innerTmpSoPath.c_str());
-        DeleteFiles(innerTmpSoPath);
-        return ERR_BUNDLEMANAGER_QUICK_FIX_INSTALL_DISK_MEM_INSUFFICIENT;
-    }
+
     return ERR_OK;
 }
 
@@ -1335,6 +1422,10 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
 {
     APP_LOGD("start to obtain decoded so files from so path");
+    if (realSoFilesPath.empty()) {
+        APP_LOGE("real so file path is empty");
+        return ERR_BUNDLEMANAGER_QUICK_FIX_INVALID_PATH;
+    }
     BundleExtractor extractor(hapPath);
     if (!extractor.Init()) {
         APP_LOGE("init bundle extractor failed");
@@ -1362,12 +1453,12 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
     for (const auto &entry : soEntryFiles) {
         auto pos = entry.rfind(Constants::PATH_SEPARATOR[0]);
         if (pos == std::string::npos) {
-            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
             continue;
         }
         std::string soFileName = entry.substr(pos + 1);
         if (soFileName.empty()) {
-            APP_LOGW("invalid so entry %{public}s", entry.c_str());
+            APP_LOGW("invalid so entry %{private}s", entry.c_str());
             continue;
         }
 
@@ -1378,19 +1469,20 @@ ErrCode InstalldOperator::ExtractSoFilesToTmpSoPath(const std::string &hapPath, 
             /* mmap so file to ram and write to innerTmpSoPath */
             ErrCode res = ERR_OK;
             APP_LOGD("tmp so path is %{public}s", (innerTmpSoPath + soFileName).c_str());
-            if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid)) != ERR_OK) {
-                APP_LOGE("decrypt file failed, srcPath is %{public}s and destPath is %{public}s", soPath.c_str(),
+            if ((res = DecryptSoFile(soPath, innerTmpSoPath + soFileName, uid, 0, 0)) != ERR_OK) {
+                APP_LOGE("decrypt file failed, srcPath is %{private}s and destPath is %{private}s", soPath.c_str(),
                     (innerTmpSoPath + soFileName).c_str());
                 return res;
             }
         } else {
-            APP_LOGW("so file %{public}s is not existed", soPath.c_str());
+            APP_LOGW("so file %{private}s is not existed", soPath.c_str());
         }
     }
     return ERR_OK;
 }
 
-ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::string &tmpPath, int32_t uid)
+ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::string &tmpPath, int32_t uid,
+    uint32_t fileSize, uint32_t offset)
 {
     APP_LOGD("src file is %{public}s, temp path is %{public}s, bundle uid is %{public}d", filePath.c_str(),
         tmpPath.c_str(), uid);
@@ -1418,8 +1510,11 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         close(fd);
         return result;
     }
-    off_t fileSize = st.st_size;
-    void *addr = mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fd, 0);
+    off_t innerFileSize = fileSize;
+    if (fileSize == 0) {
+        innerFileSize = st.st_size;
+    }
+    void *addr = mmap(NULL, innerFileSize, PROT_READ, MAP_PRIVATE, fd, offset);
     if (addr == MAP_FAILED) {
         APP_LOGE("mmap hap file status faield");
         close(dev_fd);
@@ -1433,17 +1528,17 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
         APP_LOGE("create fd for tmp hap file failed");
         close(dev_fd);
         close(fd);
-        munmap(addr, fileSize);
+        munmap(addr, innerFileSize);
         return result;
     }
-    if (write(outPutFd, addr, fileSize) != INVALID_RETURN_VALUE) {
+    if (write(outPutFd, addr, innerFileSize) != INVALID_RETURN_VALUE) {
         result = ERR_OK;
         APP_LOGD("write hap to temp path successfully");
     }
     close(dev_fd);
     close(fd);
     close(outPutFd);
-    munmap(addr, fileSize);
+    munmap(addr, innerFileSize);
     return result;
 }
 
