@@ -138,6 +138,7 @@ struct SkillUri {
     std::string pathRegex;
     std::string type;
     std::string utd;
+    int32_t maxFileSupported;
 };
 
 struct Skill {
@@ -148,6 +149,7 @@ public:
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
+    bool MatchUtd(const std::string &utd, int32_t count) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;

@@ -32,6 +32,7 @@
 #endif
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
+#include "napi_common_want.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -747,11 +748,17 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!CommonFunc::ParseWantPerformance(env, args[i], asyncCallbackInfo->want)) {
+            // parse want with parameter
+            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
             }
+            // if (!CommonFunc::ParseWantPerformance(env, args[i], asyncCallbackInfo->want)) {
+            //     APP_LOGE("invalid want");
+            //     BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
+            //     return nullptr;
+            // }
         } else if ((i == ARGS_POS_ONE) && (valueType == napi_number)) {
             CommonFunc::ParseInt(env, args[i], asyncCallbackInfo->flags);
         } else if (i == ARGS_POS_TWO) {

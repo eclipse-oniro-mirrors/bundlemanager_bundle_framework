@@ -69,8 +69,10 @@ constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 constexpr const char* FREE_INSTALL_ACTION = "ohos.want.action.hapFreeInstall";
 // share action
 constexpr const char* SHARE_ACTION = "ohos.want.action.sendData";
-const std::string WANT_PARAM_UTDS = "ability.picker.utds";
-const std::string WANT_PARAM_RECORD_COUNT = "ability.picker.recordCount";
+const std::string WANT_PARAM_PICKER_SUMMARY = "ability.picker.summary";
+const std::string SUMMARY_TOTAL_COUNT = "totalCount";
+const std::string WANT_PARAM_SUMMARY = "summary";
+constexpr int32_t DEFAULT_SUMMARY_COUNT = 0;
 // data share
 constexpr const char* DATA_PROXY_URI_PREFIX = "datashareproxy://";
 constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
@@ -1162,6 +1164,7 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, A
             skillinfo.pathRegex = uri.pathRegex;
             skillinfo.type = uri.type;
             skillinfo.utd = uri.utd;
+            skillinfo.maxFileSupported = uri.maxFileSupported;
             skillUriTmp.emplace_back(skillinfo);
         }
         abilityInfo.skillUri = skillUriTmp;
@@ -1226,8 +1229,29 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     if (want.GetAction() != SHARE_ACTION) {
         return false;
     }
-    std::vector<std::string> utds = want.GetStringArrayParam(WANT_PARAM_UTDS);
-    
+    auto wantParams = want.GetParams();
+    auto pickerSummary = wantParams.GetWantParams(WANT_PARAM_PICKER_SUMMARY);
+    int32_t totalCount = pickerSummary.GetIntParam(SUMMARY_TOTAL_COUNT, DEFAULT_SUMMARY_COUNT);
+    if (totalCount == DEFAULT_SUMMARY_COUNT) {
+        APP_LOGW("Invalid total count");
+    }
+    auto shareSummary = pickerSummary.GetWantParams(WANT_PARAM_SUMMARY);
+    auto utds = shareSummary.KeySet();
+    for (const auto &utd : utds) {
+        int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
+        bool match = false;
+        for (const auto &skill : skills) {
+            if (skill.MatchUtd(utd, count)) {
+                match = true;
+                break;
+            }
+        }
+        if (!match) {
+            APP_LOGI("match failed");
+            return false;
+        }
+    }
+    return true;
 }
 
 void BundleDataMgr::ModifyLauncherAbilityInfo(bool isStage, AbilityInfo &abilityInfo) const
@@ -4130,6 +4154,7 @@ void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
             skillinfo.pathRegex = uri.pathRegex;
             skillinfo.type = uri.type;
             skillinfo.utd = uri.utd;
+            skillinfo.maxFileSupported = uri.maxFileSupported;
             skillUriTmp.emplace_back(skillinfo);
         }
         extensionAbilityInfo.skillUri = skillUriTmp;

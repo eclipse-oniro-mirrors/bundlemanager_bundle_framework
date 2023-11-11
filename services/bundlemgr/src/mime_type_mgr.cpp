@@ -15,7 +15,10 @@
 
 #include "mime_type_mgr.h"
 
+#include <memory>
+
 #include "app_log_wrapper.h"
+#include "type_descriptor.h"
 #include "utd_client.h"
 
 namespace OHOS {
@@ -386,20 +389,27 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
     return true;
 }
 
-bool MimeTypeMgr::MatchUriWithUtd(const std::string &uri, const std::string &utd)
+bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd)
 {
-    std::string suffix;
-    if (!GetUriSuffix(uri, suffix)) {
-        APP_LOGE("Get suffix failed, uri is %{public}s", uri.c_str());
-        return false;
-    }
-    std::string matchedUtd;
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByFilenameExtension(suffix, utd, matchedUtd);
+    std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
+
+    auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
     if (ret != ERR_OK) {
-        APP_LOGE("Match uri with udmf failed");
+        APP_LOGE("GetTypeDescriptor failed");
         return false;
     }
-    return matchedUtd.empty();
+    return wantTypeDescriptor->BelongsTo(skillUtd);
+}
+
+bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd)
+{
+    std::string typeUtd;
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, "", typeUtd);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetUniformDataTypeByMIMEType failed");
+        return false;
+    }
+    return MatchUtd(typeUtd, wantUtd);
 }
 }
 }

@@ -366,12 +366,6 @@ bool Skill::MatchUriAndType(const std::string &uriString, const std::string &typ
     }
 }
 
-bool Skill::MatchUtd(const OHOS::AAFwk::Want &want)
-{
-    std::vector<std::string> utds = want.GetStringArrayParam(WANT_PARAM_UTDS);
-
-}
-
 bool Skill::StartsWith(const std::string &sourceString, const std::string &targetPrefix) const
 {
     return sourceString.rfind(targetPrefix, 0) == 0;
@@ -498,6 +492,26 @@ bool Skill::MatchMimeType(const std::string & uriString) const
         for (const auto &mimeType : mimeTypes) {
             if ((MatchUri(uriString, skillUri) || skillUri.scheme.empty())
                 && MatchType(mimeType, skillUri.type)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Skill::MatchUtd(const std::string &utd, int32_t count) const
+{
+    for (const SkillUri &skillUri : uris) {
+        if (skillUri.maxFileSupported < count) {
+            APP_LOGD("exceeds limit");
+            continue;
+        }
+        if (!skillUri.utd.empty()) {
+            if (MimeTypeMgr::MatchUtd(skillUri.utd, utd)) {
+                return true;
+            }
+        } else {
+            if (MimeTypeMgr::MatchTypeWithUtd(skillUri.type, utd)) {
                 return true;
             }
         }
