@@ -1640,10 +1640,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     }
     std::string moduleName = abilityInfo.moduleName;
     if (moduleName.empty()) {
-        AbilityInfo info;
-        if (GetAbilityInfo(abilityInfo.bundleName, abilityInfo.name, info)) {
-            moduleName = info.moduleName;
-        }
+        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
     }
     BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);

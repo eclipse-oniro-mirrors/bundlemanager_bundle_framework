@@ -3682,6 +3682,33 @@ HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfoV9_0300, Function | Small
 }
 
 /**
+ * @tc.number: GetModuleNameByBundleAndAbility_0100
+ * @tc.name: GetModuleNameByBundleAndAbility
+ * @tc.desc: GetModuleNameByBundleAndAbility
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetModuleNameByBundleAndAbility_0100, Function | SmallTest | Level0)
+{
+    std::string moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility("", ABILITY_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, "");
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    EXPECT_EQ(moduleName, MODULE_NAME_TEST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
  * @tc.number: FilterAbilityInfosByModuleName_0100
  * @tc.name: test FilterAbilityInfosByModuleName
  * @tc.desc: 1.test FilterAbilityInfosByModuleName

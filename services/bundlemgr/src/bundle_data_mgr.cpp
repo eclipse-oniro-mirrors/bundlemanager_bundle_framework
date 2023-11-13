@@ -5733,5 +5733,27 @@ bool BundleDataMgr::IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &old
 {
     return !oldInfo.HasEntry() || oldInfo.GetEntryInstallationFree() || newInfo.HasEntry();
 }
+
+std::string BundleDataMgr::GetModuleNameByBundleAndAbility(
+    const std::string& bundleName, const std::string& abilityName)
+{
+    if (bundleName.empty() || abilityName.empty()) {
+        APP_LOGE("bundleName or abilityName is empty");
+        return std::string();
+    }
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    auto innerBundleInfo = bundleInfos_.find(bundleName);
+    if (innerBundleInfo == bundleInfos_.end()) {
+        APP_LOGE("can not find bundle %{public}s.", bundleName.c_str());
+        return std::string();
+    }
+    auto abilityInfo = innerBundleInfo->second.FindAbilityInfoV9(Constants::EMPTY_STRING, abilityName);
+    if (!abilityInfo) {
+        APP_LOGE("bundleName:%{public}s, abilityName:%{public}s can find moduleName",
+            bundleName.c_str(), abilityName.c_str());
+        return std::string();
+    }
+    return abilityInfo->moduleName;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
