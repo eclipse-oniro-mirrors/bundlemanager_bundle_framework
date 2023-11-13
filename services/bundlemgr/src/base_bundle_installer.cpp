@@ -1751,7 +1751,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     return ERR_OK;
 }
 
-bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo) {
+bool BaseBundleInstaller::CheckAppIdentifier(InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo)
+{
     if (!otaInstall_ && oldInfo.GetVersionCode() == newInfo.GetVersionCode()) {
         if ((oldInfo.GetAppIdentifier() != newInfo.GetAppIdentifier()) ||
             (oldInfo.GetProvisionId() != newInfo.GetProvisionId())) {
