@@ -503,8 +503,7 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "vendor":"",
             "versionCode":0,
             "versionName":"",
-            "resourcesApply":[],
-            "oldAppIds":[]
+            "resourcesApply":[]
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1174,7 +1173,8 @@ protected:
                 "appIndex": 0,
                 "vendor": "ohos",
                 "versionCode": 1000000,
-                "versionName": "1.0.0"
+                "versionName": "1.0.0",
+                "oldAppIds":[]
             },
             "baseExtensionInfos_": {
             },

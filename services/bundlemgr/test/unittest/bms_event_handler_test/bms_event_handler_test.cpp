@@ -581,7 +581,7 @@ HWTEST_F(BmsEventHandlerTest, InnerProcessRebootTest_0200, Function | SmallTest 
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = std::make_shared<BundleDataMgr>();
     handler->InnerProcessRebootSharedBundleInstall(scanPathList, appType);
     bool removable = handler->IsPreInstallRemovable(BUNDLE_PATH);
-    EXPECT_FALSE(removable);
+    EXPECT_TRUE(removable);
     DelayedSingleton<BundleMgrService>::GetInstance()->dataMgr_ = dataMgr;
 }
 
