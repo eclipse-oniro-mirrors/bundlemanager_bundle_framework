@@ -385,6 +385,9 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         newInfo.SetProvisionId(provisionInfo.appId);
         FetchPrivilegeCapabilityFromPreConfig(
             newInfo.GetBundleName(), newInfo.GetAppId(), appPrivilegeCapability);
+        // allow appIdentifier
+        FetchPrivilegeCapabilityFromPreConfig(
+            newInfo.GetBundleName(), provisionInfo.bundleInfo.appIdentifier, appPrivilegeCapability);
         // process bundleInfo by appPrivilegeCapability
         result = ProcessBundleInfoByPrivilegeCapability(appPrivilegeCapability, newInfo);
         if (result != ERR_OK) {
@@ -699,6 +702,7 @@ void BundleInstallChecker::GetPrivilegeCapability(
 
     if (!MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetCertificateFingerprint()) &&
         !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppId()) &&
+        !MatchSignature(preBundleConfigInfo.appSignature, newInfo.GetAppIdentifier()) &&
         !MatchOldSignatures(newInfo.GetBundleName(), preBundleConfigInfo.appSignature)) {
         APP_LOGE("bundleName:%{public}s signature not match the capability list", newInfo.GetBundleName().c_str());
         return;
@@ -1224,22 +1228,20 @@ bool BundleInstallChecker::MatchOldSignatures(const std::string &bundleName,
         APP_LOGE("Get OldAppIds failed.");
         return false;
     }
-    bool isExistSignature = false;
     for (const auto &signature : appSignatures) {
         if (std::find(oldAppIds.begin(), oldAppIds.end(), signature) != oldAppIds.end()) {
-            isExistSignature = true;
-            break;
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
 }
 
 bool BundleInstallChecker::MatchSignature(
     const std::vector<std::string> &appSignatures, const std::string &signature)
 {
-    if (appSignatures.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (appSignatures.empty() || signature.empty()) {
+        APP_LOGW("appSignature of signature is empty");
         return false;
     }
 

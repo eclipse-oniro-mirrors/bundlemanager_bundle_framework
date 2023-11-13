@@ -443,6 +443,7 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
 #ifdef USE_PRE_BUNDLE_PROFILE
             if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
                 !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppIdentifier()) &&
                 !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
                 continue;
             }
@@ -706,8 +707,8 @@ bool BundlePermissionMgr::MatchSignature(
 bool BundlePermissionMgr::MatchSignature(
     const DefaultPermission &permission, const std::string &signature)
 {
-    if (permission.appSignature.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (permission.appSignature.empty() || signature.empty()) {
+        APP_LOGW("appSignature or signature is empty");
         return false;
     }
     return std::find(permission.appSignature.begin(), permission.appSignature.end(),

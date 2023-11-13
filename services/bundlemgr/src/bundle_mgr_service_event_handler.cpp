@@ -1988,6 +1988,7 @@ void BMSEventHandler::UpdatePrivilegeCapability(
     // match both fingerprint and appId
     if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint()) &&
         !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppId()) &&
+        !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppIdentifier()) &&
         !MatchOldSignatures(preBundleConfigInfo, innerBundleInfo.GetOldAppIds())) {
         APP_LOGE("bundleName: %{public}s no match pre bundle config info", bundleName.c_str());
         return;
@@ -1999,8 +2000,8 @@ void BMSEventHandler::UpdatePrivilegeCapability(
 bool BMSEventHandler::MatchSignature(
     const PreBundleConfigInfo &configInfo, const std::string &signature)
 {
-    if (configInfo.appSignature.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (configInfo.appSignature.empty() || signature.empty()) {
+        APP_LOGW("appSignature or signature is empty");
         return false;
     }
 
@@ -2011,8 +2012,8 @@ bool BMSEventHandler::MatchSignature(
 bool BMSEventHandler::MatchOldSignatures(const PreBundleConfigInfo &configInfo,
     const std::vector<std::string> &oldSignatures)
 {
-    if (configInfo.appSignature.empty()) {
-        APP_LOGW("appSignature is empty");
+    if (configInfo.appSignature.empty() || oldSignatures.empty()) {
+        APP_LOGW("appSignature or oldSignatures is empty");
         return false;
     }
     for (const auto &signature : oldSignatures) {

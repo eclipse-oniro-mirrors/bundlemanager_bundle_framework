@@ -822,4 +822,53 @@ HWTEST_F(BmsEventHandlerTest, GetPreInstallCapability_0300, Function | SmallTest
     EXPECT_TRUE(handler->LoadPreInstallProFile());
     EXPECT_FALSE(handler->GetPreInstallCapability(preBundleConfigInfo));
 }
+
+/**
+ * @tc.number: MatchSignature_0101
+ * @tc.name: MatchSignature
+ * @tc.desc: test MatchSignature
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, MatchSignature_0101, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = BUNDLE_NAME;
+    bool ret = handler->MatchSignature(preBundleConfigInfo, "");
+    EXPECT_FALSE(ret);
+
+    preBundleConfigInfo.appSignature.emplace_back("signature_1");
+    ret = handler->MatchSignature(preBundleConfigInfo, "");
+    EXPECT_FALSE(ret);
+
+    preBundleConfigInfo.appSignature.emplace_back("signature_2");
+    ret = handler->MatchSignature(preBundleConfigInfo, "signature_2");
+    EXPECT_TRUE(ret);
+}
+
+/**
+ * @tc.number: MatchSignature_0102
+ * @tc.name: MatchOldSignatures
+ * @tc.desc: test MatchOldSignatures
+ * @tc.require: issueI7HXM5
+ */
+HWTEST_F(BmsEventHandlerTest, MatchSignature_0102, Function | SmallTest | Level0)
+{
+    std::shared_ptr<BMSEventHandler> handler = std::make_shared<BMSEventHandler>();
+    PreBundleConfigInfo preBundleConfigInfo;
+    preBundleConfigInfo.bundleName = BUNDLE_NAME;
+    std::vector<std::string> oldSignatures;
+    bool ret = handler->MatchOldSignatures(preBundleConfigInfo, oldSignatures);
+    EXPECT_FALSE(ret);
+
+    preBundleConfigInfo.appSignature.emplace_back("signature_1");
+    ret = handler->MatchOldSignatures(preBundleConfigInfo, oldSignatures);
+    EXPECT_FALSE(ret);
+
+    preBundleConfigInfo.appSignature.emplace_back("signature_2");
+    oldSignatures.emplace_back("signature_2");
+    oldSignatures.emplace_back("signature_3");
+    ret = handler->MatchOldSignatures(preBundleConfigInfo, oldSignatures);
+    EXPECT_TRUE(ret);
+}
 } // OHOS

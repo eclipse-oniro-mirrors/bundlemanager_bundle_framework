@@ -101,6 +101,9 @@ ohos_unittest("BmsEventHandlerTest") {
   if (current_cpu == "arm64") {
     defines += [ "USE_BUNDLE_EXTENSION" ]
   }
+  if (use_pre_bundle_profile) {
+    defines += [ "USE_PRE_BUNDLE_PROFILE" ]
+  }
   if (bundle_framework_app_control) {
     defines += [ "BUNDLE_FRAMEWORK_APP_CONTROL" ]
     sources += [
