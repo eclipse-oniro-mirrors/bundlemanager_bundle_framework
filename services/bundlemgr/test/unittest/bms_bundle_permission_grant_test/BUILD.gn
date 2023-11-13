@@ -90,6 +90,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
@@ -236,6 +237,7 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -385,6 +387,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
@@ -537,6 +540,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [
@@ -686,6 +690,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
@@ -834,6 +839,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
@@ -974,6 +980,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [

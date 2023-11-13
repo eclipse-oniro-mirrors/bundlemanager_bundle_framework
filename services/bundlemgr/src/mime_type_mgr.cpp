@@ -18,6 +18,7 @@
 #include <memory>
 
 #include "app_log_wrapper.h"
+#include "bundle_constants.h"
 #include "type_descriptor.h"
 #include "utd_client.h"
 
@@ -398,13 +399,19 @@ bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantU
         APP_LOGE("GetTypeDescriptor failed");
         return false;
     }
-    return wantTypeDescriptor->BelongsTo(skillUtd);
+    bool matchRet = false;
+    ret = wantTypeDescriptor->BelongsTo(skillUtd, matchRet);
+    if (ret != ERR_OK) {
+        APP_LOGE("GetTypeDescriptor failed");
+        return false;
+    }
+    return matchRet;
 }
 
 bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd)
 {
     std::string typeUtd;
-    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, "", typeUtd);
+    auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
     if (ret != ERR_OK) {
         APP_LOGE("GetUniformDataTypeByMIMEType failed");
         return false;

@@ -71,6 +71,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -231,6 +232,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -342,6 +344,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -454,6 +457,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -566,6 +570,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 

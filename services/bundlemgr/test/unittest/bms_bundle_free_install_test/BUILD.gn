@@ -90,6 +90,7 @@ ohos_unittest("BmsBundleFreeInstallBaseTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]
@@ -235,6 +236,7 @@ ohos_unittest("BmsBundleFreeInstallTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_FREE_INSTALL" ]

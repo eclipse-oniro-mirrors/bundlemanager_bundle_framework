@@ -72,6 +72,7 @@ ohos_unittest("BmsBundleQuickFixTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []

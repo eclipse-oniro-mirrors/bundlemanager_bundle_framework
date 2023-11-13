@@ -25,6 +25,7 @@
 #include "hap_module_info.h"
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
+#include "napi_common_want.h"
 #include "napi_constants.h"
 #include "bundle_manager_sync.h"
 
@@ -240,7 +241,8 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseWantPerformance(env, args[i], extensionParamInfo.want)) {
+            // parse want with parameter
+            if (!UnwrapWant(env, args[i], extensionParamInfo.want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
