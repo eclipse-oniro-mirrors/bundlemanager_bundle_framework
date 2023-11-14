@@ -858,6 +858,11 @@ public:
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
+    virtual ErrCode GetRecoverableApplicationInfo(
+        std::vector<RecoverableApplicationInfo> &recoverableApplications) override;
+
+    virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

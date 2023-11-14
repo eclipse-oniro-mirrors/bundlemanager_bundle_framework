@@ -322,6 +322,10 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetBundleResourceProxy);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_VERIFY_MANAGER),
         &BundleMgrHost::HandleGetVerifyManager);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_RECOVERABLE_APPLICATION_INFO),
+        &BundleMgrHost::HandleGetRecoverableApplicationInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO),
+        &BundleMgrHost::HandleGetUninstalledBundleInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2898,6 +2902,44 @@ ErrCode BundleMgrHost::HandleGetBundleResourceProxy(MessageParcel &data, Message
 
     if (!reply.WriteObject<IRemoteObject>(bundleResourceProxy->AsObject())) {
         APP_LOGE("WriteObject failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::vector<RecoverableApplicationInfo> infos;
+    ErrCode ret = GetRecoverableApplicationInfo(infos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("HandleGetRecoverableApplicationInfo write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if ((ret == ERR_OK) && !WriteParcelableVector(infos, reply)) {
+        APP_LOGE("write infos failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string name = data.ReadString();
+    if (name.empty()) {
+        APP_LOGE("bundleName is empty");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    BundleInfo info;
+    reply.SetDataCapacity(Constants::CAPACITY_SIZE);
+    auto ret = GetUninstalledBundleInfo(name, info);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
+        APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

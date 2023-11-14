@@ -40,6 +40,7 @@
 #include "form_info.h"
 #include "hap_module_info.h"
 #include "permission_define.h"
+#include "recoverable_application_info.h"
 #include "shared/base_shared_bundle_info.h"
 #include "shared/shared_bundle_info.h"
 #include "shortcut_info.h"
@@ -1246,6 +1247,16 @@ public:
     virtual sptr<IBundleResource> GetBundleResourceProxy()
     {
         return nullptr;
+    }
+
+    virtual ErrCode GetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo> &recoverableApplications)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+
+    virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
+    {
+        return ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
     }
 };
 
