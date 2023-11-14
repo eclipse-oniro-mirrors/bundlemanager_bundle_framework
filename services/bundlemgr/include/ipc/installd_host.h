@@ -164,6 +164,8 @@ private:
 
     bool HandExtractEncryptedSoFiles(MessageParcel &data, MessageParcel &reply);
 
+    bool HandVerifyCodeSignatureForHap(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();

@@ -2956,7 +2956,9 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     }
     ProcessDataGroupInfo(bundlePaths, infos, installParam.userId, hapVerifyRes);
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
-
+    /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
+    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
+    appIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     return ret;
 }
 
@@ -3648,6 +3650,10 @@ ErrCode BaseBundleInstaller::SaveHapToInstallPath(const std::unordered_map<std::
                 APP_LOGE("Copy hap to install path failed");
                 return ERR_APPEXECFWK_INSTALL_COPY_HAP_FAILED;
             }
+            if (VerifyCodeSignatureForHap(infos, hapPathRecord.first, hapPathRecord.second) != ERR_OK) {
+                APP_LOGE("enable code signature failed");
+                return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+            }
         }
     }
     APP_LOGD("copy hap to install path success");
@@ -3690,6 +3696,8 @@ void BaseBundleInstaller::ResetInstallProperties()
     isModuleUpdate_ = false;
     isEntryInstalled_ = false;
     entryModuleName_.clear();
+    isEnterpriseBundle_ = false;
+    appIdentifier_.clear();
 }
 
 void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
@@ -4000,8 +4008,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         auto result = ExtractModuleFiles(info, modulePath, targetSoPath, cpuAbi);
         CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
-        result = InstalldClient::GetInstance()->VerifyCodeSignature(modulePath_, cpuAbi, targetSoPath,
-            signatureFileDir);
+        const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
+        result = VerifyCodeSignatureForNativeFiles(compileSdkType, cpuAbi, targetSoPath, signatureFileDir);
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // check whether the hap or hsp is encrypted
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
@@ -4015,6 +4023,40 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         info.SetNativeLibraryFileNames(modulePackage_, fileNames);
     }
     return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType,
+    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir) const
+{
+    APP_LOGD("begin to verify code signature for native files");
+    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
+        APP_LOGD("code signature is not supported");
+        return ERR_OK;
+    }
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = modulePath_;
+    codeSignatureParam.cpuAbi = cpuAbi;
+    codeSignatureParam.targetSoPath = targetSoPath;
+    codeSignatureParam.signatureFileDir = signatureFileDir;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+ErrCode BaseBundleInstaller::VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
+    const std::string &srcHapPath, const std::string &realHapPath) const
+{
+    APP_LOGD("begin to verify code signature for hap or internal hsp");
+    auto iter = infos.find(srcHapPath);
+    if (iter == infos.end()) {
+        return ERR_OK;
+    }
+    const std::string compileSdkType = (iter->second).GetBaseApplicationInfo().compileSdkType;
+    if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
+        APP_LOGD("code signature is not supported");
+        return ERR_OK;
+    }
+    return InstalldClient::GetInstance()->VerifyCodeSignatureForHap(realHapPath, appIdentifier_, isEnterpriseBundle_);
 }
 
 ErrCode BaseBundleInstaller::CheckSoEncryption(InnerBundleInfo &info, const std::string &cpuAbi,

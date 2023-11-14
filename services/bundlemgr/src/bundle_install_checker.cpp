@@ -1547,5 +1547,16 @@ ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
     }
     return ERR_OK;
 }
+
+bool BundleInstallChecker::CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const
+{
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
+        return true;
+    }
+    return false;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

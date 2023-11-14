@@ -120,8 +120,8 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
         return std::nullopt;
     }
     aotArgs.bundleUid = newInnerBundleUserInfo.uid;
-    aotArgs.appIdentifier = "";
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
+    aotArgs.appIdentifier = info.GetAppIdentifier();
 
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
