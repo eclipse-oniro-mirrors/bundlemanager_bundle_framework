@@ -47,7 +47,7 @@ const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
         "bundle-mgr": {
-            "extension-name": "HMOSBundleMgrExt",
+            "extension-name": "BundleMgrExt",
             "libpath":"system/lib/libappexecfwk_test.z.so",
             "lib64path":"system/lib64/libappexecfwk_test.z.so"
         }
@@ -58,7 +58,7 @@ const nlohmann::json EXTENSIONS_JSON_3 = R"(
 {
     "no_extensions": {
         "bundle-mgr": {
-            "extension-name": "HMOSBundleMgrExt",
+            "extension-name": "BundleMgrExt",
             "libpath":"system/lib/libappexecfwk_test.z.so",
             "lib64path":"system/lib64/libappexecfwk_test.z.so"
         }
