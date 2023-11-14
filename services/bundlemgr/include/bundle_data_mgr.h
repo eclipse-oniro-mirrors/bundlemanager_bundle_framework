@@ -971,6 +971,10 @@ private:
     bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
     bool HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const;
+    void EmplaceExtensionInfo(const InnerBundleInfo &info, ExtensionAbilityInfo &extensionInfo,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos) const;
+    void EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
+        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

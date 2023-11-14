@@ -1177,6 +1177,36 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, A
     }
 }
 
+void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
+        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const
+{
+    if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
+        GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
+        if (!info.IsAbilityEnabled(abilityInfo, GetUserId(userId))) {
+            APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityInfo.name.c_str());
+            return;
+        }
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
+        info.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
+            userId, abilityInfo.applicationInfo);
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) !=
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) {
+        abilityInfo.permissions.clear();
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) !=
+        static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) {
+        abilityInfo.metaData.customizeData.clear();
+        abilityInfo.metadata.clear();
+    }
+    infos.emplace_back(abilityInfo);
+}
+
 void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     const InnerBundleInfo &info, int32_t userId, std::vector<AbilityInfo> &abilityInfos) const
 {
@@ -1187,44 +1217,33 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
     }
     std::map<std::string, std::vector<Skill>> skillInfos = info.GetInnerSkillInfos();
     for (const auto &abilityInfoPair : info.GetInnerAbilityInfos()) {
+        AbilityInfo abilityinfo = abilityInfoPair.second;
         auto skillsPair = skillInfos.find(abilityInfoPair.first);
         if (skillsPair == skillInfos.end()) {
             continue;
         }
         bool isPrivateType = MatchPrivateType(
             want, abilityInfoPair.second.supportExtNames, abilityInfoPair.second.supportMimeTypes);
+        bool isShareMatched = false;
+        if (want.GetAction() == SHARE_ACTION) {
+            if (!MatchShare(want, skillsPair->second)) {
+                continue;
+            }
+            if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
+                GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
+                if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
+                    APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityinfo.name.c_str());
+                    return;
+                }
+            }
+            EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
+        }
         for (const Skill &skill : skillsPair->second) {
             if (isPrivateType || skill.Match(want)) {
-                AbilityInfo abilityinfo = abilityInfoPair.second;
                 if (abilityinfo.name == Constants::APP_DETAIL_ABILITY) {
                     continue;
                 }
-                if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
-                    GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
-                    if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
-                        APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityinfo.name.c_str());
-                        continue;
-                    }
-                }
-                if ((static_cast<uint32_t>(flags) &
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) ==
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_APPLICATION)) {
-                    info.GetApplicationInfoV9(static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT),
-                        userId, abilityinfo.applicationInfo);
-                }
-                if ((static_cast<uint32_t>(flags) &
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) !=
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_PERMISSION)) {
-                    abilityinfo.permissions.clear();
-                }
-                if ((static_cast<uint32_t>(flags) &
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) !=
-                    static_cast<int32_t>(GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_METADATA)) {
-                    abilityinfo.metaData.customizeData.clear();
-                    abilityinfo.metadata.clear();
-                }
-                abilityInfos.emplace_back(abilityinfo);
-                break;
+                EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
             }
         }
     }
@@ -4156,39 +4175,58 @@ void BundleDataMgr::AddExtensionSkillUrisInfo(int32_t flags, const Skill &skill,
     }
 }
 
+void BundleDataMgr::EmplaceExtensionInfo(const InnerBundleInfo &info, ExtensionAbilityInfo &extensionInfo,
+    int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos) const
+{
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
+        info.GetApplicationInfoV9(static_cast<int32_t>(
+            GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) {
+        extensionInfo.permissions.clear();
+    }
+    if ((static_cast<uint32_t>(flags) &
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) !=
+        static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) {
+        extensionInfo.metadata.clear();
+    }
+    infos.emplace_back(extensionInfo);
+}
+
 void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
 {
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
+    bool queryShare = (want.GetAction() == SHARE_ACTION);
     for (const auto &skillInfos : extensionSkillInfos) {
-        for (const auto &skill : skillInfos.second) {
-            if (!skill.Match(want)) {
+        if (queryShare) {
+            if (!MatchShare(want, skillInfos.second)) {
                 continue;
             }
             if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
                 APP_LOGW("cannot find the extension info with %{public}s", skillInfos.first.c_str());
-                break;
+                continue;
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
-            if ((static_cast<uint32_t>(flags) &
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
-                info.GetApplicationInfoV9(static_cast<int32_t>(
-                    GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
+            EmplaceExtensionInfo(info, extensionInfo, flags, userId, infos);
+        } else {
+            for (const auto &skill : skillInfos.second) {
+                if (!skill.Match(want)) {
+                    continue;
+                }
+                if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
+                    APP_LOGW("cannot find the extension info with %{public}s", skillInfos.first.c_str());
+                    break;
+                }
+                ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+                EmplaceExtensionInfo(info, extensionInfo, flags, userId, infos);
+                break;
             }
-            if ((static_cast<uint32_t>(flags) &
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) {
-                extensionInfo.permissions.clear();
-            }
-            if ((static_cast<uint32_t>(flags) &
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) !=
-                static_cast<int32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) {
-                extensionInfo.metadata.clear();
-            }
-            infos.emplace_back(extensionInfo);
-            break;
         }
     }
 }
