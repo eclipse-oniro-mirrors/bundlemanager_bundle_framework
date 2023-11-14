@@ -76,6 +76,7 @@ constexpr int32_t DATA_PROXY_URI_PREFIX_LEN = 17;
 constexpr const char* INTENT_PROFILE_PATH = "resources/base/profile/insight_intent.json";
 constexpr const char* ADDITION_PROFILE_PATH = "resources/base/profile/addition.json";
 constexpr const char* NETWORK_PROFILE_PATH = "resources/base/profile/network_config.json";
+constexpr const char* UTD_SDT_PROFILE_PATH = "resources/rawfile/arkdata/utd/utd-adt.json";
 constexpr const char* PROFILE_PATH = "resources/base/profile/";
 constexpr const char* PROFILE_PREFIX = "$profile:";
 constexpr const char* JSON_SUFFIX = ".json";
@@ -83,7 +84,8 @@ constexpr const char* JSON_SUFFIX = ".json";
 const std::map<ProfileType, std::string> PROFILE_TYPE_MAP = {
     { ProfileType::INTENT_PROFILE, INTENT_PROFILE_PATH },
     { ProfileType::ADDITION_PROFILE, ADDITION_PROFILE_PATH},
-    { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH }
+    { ProfileType::NETWORK_PROFILE, NETWORK_PROFILE_PATH },
+    { ProfileType::UTD_SDT_PROFILE, UTD_SDT_PROFILE_PATH}
 };
 }
 
