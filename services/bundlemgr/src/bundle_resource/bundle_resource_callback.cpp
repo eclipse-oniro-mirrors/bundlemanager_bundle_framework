@@ -118,10 +118,10 @@ bool BundleResourceCallback::OnBundleStatusChanged(
         APP_LOGE("bundleName is empty");
         return false;
     }
-    if (userId != Constants::START_USERID) {
+    if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if (currentUserId != userId) {
-            APP_LOGE("userId: %{public}d, currentUserId :%{public}d", userId, currentUserId);
+        if ((currentUserId > 0) && (currentUserId != userId)) {
+            APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
             return false;
         }
     }
@@ -154,11 +154,10 @@ bool BundleResourceCallback::OnAbilityStatusChanged(const std::string &bundleNam
         APP_LOGE("bundleName or moduleName or abilityName is empty");
         return false;
     }
-
-    if (userId != Constants::START_USERID) {
+    if (userId != Constants::DEFAULT_USERID) {
         int32_t currentUserId = AccountHelper::GetCurrentActiveUserId();
-        if (currentUserId != userId) {
-            APP_LOGE("wtt userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
+        if ((currentUserId > 0) && (currentUserId != userId)) {
+            APP_LOGE("userId: %{public}d, currentUserId :%{public}d not same", userId, currentUserId);
             return false;
         }
     }

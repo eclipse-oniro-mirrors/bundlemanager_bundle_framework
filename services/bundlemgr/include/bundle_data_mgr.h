@@ -847,6 +847,7 @@ public:
         std::string &profile) const;
     bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+    std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
 
 private:
     /**
