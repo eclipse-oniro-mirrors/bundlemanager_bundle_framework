@@ -2060,6 +2060,7 @@ public:
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
     bool IsContainEncryptedModule() const;
+    void UpdateDebug(bool debug, bool isEntry);
 
 private:
     bool IsExistLauncherAbility() const;
