@@ -659,6 +659,17 @@ public:
      */
     ErrCode QueryExtensionAbilityInfosV9(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
+
+    /**
+     * @brief Query a ExtensionAbilityInfo without want.
+     * @param want Indicates the information of the ability.
+     * @param flags Indicates the information contained in the AbilityInfo object to be returned.
+     * @param userId Indicates the user ID.
+     * @param extensionInfos Indicates the obtained ExtensionAbilityInfo of list.
+     * @return Returns ERR_OK if the ExtensionAbilityInfo is successfully obtained; returns errCode otherwise.
+     */
+    ErrCode QueryExtensionAbilityInfos(uint32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex = 0) const;
     /**
      * @brief Obtains the PreInstallBundleInfo objects in Cache.
      * @return Returns PreInstallBundleInfos.
@@ -918,6 +929,8 @@ private:
         std::vector<ExtensionAbilityInfo> &einfos) const;
     void GetMatchExtensionInfosV9(const Want &want, int32_t flags, int32_t userId, const InnerBundleInfo &info,
         std::vector<ExtensionAbilityInfo> &infos) const;
+    void GetAllExtensionInfos(uint32_t flags, int32_t userId, const InnerBundleInfo &info,
+        std::vector<ExtensionAbilityInfo> &infos) const;
 #ifdef GLOBAL_RESMGR_ENABLE
     std::shared_ptr<Global::Resource::ResourceManager> GetResourceManager(const std::string &bundleName,
         const std::string &moduleName, int32_t userId, const std::string &localeInfo = Constants::EMPTY_STRING) const;
@@ -948,6 +961,8 @@ private:
     void ImplicitQueryAllExtensionInfos(const Want &want, int32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     void ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t flags, int32_t userId,
+        std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
+    ErrCode ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t userId,
         std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const;
     ErrCode CheckInnerBundleInfoWithFlags(
         const InnerBundleInfo &innerBundleInfo, const int32_t flags, int32_t userId) const;

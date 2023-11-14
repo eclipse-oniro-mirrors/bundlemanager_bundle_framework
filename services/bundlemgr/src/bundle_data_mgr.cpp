@@ -3690,7 +3690,6 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
         extensionInfos.emplace_back(info);
         return ERR_OK;
     }
-
     ErrCode ret = ImplicitQueryExtensionInfosV9(want, flags, requestUserId, extensionInfos, appIndex);
     if (ret != ERR_OK) {
         APP_LOGD("ImplicitQueryExtensionInfosV9 error");
@@ -3701,6 +3700,27 @@ ErrCode BundleDataMgr::QueryExtensionAbilityInfosV9(const Want &want, int32_t fl
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
     }
     APP_LOGD("QueryExtensionAbilityInfosV9 success");
+    return ERR_OK;
+}
+
+ErrCode BundleDataMgr::QueryExtensionAbilityInfos(uint32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &extensionInfos, int32_t appIndex) const
+{
+    int32_t requestUserId = GetUserId(userId);
+    if (requestUserId == Constants::INVALID_USERID) {
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+
+    ErrCode ret = ImplicitQueryAllExtensionInfos(flags, requestUserId, extensionInfos, appIndex);
+    if (ret != ERR_OK) {
+        APP_LOGD("QueryExtensionAbilityInfosWithoutWant error");
+        return ret;
+    }
+    if (extensionInfos.empty()) {
+        APP_LOGW("no matching abilityInfo");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    APP_LOGD("QueryExtensionAbilityInfosWithoutWant success");
     return ERR_OK;
 }
 
@@ -4060,6 +4080,49 @@ void BundleDataMgr::ImplicitQueryAllExtensionInfosV9(const Want &want, int32_t f
     APP_LOGD("finish to ImplicitQueryAllExtensionInfosV9");
 }
 
+ErrCode BundleDataMgr::ImplicitQueryAllExtensionInfos(uint32_t flags, int32_t userId,
+    std::vector<ExtensionAbilityInfo> &infos, int32_t appIndex) const
+{
+    APP_LOGD("begin to ImplicitQueryAllExtensionInfosWithoutWant");
+    // query from bundleInfos_
+    if (appIndex == 0) {
+        for (const auto &item : bundleInfos_) {
+            InnerBundleInfo innerBundleInfo;
+            ErrCode ret = GetInnerBundleInfoWithFlagsV9(item.first, flags, innerBundleInfo, userId);
+            if (ret != ERR_OK) {
+                APP_LOGD("GetInnerBundleInfoWithFlagsV9 failed, bundleName:%{public}s", item.first.c_str());
+                continue;
+            }
+            int32_t responseUserId = innerBundleInfo.GetResponseUserId(userId);
+            GetAllExtensionInfos(flags, responseUserId, innerBundleInfo, infos);
+        }
+    } else {
+        // query from sandbox manager for sandbox bundle
+        if (sandboxAppHelper_ == nullptr) {
+            APP_LOGW("sandboxAppHelper_ is nullptr");
+            return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+        }
+        auto sandboxMap = sandboxAppHelper_->GetSandboxAppInfoMap();
+        for (const auto &item : sandboxMap) {
+            InnerBundleInfo info;
+            size_t pos = item.first.rfind(Constants::FILE_UNDERLINE);
+            if (pos == std::string::npos) {
+                APP_LOGW("sandbox map contains invalid element");
+                continue;
+            }
+            std::string innerBundleName = item.first.substr(0, pos);
+            if (sandboxAppHelper_->GetSandboxAppInfo(innerBundleName, appIndex, userId, info) != ERR_OK) {
+                APP_LOGD("obtain innerBundleInfo of sandbox app failed");
+                continue;
+            }
+            int32_t responseUserId = info.GetResponseUserId(userId);
+            GetAllExtensionInfos(flags, responseUserId, info, infos);
+        }
+    }
+    APP_LOGD("finish to ImplicitQueryAllExtensionInfosWithoutWant");
+    return ERR_OK;
+}
+
 void BundleDataMgr::GetMatchExtensionInfos(const Want &want, int32_t flags, const int32_t &userId,
     const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
 {
@@ -4150,6 +4213,32 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             infos.emplace_back(extensionInfo);
             break;
         }
+    }
+}
+
+void BundleDataMgr::GetAllExtensionInfos(uint32_t flags, int32_t userId,
+    const InnerBundleInfo &info, std::vector<ExtensionAbilityInfo> &infos) const
+{
+    auto extensionInfos = info.GetInnerExtensionInfos();
+    for (const auto &extensionAbilityInfo : extensionInfos) {
+        ExtensionAbilityInfo extensionInfo = extensionAbilityInfo.second;
+        if ((flags &
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) ==
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_APPLICATION)) {
+            info.GetApplicationInfoV9(static_cast<int32_t>(
+                GetApplicationFlag::GET_APPLICATION_INFO_DEFAULT), userId, extensionInfo.applicationInfo);
+        }
+        if ((flags &
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) !=
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_PERMISSION)) {
+            extensionInfo.permissions.clear();
+        }
+        if ((flags &
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) !=
+            static_cast<uint32_t>(GetExtensionAbilityInfoFlag::GET_EXTENSION_ABILITY_INFO_WITH_METADATA)) {
+            extensionInfo.metadata.clear();
+        }
+        infos.emplace_back(extensionInfo);
     }
 }
 

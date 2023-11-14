@@ -314,6 +314,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleQueryAppGalleryBundleName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_WITH_TYPE_NAME),
         &BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME),
+        &BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::RESET_AOT_COMPILE_STATUS),
         &BundleMgrHost::HandleResetAOTCompileStatus);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_JSON_PROFILE),
@@ -2844,6 +2846,26 @@ ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosWithTypeName(MessageParce
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     if (ret == ERR_OK && !WriteParcelableVector(extensionAbilityInfos, reply)) {
+        APP_LOGE("Write extension infos failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleQueryExtensionAbilityInfosOnlyWithTypeName(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string extensionTypeName = data.ReadString();
+    int32_t flags = data.ReadUint32();
+    int32_t userId = data.ReadInt32();
+    std::vector<ExtensionAbilityInfo> extensionAbilityInfos;
+    ErrCode ret =
+        QueryExtensionAbilityInfosOnlyWithTypeName(extensionTypeName, flags, userId, extensionAbilityInfos);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write result failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (ret == ERR_OK && !WriteVectorToParcelIntelligent(extensionAbilityInfos, reply)) {
         APP_LOGE("Write extension infos failed");
             return ERR_APPEXECFWK_PARCEL_ERROR;
     }

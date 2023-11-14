@@ -150,6 +150,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_JSON_PROFILE,
     GET_BUNDLE_RESOURCE_PROXY,
     GET_VERIFY_MANAGER,
+    QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
