@@ -173,8 +173,7 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     return ERR_OK;
 }
@@ -197,6 +196,12 @@ ErrCode InstalldHostImpl::ExtractDriverSoFiles(const std::string &srcPath,
 
 ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
 {
     return ERR_OK;
 }

@@ -775,7 +775,14 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4300, Function | Sma
     auto hostImpl = GetInstalldHostImpl();
     EXPECT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = hostImpl->VerifyCodeSignature(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 

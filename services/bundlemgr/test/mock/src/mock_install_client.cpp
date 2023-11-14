@@ -171,8 +171,7 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
     return 0;
 }
 
-ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldClient::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     return ERR_OK;
 }
@@ -200,6 +199,12 @@ ErrCode InstalldClient::ExtractDriverSoFiles(const std::string &srcPath,
 
 ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
     const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
 {
     return ERR_OK;
 }

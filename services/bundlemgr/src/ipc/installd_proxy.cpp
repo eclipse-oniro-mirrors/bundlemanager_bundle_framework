@@ -444,15 +444,14 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldProxy::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(modulePath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFileDir));
+    if (!data.WriteParcelable(&codeSignatureParam)) {
+        APP_LOGE("WriteParcelable codeSignatureParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -535,6 +534,25 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realHapPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(appIdentifier));
+    INSTALLD_PARCEL_WRITE(data, Bool, isEnterpriseBundle);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;

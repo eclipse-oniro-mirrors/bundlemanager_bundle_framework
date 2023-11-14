@@ -25,6 +25,7 @@
 #include "bundle_extractor.h"
 #include "installd/installd_constants.h"
 #include "ipc/check_encryption_param.h"
+#include "ipc/code_signature_param.h"
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
@@ -201,8 +202,7 @@ public:
     static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
-    static bool VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
-        const std::string &targetSoPath, const std::string &signatureFileDir);
+    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
