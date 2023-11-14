@@ -700,7 +700,9 @@ void to_json(nlohmann::json &jsonObject, const SkillUri &uri)
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATH, uri.path},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATHSTARTWITH, uri.pathStartWith},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATHREGEX, uri.pathRegex},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE, uri.type}
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE, uri.type},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_UTD, uri.utd},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED, uri.maxFileSupported},
     };
 }
 
@@ -1310,6 +1312,22 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE,
         uri.type,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_UTD,
+        uri.utd,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED,
+        uri.maxFileSupported,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

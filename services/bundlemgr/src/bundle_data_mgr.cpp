@@ -1178,7 +1178,7 @@ void BundleDataMgr::AddAbilitySkillUrisInfo(int32_t flags, const Skill &skill, A
 }
 
 void BundleDataMgr::EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
-        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const
+    int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const
 {
     if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
         GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
@@ -1228,13 +1228,6 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
         if (want.GetAction() == SHARE_ACTION) {
             if (!MatchShare(want, skillsPair->second)) {
                 continue;
-            }
-            if (!(static_cast<uint32_t>(flags) & static_cast<int32_t>(
-                GetAbilityInfoFlag::GET_ABILITY_INFO_WITH_DISABLE))) {
-                if (!info.IsAbilityEnabled(abilityinfo, GetUserId(userId))) {
-                    APP_LOGW("GetMatchAbilityInfos %{public}s is disabled", abilityinfo.name.c_str());
-                    return;
-                }
             }
             EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
         }
@@ -4202,9 +4195,8 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
 {
     auto extensionSkillInfos = info.GetExtensionSkillInfos();
     auto extensionInfos = info.GetInnerExtensionInfos();
-    bool queryShare = (want.GetAction() == SHARE_ACTION);
     for (const auto &skillInfos : extensionSkillInfos) {
-        if (queryShare) {
+        if (want.GetAction() == SHARE_ACTION) {
             if (!MatchShare(want, skillInfos.second)) {
                 continue;
             }
@@ -4214,19 +4206,19 @@ void BundleDataMgr::GetMatchExtensionInfosV9(const Want &want, int32_t flags, in
             }
             ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
             EmplaceExtensionInfo(info, extensionInfo, flags, userId, infos);
-        } else {
-            for (const auto &skill : skillInfos.second) {
-                if (!skill.Match(want)) {
-                    continue;
-                }
-                if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
-                    APP_LOGW("cannot find the extension info with %{public}s", skillInfos.first.c_str());
-                    break;
-                }
-                ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
-                EmplaceExtensionInfo(info, extensionInfo, flags, userId, infos);
+            continue;
+        }
+        for (const auto &skill : skillInfos.second) {
+            if (!skill.Match(want)) {
+                continue;
+            }
+            if (extensionInfos.find(skillInfos.first) == extensionInfos.end()) {
+                APP_LOGW("cannot find the extension info with %{public}s", skillInfos.first.c_str());
                 break;
             }
+            ExtensionAbilityInfo extensionInfo = extensionInfos[skillInfos.first];
+            EmplaceExtensionInfo(info, extensionInfo, flags, userId, infos);
+            break;
         }
     }
 }
