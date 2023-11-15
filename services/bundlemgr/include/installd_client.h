@@ -179,6 +179,11 @@ public:
     ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
 
+    ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock);
+
+    ErrCode RemoveSignProfile(const std::string &bundleName);
+
 private:
     /**
      * @brief Get the installd proxy object.

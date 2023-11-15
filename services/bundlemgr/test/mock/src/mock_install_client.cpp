@@ -208,5 +208,16 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath
 {
     return ERR_OK;
 }
+
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    return ERR_OK;
+}
+
+ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
+{
+    return ERR_OK;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

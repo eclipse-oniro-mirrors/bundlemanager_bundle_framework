@@ -165,6 +165,11 @@ public:
     virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
         bool isEnterpriseBundle) override;
 
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock) override;
+
+    virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);

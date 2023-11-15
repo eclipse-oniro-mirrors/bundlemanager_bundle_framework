@@ -93,6 +93,10 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = CheckAppLabelInfo();
     CHECK_RESULT(result, "check label info failed %{public}d");
 
+    // delivery sign profile to code signature
+    result = DeliveryProfileToCodeSign(hapVerifyResults);
+    CHECK_RESULT(result, "delivery sign profile failed %{public}d");
+
     // check native file
     result = bundleInstallChecker_->CheckMultiNativeFile(parsedBundles_);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
@@ -609,9 +613,11 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
             tempSoPath.c_str(), cpuAbi.c_str(), bundlePath.c_str());
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "extract module files failed %{public}d");
-        // verify hap or hsp code signature for compressed so files
-        result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath, signatureFileDir_);
-        CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        if (!newInfo.IsPreInstallApp()) {
+            // verify hap or hsp code signature for compressed so files
+            result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath, signatureFileDir_);
+            CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
+        }
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir);
         CHECK_RESULT(result, "move so to real path failed %{public}d");
@@ -640,6 +646,34 @@ ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std:
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
+}
+
+ErrCode InnerSharedBundleInstaller::DeliveryProfileToCodeSign(
+    std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const
+{
+    if (isBundleExist_) {
+        APP_LOGD("shared bundle %{public}s has been installed and unnecessary to delivery sign profile",
+            bundleName_.c_str());
+        return ERR_OK;
+    }
+    if (hapVerifyResults.empty()) {
+        APP_LOGE("no sign info in the all haps!");
+        return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+    }
+
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyResults[0].GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            APP_LOGE("invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+    }
+    return ERR_OK;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

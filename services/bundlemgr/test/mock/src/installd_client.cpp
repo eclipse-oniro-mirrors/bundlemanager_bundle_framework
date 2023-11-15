@@ -337,6 +337,23 @@ ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath
     return CallService(&IInstalld::VerifyCodeSignatureForHap, realHapPath, appIdentifier, isEnterpriseBundle);
 }
 
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    if (bundleName.empty() || profileBlock == nullptr) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+}
+
+ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::RemoveSignProfile, bundleName);
+}
+
 bool InstalldClient::StartInstalldService()
 {
     return GetInstalldProxy();

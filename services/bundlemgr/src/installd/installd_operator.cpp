@@ -1026,8 +1026,6 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
 
 bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
-    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s",
-        codeSignatureParam.modulePath.c_str(), codeSignatureParam.signatureFileDir.c_str());
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
         return false;
@@ -1035,12 +1033,10 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 
     std::vector<std::string> soEntryFiles;
     if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
-        APP_LOGE("ObtainNativeSoFile failed");
         return false;
     }
 
     if (soEntryFiles.empty()) {
-        APP_LOGD("no so file in installation file %{public}s", codeSignatureParam.modulePath.c_str());
         return true;
     }
 
@@ -1168,9 +1164,11 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
 {
     std::vector<std::string> entryNames;
     if (!extractor.GetZipFileNames(entryNames)) {
+        APP_LOGE("GetZipFileNames failed");
         return false;
     }
     if (entryNames.empty()) {
+        APP_LOGE("entryNames is empty");
         return false;
     }
 
@@ -1187,6 +1185,10 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
             soEntryFiles.emplace_back(entryName);
             continue;
         }
+    }
+
+    if (soEntryFiles.empty()) {
+        APP_LOGD("no so file in installation file");
     }
     return true;
 }

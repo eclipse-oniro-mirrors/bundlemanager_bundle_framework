@@ -305,6 +305,17 @@ public:
     {
         return ERR_OK;
     }
+
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode RemoveSignProfile(const std::string &bundleName)
+    {
+        return ERR_OK;
+    }
 };
 
 #define INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(parcel, token)                        \

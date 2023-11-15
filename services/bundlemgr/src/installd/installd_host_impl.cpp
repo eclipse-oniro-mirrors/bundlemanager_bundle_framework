@@ -29,6 +29,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #if defined(CODE_SIGNATURE_ENABLE)
+#include "byte_buffer.h"
 #include "code_sign_utils.h"
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
@@ -896,7 +897,6 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPa
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
     if (realHapPath.empty()) {
         APP_LOGE("real path of the installed hap is empty");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
@@ -918,6 +918,61 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPa
     if (ret != ERR_OK) {
         APP_LOGE("hap or hsp code signature failed due to %{public}d", ret);
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    APP_LOGD("start to delivery sign profile");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty() || profileBlock == nullptr || profileBlockLength == 0) {
+        APP_LOGE("Calling the function DeliverySignProfile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    APP_LOGD("delivery profile of bundle %{public}s and profile size is %{public}d", bundleName.c_str(),
+        profileBlockLength);
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(profileBlock), profileBlockLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyInProfile(bundleName, byteBuffer);
+    if (ret != ERR_OK) {
+        APP_LOGE("delivery code sign profile failed due to error %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
+{
+    APP_LOGD("start to remove sign profile");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty()) {
+        APP_LOGE("Calling the function RemoveSignProfile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ErrCode ret = Security::CodeSign::CodeSignUtils::RemoveKeyInProfile(bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("remove code sign profile failed due to error %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_REMOVE_FILE_FAILED;
     }
 #else
     APP_LOGW("code signature feature is not supported");

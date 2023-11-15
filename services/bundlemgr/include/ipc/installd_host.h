@@ -166,6 +166,10 @@ private:
 
     bool HandVerifyCodeSignatureForHap(MessageParcel &data, MessageParcel &reply);
 
+    bool HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply);
+
+    bool HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply);
+
     void AddCloseInstalldTask();
 
     void RemoveCloseInstalldTask();
