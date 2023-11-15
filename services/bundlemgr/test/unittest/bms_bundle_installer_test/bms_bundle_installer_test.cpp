@@ -30,6 +30,7 @@
 #include "app_control_manager_host_impl.h"
 #include "app_control_constants.h"
 #endif
+#include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -5007,5 +5008,79 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0500, Function | SmallTest |
     BaseBundleInstaller installer;
     bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BeforeInstall_0100
+ * @tc.name: test BeforeInstall
+ * @tc.desc: 1.Test the BeforeInstall
+*/
+HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    hspPaths.push_back(TEST_CREATE_FILE_PATH);
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+
+    auto res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+
+    installParam.isPreInstallApp = true;
+    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_OK);
+
+    ClearDataMgr();
+    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: CheckFileType_0100
+ * @tc.name: test CheckFileType
+ * @tc.desc: 1.Test the CheckFileType
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckFileType_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    auto res = appServiceFwkInstaller.CheckFileType(hspPaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    hspPaths.push_back(TEST_CREATE_FILE_PATH);
+    res = appServiceFwkInstaller.CheckFileType(hspPaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0100
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test the CheckAppLabelInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabelInfo_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
+    auto res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED);
+
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
+
+    innerModuleInfo.bundleType = BundleType::SHARED;
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
 }
 } // OHOS

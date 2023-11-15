@@ -36,6 +36,7 @@
 #include "iservice_registry.h"
 #include "status_receiver_host.h"
 #include "system_ability_definition.h"
+#include "verify_manager_proxy.h"
 
 using namespace testing::ext;
 
@@ -2335,6 +2336,92 @@ HWTEST_F(BundleMgrClientSystemTest, BundleMgrClientImplIsNull_0400, Function | M
     res1 = client.GetSandboxHapModuleInfo(abilityInfo, appIndex, DEFAULT_USERID, hapModuleInfo);
     EXPECT_NE(res1, ERR_OK);
     std::cout << "test bundle_installer_0700 done" << std::endl;
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0100
+ * @tc.name: Verify
+ * @tc.desc: 1.Test the interface of Verify
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0100, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    VerifyManagerProxy verifyManagerProxy(remoteObject);
+    std::vector<std::string> abcPaths;
+    std::vector<std::string> abcNames;
+    ErrCode ret = verifyManagerProxy.Verify(abcPaths, abcNames, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    abcPaths.push_back(HAP_PATH);
+    ret = verifyManagerProxy.Verify(abcPaths, abcNames, true);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_SEND_REQUEST_FAILED);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0200
+ * @tc.name: CreateFd
+ * @tc.desc: 1.Test the interface of CreateFd
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0200, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    VerifyManagerProxy verifyManagerProxy(remoteObject);
+    int32_t fd = 4;
+    std::string path;
+    ErrCode ret = verifyManagerProxy.CreateFd("", fd, path);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+    ret = verifyManagerProxy.CreateFd(BUNDLE_NAME, fd, path);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_PARCEL_ERROR);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0300
+ * @tc.name: RemoveFiles
+ * @tc.desc: 1.Test the interface of RemoveFiles
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0300, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    VerifyManagerProxy verifyManagerProxy(remoteObject);
+    std::vector<std::string> abcPaths;
+    std::string abcPath = HAP_PATH;
+    abcPaths.push_back(abcPath);
+    ErrCode ret = verifyManagerProxy.RemoveFiles(abcPaths);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: VerifyManagerProxy_0400
+ * @tc.name: CopyFiles
+ * @tc.desc: 1.Test the interface of CopyFiles
+ */
+HWTEST_F(BundleMgrClientSystemTest, VerifyManagerProxy_0400, TestSize.Level1)
+{
+    sptr<ISystemAbilityManager> systemAbilityManager =
+        SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    EXPECT_NE(systemAbilityManager, nullptr);
+
+    sptr<IRemoteObject> remoteObject = systemAbilityManager->GetSystemAbility(BUNDLE_MGR_SERVICE_SYS_ABILITY_ID);
+    VerifyManagerProxy verifyManagerProxy(remoteObject);
+    std::vector<std::string> sourceFiles;
+    std::vector<std::string> destFiles;
+    ErrCode ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
+
+    sourceFiles.push_back(HAP_PATH);
+    ret = verifyManagerProxy.CopyFiles(sourceFiles, destFiles);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
