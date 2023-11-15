@@ -137,6 +137,14 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     dataMgr->AddUserId(userId);
     // Scan preset applications and parse package information.
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto iter = preInstallBundleInfos.begin(); iter != preInstallBundleInfos.end();) {
+        if (std::find(disallowList.begin(), disallowList.end(), iter->GetBundleName()) != disallowList.end()) {
+            APP_LOGD("BundleName is same as black list %{public}s", iter->GetBundleName().c_str());
+            iter = preInstallBundleInfos.erase(iter);
+            continue;
+        }
+        iter++;
+    }
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
@@ -144,11 +152,6 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<st
     bool needReinstall = userId == Constants::START_USERID;
     // Read apps installed by other users that are visible to all users
     for (const auto &info : preInstallBundleInfos) {
-        if (std::find(disallowList.begin(), disallowList.end(), info.GetBundleName()) != disallowList.end()) {
-            APP_LOGD("BundleName is same as black list");
-            totalHapNum--;
-            continue;
-        }
         InstallParam installParam;
         installParam.userId = userId;
         installParam.isPreInstallApp = true;
