@@ -2203,12 +2203,15 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
 {
     std::vector<PreInstallBundleInfo> recoverablePreInstallBundleInfos;
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId == Constants::NOT_EXIST_USERID) {
-        APP_LOGW("userId %{public}d is not exist", userId);
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGW("userId %{public}d is invalid", userId);
         return recoverablePreInstallBundleInfos;
     }
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = GetAllPreInstallBundleInfos();
     for (auto preInstallBundleInfo: preInstallBundleInfos) {
+        if (!preInstallBundleInfo.IsRemovable()) {
+            continue;
+        }
         std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
         auto infoItem = bundleInfos_.find(preInstallBundleInfo.GetBundleName());
         if (infoItem == bundleInfos_.end()) {
