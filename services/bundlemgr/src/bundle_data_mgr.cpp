@@ -1230,6 +1230,7 @@ void BundleDataMgr::GetMatchAbilityInfosV9(const Want &want, int32_t flags,
                 continue;
             }
             EmplaceAbilityInfo(info, abilityinfo, flags, userId, abilityInfos);
+            continue;
         }
         for (const Skill &skill : skillsPair->second) {
             if (isPrivateType || skill.Match(want)) {
@@ -1265,7 +1266,7 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
             }
         }
         if (!match) {
-            APP_LOGI("match failed");
+            APP_LOGD("match failed");
             return false;
         }
     }

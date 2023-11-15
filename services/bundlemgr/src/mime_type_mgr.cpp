@@ -392,6 +392,7 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
 
 bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd)
 {
+    APP_LOGI("skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
     std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
 
     auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
@@ -410,6 +411,7 @@ bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantU
 
 bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd)
 {
+    APP_LOGI("mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
     std::string typeUtd;
     auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);
     if (ret != ERR_OK) {
