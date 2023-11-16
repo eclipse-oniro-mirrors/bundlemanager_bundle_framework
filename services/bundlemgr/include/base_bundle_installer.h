@@ -517,6 +517,7 @@ private:
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void OnSingletonChange(bool noSkipsKill);
+    bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
@@ -554,7 +555,7 @@ private:
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
-    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false) const;
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
         const std::string &bundleName, int32_t userId) const;
     ErrCode CopyPgoFile(const std::string &moduleName, const std::string &pgoPath,

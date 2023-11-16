@@ -92,6 +92,9 @@ const int32_t STORAGE_MANAGER_MANAGER_ID = 5003;
 const int32_t ATOMIC_SERVICE_DATASIZE_THRESHOLD_MB_PRESET = 50;
 const int32_t SINGLE_HSP_VERSION = 1;
 const char* BMS_KEY_SHELL_UID = "const.product.shell.uid";
+const std::set<std::string> SINGLETON_WHITE_LIST = {
+    "com.ohos.sceneboard"
+};
 
 std::string GetHapPath(const InnerBundleInfo &info, const std::string &moduleName)
 {
@@ -169,6 +172,10 @@ ErrCode BaseBundleInstaller::InstallBundle(
         if (NotifyBundleStatus(installRes) != ERR_OK) {
             APP_LOGW("notify status failed for installation");
         }
+    }
+
+    if (result == ERR_OK) {
+        OnSingletonChange(installParam.noSkipsKill);
     }
 
     if (!bundleName_.empty()) {
@@ -699,6 +706,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
         result = CheckNativeFileWithOldInfo(oldInfo, newInfos);
         CHECK_RESULT(result, "Check native so between oldInfo and newInfos failed %{public}d");
 
+        for (auto &info : newInfos) {
+            std::string packageName = info.second.GetCurrentModulePackage();
+            if (oldInfo.FindModule(packageName)) {
+                installedModules_[packageName] = true;
+            }
+        }
+
         hasInstalledInUser_ = oldInfo.HasInnerBundleUserInfo(userId_);
         if (!hasInstalledInUser_) {
             APP_LOGD("new userInfo with bundleName %{public}s and userId %{public}d",
@@ -717,18 +731,13 @@ ErrCode BaseBundleInstaller::InnerProcessBundleInstall(std::unordered_map<std::s
             result = CreateBundleUserData(oldInfo);
             CHECK_RESULT(result, "CreateBundleUserData failed %{public}d");
 
-            // extract ap file
-            result = ExtractAllArkProfileFile(oldInfo);
-            CHECK_RESULT(result, "ExtractAllArkProfileFile failed %{public}d");
+            if (!isFeatureNeedUninstall_) {
+                // extract ap file in old haps
+                result = ExtractAllArkProfileFile(oldInfo, true);
+                CHECK_RESULT(result, "ExtractAllArkProfileFile failed %{public}d");
+            }
 
             userGuard.Dismiss();
-        }
-
-        for (auto &info : newInfos) {
-            std::string packageName = info.second.GetCurrentModulePackage();
-            if (oldInfo.FindModule(packageName)) {
-                installedModules_[packageName] = true;
-            }
         }
     }
 
@@ -1034,7 +1043,6 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
         quickFixDeleter->Execute();
     }
 #endif
-    OnSingletonChange(installParam.noSkipsKill);
     GetInstallEventInfo(sysEventInfo_);
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo(), installParam);
     ProcessOldNativeLibraryPath(newInfos, oldInfo.GetVersionCode(), oldInfo.GetNativeLibraryPath());
@@ -1690,6 +1698,11 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
     return ERR_OK;
 }
 
+bool BaseBundleInstaller::AllowSingletonChange(const std::string &bundleName)
+{
+    return SINGLETON_WHITE_LIST.find(bundleName) != SINGLETON_WHITE_LIST.end();
+}
+
 ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
     InnerBundleInfo &oldInfo, InnerBundleInfo &newInfo, bool isReplace, bool noSkipsKill)
 {
@@ -1703,18 +1716,16 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         uninstallModuleVec_.emplace_back(modulePackage_);
     }
 
-#ifdef USE_PRE_BUNDLE_PROFILE
     if (oldInfo.IsSingleton() != newInfo.IsSingleton()) {
-        APP_LOGE("Singleton not allow changed");
-        return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
+        if ((oldInfo.IsSingleton() && !newInfo.IsSingleton()) && newInfo.IsPreInstallApp()
+            && AllowSingletonChange(newInfo.GetBundleName())) {
+            APP_LOGI("Singleton %{public}s changed", newInfo.GetBundleName().c_str());
+            singletonState_ = SingletonState::SINGLETON_TO_NON;
+        } else {
+            APP_LOGE("Singleton not allow changed");
+            return ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE;
+        }
     }
-#else
-    if (oldInfo.IsSingleton() && !newInfo.IsSingleton()) {
-        singletonState_ = SingletonState::SINGLETON_TO_NON;
-    } else if (!oldInfo.IsSingleton() && newInfo.IsSingleton()) {
-        singletonState_ = SingletonState::NON_TO_SINGLETON;
-    }
-#endif
 
     auto result = CheckOverlayUpdate(oldInfo, newInfo, userId_);
     if (result != ERR_OK) {
@@ -2684,7 +2695,7 @@ ErrCode BaseBundleInstaller::ExtractArkNativeFile(InnerBundleInfo &info, const s
     return ERR_OK;
 }
 
-ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const
+ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat) const
 {
     if (!oldInfo.GetIsNewVersion()) {
         return ERR_OK;
@@ -2693,6 +2704,10 @@ ErrCode BaseBundleInstaller::ExtractAllArkProfileFile(const InnerBundleInfo &old
     APP_LOGD("Begin to ExtractAllArkProfileFile, bundleName : %{public}s", bundleName.c_str());
     const auto &innerModuleInfos = oldInfo.GetInnerModuleInfos();
     for (auto iter = innerModuleInfos.cbegin(); iter != innerModuleInfos.cend(); ++iter) {
+        if (checkRepeat && installedModules_.find(iter->first) != installedModules_.end()) {
+            continue;
+        }
+
         ErrCode ret = CopyPgoFileToArkProfileDir(iter->second.name, iter->second.hapPath, bundleName, userId_);
         if (ret != ERR_OK) {
             APP_LOGE("fail to CopyPgoFileToArkProfileDir, error is %{public}d", ret);
@@ -3718,14 +3733,14 @@ void BaseBundleInstaller::OnSingletonChange(bool noSkipsKill)
     installParam.forceExecuted = true;
     installParam.noSkipsKill = noSkipsKill;
     if (singletonState_ == SingletonState::SINGLETON_TO_NON) {
-        APP_LOGD("Bundle changes from singleton app to non singleton app");
+        APP_LOGI("Bundle changes from singleton app to non singleton app");
         installParam.userId = Constants::DEFAULT_USERID;
         UninstallBundle(bundleName_, installParam);
         return;
     }
 
     if (singletonState_ == SingletonState::NON_TO_SINGLETON) {
-        APP_LOGD("Bundle changes from non singleton app to singleton app");
+        APP_LOGI("Bundle changes from non singleton app to singleton app");
         for (auto infoItem : info.GetInnerBundleUserInfos()) {
             int32_t installedUserId = infoItem.second.bundleUserInfo.userId;
             if (installedUserId == Constants::DEFAULT_USERID) {
