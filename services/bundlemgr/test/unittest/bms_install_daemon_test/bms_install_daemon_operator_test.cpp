@@ -1132,4 +1132,82 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7100, Function | Sma
     bool res = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
     EXPECT_EQ(res, false);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_7200
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7200, Function | SmallTest | Level0)
+{
+    std::string srcPath = "";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+
+    srcPath = "invalid";
+    res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+
+    srcPath = "";
+    dirMap.emplace(srcPath, srcPath);
+    res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7300
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7300, Function | SmallTest | Level0)
+{
+    std::string srcPath = "invalid";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.emplace(srcPath, srcPath);
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7400
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7400, Function | SmallTest | Level0)
+{
+    std::string srcPath = "data/test";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.emplace(srcPath, srcPath);
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7500
+ * @tc.name: test function of CopyDriverSoFiles
+ * @tc.desc: 1. calling CopyDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | SmallTest | Level0)
+{
+    std::string destinedDir = "invalid";
+    std::string originalDir = "invalid";
+    BundleExtractor extractor("");
+    bool res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "invalid/";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "invalid/test";
+    originalDir = "invalid/test";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "data/test";
+    originalDir = "data/test";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+}
 } // OHOS

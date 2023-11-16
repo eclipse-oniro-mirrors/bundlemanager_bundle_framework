@@ -1042,13 +1042,14 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_2200, Function | Sma
 {
     AppControlManagerHostImpl impl;
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    ErrCode res = impl.SetDisposedStatus(APPID, want, userId);
     EXPECT_EQ(res, ERR_OK);
 
-    res = impl.GetDisposedStatus(APPID, want, USERID);
+    res = impl.GetDisposedStatus(APPID, want, userId);
     EXPECT_EQ(res, ERR_OK);
 
-    res = impl.DeleteDisposedStatus(APPID, USERID);
+    res = impl.DeleteDisposedStatus(APPID, userId);
     EXPECT_EQ(res, ERR_OK);
 }
 
@@ -1384,5 +1385,20 @@ HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4300, Function | Sma
     sptr<IAppControlMgr> appControlProxy = bundleMgrProxy->GetAppControlProxy();
     auto res = appControlProxy->GetAppJumpControlRule(CALLER_BUNDLE_NAME, TARGET_BUNDLE_NAME, USERID, controlRule);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: AppControlManagerHostImpl_4400
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.GetAbilityRunningControlRule test
+ */
+HWTEST_F(BmsBundleAppControlTest, AppControlManagerHostImpl_4400, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    std::vector<DisposedRule> disposedRules;
+    int32_t userId = Constants::UNSPECIFIED_USERID;
+    ErrCode res = impl.GetAbilityRunningControlRule(CALLER_BUNDLE_NAME, userId, disposedRules);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+    EXPECT_EQ(disposedRules.empty(), true);
 }
 } // OHOS
