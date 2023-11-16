@@ -15,6 +15,7 @@
 
 #include "ipc/create_dir_param.h"
 
+#include "app_log_wrapper.h"
 #include "parcel_macro.h"
 #include "string_ex.h"
 

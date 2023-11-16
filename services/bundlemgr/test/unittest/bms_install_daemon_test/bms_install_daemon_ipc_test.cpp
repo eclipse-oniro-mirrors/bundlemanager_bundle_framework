@@ -544,7 +544,14 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2500, Function | SmallTest |
     auto proxy = GetInstallProxy();
     EXPECT_NE(proxy, nullptr);
 
-    auto ret = proxy->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = proxy->VerifyCodeSignature(codeSignatureParam);
     EXPECT_EQ(ret, ERR_OK);
 }
 
@@ -559,7 +566,14 @@ HWTEST_F(BmsInstallDaemonIpcTest, InstalldProxyTest_2600, Function | SmallTest |
     sptr<InstalldProxy> installdProxy = new (std::nothrow) InstalldProxy(nullptr);
     EXPECT_NE(installdProxy, nullptr);
 
-    auto ret = installdProxy->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = installdProxy->VerifyCodeSignature(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR);
 }
 

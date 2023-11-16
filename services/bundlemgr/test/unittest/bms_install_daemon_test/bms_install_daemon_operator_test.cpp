@@ -972,8 +972,15 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, "");
-    EXPECT_TRUE(ret);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1091,8 +1098,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | SmallTest | Level0)
 {
-    bool res = InstalldOperator::VerifyCodeSignature("", "", "", "");
-    EXPECT_EQ(res, true);
+    CodeSignatureParam codeSignatureParam;
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -1102,7 +1110,9 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7000, Function | SmallTest | Level0)
 {
-    bool res = InstalldOperator::VerifyCodeSignature("", "", "", "/");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.signatureFileDir = "/";
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
     EXPECT_EQ(res, false);
 }
 

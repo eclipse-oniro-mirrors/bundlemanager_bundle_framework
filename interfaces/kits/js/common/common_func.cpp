@@ -432,6 +432,11 @@ void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Wan
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, want.GetAction().c_str(), NAPI_AUTO_LENGTH, &naction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "action", naction));
 
+    napi_value nmoduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &nmoduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "moduleName", nmoduleName));
+
     auto entities = want.GetEntities();
     napi_value nGetEntities;
     NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &nGetEntities));
@@ -1866,6 +1871,45 @@ void CommonFunc::ConvertAllSharedBundleInfo(napi_env env, napi_value value,
         napi_value objInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
         ConvertSharedBundleInfo(env, objInfo, item);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
+        index++;
+    }
+}
+
+void CommonFunc::ConvertRecoverableApplicationInfo(
+    napi_env env, napi_value value, const RecoverableApplicationInfo &recoverableApplication)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, recoverableApplication.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_NAME, nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, recoverableApplication.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, LABEL_ID, nLabelId));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, ICON_ID, nIconId));
+}
+
+void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
+    const std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    if (recoverableApplications.empty()) {
+        APP_LOGD("recoverableApplications is empty");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : recoverableApplications) {
+        napi_value objInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
+        ConvertRecoverableApplicationInfo(env, objInfo, item);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
         index++;
     }

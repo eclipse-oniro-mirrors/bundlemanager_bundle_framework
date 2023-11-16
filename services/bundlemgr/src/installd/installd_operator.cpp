@@ -50,6 +50,9 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
+#if defined(CODE_SIGNATURE_ENABLE)
+using namespace OHOS::Security::CodeSign;
+#endif
 #if defined(CODE_ENCRYPTION_ENABLE)
 static std::string CODE_DECRYPT = "/dev/code_decrypt";
 static int32_t INVALID_RETURN_VALUE = -1;
@@ -1021,39 +1024,34 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     return true;
 }
 
-bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
-    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s", modulePath.c_str(),
-        signatureFileDir.c_str());
-    if (signatureFileDir.empty()) {
-        APP_LOGD("signature file dir is empty and does not need to verify code signature");
-        return true;
-    }
-
-    BundleExtractor extractor(modulePath);
+    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s",
+        codeSignatureParam.modulePath.c_str(), codeSignatureParam.signatureFileDir.c_str());
+    BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
         return false;
     }
 
     std::vector<std::string> soEntryFiles;
-    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
+    if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
         APP_LOGE("ObtainNativeSoFile failed");
         return false;
     }
 
     if (soEntryFiles.empty()) {
-        APP_LOGD("no so file in installation file %{public}s", modulePath.c_str());
+        APP_LOGD("no so file in installation file %{public}s", codeSignatureParam.modulePath.c_str());
         return true;
     }
 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
-    if (!targetSoPath.empty()) {
-        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
+    if (!codeSignatureParam.targetSoPath.empty()) {
+        const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+        for_each(soEntryFiles.begin(), soEntryFiles.end(),
+            [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
             std::string fileName = entry.substr(prefix.length());
-            std::string path = targetSoPath;
+            std::string path = codeSignatureParam.targetSoPath;
             if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
                 path += Constants::FILE_SEPARATOR_CHAR;
             }
@@ -1061,7 +1059,23 @@ bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const 
             APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
         });
     }
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
+    ErrCode ret = ERR_OK;
+    if (codeSignatureParam.signatureFileDir.empty()) {
+        if (codeSignatureParam.isEnterpriseBundle) {
+            APP_LOGD("Verify code signature for enterprise bundle");
+            ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
+        } else {
+            APP_LOGD("Verify code signature for non-enterprise bundle");
+            ret = CodeSignUtils::EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
+        }
+    } else {
+        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
+    }
+    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
+        APP_LOGW("no code sign file in the bundle");
+        return true;
+    }
     if (ret != ERR_OK) {
         APP_LOGE("VerifyCode failed due to %{public}d", ret);
         return false;
@@ -1257,7 +1271,7 @@ bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, co
         std::string filePath = targetDir + entryName;
         if (!extractor.ExtractFile(entryName, filePath)) {
             APP_LOGE("ExtractFile failed");
-            return false;
+            continue;
         }
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
         if (!OHOS::ChangeModeFile(filePath, mode)) {

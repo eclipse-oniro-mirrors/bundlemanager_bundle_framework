@@ -63,6 +63,9 @@ const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles
 const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
 const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+#if defined(CODE_SIGNATURE_ENABLE)
+using namespace OHOS::Security::CodeSign;
+#endif
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -775,20 +778,19 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     APP_LOGD("start to process the code signature for so files");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    if (modulePath.empty()) {
+    APP_LOGD("code sign param is %{public}s", codeSignatureParam.ToString().c_str());
+    if (codeSignatureParam.modulePath.empty()) {
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
+    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -883,6 +885,44 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
     APP_LOGD("code encryption is not supported");
     return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_SUPPORT_CODE_ENCRYPTION;
 #endif
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
+{
+    APP_LOGD("start to enable code signature for hap or hsp");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (realHapPath.empty()) {
+        APP_LOGE("real path of the installed hap is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode ret = ERR_OK;
+    if (isEnterpriseBundle) {
+        APP_LOGD("Verify code signature for enterprise bundle");
+        ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId(appIdentifier, realHapPath, entryMap, FILE_SELF);
+    } else {
+        APP_LOGD("Verify code signature for non-enterprise bundle");
+        ret = CodeSignUtils::EnforceCodeSignForApp(realHapPath, entryMap, FILE_SELF);
+    }
+    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
+        APP_LOGW("no code sign file in the bundle");
+        return ERR_OK;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
 }
 
 bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string &prefix)

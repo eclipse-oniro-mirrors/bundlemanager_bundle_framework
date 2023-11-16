@@ -28,6 +28,7 @@ using namespace OHOS::Security;
 namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 const int32_t MAX_FILE_NUMBER = 2;
+const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
 }
 
 InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
@@ -96,6 +97,12 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     result = bundleInstallChecker_->CheckMultiNativeFile(parsedBundles_);
     CHECK_RESULT(result, "native so is incompatible in all haps %{public}d");
 
+    // check enterprise bundle
+    /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
+    isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
+    appIdentifier_ = hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
+        (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
     return result;
 }
@@ -507,7 +514,16 @@ ErrCode InnerSharedBundleInstaller::SaveHspToRealInstallationDir(const std::stri
     // 2. copy hsp to installation dir, and then to verify code signature of hsp
     std::string tempHspPath = tempHspDir + Constants::PATH_SEPARATOR + moduleName +
         Constants::HSP_FILE_SUFFIX;
-    result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
+    if (!signatureFileDir_.empty()) {
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath, signatureFileDir_);
+    } else {
+        result = InstalldClient::GetInstance()->CopyFile(bundlePath, tempHspPath);
+        CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
+        if (compileSdkType_ != COMPILE_SDK_TYPE_OPEN_HARMONY) {
+            result = InstalldClient::GetInstance()->VerifyCodeSignatureForHap(tempHspPath, appIdentifier_,
+                isEnterpriseBundle_);
+        }
+    }
     CHECK_RESULT(result, "copy hsp to install dir failed %{public}d");
 
     // 3. move hsp to real installation dir
@@ -594,8 +610,7 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         auto result = InstalldClient::GetInstance()->ExtractModuleFiles(bundlePath, moduleDir, tempSoPath, cpuAbi);
         CHECK_RESULT(result, "extract module files failed %{public}d");
         // verify hap or hsp code signature for compressed so files
-        result = InstalldClient::GetInstance()->VerifyCodeSignature(bundlePath, cpuAbi, tempSoPath,
-            signatureFileDir_);
+        result = VerifyCodeSignatureForNativeFiles(bundlePath, cpuAbi, tempSoPath, signatureFileDir_);
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // move so to real path
         result = MoveSoToRealPath(moduleName, versionDir);
@@ -607,6 +622,24 @@ ErrCode InnerSharedBundleInstaller::ProcessNativeLibrary(
         newInfo.SetNativeLibraryFileNames(moduleName, fileNames);
     }
     return ERR_OK;
+}
+
+ErrCode InnerSharedBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string &bundlePath,
+    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir) const
+{
+    APP_LOGD("begin to verify code signature for hsp native files");
+    if (compileSdkType_ == COMPILE_SDK_TYPE_OPEN_HARMONY) {
+        APP_LOGD("code signature is not supported");
+        return ERR_OK;
+    }
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = bundlePath;
+    codeSignatureParam.cpuAbi = cpuAbi;
+    codeSignatureParam.targetSoPath = targetSoPath;
+    codeSignatureParam.signatureFileDir = signatureFileDir;
+    codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
+    codeSignatureParam.appIdentifier = appIdentifier_;
+    return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

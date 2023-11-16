@@ -24,6 +24,7 @@
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "ipc/check_encryption_param.h"
+#include "ipc/code_signature_param.h"
 #include "ipc/create_dir_param.h"
 #include "ipc/extract_param.h"
 #include "ipc/file_stat.h"
@@ -272,8 +273,7 @@ public:
         return ERR_OK;
     }
 
-    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir)
+    virtual ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
     {
         return ERR_OK;
     }
@@ -296,6 +296,12 @@ public:
 
     virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid)
+    {
+        return ERR_OK;
+    }
+
+    virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+        bool isEnterpriseBundle)
     {
         return ERR_OK;
     }

@@ -848,7 +848,7 @@ public:
     bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
-
+    const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
 private:
     /**
      * @brief Init transferStates.

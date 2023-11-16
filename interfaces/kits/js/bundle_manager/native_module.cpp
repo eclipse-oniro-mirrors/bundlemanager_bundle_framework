@@ -141,6 +141,7 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getJsonProfile", GetJsonProfile),
         DECLARE_NAPI_FUNCTION("verifyAbc", VerifyAbc),
         DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
+        DECLARE_NAPI_FUNCTION("getRecoverableApplicationInfo", GetRecoverableApplicationInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

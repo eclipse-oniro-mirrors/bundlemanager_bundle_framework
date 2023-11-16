@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Huawei Device Co., Ltd.
+ * Copyright (c) 2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,33 +13,25 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_MODULE_INFO_H
-#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_MODULE_INFO_H
+#ifndef FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_RECOVERABLE_APPLICATION_INFO_H
+#define FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_RECOVERABLE_APPLICATION_INFO_H
 
 #include <string>
-#include <vector>
 
 #include "parcel.h"
 
 namespace OHOS {
 namespace AppExecFwk {
-enum ProfileType {
-    INTENT_PROFILE = 1,
-    ADDITION_PROFILE = 2,
-    NETWORK_PROFILE = 3,
-    UTD_SDT_PROFILE = 4
-};
-
-// stores module information about an application
-struct ModuleInfo : public Parcelable {
-    std::string moduleName;  // the "name" in module part in config.json
-    std::string moduleSourceDir;
-    std::vector<std::string> preloads;
+struct RecoverableApplicationInfo : public Parcelable {
+    std::string bundleName;
+    std::string moduleName;
+    int32_t labelId = 0;
+    int32_t iconId = 0;
 
     bool ReadFromParcel(Parcel &parcel);
     virtual bool Marshalling(Parcel &parcel) const override;
-    static ModuleInfo *Unmarshalling(Parcel &parcel);
+    static RecoverableApplicationInfo *Unmarshalling(Parcel &parcel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
-#endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_MODULE_INFO_H
+#endif  // FOUNDATION_APPEXECFWK_INTERFACES_INNERKITS_APPEXECFWK_BASE_INCLUDE_SHARED_BUNDLE_INFO_H

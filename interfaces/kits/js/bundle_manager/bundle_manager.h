@@ -32,6 +32,7 @@
 #ifdef BUNDLE_FRAMEWORK_GET_ABILITY_ICON_ENABLED
 #include "pixel_map.h"
 #endif
+#include "recoverable_application_info.h"
 #include "shared/shared_bundle_info.h"
 #include "want.h"
 
@@ -221,6 +222,12 @@ struct AppProvisionInfoCallbackInfo : public BaseCallbackInfo {
     AppProvisionInfo appProvisionInfo;
 };
 
+struct RecoverableApplicationCallbackInfo : public BaseCallbackInfo {
+    explicit RecoverableApplicationCallbackInfo(napi_env env) : BaseCallbackInfo(env) {}
+
+    std::vector<RecoverableApplicationInfo> recoverableApplicationInfos;
+};
+
 napi_value GetBundleArchiveInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleNameByUid(napi_env env, napi_callback_info info);
 napi_value SetApplicationEnabled(napi_env env, napi_callback_info info);
@@ -253,6 +260,7 @@ napi_value GetAdditionalInfo(napi_env env, napi_callback_info info);
 napi_value GetBundleInfoForSelfSync(napi_env env, napi_callback_info info);
 napi_value VerifyAbc(napi_env env, napi_callback_info info);
 napi_value GetJsonProfile(napi_env env, napi_callback_info info);
+napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info);
 void CreateApplicationFlagObject(napi_env env, napi_value value);
 void CreateAbilityFlagObject(napi_env env, napi_value value);
 void CreateExtensionAbilityFlagObject(napi_env env, napi_value value);
