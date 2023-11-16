@@ -1248,4 +1248,21 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100
         USERID, DEFAULT_APP_VIDEO);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8200
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8200, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    DisposedRule rule;
+    ErrCode res = impl.SetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    res = impl.GetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
 } // OHOS
