@@ -138,7 +138,7 @@ struct SkillUri {
     std::string pathRegex;
     std::string type;
     std::string utd;
-    int32_t maxFileSupported;
+    int32_t maxFileSupported = 0;
 };
 
 struct Skill {
