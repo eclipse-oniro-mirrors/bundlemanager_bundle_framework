@@ -167,7 +167,8 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.distributeddatamgr_udmf)) {
     udmf_enabled = false
-  }}
+  }
+}
 
 print("bundle_framework_power_mgr_enable = " +
       "$bundle_framework_power_mgr_enable")

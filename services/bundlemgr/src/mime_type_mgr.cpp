@@ -19,8 +19,10 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
+#ifdef UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"
+#endif
 
 namespace OHOS {
 namespace AppExecFwk {
