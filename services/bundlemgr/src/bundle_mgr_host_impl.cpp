@@ -2998,9 +2998,11 @@ bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<st
             return false;
         }
         bundleInfo = resultBundleInfo;
-        if (!resultBundleInfo.hapModuleInfos.empty() &&
-            resultBundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
-            return true;
+        if (!bundleInfo.hapModuleInfos.empty()) {
+            bundleInfo.hapModuleInfos[0].hapPath = hapPath;
+            if (bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                return true;
+            }
         }
     }
     return true;
@@ -3033,7 +3035,7 @@ ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
             recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
             recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
             if (!bundleInfo.hapModuleInfos.empty()) {
-                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].name;
+                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
             }
             recoverableApplicaitons.emplace_back(recoverableApplication);
         }
@@ -3058,9 +3060,9 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     int32_t userId = AccountHelper::GetCurrentActiveUserId();
-    if (userId == Constants::NOT_EXIST_USERID) {
-        APP_LOGE("userId %{public}d is not exist", userId);
-        return ERR_APPEXECFWK_USER_NOT_EXIST;
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
     }
     if (dataMgr->HasUserInstallInBundle(bundleName, Constants::DEFAULT_USERID) ||
         dataMgr->HasUserInstallInBundle(bundleName, userId)) {
