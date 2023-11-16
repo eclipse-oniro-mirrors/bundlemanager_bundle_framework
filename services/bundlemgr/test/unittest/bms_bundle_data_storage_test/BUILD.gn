@@ -62,6 +62,7 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "udmf:udmf_client",
   ]
   defines = []
   if (ability_runtime_enable) {

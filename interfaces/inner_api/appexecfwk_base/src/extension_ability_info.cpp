@@ -109,6 +109,8 @@ bool ReadSkillInfoFromParcel(Parcel &parcel, std::vector<SkillUriForAbilityAndEx
         stctUri.pathStartWith = Str16ToStr8(parcel.ReadString16());
         stctUri.pathRegex = Str16ToStr8(parcel.ReadString16());
         stctUri.type = Str16ToStr8(parcel.ReadString16());
+        stctUri.utd = Str16ToStr8(parcel.ReadString16());
+        stctUri.maxFileSupported = parcel.ReadInt32();
         skillUri.emplace_back(stctUri);
     }
     return true;
@@ -236,6 +238,8 @@ bool ExtensionAbilityInfo::Marshalling(Parcel &parcel) const
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathStartWith));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.pathRegex));
         WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.type));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(String16, parcel, Str8ToStr16(uri.utd));
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, uri.maxFileSupported);
     }
     return true;
 }
