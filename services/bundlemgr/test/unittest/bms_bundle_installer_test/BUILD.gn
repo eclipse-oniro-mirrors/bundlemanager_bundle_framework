@@ -87,7 +87,6 @@ ohos_unittest("BmsBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -177,6 +176,10 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleOtaUpdateTest") {
@@ -241,7 +244,6 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -331,6 +333,10 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "${services_path}/bundlemgr/src/rdb/bms_rdb_open_callback.cpp",
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsMultipleBundleInstallerTest") {
@@ -412,7 +418,6 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -494,6 +499,10 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallIpcTest") {
@@ -548,7 +557,6 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -630,6 +638,10 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallCheckerTest") {
@@ -678,7 +690,6 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -761,6 +772,10 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
     external_deps += [ "c_utils:utils" ]
   }
   defines += [ "GET_BOOL_PARAMETER_TRUE" ]
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleInstallDeviceTypeTest") {
@@ -810,7 +825,6 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -892,6 +906,10 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsSystemBundleInstallerTest") {
@@ -943,7 +961,6 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1026,6 +1043,10 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -1108,7 +1129,6 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -1191,6 +1211,10 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

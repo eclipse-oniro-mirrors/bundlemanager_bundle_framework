@@ -90,7 +90,6 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_PERMISSION_DEF_LIST" ]
@@ -161,6 +160,10 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -237,7 +240,6 @@ ohos_unittest("BmsBundlePermissionGrantTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -387,7 +389,6 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_PERMISSION_RETURN_FALSE" ]
@@ -464,6 +465,10 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionStartFullTest") {
@@ -540,7 +545,6 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "storage_service:storage_manager_sa_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [
@@ -614,6 +618,10 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -690,7 +698,6 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_FRAMEWORK_SYSTEM_APP_FALSE" ]
@@ -767,6 +774,10 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionTokenTest") {
@@ -839,7 +850,6 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [ "BUNDLE_NOT_IS_NAYIVE_TOKEN_TYPE" ]
@@ -915,6 +925,10 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundlePermissionGetRequestTest") {
@@ -980,7 +994,6 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = [
@@ -1061,6 +1074,10 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

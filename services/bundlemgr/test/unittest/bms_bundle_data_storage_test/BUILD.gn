@@ -62,7 +62,6 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     "hilog:libhilog",
     "init:libbegetutil",
     "ipc:ipc_core",
-    "udmf:udmf_client",
   ]
   defines = []
   if (ability_runtime_enable) {
@@ -77,6 +76,10 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
   if (storage_service_enable) {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

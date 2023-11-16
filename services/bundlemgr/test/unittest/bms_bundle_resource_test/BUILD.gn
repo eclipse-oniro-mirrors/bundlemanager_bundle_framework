@@ -77,7 +77,6 @@ ohos_unittest("BmsBundleResourceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -163,6 +162,10 @@ ohos_unittest("BmsBundleResourceTest") {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
     external_deps += [ "ability_base:configuration" ]
     sources += bundle_resource
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

@@ -51,7 +51,6 @@ ohos_unittest("BmsEventHandlerTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -114,6 +113,10 @@ ohos_unittest("BmsEventHandlerTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsEventHandlerUnLockedTest") {
@@ -151,7 +154,6 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
     "kv_store:distributeddata_inner",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   if (bundle_framework_graphics) {
@@ -210,6 +212,10 @@ ohos_unittest("BmsEventHandlerUnLockedTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
