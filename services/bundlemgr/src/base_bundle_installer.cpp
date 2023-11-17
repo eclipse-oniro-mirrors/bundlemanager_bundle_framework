@@ -79,6 +79,7 @@ const std::string LOG = "log";
 const std::string HSP_VERSION_PREFIX = "v";
 const std::string PRE_INSTALL_HSP_PATH = "/shared_bundles/";
 const std::string APP_INSTALL_PATH = "/data/app/el1/bundle";
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 constexpr int32_t DATA_GROUP_DIR_MODE = 02770;
 
 #ifdef STORAGE_SERVICE_ENABLE
@@ -307,6 +308,7 @@ ErrCode BaseBundleInstaller::UninstallBundle(const std::string &bundleName, cons
 
 ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallParam &uninstallParam)
 {
+    APP_LOGD("begin to process cross-app bundle %{public}s uninstall", uninstallParam.bundleName.c_str());
     std::string bundleName = uninstallParam.bundleName;
     int32_t versionCode = uninstallParam.versionCode;
     if (bundleName.empty()) {
@@ -358,6 +360,7 @@ ErrCode BaseBundleInstaller::UninstallBundleByUninstallParam(const UninstallPara
 
 ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const std::string &bundleName)
 {
+    APP_LOGD("begin to process hsp bundle %{public}s uninstall", bundleName.c_str());
     // remove bundle dir first, then delete data in bundle data manager
     ErrCode errCode;
      // delete bundle bunlde in data
@@ -386,11 +389,14 @@ ErrCode BaseBundleInstaller::UninstallHspBundle(std::string &uninstallDir, const
         sysEventInfo_.preBundleScene,
         errCode);
     PerfProfile::GetInstance().SetBundleUninstallEndTime(GetTickCount());
+    /* remove sign profile from code signature for cross-app hsp */
+    RemoveProfileFromCodeSign(bundleName);
     return ERR_OK;
 }
 
 ErrCode BaseBundleInstaller::UninstallHspVersion(std::string &uninstallDir, int32_t versionCode, InnerBundleInfo &info)
 {
+    APP_LOGD("begin to process hsp bundle %{public}s uninstall", info.GetBundleName().c_str());
     // remove bundle dir first, then delete data in innerBundleInfo
     ErrCode errCode;
     if (!dataMgr_->UpdateBundleInstallState(info.GetBundleName(), InstallState::UNINSTALL_START)) {
@@ -920,6 +926,8 @@ ErrCode BaseBundleInstaller::ProcessBundleInstall(const std::vector<std::string>
     // check the dependencies whether or not exists
     result = CheckDependency(newInfos, sharedBundleInstaller);
     CHECK_RESULT(result, "check dependency failed %{public}d");
+    // hapVerifyResults at here will not be empty
+    verifyRes_ = hapVerifyResults[0];
     UpdateInstallerState(InstallerState::INSTALL_PARSED);                          // ---- 20%
 
     userId_ = GetConfirmUserId(userId_, newInfos);
@@ -1066,7 +1074,8 @@ void BaseBundleInstaller::RollBack(const std::unordered_map<std::string, InnerBu
         for (const auto &info : newInfos) {
             driverInstaller->RemoveDriverSoFile(info.second, "", false);
         }
-
+        // remove profile from code signature
+        RemoveProfileFromCodeSign(bundleName_);
         // remove innerBundleInfo
         RemoveInfo(bundleName_, "");
         return;
@@ -1315,6 +1324,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
         MarkPreInstallState(bundleName, true);
     }
     BundleResourceHelper::DeleteResourceInfo(bundleName);
+    // remove profile from code signature
+    RemoveProfileFromCodeSign(bundleName);
     return ERR_OK;
 }
 
@@ -1418,6 +1429,8 @@ ErrCode BaseBundleInstaller::ProcessBundleUninstall(
                 APP_LOGE("remove bundle failed");
                 return result;
             }
+            // remove profile from code signature
+            RemoveProfileFromCodeSign(bundleName);
 
             result = DeleteOldArkNativeFile(oldInfo);
             if (result != ERR_OK) {
@@ -1657,6 +1670,10 @@ ErrCode BaseBundleInstaller::ProcessBundleInstallStatus(InnerBundleInfo &info, i
         APP_LOGE("create bundle and data dir failed");
         return result;
     }
+
+    // delivery sign profile to code signature
+    result = DeliveryProfileToCodeSign();
+    CHECK_RESULT(result, "delivery profile failed %{public}d");
 
     ScopeGuard bundleGuard([&] { RemoveBundleAndDataDir(info, false); });
     std::string modulePath = info.GetAppCodePath() + Constants::PATH_SEPARATOR + modulePackage_;
@@ -2958,7 +2975,8 @@ ErrCode BaseBundleInstaller::ParseHapFiles(
     isContainEntry_ = bundleInstallChecker_->IsContainEntry();
     /* At this place, hapVerifyRes cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyRes[0]);
-    appIdentifier_ = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    appIdentifier_ = (hapVerifyRes[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     return ret;
 }
 
@@ -4009,7 +4027,8 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
         CHECK_RESULT(result, "fail to extract module dir, error is %{public}d");
         // verify hap or hsp code signature for compressed so files
         const std::string compileSdkType = info.GetBaseApplicationInfo().compileSdkType;
-        result = VerifyCodeSignatureForNativeFiles(compileSdkType, cpuAbi, targetSoPath, signatureFileDir);
+        result = VerifyCodeSignatureForNativeFiles(compileSdkType, cpuAbi, targetSoPath, signatureFileDir,
+            info.IsPreInstallApp());
         CHECK_RESULT(result, "fail to VerifyCodeSignature, error is %{public}d");
         // check whether the hap or hsp is encrypted
         result = CheckSoEncryption(info, cpuAbi, targetSoPath);
@@ -4026,11 +4045,16 @@ ErrCode BaseBundleInstaller::InnerProcessNativeLibs(InnerBundleInfo &info, const
 }
 
 ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType,
-    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir) const
+    const std::string &cpuAbi, const std::string &targetSoPath, const std::string &signatureFileDir,
+    bool isPreInstalledBundle) const
 {
     APP_LOGD("begin to verify code signature for native files");
     if (compileSdkType == COMPILE_SDK_TYPE_OPEN_HARMONY) {
         APP_LOGD("code signature is not supported");
+        return ERR_OK;
+    }
+    if (isPreInstalledBundle) {
+        APP_LOGD("code signature is not supported for pre-installed bundle");
         return ERR_OK;
     }
     CodeSignatureParam codeSignatureParam;
@@ -4482,6 +4506,30 @@ ErrCode BaseBundleInstaller::InstallEntryMoudleFirst(std::unordered_map<std::str
     }
     isEntryInstalled_ = true;
     return result;
+}
+
+ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
+{
+    APP_LOGD("start to delivery sign profile to code signature");
+    Security::Verify::ProvisionInfo provisionInfo = verifyRes_.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
+        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+            APP_LOGE("invalid sign profile");
+            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
+        }
+        return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
+            provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
+    }
+    return ERR_OK;
+}
+
+ErrCode BaseBundleInstaller::RemoveProfileFromCodeSign(const std::string &bundleName) const
+{
+    APP_LOGD("start to remove sign profile of bundle %{public}s from code signature", bundleName.c_str());
+    return InstalldClient::GetInstance()->RemoveSignProfile(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

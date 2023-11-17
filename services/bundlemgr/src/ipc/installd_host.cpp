@@ -97,6 +97,10 @@ void InstalldHost::Init()
         &InstalldHost::HandExtractEncryptedSoFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP),
         &InstalldHost::HandVerifyCodeSignatureForHap);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE),
+        &InstalldHost::HandDeliverySignProfile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE),
+        &InstalldHost::HandRemoveSignProfile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -517,6 +521,33 @@ bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessagePar
     bool isEnterpriseBundle = data.ReadBool();
 
     ErrCode result = VerifyCodeSignatureForHap(realHapPath, appIdentifier, isEnterpriseBundle);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t profileBlockLength = data.ReadInt32();
+    if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(data.ReadRawData(profileBlockLength));
+    if (profileBlock == nullptr) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = RemoveSignProfile(bundleName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

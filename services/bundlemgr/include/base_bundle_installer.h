@@ -620,9 +620,11 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir) const;
+        const std::string &targetSoPath, const std::string &signatureFileDir, bool isPreInstalledBundle) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::string &srcHapPath, const std::string &realHapPath) const;
+    ErrCode DeliveryProfileToCodeSign() const;
+    ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -672,6 +674,7 @@ private:
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_ = "";
+    Security::Verify::HapVerifyResult verifyRes_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
