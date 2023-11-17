@@ -78,7 +78,8 @@ enum class ExtensionAbilityType {
     SYSPICKER_SHARE = 401,
     SYSPICKER_MEETIMECONTACT = 402,
     SYSPICKER_MEETIMECALLLOG = 403,
-    SYS_COMMON_UI = 500
+    SYS_COMMON_UI = 500,
+    AUTO_FILL_PASSWORD = 501
 };
 
 enum class CompileMode {
