@@ -66,6 +66,7 @@ declare_args() {
   code_encryption_enable = true
   ecologic_rule_mgr_enabled = true
   verify_abc_enabled = true
+  udmf_enabled = true
 
   if (defined(global_parts_info) &&
       !defined(global_parts_info.ability_ability_runtime)) {
@@ -162,6 +163,10 @@ declare_args() {
   if (defined(global_parts_info) &&
       !defined(global_parts_info.arkcompiler_runtime_core)) {
     verify_abc_enabled = false
+  }
+  if (defined(global_parts_info) &&
+      !defined(global_parts_info.distributeddatamgr_udmf)) {
+    udmf_enabled = false
   }
 }
 

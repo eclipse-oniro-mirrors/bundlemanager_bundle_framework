@@ -247,7 +247,6 @@ ohos_shared_library("libbms") {
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
     "syscap_codec:syscap_interface_shared",
-    "udmf:udmf_client",
   ]
 
   if (bundle_framework_power_mgr_enable) {
@@ -386,6 +385,11 @@ ohos_shared_library("libbms") {
   if (verify_abc_enabled) {
     defines += [ "VERIFY_ABC_ENABLED" ]
     external_deps += [ "runtime_core:libarkverifier" ]
+  }
+
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 
   subsystem_name = "bundlemanager"
