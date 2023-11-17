@@ -1255,7 +1255,7 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100
  * @tc.desc: 1.SetDisposedStatus test
  *           2.GetDisposedStatus test
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundleSyetemAppFalseTest_8200, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8200, Function | SmallTest | Level1)
 {
     AppControlManagerHostImpl impl;
     DisposedRule rule;
