@@ -2001,7 +2001,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2800, Function | SmallTest 
     bool noSkipsKill = false;
 
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 }
 
 /**
@@ -2020,7 +2020,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
     bool noSkipsKill = false;
 
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 
     installer.modulePackage_ = MODULE_NAME;
     InnerModuleInfo moduleInfo;
