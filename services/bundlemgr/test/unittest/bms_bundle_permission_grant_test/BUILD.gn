@@ -162,7 +162,7 @@ ohos_unittest("BmsBundlePermissionDefListTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -466,7 +466,7 @@ ohos_unittest("BmsBundlePermissionFalseTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -620,7 +620,7 @@ ohos_unittest("BmsBundlePermissionStartFullTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -775,7 +775,7 @@ ohos_unittest("BmsBundlePermissionSyetemAppFalseTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -926,7 +926,7 @@ ohos_unittest("BmsBundlePermissionTokenTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -1076,7 +1076,7 @@ ohos_unittest("BmsBundlePermissionGetRequestTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

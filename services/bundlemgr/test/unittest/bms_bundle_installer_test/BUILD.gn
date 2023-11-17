@@ -177,7 +177,7 @@ ohos_unittest("BmsBundleInstallerTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -334,7 +334,7 @@ ohos_unittest("BmsBundleOtaUpdateTest") {
     "${services_path}/bundlemgr/src/rdb/rdb_data_manager.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -500,7 +500,7 @@ ohos_unittest("BmsMultipleBundleInstallerTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -639,7 +639,7 @@ ohos_unittest("BmsBundleInstallIpcTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -773,7 +773,7 @@ ohos_unittest("BmsBundleInstallCheckerTest") {
   }
   defines += [ "GET_BOOL_PARAMETER_TRUE" ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -907,7 +907,7 @@ ohos_unittest("BmsBundleInstallDeviceTypeTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -1045,7 +1045,7 @@ ohos_unittest("BmsSystemBundleInstallerTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -1213,7 +1213,7 @@ ohos_unittest("BmsBundleInstallDriverTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

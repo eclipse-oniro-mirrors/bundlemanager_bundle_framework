@@ -155,7 +155,7 @@ ohos_unittest("BmsBundleDataMgrTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -297,7 +297,7 @@ ohos_unittest("BmsBundleKitServiceTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -438,7 +438,7 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

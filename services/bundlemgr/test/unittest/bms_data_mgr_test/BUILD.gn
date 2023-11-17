@@ -136,7 +136,7 @@ ohos_unittest("BmsDataMgrTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -265,7 +265,7 @@ ohos_unittest("BmsExtensionDataMgrTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

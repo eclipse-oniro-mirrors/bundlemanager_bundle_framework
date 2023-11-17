@@ -147,7 +147,7 @@ ohos_unittest("BmsAbilityManagerHelperTest") {
   }
 
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

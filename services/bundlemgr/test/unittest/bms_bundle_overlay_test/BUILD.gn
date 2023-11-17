@@ -113,7 +113,7 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -291,7 +291,7 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -405,7 +405,7 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -521,7 +521,7 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -637,7 +637,7 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     external_deps += [ "c_utils:utils" ]
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

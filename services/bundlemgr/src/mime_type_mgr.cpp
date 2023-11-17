@@ -19,7 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
-#ifdef UDMF_ENABLED
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
 #include "type_descriptor.h"
 #include "utd_client.h"
 #endif
@@ -394,7 +394,7 @@ bool MimeTypeMgr::GetUriSuffix(const std::string &uri, std::string &suffix)
 
 bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantUtd)
 {
-#ifdef UDMF_ENABLED
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     APP_LOGD("skillUtd %{public}s, wantUtd %{public}s", skillUtd.c_str(), wantUtd.c_str());
     std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
 
@@ -416,7 +416,7 @@ bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantU
 
 bool MimeTypeMgr::MatchTypeWithUtd(const std::string &mimeType, const std::string &wantUtd)
 {
-#ifdef UDMF_ENABLED
+#ifdef BUNDLE_FRAMEWORK_UDMF_ENABLED
     APP_LOGD("mimeType %{public}s, wantUtd %{public}s", mimeType.c_str(), wantUtd.c_str());
     std::string typeUtd;
     auto ret = UDMF::UtdClient::GetInstance().GetUniformDataTypeByMIMEType(mimeType, typeUtd);

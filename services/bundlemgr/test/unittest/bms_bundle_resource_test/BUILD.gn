@@ -164,7 +164,7 @@ ohos_unittest("BmsBundleResourceTest") {
     sources += bundle_resource
   }
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }

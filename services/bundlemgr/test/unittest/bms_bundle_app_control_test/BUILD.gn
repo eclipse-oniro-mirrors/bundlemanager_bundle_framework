@@ -151,7 +151,7 @@ ohos_unittest("BmsBundleAppControlTest") {
     "${services_path}/bundlemgr/test/mock/src/bundle_data_storage_rdb.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
@@ -287,7 +287,7 @@ ohos_unittest("BmsBundleMockAppControlTest") {
     "${services_path}/bundlemgr/test/mock/src/mock_rdb_data_manager.cpp",
   ]
   if (udmf_enabled) {
-    defines += [ "UDMF_ENABLED" ]
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]
   }
 }
