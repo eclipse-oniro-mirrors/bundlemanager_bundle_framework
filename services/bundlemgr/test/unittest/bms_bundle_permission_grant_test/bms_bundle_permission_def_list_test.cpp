@@ -307,7 +307,7 @@ HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0800, Fu
  * @tc.desc: 1.SetDisposedStatus test
  *           2.GetDisposedStatus test
  */
-HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionDefListTest_0900, Function | SmallTest | Level1)
+HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0900, Function | SmallTest | Level1)
 {
     AppControlManagerHostImpl impl;
     DisposedRule rule;
