@@ -29,6 +29,7 @@ namespace {
 const std::string HSP_VERSION_PREFIX = "v";
 const int32_t MAX_FILE_NUMBER = 2;
 const std::string COMPILE_SDK_TYPE_OPEN_HARMONY = "OpenHarmony";
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 }
 
 InnerSharedBundleInstaller::InnerSharedBundleInstaller(const std::string &path)
@@ -104,7 +105,8 @@ ErrCode InnerSharedBundleInstaller::ParseFiles(const InstallCheckParam &checkPar
     // check enterprise bundle
     /* At this place, hapVerifyResults cannot be empty and unnecessary to check it */
     isEnterpriseBundle_ = bundleInstallChecker_->CheckEnterpriseBundle(hapVerifyResults[0]);
-    appIdentifier_ = hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
+    appIdentifier_ = (hapVerifyResults[0].GetProvisionInfo().type == Security::Verify::ProvisionType::DEBUG) ?
+        DEBUG_APP_IDENTIFIER : hapVerifyResults[0].GetProvisionInfo().bundleInfo.appIdentifier;
     compileSdkType_ = parsedBundles_.empty() ? COMPILE_SDK_TYPE_OPEN_HARMONY :
         (parsedBundles_.begin()->second).GetBaseApplicationInfo().compileSdkType;
     AddAppProvisionInfo(bundleName_, hapVerifyResults[0].GetProvisionInfo());
