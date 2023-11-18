@@ -150,8 +150,9 @@ declare_args() {
     code_encryption_enable = false
   }
 
-  if (defined(global_parts_info) &&
-      !defined(global_parts_info.bundlemanager_ecological_rule_manager)) {
+  if (defined(global_parts_info) && !defined(
+          global_parts_info.hmosbundlemanager_ecological_rule_manager_override) && !defined(
+          global_parts_info.bundlemanager_ecological_rule_manager)) {
     ecologic_rule_mgr_enabled = false
   }
 
