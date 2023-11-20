@@ -38,6 +38,7 @@ using namespace OHOS::Security;
 
 namespace OHOS {
 namespace {
+const std::string APPID = "appId";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
