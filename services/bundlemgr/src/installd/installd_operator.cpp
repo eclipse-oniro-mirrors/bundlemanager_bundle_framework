@@ -1087,6 +1087,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         return CheckHapEncryption(checkEncryptionParam, isEncryption);
     }
     const std::string cpuAbi = checkEncryptionParam.cpuAbi;
+    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
@@ -1110,7 +1111,6 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     }
 
 #if defined(CODE_ENCRYPTION_ENABLE)
-    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     Security::CodeSign::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
