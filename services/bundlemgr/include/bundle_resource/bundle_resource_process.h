@@ -64,6 +64,8 @@ private:
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo,  const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
 
+    static std::string systemResourceHap_;
+    static int32_t defaultIconId_;
 };
 } // AppExecFwk
 } // OHOS
