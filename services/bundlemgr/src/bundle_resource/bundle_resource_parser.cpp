@@ -18,9 +18,13 @@
 #include "app_log_wrapper.h"
 #include "bundle_resource_configuration.h"
 #include "bundle_system_state.h"
+#include "bundle_resource_drawable.h"
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string IMAGE_JSON = "data:image/json";
+}
 BundleResourceParser::BundleResourceParser()
 {
 }
@@ -199,6 +203,13 @@ bool BundleResourceParser::ParseIconResourceByResourceManager(
         APP_LOGE("GetMediaBase64DataById failed errcode: %{public}d, iconId:%{public}d",
             static_cast<int32_t>(ret), iconId);
         return false;
+    }
+    if (icon.substr(0, IMAGE_JSON.size()) == IMAGE_JSON) {
+        BundleResourceDrawable drawable;
+        if (!drawable.GetIconResourceByDrawable(iconId, 0, resourceManager, icon)) {
+            APP_LOGE("parse layered-image failed");
+            return false;
+        }
     }
     return true;
 }
