@@ -38,6 +38,7 @@ using namespace OHOS::Security;
 
 namespace OHOS {
 namespace {
+const std::string APPID = "appId";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
 }  // namespace
@@ -299,5 +300,22 @@ HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0800, Fu
     int32_t beginSystemApiVersion = 1;
     res = BundlePermissionMgr::VerifySystemApp(beginSystemApiVersion);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionDefListTest_0900
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0900, Function | SmallTest | Level1)
+{
+    AppControlManagerHostImpl impl;
+    DisposedRule rule;
+    ErrCode res = impl.SetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    res = impl.GetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS
