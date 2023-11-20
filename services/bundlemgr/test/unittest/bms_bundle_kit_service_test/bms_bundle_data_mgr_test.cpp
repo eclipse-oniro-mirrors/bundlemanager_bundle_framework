@@ -1303,7 +1303,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0300, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
@@ -1333,7 +1333,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0400, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);

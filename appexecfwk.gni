@@ -66,6 +66,7 @@ declare_args() {
   code_encryption_enable = true
   ecologic_rule_mgr_enabled = true
   verify_abc_enabled = true
+  check_eldir_enabled = false
   udmf_enabled = true
 
   if (defined(global_parts_info) &&
