@@ -2216,6 +2216,10 @@ bool BaseBundleInstaller::ExtractEncryptedSoFiles(const InnerBundleInfo &info,
     std::string cpuAbi = "";
     std::string nativeLibraryPath = "";
     bool isSoExisted = info.FetchNativeSoAttrs(info.GetCurrentModulePackage(), cpuAbi, nativeLibraryPath);
+    if (!isSoExisted) {
+        APP_LOGD("so is not existed");
+        return true;
+    }
     std::string realSoFilesPath;
     if (info.IsCompressNativeLibs(info.GetCurModuleName())) {
         realSoFilesPath.append(Constants::BUNDLE_CODE_DIR).append(Constants::PATH_SEPARATOR)
