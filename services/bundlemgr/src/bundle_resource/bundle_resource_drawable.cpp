@@ -29,6 +29,9 @@ bool BundleResourceDrawable::GetIconResourceByDrawable(
     std::string &icon)
 {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
+    if (resourceManager == nullptr) {
+        return false;
+    }
     OHOS::Ace::Napi::DrawableDescriptor::DrawableType drawableType;
     Global::Resource::RState state;
     auto drawableDescriptor = Ace::Napi::DrawableDescriptorFactory::Create(

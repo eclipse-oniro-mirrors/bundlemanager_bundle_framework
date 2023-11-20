@@ -25,6 +25,7 @@ namespace AppExecFwk {
 namespace {
 const std::string IMAGE_JSON = "data:image/json";
 }
+
 BundleResourceParser::BundleResourceParser()
 {
 }

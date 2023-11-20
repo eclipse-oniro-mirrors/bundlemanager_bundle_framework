@@ -28,6 +28,9 @@ public:
         std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
 
     static bool InitResourceGlobalConfig(std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
+
+private:
+    static void AddSystemResourceHap(std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
 };
 } // AppExecFwk
 } // OHOS
