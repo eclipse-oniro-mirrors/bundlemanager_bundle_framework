@@ -24,9 +24,6 @@
 #include "bundle_mgr_proxy_native.h"
 #include "ipc_skeleton.h"
 #include "securec.h"
-
-namespace OHOS {
-namespace AppExecFwk {
 namespace {
 const size_t CHAR_MAX_LENGTH = 10240;
 const int16_t API_ELEVEN = 11;
@@ -151,5 +148,3 @@ OH_NativeBundle_ApplicationInfo OH_NativeBundle_GetCurrentApplicationInfo()
     APP_LOGI("OH_NativeBundle_GetCurrentApplicationInfo success");
     return nativeApplicationInfo;
 }
-}  // namespace AppExecFwk
-}  // namespace OHOS
