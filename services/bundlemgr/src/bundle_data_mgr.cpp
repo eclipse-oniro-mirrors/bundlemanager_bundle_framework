@@ -5451,8 +5451,8 @@ ErrCode BundleDataMgr::GetJsonProfile(ProfileType profileType, const std::string
     return GetJsonProfileByExtractor(moduleInfo->hapPath, profilePath, profile);
 }
 
-ErrCode BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
-    std::string &profile) const
+ErrCode __attribute__((no_sanitize("cfi"))) BundleDataMgr::GetJsonProfileByExtractor(const std::string &hapPath,
+    const std::string &profilePath, std::string &profile) const
 {
     APP_LOGD("GetJsonProfileByExtractor called");
     BundleExtractor bundleExtractor(hapPath);
