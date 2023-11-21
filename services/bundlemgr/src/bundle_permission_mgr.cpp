@@ -418,39 +418,13 @@ bool BundlePermissionMgr::CheckPermissionAvailableType(
     return true;
 }
 
-bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
-    const std::vector<RequestPermission> &reqPermissions,
-    const InnerBundleInfo &innerBundleInfo)
+bool BundlePermissionMgr::InnerGrantRequestPermissions(
+    Security::AccessToken::AccessTokenID tokenId,
+    const InnerBundleInfo &innerBundleInfo,
+    std::vector<std::string> systemGrantPermList,
+    std::vector<std::string> userGrantPermList)
 {
     std::string bundleName = innerBundleInfo.GetBundleName();
-    APP_LOGD("InnerGrantRequestPermissions start, bundleName:%{public}s", bundleName.c_str());
-    std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
-    std::vector<std::string> acls = innerBundleInfo.GetAllowedAcls();
-    std::vector<std::string> systemGrantPermList;
-    std::vector<std::string> userGrantPermList;
-    for (const auto &reqPermission : reqPermissions) {
-        APP_LOGD("InnerGrantRequestPermissions add request permission %{public}s", reqPermission.name.c_str());
-        AccessToken::PermissionDef permDef;
-        int32_t ret = AccessToken::AccessTokenKit::GetDefPermission(reqPermission.name, permDef);
-        if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
-            APP_LOGE("get permission def failed, request permission name: %{public}s", reqPermission.name.c_str());
-            continue;
-        }
-        if (CheckGrantPermission(permDef, apl, acls)) {
-            if (permDef.grantMode == AccessToken::GrantMode::SYSTEM_GRANT) {
-                systemGrantPermList.emplace_back(reqPermission.name);
-            } else {
-                userGrantPermList.emplace_back(reqPermission.name);
-            }
-        } else {
-            return false;
-        }
-        if (!CheckPermissionAvailableType(innerBundleInfo.GetBaseApplicationInfo().appDistributionType, permDef)) {
-            APP_LOGE("CheckPermissionAvailableType failed, request permission name: %{public}s",
-                reqPermission.name.c_str());
-            return false;
-        }
-    }
     APP_LOGD("bundleName:%{public}s, add system_grant permission: %{public}zu, add user_grant permission: %{public}zu",
         bundleName.c_str(), systemGrantPermList.size(), userGrantPermList.size());
     for (const auto &perm : systemGrantPermList) {
@@ -490,25 +464,44 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::Ac
 bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
     const AccessToken::AccessTokenID tokenId)
 {
-    std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
-    return InnerGrantRequestPermissions(tokenId, reqPermissions, innerBundleInfo);
+    // check all request permission when first install
+    std::vector<std::string> systemGrantPermList;
+    std::vector<std::string> userGrantPermList;
+    if (!InnerFilterRequestPermissions(innerBundleInfo, systemGrantPermList, userGrantPermList)) {
+        APP_LOGE("filer permission failed");
+        return false;
+    }
+    return InnerGrantRequestPermissions(tokenId, innerBundleInfo, systemGrantPermList, userGrantPermList);
 }
 
 bool BundlePermissionMgr::GrantRequestPermissions(const InnerBundleInfo &innerBundleInfo,
     const std::vector<std::string> &requestPermName,
     const AccessToken::AccessTokenID tokenId)
 {
-    std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
-    std::vector<RequestPermission> newRequestPermissions;
-    for (const auto &name : requestPermName) {
-        auto iter = find_if(reqPermissions.begin(), reqPermissions.end(), [&name](const auto &req) {
-            return name == req.name;
-        });
-        if (iter != reqPermissions.end()) {
-            newRequestPermissions.emplace_back(*iter);
+    // check all request permission when update
+    std::vector<std::string> systemGrantPermList;
+    std::vector<std::string> userGrantPermList;
+    if (!InnerFilterRequestPermissions(innerBundleInfo, systemGrantPermList, userGrantPermList)) {
+        APP_LOGE("filer permission failed");
+        return false;
+    }
+    for (auto iter = systemGrantPermList.begin(); iter != systemGrantPermList.end();) {
+        if (find(requestPermName.begin(), requestPermName.end(), *iter) == requestPermName.end()) {
+            iter = systemGrantPermList.erase(iter);
+        } else {
+            ++iter;
         }
     }
-    return InnerGrantRequestPermissions(tokenId, newRequestPermissions, innerBundleInfo);
+
+    for (auto iter = userGrantPermList.begin(); iter != userGrantPermList.end();) {
+        if (find(requestPermName.begin(), requestPermName.end(), *iter) == requestPermName.end()) {
+            iter = userGrantPermList.erase(iter);
+        } else {
+            ++iter;
+        }
+    }
+
+    return InnerGrantRequestPermissions(tokenId, innerBundleInfo, systemGrantPermList, userGrantPermList);
 }
 
 bool BundlePermissionMgr::GetAllReqPermissionStateFull(AccessToken::AccessTokenID tokenId,
@@ -927,6 +920,41 @@ void BundlePermissionMgr::AddPermissionUsedRecord(
     if (tokenType == AccessToken::ATokenTypeEnum::TOKEN_HAP) {
         AccessToken::PrivacyKit::AddPermissionUsedRecord(callerToken, permission, successCount, failCount);
     }
+}
+
+bool BundlePermissionMgr::InnerFilterRequestPermissions(
+    const InnerBundleInfo &innerBundleInfo,
+    std::vector<std::string> &systemGrantPermList,
+    std::vector<std::string> &userGrantPermList)
+{
+    APP_LOGD("start, bundleName:%{public}s", innerBundleInfo.GetBundleName().c_str());
+    std::vector<RequestPermission> reqPermissions = innerBundleInfo.GetAllRequestPermissions();
+    std::string apl = innerBundleInfo.GetAppPrivilegeLevel();
+    std::vector<std::string> acls = innerBundleInfo.GetAllowedAcls();
+    for (const auto &reqPermission : reqPermissions) {
+        APP_LOGD("add request permission %{public}s", reqPermission.name.c_str());
+        AccessToken::PermissionDef permDef;
+        int32_t ret = AccessToken::AccessTokenKit::GetDefPermission(reqPermission.name, permDef);
+        if (ret != AccessToken::AccessTokenKitRet::RET_SUCCESS) {
+            APP_LOGE("get permission def failed, request permission name: %{public}s", reqPermission.name.c_str());
+            continue;
+        }
+        if (CheckGrantPermission(permDef, apl, acls)) {
+            if (permDef.grantMode == AccessToken::GrantMode::SYSTEM_GRANT) {
+                systemGrantPermList.emplace_back(reqPermission.name);
+            } else {
+                userGrantPermList.emplace_back(reqPermission.name);
+            }
+        } else {
+            return false;
+        }
+        if (!CheckPermissionAvailableType(innerBundleInfo.GetBaseApplicationInfo().appDistributionType, permDef)) {
+            APP_LOGE("CheckPermissionAvailableType failed, request permission name: %{public}s",
+                reqPermission.name.c_str());
+            return false;
+        }
+    }
+    return true;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS
