@@ -395,6 +395,10 @@ ohos_shared_library("libbms") {
     external_deps += [ "runtime_core:libarkverifier" ]
   }
 
+  if (check_eldir_enabled) {
+    defines += [ "CHECK_ELDIR_ENABLED" ]
+  }
+
   if (udmf_enabled) {
     defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
     external_deps += [ "udmf:udmf_client" ]

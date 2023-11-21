@@ -42,7 +42,7 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     if (action == EventFwk::CommonEventSupport::COMMON_EVENT_USER_UNLOCKED) {
         int32_t userId = data.GetCode();
         APP_LOGI("UserUnlockedEventSubscriber userId %{public}d is unlocked", userId);
-        std::thread updateDataDirThread(UpdateAppDataDirSelinuxLabel, userId);
+        std::thread updateDataDirThread(UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel, userId);
         updateDataDirThread.detach();
 #ifdef BUNDLE_FRAMEWORK_APP_CONTROL
         DelayedSingleton<AppControlManager>::GetInstance()->SetAppInstallControlStatus();
@@ -59,9 +59,10 @@ void UserUnlockedEventSubscriber::OnReceiveEvent(const EventFwk::CommonEventData
     }
 }
 
-bool UserUnlockedEventSubscriber::CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId)
+bool UpdateAppDataMgr::CreateBundleDataDir(
+    const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir)
 {
-    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
+    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
         Constants::PATH_SEPARATOR + std::to_string(userId) + Constants::BASE + bundleInfo.name;
     bool isExist = false;
     if (InstalldClient::GetInstance()->IsExistDir(baseBundleDataDir, isExist) != ERR_OK) {
@@ -87,7 +88,7 @@ bool UserUnlockedEventSubscriber::CreateBundleDataDir(const BundleInfo &bundleIn
     return true;
 }
 
-void UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
+void UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(int32_t userId)
 {
     APP_LOGD("UpdateAppDataDirSelinuxLabel userId:%{public}d", userId);
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
@@ -100,11 +101,22 @@ void UserUnlockedEventSubscriber::UpdateAppDataDirSelinuxLabel(int32_t userId)
         APP_LOGE("UpdateAppDataDirSelinuxLabel GetAllBundleInfos failed");
         return;
     }
-    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + Constants::BUNDLE_EL[1] +
-        Constants::PATH_SEPARATOR + std::to_string(userId);
 
+    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::BUNDLE_EL[1]);
+#ifdef CHECK_ELDIR_ENABLED
+    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL3);
+    ProcessUpdateAppDataDir(userId, bundleInfos, Constants::DIR_EL4);
+#endif
+}
+
+void UpdateAppDataMgr::ProcessUpdateAppDataDir(
+    int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir)
+{
+    std::string baseBundleDataDir = Constants::BUNDLE_APP_DATA_BASE_DIR + elDir +
+        Constants::PATH_SEPARATOR + std::to_string(userId);
     for (const auto &bundleInfo : bundleInfos) {
-        if (bundleInfo.singleton || !CreateBundleDataDir(bundleInfo, userId)) {
+        if ((userId != Constants::DEFAULT_USERID && bundleInfo.singleton) ||
+            !CreateBundleDataDir(bundleInfo, userId, elDir)) {
             continue;
         }
         std::string baseDir = baseBundleDataDir + Constants::BASE + bundleInfo.name;
