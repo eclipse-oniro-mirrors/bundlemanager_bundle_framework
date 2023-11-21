@@ -14,5 +14,5 @@
  */
 
 
-export default function testsuite(context) {
+export default function testsuite(context:Context) {
 }
