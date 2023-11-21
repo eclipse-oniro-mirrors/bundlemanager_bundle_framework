@@ -1253,15 +1253,26 @@ bool BundleDataMgr::MatchShare(const Want &want, const std::vector<Skill> &skill
     auto wantParams = want.GetParams();
     auto pickerSummary = wantParams.GetWantParams(WANT_PARAM_PICKER_SUMMARY);
     int32_t totalCount = pickerSummary.GetIntParam(SUMMARY_TOTAL_COUNT, DEFAULT_SUMMARY_COUNT);
-    if (totalCount == DEFAULT_SUMMARY_COUNT) {
+    if (totalCount <= DEFAULT_SUMMARY_COUNT) {
         APP_LOGW("Invalid total count");
     }
     auto shareSummary = pickerSummary.GetWantParams(WANT_PARAM_SUMMARY);
     auto utds = shareSummary.KeySet();
     for (const auto &utd : utds) {
         int32_t count = shareSummary.GetIntParam(utd, DEFAULT_SUMMARY_COUNT);
+        if (count <= DEFAULT_SUMMARY_COUNT) {
+            APP_LOGW("invalid utd count");
+            return false;
+        }
         bool match = false;
         for (const auto &skill : skills) {
+            auto &actions = skill.actions;
+            auto matchAction = std::find_if(std::begin(actions), std::end(actions), [](const auto &action) {
+                return SHARE_ACTION == action;
+            });
+            if (matchAction == actions.end()) {
+                continue;
+            }
             if (skill.MatchUtd(utd, count)) {
                 match = true;
                 break;

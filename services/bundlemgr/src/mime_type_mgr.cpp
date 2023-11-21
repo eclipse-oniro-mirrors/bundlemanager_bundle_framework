@@ -399,7 +399,7 @@ bool MimeTypeMgr::MatchUtd(const std::string &skillUtd, const std::string &wantU
     std::shared_ptr<UDMF::TypeDescriptor> wantTypeDescriptor;
 
     auto ret = UDMF::UtdClient::GetInstance().GetTypeDescriptor(wantUtd, wantTypeDescriptor);
-    if (ret != ERR_OK) {
+    if (ret != ERR_OK || wantTypeDescriptor == nullptr) {
         APP_LOGE("GetTypeDescriptor failed");
         return false;
     }
