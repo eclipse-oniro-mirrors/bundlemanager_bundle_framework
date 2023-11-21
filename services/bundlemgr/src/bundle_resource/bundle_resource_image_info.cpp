@@ -27,10 +27,11 @@ namespace OHOS {
 namespace AppExecFwk {
 #ifdef BUNDLE_FRAMEWORK_GRAPHICS
 namespace {
-constexpr int BIT_SIX = 6;
-constexpr int BIT_FOUR = 4;
-constexpr int BIT_TWO = 2;
-constexpr int LEN_THREE = 3;
+constexpr uint8_t BIT_SIX = 6;
+constexpr uint8_t BIT_FOUR = 4;
+constexpr uint8_t BIT_TWO = 2;
+constexpr uint8_t BIT_ONE = 1;
+constexpr int32_t LEN_THREE = 3;
 const std::vector<char> g_codes = {
     'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
     'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
@@ -95,10 +96,10 @@ bool BundleResourceImageInfo::EncodeBase64(
     std::string base64data = IMAGE_HEADER_INFO;
     int32_t i = 0;
     // encode in groups of every 3 bytes
-    for (int32_t i = 0; i < srcLen - 3; i += 3) {
+    for (int32_t i = 0; i < srcLen - LEN_THREE; i += LEN_THREE) {
         unsigned char byte1 = static_cast<unsigned char>(originalData[i]);
-        unsigned char byte2 = static_cast<unsigned char>(originalData[i + 1]);
-        unsigned char byte3 = static_cast<unsigned char>(originalData[i + 2]);
+        unsigned char byte2 = static_cast<unsigned char>(originalData[i + BIT_ONE]);
+        unsigned char byte3 = static_cast<unsigned char>(originalData[i + BIT_TWO]);
         base64data += g_codes[byte1 >> BIT_TWO];
         base64data += g_codes[((byte1 & 0x3) << BIT_FOUR) | (byte2 >> BIT_FOUR)];
         base64data += g_codes[((byte2 & 0xF) << BIT_TWO) | (byte3 >> BIT_SIX)];
@@ -113,7 +114,7 @@ bool BundleResourceImageInfo::EncodeBase64(
         base64data += '=';
     } else {
         unsigned char byte1 = static_cast<unsigned char>(originalData[i]);
-        unsigned char byte2 = static_cast<unsigned char>(originalData[i + 1]);
+        unsigned char byte2 = static_cast<unsigned char>(originalData[i + BIT_ONE]);
         base64data += g_codes[byte1 >> BIT_TWO];
         base64data += g_codes[((byte1 & 0x3) << BIT_FOUR) | (byte2 >> BIT_FOUR)];
         base64data += g_codes[(byte2 & 0xF) << BIT_TWO];

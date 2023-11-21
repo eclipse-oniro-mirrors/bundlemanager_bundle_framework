@@ -16,8 +16,8 @@
 #include "bundle_resource_configuration.h"
 
 #include "app_log_wrapper.h"
-#include "bundle_system_state.h"
 #include "bundle_resource_process.h"
+#include "bundle_system_state.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
 #include "locale_info.h"
