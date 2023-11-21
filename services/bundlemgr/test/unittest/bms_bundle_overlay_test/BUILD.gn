@@ -71,7 +71,6 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -112,6 +111,10 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -232,7 +235,6 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -287,6 +289,10 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -344,7 +350,6 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -398,6 +403,10 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -457,7 +466,6 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -511,6 +519,10 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -570,7 +582,6 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
 
@@ -624,6 +635,10 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

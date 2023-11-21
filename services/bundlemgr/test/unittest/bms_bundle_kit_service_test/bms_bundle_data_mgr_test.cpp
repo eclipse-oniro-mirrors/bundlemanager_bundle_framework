@@ -207,6 +207,7 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
+const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
 }  // namespace
 
 class BmsBundleDataMgrTest : public testing::Test {
@@ -1302,7 +1303,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0300, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
@@ -1332,7 +1333,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0400, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
@@ -3566,6 +3567,22 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
     auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
     bundleUserMgrHostImpl_->OnCreateNewUser(USERID);
+    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    ASSERT_NE(bundleInstaller, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
+ * @tc.number: BundleUserMgrHostImpl_0002
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest | Level1)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, DISALLOWLIST);
     bundleUserMgrHostImpl_->RemoveUser(USERID);
     ASSERT_NE(bundleInstaller, nullptr);
     DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;

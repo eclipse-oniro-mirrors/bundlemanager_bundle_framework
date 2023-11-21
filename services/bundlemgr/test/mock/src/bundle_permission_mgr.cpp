@@ -264,9 +264,11 @@ bool BundlePermissionMgr::GetNewPermissionStateFull(Security::AccessToken::Acces
     return true;
 }
 
-bool BundlePermissionMgr::InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
-    const std::vector<RequestPermission> &reqPermissions,
-    const InnerBundleInfo &innerBundleInfo)
+bool BundlePermissionMgr::InnerGrantRequestPermissions(
+    Security::AccessToken::AccessTokenID tokenId,
+    const InnerBundleInfo &innerBundleInfo,
+    std::vector<std::string> systemGrantPermList,
+    std::vector<std::string> userGrantPermList)
 {
     return true;
 }
@@ -335,6 +337,14 @@ bool BundlePermissionMgr::GrantPermission(const Security::AccessToken::AccessTok
 void BundlePermissionMgr::AddPermissionUsedRecord(
     const std::string &permission, int32_t successCount, int32_t failCount)
 {
+}
+
+bool BundlePermissionMgr::InnerFilterRequestPermissions(
+    const InnerBundleInfo &innerBundleInfo,
+    std::vector<std::string> &systemGrantPermList,
+    std::vector<std::string> &userGrantPermList)
+{
+    return true;
 }
 } // AppExecFwk
 } // OHOS

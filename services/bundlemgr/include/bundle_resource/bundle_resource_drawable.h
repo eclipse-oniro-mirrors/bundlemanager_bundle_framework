@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CONFIGURATION_H
-#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CONFIGURATION_H
+#ifndef FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_DRAWABLE_H
+#define FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_DRAWABLE_H
 
 #include <string>
 
@@ -22,16 +22,14 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class BundleResourceConfiguration {
+class BundleResourceDrawable {
 public:
-    static bool InitResourceGlobalConfig(const std::string &hapPath,
-        std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
-
-    static bool InitResourceGlobalConfig(std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
-
-private:
-    static void AddSystemResourceHap(std::shared_ptr<Global::Resource::ResourceManager> resourceManager);
+    bool GetIconResourceByDrawable(
+        const uint32_t iconId,
+        const int32_t density,
+        std::shared_ptr<Global::Resource::ResourceManager> resourceManager,
+        std::string &icon);
 };
 } // AppExecFwk
 } // OHOS
-#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_CONFIGURATION_H
+#endif // FOUNDATION_BUNDLEMANAGER_BUNDLE_FRAMEWORK_SERVICES_BUNDLEMGR_BUNDLE_RESOURCE_DRAWABLE_H

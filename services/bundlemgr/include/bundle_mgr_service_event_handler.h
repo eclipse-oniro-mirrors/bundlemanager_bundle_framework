@@ -36,6 +36,10 @@ enum class ResultCode {
     SYSTEM_ERROR,
 };
 
+enum OTAFlag {
+    CHECK_ELDIR = 0x00000001,
+};
+
 enum class ScanResultCode {
     SCAN_HAS_DATA_PARSE_SUCCESS,
     SCAN_HAS_DATA_PARSE_FAILED,
@@ -442,6 +446,10 @@ private:
     bool IsHotPatchApp(const std::string &bundleName);
 
     void ProcessRebootQuickFixBundleInstall(const std::string &path, bool isOta);
+    bool CheckOtaFlag(OTAFlag flag, bool &result);
+    bool UpdateOtaFlag(OTAFlag flag);
+    void ProcessCheckAppDataDir();
+    void InnerProcessCheckAppDataDir();
 
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();

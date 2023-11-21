@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -24,6 +24,8 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr int DISALLOWLISTMAXSIZE = 1000;
+
 BundleUserMgrProxy::BundleUserMgrProxy(const sptr<IRemoteObject> &object)
     : IRemoteProxy<IBundleUserMgr>(object)
 {
@@ -35,7 +37,7 @@ BundleUserMgrProxy::~BundleUserMgrProxy()
     APP_LOGD("destroy BundleUserMgrProxy instance");
 }
 
-ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     APP_LOGD("CreateNewUser %{public}d", userId);
     MessageParcel data;
@@ -46,6 +48,18 @@ ErrCode BundleUserMgrProxy::CreateNewUser(int32_t userId)
     if (!data.WriteInt32(static_cast<int32_t>(userId))) {
         APP_LOGE("fail to CreateNewUser due to write uid fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    int32_t disallowListMatchSize =
+        (disallowList.size() > DISALLOWLISTMAXSIZE) ? DISALLOWLISTMAXSIZE : disallowList.size();
+    if (!data.WriteInt32(disallowListMatchSize)) {
+        APP_LOGE("Write BundleNameListVector failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    for (int32_t index = 0; index < disallowListMatchSize; ++index) {
+        if (!data.WriteString(disallowList.at(index))) {
+            APP_LOGE("Write BundleNameListVector failed");
+            return ERR_APPEXECFWK_PARCEL_ERROR;
+        }
     }
 
     MessageParcel reply;

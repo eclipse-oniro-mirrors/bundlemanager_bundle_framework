@@ -143,10 +143,10 @@ void BmsBundleQuickFixDeleterTest::CheckResult(const sptr<MockQuickFixCallback> 
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0100, Function | SmallTest | Level0)
 {
-    QuickFixManagerHostImpl quickFixHost;
+    auto quickFixHost = std::make_shared<QuickFixManagerHostImpl>();
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost.DeleteQuickFix("", callback);
+    ErrCode result = quickFixHost->DeleteQuickFix("", callback);
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
@@ -159,8 +159,8 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0100, Functi
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0200, Function | SmallTest | Level0)
 {
-    QuickFixManagerHostImpl quickFixHost;
-    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, nullptr);
+    auto quickFixHost = std::make_shared<QuickFixManagerHostImpl>();
+    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, nullptr);
     EXPECT_EQ(result, ERR_BUNDLEMANAGER_QUICK_FIX_PARAM_ERROR);
 }
 
@@ -173,10 +173,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0200, Functi
  */
 HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0300, Function | SmallTest | Level0)
 {
-    QuickFixManagerHostImpl quickFixHost;
+    auto quickFixHost = std::make_shared<QuickFixManagerHostImpl>();
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }
@@ -193,10 +193,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0400, Functi
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::DEPLOY_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    QuickFixManagerHostImpl quickFixHost;
+    auto quickFixHost = std::make_shared<QuickFixManagerHostImpl>();
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }
@@ -213,10 +213,10 @@ HWTEST_F(BmsBundleQuickFixDeleterTest, BmsBundleQuickFixDeleterTest_0500, Functi
     InnerAppQuickFix innerAppQuickFix = GenerateAppQuickFixInfo(BUNDLE_NAME, QuickFixStatus::SWITCH_END);
     AddInnerAppQuickFix(innerAppQuickFix);
 
-    QuickFixManagerHostImpl quickFixHost;
+    auto quickFixHost = std::make_shared<QuickFixManagerHostImpl>();
     sptr<MockQuickFixCallback> callback = new (std::nothrow) MockQuickFixCallback();
     EXPECT_NE(callback, nullptr) << "the callback is nullptr";
-    ErrCode result = quickFixHost.DeleteQuickFix(BUNDLE_NAME, callback);
+    ErrCode result = quickFixHost->DeleteQuickFix(BUNDLE_NAME, callback);
     EXPECT_EQ(result, ERR_OK);
     CheckResult(callback, BUNDLE_NAME, ERR_OK);
 }

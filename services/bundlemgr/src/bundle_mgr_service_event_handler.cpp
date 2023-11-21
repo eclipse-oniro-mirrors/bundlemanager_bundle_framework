@@ -86,6 +86,7 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 const std::string HSP_VERSION_PREFIX = "v";
+const std::string OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
@@ -293,6 +294,9 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 void BMSEventHandler::BundleBootStartEvent()
 {
     OnBundleBootStart(Constants::DEFAULT_USERID);
+#ifdef CHECK_ELDIR_ENABLED
+    UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
+#endif
     PerfProfile::GetInstance().Dump();
 }
 
@@ -994,6 +998,93 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessBundleResourceInfo();
+#ifdef CHECK_ELDIR_ENABLED
+    ProcessCheckAppDataDir();
+#endif
+}
+
+bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+
+    std::string val;
+    if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
+        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        return false;
+    }
+
+    int32_t valInt = 0;
+    if (!StrToInt(val, valInt)) {
+        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        return false;
+    }
+
+    result = static_cast<int32_t>(flag) & valInt;
+    return true;
+}
+
+bool BMSEventHandler::UpdateOtaFlag(OTAFlag flag)
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+
+    std::string val;
+    if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
+        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
+    }
+
+    int32_t valInt = 0;
+    if (!StrToInt(val, valInt)) {
+        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
+    }
+
+    return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(static_cast<int32_t>(flag) | valInt));
+}
+
+void BMSEventHandler::ProcessCheckAppDataDir()
+{
+    bool checkElDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkElDir);
+    if (checkElDir) {
+        APP_LOGI("Not need to check data dir due to has checked.");
+        return;
+    }
+
+    APP_LOGI("Need to check data dir.");
+    InnerProcessCheckAppDataDir();
+    UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
+}
+
+void BMSEventHandler::InnerProcessCheckAppDataDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            continue;
+        }
+
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(
+            userId, bundleInfos, Constants::DIR_EL3);
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(
+            userId, bundleInfos, Constants::DIR_EL4);
+    }
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()

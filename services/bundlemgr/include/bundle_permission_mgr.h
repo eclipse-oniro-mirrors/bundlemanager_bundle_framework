@@ -135,8 +135,9 @@ private:
         std::vector<std::string> &newRequestPermName);
 
     static bool InnerGrantRequestPermissions(Security::AccessToken::AccessTokenID tokenId,
-        const std::vector<RequestPermission> &reqPermissions,
-        const InnerBundleInfo &innerBundleInfo);
+        const InnerBundleInfo &innerBundleInfo,
+        std::vector<std::string> systemGrantPermList,
+        std::vector<std::string> userGrantPermList);
 
     static Security::AccessToken::ATokenAplEnum GetTokenApl(const std::string &apl);
 
@@ -179,6 +180,11 @@ private:
         const InnerBundleInfo &newInfo,
         std::vector<Security::AccessToken::PermissionStateFull> &newPermissionStateList,
         std::vector<std::string> &newRequestPermName);
+
+    static bool InnerFilterRequestPermissions(
+        const InnerBundleInfo &innerBundleInfo,
+        std::vector<std::string> &systemGrantPermList,
+        std::vector<std::string> &userGrantPermList);
 
     static bool CheckPermissionAvailableType(const std::string &appDistributionType,
         const Security::AccessToken::PermissionDef &permDef);

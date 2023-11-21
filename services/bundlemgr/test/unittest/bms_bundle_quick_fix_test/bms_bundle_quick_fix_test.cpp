@@ -116,7 +116,7 @@ private:
     std::shared_ptr<QuickFixDeployer> deployer_ = nullptr;
     std::shared_ptr<QuickFixDeleter> deleter_ = nullptr;
     std::shared_ptr<QuickFixSwitcher> switcher_ = nullptr;
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    static std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_;
 };
 
 std::shared_ptr<BundleMgrService> BmsBundleQuickFixTest::bundleMgrService_ =
@@ -124,6 +124,9 @@ std::shared_ptr<BundleMgrService> BmsBundleQuickFixTest::bundleMgrService_ =
 
 std::shared_ptr<InstalldService> BmsBundleQuickFixTest::installdService_ =
     std::make_shared<InstalldService>();
+
+std::shared_ptr<QuickFixDataMgr> BmsBundleQuickFixTest::quickFixDataMgr_ =
+    DelayedSingleton<QuickFixDataMgr>::GetInstance();
 
 BmsBundleQuickFixTest::BmsBundleQuickFixTest()
 {}

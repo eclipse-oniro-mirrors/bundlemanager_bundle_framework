@@ -90,8 +90,8 @@ bool BmsEventHandlerTest::CreateBundleDataDir(const BundleInfo &bundleInfo, int3
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(userId);
-    return subscriberPtr->CreateBundleDataDir(bundleInfo, userId);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(userId);
+    return UpdateAppDataMgr::CreateBundleDataDir(bundleInfo, userId, Constants::DIR_EL2);
 }
 
 /**

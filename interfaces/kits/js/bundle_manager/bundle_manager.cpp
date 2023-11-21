@@ -3346,6 +3346,14 @@ void CreateProfileTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
 }
 
+void CreateApplicationReservedFlagObject(napi_env env, napi_value value)
+{
+    napi_value nEncryptedApplication;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION), &nEncryptedApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENCRYPTED_APPLICATION", nEncryptedApplication));
+}
+
 ErrCode InnerGetAppProvisionInfo(
     const std::string &bundleName, int32_t userId, AppProvisionInfo &appProvisionInfo)
 {

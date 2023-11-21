@@ -77,7 +77,6 @@ ohos_unittest("BmsBundleResourceTest") {
     "init:libbegetutil",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
-    "udmf:udmf_client",
   ]
   external_deps += bundle_install_external_deps
   defines = []
@@ -162,7 +161,18 @@ ohos_unittest("BmsBundleResourceTest") {
   if (bundle_framework_bundle_resource) {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
     external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
     sources += bundle_resource
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

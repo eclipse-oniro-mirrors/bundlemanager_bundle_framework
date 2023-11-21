@@ -78,6 +78,8 @@ public:
      */
     void SendBundleSystemEvent(const EventInfo &eventTemplate) const;
 
+    ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
+
 private:
     ErrCode CheckAppLabelInfo();
     ErrCode CheckBundleTypeWithInstalledVersion();

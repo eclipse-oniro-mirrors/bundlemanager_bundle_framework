@@ -64,10 +64,8 @@ public:
     void CheckOverlayBundleInfo(const OverlayBundleInfo &info);
 
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
-    const std::shared_ptr<OverlayManagerHostImpl> GetBundleOverlayHostImpl() const;
 
 private:
-    std::shared_ptr<OverlayManagerHostImpl> overlayHostImpl_ = std::make_shared<OverlayManagerHostImpl>();
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
@@ -222,11 +220,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundleGetOverlayModuleInfoTest::GetBundl
     return bundleMgrService_->GetDataMgr();
 }
 
-const std::shared_ptr<OverlayManagerHostImpl> BmsBundleGetOverlayModuleInfoTest::GetBundleOverlayHostImpl() const
-{
-    return overlayHostImpl_;
-}
-
 /**
  * @tc.number: GetOverlayModuleInfoTest_0100
  * @tc.name: test GetAllOverlayModuleInfo interface in OverlayManagerHostImpl.
@@ -237,7 +230,7 @@ const std::shared_ptr<OverlayManagerHostImpl> BmsBundleGetOverlayModuleInfoTest:
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0100, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> vec;
@@ -255,7 +248,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0100, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0200, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -276,7 +269,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0200, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0300, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddNonOverlayInnerBundleInfo();
@@ -297,7 +290,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0300, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0400, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -321,7 +314,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0400, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0500, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
@@ -339,7 +332,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0500, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0600, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -360,7 +353,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0600, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0700, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddNonOverlayInnerBundleInfo();
@@ -381,7 +374,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0700, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0800, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -402,7 +395,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0800, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0900, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -423,7 +416,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_0900, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1000, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -444,7 +437,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1000, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1100, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -467,7 +460,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1100, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1200, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayBundleInfo> overlayBundleInfo;
@@ -485,7 +478,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1200, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1300, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayBundleInfo();
@@ -506,7 +499,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1300, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1400, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayBundleInfo();
@@ -530,7 +523,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1400, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1500, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddNonOverlayInnerBundleInfo();
@@ -552,7 +545,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1500, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1600, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfo;
@@ -570,7 +563,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1600, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1700, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_EXTERNAL_BUNDLE);
@@ -591,7 +584,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1700, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1800, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -613,7 +606,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1800, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1900, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -635,7 +628,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_1900, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2000, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -656,7 +649,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2000, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2100, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -679,7 +672,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2100, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2200, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     AddOverlayInnerBundleInfo(OverlayType::OVERLAY_INTERNAL_BUNDLE);
@@ -702,7 +695,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2200, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2300, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
@@ -718,7 +711,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2300, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2400, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     OverlayModuleInfo overlayModuleInfo;
@@ -737,7 +730,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2400, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2500, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     std::vector<OverlayModuleInfo> overlayModuleInfos;
@@ -753,7 +746,7 @@ HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2500, Funct
 HWTEST_F(BmsBundleGetOverlayModuleInfoTest, GetOverlayModuleInfoTest_2600, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     auto res = hostImpl->SetOverlayEnabledForSelf(TARGET_MODULE_NAME, false, UNSPECIFIED_USERID);

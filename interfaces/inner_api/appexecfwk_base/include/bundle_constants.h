@@ -53,7 +53,11 @@ constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
-const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
+constexpr const char* DIR_EL1 = "el1";
+constexpr const char* DIR_EL2 = "el2";
+constexpr const char* DIR_EL3 = "el3";
+constexpr const char* DIR_EL4 = "el4";
+const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2};
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -233,6 +237,7 @@ const int32_t BUNDLE_RDB_VERSION = 1;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
+constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 
 // file size
 constexpr int32_t INVALID_FILE_SIZE = -1;

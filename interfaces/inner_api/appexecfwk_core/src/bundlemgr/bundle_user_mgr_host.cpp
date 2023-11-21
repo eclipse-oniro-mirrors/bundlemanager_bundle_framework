@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #include "bundle_user_mgr_host.h"
 
 #include "appexecfwk_errors.h"
@@ -23,6 +22,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+constexpr int32_t DISALLOWLISTMAXSIZE = 1000;
 BundleUserMgrHost::BundleUserMgrHost()
 {
     APP_LOGD("create BundleUserMgrHost instance");
@@ -64,7 +64,17 @@ int BundleUserMgrHost::OnRemoteRequest(
 
 ErrCode BundleUserMgrHost::HandleCreateNewUser(Parcel &data, Parcel &reply)
 {
-    auto ret = CreateNewUser(data.ReadInt32());
+    const int32_t userId = data.ReadInt32();
+    const int32_t vectorSize = data.ReadInt32();
+    if (vectorSize > DISALLOWLISTMAXSIZE) {
+        APP_LOGE("Abnormal data size reading form parcel, size is %{public}d", vectorSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    std::vector<std::string> disallowList;
+    for (int32_t i = 0; i < vectorSize; i++) {
+        disallowList.emplace_back(data.ReadString());
+    }
+    auto ret = CreateNewUser(userId, disallowList);
     if (!reply.WriteInt32(ret)) {
         APP_LOGE("write failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;

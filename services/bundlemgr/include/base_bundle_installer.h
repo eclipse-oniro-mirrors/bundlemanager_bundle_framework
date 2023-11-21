@@ -517,6 +517,7 @@ private:
     void SaveHapPathToRecords(
         bool isPreInstallApp, const std::unordered_map<std::string, InnerBundleInfo> &infos);
     void OnSingletonChange(bool noSkipsKill);
+    bool AllowSingletonChange(const std::string &bundleName);
     void MarkPreInstallState(const std::string &bundleName, bool isUninstalled);
     ErrCode UninstallAllSandboxApps(const std::string &bundleName, int32_t userId = Constants::INVALID_USERID);
     ErrCode CheckAppLabel(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
@@ -554,7 +555,7 @@ private:
     ErrCode DeleteArkProfile(const std::string &bundleName, int32_t userId) const;
     ErrCode ExtractArkProfileFile(const std::string &modulePath, const std::string &bundleName,
         int32_t userId) const;
-    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo) const;
+    ErrCode ExtractAllArkProfileFile(const InnerBundleInfo &oldInfo, bool checkRepeat = false) const;
     ErrCode CopyPgoFileToArkProfileDir(const std::string &moduleName, const std::string &modulePath,
         const std::string &bundleName, int32_t userId) const;
     ErrCode CopyPgoFile(const std::string &moduleName, const std::string &pgoPath,
@@ -620,9 +621,11 @@ private:
         const std::unordered_map<std::string, InnerBundleInfo> &newInfos);
     bool ExtractEncryptedSoFiles(const InnerBundleInfo &info, const std::string &tmpSoPath, int32_t uid) const;
     ErrCode VerifyCodeSignatureForNativeFiles(const std::string &compileSdkType, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir) const;
+        const std::string &targetSoPath, const std::string &signatureFileDir, bool isPreInstalledBundle) const;
     ErrCode VerifyCodeSignatureForHap(const std::unordered_map<std::string, InnerBundleInfo> &infos,
     const std::string &srcHapPath, const std::string &realHapPath) const;
+    ErrCode DeliveryProfileToCodeSign() const;
+    ErrCode RemoveProfileFromCodeSign(const std::string &bundleName) const;
 
     InstallerState state_ = InstallerState::INSTALL_START;
     std::shared_ptr<BundleDataMgr> dataMgr_ = nullptr;  // this pointer will get when public functions called
@@ -672,6 +675,7 @@ private:
     std::map<std::string, std::string> pgoParams_;
     bool isEnterpriseBundle_ = false;
     std::string appIdentifier_ = "";
+    Security::Verify::HapVerifyResult verifyRes_;
 
     DISALLOW_COPY_AND_MOVE(BaseBundleInstaller);
 
