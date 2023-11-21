@@ -16,6 +16,7 @@
 #include "bundle_resource_configuration.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_resource_process.h"
 #include "bundle_system_state.h"
 #ifdef GLOBAL_I18_ENABLE
 #include "locale_config.h"
@@ -32,6 +33,8 @@ static const std::unordered_map<std::string, Global::Resource::ColorMode> BUNDLE
     {RESOURCE_LIGHT, Global::Resource::ColorMode::LIGHT},
     {RESOURCE_DARK, Global::Resource::ColorMode::DARK},
 };
+const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1 = "/system/app/ohos.global.systemres/SystemResources.hap";
+const std::string GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2 = "/system/app/SystemResources/SystemResources.hap";
 
 Global::Resource::ColorMode ConvertColorMode(const std::string &colorMode)
 {
@@ -60,6 +63,7 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
         APP_LOGE("AddResource failed, hapPath: %{private}s", hapPath.c_str());
         return false;
     }
+    AddSystemResourceHap(resourceManager);
     std::unique_ptr<Global::Resource::ResConfig> resConfig(Global::Resource::CreateResConfig());
     if (resConfig == nullptr) {
         APP_LOGE("resConfig is nullptr");
@@ -80,6 +84,28 @@ bool BundleResourceConfiguration::InitResourceGlobalConfig(
         return false;
     }
     return true;
+}
+
+void BundleResourceConfiguration::AddSystemResourceHap(
+    std::shared_ptr<Global::Resource::ResourceManager> resourceManager)
+{
+    if (resourceManager == nullptr) {
+        APP_LOGE("resourceManager is nullptr");
+        return;
+    }
+    int32_t id = 0;
+    std::string systemResourcePath;
+    if (BundleResourceProcess::GetDefaultIconResource(id, systemResourcePath)) {
+        if (resourceManager->AddResource(systemResourcePath.c_str())) {
+            return;
+        }
+    }
+    APP_LOGD("get failed, add default hap");
+    if (resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_1.c_str()) ||
+        resourceManager->AddResource(GLOBAL_SYSTEM_RESOURCE_HAP_PATH_2.c_str())) {
+        return;
+    }
+    APP_LOGE("add system resource failed");
 }
 } // AppExecFwk
 } // OHOS

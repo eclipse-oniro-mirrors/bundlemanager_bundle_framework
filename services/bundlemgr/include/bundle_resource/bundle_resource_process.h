@@ -49,6 +49,8 @@ public:
     static bool GetResourceInfoByColorModeChanged(const std::vector<std::string> &resourceNames,
         std::vector<ResourceInfo> &resourceInfos);
 
+    static bool GetDefaultIconResource(int32_t &iconId, std::string &hapPath);
+
 private:
     static bool IsBundleExist(const InnerBundleInfo &innerBundleInfo, const int32_t userId);
 
@@ -62,7 +64,8 @@ private:
     static bool InnerGetResourceInfo(const InnerBundleInfo &innerBundleInfo,  const int32_t userId,
         std::vector<ResourceInfo> &resourceInfos);
 
-    static bool GetDefaultIconResource(int32_t &iconId, std::string &hapPath);
+    static std::string systemResourceHap_;
+    static int32_t defaultIconId_;
 };
 } // AppExecFwk
 } // OHOS
