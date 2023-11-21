@@ -198,7 +198,7 @@ bool VerifyManagerHostImpl::MoveAbc(const std::vector<std::string> &abcPaths,
             return false;
         }
 
-        auto result = InstalldClient::GetInstance()->MoveFile(abcPaths[i], targetPath);
+        result = InstalldClient::GetInstance()->MoveFile(abcPaths[i], targetPath);
         if (result != ERR_OK) {
             APP_LOGE("move file to real path failed %{public}d", result);
             Rollback(hasMovePaths);
