@@ -40,7 +40,6 @@ enum class NotifyType {
     OVERLAY_STATE_CHANGED,
     DISPOSED_RULE_ADDED,
     DISPOSED_RULE_DELETED,
-    BUNDLE_RESOURCES_UPDATE,
 };
 
 enum class SandboxInstallType : uint32_t {
@@ -74,7 +73,7 @@ public:
         int32_t userId, int32_t uid);
     void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data);
     void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId);
-    void NotifyBundleResourcesUpdate(int32_t userId);
+    void NotifyBundleResourcesChanged(int32_t userId);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);

@@ -32,6 +32,7 @@ constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
+const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -55,7 +56,6 @@ void BundleCommonEventMgr::Init()
         { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
         { NotifyType::DISPOSED_RULE_ADDED, DISPOSED_RULE_ADDED},
         { NotifyType::DISPOSED_RULE_DELETED, DISPOSED_RULE_DELETED},
-        { NotifyType::BUNDLE_RESOURCES_UPDATE, BUNDLE_RESOURCES_UPDATE},
     };
 }
 
@@ -204,10 +204,10 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
 
-void BundleCommonEventMgr::NotifyBundleResourcesUpdate(int32_t userId)
+void BundleCommonEventMgr::NotifyBundleResourcesChanged(int32_t userId)
 {
     OHOS::AAFwk::Want want;
-    want.SetAction(BUNDLE_RESOURCES_UPDATE);
+    want.SetAction(BUNDLE_RESOURCES_CHANGED);
     want.SetParam(Constants::USER_ID, userId);
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
