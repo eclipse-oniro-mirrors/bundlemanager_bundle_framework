@@ -89,6 +89,8 @@ private:
 
     uint32_t CheckResourceFlags(const uint32_t flags);
 
+    void SendBundleResourcesUpdateEvent(int32_t userId);
+
     std::shared_ptr<BundleResourceRdb> bundleResourceRdb_;
 };
 } // AppExecFwk

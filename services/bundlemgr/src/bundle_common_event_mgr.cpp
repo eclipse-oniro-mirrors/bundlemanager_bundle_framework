@@ -55,6 +55,7 @@ void BundleCommonEventMgr::Init()
         { NotifyType::OVERLAY_UPDATE, OVERLAY_CHANGED_ACTION},
         { NotifyType::DISPOSED_RULE_ADDED, DISPOSED_RULE_ADDED},
         { NotifyType::DISPOSED_RULE_DELETED, DISPOSED_RULE_DELETED},
+        { NotifyType::BUNDLE_RESOURCES_UPDATE, BUNDLE_RESOURCES_UPDATE},
     };
 }
 
@@ -199,6 +200,18 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+}
+
+void BundleCommonEventMgr::NotifyBundleResourcesUpdate(int32_t userId)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(BUNDLE_RESOURCES_UPDATE);
+    want.SetParam(Constants::USER_ID, userId);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::PERMISSION_GET_BUNDLE_RESOURCES };
     publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }
