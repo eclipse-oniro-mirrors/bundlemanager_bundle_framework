@@ -1087,7 +1087,6 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         return CheckHapEncryption(checkEncryptionParam, isEncryption);
     }
     const std::string cpuAbi = checkEncryptionParam.cpuAbi;
-    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
@@ -1111,6 +1110,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     }
 
 #if defined(CODE_ENCRYPTION_ENABLE)
+    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     Security::CodeSign::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
@@ -1513,7 +1513,12 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     }
 
     /* mmap hap or so file to ram */
-    auto fd = open(filePath.c_str(), O_RDONLY);
+    std::string newfilePath;
+    if (!PathToRealPath(filePath, newfilePath)) {
+        APP_LOGE("file is not real path, file path: %{private}s", filePath.c_str());
+        return result;
+    }
+    auto fd = open(newfilePath.c_str(), O_RDONLY);
     if (fd < 0) {
         APP_LOGE("open hap failed");
         close(dev_fd);
@@ -1583,12 +1588,17 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
 
 int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd)
 {
-    int32_t installdUid = getuid();
+    int32_t installdUid = static_cast<int32_t>(getuid());
     int32_t bundleUid = uid;
     APP_LOGD("current process uid is %{public}d and bundle uid is %{public}d", installdUid, bundleUid);
 
     /* open CODE_DECRYPT */
-    fd = open(CODE_DECRYPT.c_str(), O_RDONLY);
+    std::string newCodeDecrypt;
+    if (!PathToRealPath(CODE_DECRYPT, newCodeDecrypt)) {
+        APP_LOGE("file is not real path, file path: %{private}s", CODE_DECRYPT.c_str());
+        return INVALID_RETURN_VALUE;
+    }
+    fd = open(newCodeDecrypt.c_str(), O_RDONLY);
     if (fd < 0) {
         APP_LOGE("call open failed");
         return INVALID_RETURN_VALUE;
