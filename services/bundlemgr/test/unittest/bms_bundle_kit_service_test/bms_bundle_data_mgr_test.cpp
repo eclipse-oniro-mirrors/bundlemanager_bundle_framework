@@ -3870,4 +3870,57 @@ HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0300, Function | SmallTest | Leve
     EXPECT_FALSE(res);
     MockUninstallBundle(BUNDLE_NAME_TEST);
 }
+
+/**
+ * @tc.number: SetAdditionalInfo_0100
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo bundleName does not exist.
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    GetBundleDataMgr()->bundleInfos_.clear();
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0200
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo bundleName does not exist in current userId.
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.innerBundleUserInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0300
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    innerBundleInfo.innerBundleUserInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_OK);
+}
 }

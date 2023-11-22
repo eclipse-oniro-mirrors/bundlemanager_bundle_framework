@@ -52,6 +52,7 @@ constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -78,6 +79,7 @@ const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
 const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
+const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -3742,6 +3744,46 @@ napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info)
     callbackPtr.release();
     APP_LOGD("call NAPI_GetRecoverableApplicationInfo done.");
     return promise;
+}
+
+napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string additionalInfo;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], additionalInfo)) {
+        APP_LOGE("Parse additionalInfo failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
+    if (ret != NO_ERROR) {
+        APP_LOGE("Call failed");
+        napi_value businessError = BusinessError::CreateCommonError(env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    APP_LOGD("Call done");
+    return nRet;
 }
 }
 }

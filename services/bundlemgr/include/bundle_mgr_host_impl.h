@@ -827,6 +827,8 @@ public:
     
     virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
 
+    virtual ErrCode SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo) override;
+
 private:
     const std::shared_ptr<BundleDataMgr> GetDataMgrFromService();
 #ifdef DISTRIBUTED_BUNDLE_FRAMEWORK

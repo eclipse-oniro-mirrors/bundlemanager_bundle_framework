@@ -326,6 +326,8 @@ void BundleMgrHost::init()
         &BundleMgrHost::HandleGetRecoverableApplicationInfo);
     funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO),
         &BundleMgrHost::HandleGetUninstalledBundleInfo);
+    funcMap_.emplace(static_cast<uint32_t>(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO),
+        &BundleMgrHost::HandleSetAdditionalInfo);
 }
 
 int BundleMgrHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -2940,6 +2942,19 @@ ErrCode BundleMgrHost::HandleGetUninstalledBundleInfo(MessageParcel &data, Messa
     }
     if (ret == ERR_OK && !reply.WriteParcelable(&info)) {
         APP_LOGE("write failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHost::HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    std::string bundleName = data.ReadString();
+    std::string additionalInfo = data.ReadString();
+    ErrCode ret = SetAdditionalInfo(bundleName, additionalInfo);
+    if (!reply.WriteInt32(ret)) {
+        APP_LOGE("Write reply failed");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
     return ERR_OK;

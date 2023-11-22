@@ -676,6 +676,7 @@ private:
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply);
 

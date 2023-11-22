@@ -3852,6 +3852,36 @@ ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, B
     return ERR_OK;
 }
 
+ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called. BundleName : %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("Invalid param");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(additionalInfo)) {
+        APP_LOGE("Write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {

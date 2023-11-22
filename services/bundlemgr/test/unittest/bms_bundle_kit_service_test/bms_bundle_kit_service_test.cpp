@@ -10547,4 +10547,34 @@ HWTEST_F(BmsBundleKitServiceTest, InnerProcessShortcut_0003, Function | SmallTes
     EXPECT_EQ(shortcutInfo.icon, shortcut.icon);
     EXPECT_EQ(shortcutInfo.iconId, shortcut.iconId);
 }
+
+/**
+ * @tc.number: SetAdditionalInfo_0001
+ * @tc.name: test set the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.get AdditionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfo_0001, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(nullptr, bundleMgrProxy);
+    std::string additionalInfo = "additionalInfo";
+    auto ret = bundleMgrProxy->SetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0002
+ * @tc.name: test set the bundleName's AdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.set additionalInfo failed
+ */
+HWTEST_F(BmsBundleKitServiceTest, SetAdditionalInfo_0002, Function | SmallTest | Level1)
+{
+    sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
+    ASSERT_NE(nullptr, bundleMgrProxy);
+    std::string additionalInfo = "additionalInfo";
+    auto ret = bundleMgrProxy->SetAdditionalInfo(BUNDLE_NAME_TEST, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
+}
 }

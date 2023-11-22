@@ -863,6 +863,8 @@ public:
 
     virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
 
+    virtual ErrCode SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.

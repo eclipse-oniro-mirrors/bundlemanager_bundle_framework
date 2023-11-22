@@ -152,6 +152,7 @@ enum class BundleMgrInterfaceCode : uint32_t {
     GET_VERIFY_MANAGER,
     GET_RECOVERABLE_APPLICATION_INFO,
     GET_UNINSTALLED_BUNDLE_INFO,
+    SET_ADDITIONAL_INFO,
 };
 
 /* SAID: 401-85 Interface No.85 subservice also provides the following interfaces */
