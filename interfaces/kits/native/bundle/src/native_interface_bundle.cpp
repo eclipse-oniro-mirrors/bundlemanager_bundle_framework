@@ -29,7 +29,7 @@ const size_t CHAR_MAX_LENGTH = 10240;
 const int16_t API_ELEVEN = 11;
 }
 
-bool CheckStringLength(const std::string &str)
+static bool CheckStringLength(const std::string &str)
 {
     size_t stringLen = str.size();
     if (stringLen + 1 > CHAR_MAX_LENGTH) {
@@ -40,7 +40,7 @@ bool CheckStringLength(const std::string &str)
 }
 
 // Helper function to release char* memory
-void ReleaseMemory(char* &str)
+static void ReleaseMemory(char* &str)
 {
     if (str != nullptr) {
         free(str);
