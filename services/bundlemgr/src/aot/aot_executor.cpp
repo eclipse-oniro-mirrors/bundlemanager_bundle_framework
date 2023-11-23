@@ -117,7 +117,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
 
     /* obtain the uid of current process */
-    int32_t currentProcessUid = getuid();
+    int32_t currentProcessUid = static_cast<int32_t>(getuid());
 
     nlohmann::json subject;
     subject[BUNDLE_NAME] = aotArgs.bundleName;
