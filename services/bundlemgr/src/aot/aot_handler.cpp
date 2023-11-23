@@ -120,7 +120,7 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
             installedInfo.GetBundleName().c_str(), Constants::ALL_USERID);
         return std::nullopt;
     }
-    aotArgs.bundleUid = newInnerBundleUserInfo.uid;
+    aotArgs.bundleUid = static_cast<uint32_t>(newInnerBundleUserInfo.uid);
     aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
     aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
         DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
