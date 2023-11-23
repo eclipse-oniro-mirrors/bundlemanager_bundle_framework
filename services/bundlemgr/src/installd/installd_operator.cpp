@@ -1024,7 +1024,30 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     return true;
 }
 
-bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
+#if defined(CODE_SIGNATURE_ENABLE)
+bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+    const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap)
+{
+    if (codeSignatureParam.targetSoPath.empty()) {
+        return false;
+    }
+    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    for_each(soEntryFiles.begin(), soEntryFiles.end(),
+        [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
+        std::string fileName = entry.substr(prefix.length());
+        std::string path = codeSignatureParam.targetSoPath;
+        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+            path += Constants::FILE_SEPARATOR_CHAR;
+        }
+        entryMap.emplace(entry, path + fileName);
+        APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
+    });
+    return true;
+}
+#endif
+
+bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
+    std::shared_ptr<CodeSignHelper>& codeSignHelper)
 {
     BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
@@ -1042,28 +1065,26 @@ bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatu
 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
-    if (!codeSignatureParam.targetSoPath.empty()) {
-        const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
-        for_each(soEntryFiles.begin(), soEntryFiles.end(),
-            [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
-            std::string fileName = entry.substr(prefix.length());
-            std::string path = codeSignatureParam.targetSoPath;
-            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-                path += Constants::FILE_SEPARATOR_CHAR;
-            }
-            entryMap.emplace(entry, path + fileName);
-            APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
-        });
+    if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
+        return false;
     }
+    
     ErrCode ret = ERR_OK;
     if (codeSignatureParam.signatureFileDir.empty()) {
+        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
+            codeSignHelper = std::make_shared<CodeSignHelper>();
+        }
+        Security::CodeSign::FileType fileType = FILE_ENTRY_ADD;
+        if (codeSignatureParam.isPreInstalledBundle) {
+            fileType = FILE_ENTRY_ONLY;
+        }
         if (codeSignatureParam.isEnterpriseBundle) {
             APP_LOGD("Verify code signature for enterprise bundle");
-            ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId(
-                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
         } else {
             APP_LOGD("Verify code signature for non-enterprise bundle");
-            ret = CodeSignUtils::EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, FILE_ENTRY_ONLY);
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
         }
     } else {
         ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);

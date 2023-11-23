@@ -979,7 +979,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | Sma
     codeSignatureParam.signatureFileDir = "";
     codeSignatureParam.isEnterpriseBundle = false;
     codeSignatureParam.appIdentifier = TEST_STRING;
-    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
     EXPECT_FALSE(ret);
 }
 
@@ -1099,7 +1100,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | Sma
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | SmallTest | Level0)
 {
     CodeSignatureParam codeSignatureParam;
-    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
     EXPECT_FALSE(res);
 }
 
@@ -1112,7 +1114,8 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7000, Function | Sma
 {
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.signatureFileDir = "/";
-    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam);
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
     EXPECT_EQ(res, false);
 }
 
