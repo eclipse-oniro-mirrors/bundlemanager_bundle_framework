@@ -3670,8 +3670,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0100, Function | SmallTest | Level0)
 {
-    AppControlManagerHostImpl impl;
-    auto ret = impl.GetControlRuleType(AppInstallControlRuleType::DISALLOWED_UNINSTALL);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto ret = impl->GetControlRuleType(AppInstallControlRuleType::DISALLOWED_UNINSTALL);
     EXPECT_EQ(ret, AppControlConstants::APP_DISALLOWED_UNINSTALL);
 }
 
@@ -3682,8 +3682,8 @@ HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0100, Function | Smal
 */
 HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0200, Function | SmallTest | Level0)
 {
-    AppControlManagerHostImpl impl;
-    auto ret = impl.GetControlRuleType(AppInstallControlRuleType::UNSPECIFIED);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto ret = impl->GetControlRuleType(AppInstallControlRuleType::UNSPECIFIED);
     EXPECT_EQ(ret, EMPTY_STRING);
 }
 #endif

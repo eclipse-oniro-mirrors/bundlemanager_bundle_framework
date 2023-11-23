@@ -341,12 +341,12 @@ HWTEST_F(BmsBundlePermissionDefListTest, InnerFilterRequestPermissions_0100, Fun
  */
 HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0900, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     DisposedRule rule;
-    ErrCode res = impl.SetDisposedRule(APPID, rule, USERID);
+    ErrCode res = impl->SetDisposedRule(APPID, rule, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.GetDisposedRule(APPID, rule, USERID);
+    res = impl->GetDisposedRule(APPID, rule, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

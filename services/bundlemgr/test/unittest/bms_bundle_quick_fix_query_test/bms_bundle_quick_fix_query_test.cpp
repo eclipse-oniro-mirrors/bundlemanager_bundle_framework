@@ -66,11 +66,14 @@ public:
     const std::shared_ptr<QuickFixDataMgr> GetQuickFixDataMgr() const;
 private:
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
-    std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_ = DelayedSingleton<QuickFixDataMgr>::GetInstance();
+    static std::shared_ptr<QuickFixDataMgr> quickFixDataMgr_;
 };
 
 std::shared_ptr<BundleMgrService> BmsBundleQuickFixQueryTest::bundleMgrService_ =
     DelayedSingleton<BundleMgrService>::GetInstance();
+
+std::shared_ptr<QuickFixDataMgr> BmsBundleQuickFixQueryTest::quickFixDataMgr_ =
+    DelayedSingleton<QuickFixDataMgr>::GetInstance();
 
 BmsBundleQuickFixQueryTest::BmsBundleQuickFixQueryTest()
 {}

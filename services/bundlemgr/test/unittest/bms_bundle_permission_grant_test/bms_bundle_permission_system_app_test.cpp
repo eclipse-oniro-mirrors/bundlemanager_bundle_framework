@@ -889,15 +889,15 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5700
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
+    ErrCode res = impl->SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
-    res = impl.GetDisposedStatus(APPID, want, USERID);
+    res = impl->GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
-    res = impl.DeleteDisposedStatus(APPID, USERID);
+    res = impl->DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
@@ -1257,12 +1257,12 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8200, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     DisposedRule rule;
-    ErrCode res = impl.SetDisposedRule(APPID, rule, USERID);
+    ErrCode res = impl->SetDisposedRule(APPID, rule, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
-    res = impl.GetDisposedRule(APPID, rule, USERID);
+    res = impl->GetDisposedRule(APPID, rule, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 

@@ -1332,15 +1332,15 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
+    ErrCode res = impl->SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.GetDisposedStatus(APPID, want, USERID);
+    res = impl->GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.DeleteDisposedStatus(APPID, USERID);
+    res = impl->DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
