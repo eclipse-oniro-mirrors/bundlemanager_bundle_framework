@@ -38,6 +38,7 @@ enum class ResultCode {
 
 enum OTAFlag {
     CHECK_ELDIR = 0x00000001,
+    CHECK_LOG_DIR = 0x00000010,
 };
 
 enum class ScanResultCode {
@@ -450,6 +451,9 @@ private:
     bool UpdateOtaFlag(OTAFlag flag);
     void ProcessCheckAppDataDir();
     void InnerProcessCheckAppDataDir();
+
+    void ProcessCheckAppLogDir();
+    void InnerProcessCheckAppLogDir();
 
     bool IsSystemUpgrade();
     bool IsTestSystemUpgrade();
