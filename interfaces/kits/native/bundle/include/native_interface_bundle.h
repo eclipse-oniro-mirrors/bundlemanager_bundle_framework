@@ -37,6 +37,12 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+/**
+ * @brief Indicates information of application
+ *
+ * @syscap SystemCapability.BundleManager.BundleFramework.Core
+ * @since 9
+ */
 struct OH_NativeBundle_ApplicationInfo {
     /**
      * Indicates the name of application
