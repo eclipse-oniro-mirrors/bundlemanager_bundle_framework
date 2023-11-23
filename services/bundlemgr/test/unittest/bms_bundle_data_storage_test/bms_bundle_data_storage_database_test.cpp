@@ -503,7 +503,8 @@ const nlohmann::json INNER_BUNDLE_INFO_JSON_3_2 = R"(
             "vendor":"",
             "versionCode":0,
             "versionName":"",
-            "resourcesApply":[]
+            "resourcesApply":[],
+            "oldAppIds":[]
         },
         "compatibleVersion":9,
         "cpuAbi":"",
@@ -1036,7 +1037,6 @@ protected:
                     "moduleName": ""
                 },
                 "fingerprint":"",
-                "fingerprints":[],
                 "isCompressNativeLibs": true,
                 "isLauncherApp": true,
                 "isSystemApp": true,

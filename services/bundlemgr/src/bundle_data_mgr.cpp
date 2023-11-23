@@ -322,13 +322,13 @@ bool BundleDataMgr::AddNewModuleInfo(
             oldInfo.UpdateBaseApplicationInfo(newInfo.GetBaseApplicationInfo(), newInfo.HasEntry());
             oldInfo.UpdateRemovable(newInfo.IsPreInstallApp(), newInfo.IsRemovable());
         }
-        oldInfo.SetProvisionId(newInfo.GetProvisionId());
-        if (oldInfo.GetFingerprints().empty()) {
-            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
+        if (oldInfo.GetOldAppIds().empty()) {
+            oldInfo.AddOldAppId(oldInfo.GetAppId());
         }
+        oldInfo.SetProvisionId(newInfo.GetProvisionId());
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
-        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
+        oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
         oldInfo.UpdateNativeLibAttrs(newInfo.GetBaseApplicationInfo());
@@ -522,12 +522,12 @@ bool BundleDataMgr::UpdateInnerBundleInfo(
             oldInfo.SetAppType(newInfo.GetAppType());
             oldInfo.SetAppFeature(newInfo.GetAppFeature());
         }
-        if (oldInfo.GetFingerprints().empty()) {
-            oldInfo.AddFingerprint(oldInfo.GetCertificateFingerprint());
-        }
         oldInfo.SetCertificateFingerprint(newInfo.GetCertificateFingerprint());
+        if (oldInfo.GetOldAppIds().empty()) {
+            oldInfo.AddOldAppId(oldInfo.GetAppId());
+        }
+        oldInfo.AddOldAppId(newInfo.GetAppId());
         oldInfo.SetProvisionId(newInfo.GetProvisionId());
-        oldInfo.AddFingerprint(newInfo.GetCertificateFingerprint());
         oldInfo.SetAppIdentifier(newInfo.GetAppIdentifier());
         oldInfo.SetAppPrivilegeLevel(newInfo.GetAppPrivilegeLevel());
         oldInfo.SetAllowedAcls(newInfo.GetAllowedAcls());
@@ -5831,7 +5831,7 @@ void BundleDataMgr::RemoveOverlayInfoAndConnection(const InnerBundleInfo &innerB
 }
 #endif
 
-bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const
+bool BundleDataMgr::GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds) const
 {
     if (bundleName.empty()) {
         APP_LOGE("bundleName is empty.");
@@ -5843,7 +5843,7 @@ bool BundleDataMgr::GetFingerprints(const std::string &bundleName, std::vector<s
         APP_LOGE("can not find bundle %{public}s.", bundleName.c_str());
         return false;
     }
-    fingerPrints = innerBundleInfo->second.GetFingerprints();
+    appIds = innerBundleInfo->second.GetOldAppIds();
     return true;
 }
 

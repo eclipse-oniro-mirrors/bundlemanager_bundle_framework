@@ -2055,8 +2055,8 @@ public:
     void SetResourcesApply(const std::vector<int32_t> &resourcesApply);
     void SetAppIdentifier(const std::string &appIdentifier);
     std::string GetAppIdentifier() const;
-    void AddFingerprint(const std::string &fingerprint);
-    std::vector<std::string> GetFingerprints() const;
+    void AddOldAppId(const std::string &appId);
+    std::vector<std::string> GetOldAppIds() const;
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
     bool IsContainEncryptedModule() const;

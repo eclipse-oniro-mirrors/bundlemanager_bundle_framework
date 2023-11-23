@@ -846,7 +846,7 @@ public:
         std::string &profile, int32_t userId) const;
     ErrCode GetJsonProfileByExtractor(const std::string &hapPath, const std::string &profilePath,
         std::string &profile) const;
-    bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
+    bool GetOldAppIds(const std::string &bundleName, std::vector<std::string> &appIds) const;
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();

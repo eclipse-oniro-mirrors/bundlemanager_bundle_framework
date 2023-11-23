@@ -441,7 +441,9 @@ bool BundlePermissionMgr::InnerGrantRequestPermissions(
             }
 
 #ifdef USE_PRE_BUNDLE_PROFILE
-            if (!MatchSignature(permission, innerBundleInfo.GetFingerprints())) {
+            if (!MatchSignature(permission, innerBundleInfo.GetCertificateFingerprint()) &&
+                !MatchSignature(permission, innerBundleInfo.GetAppId()) &&
+                !MatchSignature(permission, innerBundleInfo.GetOldAppIds())) {
                 continue;
             }
 #endif
@@ -701,6 +703,17 @@ bool BundlePermissionMgr::MatchSignature(
     }
 
     return isExistSignature;
+}
+
+bool BundlePermissionMgr::MatchSignature(
+    const DefaultPermission &permission, const std::string &signature)
+{
+    if (permission.appSignature.empty()) {
+        APP_LOGW("appSignature is empty");
+        return false;
+    }
+    return std::find(permission.appSignature.begin(), permission.appSignature.end(),
+        signature) != permission.appSignature.end()
 }
 
 int32_t BundlePermissionMgr::GetHapApiVersion()

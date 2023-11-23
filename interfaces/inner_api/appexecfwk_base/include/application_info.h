@@ -250,7 +250,6 @@ struct ApplicationInfo : public Parcelable {
 
     std::string compileSdkVersion;
     std::string compileSdkType = DEFAULT_COMPILE_SDK_TYPE;
-    std::vector<std::string> fingerprints;
 
     uint32_t applicationReservedFlag = 0;
 

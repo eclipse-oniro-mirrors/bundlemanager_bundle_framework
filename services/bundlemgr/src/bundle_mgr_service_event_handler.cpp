@@ -1985,12 +1985,12 @@ void BMSEventHandler::UpdatePrivilegeCapability(
         APP_LOGW("App(%{public}s) is not installed.", bundleName.c_str());
         return;
     }
-
-    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint())) {
-        if (!MatchOldFingerprints(bundleName, preBundleConfigInfo.appSignature)) {
-            APP_LOGE("App(%{public}s) signature verify failed", bundleName.c_str());
-            return;
-        }
+    // match both fingerprint and appId
+    if (!MatchSignature(preBundleConfigInfo, innerBundleInfo.GetCertificateFingerprint()) &&
+        !MatchSignature(preBundleConfigInfo, innerBundleInfo.GetAppId()) &&
+        !MatchOldSignatures(preBundleConfigInfo, innerBundleInfo.GetOldAppIds())) {
+        APP_LOGE("bundleName: %{public}s no match pre bundle config info", bundleName.c_str());
+        return;
     }
 
     UpdateTrustedPrivilegeCapability(preBundleConfigInfo);
@@ -2008,18 +2008,18 @@ bool BMSEventHandler::MatchSignature(
         configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
 }
 
-bool BMSEventHandler::MatchOldFingerprints(const std::string &bundleName,
+bool BMSEventHandler::MatchOldSignatures(const std::string &bundleName,
     const std::vector<std::string> &appSignatures)
 {
-    std::vector<std::string> fingerprints;
+    std::vector<std::string> appIds;
     std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr->GetFingerprints(bundleName, fingerprints)) {
-        APP_LOGE("Get fingerprints failed.");
+    if (!dataMgr->GetOldAppIds(bundleName, appIds)) {
+        APP_LOGE("Get appIds failed.");
         return false;
     }
     bool isExistSignature = false;
     for (const auto &signature : appSignatures) {
-        if (std::find(fingerprints.begin(), fingerprints.end(), signature) != fingerprints.end()) {
+        if (std::find(appIds.begin(), appIds.end(), signature) != appIds.end()) {
             isExistSignature = true;
             break;
         }
