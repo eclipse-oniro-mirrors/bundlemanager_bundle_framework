@@ -4180,7 +4180,7 @@ void InnerBundleInfo::AddOldAppId(const std::string &appId)
 {
     auto appIds = baseBundleInfo_->oldAppIds;
     if (std::find(appIds.begin(), appIds.end(), appId) == appIds.end()) {
-        baseApplicationInfo_->oldAppIds.emplace_back(appId);
+        baseBundleInfo_->oldAppIds.emplace_back(appId);
     }
 }
 

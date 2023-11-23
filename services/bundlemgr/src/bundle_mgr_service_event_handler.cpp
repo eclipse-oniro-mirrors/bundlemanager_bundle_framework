@@ -2008,24 +2008,21 @@ bool BMSEventHandler::MatchSignature(
         configInfo.appSignature.end(), signature) != configInfo.appSignature.end();
 }
 
-bool BMSEventHandler::MatchOldSignatures(const std::string &bundleName,
-    const std::vector<std::string> &appSignatures)
+bool BMSEventHandler::MatchOldSignatures(const PreBundleConfigInfo &configInfo,
+    const std::vector<std::string> &oldSignatures)
 {
-    std::vector<std::string> appIds;
-    std::shared_ptr<BundleDataMgr> dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
-    if (!dataMgr->GetOldAppIds(bundleName, appIds)) {
-        APP_LOGE("Get appIds failed.");
+    if (configInfo.appSignature.empty()) {
+        APP_LOGW("appSignature is empty");
         return false;
     }
-    bool isExistSignature = false;
-    for (const auto &signature : appSignatures) {
-        if (std::find(appIds.begin(), appIds.end(), signature) != appIds.end()) {
-            isExistSignature = true;
-            break;
+    for (const auto &signature : oldSignatures) {
+        if (std::find(configInfo.appSignature.begin(), configInfo.appSignature.end(), signature) !=
+            configInfo.appSignature.end()) {
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
 }
 
 void BMSEventHandler::UpdateTrustedPrivilegeCapability(

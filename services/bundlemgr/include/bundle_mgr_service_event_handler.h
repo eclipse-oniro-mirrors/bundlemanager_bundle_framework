@@ -480,7 +480,7 @@ private:
     void UpdateAllPrivilegeCapability();
     void UpdatePrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
     bool MatchSignature(const PreBundleConfigInfo &configInfo, const std::string &signature);
-    bool MatchOldSignatures(const std::string &bundleName, const std::vector<std::string> &appSignatures);
+    bool MatchOldSignatures(const PreBundleConfigInfo &configInfo, const std::vector<std::string> &appSignatures);
     void UpdateTrustedPrivilegeCapability(const PreBundleConfigInfo &preBundleConfigInfo);
 #endif
     void ListeningUserUnlocked() const;

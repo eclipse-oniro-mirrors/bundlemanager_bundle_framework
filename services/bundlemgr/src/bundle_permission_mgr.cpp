@@ -694,15 +694,13 @@ bool BundlePermissionMgr::MatchSignature(
         APP_LOGW("appSignature is empty");
         return false;
     }
-    bool isExistSignature = false;
     for (const auto &signature : permission.appSignature) {
         if (std::find(signatures.begin(), signatures.end(), signature) != signatures.end()) {
-            isExistSignature = true;
-            break;
+            return true;
         }
     }
 
-    return isExistSignature;
+    return false;
 }
 
 bool BundlePermissionMgr::MatchSignature(
@@ -713,7 +711,7 @@ bool BundlePermissionMgr::MatchSignature(
         return false;
     }
     return std::find(permission.appSignature.begin(), permission.appSignature.end(),
-        signature) != permission.appSignature.end()
+        signature) != permission.appSignature.end();
 }
 
 int32_t BundlePermissionMgr::GetHapApiVersion()

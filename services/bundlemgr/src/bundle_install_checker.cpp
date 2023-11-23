@@ -380,7 +380,7 @@ ErrCode BundleInstallChecker::ParseHapFiles(
         ParseAppPrivilegeCapability(provisionInfo, appPrivilegeCapability);
         // form install_list_capability.json, higher priority than provision file
         FetchPrivilegeCapabilityFromPreConfig(
-            newInfo.GetBundleName(), provisionInfo.provision, appPrivilegeCapability);
+            newInfo.GetBundleName(), provisionInfo.fingerprint, appPrivilegeCapability);
         // modify fingerprint to appId
         newInfo.SetProvisionId(provisionInfo.appId);
         FetchPrivilegeCapabilityFromPreConfig(
