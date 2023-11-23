@@ -62,6 +62,21 @@ const std::string INVALID_WANT_ERROR =
     "implicit query condition, at least one query param(action entities uri type) non-empty.";
 const std::string PARAM_TYPE_CHECK_ERROR = "param type check error";
 
+bool ParseWantWithParameter(napi_env env, napi_value args, Want &want)
+{
+    if (!UnwrapWant(env, args, want)) {
+        APP_LOGW("parse want failed");
+        return false;
+    }
+    bool isExplicit = !want.GetBundle().empty() && !want.GetElement().GetAbilityName().empty();
+    if (!isExplicit && want.GetAction().empty() && want.GetEntities().empty() &&
+        want.GetUriString().empty() && want.GetType().empty()) {
+        APP_LOGW("implicit params all empty");
+        return false;
+    }
+    return true;
+}
+
 napi_value SetApplicationEnabledSync(napi_env env, napi_callback_info info)
 {
     APP_LOGD("NAPI SetApplicationEnabledSync called");
@@ -242,7 +257,7 @@ ErrCode ParamsProcessQueryExtensionInfosSync(napi_env env, napi_callback_info in
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], extensionParamInfo.want)) {
+            if (!ParseWantWithParameter(env, args[i], extensionParamInfo.want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
