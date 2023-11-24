@@ -221,6 +221,9 @@ ohos_unittest("BmsBundleKitServiceTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
