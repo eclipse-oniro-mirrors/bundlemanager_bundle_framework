@@ -35,9 +35,10 @@ namespace {
         std::vector<ExtensionFormInfo> infos(1);
         infos[0].name = "com.ohos.contactsdataability";
         infos[0].description = "dataability_description";
+        int32_t level = 0;
         for (auto _ : state) {
             /* @tc.steps: step1.call TransformTo in loop */
-            info.TransformTo(formProfile, infos);
+            info.TransformTo(formProfile, infos, level);
         }
     }
 

@@ -62,6 +62,7 @@ const std::string JSON_KEY_IS_STATIC = "isStatic";
 const std::string JSON_KEY_DATA_PROXY_ENABLED = "dataProxyEnabled";
 const std::string JSON_KEY_IS_DYNAMIC = "isDynamic";
 const std::string JSON_KEY_TRANSPARENCY_ENABLED = "transparencyEnabled";
+const std::string JSON_KEY_PRIVACY_LEVEL = "privacyLevel";
 }  // namespace
 
 FormInfo::FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo)
@@ -185,6 +186,7 @@ bool FormInfo::ReadFromParcel(Parcel &parcel)
     dataProxyEnabled = parcel.ReadBool();
     isDynamic = parcel.ReadBool();
     transparencyEnabled = parcel.ReadBool();
+    privacyLevel = parcel.ReadInt32();
     return true;
 }
 
@@ -254,6 +256,7 @@ bool FormInfo::Marshalling(Parcel &parcel) const
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, dataProxyEnabled);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, isDynamic);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Bool, parcel, transparencyEnabled);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, parcel, privacyLevel);
     return true;
 }
 
@@ -313,7 +316,8 @@ void to_json(nlohmann::json &jsonObject, const FormInfo &formInfo)
         {JSON_KEY_WINDOW, formInfo.window},
         {JSON_KEY_DATA_PROXY_ENABLED, formInfo.dataProxyEnabled},
         {JSON_KEY_IS_DYNAMIC, formInfo.isDynamic},
-        {JSON_KEY_TRANSPARENCY_ENABLED, formInfo.transparencyEnabled}
+        {JSON_KEY_TRANSPARENCY_ENABLED, formInfo.transparencyEnabled},
+        {JSON_KEY_PRIVACY_LEVEL, formInfo.privacyLevel}
         };
 }
 
@@ -616,6 +620,14 @@ void from_json(const nlohmann::json &jsonObject, FormInfo &formInfo)
         JSON_KEY_TRANSPARENCY_ENABLED,
         formInfo.transparencyEnabled,
         JsonType::BOOLEAN,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        JSON_KEY_PRIVACY_LEVEL,
+        formInfo.privacyLevel,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);

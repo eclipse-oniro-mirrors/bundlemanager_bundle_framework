@@ -2468,7 +2468,8 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
 
-    if (!dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)) {
+    if (!(dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)
+        || dataMgr->QueryAbilityInfo(want, flags, Constants::DEFAULT_USERID, info, appIndex))) {
         APP_LOGE("query ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -2498,7 +2499,8 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
 
-    if (!dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)) {
+    if (!(dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::DEFAULT_USERID, infos, appIndex))) {
         APP_LOGE("query extension ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }

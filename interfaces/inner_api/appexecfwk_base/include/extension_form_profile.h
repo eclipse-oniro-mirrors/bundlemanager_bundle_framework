@@ -48,6 +48,7 @@ const std::string METADATA_VALUE = "value";
 const std::string DATA_PROXY_ENABLED = "dataProxyEnabled";
 const std::string IS_DYNAMIC = "isDynamic";
 const std::string TRANSPARENCY_ENABLED = "transparencyEnabled";
+const std::string PRIVACY_LEVEL = "privacyLevel";
 }
 
 class ExtensionFormProfile {
@@ -55,10 +56,12 @@ public:
     /**
      * @brief Transform the form profile to ExtensionFormInfos.
      * @param formProfile Indicates the string of the form profile.
-     * @param info Indicates the obtained ExtensionFormProfileInfo.
+     * @param infos Indicates the obtained ExtensionFormProfileInfo.
+     * @param privacyLevel Indicates the form data privacy level.
      * @return Returns ERR_OK if the information transformed successfully; returns error code otherwise.
      */
-    static ErrCode TransformTo(const std::string &formProfile, std::vector<ExtensionFormInfo> &infos);
+    static ErrCode TransformTo(
+        const std::string &formProfile, std::vector<ExtensionFormInfo> &infos, int32_t &privacyLevel);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

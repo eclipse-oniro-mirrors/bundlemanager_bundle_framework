@@ -83,7 +83,8 @@ struct ExtensionFormProfileInfo {
     bool transparencyEnabled = false;
 };
 
-struct ExtensionFormProfileInfoVec {
+struct ExtensionFormProfileInfoStruct {
+    int32_t privacyLevel = 0;
     std::vector<ExtensionFormProfileInfo> forms {};
 };
 
@@ -286,13 +287,21 @@ void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfo &exten
         ArrayType::NOT_ARRAY);
 }
 
-void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoVec &infos)
+void from_json(const nlohmann::json &jsonObject, ExtensionFormProfileInfoStruct &profileInfo)
 {
     const auto &jsonObjectEnd = jsonObject.end();
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ExtensionFormProfileReader::PRIVACY_LEVEL,
+        profileInfo.privacyLevel,
+        JsonType::NUMBER,
+        false,
+        g_parseResult,
+        ArrayType::NOT_ARRAY);
     GetValueIfFindKey<std::vector<ExtensionFormProfileInfo>>(jsonObject,
         jsonObjectEnd,
         ExtensionFormProfileReader::FORMS,
-        infos.forms,
+        profileInfo.forms,
         JsonType::ARRAY,
         false,
         g_parseResult,
@@ -395,10 +404,10 @@ bool TransformToExtensionFormInfo(const ExtensionFormProfileInfo &form, Extensio
     return true;
 }
 
-bool TransformToInfos(const ExtensionFormProfileInfoVec &forms, std::vector<ExtensionFormInfo> &infos)
+bool TransformToInfos(const ExtensionFormProfileInfoStruct &profileInfo, std::vector<ExtensionFormInfo> &infos)
 {
     APP_LOGD("transform ExtensionFormProfileInfo to ExtensionFormInfo");
-    for (const auto &form: forms.forms) {
+    for (const auto &form: profileInfo.forms) {
         ExtensionFormInfo info;
         if (!TransformToExtensionFormInfo(form, info)) {
             return false;
@@ -409,7 +418,8 @@ bool TransformToInfos(const ExtensionFormProfileInfoVec &forms, std::vector<Exte
 }
 } // namespace
 
-ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::vector<ExtensionFormInfo> &infos)
+ErrCode ExtensionFormProfile::TransformTo(
+    const std::string &formProfile, std::vector<ExtensionFormInfo> &infos, int32_t &privacyLevel)
 {
     APP_LOGD("transform profile to extension form infos");
     nlohmann::json jsonObject = nlohmann::json::parse(formProfile, nullptr, false);
@@ -418,11 +428,12 @@ ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::v
         return ERR_APPEXECFWK_PARSE_BAD_PROFILE;
     }
 
-    ExtensionFormProfileInfoVec forms;
+    ExtensionFormProfileInfoStruct profileInfo;
     {
         std::lock_guard<std::mutex> lock(g_mutex);
         g_parseResult = ERR_OK;
-        forms = jsonObject.get<ExtensionFormProfileInfoVec>();
+        profileInfo = jsonObject.get<ExtensionFormProfileInfoStruct>();
+        privacyLevel = profileInfo.privacyLevel;
         if (g_parseResult != ERR_OK) {
             APP_LOGE("g_parseResult is %{public}d", g_parseResult);
             int32_t ret = g_parseResult;
@@ -432,7 +443,7 @@ ErrCode ExtensionFormProfile::TransformTo(const std::string &formProfile, std::v
         }
     }
 
-    if (!TransformToInfos(forms, infos)) {
+    if (!TransformToInfos(profileInfo, infos)) {
         return ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR;
     }
     return ERR_OK;
