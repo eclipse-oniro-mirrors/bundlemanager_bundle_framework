@@ -32,6 +32,7 @@ constexpr const char* ACCESS_TOKEN_ID = "accessTokenId";
 constexpr const char* IS_AGING_UNINSTALL = "isAgingUninstall";
 constexpr const char* APP_ID = "appId";
 constexpr const char* IS_MODULE_UPDATE = "isModuleUpdate";
+const std::string BUNDLE_RESOURCES_CHANGED = "usual.event.BUNDLE_RESOURCES_CHANGED";
 }
 
 BundleCommonEventMgr::BundleCommonEventMgr()
@@ -199,6 +200,18 @@ void BundleCommonEventMgr::NotifyDeleteDiposedRule(const std::string &appId, int
     EventFwk::CommonEventData commonData { want };
     EventFwk::CommonEventPublishInfo publishInfo;
     std::vector<std::string> permissionVec { Constants::PERMISSION_MANAGE_DISPOSED_APP_STATUS };
+    publishInfo.SetSubscriberPermissions(permissionVec);
+    EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
+}
+
+void BundleCommonEventMgr::NotifyBundleResourcesChanged(int32_t userId)
+{
+    OHOS::AAFwk::Want want;
+    want.SetAction(BUNDLE_RESOURCES_CHANGED);
+    want.SetParam(Constants::USER_ID, userId);
+    EventFwk::CommonEventData commonData { want };
+    EventFwk::CommonEventPublishInfo publishInfo;
+    std::vector<std::string> permissionVec { Constants::PERMISSION_GET_BUNDLE_RESOURCES };
     publishInfo.SetSubscriberPermissions(permissionVec);
     EventFwk::CommonEventManager::PublishCommonEvent(commonData, publishInfo);
 }

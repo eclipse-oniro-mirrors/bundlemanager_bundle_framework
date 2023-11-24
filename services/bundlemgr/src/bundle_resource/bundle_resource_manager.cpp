@@ -16,6 +16,7 @@
 #include "bundle_resource_manager.h"
 
 #include "app_log_wrapper.h"
+#include "bundle_common_event_mgr.h"
 #include "bundle_resource_parser.h"
 #include "bundle_resource_process.h"
 
@@ -80,8 +81,12 @@ bool BundleResourceManager::AddAllResourceInfo(const int32_t userId)
         APP_LOGE("GetAllResourceInfo failed, userId:%{public}d", userId);
         return false;
     }
-
-    return AddResourceInfos(resourceInfos);
+    if (!AddResourceInfos(resourceInfos)) {
+        APP_LOGE("failed, userId:%{public}d", userId);
+        return false;
+    }
+    SendBundleResourcesChangedEvent(userId);
+    return true;
 }
 
 bool BundleResourceManager::DeleteAllResourceInfo()
@@ -145,6 +150,7 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
         }
         if (resourceInfos.empty()) {
             APP_LOGI("no need to add resource");
+            SendBundleResourcesChangedEvent(userId);
             return true;
         }
     } else {
@@ -154,7 +160,12 @@ bool BundleResourceManager::AddResourceInfoByColorModeChanged(const int32_t user
             return false;
         }
     }
-    return AddResourceInfos(resourceInfos);
+    if (!AddResourceInfos(resourceInfos)) {
+        APP_LOGE("failed, userId:%{public}d", userId);
+        return false;
+    }
+    SendBundleResourcesChangedEvent(userId);
+    return true;
 }
 
 bool BundleResourceManager::GetBundleResourceInfo(const std::string &bundleName, const uint32_t flags,
@@ -224,6 +235,13 @@ std::string BundleResourceManager::GetDefaultIcon()
         return std::string();
     }
     return bundleResourceInfo.icon;
+}
+
+void BundleResourceManager::SendBundleResourcesChangedEvent(int32_t userId)
+{
+    APP_LOGD("send bundleResource event");
+    std::shared_ptr<BundleCommonEventMgr> commonEventMgr = std::make_shared<BundleCommonEventMgr>();
+    commonEventMgr->NotifyBundleResourcesChanged(userId);
 }
 } // AppExecFwk
 } // OHOS

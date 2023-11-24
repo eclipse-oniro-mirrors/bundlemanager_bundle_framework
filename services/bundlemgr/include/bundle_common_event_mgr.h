@@ -73,6 +73,7 @@ public:
         int32_t userId, int32_t uid);
     void NotifySetDiposedRule(const std::string &appId, int32_t userId, const std::string &data);
     void NotifyDeleteDiposedRule(const std::string &appId, int32_t userId);
+    void NotifyBundleResourcesChanged(int32_t userId);
 
 private:
     std::string GetCommonEventData(const NotifyType &type);
