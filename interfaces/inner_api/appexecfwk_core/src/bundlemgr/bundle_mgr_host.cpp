@@ -1062,7 +1062,7 @@ ErrCode BundleMgrHost::HandleGetAbilityLabel(MessageParcel &data, MessageParcel 
     std::string bundleName = data.ReadString();
     std::string abilityName = data.ReadString();
 
-    APP_LOGI("bundleName %{public}s, abilityName %{public}s", bundleName.c_str(), abilityName.c_str());
+    APP_LOGD("bundleName %{public}s, abilityName %{public}s", bundleName.c_str(), abilityName.c_str());
     BundleInfo info;
     std::string label = GetAbilityLabel(bundleName, abilityName);
     if (!reply.WriteString(label)) {
@@ -1228,7 +1228,7 @@ ErrCode BundleMgrHost::HandleGetLaunchWantForBundle(MessageParcel &data, Message
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
-    APP_LOGI("name %{public}s", bundleName.c_str());
+    APP_LOGD("name %{public}s", bundleName.c_str());
 
     Want want;
     ErrCode ret = GetLaunchWantForBundle(bundleName, want, userId);
@@ -1249,7 +1249,7 @@ ErrCode BundleMgrHost::HandleGetPermissionDef(MessageParcel &data, MessageParcel
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string permissionName = data.ReadString();
-    APP_LOGI("name %{public}s", permissionName.c_str());
+    APP_LOGD("name %{public}s", permissionName.c_str());
 
     PermissionDef permissionDef;
     ErrCode ret = GetPermissionDef(permissionName, permissionDef);
@@ -2446,7 +2446,7 @@ ErrCode BundleMgrHost::HandleGetMediaData(MessageParcel &data, MessageParcel &re
     std::string abilityName = data.ReadString();
     std::string moduleName = data.ReadString();
     int32_t userId = data.ReadInt32();
-    APP_LOGI("HandleGetMediaData:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
+    APP_LOGD("HandleGetMediaData:%{public}s, %{public}s, %{public}s", bundleName.c_str(),
         abilityName.c_str(), moduleName.c_str());
     std::unique_ptr<uint8_t[]> mediaDataPtr = nullptr;
     size_t len = 0;
@@ -2560,7 +2560,7 @@ ErrCode BundleMgrHost::HandleGetProvisionMetadata(MessageParcel &data, MessagePa
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     std::string bundleName = data.ReadString();
     int32_t userId = data.ReadInt32();
-    APP_LOGI("start to get provision metadata, bundleName is %{public}s, userId is %{public}d",
+    APP_LOGD("start to get provision metadata, bundleName is %{public}s, userId is %{public}d",
         bundleName.c_str(), userId);
     std::vector<Metadata> provisionMetadatas;
     ErrCode ret = GetProvisionMetadata(bundleName, userId, provisionMetadatas);
