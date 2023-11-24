@@ -5083,4 +5083,126 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppLabelInfo_0100, Function | SmallTest | 
     res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
     EXPECT_EQ(res, ERR_OK);
 }
+
+/**
+ * @tc.number: InstalldOperatorTest_7600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldHostImpl
+ *           2. return false
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "";
+    auto ret = hostImpl.VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7700
+ * @tc.name: test function of CheckEncryption
+ * @tc.desc: 1. calling CheckEncryption
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    bool isEncrypted = false;
+    ErrCode res = hostImpl.CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7800
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7800, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> fileNames;
+    auto ret = hostImpl.MoveFiles("", "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.MoveFiles(TEST_STRING, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.MoveFiles("", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7800
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7900, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::unordered_multimap<std::string, std::string> dirMap;
+    auto ret = hostImpl.ExtractDriverSoFiles("", dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8000
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8000, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    auto ret = hostImpl.CheckPathValid("", "");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8100
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "../";
+    auto ret = hostImpl.CheckPathValid(path, "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8200
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8200, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "./";
+    std::string prefix = "npos";
+    auto ret = hostImpl.CheckPathValid(path, prefix);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8300
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8300, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "./npos";
+    std::string prefix = "npos";
+    auto ret = hostImpl.CheckPathValid(path, prefix);
+    EXPECT_EQ(ret, true);
+}
 } // OHOS

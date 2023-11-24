@@ -470,6 +470,43 @@ HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1100, Function | Sm
     auto id = proxy->CreateSignatureFileStream(HSPNAME, "");
     EXPECT_EQ(id, fd);
 }
+
+/**
+ * @tc.number: CreateSharedBundleStream_1200
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreatePgoFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1200, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreatePgoFileStream("", "");
+    EXPECT_EQ(id, fd);
+
+    id = proxy->CreatePgoFileStream(HSPNAME, "");
+    EXPECT_EQ(id, fd);
+
+    id = proxy->CreatePgoFileStream("", HSPNAME);
+    EXPECT_EQ(id, fd);
+}
+
+/**
+ * @tc.number: CreateSharedBundleStream_1300
+ * @tc.name: test GetInstallerId function of BundleStreamInstallerProxy
+ * @tc.desc: 1. Obtain installerProxy
+ *           2. Calling function CreatePgoFileStream
+*/
+HWTEST_F(BmsBundleInstallerIPCTest, CreateSharedBundleStream_1300, Function | SmallTest | Level0)
+{
+    auto proxy = GetStreamInstallerProxy();
+    ASSERT_FALSE(proxy == nullptr);
+    int32_t fd = -1;
+    auto id = proxy->CreatePgoFileStream(HSPNAME, HSPNAME);
+    EXPECT_EQ(id, fd);
+}
+
 /**
  * @tc.number: OnRemoteRequestTest_0100
  * @tc.name: test true function of OnRemoteRequest
