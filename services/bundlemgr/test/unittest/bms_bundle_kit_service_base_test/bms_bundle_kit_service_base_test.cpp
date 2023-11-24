@@ -857,11 +857,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_1900, Function | 
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
-    #ifdef ARM64
+#ifdef USE_ARM64
+    EXPECT_TRUE(ret);
+#else
     EXPECT_FALSE(ret);
-    #else
-    EXPECT_FALSE(ret);
-    #endif
+#endif
     sleep(1);
 }
 
@@ -883,7 +883,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2000, Function | 
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+#ifdef USE_ARM64
+    EXPECT_TRUE(ret);
+#else
     EXPECT_FALSE(ret);
+#endif
     sleep(1);
 }
 
@@ -899,7 +903,11 @@ HWTEST_F(BmsBundleKitServiceBaseTest, BundleDistributedManager_2100, Function | 
     setuid(Constants::FOUNDATION_UID);
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     auto ret = mgr.QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
+#ifdef USE_ARM64
+    EXPECT_TRUE(ret);
+#else
     EXPECT_FALSE(ret);
+#endif
     sleep(1);
 }
 
