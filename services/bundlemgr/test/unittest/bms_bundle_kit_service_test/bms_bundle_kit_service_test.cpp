@@ -7695,9 +7695,9 @@ HWTEST_F(BmsBundleKitServiceTest, GetBundleDistributedManager_0004, Function | S
     ScopeGuard uidGuard([&] { setuid(Constants::ROOT_UID); });
     bool res = bundleMgr->QueryRpcIdByAbilityToServiceCenter(targetAbilityInfo);
 #ifdef USE_ARM64
-    EXPECT_TRUE(ret);
+    EXPECT_TRUE(res);
 #else
-    EXPECT_FALSE(ret);
+    EXPECT_FALSE(res);
 #endif
 }
 
