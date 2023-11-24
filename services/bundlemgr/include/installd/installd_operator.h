@@ -208,7 +208,11 @@ public:
 
     static bool CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
-    static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
+    static bool MoveFiles(const std::string &srcDir, const std::string &desDir, bool isDesDirNeedCreated = false);
+
+    static bool MoveFileOrDir(const std::string &srcPath, const std::string &destPath, mode_t mode);
+
+    static bool MoveFile(const std::string &srcPath, const std::string &destPath);
 
     static bool ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap);
