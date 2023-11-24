@@ -80,6 +80,9 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     external_deps += [ "image_framework:image_native" ]
   }
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
