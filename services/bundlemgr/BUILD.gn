@@ -290,7 +290,10 @@ ohos_shared_library("libbms") {
   }
 
   if (ability_runtime_enable) {
-    external_deps += [ "ability_runtime:ability_manager" ]
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+    ]
     defines += [ "ABILITY_RUNTIME_ENABLE" ]
   }
 
