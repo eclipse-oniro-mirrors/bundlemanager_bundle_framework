@@ -725,7 +725,7 @@ void JsGetAllLauncherAbilityInfoComplete(napi_env env, napi_status status, void 
 
 napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
 {
-    APP_LOGD("napi begin to JSGetAllLauncherAbilityInfos");
+    APP_LOGI("napi begin to JSGetAllLauncherAbilityInfos");
     NapiArg args(env, info);
     JsGetAllLauncherAbilityCallbackInfo *asyncCallbackInfo =
         new (std::nothrow) JsGetAllLauncherAbilityCallbackInfo(env);
@@ -760,7 +760,7 @@ napi_value JSGetAllLauncherAbilityInfos(napi_env env, napi_callback_info info)
         env, asyncCallbackInfo, "GetLauncherAbilityInfo",
         JsGetAllLauncherAbilityInfoExec, JsGetAllLauncherAbilityInfoComplete);
     callbackPtr.release();
-    APP_LOGD("call GetAllLauncherAbilityInfo done");
+    APP_LOGI("call GetAllLauncherAbilityInfo done");
     return promise;
 }
 
