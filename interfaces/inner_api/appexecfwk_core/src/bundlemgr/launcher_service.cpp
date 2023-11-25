@@ -16,6 +16,7 @@
 #include "launcher_service.h"
 
 #include "bundle_mgr_proxy.h"
+#include "bundle_mgr_service_death_recipient.h"
 #include "common_event_subscribe_info.h"
 #include "common_event_support.h"
 #include "matching_skills.h"
@@ -23,8 +24,6 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::bundleMgr_ = nullptr;
-std::mutex LauncherService::bundleMgrMutex_;
 const char* EMPTY_STRING = "";
 
 LauncherService::LauncherService()
@@ -40,6 +39,14 @@ void LauncherService::init()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
+}
+
+LauncherService::~LauncherService()
+{
+    APP_LOGD("destroy LauncherService");
+    if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
 }
 
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
@@ -62,6 +69,15 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
                 APP_LOGE("GetBundleMgr iface_cast get null");
             }
             bundleMgr_ = bundleMgr;
+            std::weak_ptr<LauncherService> weakPtr = shared_from_this();
+            auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
+                auto sharedPtr = weakPtr.lock();
+                if (sharedPtr != nullptr) {
+                    sharedPtr->OnDeath();
+                }
+            };
+            deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
+            bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
         }
     }
     return bundleMgr_;
@@ -366,5 +382,11 @@ ErrCode LauncherService::GetShortcutInfoV9(
     return ERR_OK;
 }
 
+void LauncherService::OnDeath()
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS
