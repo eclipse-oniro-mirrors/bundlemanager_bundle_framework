@@ -3776,7 +3776,8 @@ napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
     ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
     if (ret != NO_ERROR) {
         APP_LOGE("Call failed");
-        napi_value businessError = BusinessError::CreateCommonError(env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO);
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
         napi_throw(env, businessError);
         return nullptr;
     }
