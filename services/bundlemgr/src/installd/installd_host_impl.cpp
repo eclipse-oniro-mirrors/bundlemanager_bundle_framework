@@ -604,14 +604,9 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
+    if (!InstalldOperator::MoveFile(oldPath, newPath)) {
         APP_LOGE("Move file %{public}s to %{public}s failed",
             oldPath.c_str(), newPath.c_str());
-        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-    }
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    if (!OHOS::ChangeModeFile(newPath, mode)) {
-        APP_LOGE("change mode failed");
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     return ERR_OK;

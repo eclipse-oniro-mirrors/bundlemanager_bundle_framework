@@ -1193,9 +1193,14 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
     return true;
 }
 
-bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir)
+bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir, bool isDesDirNeedCreated)
 {
     APP_LOGD("srcDir is %{public}s, desDir is %{public}s", srcDir.c_str(), desDir.c_str());
+    if (isDesDirNeedCreated && !MkRecursiveDir(desDir, true)) {
+        APP_LOGE("create desDir failed");
+        return false;
+    }
+
     if (srcDir.empty() || desDir.empty()) {
         APP_LOGE("move file failed due to srcDir or desDir is empty");
         return false;
@@ -1227,20 +1232,46 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         }
 
         std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
+        std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
         struct stat s;
-        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
-            std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
-            if (!RenameFile(curPath, innerDesStr)) {
-                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s) failed", curPath.c_str(),
-                    innerDesStr.c_str());
-                closedir(directory);
-                return false;
-            }
-            mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-            OHOS::ChangeModeFile(innerDesStr, mode);
+        if (stat(curPath.c_str(), &s) != 0) {
+            APP_LOGD("MoveFiles stat %{public}s failed", curPath.c_str());
+            continue;
+        }
+        if (!MoveFileOrDir(curPath, innerDesStr, s.st_mode)) {
+            closedir(directory);
+            return false;
         }
     }
     closedir(directory);
+    return true;
+}
+
+bool InstalldOperator::MoveFileOrDir(const std::string &srcPath, const std::string &destPath, mode_t mode)
+{
+    if (mode & S_IFREG) {
+        APP_LOGD("srcPath(%{public}s) is a file", srcPath.c_str());
+        return MoveFile(srcPath, destPath);
+    } else if (mode & S_IFDIR) {
+        APP_LOGD("srcPath(%{public}s) is a dir", srcPath.c_str());
+        return MoveFiles(srcPath, destPath, true);
+    }
+    return true;
+}
+
+bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &destPath)
+{
+    APP_LOGD("srcPath is %{public}s, destPath is %{public}s", srcPath.c_str(), destPath.c_str());
+    if (!RenameFile(srcPath, destPath)) {
+        APP_LOGE("move file from srcPath(%{public}s) to destPath(%{public}s) failed", srcPath.c_str(),
+            destPath.c_str());
+        return false;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(destPath, mode)) {
+        APP_LOGE("change mode failed");
+        return false;
+    }
     return true;
 }
 
