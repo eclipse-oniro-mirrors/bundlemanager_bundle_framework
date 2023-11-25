@@ -253,7 +253,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
             std::string logDir = GetBundleDataDir(el, createDirParam.userId) +
                 Constants::LOG + createDirParam.bundleName;
             if (!InstalldOperator::MkOwnerDir(
-                logDir, S_IRWXU | S_IRGRP | S_IXGRP, createDirParam.uid, Constants::LOG_DIR_GID)) {
+                logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
                 APP_LOGE("create log dir failed");
                 return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
