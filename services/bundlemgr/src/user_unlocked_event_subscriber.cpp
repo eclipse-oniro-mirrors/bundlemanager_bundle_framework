@@ -163,7 +163,7 @@ bool UpdateAppDataMgr::CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t 
         return false;
     }
     if (InstalldClient::GetInstance()->Mkdir(
-        bundleLogDir, S_IRWXU | S_IRGRP | S_IXGRP, bundleInfo.uid, Constants::LOG_DIR_GID) != ERR_OK) {
+        bundleLogDir, S_IRWXU | S_IRWXG, bundleInfo.uid, Constants::LOG_DIR_GID) != ERR_OK) {
         APP_LOGE("CreateBundleLogDir failed");
         return false;
     }
