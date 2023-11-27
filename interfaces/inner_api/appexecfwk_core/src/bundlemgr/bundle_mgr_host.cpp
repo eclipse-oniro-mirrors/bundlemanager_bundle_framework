@@ -2331,6 +2331,7 @@ template<typename T>
 bool BundleMgrHost::WriteVectorToParcelIntelligent(std::vector<T> &parcelableVector, MessageParcel &reply)
 {
     Parcel tempParcel;
+    (void)tempParcel.SetMaxCapacity(MAX_PARCEL_CAPACITY);
     if (!tempParcel.WriteInt32(parcelableVector.size())) {
         APP_LOGE("write ParcelableVector failed");
         return false;
