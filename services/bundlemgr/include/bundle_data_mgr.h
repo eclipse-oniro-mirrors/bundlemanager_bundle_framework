@@ -849,6 +849,7 @@ public:
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
     std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
     const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
+    bool IsBundleExist(const std::string &bundleName) const;
     ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
 
 private:

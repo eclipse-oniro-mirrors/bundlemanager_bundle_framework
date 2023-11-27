@@ -312,6 +312,10 @@ constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
+
+constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
+constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

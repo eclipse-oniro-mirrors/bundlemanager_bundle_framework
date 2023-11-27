@@ -1039,7 +1039,7 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
-    const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId)
 {
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -1069,6 +1069,17 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback, userId);
+        APP_LOGI("ret : %{public}d", ret);
+        if (ret != ERR_OK) {
+            ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+        }
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
+        return ret;
+    }
+
     ApplicationInfo applicationInfo;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1096,7 +1107,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
-    const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    const sptr<ICleanCacheCallback> cleanCacheCallback,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     int32_t userId)
 {
@@ -1164,6 +1175,13 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
+    }
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode ret = bmsExtensionClient->ClearData(bundleName, userId);
+        APP_LOGI("ret : %{public}d", ret);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, ret != ERR_OK);
+        return ret == ERR_OK;
     }
     ApplicationInfo applicationInfo;
     if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
@@ -2375,10 +2393,20 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
+    }
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
+        APP_LOGI("ret : %{public}d", ret);
+        return ret == ERR_OK;
     }
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
 }
@@ -3113,6 +3141,16 @@ ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName
         return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
     }
     return ERR_OK;
+}
+
+bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->IsBundleExist(bundleName);
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

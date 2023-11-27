@@ -464,7 +464,7 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFiles(
-        const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+        const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Clears application running data of a specified application.
@@ -851,7 +851,7 @@ private:
     bool VerifyQueryPermission(const std::string &queryBundleName);
     bool VerifyPrivilegedPermission(const std::string &queryBundleName);
     bool VerifyDependency(const std::string &sharedBundleName);
-    void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    void CleanBundleCacheTask(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         const std::shared_ptr<BundleDataMgr> &dataMgr, int32_t userId);
     void NotifyBundleStatus(const NotifyBundleEvents &installRes);
     ErrCode GetBundleArchiveInfoBySandBoxPath(
@@ -859,6 +859,7 @@ private:
     bool IsPreInstallApp(const std::string &bundleName);
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
+    bool IsBundleExist(const std::string &bundleName);
 
     bool isBrokerServiceExisted_ = false;
 };

@@ -32,6 +32,7 @@ public:
     using Want = OHOS::AAFwk::Want;
 
     BmsExtensionDataMgr();
+    ErrCode Init();
     bool CheckApiInfo(const BundleInfo &bundleInfo, uint32_t sdkVersion);
     bool CheckApiInfo(uint32_t compatibleVersion, uint32_t sdkVersion);
     ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult);
@@ -43,8 +44,11 @@ public:
     ErrCode GetBundleInfo(const std::string &bundleName, int32_t flags, int32_t userId,
         BundleInfo &bundleInfo, bool isNewVersion = false);
     ErrCode Uninstall(const std::string &bundleName);
-    ErrCode Init();
-
+    ErrCode GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats);
+    ErrCode ClearData(const std::string &bundleName, int32_t userId);
+    ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId);
+    ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
+    ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
 private:
     bool OpenHandler();
     static BmsExtension bmsExtension_;

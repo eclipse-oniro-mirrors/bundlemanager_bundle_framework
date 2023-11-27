@@ -46,6 +46,11 @@ public:
     ErrCode ImplicitQueryAbilityInfos(
         const Want &want, int32_t flags, int32_t userId, std::vector<AbilityInfo> &abilityInfos,
         bool isNewVersion) const;
+    ErrCode GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats);
+    ErrCode ClearData(const std::string &bundleName, int32_t userId);
+    ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId);
+    ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid);
+    ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName);
 
 private:
     void ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const;

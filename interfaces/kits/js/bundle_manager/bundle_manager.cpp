@@ -1534,7 +1534,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
 }
 
 static ErrCode InnerCleanBundleCacheCallback(
-    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback>& cleanCacheCallback)
+    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
 {
     if (cleanCacheCallback == nullptr) {
         APP_LOGE("callback nullptr");

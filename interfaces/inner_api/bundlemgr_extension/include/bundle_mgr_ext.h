@@ -28,6 +28,8 @@ class BundleMgrExt {
 public:
     using Want = OHOS::AAFwk::Want;
 
+    virtual ~BundleMgrExt() = default;
+
     virtual bool CheckApiInfo(const BundleInfo& bundleInfo) = 0;
     virtual ErrCode HapVerify(const std::string &filePath, Security::Verify::HapVerifyResult &hapVerifyResult)
     {
@@ -57,7 +59,26 @@ public:
     {
         return ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED;
     }
-    virtual ~BundleMgrExt() = default;
+    virtual ErrCode GetBundleStats(const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode ClearData(const std::string &bundleName, int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
+    virtual ErrCode GetBundleNameByUid(int32_t uid, std::string &bundleName)
+    {
+        return ERR_BUNDLE_MANAGER_EXTENSION_DEFAULT_ERR;
+    }
 };
 
 } // AppExecFwk

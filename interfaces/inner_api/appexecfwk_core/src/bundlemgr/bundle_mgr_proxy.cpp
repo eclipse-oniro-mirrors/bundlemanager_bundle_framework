@@ -1498,7 +1498,7 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
-    const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback, int32_t userId)
+    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
