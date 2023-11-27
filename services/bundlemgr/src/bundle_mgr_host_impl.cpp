@@ -1071,7 +1071,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
 
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
         auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback, userId);
+        ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
         APP_LOGI("ret : %{public}d", ret);
         if (ret != ERR_OK) {
             ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
