@@ -184,9 +184,12 @@ ohos_shared_library("libbms") {
   branch_protector_ret = "pac_ret"
 
   sanitize = {
+    boundary_sanitize = true
     cfi = true
     cfi_cross_dso = true
     debug = false
+    integer_overflow = true
+    ubsan = true
   }
 
   use_exceptions = true
@@ -287,7 +290,10 @@ ohos_shared_library("libbms") {
   }
 
   if (ability_runtime_enable) {
-    external_deps += [ "ability_runtime:ability_manager" ]
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+    ]
     defines += [ "ABILITY_RUNTIME_ENABLE" ]
   }
 

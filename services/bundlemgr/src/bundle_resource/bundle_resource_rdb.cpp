@@ -23,6 +23,9 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+namespace {
+const std::string IMAGE_JSON = "data:image/json";
+}
 BundleResourceRdb::BundleResourceRdb()
 {
     APP_LOGI("create");
@@ -65,13 +68,14 @@ bool BundleResourceRdb::AddResourceInfos(const std::vector<ResourceInfo> &resour
         APP_LOGE("failed, resourceInfos is empty");
         return false;
     }
+    bool ret = true;
     for (const auto &info : resourceInfos) {
         if (!AddResourceInfo(info)) {
             APP_LOGE("failed, key:%{public}s", info.GetKey().c_str());
-            return false;
+            ret = false;
         }
     }
-    return true;
+    return ret;
 }
 
 bool BundleResourceRdb::DeleteResourceInfo(const std::string &key)
@@ -121,6 +125,17 @@ bool BundleResourceRdb::GetAllResourceName(std::vector<std::string> &keyNames)
         if (ret != NativeRdb::E_OK) {
             APP_LOGE("GetString name failed, ret: %{public}d", ret);
             return false;
+        }
+        // icon is invalid, need add again
+        std::string icon;
+        ret = absSharedResultSet->GetString(BundleResourceConstants::INDEX_ICON, icon);
+        if (ret != NativeRdb::E_OK) {
+            APP_LOGE("GetString icon failed, ret: %{public}d", ret);
+            return false;
+        }
+        if (icon.substr(0, IMAGE_JSON.size()) == IMAGE_JSON) {
+            APP_LOGW("keyName:%{public}s icon is invalid, need add again", name.c_str());
+            continue;
         }
         keyNames.push_back(name);
     } while (absSharedResultSet->GoToNextRow() == NativeRdb::E_OK);

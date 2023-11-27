@@ -92,11 +92,11 @@ bool BundleResourceImageInfo::EncodeBase64(
         APP_LOGE("originalData is empty");
         return false;
     }
-    int32_t srcLen = originalData.length() - 1;
+    int32_t srcLen = static_cast<int32_t>(originalData.length() - 1);
     std::string base64data = IMAGE_HEADER_INFO;
     int32_t i = 0;
     // encode in groups of every 3 bytes
-    for (int32_t i = 0; i < srcLen - LEN_THREE; i += LEN_THREE) {
+    for (i = 0; i < srcLen - LEN_THREE; i += LEN_THREE) {
         unsigned char byte1 = static_cast<unsigned char>(originalData[i]);
         unsigned char byte2 = static_cast<unsigned char>(originalData[i + BIT_ONE]);
         unsigned char byte3 = static_cast<unsigned char>(originalData[i + BIT_TWO]);
