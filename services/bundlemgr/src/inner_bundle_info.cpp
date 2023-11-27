@@ -2594,15 +2594,15 @@ ErrCode InnerBundleInfo::GetApplicationInfoV9(int32_t flags, int32_t userId, App
             appInfo.entryDir = info.second.modulePath;
         }
         if ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) ==
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION)) {
             for (const auto &item : info.second.requestPermissions) {
                 appInfo.permissions.push_back(item.name);
             }
         }
         if ((static_cast<uint32_t>(flags) &
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
-            static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) ==
+            static_cast<uint32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA)) {
             bool isModuleJson = info.second.isModuleJson;
             if (!isModuleJson && info.second.metaData.customizeData.size() > 0) {
                 appInfo.metaData[info.second.moduleName] = info.second.metaData.customizeData;
