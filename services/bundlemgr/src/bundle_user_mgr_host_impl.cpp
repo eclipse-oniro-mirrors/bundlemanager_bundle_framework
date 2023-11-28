@@ -37,7 +37,6 @@ namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
-const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
 
@@ -360,7 +359,8 @@ void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+    dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
+    dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
 #endif
 }
 }  // namespace AppExecFwk

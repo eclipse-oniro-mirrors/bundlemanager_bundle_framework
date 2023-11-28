@@ -2646,7 +2646,7 @@ static bool InnerSetAbilityEnabled(const OHOS::AppExecFwk::AbilityInfo &abilityI
 }
 
 static bool InnerCleanBundleCacheCallback(
-    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback>& cleanCacheCallback)
+    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
 {
     auto iBundleMgr = GetBundleMgr();
     if (iBundleMgr == nullptr) {

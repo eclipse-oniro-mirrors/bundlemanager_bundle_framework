@@ -2291,6 +2291,12 @@ const std::vector<PreInstallBundleInfo> BundleDataMgr::GetRecoverablePreInstallB
     return recoverablePreInstallBundleInfos;
 }
 
+bool BundleDataMgr::IsBundleExist(const std::string &bundleName) const
+{
+    std::shared_lock<std::shared_mutex> lock(bundleInfoMutex_);
+    return bundleInfos_.find(bundleName) != bundleInfos_.end();
+}
+
 bool BundleDataMgr::HasUserInstallInBundle(
     const std::string &bundleName, const int32_t userId) const
 {

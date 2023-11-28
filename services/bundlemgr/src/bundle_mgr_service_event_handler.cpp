@@ -62,9 +62,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
-const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
-const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
@@ -2185,11 +2182,11 @@ void BMSEventHandler::HandleSceneBoard() const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, Constants::DEFAULT_USERID);
-    dataMgr->SetApplicationEnabled(SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
+    dataMgr->SetApplicationEnabled(Constants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
-        dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });
     APP_LOGD("HandleSceneBoard finish");
 #endif
