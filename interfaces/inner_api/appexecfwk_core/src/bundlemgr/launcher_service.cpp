@@ -24,7 +24,18 @@
 
 namespace OHOS {
 namespace AppExecFwk {
+OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::bundleMgr_ = nullptr;
+OHOS::sptr<IRemoteObject::DeathRecipient> LauncherService::deathRecipient_(
+    new (std::nothrow) LauncherServiceDeathRecipient());
+std::mutex LauncherService::bundleMgrMutex_;
 const char* EMPTY_STRING = "";
+
+void LauncherService::LauncherServiceDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+};
 
 LauncherService::LauncherService()
 {
@@ -67,16 +78,9 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
             auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
             if (bundleMgr == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
+                return nullptr;
             }
             bundleMgr_ = bundleMgr;
-            std::weak_ptr<LauncherService> weakPtr = shared_from_this();
-            auto deathCallback = [weakPtr](const wptr<IRemoteObject>& object) {
-                auto sharedPtr = weakPtr.lock();
-                if (sharedPtr != nullptr) {
-                    sharedPtr->OnDeath();
-                }
-            };
-            deathRecipient_ = new (std::nothrow) BundleMgrServiceDeathRecipient(deathCallback);
             bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
         }
     }

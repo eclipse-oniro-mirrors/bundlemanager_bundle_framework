@@ -21,6 +21,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_mgr_interface.h"
+#include "iremote_object.h"
 #include "launcher_ability_info.h"
 #include "napi/native_api.h"
 #include "napi/native_common.h"
@@ -160,6 +161,10 @@ static void ConvertRecoverableApplicationInfo(
 static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications);
 
+class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
+    virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
+};
+
 template<typename T>
 static napi_value AsyncCallNativeMethod(napi_env env,
                                  T *asyncCallbackInfo,
@@ -215,6 +220,7 @@ static void NapiReturnDeferred(napi_env env, T *asyncCallbackInfo, napi_value re
 private:
     static sptr<IBundleMgr> bundleMgr_;
     static std::mutex bundleMgrMutex_;
+    static sptr<IRemoteObject::DeathRecipient> deathRecipient_;
 };
 
 #define PARSE_PROPERTY(env, property, funcType, value)                                        \

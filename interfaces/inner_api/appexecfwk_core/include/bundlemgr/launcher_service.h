@@ -36,7 +36,7 @@
 
 namespace OHOS {
 namespace AppExecFwk {
-class LauncherService : public std::enable_shared_from_this<LauncherService>, public virtual RefBase {
+class LauncherService : public virtual RefBase {
 public:
     using Want = OHOS::AAFwk::Want;
 
@@ -109,13 +109,18 @@ private:
 private:
     void init();
     void OnDeath();
-    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
+    static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     std::shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
-    OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_ = nullptr;
-    OHOS::sptr<IRemoteObject::DeathRecipient> deathRecipient_ = nullptr;
-    std::mutex bundleMgrMutex_;
+    static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
+    static OHOS::sptr<IRemoteObject::DeathRecipient> deathRecipient_;
+
+    static std::mutex bundleMgrMutex_;
     DISALLOW_COPY_AND_MOVE(LauncherService);
+
+    class LauncherServiceDeathRecipient : public IRemoteObject::DeathRecipient {
+        virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
+    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS
