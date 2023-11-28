@@ -1070,14 +1070,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
     }
 
     if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
-        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
-        ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
-        APP_LOGI("ret : %{public}d", ret);
-        if (ret != ERR_OK) {
-            ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
-        }
-        EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
-        return ret;
+        return ClearCache(bundleName, cleanCacheCallback, userId);
     }
 
     ApplicationInfo applicationInfo;
@@ -3151,6 +3144,19 @@ bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
         return false;
     }
     return dataMgr->IsBundleExist(bundleName);
+}
+
+ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
+    const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
+    APP_LOGI("ret : %{public}d", ret);
+    if (ret != ERR_OK) {
+        ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

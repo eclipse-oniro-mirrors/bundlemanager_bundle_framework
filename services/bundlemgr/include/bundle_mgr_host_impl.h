@@ -860,6 +860,8 @@ private:
     bool GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
         BundleInfo &bundleInfo);
     bool IsBundleExist(const std::string &bundleName);
+    ErrCode ClearCache(const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
+        int32_t userId);
 
     bool isBrokerServiceExisted_ = false;
 };
