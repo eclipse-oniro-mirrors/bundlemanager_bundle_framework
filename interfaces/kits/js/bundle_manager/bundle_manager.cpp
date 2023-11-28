@@ -19,6 +19,7 @@
 
 #include "app_log_wrapper.h"
 #include "bundle_errors.h"
+#include "bundle_manager_sync.h"
 #include "bundle_mgr_client.h"
 #include "bundle_mgr_interface.h"
 #include "bundle_mgr_proxy.h"
@@ -754,7 +755,7 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -802,7 +803,7 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], want)) {
+            if (!ParseWantWithParameter(env, args[i], want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
@@ -1003,7 +1004,7 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
             // parse want with parameter
-            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
+            if (!ParseWantWithParameter(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
