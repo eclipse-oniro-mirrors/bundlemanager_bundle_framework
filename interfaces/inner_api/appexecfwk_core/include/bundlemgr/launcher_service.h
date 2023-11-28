@@ -41,7 +41,7 @@ public:
     using Want = OHOS::AAFwk::Want;
 
     LauncherService();
-    virtual ~LauncherService() = default;
+    virtual ~LauncherService();
 
     /**
      * @brief Registers a callback method for monitoring bundle installation, uninstallation, and update events.
@@ -108,12 +108,19 @@ private:
 
 private:
     void init();
+    void OnDeath();
     static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> GetBundleMgr();
 
     std::shared_ptr<BundleMonitor> bundleMonitor_ = nullptr;
     static OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> bundleMgr_;
+    static OHOS::sptr<IRemoteObject::DeathRecipient> deathRecipient_;
+
     static std::mutex bundleMgrMutex_;
     DISALLOW_COPY_AND_MOVE(LauncherService);
+
+    class LauncherServiceDeathRecipient : public IRemoteObject::DeathRecipient {
+        virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
+    };
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -16,6 +16,7 @@
 #include "launcher_service.h"
 
 #include "bundle_mgr_proxy.h"
+#include "bundle_mgr_service_death_recipient.h"
 #include "common_event_subscribe_info.h"
 #include "common_event_support.h"
 #include "matching_skills.h"
@@ -24,8 +25,17 @@
 namespace OHOS {
 namespace AppExecFwk {
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::bundleMgr_ = nullptr;
+OHOS::sptr<IRemoteObject::DeathRecipient> LauncherService::deathRecipient_(
+    new (std::nothrow) LauncherServiceDeathRecipient());
 std::mutex LauncherService::bundleMgrMutex_;
 const char* EMPTY_STRING = "";
+
+void LauncherService::LauncherServiceDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+};
 
 LauncherService::LauncherService()
 {
@@ -40,6 +50,14 @@ void LauncherService::init()
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_PACKAGE_REMOVED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     bundleMonitor_ = std::make_shared<BundleMonitor>(subscribeInfo);
+}
+
+LauncherService::~LauncherService()
+{
+    APP_LOGD("destroy LauncherService");
+    if (bundleMgr_ != nullptr && deathRecipient_ != nullptr) {
+        bundleMgr_->AsObject()->RemoveDeathRecipient(deathRecipient_);
+    }
 }
 
 OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
@@ -60,8 +78,10 @@ OHOS::sptr<OHOS::AppExecFwk::IBundleMgr> LauncherService::GetBundleMgr()
             auto bundleMgr = OHOS::iface_cast<IBundleMgr>(bundleMgrSa);
             if (bundleMgr == nullptr) {
                 APP_LOGE("GetBundleMgr iface_cast get null");
+                return nullptr;
             }
             bundleMgr_ = bundleMgr;
+            bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
         }
     }
     return bundleMgr_;
@@ -374,5 +394,11 @@ ErrCode LauncherService::GetShortcutInfoV9(
     return ERR_OK;
 }
 
+void LauncherService::OnDeath()
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+}
 }  // namespace AppExecFwk
 }  // namespace OHOS

@@ -119,6 +119,14 @@ using Want = OHOS::AAFwk::Want;
 
 sptr<IBundleMgr> CommonFunc::bundleMgr_ = nullptr;
 std::mutex CommonFunc::bundleMgrMutex_;
+sptr<IRemoteObject::DeathRecipient> CommonFunc::deathRecipient_(new (std::nothrow) BundleMgrCommonDeathRecipient());
+
+void CommonFunc::BundleMgrCommonDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+};
 
 napi_value CommonFunc::WrapVoidToJS(napi_env env)
 {
@@ -335,6 +343,7 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
             APP_LOGE("iface_cast failed.");
             return nullptr;
         }
+        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
     }
     return bundleMgr_;
 }
