@@ -712,6 +712,9 @@ private:
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
 
+    template<typename T>
+    ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
+
     ErrCode WriteBigString(const std::string &str, MessageParcel &reply) const;
 
     using BundleMgrHostFunc = ErrCode (BundleMgrHost::*)(MessageParcel &, MessageParcel &);
