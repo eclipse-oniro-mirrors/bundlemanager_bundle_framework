@@ -145,7 +145,7 @@ void GetValueIfFindKey(const nlohmann::json &jsonObject, const nlohmann::detail:
                     break;
                 }
                 data = jsonObject.at(key).get<T>();
-                if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_ELEMENT_LENGTH) {
+                if (jsonObject.at(key).get<std::string>().length() > Constants::MAX_JSON_STRING_LENGTH) {
                     parseResult = ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR;
                 }
                 break;

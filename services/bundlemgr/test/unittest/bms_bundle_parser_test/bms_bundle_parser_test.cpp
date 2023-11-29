@@ -60,7 +60,7 @@ const std::string BUNDLE_APP_PROFILE_KEY_VERSION = "version";
 const std::string BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE = "installationFree";
 const size_t ONE = 1;
 const size_t TWO = 2;
-const std::string OVER_MAX_PATH_SIZE(260, 'x');
+const std::string OVER_MAX_PATH_SIZE(1025, 'x');
 const nlohmann::json CONFIG_JSON = R"(
     {
         "app": {
@@ -913,7 +913,7 @@ void BmsBundleParserTest::CheckProfilePermission(const nlohmann::json &checkedPr
     std::ostringstream profileFileBuffer;
 
     profileFileBuffer << checkedProfileJson.dump();
-    
+
     BundleExtractor bundleExtractor("");
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
@@ -1496,7 +1496,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2800, Function | SmallTest | Level1)
     std::ostringstream profileFileBuffer;
 
     profileFileBuffer << formsJson.dump();
-    
+
     BundleExtractor bundleExtractor("");
     ErrCode result = bundleProfile.TransformTo(
         profileFileBuffer, bundleExtractor, innerBundleInfo);
@@ -1524,7 +1524,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_2900, Function | SmallTest | Level1)
 
     errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = OVER_MAX_PATH_SIZE;
     CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_SIZE_CHECK_ERROR);
-    
+
     errorShortcutJson[BUNDLE_PROFILE_KEY_APP][BUNDLE_APP_PROFILE_KEY_BUNDLE_NAME] = "bundleName&";
     CheckProfileShortcut(errorShortcutJson, ERR_APPEXECFWK_PARSE_PROFILE_PROP_CHECK_ERROR);
 
@@ -2586,7 +2586,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_5900, Function | SmallTest | Level1)
 
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson[BUNDLE_TYPE_APP][BUNDLETYPE] = BUNDLE_TYPE_APP;
-    
+
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);
@@ -2609,7 +2609,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6000, Function | SmallTest | Level1)
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson[BUNDLE_TYPE_APP][BUNDLETYPE] = EMPTY_NAME;
     profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
-    
+
     profileFileBuffer << profileJson.dump();
 
     BundleExtractor bundleExtractor(EMPTY_NAME);
@@ -2629,7 +2629,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6100, Function | SmallTest | Level1)
     ModuleProfile moduleProfile;
     InnerBundleInfo innerBundleInfo;
     std::ostringstream profileFileBuffer;
-    
+
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
     profileFileBuffer << profileJson.dump();
@@ -2651,7 +2651,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6200, Function | SmallTest | Level1)
     ModuleProfile moduleProfile;
     InnerBundleInfo innerBundleInfo;
     std::ostringstream profileFileBuffer;
-    
+
     nlohmann::json profileJson = MODULE_JSON_2;
     profileJson[MODULE][BUNDLE_MODULE_PROFILE_KEY_MODULE_INSTALLATION_FREE] = true;
     profileJson[MODULE][TYPE] = NO_EXIST_NAME;
@@ -2674,7 +2674,7 @@ HWTEST_F(BmsBundleParserTest, TestParse_6300, Function | SmallTest | Level1)
     ModuleProfile moduleProfile;
     InnerBundleInfo innerBundleInfo;
     std::ostringstream profileFileBuffer;
-    
+
     nlohmann::json profileJson = MODULE_JSON_2;
     profileFileBuffer << profileJson.dump();
 

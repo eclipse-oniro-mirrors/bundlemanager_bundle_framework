@@ -474,8 +474,6 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 
 void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
-    APP_LOGI("rule info: componentType %{public}d, disposedType %{public}d, controlType %{public}d",
-        static_cast<int32_t>(rule.componentType), static_cast<int32_t>(rule.disposedType), static_cast<int32_t>(rule.controlType));
     napi_value nWant = nullptr;
     if (rule.want != nullptr) {
         nWant = CreateJsWant(env, *rule.want);
