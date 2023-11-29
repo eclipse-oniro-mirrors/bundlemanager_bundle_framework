@@ -911,18 +911,14 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
 
-    template <typename T>
-    bool GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo);
-
-    template<typename T>
-    bool GetBigParcelableInfo(
-        BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
-
     template<typename T>
     ErrCode GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     template<typename T>
     ErrCode InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo);
+
+    template<typename T>
+    ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
 
