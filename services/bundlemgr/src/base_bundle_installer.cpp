@@ -4531,14 +4531,14 @@ ErrCode BaseBundleInstaller::DeliveryProfileToCodeSign() const
 {
     APP_LOGD("start to delivery sign profile to code signature");
     Security::Verify::ProvisionInfo provisionInfo = verifyRes_.GetProvisionInfo();
+    if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
+        APP_LOGD("Emulator does not verify signature");
+        return ERR_OK;
+    }
     if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
         provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
         provisionInfo.type == Security::Verify::ProvisionType::DEBUG) {
-        if (provisionInfo.profileBlockLength == 0 || provisionInfo.profileBlock == nullptr) {
-            APP_LOGE("invalid sign profile");
-            return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
-        }
         return InstalldClient::GetInstance()->DeliverySignProfile(provisionInfo.bundleInfo.bundleName,
             provisionInfo.profileBlockLength, provisionInfo.profileBlock.get());
     }
