@@ -26,6 +26,7 @@
 #include "disposed_rule.h"
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
+#include "napi_common_want.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -473,10 +474,13 @@ napi_value GetDisposedStatusSync(napi_env env, napi_callback_info info)
 
 void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
 {
+    APP_LOGI("rule info: componentType %{public}d, disposedType %{public}d, controlType %{public}d",
+        static_cast<int32_t>(rule.componentType), static_cast<int32_t>(rule.disposedType), static_cast<int32_t>(rule.controlType));
     napi_value nWant = nullptr;
-    NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &nWant));
     if (rule.want != nullptr) {
-        CommonFunc::ConvertWantInfo(env, nWant, *rule.want);
+        nWant = CreateJsWant(env, *rule.want);
+    } else {
+        napi_create_object(env, &nWant);
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "want", nWant));
     napi_value nComponentType;
@@ -514,7 +518,7 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     napi_value prop = nullptr;
     napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
     AAFwk::Want want;
-    if (!CommonFunc::ParseWantWithoutVerification(env, prop, want)) {
+    if (!UnwrapWant(env, prop, want)) {
         APP_LOGW("parse want failed");
         return false;
     }
