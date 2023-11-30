@@ -742,6 +742,16 @@ ErrCode InstalldHostImpl::IsExistFile(const std::string &path, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::IsExistApFile(const std::string &path, bool &isExist)
+{
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    isExist = InstalldOperator::IsExistApFile(path);
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {

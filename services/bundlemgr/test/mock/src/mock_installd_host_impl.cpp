@@ -142,6 +142,11 @@ ErrCode InstalldHostImpl::IsExistFile(const std::string &path, bool &isExist)
     return ERR_OK;
 }
 
+ErrCode InstalldHostImpl::IsExistApFile(const std::string &path, bool &isExist)
+{
+    return ERR_OK;
+}
+
 ErrCode InstalldHostImpl::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return ERR_OK;

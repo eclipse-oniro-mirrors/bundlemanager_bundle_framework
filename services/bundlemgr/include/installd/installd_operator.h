@@ -40,6 +40,12 @@ public:
      */
     static bool IsExistFile(const std::string &path);
     /**
+     * @brief Check whether an AP file exists in the current directory of the file.
+     * @param path Indicates the file path to be checked.
+     * @return Returns true if the file exist; returns false otherwise.
+     */
+    static bool IsExistApFile(const std::string &path);
+    /**
      * @brief Check whether a directory exist.
      * @param path Indicates the directory path to be checked.
      * @return Returns true if the directory exist; returns false otherwise.

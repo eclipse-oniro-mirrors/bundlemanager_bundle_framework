@@ -146,6 +146,8 @@ private:
 
     bool HandleIsExistFile(MessageParcel &data, MessageParcel &reply);
 
+    bool HandleIsExistApFile(MessageParcel &data, MessageParcel &reply);
+
     bool HandleIsDirEmpty(MessageParcel &data, MessageParcel &reply);
 
     bool HandObtainQuickFixFileDir(MessageParcel &data, MessageParcel &reply);

@@ -141,6 +141,8 @@ public:
 
     virtual ErrCode IsExistFile(const std::string &path, bool &isExist) override;
 
+    virtual ErrCode IsExistApFile(const std::string &path, bool &isExist) override;
+
     virtual ErrCode IsDirEmpty(const std::string &dir, bool &isDirEmpty) override;
 
     virtual ErrCode ObtainQuickFixFileDir(const std::string &dir, std::vector<std::string> &dirVec) override;

@@ -86,6 +86,8 @@ void InstalldHost::Init()
         &InstalldHost::HandGetNativeLibraryFileNames);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXECUTE_AOT), &InstalldHost::HandleExecuteAOT);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_FILE), &InstalldHost::HandleIsExistFile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::IS_EXIST_AP_FILE),
+        &InstalldHost::HandleIsExistApFile);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE),
         &InstalldHost::HandVerifyCodeSignature);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::CHECK_ENCRYPTION),
@@ -387,6 +389,19 @@ bool InstalldHost::HandleIsExistFile(MessageParcel &data, MessageParcel &reply)
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     if (!reply.WriteBool(isExist)) {
         APP_LOGE("fail to IsExistFile from reply");
+        return false;
+    }
+    return true;
+}
+
+bool InstalldHost::HandleIsExistApFile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string path = Str16ToStr8(data.ReadString16());
+    bool isExist = false;
+    ErrCode result = IsExistApFile(path, isExist);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    if (!reply.WriteBool(isExist)) {
+        APP_LOGE("fail to IsExistApFile from reply");
         return false;
     }
     return true;

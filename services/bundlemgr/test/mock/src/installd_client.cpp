@@ -264,6 +264,11 @@ ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
     return CallService(&IInstalld::IsExistFile, path, isExist);
 }
 
+ErrCode InstalldClient::IsExistApFile(const std::string &path, bool &isExist)
+{
+    return CallService(&IInstalld::IsExistApFile, path, isExist);
+}
+
 ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return CallService(&IInstalld::IsDirEmpty, dir, isDirEmpty);

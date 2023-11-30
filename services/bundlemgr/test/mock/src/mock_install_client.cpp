@@ -150,6 +150,11 @@ ErrCode InstalldClient::IsExistFile(const std::string &path, bool &isExist)
     return 0;
 }
 
+ErrCode InstalldClient::IsExistApFile(const std::string &path, bool &isExist)
+{
+    return 0;
+}
+
 ErrCode InstalldClient::IsDirEmpty(const std::string &dir, bool &isDirEmpty)
 {
     return 0;
