@@ -445,7 +445,12 @@ ErrCode BundleMgrHostImpl::GetNameForUid(const int uid, std::string &name)
         APP_LOGE("DataMgr is nullptr");
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
-    return dataMgr->GetNameForUid(uid, name);
+    auto ret = dataMgr->GetNameForUid(uid, name);
+    if (ret != ERR_OK && isBrokerServiceExisted_) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ret = bmsExtensionClient->GetBundleNameByUid(uid, name);
+    }
+    return ret;
 }
 
 bool BundleMgrHostImpl::GetBundleGids(const std::string &bundleName, std::vector<int> &gids)
