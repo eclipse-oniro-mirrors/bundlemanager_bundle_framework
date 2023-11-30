@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 
+#include "code_sign_helper.h"
 #include "ipc/installd_host.h"
 #include "installd/installd_operator.h"
 
@@ -173,6 +174,7 @@ public:
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
+    std::shared_ptr<CodeSignHelper> codeSignHelper_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

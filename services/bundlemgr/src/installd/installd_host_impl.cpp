@@ -800,7 +800,7 @@ ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSign
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam)) {
+    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper_)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -913,13 +913,17 @@ ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPa
 
     Security::CodeSign::EntryMap entryMap;
     ErrCode ret = ERR_OK;
+    if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
+        codeSignHelper_ = std::make_shared<CodeSignHelper>();
+    }
     if (isEnterpriseBundle) {
         APP_LOGD("Verify code signature for enterprise bundle");
-        ret = CodeSignUtils::EnforceCodeSignForAppWithOwnerId(appIdentifier, realHapPath, entryMap, FILE_SELF);
+        ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(appIdentifier, realHapPath, entryMap, FILE_ALL);
     } else {
         APP_LOGD("Verify code signature for non-enterprise bundle");
-        ret = CodeSignUtils::EnforceCodeSignForApp(realHapPath, entryMap, FILE_SELF);
+        ret = codeSignHelper_->EnforceCodeSignForApp(realHapPath, entryMap, FILE_ALL);
     }
+    codeSignHelper_->SetHapChecked(true);
     if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
         APP_LOGW("no code sign file in the bundle");
         return ERR_OK;

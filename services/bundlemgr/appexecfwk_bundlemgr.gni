@@ -17,6 +17,7 @@ install_daemon_sources = [
   "${services_path}/bundlemgr/src/aot/aot_args.cpp",
   "${services_path}/bundlemgr/src/aot/aot_executor.cpp",
   "${services_path}/bundlemgr/src/bundle_util.cpp",
+  "${services_path}/bundlemgr/src/code_sign_helper.cpp",
   "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
   "${services_path}/bundlemgr/src/installd/installd_load_callback.cpp",
   "${services_path}/bundlemgr/src/installd/installd_operator.cpp",

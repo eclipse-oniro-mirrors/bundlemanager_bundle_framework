@@ -4072,10 +4072,6 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
         APP_LOGD("code signature is not supported");
         return ERR_OK;
     }
-    if (isPreInstalledBundle) {
-        APP_LOGD("code signature is not supported for pre-installed bundle");
-        return ERR_OK;
-    }
     CodeSignatureParam codeSignatureParam;
     codeSignatureParam.modulePath = modulePath_;
     codeSignatureParam.cpuAbi = cpuAbi;
@@ -4083,6 +4079,7 @@ ErrCode BaseBundleInstaller::VerifyCodeSignatureForNativeFiles(const std::string
     codeSignatureParam.signatureFileDir = signatureFileDir;
     codeSignatureParam.isEnterpriseBundle = isEnterpriseBundle_;
     codeSignatureParam.appIdentifier = appIdentifier_;
+    codeSignatureParam.isPreInstalledBundle = isPreInstalledBundle;
     return InstalldClient::GetInstance()->VerifyCodeSignature(codeSignatureParam);
 }
 
