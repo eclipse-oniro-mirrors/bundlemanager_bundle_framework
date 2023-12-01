@@ -475,7 +475,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0100, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -505,7 +505,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0200, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle25.hap";
     std::string appName = BASE_BUNDLE_NAME + "2";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -538,7 +538,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0300, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle26.hap";
     std::string appName = BASE_BUNDLE_NAME + "3";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -573,7 +573,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0500, Function | MediumTest | Level
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle28.rpk";
         std::string appName = BASE_BUNDLE_NAME + "5";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -614,7 +614,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfo_0600, Function | MediumTest | Level
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -694,7 +694,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0010, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -726,7 +726,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0011, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -758,7 +758,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0012, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -791,7 +791,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0013, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -825,7 +825,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0014, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -837,7 +837,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0014, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_HAP_MODULE), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     CheckBaseBundleInfo(1, bundleInfo);
-    EXPECT_GT(bundleInfo.hapModuleInfos.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -859,7 +859,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0015, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -872,8 +872,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0015, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_ABILITY), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     CheckBaseBundleInfo(1, bundleInfo);
-    EXPECT_GT(bundleInfo.hapModuleInfos.size(), 0);
-    EXPECT_GT(bundleInfo.hapModuleInfos[0].abilityInfos.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].abilityInfos.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -895,7 +895,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0016, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -908,8 +908,8 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0016, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_GT(bundleInfo.hapModuleInfos.size(), 0);
-    EXPECT_GT(bundleInfo.hapModuleInfos[0].extensionInfos.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos.empty());
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].extensionInfos.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -931,7 +931,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0017, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -965,7 +965,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -979,7 +979,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0018, Function | MediumTest | Lev
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
     EXPECT_EQ(bundleInfo.applicationInfo.name, appName);
-    EXPECT_GT(bundleInfo.applicationInfo.metadata.size(), 0);
+    EXPECT_FALSE(bundleInfo.applicationInfo.metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1001,7 +1001,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1014,7 +1014,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0019, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_GT(bundleInfo.hapModuleInfos[0].metadata.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1036,7 +1036,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1050,7 +1050,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0020, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_GT(bundleInfo.hapModuleInfos[0].abilityInfos[0].metadata.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].abilityInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1072,7 +1072,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1086,7 +1086,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0021, Function | MediumTest | Lev
         static_cast<int32_t>(GetBundleInfoFlag::GET_BUNDLE_INFO_WITH_METADATA), bundleInfo, USERID);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(bundleInfo.name, appName);
-    EXPECT_GT(bundleInfo.hapModuleInfos[0].extensionInfos[0].metadata.size(), 0);
+    EXPECT_FALSE(bundleInfo.hapModuleInfos[0].extensionInfos[0].metadata.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1108,7 +1108,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0022, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1145,7 +1145,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfoV9_0023, Function | MediumTest | Lev
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1183,7 +1183,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfos_0100, Function | MediumTest | Leve
         for (int i = 6; i < 9; i++) {
             std::vector<std::string> resvec;
             std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-            Install(hapFilePath, InstallFlag::NORMAL, resvec);
+            Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
             installResult = commonTool.VectorToStr(resvec);
             EXPECT_EQ(installResult, "Success") << "install fail!";
         }
@@ -1296,7 +1296,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0200, Function | MediumTest | Le
     for (int i = 6; i < 9; i++) {
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
     }
@@ -1342,7 +1342,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0300, Function | MediumTest | Le
     for (int i = 6; i < 9; i++) {
         std::vector<std::string> resvec;
         std::string hapFile = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFile, InstallFlag::NORMAL, resvec);
+        Install(hapFile, InstallFlag::REPLACE_EXISTING, resvec);
         installRes = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installRes, "Success") << "install fail!";
     }
@@ -1397,7 +1397,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosV9_0400, Function | MediumTest | Le
     for (int i = 6; i < 9; i++) {
         std::vector<std::string> resvec;
         std::string hapFile = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFile, InstallFlag::NORMAL, resvec);
+        Install(hapFile, InstallFlag::REPLACE_EXISTING, resvec);
         installRes = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installRes, "Success") << "install fail!";
     }
@@ -1451,7 +1451,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0100, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -1499,7 +1499,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0200, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -1547,7 +1547,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0300, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -1596,7 +1596,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0400, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -1643,7 +1643,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0500, Function | MediumTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -1677,7 +1677,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0600, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -1725,7 +1725,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfo_0700, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1790,7 +1790,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0100, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1826,7 +1826,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0200, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1880,7 +1880,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0400, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1893,8 +1893,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0400, Function | MediumTest 
         appName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_PERMISSION), USERID, appInfo);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(appInfo.name, appName);
-    EXPECT_GT(appInfo.permissions.size(), 0);
-
+    EXPECT_FALSE(appInfo.permissions.empty());
     resvec.clear();
     Uninstall(appName, resvec);
     std::string uninstallResult = commonTool.VectorToStr(resvec);
@@ -1917,7 +1916,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0500, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -1930,7 +1929,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfoV9_0500, Function | MediumTest 
         appName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_METADATA), USERID, appInfo);
     EXPECT_EQ(getInfoResult, ERR_OK);
     EXPECT_EQ(appInfo.name, appName);
-    EXPECT_GT(appInfo.metadata.size(), 0);
+    EXPECT_FALSE(appInfo.metadata.empty());
 
     resvec.clear();
     Uninstall(appName, resvec);
@@ -1961,7 +1960,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfos_0100, Function | MediumTest |
             std::vector<std::string> resvec;
             std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
             std::string appName = BASE_BUNDLE_NAME + std::to_string(i - 5);
-            Install(hapFilePath, InstallFlag::NORMAL, resvec);
+            Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
             installResult = commonTool.VectorToStr(resvec);
             EXPECT_EQ(installResult, "Success") << "install fail!";
 
@@ -2075,7 +2074,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0200, Function | MediumTest
     for (int i = 6; i < 9; i++) {
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
     }
@@ -2120,7 +2119,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetApplicationInfosV9_0300, Function | MediumTest
     for (int i = 6; i < 9; i++) {
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
     }
@@ -2353,7 +2352,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0100, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string bundleName = BASE_BUNDLE_NAME + "1";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2397,7 +2396,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0200, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string bundleName = BASE_BUNDLE_NAME + "1";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2442,7 +2441,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0300, Function | MediumTest | 
         std::vector<std::string> resvec;
         std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string bundleName = BASE_BUNDLE_NAME + "1";
-        Install(hapFilePath, InstallFlag::NORMAL, resvec);
+        Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         int userId = Constants::DEFAULT_USERID;
@@ -2488,7 +2487,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetUidByBundleName_0400, Function | MediumTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
@@ -2537,7 +2536,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0100, Function | MediumTest | Level1)
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2615,7 +2614,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0300, Function | MediumTest | Level2)
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string errName = BASE_BUNDLE_NAME + "e";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2675,7 +2674,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppType_0500, Function | MediumTest | Level2)
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle28.rpk";
         std::string appName = BASE_BUNDLE_NAME + "5";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2717,7 +2716,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0100, Function | MediumTest | Lev
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
         std::string label = "$string:MainAbility_label";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2765,7 +2764,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0300, Function | MediumTest | Lev
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
         std::string label = "$string:MainAbility_label";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2813,7 +2812,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0400, Function | MediumTest | Lev
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string errAbilityName = "MainAbility";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2874,7 +2873,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityLabel_0600, Function | MediumTest | Lev
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle28.rpk";
         std::string appName = BASE_BUNDLE_NAME + "5";
         std::string abilityName = "MainAbility";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2914,7 +2913,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0100, Function | MediumTest | Le
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -2968,7 +2967,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0200, Function | MediumTest | Le
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         CommonTool commonTool;
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         AbilityInfo abilityInfo;
@@ -3025,7 +3024,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0300, Function | MediumTest | Le
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3077,7 +3076,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0400, Function | MediumTest | Le
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap";
         std::string appName = BASE_BUNDLE_NAME + "2";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3148,7 +3147,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetHapModuleInfo_0600, Function | MediumTest | Le
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle28.rpk";
         std::string appName = BASE_BUNDLE_NAME + "5";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3290,7 +3289,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0100, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
 
@@ -3345,7 +3344,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0300, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
 
@@ -3404,7 +3403,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0400, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
 
@@ -3463,7 +3462,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0500, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
 
@@ -3519,7 +3518,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0600, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(bundleStatusCallback);
-        Install(filePath, InstallFlag::NORMAL, resvec);
+        Install(filePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
         bool clearResult = bundleMgrProxy->ClearBundleStatusCallback(bundleStatusCallback);
@@ -3572,14 +3571,14 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0700, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(firstBundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         resvec.clear();
         sptr<BundleStatusCallbackImpl> secondBundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
         EXPECT_NE(secondBundleStatusCallback, nullptr);
         secondBundleStatusCallback->SetBundleName(secondAppName);
         bundleMgrProxy->RegisterBundleStatusCallback(secondBundleStatusCallback);
-        Install(secondFilePath, InstallFlag::NORMAL, resvec);
+        Install(secondFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         bool clearResult = bundleMgrProxy->ClearBundleStatusCallback(firstBundleStatusCallback);
         EXPECT_TRUE(clearResult);
@@ -3631,7 +3630,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0800, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(firstBundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string firstinstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(firstinstallResult, "Success") << "install fail!";
         resvec.clear();
@@ -3639,7 +3638,7 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0800, Function | MediumTest | Level1)
         EXPECT_NE(secondBundleStatusCallback, nullptr);
         secondBundleStatusCallback->SetBundleName(secondAppName);
         bundleMgrProxy->RegisterBundleStatusCallback(secondBundleStatusCallback);
-        Install(secondFilePath, InstallFlag::NORMAL, resvec);
+        Install(secondFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         std::string secondinstallResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(secondinstallResult, "Success") << "install fail!";
         bool clearResult = bundleMgrProxy->ClearBundleStatusCallback(secondBundleStatusCallback);
@@ -3693,14 +3692,14 @@ HWTEST_F(ActsBmsKitSystemTest, Callback_0900, Function | MediumTest | Level1)
         ASSERT_NE(bundleMgrProxy, nullptr);
 
         bundleMgrProxy->RegisterBundleStatusCallback(firstBundleStatusCallback);
-        Install(firstFilePath, InstallFlag::NORMAL, resvec);
+        Install(firstFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         resvec.clear();
         sptr<BundleStatusCallbackImpl> secondBundleStatusCallback = (new (std::nothrow) BundleStatusCallbackImpl());
         EXPECT_NE(secondBundleStatusCallback, nullptr);
         secondBundleStatusCallback->SetBundleName(secondAppName);
         bundleMgrProxy->RegisterBundleStatusCallback(secondBundleStatusCallback);
-        Install(secondFilePath, InstallFlag::NORMAL, resvec);
+        Install(secondFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         bool clearResult1 = bundleMgrProxy->ClearBundleStatusCallback(firstBundleStatusCallback);
         EXPECT_TRUE(clearResult1);
@@ -3780,7 +3779,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0100, Function | MediumTest | Le
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3835,7 +3834,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0200, Function | MediumTest | Le
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle3.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3889,7 +3888,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0300, Function | MediumTest | Le
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3945,7 +3944,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0400, Function | MediumTest | Le
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -3998,7 +3997,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0500, Function | MediumTest | Le
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -4041,7 +4040,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfo_0600, Function | MediumTest | Le
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -4088,7 +4087,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleInfosByMetaData_0100, Function | MediumT
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle17.hap";
         std::string appName = "com.third.hiworld.example6";
 
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -4185,7 +4184,7 @@ HWTEST_F(ActsBmsKitSystemTest, AbilityDump_0100, Function | MediumTest | Level0)
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
         std::string abilityName = BASE_ABILITY_NAME;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         CommonTool commonTool;
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         Want want;
@@ -4265,7 +4264,7 @@ HWTEST_F(ActsBmsKitSystemTest, ApplicationInfoDump_0100, Function | MediumTest |
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -4436,7 +4435,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0200, Function | MediumTest | Level1)
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle9.hap";
         std::string bundleName = BASE_BUNDLE_NAME + "2";
         std::vector<std::string> resvec;
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -4480,7 +4479,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0500, Function | MediumTest | Level1)
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle12.rpk";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
         std::string installResult = commonTool.VectorToStr(resvec);
@@ -4514,7 +4513,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0600, Function | MediumTest | Level1)
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "e.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
 
@@ -4550,7 +4549,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0700, Function | MediumTest | Level1)
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
 
@@ -4599,7 +4598,7 @@ HWTEST_F(ActsBmsKitSystemTest, Errors_0800, Function | MediumTest | Level1)
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
         CommonTool commonTool;
 
@@ -4677,7 +4676,7 @@ HWTEST_F(ActsBmsKitSystemTest, ApplicationInfo_0100, Function | MediumTest | Lev
     for (int i = 1; i <= stLevel_.BMSLevel; i++) {
         std::vector<std::string> resvec;
         std::string appName = BASE_BUNDLE_NAME + "1";
-        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap", InstallFlag::NORMAL, resvec);
+        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap", InstallFlag::REPLACE_EXISTING, resvec);
         CommonTool commonTool;
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         ApplicationInfo appInfo;
@@ -4783,7 +4782,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryKeepAliveBundleInfos_0100, Function | Medium
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -4816,7 +4815,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryKeepAliveBundleInfos_0200, Function | Medium
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle2.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -4854,7 +4853,7 @@ HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0100, Function | MediumTest | 
         EXPECT_EQ(installerProxy, nullptr);
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.isKeepData = false;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
@@ -4891,7 +4890,7 @@ HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0200, Function | MediumTest | 
         EXPECT_EQ(installerProxy, nullptr);
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.isKeepData = true;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
@@ -4927,7 +4926,7 @@ HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0300, Function | MediumTest | 
         EXPECT_EQ(installerProxy, nullptr);
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.isKeepData = false;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
@@ -4977,7 +4976,7 @@ HWTEST_F(ActsBmsKitSystemTest, Uninstall_KeepData_0400, Function | MediumTest | 
         EXPECT_EQ(installerProxy, nullptr);
     }
     InstallParam installParam;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.userId = USERID;
     installParam.isKeepData = true;
     sptr<StatusReceiverImpl> statusReceiver = (new (std::nothrow) StatusReceiverImpl());
@@ -5027,7 +5026,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0100, Function | MediumTest | Le
         for (int i = 6; i <= 8; i++) {
             std::vector<std::string> resvec;
             std::string hapFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle" + std::to_string(i) + ".hap";
-            Install(hapFilePath, InstallFlag::NORMAL, resvec);
+            Install(hapFilePath, InstallFlag::REPLACE_EXISTING, resvec);
             EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         }
         bool ret;
@@ -5101,7 +5100,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlesForUid_0300, Function | MediumTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
 
@@ -5141,7 +5140,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         CommonTool commonTool;
         std::vector<std::string> resvec;
         std::string name1, name2;
-        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap", InstallFlag::NORMAL, resvec);
+        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap", InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         resvec.clear();
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -5154,10 +5153,10 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0100, Function | MediumTest | Level
         Uninstall(BASE_BUNDLE_NAME + '1', resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "uninstall fail!";
         resvec.clear();
-        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap", InstallFlag::NORMAL, resvec);
+        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle7.hap", InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         resvec.clear();
-        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap", InstallFlag::NORMAL, resvec);
+        Install(THIRD_BUNDLE_PATH + "bmsThirdBundle6.hap", InstallFlag::REPLACE_EXISTING, resvec);
         EXPECT_EQ(commonTool.VectorToStr(resvec), "Success") << "install fail!";
         BundleInfo bundleInfo2;
         bundleMgrProxy->GetBundleInfo(BASE_BUNDLE_NAME + '1', BundleFlag::GET_BUNDLE_DEFAULT, bundleInfo2, USERID);
@@ -5201,7 +5200,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0200, Function | MediumTest | Level
         std::vector<std::string> resvec;
         std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
         std::string appName = BASE_BUNDLE_NAME + '1';
-        Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+        Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
         installResult = commonTool.VectorToStr(resvec);
         EXPECT_EQ(installResult, "Success") << "install fail!";
         sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
@@ -5241,7 +5240,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetNameForUid_0300, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     sptr<BundleMgrProxy> bundleMgrProxy = GetBundleMgrProxy();
     ASSERT_NE(bundleMgrProxy, nullptr);
 
@@ -5270,7 +5269,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppIdByBundleName_0100, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5313,7 +5312,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGidsByUid_0100, Function | MediumTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5345,7 +5344,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0100, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5375,7 +5374,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleGids_0200, Function | MediumTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5406,7 +5405,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckIsSystemAppByUid_0100, Function | MediumTest
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5439,7 +5438,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0100, Function | MediumTest | L
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5475,7 +5474,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfos_0200, Function | MediumTest | L
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5511,7 +5510,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAbilityInfosV9_0100, Function | MediumTest |
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5548,7 +5547,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryAllAbilityInfos_0100, Function | MediumTest 
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5584,7 +5583,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppPrivilegeLevel_0100, Function | MediumTest 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5627,7 +5626,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0100, Function | MediumTest | Leve
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5658,7 +5657,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0100, Function | SmallTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5689,7 +5688,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundlePackInfo_0200, Function | SmallTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5740,7 +5739,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfoByPriority_0100, Function | Smal
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5778,7 +5777,7 @@ HWTEST_F(ActsBmsKitSystemTest, ImplicitQueryInfos_0100, Function | SmallTest | L
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5816,7 +5815,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAllDependentModuleNames_0100, Function | Small
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5869,7 +5868,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetModuleUpgradeFlag_0100, Function | SmallTest |
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5925,7 +5924,7 @@ HWTEST_F(ActsBmsKitSystemTest, ObtainCallingBundleName_0100, Function | SmallTes
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5969,7 +5968,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetBundleStats_0100, Function | SmallTest | Level
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -5999,7 +5998,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetStringById_0100, Function | SmallTest | Level1
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6050,7 +6049,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetIconById_0100, Function | SmallTest | Level1)
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6219,7 +6218,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0100, Function | SmallTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6256,7 +6255,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0200, Function | SmallTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6291,7 +6290,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0300, Function | SmallTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6329,7 +6328,7 @@ HWTEST_F(ActsBmsKitSystemTest, CheckAbilityEnabled_0400, Function | SmallTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6438,7 +6437,7 @@ HWTEST_F(ActsBmsKitSystemTest, QueryExtensionAbilityInfosV9_0400, Function | Sma
     GTEST_LOG_(INFO) << name << " start";
     std::string bundleFilePath = "/data/test/bms_bundle/bundleClient1.hap";
     std::vector<std::string> resvec;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -6685,7 +6684,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0400, Function | SmallTest | Level
     std::vector<std::string> resvec;
     CommonTool commonTool;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
     std::string bundleName = BASE_BUNDLE_NAME + "1";
@@ -6712,7 +6711,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAbilityInfo_0500, Function | SmallTest | Level
     std::vector<std::string> resvec;
     CommonTool commonTool;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle24.hap";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
     std::string bundleName = BASE_BUNDLE_NAME + "1";
@@ -6754,7 +6753,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetFormsInfoByApp_0200, Function | SmallTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7083,7 +7082,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0100, Function | MediumTest | L
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
     std::string appName = "com.example.ohosproject.hmservice";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7138,7 +7137,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetShortcutInfoV9_0300, Function | SmallTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7179,7 +7178,7 @@ HWTEST_F(ActsBmsKitSystemTest, event_callback_0100, Function | MediumTest | Leve
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     CommonTool commonTool;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
     resvec.clear();
@@ -7576,7 +7575,7 @@ HWTEST_F(ActsBmsKitSystemTest, SilentInstall_0200, Function | MediumTest | Level
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
     std::string abilityName = BASE_ABILITY_NAME;
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
 
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
@@ -7720,7 +7719,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAppProvisionInfo_0002, Function | SmallTest | 
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7769,7 +7768,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetSpecifiedDistributionType_0002, Function | Sma
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7859,7 +7858,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0002, Function | SmallTest | Le
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -7891,7 +7890,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0003, Function | SmallTest | Le
     std::string appName = BASE_BUNDLE_NAME + "1";
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.specifiedDistributionType = "specifiedDistributionType";
     installParam.additionalInfo = "additionalInfo";
     Install(bundleFilePath, installParam, resvec);
@@ -7929,7 +7928,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetAdditionalInfo_0004, Function | SmallTest | Le
     std::string appName = BASE_BUNDLE_NAME + "1";
     InstallParam installParam;
     installParam.userId = USERID;
-    installParam.installFlag = InstallFlag::NORMAL;
+    installParam.installFlag = InstallFlag::REPLACE_EXISTING;
     installParam.specifiedDistributionType = "specifiedDistributionType";
     installParam.additionalInfo = "additionalInfo";
     Install(bundleFilePath, installParam, resvec);
@@ -7972,7 +7971,7 @@ HWTEST_F(ActsBmsKitSystemTest, DumpInfos_0001, Function | SmallTest | Level1)
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -8002,7 +8001,7 @@ HWTEST_F(ActsBmsKitSystemTest, GetOverlayManagerProxy_0100, Function | SmallTest
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bmsThirdBundle1.hap";
     std::string appName = BASE_BUNDLE_NAME + "1";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
@@ -8047,7 +8046,7 @@ HWTEST_F(ActsBmsKitSystemTest, ResetAOTCompileStatus_0100, Function | SmallTest 
     // install
     std::vector<std::string> resvec;
     std::string bundleFilePath = THIRD_BUNDLE_PATH + "bundleClient1.hap";
-    Install(bundleFilePath, InstallFlag::NORMAL, resvec);
+    Install(bundleFilePath, InstallFlag::REPLACE_EXISTING, resvec);
     CommonTool commonTool;
     std::string installResult = commonTool.VectorToStr(resvec);
     EXPECT_EQ(installResult, "Success") << "install fail!";
