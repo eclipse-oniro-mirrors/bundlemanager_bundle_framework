@@ -52,6 +52,7 @@ const std::string DEFAULT_APP_BROWSER = "BROWSER";
 const std::string DEFAULT_APP_AUDIO = "AUDIO";
 const std::string DEFAULT_APP_PDF = "PDF";
 const std::string DEFAULT_APP_WORD = "WORD";
+const std::string DEFAULT_FILE_TYPE_WORD = "application/msword";
 const std::string DEFAULT_APP_EXCEL = "EXCEL";
 const std::string DEFAULT_APP_PPT = "PPT";
 const std::string ABILITY_VIDEO = "VIDEO";
@@ -415,18 +416,18 @@ HWTEST_F(BmsBundleDefaultAppTest, BmsBundleDefaultApp_0700, Function | SmallTest
     auto defaultAppProxy = GetDefaultAppProxy();
     EXPECT_NE(defaultAppProxy, nullptr);
     AAFwk::Want want;
-    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_VIDEO, want);
+    ErrCode result = defaultAppProxy->SetDefaultApplication(USER_ID, DEFAULT_APP_WORD, want);
     EXPECT_EQ(result, ERR_OK);
-    result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_VIDEO_MP4, ABILITY_VIDEO_MP4);
+    result = SetDefaultApplicationWrap(defaultAppProxy, DEFAULT_FILE_TYPE_WORD, DEFAULT_APP_WORD);
     EXPECT_EQ(result, ERR_OK);
     BundleInfo bundleInfo;
-    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD, bundleInfo);
     EXPECT_EQ(result, ERR_OK);
     EXPECT_EQ(bundleInfo.name, BUNDLE_NAME);
 
-    result = defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4);
+    result = defaultAppProxy->ResetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD);
     EXPECT_EQ(result, ERR_OK);
-    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_VIDEO_MP4, bundleInfo);
+    result = defaultAppProxy->GetDefaultApplication(USER_ID, DEFAULT_FILE_TYPE_WORD, bundleInfo);
     EXPECT_NE(result, ERR_OK);
 }
 
