@@ -120,8 +120,8 @@ int32_t BundleStreamInstallerHostImpl::CreateStream(const std::string &fileName)
         return Constants::DEFAULT_STREAM_FD;
     }
     std::string filePath = tempDir_ + fileName;
-    int32_t fd = Constants::DEFAULT_STREAM_FD;
-    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
+    int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
+    if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
@@ -171,8 +171,8 @@ int32_t BundleStreamInstallerHostImpl::CreateSignatureFileStream(const std::stri
         return Constants::DEFAULT_STREAM_FD;
     }
     std::string filePath = tempSignatureFileDir_ + fileName;
-    int32_t fd = Constants::DEFAULT_STREAM_FD;
-    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
+    int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
+    if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
 
@@ -219,8 +219,8 @@ int32_t BundleStreamInstallerHostImpl::CreateSharedBundleStream(const std::strin
     }
 
     std::string bundlePath = installParam_.sharedBundleDirPaths[index] + hspName;
-    int32_t fd = Constants::DEFAULT_STREAM_FD;
-    if ((fd = BundleUtil::CreateFileDescriptor(bundlePath, 0)) < 0) {
+    int32_t fd = BundleUtil::CreateFileDescriptor(bundlePath, 0);
+    if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
     if (fd > 0) {
@@ -263,8 +263,8 @@ int32_t BundleStreamInstallerHostImpl::CreatePgoFileStream(const std::string &mo
         return Constants::DEFAULT_STREAM_FD;
     }
     std::string filePath = tempPgoFileDir_ + fileName;
-    int32_t fd = Constants::DEFAULT_STREAM_FD;
-    if ((fd = BundleUtil::CreateFileDescriptor(filePath, 0)) < 0) {
+    int32_t fd = BundleUtil::CreateFileDescriptor(filePath, 0);
+    if (fd < 0) {
         APP_LOGE("stream installer create file descriptor failed");
     }
 

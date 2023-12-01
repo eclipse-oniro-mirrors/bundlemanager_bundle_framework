@@ -1022,7 +1022,7 @@ bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
         return false;
     }
 
-    result = static_cast<int32_t>(flag) & valInt;
+    result = static_cast<uint32_t>(flag) & static_cast<uint32_t>(valInt);
     return true;
 }
 
@@ -1046,7 +1046,8 @@ bool BMSEventHandler::UpdateOtaFlag(OTAFlag flag)
         return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
     }
 
-    return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(static_cast<int32_t>(flag) | valInt));
+    return bmsPara->SaveBmsParam(
+        OTA_FLAG, std::to_string(static_cast<uint32_t>(flag) | static_cast<uint32_t>(valInt)));
 }
 
 void BMSEventHandler::ProcessCheckAppDataDir()

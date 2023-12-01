@@ -162,7 +162,7 @@ static void ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
     const std::vector<RecoverableApplicationInfo> &recoverableApplications);
 
 class BundleMgrCommonDeathRecipient : public IRemoteObject::DeathRecipient {
-    virtual void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
+    void OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote) override;
 };
 
 template<typename T>

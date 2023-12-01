@@ -413,8 +413,12 @@ ErrCode BundleInstallerProxy::StreamInstall(const std::vector<std::string> &bund
 ErrCode BundleInstallerProxy::WriteFile(const std::string &path, int32_t outputFd)
 {
     APP_LOGD("write file stream to service terminal start");
-
-    int32_t inputFd = open(path.c_str(), O_RDONLY);
+    std::string realPath;
+    if (!PathToRealPath(path, realPath)) {
+        APP_LOGE("file is not real path, file path: %{private}s", path.c_str());
+        return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
+    }
+    int32_t inputFd = open(realPath.c_str(), O_RDONLY);
     if (inputFd < 0) {
         APP_LOGE("write file to stream failed due to open the hap file");
         return ERR_APPEXECFWK_INSTALL_FILE_PATH_INVALID;
