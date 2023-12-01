@@ -306,7 +306,7 @@ public:
     }
 
     virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-        bool isEnterpriseBundle)
+        bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
     {
         return ERR_OK;
     }

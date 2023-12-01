@@ -334,12 +334,13 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
 }
 
 ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     if (realHapPath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::VerifyCodeSignatureForHap, realHapPath, appIdentifier, isEnterpriseBundle);
+    return CallService(&IInstalld::VerifyCodeSignatureForHap, realHapPath, appIdentifier, isEnterpriseBundle,
+        isCompileSdkOpenHarmony);
 }
 
 ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,

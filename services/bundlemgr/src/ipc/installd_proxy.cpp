@@ -559,13 +559,14 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
 }
 
 ErrCode InstalldProxy::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
-    bool isEnterpriseBundle)
+    bool isEnterpriseBundle, bool isCompileSdkOpenHarmony)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realHapPath));
     INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(appIdentifier));
     INSTALLD_PARCEL_WRITE(data, Bool, isEnterpriseBundle);
+    INSTALLD_PARCEL_WRITE(data, Bool, isCompileSdkOpenHarmony);
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
