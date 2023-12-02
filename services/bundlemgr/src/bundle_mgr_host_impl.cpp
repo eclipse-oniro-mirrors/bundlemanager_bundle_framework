@@ -2981,7 +2981,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std:
     if (typeName.empty()) {
         APP_LOGE("Input typeName is empty");
         return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
-    } 
+    }
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfos(flags, userId, infos);
     if (ret != ERR_OK) {

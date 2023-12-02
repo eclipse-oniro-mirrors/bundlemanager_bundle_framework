@@ -3734,8 +3734,9 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosOnlyWithTypeName(const std::st
         APP_LOGE("Write userId fail");
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
-    return GetVectorFromParcelIntelligentWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME,
-        data, extensionInfos);
+    return GetVectorFromParcelIntelligentWithErrCode(
+        BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME, data,
+        extensionInfos);
 }
 
 ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,

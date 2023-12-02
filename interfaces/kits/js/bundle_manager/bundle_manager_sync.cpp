@@ -291,7 +291,7 @@ ErrCode ParamsProcessQueryExtensionInfosOnlyWithTypeNameSync(napi_env env, napi_
         if (i == ARGS_POS_ZERO) {
             if (!CommonFunc::ParseString(env, args[i], extensionParamInfo.extensionTypeName)) {
                 BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, EXTENSION_TYPE_NAME,
-                TYPE_STRING);
+                    TYPE_STRING);
                 return ERROR_PARAM_CHECK_ERROR;
             }
         } else if (i == ARGS_POS_ONE) {
