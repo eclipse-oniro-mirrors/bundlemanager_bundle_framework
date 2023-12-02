@@ -671,6 +671,14 @@ private:
      * @return Returns ERR_OK if called successfully; returns error code otherwise.
      */
     ErrCode HandleQueryExtensionAbilityInfosWithTypeName(MessageParcel &data, MessageParcel &reply);
+
+    /**
+     * @brief Handles the HandleQueryExtensionAbilityInfosWithoutWant function called from a IBundleMgr proxy object.
+     * @param data Indicates the data to be read.
+     * @param reply Indicates the reply to be sent;
+     * @return Returns ERR_OK if called successfully; returns error code otherwise.
+     */
+    ErrCode HandleQueryExtensionAbilityInfosOnlyWithTypeName(MessageParcel &data, MessageParcel &reply);
     ErrCode HandleResetAOTCompileStatus(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);

@@ -2966,6 +2966,47 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     return ERR_OK;
 }
 
+ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &typeName,
+    uint32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    if (!VerifySystemApi()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO)
+        && !BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    if (typeName.empty()) {
+        APP_LOGE("Input typeName is empty");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    } 
+    std::vector<ExtensionAbilityInfo> infos;
+    ErrCode ret = dataMgr->QueryExtensionAbilityInfos(flags, userId, infos);
+    if (ret != ERR_OK) {
+        APP_LOGE("QueryExtensionAbilityInfos is failed");
+        return ret;
+    }
+    for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
+        APP_LOGD("Input typeName is %{public}s, info.type is %{public}s",
+            typeName.c_str(), info.extensionTypeName.c_str());
+        if (typeName == info.extensionTypeName) {
+            extensionInfos.emplace_back(info);
+        }
+    });
+    if (extensionInfos.empty()) {
+        APP_LOGE("No valid extension info can be inquired");
+        return ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST;
+    }
+    return ERR_OK;
+}
+
 ErrCode BundleMgrHostImpl::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {

@@ -3714,6 +3714,30 @@ ErrCode BundleMgrProxy::QueryExtensionAbilityInfosWithTypeName(const Want &want,
         data, extensionInfos);
 }
 
+ErrCode BundleMgrProxy::QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &extensionTypeName,
+    const uint32_t flag, const int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+{
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(extensionTypeName)) {
+        APP_LOGE("Write type fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteUint32(flag)) {
+        APP_LOGE("Write flag fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteInt32(userId)) {
+        APP_LOGE("Write userId fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetVectorFromParcelIntelligentWithErrCode(BundleMgrInterfaceCode::QUERY_EXTENSION_ABILITY_INFO_ONLY_WITH_TYPE_NAME,
+        data, extensionInfos);
+}
+
 ErrCode BundleMgrProxy::ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
     int32_t triggerMode)
 {
