@@ -27,6 +27,7 @@
 #include <dirent.h>
 #include <dlfcn.h>
 #include <fcntl.h>
+#include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
@@ -95,6 +96,23 @@ bool InstalldOperator::IsExistFile(const std::string &path)
         return false;
     }
     return S_ISREG(buf.st_mode);
+}
+
+bool InstalldOperator::IsExistApFile(const std::string &path)
+{
+    if (path.empty()) {
+        return false;
+    }
+
+    std::filesystem::path ApFilePath(path);
+    std::string directory = ApFilePath.parent_path().string();
+    
+    for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+        if (entry.path().extension() == Constants::AP_SUFFIX) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool InstalldOperator::IsExistDir(const std::string &path)

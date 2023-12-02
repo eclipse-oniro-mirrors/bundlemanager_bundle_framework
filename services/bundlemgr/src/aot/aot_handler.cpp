@@ -75,7 +75,7 @@ std::string AOTHandler::GetArkProfilePath(const std::string &bundleName, const s
             .append(Constants::PATH_SEPARATOR).append(moduleName).append(Constants::AP_SUFFIX);
         APP_LOGD("path : %{public}s", path.c_str());
         bool isExistFile = false;
-        (void)InstalldClient::GetInstance()->IsExistFile(path, isExistFile);
+        (void)InstalldClient::GetInstance()->IsExistApFile(path, isExistFile);
         if (isExistFile) {
             return path;
         }

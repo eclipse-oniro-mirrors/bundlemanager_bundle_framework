@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -46,6 +47,7 @@ constexpr const char* PROCESS_UID = "processUid";
 constexpr const char* BUNDLE_UID = "bundleUid";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
 constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
+constexpr const char* PGO_DIR = "pgoDir";
 }
 
 AOTExecutor& AOTExecutor::GetInstance()
@@ -119,6 +121,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     /* obtain the uid of current process */
     int32_t currentProcessUid = static_cast<int32_t>(getuid());
 
+    std::filesystem::path filePath(aotArgs.arkProfilePath);
     nlohmann::json subject;
     subject[BUNDLE_NAME] = aotArgs.bundleName;
     subject[MODULE_NAME] = aotArgs.moduleName;
@@ -130,6 +133,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     subject[BUNDLE_UID] = DecToHex(aotArgs.bundleUid);
     subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
     subject[IS_ENCRYPTED_BUNDLE] = DecToHex(aotArgs.isEncryptedBundle);
+    subject[PGO_DIR] = filePath.parent_path().string();
 
     nlohmann::json objectArray = nlohmann::json::array();
     for (const auto &hspInfo : aotArgs.hspVector) {
@@ -150,9 +154,6 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
         "--compiler-pkg-info=" + subject.dump(),
         "--compiler-external-pkg-info=" + objectArray.dump(),
     };
-    if (aotArgs.compileMode == Constants::COMPILE_PARTIAL) {
-        tmpVector.emplace_back("--compiler-pgo-profiler-path=" + aotArgs.arkProfilePath);
-    }
     tmpVector.emplace_back(aotArgs.hapPath + Constants::PATH_SEPARATOR + ABC_RELATIVE_PATH);
 
     std::vector<const char*> argv;
