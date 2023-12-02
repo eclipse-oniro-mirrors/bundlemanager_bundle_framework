@@ -1768,6 +1768,10 @@ ErrCode BaseBundleInstaller::ProcessBundleUpdateStatus(
         isModuleUpdate_ = true;
     }
     newInfo.RestoreFromOldInfo(oldInfo);
+    // bundle update do not affect isPreInstallApp label
+    if (oldInfo.IsPreInstallApp()) {
+        newInfo.SetIsPreInstallApp(true);
+    }
     result = isModuleExist ? ProcessModuleUpdate(newInfo, oldInfo,
         isReplace, noSkipsKill) : ProcessNewModuleInstall(newInfo, oldInfo);
     if (result != ERR_OK) {
