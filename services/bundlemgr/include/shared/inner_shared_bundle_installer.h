@@ -78,6 +78,8 @@ public:
      */
     void SendBundleSystemEvent(const EventInfo &eventTemplate) const;
 
+    ErrCode DeliveryProfileToCodeSign(std::vector<Security::Verify::HapVerifyResult> &hapVerifyResults) const;
+
 private:
     ErrCode CheckAppLabelInfo();
     ErrCode CheckBundleTypeWithInstalledVersion();
@@ -100,6 +102,8 @@ private:
     ErrCode ProcessNativeLibrary(const std::string &bundlePath,
         const std::string &moduleDir, const std::string &moduleName, const std::string &versionDir,
         InnerBundleInfo &newInfo);
+    ErrCode VerifyCodeSignatureForNativeFiles(const std::string &bundlePath, const std::string &cpuAbi,
+        const std::string &targetSoPath, const std::string &signatureFileDir) const;
 
     // the real path or the parent directory of hsp files to be installed.
     std::string sharedBundlePath_;
@@ -115,6 +119,9 @@ private:
     InnerBundleInfo newBundleInfo_;
     std::unique_ptr<BundleInstallChecker> bundleInstallChecker_ = nullptr;
     std::string nativeLibraryPath_;
+    bool isEnterpriseBundle_ = false;
+    std::string appIdentifier_;
+    std::string compileSdkType_;
 
     DISALLOW_COPY_AND_MOVE(InnerSharedBundleInstaller);
 

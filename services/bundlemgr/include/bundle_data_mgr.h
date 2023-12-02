@@ -836,6 +836,7 @@ public:
     ErrCode ResetAOTCompileStatus(const std::string &bundleName, const std::string &moduleName,
         int32_t triggerMode);
     std::vector<std::string> GetAllBundleName() const;
+    bool IsBundleExist(const std::string &bundleName) const;
     bool QueryInnerBundleInfo(const std::string &bundleName, InnerBundleInfo &info) const;
     std::vector<int32_t> GetUserIds(const std::string &bundleName) const;
     ErrCode SetExtNameOrMIMEToApp(const std::string &bundleName, const std::string &moduleName,
@@ -858,6 +859,9 @@ public:
         std::string &profile) const;
     bool GetFingerprints(const std::string &bundleName, std::vector<std::string> &fingerPrints) const;
     ErrCode GetInnerBundleInfoByUid(const int uid, InnerBundleInfo &innerBundleInfo) const;
+    std::string GetModuleNameByBundleAndAbility(const std::string& bundleName, const std::string& abilityName);
+    const std::vector<PreInstallBundleInfo> GetRecoverablePreInstallBundleInfos();
+    ErrCode SetAdditionalInfo(const std::string& bundleName, const std::string& additionalInfo) const;
 
 private:
     /**
@@ -983,8 +987,13 @@ private:
     void RestoreSandboxUidAndGid(std::map<int32_t, std::string> &bundleIdMap);
     bool IsUpdateInnerBundleInfoSatisified(const InnerBundleInfo &oldInfo, const InnerBundleInfo &newInfo) const;
     ErrCode ProcessBundleMenu(BundleInfo& bundleInfo, int32_t flag, bool clearData) const;
+    bool MatchShare(const Want &want, const std::vector<Skill> &skills) const;
     bool HandlePreview(const Want &want, const int32_t flags, const int32_t userId,
         std::vector<AbilityInfo> &abilityInfos, std::vector<ExtensionAbilityInfo> &extensionInfos) const;
+    void EmplaceExtensionInfo(const InnerBundleInfo &info, ExtensionAbilityInfo &extensionInfo,
+        int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &infos) const;
+    void EmplaceAbilityInfo(const InnerBundleInfo &info, AbilityInfo &abilityInfo,
+        int32_t flags, int32_t userId, std::vector<AbilityInfo> &infos) const;
 
 private:
     mutable std::shared_mutex bundleInfoMutex_;

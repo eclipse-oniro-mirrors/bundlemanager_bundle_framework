@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2023 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -37,7 +37,6 @@ namespace OHOS {
 namespace AppExecFwk {
 std::atomic_uint g_installedHapNum = 0;
 const std::string ARK_PROFILE_PATH = "/data/local/ark-profile/";
-const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
 const uint32_t FACTOR = 8;
 const uint32_t INTERVAL = 6;
 
@@ -92,7 +91,7 @@ private:
     bool needReInstall_ = false;
 };
 
-ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
+ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     HITRACE_METER(HITRACE_TAG_APP);
     EventReport::SendUserSysEvent(UserEventType::CREATE_START, userId);
@@ -103,7 +102,7 @@ ErrCode BundleUserMgrHostImpl::CreateNewUser(int32_t userId)
         return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
     }
     BeforeCreateNewUser(userId);
-    OnCreateNewUser(userId);
+    OnCreateNewUser(userId, disallowList);
     AfterCreateNewUser(userId);
     EventReport::SendUserSysEvent(UserEventType::CREATE_END, userId);
     APP_LOGI("CreateNewUser end userId: (%{public}d)", userId);
@@ -117,7 +116,7 @@ void BundleUserMgrHostImpl::BeforeCreateNewUser(int32_t userId)
     }
 }
 
-void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
+void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId, const std::vector<std::string> &disallowList)
 {
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -139,6 +138,14 @@ void BundleUserMgrHostImpl::OnCreateNewUser(int32_t userId)
     dataMgr->AddUserId(userId);
     // Scan preset applications and parse package information.
     std::vector<PreInstallBundleInfo> preInstallBundleInfos = dataMgr->GetAllPreInstallBundleInfos();
+    for (auto iter = preInstallBundleInfos.begin(); iter != preInstallBundleInfos.end();) {
+        if (std::find(disallowList.begin(), disallowList.end(), iter->GetBundleName()) != disallowList.end()) {
+            APP_LOGD("BundleName is same as black list %{public}s", iter->GetBundleName().c_str());
+            iter = preInstallBundleInfos.erase(iter);
+            continue;
+        }
+        iter++;
+    }
     g_installedHapNum = 0;
     std::shared_ptr<BundlePromise> bundlePromise = std::make_shared<BundlePromise>();
     int32_t totalHapNum = static_cast<int32_t>(preInstallBundleInfos.size());
@@ -352,7 +359,8 @@ void BundleUserMgrHostImpl::HandleSceneBoard(int32_t userId) const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("userId : %{public}d, sceneBoardEnable : %{public}d", userId, sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+    dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
+    dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
 #endif
 }
 }  // namespace AppExecFwk

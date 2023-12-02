@@ -1039,7 +1039,7 @@ ErrCode BundleMgrHostImpl::GetPermissionDef(const std::string &permissionName, P
 }
 
 ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
-    const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
     int32_t userId)
 {
     if (userId == Constants::UNSPECIFIED_USERID) {
@@ -1069,6 +1069,10 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
         return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
     }
 
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        return ClearCache(bundleName, cleanCacheCallback, userId);
+    }
+
     ApplicationInfo applicationInfo;
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
@@ -1096,7 +1100,7 @@ ErrCode BundleMgrHostImpl::CleanBundleCacheFiles(
 }
 
 void BundleMgrHostImpl::CleanBundleCacheTask(const std::string &bundleName,
-    const sptr<ICleanCacheCallback> &cleanCacheCallback,
+    const sptr<ICleanCacheCallback> cleanCacheCallback,
     const std::shared_ptr<BundleDataMgr> &dataMgr,
     int32_t userId)
 {
@@ -1164,6 +1168,13 @@ bool BundleMgrHostImpl::CleanBundleDataFiles(const std::string &bundleName, cons
         APP_LOGE("ohos.permission.REMOVE_CACHE_FILES permission denied");
         EventReport::SendCleanCacheSysEvent(bundleName, userId, false, true);
         return false;
+    }
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode ret = bmsExtensionClient->ClearData(bundleName, userId);
+        APP_LOGI("ret : %{public}d", ret);
+        EventReport::SendCleanCacheSysEvent(bundleName, userId, false, ret != ERR_OK);
+        return ret == ERR_OK;
     }
     ApplicationInfo applicationInfo;
     if (GetApplicationInfoV9(bundleName, static_cast<int32_t>(GetApplicationFlag::GET_APPLICATION_INFO_WITH_DISABLE),
@@ -1640,10 +1651,7 @@ ErrCode BundleMgrHostImpl::SetAbilityEnabled(const AbilityInfo &abilityInfo, boo
     }
     std::string moduleName = abilityInfo.moduleName;
     if (moduleName.empty()) {
-        AbilityInfo info;
-        if (GetAbilityInfo(abilityInfo.bundleName, abilityInfo.name, info)) {
-            moduleName = info.moduleName;
-        }
+        moduleName = dataMgr->GetModuleNameByBundleAndAbility(abilityInfo.bundleName, abilityInfo.name);
     }
     BundleResourceHelper::SetAbilityEnabled(abilityInfo.bundleName, moduleName, abilityInfo.name, isEnabled, userId);
     EventReport::SendComponentStateSysEvent(abilityInfo.bundleName, abilityInfo.name, userId, isEnabled, false);
@@ -2378,10 +2386,20 @@ bool BundleMgrHostImpl::GetBundleStats(const std::string &bundleName, int32_t us
         APP_LOGE("verify permission failed");
         return false;
     }
+    if (bundleName.empty()) {
+        APP_LOGE("bundleName empty");
+        return false;
+    }
     auto dataMgr = GetDataMgrFromService();
     if (dataMgr == nullptr) {
         APP_LOGE("DataMgr is nullptr");
         return false;
+    }
+    if (isBrokerServiceExisted_ && !IsBundleExist(bundleName)) {
+        auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+        ErrCode ret = bmsExtensionClient->GetBundleStats(bundleName, userId, bundleStats);
+        APP_LOGI("ret : %{public}d", ret);
+        return ret == ERR_OK;
     }
     return dataMgr->GetBundleStats(bundleName, userId, bundleStats);
 }
@@ -2471,7 +2489,8 @@ ErrCode BundleMgrHostImpl::GetSandboxAbilityInfo(const Want &want, int32_t appIn
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
 
-    if (!dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)) {
+    if (!(dataMgr->QueryAbilityInfo(want, flags, userId, info, appIndex)
+        || dataMgr->QueryAbilityInfo(want, flags, Constants::DEFAULT_USERID, info, appIndex))) {
         APP_LOGE("query ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -2501,7 +2520,8 @@ ErrCode BundleMgrHostImpl::GetSandboxExtAbilityInfos(const Want &want, int32_t a
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
 
-    if (!dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)) {
+    if (!(dataMgr->QueryExtensionAbilityInfos(want, flags, userId, infos, appIndex)
+        || dataMgr->QueryExtensionAbilityInfos(want, flags, Constants::DEFAULT_USERID, infos, appIndex))) {
         APP_LOGE("query extension ability info failed");
         return ERR_APPEXECFWK_SANDBOX_QUERY_INTERNAL_ERROR;
     }
@@ -2941,8 +2961,8 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithTypeName(const Want &wa
     return ERR_OK;
 }
 
-ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithoutWant(const std::string &typeName,
-    int32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
+ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosOnlyWithTypeName(const std::string &typeName,
+    uint32_t flags, int32_t userId, std::vector<ExtensionAbilityInfo> &extensionInfos)
 {
     if (!VerifySystemApi()) {
         APP_LOGE("Non-system app calling system api");
@@ -2965,7 +2985,7 @@ ErrCode BundleMgrHostImpl::QueryExtensionAbilityInfosWithoutWant(const std::stri
     std::vector<ExtensionAbilityInfo> infos;
     ErrCode ret = dataMgr->QueryExtensionAbilityInfos(flags, userId, infos);
     if (ret != ERR_OK) {
-        APP_LOGE("QueryExtensionAbilityInfosWithoutWant is failed");
+        APP_LOGE("QueryExtensionAbilityInfos is failed");
         return ret;
     }
     for_each(infos.begin(), infos.end(), [&typeName, &extensionInfos](const auto &info)->decltype(auto) {
@@ -3021,6 +3041,39 @@ ErrCode BundleMgrHostImpl::GetJsonProfile(ProfileType profileType, const std::st
     return dataMgr->GetJsonProfile(profileType, bundleName, moduleName, profile, userId);
 }
 
+ErrCode BundleMgrHostImpl::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+{
+    APP_LOGD("Called. BundleName: %{public}s.", bundleName.c_str());
+    if (!VerifySystemApi()) {
+        APP_LOGE("Non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("Verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+
+    std::string appGalleryBundleName;
+    QueryAppGalleryBundleName(appGalleryBundleName);
+
+    std::string callingBundleName;
+    ObtainCallingBundleName(callingBundleName);
+
+    if (appGalleryBundleName.empty() || callingBundleName.empty() || appGalleryBundleName != callingBundleName) {
+        APP_LOGE("Failed, appGalleryBundleName: %{public}s. callingBundleName: %{public}s",
+            appGalleryBundleName.c_str(), callingBundleName.c_str());
+        return ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL;
+    }
+
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return dataMgr->SetAdditionalInfo(bundleName, additionalInfo);
+}
+
 sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 {
 #ifdef BUNDLE_FRAMEWORK_BUNDLE_RESOURCE
@@ -3028,6 +3081,125 @@ sptr<IBundleResource> BundleMgrHostImpl::GetBundleResourceProxy()
 #else
     return nullptr;
 #endif
+}
+
+bool BundleMgrHostImpl::GetPreferableBundleInfoFromHapPaths(const std::vector<std::string> &hapPaths,
+    BundleInfo &bundleInfo)
+{
+    if (hapPaths.empty()) {
+        return false;
+    }
+    for (auto hapPath: hapPaths) {
+        BundleInfo resultBundleInfo;
+        if (!GetBundleArchiveInfo(hapPath, GET_BUNDLE_DEFAULT, resultBundleInfo)) {
+            return false;
+        }
+        bundleInfo = resultBundleInfo;
+        if (!bundleInfo.hapModuleInfos.empty()) {
+            bundleInfo.hapModuleInfos[0].hapPath = hapPath;
+            if (bundleInfo.hapModuleInfos[0].moduleType == ModuleType::ENTRY) {
+                return true;
+            }
+        }
+    }
+    return true;
+}
+
+ErrCode BundleMgrHostImpl::GetRecoverableApplicationInfo(
+    std::vector<RecoverableApplicationInfo> &recoverableApplicaitons)
+{
+    APP_LOGD("begin to GetRecoverableApplicationInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    std::vector<PreInstallBundleInfo> recoverableBundleInfos = dataMgr->GetRecoverablePreInstallBundleInfos();
+    for (auto recoverableBundleInfo: recoverableBundleInfos) {
+        BundleInfo bundleInfo;
+        if (GetPreferableBundleInfoFromHapPaths(
+            recoverableBundleInfo.GetBundlePaths(), bundleInfo)) {
+            RecoverableApplicationInfo recoverableApplication;
+            recoverableApplication.bundleName = bundleInfo.name;
+            recoverableApplication.labelId = bundleInfo.applicationInfo.labelId;
+            recoverableApplication.iconId = bundleInfo.applicationInfo.iconId;
+            if (!bundleInfo.hapModuleInfos.empty()) {
+                recoverableApplication.moduleName = bundleInfo.hapModuleInfos[0].moduleName;
+            }
+            recoverableApplicaitons.emplace_back(recoverableApplication);
+        }
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrHostImpl::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
+{
+    APP_LOGD("begin to GetUninstalledBundleInfo");
+    if (!VerifySystemApi()) {
+        APP_LOGE("non-system app calling system api");
+        return ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED;
+    }
+    if (!BundlePermissionMgr::VerifyCallingPermission(Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED)) {
+        APP_LOGE("verify permission failed");
+        return ERR_BUNDLE_MANAGER_PERMISSION_DENIED;
+    }
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    int32_t userId = AccountHelper::GetCurrentActiveUserId();
+    if (userId == Constants::INVALID_USERID) {
+        APP_LOGE("userId %{public}d is invalid", userId);
+        return ERR_BUNDLE_MANAGER_INVALID_USER_ID;
+    }
+    if (dataMgr->HasUserInstallInBundle(bundleName, Constants::DEFAULT_USERID) ||
+        dataMgr->HasUserInstallInBundle(bundleName, userId)) {
+        APP_LOGE("bundle has installed");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    PreInstallBundleInfo preInstallBundleInfo;
+    if (!dataMgr->GetPreInstallBundleInfo(bundleName, preInstallBundleInfo)) {
+        APP_LOGE("get preinstallBundleInfo failed");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    if (!GetPreferableBundleInfoFromHapPaths(
+        preInstallBundleInfo.GetBundlePaths(), bundleInfo)) {
+        APP_LOGE("prefect bundle is not found");
+        return ERR_APPEXECFWK_FAILED_GET_BUNDLE_INFO;
+    }
+    return ERR_OK;
+}
+
+bool BundleMgrHostImpl::IsBundleExist(const std::string &bundleName)
+{
+    auto dataMgr = GetDataMgrFromService();
+    if (dataMgr == nullptr) {
+        APP_LOGE("dataMgr is nullptr");
+        return false;
+    }
+    return dataMgr->IsBundleExist(bundleName);
+}
+
+ErrCode BundleMgrHostImpl::ClearCache(const std::string &bundleName,
+    const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
+{
+    auto bmsExtensionClient = std::make_shared<BmsExtensionClient>();
+    ErrCode ret = bmsExtensionClient->ClearCache(bundleName, cleanCacheCallback->AsObject(), userId);
+    APP_LOGI("ret : %{public}d", ret);
+    if (ret != ERR_OK) {
+        ret = ERR_APPEXECFWK_SERVICE_INTERNAL_ERROR;
+    }
+    EventReport::SendCleanCacheSysEvent(bundleName, userId, true, ret != ERR_OK);
+    return ret;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

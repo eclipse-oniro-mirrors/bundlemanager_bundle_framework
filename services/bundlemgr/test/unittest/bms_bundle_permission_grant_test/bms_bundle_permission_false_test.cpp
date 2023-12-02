@@ -1332,15 +1332,15 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8800, Functi
  */
 HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_8900, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
+    ErrCode res = impl->SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.GetDisposedStatus(APPID, want, USERID);
+    res = impl->GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 
-    res = impl.DeleteDisposedStatus(APPID, USERID);
+    res = impl->DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 
@@ -1672,5 +1672,18 @@ HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_20000, Funct
 {
     bool result = bundleMgrHostImpl_->VerifyPrivilegedPermission("");
     EXPECT_EQ(result, false);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionFalseTest_21000
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.SetAdditionalInfo failed
+ */
+HWTEST_F(BmsBundlePermissionFalseTest, BmsBundlePermissionFalseTest_21000, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "abc";
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

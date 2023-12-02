@@ -55,10 +55,9 @@ public:
     void CheckEnabledState(int32_t state);
 
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
-    const std::shared_ptr<OverlayManagerHostImpl> GetBundleOverlayHostImpl() const;
 
 private:
-    std::shared_ptr<OverlayManagerHostImpl> overlayHostImpl_ = std::make_shared<OverlayManagerHostImpl>();
+    static std::shared_ptr<OverlayManagerHostImpl> overlayHostImpl_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
 };
 
@@ -179,11 +178,6 @@ const std::shared_ptr<BundleDataMgr> BmsBundleSetOverlayEnabledTest::GetBundleDa
     return bundleMgrService_->GetDataMgr();
 }
 
-const std::shared_ptr<OverlayManagerHostImpl> BmsBundleSetOverlayEnabledTest::GetBundleOverlayHostImpl() const
-{
-    return overlayHostImpl_;
-}
-
 /**
  * @tc.number: SetOverlayEnabledTest_0100
  * @tc.name: test CheckInternalBundle interface in OverlayManagerHostImpl.
@@ -194,7 +188,7 @@ const std::shared_ptr<OverlayManagerHostImpl> BmsBundleSetOverlayEnabledTest::Ge
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0100, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     auto res = hostImpl->SetOverlayEnabled("", TEST_MODULE_NAME, true);
@@ -211,7 +205,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0100, Function | 
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0200, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     auto res = hostImpl->SetOverlayEnabled("", TEST_MODULE_NAME, false);
@@ -228,7 +222,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0200, Function | 
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0300, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, "", true);
@@ -245,7 +239,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0300, Function | 
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0400, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
 
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, "", false);
@@ -262,7 +256,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0400, Function | 
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_500, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true, Constants::INVALID_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_SET_OVERLAY_PARAM_ERROR);
@@ -278,7 +272,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_500, Function | S
 HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0600, Function | SmallTest | Level0)
 {
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_BUNDLE);
@@ -298,7 +292,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0700, Function | 
     AddOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true, TEST_USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_BUNDLE_NOT_INSTALLED_AT_SPECIFIED_USERID);
@@ -319,7 +313,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0800, Function | 
     AddNonOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_BUNDLE);
@@ -340,7 +334,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_0900, Function | 
     AddOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME_THIRD, true, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_MISSING_OVERLAY_MODULE);
@@ -361,7 +355,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_1000, Function | 
     AddOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME_SECOND, true, USERID);
     EXPECT_EQ(res, ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_NON_OVERLAY_MODULE);
@@ -382,7 +376,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_1100, Function | 
     AddOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, true, USERID);
     EXPECT_EQ(res, ERR_OK);
@@ -405,7 +399,7 @@ HWTEST_F(BmsBundleSetOverlayEnabledTest, SetOverlayEnabledTest_1200, Function | 
     AddOverlayInnerBundleInfo();
 
     // get OverlayManagerHostImpl instance
-    auto hostImpl = GetBundleOverlayHostImpl();
+    auto hostImpl = std::make_shared<OverlayManagerHostImpl>();
     EXPECT_NE(hostImpl, nullptr);
     auto res = hostImpl->SetOverlayEnabled(TEST_BUNDLE_NAME, TEST_MODULE_NAME, false, USERID);
     EXPECT_EQ(res, ERR_OK);

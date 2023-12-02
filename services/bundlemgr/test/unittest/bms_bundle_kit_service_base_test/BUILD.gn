@@ -80,6 +80,9 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     external_deps += [ "image_framework:image_native" ]
   }
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
   if (account_enable) {
     external_deps += [ "os_account:os_account_innerkits" ]
     defines += [ "ACCOUNT_ENABLE" ]
@@ -145,6 +148,10 @@ ohos_unittest("BmsBundleKitServiceBaseTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

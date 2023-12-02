@@ -889,15 +889,15 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5700
  */
 HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_5800, Function | SmallTest | Level1)
 {
-    AppControlManagerHostImpl impl;
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
     Want want;
-    ErrCode res = impl.SetDisposedStatus(APPID, want, USERID);
+    ErrCode res = impl->SetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
-    res = impl.GetDisposedStatus(APPID, want, USERID);
+    res = impl->GetDisposedStatus(APPID, want, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 
-    res = impl.DeleteDisposedStatus(APPID, USERID);
+    res = impl->DeleteDisposedStatus(APPID, USERID);
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 
@@ -1246,6 +1246,36 @@ HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8100
     dataMgr->multiUserIdsSet_.insert(USERID);
     ErrCode ret = DefaultAppMgr::GetInstance().ResetDefaultApplication(
         USERID, DEFAULT_APP_VIDEO);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8200
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8200, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    DisposedRule rule;
+    ErrCode res = impl->SetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+
+    res = impl->GetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
+}
+
+/**
+ * @tc.number: BmsBundleSyetemAppFalseTest_8300
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: 1. system running normally
+ *           2. SetAdditionalInfo false by not system api.
+ */
+HWTEST_F(BmsBundlePermissionSyetemAppFalseTest, BmsBundleSyetemAppFalseTest_8300, Function | SmallTest | Level1)
+{
+    std::string additionalInfo;
+    ErrCode ret = bundleMgrHostImpl_->SetAdditionalInfo("", additionalInfo);
     EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_SYSTEM_API_DENIED);
 }
 } // OHOS

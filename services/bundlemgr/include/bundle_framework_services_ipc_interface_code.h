@@ -56,7 +56,10 @@ enum class InstalldInterfaceCode : uint32_t {
     MOVE_FILES,
     EXTRACT_DRIVER_SO_FILE,
     CHECK_ENCRYPTION,
-    EXTRACT_CODED_SO_FILE
+    EXTRACT_CODED_SO_FILE,
+    VERIFY_CODE_SIGNATURE_FOR_HAP,
+    DELIVERY_SIGN_PROFILE,
+    REMOVE_SIGN_PROFILE
 };
 
 } // namespace AppExecFwk

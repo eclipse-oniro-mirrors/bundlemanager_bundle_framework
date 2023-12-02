@@ -43,6 +43,7 @@ constexpr const char* BUNDLE_BASE_CODE_DIR = "/data/app/el1/bundle";
 constexpr const char* BUNDLE_APP_DATA_BASE_DIR = "/data/app/";
 constexpr const char* BASE = "/base/";
 constexpr const char* DATABASE = "/database/";
+constexpr const char* LOG = "/log/";
 constexpr const char* HAPS = "/haps/";
 constexpr const char* BUNDLE_MANAGER_SERVICE_PATH = "/data/service/el1/public/bms/bundle_manager_service";
 constexpr const char* SANDBOX_DATA_PATH = "/data/storage/el2/base";
@@ -53,7 +54,11 @@ constexpr const char* SECURITY_STREAM_INSTALL_PATH = "security_stream_install";
 constexpr const char* QUICK_FIX_PATH = "quick_fix";
 constexpr const char* SECURITY_QUICK_FIX_PATH = "security_quick_fix";
 constexpr const char* BUNDLE_ASAN_LOG_DIR = "/data/local/app-logs";
-const std::vector<std::string> BUNDLE_EL = {"el1", "el2"};
+constexpr const char* DIR_EL1 = "el1";
+constexpr const char* DIR_EL2 = "el2";
+constexpr const char* DIR_EL3 = "el3";
+constexpr const char* DIR_EL4 = "el4";
+const std::vector<std::string> BUNDLE_EL = {DIR_EL1, DIR_EL2};
 constexpr int START_USERID = 100;
 constexpr int DEFAULT_USERID = 0;
 constexpr int INVALID_USERID = -1;
@@ -132,6 +137,7 @@ constexpr int32_t MAX_APP_UID = 65535;
 constexpr int32_t U_VALUE = 100000;
 constexpr int32_t DATABASE_DIR_GID = 3012;
 constexpr int32_t DFS_GID = 1009;
+constexpr int32_t LOG_DIR_GID = 1007;
 constexpr const char* PROFILE_KEY_UID_SIZE = "size";
 constexpr const char* PROFILE_KEY_UID_AND_GID = "uid_and_gid";
 constexpr const char* FOUNDATION_PROCESS_NAME = "foundation";
@@ -233,6 +239,7 @@ const int32_t BUNDLE_RDB_VERSION = 1;
 constexpr int32_t ASHMEM_THRESHOLD  = 200 * 1024; // 200K
 constexpr int32_t CAPACITY_SIZE = 1 * 1024 * 1000; // 1M
 constexpr int32_t MAX_CAPACITY_BUNDLES = 5 * 1024 * 1000; // 5M
+constexpr int32_t MAX_PARCEL_CAPACITY = 100 * 1024 * 1024; // 100M
 
 // file size
 constexpr int32_t INVALID_FILE_SIZE = -1;
@@ -305,6 +312,10 @@ constexpr int32_t DOWNLOAD_SERVICE_SA_ID = 3706;
 constexpr const char* HMDFS_CONFIG_PATH = "/config/hmdfs/";
 constexpr const char* SHAREFS_CONFIG_PATH = "/config/sharefs/";
 constexpr const char* SYSTEM_SERVICE_DIR = "/data/service/el1/public";
+
+constexpr const char* SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
+constexpr const char* LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
+constexpr const char* SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 }  // namespace Constants
 }  // namespace AppExecFwk
 }  // namespace OHOS

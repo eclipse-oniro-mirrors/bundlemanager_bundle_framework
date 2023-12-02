@@ -45,6 +45,7 @@ constexpr const char* ABC_SIZE = "abcSize";
 constexpr const char* PROCESS_UID = "processUid";
 constexpr const char* BUNDLE_UID = "bundleUid";
 constexpr const char* APP_IDENTIFIER = "appIdentifier";
+constexpr const char* IS_ENCRYPTED_BUNDLE = "isEncryptedBundle";
 }
 
 AOTExecutor& AOTExecutor::GetInstance()
@@ -116,7 +117,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     APP_LOGD("ExecuteInChildProcess, args : %{public}s", aotArgs.ToString().c_str());
 
     /* obtain the uid of current process */
-    int32_t currentProcessUid = getuid();
+    int32_t currentProcessUid = static_cast<int32_t>(getuid());
 
     nlohmann::json subject;
     subject[BUNDLE_NAME] = aotArgs.bundleName;
@@ -128,6 +129,7 @@ void AOTExecutor::ExecuteInChildProcess(const AOTArgs &aotArgs) const
     subject[PROCESS_UID] = DecToHex(currentProcessUid);
     subject[BUNDLE_UID] = DecToHex(aotArgs.bundleUid);
     subject[APP_IDENTIFIER] = aotArgs.appIdentifier;
+    subject[IS_ENCRYPTED_BUNDLE] = DecToHex(aotArgs.isEncryptedBundle);
 
     nlohmann::json objectArray = nlohmann::json::array();
     for (const auto &hspInfo : aotArgs.hspVector) {

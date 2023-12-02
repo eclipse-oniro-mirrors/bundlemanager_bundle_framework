@@ -77,6 +77,10 @@ ohos_unittest("BmsBundleDataStorageDatabaseTest") {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 group("unittest") {

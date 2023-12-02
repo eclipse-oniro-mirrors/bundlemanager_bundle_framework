@@ -468,7 +468,7 @@ public:
      * @return Returns ERR_OK if this function is successfully called; returns other ErrCode otherwise.
      */
     virtual ErrCode CleanBundleCacheFiles(
-        const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback,
+        const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback,
         int32_t userId = Constants::UNSPECIFIED_USERID) override;
     /**
      * @brief Clears application running data of a specified application through the proxy object.
@@ -869,6 +869,13 @@ public:
 
     virtual sptr<IBundleResource> GetBundleResourceProxy() override;
 
+    virtual ErrCode GetRecoverableApplicationInfo(
+        std::vector<RecoverableApplicationInfo> &recoverableApplications) override;
+
+    virtual ErrCode GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo) override;
+
+    virtual ErrCode SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo) override;
+
 private:
     /**
      * @brief Send a command message from the proxy object.
@@ -915,18 +922,14 @@ private:
     template<typename T>
     ErrCode InnerGetVectorFromParcelIntelligent(MessageParcel &reply, std::vector<T> &parcelableInfos);
 
-    template <typename T>
-    bool GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo);
-
-    template<typename T>
-    bool GetBigParcelableInfo(
-        BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo);
-
     template<typename T>
     ErrCode GetParcelInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     template<typename T>
     ErrCode InnerGetParcelInfo(MessageParcel &reply, T &parcelInfo);
+
+    template<typename T>
+    ErrCode GetParcelInfoIntelligent(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo);
 
     ErrCode GetBigString(BundleMgrInterfaceCode code, MessageParcel &data, std::string &result);
 

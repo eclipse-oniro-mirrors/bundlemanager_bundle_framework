@@ -112,6 +112,10 @@ ohos_unittest("BmsBundleOverlayCheckerTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleOverlayInfoTest") {
@@ -286,6 +290,10 @@ ohos_unittest("BmsBundleOverlayIpcTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleManagerOverlayIpcTest") {
@@ -395,6 +403,10 @@ ohos_unittest("BmsBundleManagerOverlayIpcTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -508,6 +520,10 @@ ohos_unittest("BmsBundleSetOverlayEnabledTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
@@ -619,6 +635,10 @@ ohos_unittest("BmsBundleGetOverlayModuleInfoTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

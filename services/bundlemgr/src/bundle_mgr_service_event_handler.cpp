@@ -62,9 +62,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const std::string SYSTEM_UI_BUNDLE_NAME = "com.ohos.systemui";
-const std::string LAUNCHER_BUNDLE_NAME = "com.ohos.launcher";
-const std::string SCENE_BOARD_BUNDLE_NAME = "com.ohos.sceneboard";
 const std::string APP_SUFFIX = "/app";
 const std::string TEMP_PREFIX = "temp_";
 const std::string MODULE_PREFIX = "module_";
@@ -86,6 +83,7 @@ const std::vector<std::string> FINGERPRINTS = {
     "const.comp.hl.product_base_version.real"
 };
 const std::string HSP_VERSION_PREFIX = "v";
+const std::string OTA_FLAG = "otaFlag";
 // pre bundle profile
 constexpr const char* DEFAULT_PRE_BUNDLE_ROOT_DIR = "/system";
 constexpr const char* PRODUCT_SUFFIX = "/etc/app";
@@ -293,6 +291,10 @@ bool BMSEventHandler::LoadInstallInfosFromDb()
 void BMSEventHandler::BundleBootStartEvent()
 {
     OnBundleBootStart(Constants::DEFAULT_USERID);
+#ifdef CHECK_ELDIR_ENABLED
+    UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
+#endif
+    UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
     PerfProfile::GetInstance().Dump();
 }
 
@@ -994,6 +996,123 @@ void BMSEventHandler::ProcessRebootBundle()
     ProcessRebootBundleUninstall();
     ProcessRebootQuickFixBundleInstall(QUICK_FIX_APP_PATH, true);
     ProcessBundleResourceInfo();
+#ifdef CHECK_ELDIR_ENABLED
+    ProcessCheckAppDataDir();
+#endif
+    ProcessCheckAppLogDir();
+}
+
+bool BMSEventHandler::CheckOtaFlag(OTAFlag flag, bool &result)
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+
+    std::string val;
+    if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
+        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        return false;
+    }
+
+    int32_t valInt = 0;
+    if (!StrToInt(val, valInt)) {
+        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        return false;
+    }
+
+    result = static_cast<uint32_t>(flag) & static_cast<uint32_t>(valInt);
+    return true;
+}
+
+bool BMSEventHandler::UpdateOtaFlag(OTAFlag flag)
+{
+    auto bmsPara = DelayedSingleton<BundleMgrService>::GetInstance()->GetBmsParam();
+    if (bmsPara == nullptr) {
+        APP_LOGE("bmsPara is nullptr");
+        return false;
+    }
+
+    std::string val;
+    if (!bmsPara->GetBmsParam(OTA_FLAG, val)) {
+        APP_LOGI("GetBmsParam OTA_FLAG failed.");
+        return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
+    }
+
+    int32_t valInt = 0;
+    if (!StrToInt(val, valInt)) {
+        APP_LOGE("val(%{public}s) strToInt failed", val.c_str());
+        return bmsPara->SaveBmsParam(OTA_FLAG, std::to_string(flag));
+    }
+
+    return bmsPara->SaveBmsParam(
+        OTA_FLAG, std::to_string(static_cast<uint32_t>(flag) | static_cast<uint32_t>(valInt)));
+}
+
+void BMSEventHandler::ProcessCheckAppDataDir()
+{
+    bool checkElDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_ELDIR, checkElDir);
+    if (checkElDir) {
+        APP_LOGI("Not need to check data dir due to has checked.");
+        return;
+    }
+
+    APP_LOGI("Need to check data dir.");
+    InnerProcessCheckAppDataDir();
+    UpdateOtaFlag(OTAFlag::CHECK_ELDIR);
+}
+
+void BMSEventHandler::InnerProcessCheckAppDataDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+
+    std::set<int32_t> userIds = dataMgr->GetAllUser();
+    for (const auto &userId : userIds) {
+        std::vector<BundleInfo> bundleInfos;
+        if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, userId)) {
+            APP_LOGW("UpdateAppDataDir GetAllBundleInfos failed");
+            continue;
+        }
+
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(
+            userId, bundleInfos, Constants::DIR_EL3);
+        UpdateAppDataMgr::ProcessUpdateAppDataDir(
+            userId, bundleInfos, Constants::DIR_EL4);
+    }
+}
+
+void BMSEventHandler::ProcessCheckAppLogDir()
+{
+    bool checkLogDir = false;
+    CheckOtaFlag(OTAFlag::CHECK_LOG_DIR, checkLogDir);
+    if (checkLogDir) {
+        APP_LOGI("Not need to check log dir due to has checked.");
+        return;
+    }
+    APP_LOGI("Need to check log dir.");
+    InnerProcessCheckAppLogDir();
+    UpdateOtaFlag(OTAFlag::CHECK_LOG_DIR);
+}
+
+void BMSEventHandler::InnerProcessCheckAppLogDir()
+{
+    auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
+    if (dataMgr == nullptr) {
+        APP_LOGE("DataMgr is nullptr");
+        return;
+    }
+    std::vector<BundleInfo> bundleInfos;
+    if (!dataMgr->GetBundleInfos(BundleFlag::GET_BUNDLE_DEFAULT, bundleInfos, Constants::DEFAULT_USERID)) {
+        APP_LOGE("GetAllBundleInfos failed");
+        return;
+    }
+    UpdateAppDataMgr::ProcessUpdateAppLogDir(bundleInfos, Constants::DEFAULT_USERID);
 }
 
 bool BMSEventHandler::LoadAllPreInstallBundleInfos()
@@ -2064,11 +2183,11 @@ void BMSEventHandler::HandleSceneBoard() const
     }
     bool sceneBoardEnable = Rosen::SceneBoardJudgement::IsSceneBoardEnabled();
     APP_LOGI("HandleSceneBoard sceneBoardEnable : %{public}d", sceneBoardEnable);
-    dataMgr->SetApplicationEnabled(SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, Constants::DEFAULT_USERID);
-    dataMgr->SetApplicationEnabled(SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
+    dataMgr->SetApplicationEnabled(Constants::SYSTEM_UI_BUNDLE_NAME, !sceneBoardEnable, Constants::DEFAULT_USERID);
     std::set<int32_t> userIds = dataMgr->GetAllUser();
     std::for_each(userIds.cbegin(), userIds.cend(), [dataMgr, sceneBoardEnable](const int32_t userId) {
-        dataMgr->SetApplicationEnabled(LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(Constants::SCENE_BOARD_BUNDLE_NAME, sceneBoardEnable, userId);
+        dataMgr->SetApplicationEnabled(Constants::LAUNCHER_BUNDLE_NAME, !sceneBoardEnable, userId);
     });
     APP_LOGD("HandleSceneBoard finish");
 #endif

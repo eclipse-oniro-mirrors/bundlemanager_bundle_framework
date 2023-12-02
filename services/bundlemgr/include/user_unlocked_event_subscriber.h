@@ -27,10 +27,17 @@ public:
     explicit UserUnlockedEventSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo);
     virtual ~UserUnlockedEventSubscriber();
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+};
 
-private:
-    static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId);
+class UpdateAppDataMgr {
+public:
     static void UpdateAppDataDirSelinuxLabel(int32_t userId);
+    static void ProcessUpdateAppDataDir(
+        int32_t userId, const std::vector<BundleInfo> &bundleInfos, const std::string &elDir);
+    static void ProcessUpdateAppLogDir(const std::vector<BundleInfo> &bundleInfos, int32_t userId);
+private:
+    static bool CreateBundleDataDir(const BundleInfo &bundleInfo, int32_t userId, const std::string &elDir);
+    static bool CreateBundleLogDir(const BundleInfo &bundleInfo, int32_t userId);
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

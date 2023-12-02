@@ -87,7 +87,7 @@ sptr<InstalldHostImpl> BmsInstallDaemonHostImplTest::GetInstalldHostImpl()
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->CreateBundleDir(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -102,7 +102,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_, Function | SmallTe
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ExtractModuleFiles(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -117,7 +117,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0200, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RenameModuleDir(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -132,7 +132,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0300, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0400, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
     CreateDirParam createDirParam;
     createDirParam.bundleName = TEST_STRING;
     createDirParam.userId = 0;
@@ -153,7 +153,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0400, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RemoveBundleDataDir(TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -168,7 +168,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0600, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RemoveModuleDataDir(TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -183,7 +183,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RemoveDir(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -198,7 +198,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0700, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->CleanBundleDataDir(TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -213,7 +213,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0800, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
     auto ret = hostImpl->GetBundleStats(TEST_STRING, 0, vec);
@@ -229,7 +229,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_0900, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->SetDirApl(TEST_STRING, TEST_STRING, TEST_STRING, false, false);
 #ifdef WITH_SELINUX
@@ -248,7 +248,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1000, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->GetBundleCachePath(TEST_STRING, vec);
@@ -264,7 +264,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1100, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->ScanDir(TEST_STRING, ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, vec);
@@ -280,7 +280,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1200, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->MoveFile(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -295,7 +295,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1300, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1400, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->CopyFile(TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -310,7 +310,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1400, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->Mkdir(TEST_STRING, 0, 0, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -325,7 +325,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1600, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     FileStat fileStat;
     auto ret = hostImpl->GetFileStat(TEST_STRING, fileStat);
@@ -341,7 +341,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ExtractDiffFiles(TEST_STRING, TEST_STRING, TEST_STRING);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -356,7 +356,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1700, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ApplyDiffPatch(TEST_STRING, TEST_STRING, TEST_STRING, 0);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -371,7 +371,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1800, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1900, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     bool isExist = true;
     auto ret = hostImpl->IsExistDir(TEST_STRING, isExist);
@@ -387,7 +387,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_1900, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     bool isDirEmpty = true;
     auto ret = hostImpl->IsDirEmpty(TEST_STRING, isDirEmpty);
@@ -403,7 +403,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2000, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->ObtainQuickFixFileDir(TEST_STRING, vec);
@@ -419,7 +419,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2100, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->CopyFiles(TEST_STRING, TEST_STRING);
@@ -492,7 +492,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->CreateBundleDir("");
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
@@ -507,7 +507,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2700, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ExtractModuleFiles("", TEST_STRING, TEST_STRING, TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
@@ -553,7 +553,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_2900, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RenameModuleDir("", TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
@@ -572,7 +572,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3000, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RenameModuleDir(OVER_MAX_PATH_SIZE, TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
@@ -587,7 +587,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3100, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
     CreateDirParam createDirParam;
     createDirParam.bundleName = TEST_STRING;
     createDirParam.userId = -1;
@@ -608,7 +608,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3200, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RemoveBundleDataDir("", 0);
     EXPECT_NE(ret, ERR_OK);
@@ -627,7 +627,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3300, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3400, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->RemoveDir("");
     EXPECT_NE(ret, ERR_OK);
@@ -642,7 +642,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3400, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3500, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->CleanBundleDataDir("");
     EXPECT_NE(ret, ERR_OK);
@@ -657,7 +657,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3500, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<int64_t> vec;
     auto ret = hostImpl->GetBundleStats("", 0, vec);
@@ -673,7 +673,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->GetBundleCachePath("", vec);
@@ -689,7 +689,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3700, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3800, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     std::vector<std::string> vec;
     auto ret = hostImpl->ScanDir("", ScanMode::SUB_FILE_ALL, ResultMode::ABSOLUTE_PATH, vec);
@@ -705,7 +705,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3800, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3900, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->MoveFile("", "");
     EXPECT_NE(ret, ERR_OK);
@@ -720,7 +720,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_3900, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4000, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->Mkdir("", 0, 0, 0);
     EXPECT_NE(ret, ERR_OK);
@@ -735,7 +735,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4000, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4100, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ExtractDiffFiles("", TEST_STRING, TEST_STRING);
     EXPECT_NE(ret, ERR_OK);
@@ -754,7 +754,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4100, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4200, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     auto ret = hostImpl->ApplyDiffPatch("", TEST_STRING, TEST_STRING, 0);
     EXPECT_NE(ret, ERR_OK);
@@ -773,9 +773,16 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4200, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4300, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
-    auto ret = hostImpl->VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, TEST_STRING);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = TEST_STRING;
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    auto ret = hostImpl->VerifyCodeSignature(codeSignatureParam);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 
@@ -829,7 +836,7 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4600, Function | Sma
 HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4700, Function | SmallTest | Level0)
 {
     auto hostImpl = GetInstalldHostImpl();
-    EXPECT_NE(hostImpl, nullptr);
+    ASSERT_NE(hostImpl, nullptr);
 
     CheckEncryptionParam checkEncryptionParam;
     checkEncryptionParam.modulePath = TEST_STRING;
@@ -838,6 +845,51 @@ HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4700, Function | Sma
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
     auto ret = hostImpl->CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4800
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4800, Function | SmallTest | Level1)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> fileNames;
+    auto ret = hostImpl->GetNativeLibraryFileNames(TEST_STRING, TEST_STRING, fileNames);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4900
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_4900, Function | SmallTest | Level1)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::vector<std::string> fileNames;
+    auto ret = hostImpl->MoveFiles(TEST_STRING, TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
+}
+
+/**
+ * @tc.number: InstalldHostImplTest_4900
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsInstallDaemonHostImplTest, InstalldHostImplTest_5000, Function | SmallTest | Level1)
+{
+    auto hostImpl = GetInstalldHostImpl();
+    ASSERT_NE(hostImpl, nullptr);
+    std::unordered_multimap<std::string, std::string> dirMap;
+    auto ret = hostImpl->ExtractDriverSoFiles("", dirMap);
     EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED);
 }
 } // OHOS

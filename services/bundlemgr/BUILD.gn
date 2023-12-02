@@ -181,6 +181,17 @@ group("bms_target") {
 }
 
 ohos_shared_library("libbms") {
+  branch_protector_ret = "pac_ret"
+
+  sanitize = {
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+    integer_overflow = true
+    ubsan = true
+  }
+
   use_exceptions = true
   visibility = [
     "//base/*",
@@ -279,7 +290,10 @@ ohos_shared_library("libbms") {
   }
 
   if (ability_runtime_enable) {
-    external_deps += [ "ability_runtime:ability_manager" ]
+    external_deps += [
+      "ability_runtime:ability_manager",
+      "ability_runtime:app_manager",
+    ]
     defines += [ "ABILITY_RUNTIME_ENABLE" ]
   }
 
@@ -375,6 +389,14 @@ ohos_shared_library("libbms") {
   if (bundle_framework_bundle_resource) {
     defines += [ "BUNDLE_FRAMEWORK_BUNDLE_RESOURCE" ]
     external_deps += [ "ability_base:configuration" ]
+    if (bundle_framework_graphics) {
+      defines += [ "BUNDLE_FRAMEWORK_GRAPHICS" ]
+      external_deps += [
+        "ace_engine:drawable_descriptor",
+        "image_framework:image_native",
+      ]
+    }
+
     sources += bundle_resource
   }
 
@@ -385,6 +407,15 @@ ohos_shared_library("libbms") {
   if (verify_abc_enabled) {
     defines += [ "VERIFY_ABC_ENABLED" ]
     external_deps += [ "runtime_core:libarkverifier" ]
+  }
+
+  if (check_eldir_enabled) {
+    defines += [ "CHECK_ELDIR_ENABLED" ]
+  }
+
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 
   subsystem_name = "bundlemanager"

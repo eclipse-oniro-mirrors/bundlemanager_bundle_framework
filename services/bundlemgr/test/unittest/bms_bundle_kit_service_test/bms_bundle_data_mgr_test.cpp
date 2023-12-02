@@ -207,6 +207,7 @@ const int32_t WAIT_TIME = 5; // init mocked bms
 const int32_t ICON_ID = 16777258;
 const int32_t LABEL_ID = 16777257;
 const int32_t SPACE_SIZE = 0;
+const std::vector<std::string> &DISALLOWLIST = {"com.example.actsregisterjserrorrely"};
 }  // namespace
 
 class BmsBundleDataMgrTest : public testing::Test {
@@ -1302,7 +1303,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0300, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
@@ -1332,7 +1333,7 @@ HWTEST_F(BmsBundleDataMgrTest, GetAllBundleInfos_0400, Function | SmallTest | Le
     OHOS::EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     auto subscriberPtr = std::make_shared<UserUnlockedEventSubscriber>(subscribeInfo);
-    subscriberPtr->UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
+    UpdateAppDataMgr::UpdateAppDataDirSelinuxLabel(Constants::ALL_USERID);
 
     bool res = GetBundleDataMgr()->GetAllBundleInfos(GET_ABILITY_INFO_DEFAULT, bundleInfos);
     EXPECT_EQ(res, true);
@@ -3336,37 +3337,6 @@ HWTEST_F(BmsBundleDataMgrTest, GetBundleInfo_0001, Function | MediumTest | Level
 }
 
 /**
- * @tc.number: GetBigParcelableInfo_0001
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0001, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    size_t len = 10;
-    sptr<Ashmem> ashMem = Ashmem::CreateAshmem((__func__ + std::to_string(TEST_UID)).c_str(), len);
-    reply.WriteAshmem(ashMem);
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
- * @tc.number: GetBigParcelableInfo_0002
- * @tc.name: GetBigParcelableInfo
- * @tc.desc: 1. GetBigParcelableInfo
- */
-HWTEST_F(BmsBundleDataMgrTest, GetBigParcelableInfo_0002, Function | SmallTest | Level0)
-{
-    auto bundleMgrProxy = GetBundleMgrProxy();
-    MessageParcel reply;
-    BundleInfo bundleInfo;
-    auto res = bundleMgrProxy->GetParcelableFromAshmem<BundleInfo>(reply, bundleInfo);
-    EXPECT_EQ(res, false);
-}
-
-/**
  * @tc.number: RemoveModuleInfo_0100
  * @tc.name: test InnerBundleInfo
  * @tc.desc: 1. call RemoveModuleInfo, return false
@@ -3572,6 +3542,22 @@ HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0001, Function | SmallTest 
 }
 
 /**
+ * @tc.number: BundleUserMgrHostImpl_0002
+ * Function: BundleUserMgrHostImpl
+ * @tc.name: test BundleUserMgrHostImpl
+ * @tc.desc: test OnCreateNewUser and RemoveUser
+ */
+HWTEST_F(BmsBundleDataMgrTest, BundleUserMgrHostImpl_0002, Function | SmallTest | Level1)
+{
+    auto bundleInstaller = DelayedSingleton<BundleMgrService>::GetInstance()->installer_;
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = nullptr;
+    bundleUserMgrHostImpl_->OnCreateNewUser(USERID, DISALLOWLIST);
+    bundleUserMgrHostImpl_->RemoveUser(USERID);
+    ASSERT_NE(bundleInstaller, nullptr);
+    DelayedSingleton<BundleMgrService>::GetInstance()->installer_ = bundleInstaller;
+}
+
+/**
  * @tc.number: BundleExceptionHandler_0100
  * Function: BundleExceptionHandler
  * @tc.name: test HandleInvalidBundle
@@ -3679,6 +3665,33 @@ HWTEST_F(BmsBundleDataMgrTest, ExplicitQueryAbilityInfoV9_0300, Function | Small
     ErrCode testRet = GetBundleDataMgr()->ExplicitQueryAbilityInfoV9(
         want, GET_ABILITY_INFO_DEFAULT, USERID, abilityInfo, appIndex);
     EXPECT_EQ(testRet, ERR_BUNDLE_MANAGER_ABILITY_NOT_EXIST);
+}
+
+/**
+ * @tc.number: GetModuleNameByBundleAndAbility_0100
+ * @tc.name: GetModuleNameByBundleAndAbility
+ * @tc.desc: GetModuleNameByBundleAndAbility
+ */
+HWTEST_F(BmsBundleDataMgrTest, GetModuleNameByBundleAndAbility_0100, Function | SmallTest | Level0)
+{
+    std::string moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility("", ABILITY_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, "");
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    MockInstallBundle(BUNDLE_NAME_TEST, MODULE_NAME_TEST, ABILITY_NAME_TEST);
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, MODULE_NAME_TEST);
+    EXPECT_TRUE(moduleName.empty());
+
+    moduleName = GetBundleDataMgr()->GetModuleNameByBundleAndAbility(BUNDLE_NAME_TEST, ABILITY_NAME_TEST);
+    EXPECT_EQ(moduleName, MODULE_NAME_TEST);
+
+    MockUninstallBundle(BUNDLE_NAME_TEST);
 }
 
 /**
@@ -3825,5 +3838,58 @@ HWTEST_F(BmsBundleDataMgrTest, GetFingerprints_0300, Function | SmallTest | Leve
     auto res = GetBundleDataMgr()->GetFingerprints("", fingerPrints);
     EXPECT_FALSE(res);
     MockUninstallBundle(BUNDLE_NAME_TEST);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0100
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo bundleName does not exist.
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0100, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    GetBundleDataMgr()->bundleInfos_.clear();
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0200
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo bundleName does not exist in current userId.
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0200, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::APP);
+    innerBundleInfo.innerBundleUserInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST);
+}
+
+/**
+ * @tc.number: SetAdditionalInfo_0300
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: SetAdditionalInfo system run normally
+ */
+HWTEST_F(BmsBundleDataMgrTest, SetAdditionalInfo_0300, Function | SmallTest | Level1)
+{
+    std::string additionalInfo = "additionalInfoTest";
+    InnerBundleInfo innerBundleInfo;
+    ApplicationInfo applicationInfo;
+    applicationInfo.bundleName = BUNDLE_TEST1;
+    innerBundleInfo.SetBaseApplicationInfo(applicationInfo);
+    innerBundleInfo.SetApplicationBundleType(BundleType::SHARED);
+    innerBundleInfo.innerBundleUserInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.clear();
+    GetBundleDataMgr()->bundleInfos_.emplace(BUNDLE_TEST1, innerBundleInfo);
+    ErrCode res = GetBundleDataMgr()->SetAdditionalInfo(BUNDLE_TEST1, additionalInfo);
+    EXPECT_EQ(res, ERR_OK);
 }
 }

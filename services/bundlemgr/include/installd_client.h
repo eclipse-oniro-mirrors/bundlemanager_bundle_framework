@@ -158,8 +158,10 @@ public:
 
     ErrCode ExecuteAOT(const AOTArgs &aotArgs);
 
-    ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
-        const std::string &targetSoPath, const std::string &signatureFileDir);
+    ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam);
+
+    ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+        bool isEnterpriseBundle);
 
     ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
@@ -176,6 +178,11 @@ public:
 
     ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid);
+
+    ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock);
+
+    ErrCode RemoveSignProfile(const std::string &bundleName);
 
 private:
     /**

@@ -16,6 +16,7 @@
 #ifndef FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 #define FOUNDATION_APPEXECFWK_SERVICES_BUNDLEMGR_INCLUDE_INSTALLD_HOST_IMPL_H
 
+#include "code_sign_helper.h"
 #include "ipc/installd_host.h"
 #include "installd/installd_operator.h"
 
@@ -150,8 +151,7 @@ public:
     virtual ErrCode GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames) override;
 
-    virtual ErrCode VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-        const std::string &targetSoPath, const std::string &signatureFileDir) override;
+    virtual ErrCode VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam) override;
 
     virtual ErrCode CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption) override;
 
@@ -163,9 +163,18 @@ public:
     virtual ErrCode ExtractEncryptedSoFiles(const std::string &hapPath, const std::string &realSoFilesPath,
         const std::string &cpuAbi, const std::string &tmpSoPath, int32_t uid) override;
 
+    virtual ErrCode VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+        bool isEnterpriseBundle) override;
+
+    virtual ErrCode DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+        const unsigned char *profileBlock) override;
+
+    virtual ErrCode RemoveSignProfile(const std::string &bundleName) override;
+
 private:
     std::string GetBundleDataDir(const std::string &el, const int userid) const;
     bool CheckPathValid(const std::string &path, const std::string &prefix);
+    std::shared_ptr<CodeSignHelper> codeSignHelper_ = nullptr;
 };
 }  // namespace AppExecFwk
 }  // namespace OHOS

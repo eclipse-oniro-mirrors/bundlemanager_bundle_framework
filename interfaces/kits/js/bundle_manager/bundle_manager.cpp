@@ -32,6 +32,7 @@
 #endif
 #include "ipc_skeleton.h"
 #include "napi_arg.h"
+#include "napi_common_want.h"
 #include "napi_constants.h"
 
 namespace OHOS {
@@ -51,6 +52,7 @@ constexpr const char* STRING_TYPE = "napi_string";
 constexpr const char* GET_LAUNCH_WANT_FOR_BUNDLE = "GetLaunchWantForBundle";
 constexpr const char* VERIFY_ABC = "VerifyAbc";
 constexpr const char* ERR_MSG_BUNDLE_SERVICE_EXCEPTION = "Bundle manager service is excepted.";
+constexpr const char* ADDITIONAL_INFO = "additionalInfo";
 const std::string GET_BUNDLE_ARCHIVE_INFO = "GetBundleArchiveInfo";
 const std::string GET_BUNDLE_NAME_BY_UID = "GetBundleNameByUid";
 const std::string QUERY_ABILITY_INFOS = "QueryAbilityInfos";
@@ -76,6 +78,8 @@ const std::string RESOURCE_NAME_OF_GET_SPECIFIED_DISTRIBUTION_TYPE = "GetSpecifi
 const std::string RESOURCE_NAME_OF_GET_ADDITIONAL_INFO = "GetAdditionalInfo";
 const std::string GET_BUNDLE_INFO_FOR_SELF_SYNC = "GetBundleInfoForSelfSync";
 const std::string GET_JSON_PROFILE = "GetJsonProfile";
+const std::string GET_RECOVERABLE_APPLICATION_INFO = "GetRecoverableApplicationInfo";
+const std::string RESOURCE_NAME_OF_SET_ADDITIONAL_INFO = "SetAdditionalInfo";
 } // namespace
 using namespace OHOS::AAFwk;
 static std::shared_ptr<ClearCacheListener> g_clearCacheListener;
@@ -749,7 +753,8 @@ napi_value QueryAbilityInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!CommonFunc::ParseWantPerformance(env, args[i], asyncCallbackInfo->want)) {
+            // parse want with parameter
+            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -796,7 +801,8 @@ ErrCode ParamsProcessQueryAbilityInfosSync(napi_env env, napi_callback_info info
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if (i == ARGS_POS_ZERO) {
-            if (!CommonFunc::ParseWantPerformance(env, args[i], want)) {
+            // parse want with parameter
+            if (!UnwrapWant(env, args[i], want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return ERROR_PARAM_CHECK_ERROR;
@@ -996,7 +1002,8 @@ napi_value QueryExtensionInfos(napi_env env, napi_callback_info info)
         napi_valuetype valueType = napi_undefined;
         napi_typeof(env, args[i], &valueType);
         if ((i == ARGS_POS_ZERO) && (valueType == napi_object)) {
-            if (!CommonFunc::ParseWant(env, args[i], asyncCallbackInfo->want)) {
+            // parse want with parameter
+            if (!UnwrapWant(env, args[i], asyncCallbackInfo->want)) {
                 APP_LOGE("invalid want");
                 BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, INVALID_WANT_ERROR);
                 return nullptr;
@@ -1527,7 +1534,7 @@ napi_value IsAbilityEnabled(napi_env env, napi_callback_info info)
 }
 
 static ErrCode InnerCleanBundleCacheCallback(
-    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback>& cleanCacheCallback)
+    const std::string& bundleName, const OHOS::sptr<CleanCacheCallback> cleanCacheCallback)
 {
     if (cleanCacheCallback == nullptr) {
         APP_LOGE("callback nullptr");
@@ -3341,6 +3348,14 @@ void CreateProfileTypeObject(napi_env env, napi_value value)
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "INTENT_PROFILE", nIntentProfile));
 }
 
+void CreateApplicationReservedFlagObject(napi_env env, napi_value value)
+{
+    napi_value nEncryptedApplication;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(
+        env, static_cast<int32_t>(ApplicationReservedFlag::ENCRYPTED_APPLICATION), &nEncryptedApplication));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, "ENCRYPTED_APPLICATION", nEncryptedApplication));
+}
+
 ErrCode InnerGetAppProvisionInfo(
     const std::string &bundleName, int32_t userId, AppProvisionInfo &appProvisionInfo)
 {
@@ -3650,6 +3665,126 @@ napi_value GetJsonProfile(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, profile.c_str(), NAPI_AUTO_LENGTH, &nProfile);
     APP_LOGD("call GetJsonProfile done.");
     return nProfile;
+}
+
+static ErrCode InnerGetRecoverableApplicationInfo(std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("iBundleMgr is null");
+        return ERROR_BUNDLE_SERVICE_EXCEPTION;
+    }
+    ErrCode ret = iBundleMgr->GetRecoverableApplicationInfo(recoverableApplications);
+    return CommonFunc::ConvertErrCode(ret);
+}
+
+void GetRecoverableApplicationInfoExec(napi_env env, void *data)
+{
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<RecoverableApplicationCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        return;
+    }
+    asyncCallbackInfo->err = InnerGetRecoverableApplicationInfo(asyncCallbackInfo->recoverableApplicationInfos);
+}
+
+void GetRecoverableApplicationInfoExecComplete(napi_env env, napi_status status, void *data)
+{
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo =
+        reinterpret_cast<RecoverableApplicationCallbackInfo *>(data);
+    if (asyncCallbackInfo == nullptr) {
+        return;
+    }
+    std::unique_ptr<RecoverableApplicationCallbackInfo> callbackPtr {asyncCallbackInfo};
+    napi_value result[CALLBACK_PARAM_SIZE] = {0};
+    if (asyncCallbackInfo->err == NO_ERROR) {
+        NAPI_CALL_RETURN_VOID(env, napi_get_null(env, &result[ARGS_POS_ZERO]));
+        NAPI_CALL_RETURN_VOID(env, napi_create_array(env, &result[ARGS_POS_ONE]));
+        CommonFunc::ConvertRecoverableApplicationInfos(
+            env, result[ARGS_POS_ONE], asyncCallbackInfo->recoverableApplicationInfos);
+    } else {
+        result[ARGS_POS_ZERO] = BusinessError::CreateCommonError(env, asyncCallbackInfo->err,
+            GET_RECOVERABLE_APPLICATION_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+    }
+    CommonFunc::NapiReturnDeferred<RecoverableApplicationCallbackInfo>(env, asyncCallbackInfo, result, ARGS_SIZE_TWO);
+}
+
+napi_value GetRecoverableApplicationInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("NAPI_GetRecoverableApplicationInfo called");
+    NapiArg args(env, info);
+    RecoverableApplicationCallbackInfo *asyncCallbackInfo = new (std::nothrow) RecoverableApplicationCallbackInfo(env);
+    if (asyncCallbackInfo == nullptr) {
+        APP_LOGE("asyncCallbackInfo is null.");
+        return nullptr;
+    }
+    std::unique_ptr<RecoverableApplicationCallbackInfo> callbackPtr {asyncCallbackInfo};
+    if (!args.Init(ARGS_SIZE_ZERO, ARGS_SIZE_ONE)) {
+        APP_LOGE("param count invalid.");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    for (size_t i = 0; i < args.GetMaxArgc(); ++i) {
+        napi_valuetype valueType = napi_undefined;
+        napi_typeof(env, args[i], &valueType);
+        if (i == ARGS_POS_ZERO) {
+            if (valueType == napi_function) {
+                NAPI_CALL(env, napi_create_reference(env, args[i], NAPI_RETURN_ONE, &asyncCallbackInfo->callback));
+                break;
+            }
+        } else {
+            APP_LOGE("param check error");
+            BusinessError::ThrowError(env, ERROR_PARAM_CHECK_ERROR, PARAM_TYPE_CHECK_ERROR);
+            return nullptr;
+        }
+    }
+    auto promise = CommonFunc::AsyncCallNativeMethod<RecoverableApplicationCallbackInfo>(
+        env, asyncCallbackInfo, GET_RECOVERABLE_APPLICATION_INFO,
+        GetRecoverableApplicationInfoExec, GetRecoverableApplicationInfoExecComplete);
+    callbackPtr.release();
+    APP_LOGD("call NAPI_GetRecoverableApplicationInfo done.");
+    return promise;
+}
+
+napi_value SetAdditionalInfo(napi_env env, napi_callback_info info)
+{
+    APP_LOGD("Called");
+    NapiArg args(env, info);
+    if (!args.Init(ARGS_SIZE_TWO, ARGS_SIZE_TWO)) {
+        APP_LOGE("Param count invalid");
+        BusinessError::ThrowTooFewParametersError(env, ERROR_PARAM_CHECK_ERROR);
+        return nullptr;
+    }
+    std::string bundleName;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ZERO], bundleName)) {
+        APP_LOGE("Parse bundleName failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, BUNDLE_NAME, TYPE_STRING);
+        return nullptr;
+    }
+    std::string additionalInfo;
+    if (!CommonFunc::ParseString(env, args[ARGS_POS_ONE], additionalInfo)) {
+        APP_LOGE("Parse additionalInfo failed");
+        BusinessError::ThrowParameterTypeError(env, ERROR_PARAM_CHECK_ERROR, ADDITIONAL_INFO, TYPE_STRING);
+        return nullptr;
+    }
+    auto iBundleMgr = CommonFunc::GetBundleMgr();
+    if (iBundleMgr == nullptr) {
+        APP_LOGE("Can not get iBundleMgr");
+        BusinessError::ThrowError(env, ERROR_BUNDLE_SERVICE_EXCEPTION, ERR_MSG_BUNDLE_SERVICE_EXCEPTION);
+        return nullptr;
+    }
+    ErrCode ret = CommonFunc::ConvertErrCode(iBundleMgr->SetAdditionalInfo(bundleName, additionalInfo));
+    if (ret != NO_ERROR) {
+        APP_LOGE("Call failed");
+        napi_value businessError = BusinessError::CreateCommonError(
+            env, ret, RESOURCE_NAME_OF_SET_ADDITIONAL_INFO, Constants::PERMISSION_GET_BUNDLE_INFO_PRIVILEGED);
+        napi_throw(env, businessError);
+        return nullptr;
+    }
+    napi_value nRet = nullptr;
+    NAPI_CALL(env, napi_get_undefined(env, &nRet));
+    APP_LOGD("Call done");
+    return nRet;
 }
 }
 }

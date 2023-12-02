@@ -225,6 +225,48 @@ ErrCode BmsExtensionClient::ImplicitQueryAbilityInfos(
     return ERR_OK;
 }
 
+ErrCode BmsExtensionClient::GetBundleStats(
+    const std::string &bundleName, int32_t userId, std::vector<int64_t> &bundleStats)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetBundleStats(bundleName, userId, bundleStats);
+}
+ErrCode BmsExtensionClient::ClearData(const std::string &bundleName, int32_t userId)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->ClearData(bundleName, userId);
+}
+ErrCode BmsExtensionClient::ClearCache(const std::string &bundleName, sptr<IRemoteObject> callback, int32_t userId)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->ClearCache(bundleName, callback, userId);
+}
+ErrCode BmsExtensionClient::GetUidByBundleName(const std::string &bundleName, int32_t userId, int32_t &uid)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetUidByBundleName(bundleName, userId, uid);
+}
+ErrCode BmsExtensionClient::GetBundleNameByUid(int32_t uid, std::string &bundleName)
+{
+    if (bmsExtensionImpl_ == nullptr) {
+        APP_LOGW("bmsExtensionImpl_ is null");
+        return ERR_BUNDLE_MANAGER_INTERNAL_ERROR;
+    }
+    return bmsExtensionImpl_->GetBundleNameByUid(uid, bundleName);
+}
+
 void BmsExtensionClient::ModifyLauncherAbilityInfo(AbilityInfo &abilityInfo) const
 {
     if (abilityInfo.labelId == 0) {

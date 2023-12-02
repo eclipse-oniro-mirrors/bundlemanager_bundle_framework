@@ -197,18 +197,20 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         APP_LOGE("check hap sign info failed due to empty bundlePaths!");
         return ERR_APPEXECFWK_INSTALL_PARAM_ERROR;
     }
-
     for (const std::string &bundlePath : bundlePaths) {
         Security::Verify::HapVerifyResult hapVerifyResult;
-#ifndef X86_EMULATOR_MODE
         auto verifyRes = BundleVerifyMgr::HapVerify(bundlePath, hapVerifyResult);
         if (verifyRes != ERR_OK) {
+#ifndef X86_EMULATOR_MODE
             APP_LOGE("hap file verify failed");
             return verifyRes;
-        }
 #else
-        BundleVerifyMgr::ParseHapProfile(bundlePath, hapVerifyResult);
+            if (verifyRes != ERR_APPEXECFWK_INSTALL_FAILED_NO_BUNDLE_SIGNATURE) {
+                APP_LOGE("hap file verify failed");
+                return verifyRes;
+            }
 #endif
+        }
         hapVerifyRes.emplace_back(hapVerifyResult);
     }
 
@@ -217,7 +219,6 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
 
-#ifndef X86_EMULATOR_MODE
     auto appId = hapVerifyRes[0].GetProvisionInfo().appId;
     auto appIdentifier = hapVerifyRes[0].GetProvisionInfo().bundleInfo.appIdentifier;
     auto apl = hapVerifyRes[0].GetProvisionInfo().bundleInfo.apl;
@@ -250,7 +251,6 @@ ErrCode BundleInstallChecker::CheckMultipleHapsSignInfo(
     if (isInvalid) {
         return ERR_APPEXECFWK_INSTALL_FAILED_INCOMPATIBLE_SIGNATURE;
     }
-#endif
     APP_LOGD("finish check multiple haps signInfo");
     return ERR_OK;
 }
@@ -355,13 +355,13 @@ ErrCode BundleInstallChecker::ParseHapFiles(
             APP_LOGE("bundle parse failed %{public}d", result);
             return result;
         }
-#ifndef X86_EMULATOR_MODE
-        result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
-        if (result != ERR_OK) {
-            APP_LOGE("check provision bundleName failed");
-            return result;
+        if (!provisionInfo.appId.empty()) {
+            result = CheckBundleName(provisionInfo.bundleInfo.bundleName, newInfo.GetBundleName());
+            if (result != ERR_OK) {
+                APP_LOGE("check provision bundleName failed");
+                return result;
+            }
         }
-#endif
         if (newInfo.HasEntry()) {
             if (isContainEntry_) {
                 APP_LOGE("more than one entry hap in the direction!");
@@ -1546,6 +1546,17 @@ ErrCode BundleInstallChecker::CheckAllowEnterpriseBundle(
         }
     }
     return ERR_OK;
+}
+
+bool BundleInstallChecker::CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const
+{
+    Security::Verify::ProvisionInfo provisionInfo = hapVerifyRes.GetProvisionInfo();
+    if (provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_NORMAL ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE_MDM ||
+        provisionInfo.distributionType == Security::Verify::AppDistType::ENTERPRISE) {
+        return true;
+    }
+    return false;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

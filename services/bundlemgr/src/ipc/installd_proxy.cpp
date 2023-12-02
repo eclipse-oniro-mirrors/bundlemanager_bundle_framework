@@ -444,15 +444,14 @@ ErrCode InstalldProxy::GetNativeLibraryFileNames(const std::string &filePath, co
     return ERR_OK;
 }
 
-ErrCode InstalldProxy::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldProxy::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     MessageParcel data;
     INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(modulePath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(cpuAbi));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(targetSoPath));
-    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(signatureFileDir));
+    if (!data.WriteParcelable(&codeSignatureParam)) {
+        APP_LOGE("WriteParcelable codeSignatureParam failed.");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
 
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
@@ -535,6 +534,68 @@ ErrCode InstalldProxy::ExtractEncryptedSoFiles(const std::string &hapPath, const
     MessageParcel reply;
     MessageOption option(MessageOption::TF_SYNC);
     auto ret = TransactInstalldCmd(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(realHapPath));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(appIdentifier));
+    INSTALLD_PARCEL_WRITE(data, Bool, isEnterpriseBundle);
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY || profileBlock == nullptr) {
+        APP_LOGE("invalid params");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    MessageParcel data;
+    (void)data.SetMaxCapacity(Constants::MAX_PARCEL_CAPACITY);
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+    INSTALLD_PARCEL_WRITE(data, Int32, profileBlockLength);
+    if (!data.WriteRawData(profileBlock, profileBlockLength)) {
+        APP_LOGE("Failed to write raw data");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE, data, reply, option);
+    if (ret != ERR_OK) {
+        APP_LOGE("TransactInstalldCmd failed");
+        return ret;
+    }
+    return ERR_OK;
+}
+
+ErrCode InstalldProxy::RemoveSignProfile(const std::string &bundleName)
+{
+    MessageParcel data;
+    INSTALLD_PARCEL_WRITE_INTERFACE_TOKEN(data, (GetDescriptor()));
+    INSTALLD_PARCEL_WRITE(data, String16, Str8ToStr16(bundleName));
+
+    MessageParcel reply;
+    MessageOption option(MessageOption::TF_SYNC);
+    auto ret = TransactInstalldCmd(InstalldInterfaceCode::REMOVE_SIGN_PROFILE, data, reply, option);
     if (ret != ERR_OK) {
         APP_LOGE("TransactInstalldCmd failed");
         return ret;

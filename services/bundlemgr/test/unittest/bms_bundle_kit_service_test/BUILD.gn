@@ -154,6 +154,10 @@ ohos_unittest("BmsBundleDataMgrTest") {
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsBundleKitServiceTest") {
@@ -217,6 +221,9 @@ ohos_unittest("BmsBundleKitServiceTest") {
   external_deps += bundle_install_external_deps
 
   defines = []
+  if (current_cpu == "arm64") {
+    defines += [ "USE_ARM64" ]
+  }
   if (configpolicy_enable) {
     external_deps += [ "config_policy:configpolicy_util" ]
     defines += [ "CONFIG_POLOCY_ENABLE" ]
@@ -291,6 +298,10 @@ ohos_unittest("BmsBundleKitServiceTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 
@@ -428,6 +439,10 @@ ohos_unittest("BmsBundleGetWindowPropertiesTest") {
     ]
     include_dirs += [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
+  }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
   }
 }
 

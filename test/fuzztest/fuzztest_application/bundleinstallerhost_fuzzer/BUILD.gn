@@ -105,6 +105,10 @@ ohos_fuzztest("BundleInstallerHostFuzzTest") {
     include_dirs = [ "${services_path}/bundlemgr/include/app_control" ]
     external_deps += [ "c_utils:utils" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 
   sources += [ "bundleinstallerhost_fuzzer.cpp" ]
 }

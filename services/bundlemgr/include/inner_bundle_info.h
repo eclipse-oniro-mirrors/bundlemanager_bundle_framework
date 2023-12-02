@@ -137,6 +137,8 @@ struct SkillUri {
     std::string pathStartWith;
     std::string pathRegex;
     std::string type;
+    std::string utd;
+    int32_t maxFileSupported = 0;
 };
 
 struct Skill {
@@ -147,6 +149,7 @@ public:
     bool Match(const OHOS::AAFwk::Want &want) const;
     bool MatchLauncher(const OHOS::AAFwk::Want &want) const;
     bool MatchType(const std::string &type, const std::string &skillUriType) const;
+    bool MatchUtd(const std::string &utd, int32_t count) const;
 private:
     bool MatchAction(const std::string &action) const;
     bool MatchEntities(const std::vector<std::string> &paramEntities) const;
@@ -154,6 +157,7 @@ private:
     bool MatchUri(const std::string &uriString, const SkillUri &skillUri) const;
     bool StartsWith(const std::string &sourceString, const std::string &targetPrefix) const;
     bool MatchMimeType(const std::string &uriString) const;
+    bool MatchUtd(const OHOS::AAFwk::Want &want);
     std::string GetOptParamUri(const std::string &uriString) const;
 };
 
@@ -2056,6 +2060,7 @@ public:
     void SetMoudleIsEncrpted(const std::string &packageName, bool isEncrypted);
     bool IsEncryptedMoudle(const std::string &packageName) const;
     bool IsContainEncryptedModule() const;
+    void UpdateDebug(bool debug, bool isEntry);
 
 private:
     bool IsExistLauncherAbility() const;

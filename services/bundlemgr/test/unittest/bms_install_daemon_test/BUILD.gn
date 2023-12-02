@@ -54,6 +54,7 @@ ohos_unittest("BmsInstallDaemonTest") {
     "access_token:libtokenid_sdk",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
@@ -75,6 +76,10 @@ ohos_unittest("BmsInstallDaemonTest") {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsInstallDaemonIpcTest") {
@@ -87,6 +92,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/common/serial_queue.cpp",
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
@@ -115,6 +121,7 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
@@ -135,6 +142,10 @@ ohos_unittest("BmsInstallDaemonIpcTest") {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsInstallDaemonHostImplTest") {
@@ -149,6 +160,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "${services_path}/bundlemgr/src/installd/installd_host_impl.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
     "${services_path}/bundlemgr/src/ipc/file_stat.cpp",
@@ -177,6 +189,7 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     "c_utils:utils",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
@@ -198,6 +211,10 @@ ohos_unittest("BmsInstallDaemonHostImplTest") {
     external_deps += [ "storage_service:storage_manager_sa_proxy" ]
     defines += [ "STORAGE_SERVICE_ENABLE" ]
   }
+  if (udmf_enabled) {
+    defines += [ "BUNDLE_FRAMEWORK_UDMF_ENABLED" ]
+    external_deps += [ "udmf:udmf_client" ]
+  }
 }
 
 ohos_unittest("BmsInstallDaemonOperatorTest") {
@@ -210,6 +227,7 @@ ohos_unittest("BmsInstallDaemonOperatorTest") {
     "${services_path}/bundlemgr/src/bundle_util.cpp",
     "${services_path}/bundlemgr/src/installd/installd_operator.cpp",
     "${services_path}/bundlemgr/src/ipc/check_encryption_param.cpp",
+    "${services_path}/bundlemgr/src/ipc/code_signature_param.cpp",
     "${services_path}/bundlemgr/src/ipc/create_dir_param.cpp",
     "${services_path}/bundlemgr/src/ipc/extract_param.cpp",
   ]

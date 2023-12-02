@@ -143,6 +143,8 @@ constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHSTARTWITH = "pathStartWith";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGX = "pathRegx";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_PATHREGEX = "pathRegex";
 constexpr const char* BUNDLE_MODULE_PROFILE_KEY_TYPE = "type";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_UTD = "utd";
+constexpr const char* BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED = "maxFileSupported";
 // sub BUNDLE_MODULE_PROFILE_KEY_META_DATA
 constexpr const char* BUNDLE_MODULE_META_KEY_CUSTOMIZE_DATA = "customizeData";
 constexpr const char* BUNDLE_MODULE_META_KEY_NAME = "name";

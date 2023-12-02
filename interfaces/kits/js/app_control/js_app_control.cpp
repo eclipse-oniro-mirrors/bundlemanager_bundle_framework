@@ -499,7 +499,7 @@ void ConvertRuleInfo(napi_env env, napi_value nRule, const DisposedRule &rule)
     }
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "elementList", nElementList));
     napi_value nPriority;
-    NAPI_CALL_RETURN_VOID(env, napi_create_uint32(env, rule.priority, &nPriority));
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, rule.priority, &nPriority));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, nRule, "priority", nPriority));
 }
 
@@ -514,7 +514,10 @@ bool ParseDiposedRule(napi_env env, napi_value nRule, DisposedRule &rule)
     napi_value prop = nullptr;
     napi_get_named_property(env, nRule, TYPE_WANT.c_str(), &prop);
     AAFwk::Want want;
-    CommonFunc::ParseWantWithoutVerification(env, prop, want);
+    if (!CommonFunc::ParseWantWithoutVerification(env, prop, want)) {
+        APP_LOGW("parse want failed");
+        return false;
+    }
     rule.want = std::make_shared<AAFwk::Want>(want);
     napi_get_named_property(env, nRule, "componentType", &prop);
     int32_t componentType;

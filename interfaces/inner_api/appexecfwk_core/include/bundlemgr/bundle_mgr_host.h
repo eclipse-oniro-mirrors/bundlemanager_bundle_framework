@@ -684,6 +684,11 @@ private:
     ErrCode HandleGetJsonProfile(MessageParcel &data, MessageParcel &reply);
 
     ErrCode HandleGetBundleResourceProxy(MessageParcel &data, MessageParcel &reply);
+    ErrCode HandleSetAdditionalInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetRecoverableApplicationInfo(MessageParcel &data, MessageParcel &reply);
+
+    ErrCode HandleGetUninstalledBundleInfo(MessageParcel &data, MessageParcel &reply);
 
 private:
     /**
@@ -714,6 +719,9 @@ private:
 
     template<typename T>
     ErrCode WriteParcelInfo(const T &parcelInfo, MessageParcel &reply) const;
+
+    template<typename T>
+    ErrCode WriteParcelInfoIntelligent(const T &parcelInfo, MessageParcel &reply) const;
 
     ErrCode WriteBigString(const std::string &str, MessageParcel &reply) const;
 

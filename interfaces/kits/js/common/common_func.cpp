@@ -102,6 +102,7 @@ static std::unordered_map<int32_t, int32_t> ERR_MAP = {
     { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_TARGET_BUNDLE_NOT_EXISTED, ERROR_BUNDLE_NOT_EXIST },
     { ERR_BUNDLEMANAGER_OVERLAY_QUERY_FAILED_PERMISSION_DENIED, ERROR_PERMISSION_DENIED_ERROR },
     { ERR_ZLIB_SRC_FILE_FORMAT_ERROR, ERR_ZLIB_SRC_FILE_FORMAT_ERROR_OR_DAMAGED },
+    { ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL, ERROR_NOT_APP_GALLERY_CALL },
     { ERR_BUNDLE_MANAGER_VERIFY_GET_VERIFY_MGR_FAILED, ERROR_VERIFY_ABC },
     { ERR_BUNDLE_MANAGER_VERIFY_INVALID_TARGET_DIR, ERROR_VERIFY_ABC },
     { ERR_BUNDLE_MANAGER_VERIFY_PARAM_ERROR, ERROR_VERIFY_ABC },
@@ -118,6 +119,14 @@ using Want = OHOS::AAFwk::Want;
 
 sptr<IBundleMgr> CommonFunc::bundleMgr_ = nullptr;
 std::mutex CommonFunc::bundleMgrMutex_;
+sptr<IRemoteObject::DeathRecipient> CommonFunc::deathRecipient_(new (std::nothrow) BundleMgrCommonDeathRecipient());
+
+void CommonFunc::BundleMgrCommonDeathRecipient::OnRemoteDied([[maybe_unused]] const wptr<IRemoteObject>& remote)
+{
+    APP_LOGD("BundleManagerService dead.");
+    std::lock_guard<std::mutex> lock(bundleMgrMutex_);
+    bundleMgr_ = nullptr;
+};
 
 napi_value CommonFunc::WrapVoidToJS(napi_env env)
 {
@@ -334,6 +343,7 @@ sptr<IBundleMgr> CommonFunc::GetBundleMgr()
             APP_LOGE("iface_cast failed.");
             return nullptr;
         }
+        bundleMgr_->AsObject()->AddDeathRecipient(deathRecipient_);
     }
     return bundleMgr_;
 }
@@ -431,6 +441,11 @@ void CommonFunc::ConvertWantInfo(napi_env env, napi_value objWantInfo, const Wan
     napi_value naction;
     NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(env, want.GetAction().c_str(), NAPI_AUTO_LENGTH, &naction));
     NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "action", naction));
+
+    napi_value nmoduleName;
+    NAPI_CALL_RETURN_VOID(
+        env, napi_create_string_utf8(env, elementName.GetModuleName().c_str(), NAPI_AUTO_LENGTH, &nmoduleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, objWantInfo, "moduleName", nmoduleName));
 
     auto entities = want.GetEntities();
     napi_value nGetEntities;
@@ -1866,6 +1881,45 @@ void CommonFunc::ConvertAllSharedBundleInfo(napi_env env, napi_value value,
         napi_value objInfo;
         NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
         ConvertSharedBundleInfo(env, objInfo, item);
+        NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
+        index++;
+    }
+}
+
+void CommonFunc::ConvertRecoverableApplicationInfo(
+    napi_env env, napi_value value, const RecoverableApplicationInfo &recoverableApplication)
+{
+    napi_value nBundleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, recoverableApplication.bundleName.c_str(), NAPI_AUTO_LENGTH, &nBundleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, BUNDLE_NAME, nBundleName));
+
+    napi_value nModuleName;
+    NAPI_CALL_RETURN_VOID(env, napi_create_string_utf8(
+        env, recoverableApplication.moduleName.c_str(), NAPI_AUTO_LENGTH, &nModuleName));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, MODULE_NAME, nModuleName));
+
+    napi_value nLabelId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.labelId, &nLabelId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, LABEL_ID, nLabelId));
+
+    napi_value nIconId;
+    NAPI_CALL_RETURN_VOID(env, napi_create_int32(env, recoverableApplication.iconId, &nIconId));
+    NAPI_CALL_RETURN_VOID(env, napi_set_named_property(env, value, ICON_ID, nIconId));
+}
+
+void CommonFunc::ConvertRecoverableApplicationInfos(napi_env env, napi_value value,
+    const std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    if (recoverableApplications.empty()) {
+        APP_LOGD("recoverableApplications is empty");
+        return;
+    }
+    size_t index = 0;
+    for (const auto &item : recoverableApplications) {
+        napi_value objInfo;
+        NAPI_CALL_RETURN_VOID(env, napi_create_object(env, &objInfo));
+        ConvertRecoverableApplicationInfo(env, objInfo, item);
         NAPI_CALL_RETURN_VOID(env, napi_set_element(env, value, index, objInfo));
         index++;
     }

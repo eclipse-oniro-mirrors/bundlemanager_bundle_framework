@@ -499,6 +499,26 @@ bool Skill::MatchMimeType(const std::string & uriString) const
     return false;
 }
 
+bool Skill::MatchUtd(const std::string &utd, int32_t count) const
+{
+    for (const SkillUri &skillUri : uris) {
+        if (skillUri.maxFileSupported < count) {
+            APP_LOGD("exceeds limit");
+            continue;
+        }
+        if (!skillUri.utd.empty()) {
+            if (MimeTypeMgr::MatchUtd(skillUri.utd, utd)) {
+                return true;
+            }
+        } else {
+            if (MimeTypeMgr::MatchTypeWithUtd(skillUri.type, utd)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 InnerBundleInfo::InnerBundleInfo()
 {
     baseApplicationInfo_ = std::make_shared<ApplicationInfo>();
@@ -680,7 +700,9 @@ void to_json(nlohmann::json &jsonObject, const SkillUri &uri)
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATH, uri.path},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATHSTARTWITH, uri.pathStartWith},
         {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_PATHREGEX, uri.pathRegex},
-        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE, uri.type}
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE, uri.type},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_UTD, uri.utd},
+        {ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED, uri.maxFileSupported},
     };
 }
 
@@ -1290,6 +1312,22 @@ void from_json(const nlohmann::json &jsonObject, SkillUri &uri)
         ProfileReader::BUNDLE_MODULE_PROFILE_KEY_TYPE,
         uri.type,
         JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<std::string>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_UTD,
+        uri.utd,
+        JsonType::STRING,
+        false,
+        parseResult,
+        ArrayType::NOT_ARRAY);
+    GetValueIfFindKey<int32_t>(jsonObject,
+        jsonObjectEnd,
+        ProfileReader::BUNDLE_MODULE_PROFILE_KEY_MAX_FILE_SUPPORTED,
+        uri.maxFileSupported,
+        JsonType::NUMBER,
         false,
         parseResult,
         ArrayType::NOT_ARRAY);
@@ -2103,11 +2141,8 @@ void InnerBundleInfo::UpdateBaseApplicationInfo(
     baseApplicationInfo_->targetBundleName = applicationInfo.targetBundleName;
     baseApplicationInfo_->targetPriority = applicationInfo.targetPriority;
 #endif
-    if (isEntry) {
-        baseApplicationInfo_->debug = applicationInfo.debug;
-    } else if (!HasEntry() && applicationInfo.debug) {
-        baseApplicationInfo_->debug = applicationInfo.debug;
-    }
+    UpdateDebug(applicationInfo.debug, isEntry);
+    baseApplicationInfo_->gwpAsanEnabled = applicationInfo.gwpAsanEnabled;
 }
 
 void InnerBundleInfo::UpdateAppDetailAbilityAttrs()
@@ -4143,6 +4178,15 @@ std::string InnerBundleInfo::GetAppIdentifier() const
 void InnerBundleInfo::SetAppIdentifier(const std::string &appIdentifier)
 {
     baseBundleInfo_->signatureInfo.appIdentifier = appIdentifier;
+}
+
+void InnerBundleInfo::UpdateDebug(bool debug, bool isEntry)
+{
+    if (isEntry) {
+        baseApplicationInfo_->debug = debug;
+    } else if (!HasEntry() && debug) {
+        baseApplicationInfo_->debug = debug;
+    }
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

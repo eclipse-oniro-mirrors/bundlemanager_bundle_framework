@@ -972,8 +972,16 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_5900, Function | SmallTest | Level0)
 {
-    auto ret = InstalldOperator::VerifyCodeSignature(TEST_STRING, TEST_STRING, TEST_STRING, "");
-    EXPECT_TRUE(ret);
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = TEST_STRING;
+    codeSignatureParam.cpuAbi = TEST_STRING;
+    codeSignatureParam.targetSoPath = TEST_STRING;
+    codeSignatureParam.signatureFileDir = "";
+    codeSignatureParam.isEnterpriseBundle = false;
+    codeSignatureParam.appIdentifier = TEST_STRING;
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    auto ret = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
+    EXPECT_FALSE(ret);
 }
 
 /**
@@ -1091,8 +1099,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6800, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | SmallTest | Level0)
 {
-    bool res = InstalldOperator::VerifyCodeSignature("", "", "", "");
-    EXPECT_EQ(res, true);
+    CodeSignatureParam codeSignatureParam;
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
+    EXPECT_FALSE(res);
 }
 
 /**
@@ -1102,7 +1112,10 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_6900, Function | Sma
 */
 HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7000, Function | SmallTest | Level0)
 {
-    bool res = InstalldOperator::VerifyCodeSignature("", "", "", "/");
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.signatureFileDir = "/";
+    std::shared_ptr<CodeSignHelper> codeSignHelper = nullptr;
+    bool res = InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper);
     EXPECT_EQ(res, false);
 }
 
@@ -1120,6 +1133,84 @@ HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7100, Function | Sma
     checkEncryptionParam.bundleId = -1;
     bool isEncrypted = false;
     bool res = InstalldOperator::CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7200
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7200, Function | SmallTest | Level0)
+{
+    std::string srcPath = "";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+
+    srcPath = "invalid";
+    res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+
+    srcPath = "";
+    dirMap.emplace(srcPath, srcPath);
+    res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7300
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7300, Function | SmallTest | Level0)
+{
+    std::string srcPath = "invalid";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.emplace(srcPath, srcPath);
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7400
+ * @tc.name: test function of ExtractDriverSoFiles
+ * @tc.desc: 1. calling ExtractDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7400, Function | SmallTest | Level0)
+{
+    std::string srcPath = "data/test";
+    std::unordered_multimap<std::string, std::string> dirMap;
+    dirMap.emplace(srcPath, srcPath);
+    bool res = InstalldOperator::ExtractDriverSoFiles(srcPath, dirMap);
+    EXPECT_EQ(res, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7500
+ * @tc.name: test function of CopyDriverSoFiles
+ * @tc.desc: 1. calling CopyDriverSoFiles
+*/
+HWTEST_F(BmsInstallDaemonOperatorTest, InstalldOperatorTest_7500, Function | SmallTest | Level0)
+{
+    std::string destinedDir = "invalid";
+    std::string originalDir = "invalid";
+    BundleExtractor extractor("");
+    bool res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "invalid/";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "invalid/test";
+    originalDir = "invalid/test";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
+    EXPECT_EQ(res, false);
+
+    destinedDir = "data/test";
+    originalDir = "data/test";
+    res = InstalldOperator::CopyDriverSoFiles(extractor, originalDir, destinedDir);
     EXPECT_EQ(res, false);
 }
 } // OHOS

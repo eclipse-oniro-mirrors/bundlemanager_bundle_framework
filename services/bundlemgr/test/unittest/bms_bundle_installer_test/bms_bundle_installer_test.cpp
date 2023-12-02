@@ -30,6 +30,7 @@
 #include "app_control_manager_host_impl.h"
 #include "app_control_constants.h"
 #endif
+#include "app_service_fwk/app_service_fwk_installer.h"
 #include "bundle_info.h"
 #include "bundle_installer_host.h"
 #include "bundle_mgr_service.h"
@@ -2000,7 +2001,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2800, Function | SmallTest 
     bool noSkipsKill = false;
 
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 }
 
 /**
@@ -2019,7 +2020,7 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_2900, Function | SmallTest 
     bool noSkipsKill = false;
 
     auto res = installer.ProcessBundleUpdateStatus(oldInfo, newInfo, isReplace, noSkipsKill);
-    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_STATE_ERROR);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_SINGLETON_INCOMPATIBLE);
 
     installer.modulePackage_ = MODULE_NAME;
     InnerModuleInfo moduleInfo;
@@ -3669,8 +3670,8 @@ HWTEST_F(BmsBundleInstallerTest, baseBundleInstaller_5300, Function | SmallTest 
 */
 HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0100, Function | SmallTest | Level0)
 {
-    AppControlManagerHostImpl impl;
-    auto ret = impl.GetControlRuleType(AppInstallControlRuleType::DISALLOWED_UNINSTALL);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto ret = impl->GetControlRuleType(AppInstallControlRuleType::DISALLOWED_UNINSTALL);
     EXPECT_EQ(ret, AppControlConstants::APP_DISALLOWED_UNINSTALL);
 }
 
@@ -3681,8 +3682,8 @@ HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0100, Function | Smal
 */
 HWTEST_F(BmsBundleInstallerTest, appControlManagerHostImpl_0200, Function | SmallTest | Level0)
 {
-    AppControlManagerHostImpl impl;
-    auto ret = impl.GetControlRuleType(AppInstallControlRuleType::UNSPECIFIED);
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    auto ret = impl->GetControlRuleType(AppInstallControlRuleType::UNSPECIFIED);
     EXPECT_EQ(ret, EMPTY_STRING);
 }
 #endif
@@ -5007,5 +5008,201 @@ HWTEST_F(BmsBundleInstallerTest, CheckAppIdentifier_0500, Function | SmallTest |
     BaseBundleInstaller installer;
     bool res = installer.CheckAppIdentifier(newInfo, oldInfo);
     EXPECT_TRUE(res);
+}
+
+/**
+ * @tc.number: BeforeInstall_0100
+ * @tc.name: test BeforeInstall
+ * @tc.desc: 1.Test the BeforeInstall
+*/
+HWTEST_F(BmsBundleInstallerTest, BeforeInstall_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    hspPaths.push_back(TEST_CREATE_FILE_PATH);
+    InstallParam installParam;
+    installParam.isPreInstallApp = false;
+
+    auto res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_NOT_PREINSTALL);
+
+    installParam.isPreInstallApp = true;
+    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_OK);
+
+    ClearDataMgr();
+    res = appServiceFwkInstaller.BeforeInstall(hspPaths, installParam);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_BUNDLE_MGR_SERVICE_ERROR);
+    ResetDataMgr();
+}
+
+/**
+ * @tc.number: CheckFileType_0100
+ * @tc.name: test CheckFileType
+ * @tc.desc: 1.Test the CheckFileType
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckFileType_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    std::vector<std::string> hspPaths;
+    auto res = appServiceFwkInstaller.CheckFileType(hspPaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_PARAM_ERROR);
+
+    hspPaths.push_back(TEST_CREATE_FILE_PATH);
+    res = appServiceFwkInstaller.CheckFileType(hspPaths);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALL_INVALID_HAP_NAME);
+}
+
+/**
+ * @tc.number: CheckAppLabelInfo_0100
+ * @tc.name: test CheckAppLabelInfo
+ * @tc.desc: 1.Test the CheckAppLabelInfo
+*/
+HWTEST_F(BmsBundleInstallerTest, CheckAppLabelInfo_0100, Function | SmallTest | Level0)
+{
+    AppServiceFwkInstaller appServiceFwkInstaller;
+    InnerBundleInfo innerBundleInfo;
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP;
+    std::unordered_map<std::string, InnerBundleInfo> infos;
+    infos.emplace(TEST_CREATE_FILE_PATH, innerBundleInfo);
+    auto res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_APP_SERVICE_FWK_INSTALL_TYPE_FAILED);
+
+    innerBundleInfo.baseApplicationInfo_->bundleType = BundleType::APP_SERVICE_FWK;
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
+
+    innerBundleInfo.currentPackage_ = MODULE_NAME_TEST;
+    InnerModuleInfo innerModuleInfo;
+    innerModuleInfo.moduleName = MODULE_NAME_TEST;
+    innerBundleInfo.innerModuleInfos_.emplace(MODULE_NAME_TEST, innerModuleInfo);
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
+
+    innerModuleInfo.bundleType = BundleType::SHARED;
+    res = appServiceFwkInstaller.CheckAppLabelInfo(infos);
+    EXPECT_EQ(res, ERR_OK);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7600
+ * @tc.name: test function of InstalldOperator
+ * @tc.desc: 1. calling VerifyCodeSignature of InstalldHostImpl
+ *           2. return false
+ * @tc.require: issueI6PNQX
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7600, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CodeSignatureParam codeSignatureParam;
+    codeSignatureParam.modulePath = "";
+    auto ret = hostImpl.VerifyCodeSignature(codeSignatureParam);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7700
+ * @tc.name: test function of CheckEncryption
+ * @tc.desc: 1. calling CheckEncryption
+*/
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7700, Function | SmallTest | Level0)
+{
+    InstalldHostImpl hostImpl;
+    CheckEncryptionParam checkEncryptionParam;
+    checkEncryptionParam.modulePath = "";
+    bool isEncrypted = false;
+    ErrCode res = hostImpl.CheckEncryption(checkEncryptionParam, isEncrypted);
+    EXPECT_EQ(res, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7800
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7800, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::vector<std::string> fileNames;
+    auto ret = hostImpl.MoveFiles("", "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.MoveFiles(TEST_STRING, "");
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+
+    ret = hostImpl.MoveFiles("", TEST_STRING);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_7800
+ * @tc.name: test RegisterBundleStatusCallback
+ * @tc.desc: 1.system run normally
+ *           2.RegisterBundleStatusCallback failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_7900, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::unordered_multimap<std::string, std::string> dirMap;
+    auto ret = hostImpl.ExtractDriverSoFiles("", dirMap);
+    EXPECT_EQ(ret, ERR_APPEXECFWK_INSTALLD_PARAM_ERROR);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8000
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8000, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    auto ret = hostImpl.CheckPathValid("", "");
+    EXPECT_EQ(ret, true);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8100
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8100, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "../";
+    auto ret = hostImpl.CheckPathValid(path, "");
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8200
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8200, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "./";
+    std::string prefix = "npos";
+    auto ret = hostImpl.CheckPathValid(path, prefix);
+    EXPECT_EQ(ret, false);
+}
+
+/**
+ * @tc.number: InstalldOperatorTest_8300
+ * @tc.name: test CheckPathValid
+ * @tc.desc: 1.system run normally
+ *           2.CheckPathValid failed
+ */
+HWTEST_F(BmsBundleInstallerTest, InstalldOperatorTest_8300, Function | SmallTest | Level1)
+{
+    InstalldHostImpl hostImpl;
+    std::string path = "./npos";
+    std::string prefix = "npos";
+    auto ret = hostImpl.CheckPathValid(path, prefix);
+    EXPECT_EQ(ret, true);
 }
 } // OHOS

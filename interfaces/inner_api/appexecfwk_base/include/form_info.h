@@ -56,6 +56,7 @@ struct FormInfo : public Parcelable {
     bool dataProxyEnabled = false;
     bool isDynamic = true;
     bool transparencyEnabled = false;
+    int32_t privacyLevel = 0;
 
     FormInfo() = default;
     explicit FormInfo(const ExtensionAbilityInfo &abilityInfo, const ExtensionFormInfo &formInfo);

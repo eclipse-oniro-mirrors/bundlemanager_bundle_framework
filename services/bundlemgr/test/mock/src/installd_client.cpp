@@ -285,14 +285,12 @@ ErrCode InstalldClient::GetNativeLibraryFileNames(const std::string &filePath, c
     return CallService(&IInstalld::GetNativeLibraryFileNames, filePath, cpuAbi, fileNames);
 }
 
-ErrCode InstalldClient::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldClient::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
-    if (modulePath.empty()) {
+    if (codeSignatureParam.modulePath.empty()) {
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    return CallService(&IInstalld::VerifyCodeSignature, modulePath, cpuAbi, targetSoPath,
-        signatureFileDir);
+    return CallService(&IInstalld::VerifyCodeSignature, codeSignatureParam);
 }
 
 ErrCode InstalldClient::CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption)
@@ -328,6 +326,32 @@ ErrCode InstalldClient::ExtractEncryptedSoFiles(const std::string &hapPath, cons
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
     return CallService(&IInstalld::ExtractEncryptedSoFiles, hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
+}
+
+ErrCode InstalldClient::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
+{
+    if (realHapPath.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::VerifyCodeSignatureForHap, realHapPath, appIdentifier, isEnterpriseBundle);
+}
+
+ErrCode InstalldClient::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    if (bundleName.empty() || profileBlock == nullptr) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::DeliverySignProfile, bundleName, profileBlockLength, profileBlock);
+}
+
+ErrCode InstalldClient::RemoveSignProfile(const std::string &bundleName)
+{
+    if (bundleName.empty()) {
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+    return CallService(&IInstalld::RemoveSignProfile, bundleName);
 }
 
 bool InstalldClient::StartInstalldService()

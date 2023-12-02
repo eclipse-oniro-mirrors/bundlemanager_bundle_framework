@@ -38,8 +38,11 @@ using namespace OHOS::Security;
 
 namespace OHOS {
 namespace {
+const std::string APPID = "appId";
 const int32_t USERID = 100;
 const int32_t WAIT_TIME = 5; // init mocked bms
+const std::string PERMISSION_TEST = "ohos.permission.test";
+const std::string MODULE_ENTRY_NAME = "entry";
 }  // namespace
 
 class BmsBundlePermissionDefListTest : public testing::Test {
@@ -55,6 +58,7 @@ public:
     const std::shared_ptr<BundleDataMgr> GetBundleDataMgr() const;
     void StartInstalldService() const;
     void StartBundleService();
+    void InitInnerBundleInfo(InnerBundleInfo &innerBundleInfo);
 private:
     static std::shared_ptr<InstalldService> installdService_;
     static std::shared_ptr<BundleMgrService> bundleMgrService_;
@@ -84,6 +88,16 @@ void BmsBundlePermissionDefListTest::SetUp()
 {
     StartInstalldService();
     StartBundleService();
+}
+
+void BmsBundlePermissionDefListTest::InitInnerBundleInfo(InnerBundleInfo &innerBundleInfo)
+{
+    innerBundleInfo.SetAppPrivilegeLevel(Profile::AVAILABLELEVEL_SYSTEM_CORE);
+    InnerModuleInfo innerModuleInfo;
+    RequestPermission requestPermission;
+    requestPermission.name = PERMISSION_TEST;
+    innerModuleInfo.requestPermissions.emplace_back(requestPermission);
+    innerBundleInfo.InsertInnerModuleInfo(MODULE_ENTRY_NAME, innerModuleInfo);
 }
 
 void BmsBundlePermissionDefListTest::TearDown()
@@ -205,13 +219,11 @@ HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0300, Fu
 
     Security::AccessToken::AccessTokenID tokenId = 0;
     InnerBundleInfo innerBundleInfo;
-    RequestPermission requestPermission;
-    requestPermission.name = "name";
-    requestPermission.reason = "reason";
-    std::vector<RequestPermission> reqPermissions;
-    reqPermissions.push_back(requestPermission);
-    res = BundlePermissionMgr::InnerGrantRequestPermissions(tokenId, reqPermissions, innerBundleInfo);
-    EXPECT_EQ(res, false);
+    std::vector<std::string> systemGrantPermList;
+    std::vector<std::string> userGrantPermList;
+    res = BundlePermissionMgr::InnerGrantRequestPermissions(
+        tokenId, innerBundleInfo, systemGrantPermList, userGrantPermList);
+    EXPECT_EQ(res, true);
 }
 
 /**
@@ -299,5 +311,42 @@ HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0800, Fu
     int32_t beginSystemApiVersion = 1;
     res = BundlePermissionMgr::VerifySystemApp(beginSystemApiVersion);
     EXPECT_EQ(res, true);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionDefListTest
+ * Function: InnerFilterRequestPermissions
+ * @tc.name: test InnerFilterRequestPermissions verify success
+ * @tc.desc: 1. system running normally
+ */
+HWTEST_F(BmsBundlePermissionDefListTest, InnerFilterRequestPermissions_0100, Function | SmallTest | Level0)
+{
+    bool res = BundlePermissionMgr::Init();
+    EXPECT_EQ(res, true);
+
+    InnerBundleInfo innerBundleInfo;
+    InitInnerBundleInfo(innerBundleInfo);
+    std::vector<std::string> systemGrantPermList;
+    std::vector<std::string> userGrantPermList;
+    bool result = BundlePermissionMgr::InnerFilterRequestPermissions(
+        innerBundleInfo, systemGrantPermList, userGrantPermList);
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.number: BmsBundlePermissionDefListTest_0900
+ * @tc.name: test AppControlManagerHostImpl
+ * @tc.desc: 1.SetDisposedStatus test
+ *           2.GetDisposedStatus test
+ */
+HWTEST_F(BmsBundlePermissionDefListTest, BmsBundlePermissionDefListTest_0900, Function | SmallTest | Level1)
+{
+    auto impl = std::make_shared<AppControlManagerHostImpl>();
+    DisposedRule rule;
+    ErrCode res = impl->SetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
+
+    res = impl->GetDisposedRule(APPID, rule, USERID);
+    EXPECT_EQ(res, ERR_BUNDLE_MANAGER_PERMISSION_DENIED);
 }
 } // OHOS

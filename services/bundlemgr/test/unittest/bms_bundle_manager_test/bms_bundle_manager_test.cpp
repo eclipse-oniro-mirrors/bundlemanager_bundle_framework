@@ -5650,4 +5650,18 @@ HWTEST_F(BmsBundleManagerTest, GetAllBundleInfoWithMenu_0003, Function | SmallTe
 
     UnInstallBundle(BUNDLE_PREVIEW_NAME);
 }
+
+/**
+ * @tc.number: SetAdditionalInfo_0100
+ * @tc.name: test SetAdditionalInfo
+ * @tc.desc: 1.system run normally
+ *           2.set additionalInfo failed
+ */
+HWTEST_F(BmsBundleManagerTest, SetAdditionalInfo_0100, Function | SmallTest | Level1)
+{
+    auto hostImpl = std::make_unique<BundleMgrHostImpl>();
+    std::string additionalInfo = "additionalInfo";
+    ErrCode ret = hostImpl->SetAdditionalInfo(BUNDLE_NAME, additionalInfo);
+    EXPECT_EQ(ret, ERR_BUNDLE_MANAGER_NOT_APP_GALLERY_CALL);
+}
 } // OHOS

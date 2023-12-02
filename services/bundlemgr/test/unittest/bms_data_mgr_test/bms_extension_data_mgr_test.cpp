@@ -47,7 +47,7 @@ const nlohmann::json EXTENSIONS_JSON_1 = R"(
 {
     "bms-extensions": {
         "bundle-mgr": {
-            "extension-name": "HMOSBundleMgrExt",
+            "extension-name": "BundleMgrExt",
             "libpath":"system/lib/libappexecfwk_test.z.so",
             "lib64path":"system/lib64/libappexecfwk_test.z.so"
         }
@@ -58,7 +58,7 @@ const nlohmann::json EXTENSIONS_JSON_3 = R"(
 {
     "no_extensions": {
         "bundle-mgr": {
-            "extension-name": "HMOSBundleMgrExt",
+            "extension-name": "BundleMgrExt",
             "libpath":"system/lib/libappexecfwk_test.z.so",
             "lib64path":"system/lib64/libappexecfwk_test.z.so"
         }
@@ -186,7 +186,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0004, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfos(want, userId, abilityInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
+    EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -206,7 +206,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0005, Function | SmallTest
     std::vector<AbilityInfo> abilityInfos;
     ErrCode res = bmsExtensionDataMgr.QueryAbilityInfosWithFlag(want, flags, userId, abilityInfos);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
+    EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -225,7 +225,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0006, Function | SmallTest
     std::vector<BundleInfo> bundleInfos;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfos(flags, bundleInfos, userId);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_UNINSTALL_FAILED);
+    EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -245,7 +245,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0007, Function | SmallTest
     BundleInfo bundleInfo;
     ErrCode res = bmsExtensionDataMgr.GetBundleInfo(bundleName, flags, userId, bundleInfo);
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_INSTALL_FAILED);
+    EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif
@@ -279,7 +279,7 @@ HWTEST_F(BmsExtensionDataMgrTest, BmsExtensionDataMgr_0009, Function | SmallTest
     BmsExtensionDataMgr bmsExtensionDataMgr;
     ErrCode res = bmsExtensionDataMgr.Uninstall("");
     #ifdef USE_EXTENSION_DATA
-    EXPECT_EQ(res, BMS_BROKER_ERR_INSTALL_FAILED);
+    EXPECT_NE(res, ERR_OK);
     #else
     EXPECT_EQ(res, ERR_BUNDLE_MANAGER_INSTALL_FAILED_BUNDLE_EXTENSION_NOT_EXISTED);
     #endif

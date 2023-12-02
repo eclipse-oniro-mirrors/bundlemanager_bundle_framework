@@ -47,6 +47,7 @@ struct AOTArgs : public Parcelable {
     std::vector<HspInfo> hspVector;
     uint32_t bundleUid = 0;
     std::string appIdentifier;
+    uint32_t isEncryptedBundle = 0;
 
     std::string ToString() const;
     bool ReadFromParcel(Parcel &parcel);

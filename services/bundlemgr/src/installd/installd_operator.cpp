@@ -50,6 +50,9 @@ static const char LIB64_DIFF_PATCH_SHARED_SO_PATH[] = "system/lib64/libdiff_patc
 static const char APPLY_PATCH_FUNCTION_NAME[] = "ApplyPatch";
 static std::string PREFIX_RESOURCE_PATH = "/resources/rawfile/";
 static std::string PREFIX_TARGET_PATH = "/print_service/";
+#if defined(CODE_SIGNATURE_ENABLE)
+using namespace OHOS::Security::CodeSign;
+#endif
 #if defined(CODE_ENCRYPTION_ENABLE)
 static std::string CODE_DECRYPT = "/dev/code_decrypt";
 static int32_t INVALID_RETURN_VALUE = -1;
@@ -1021,47 +1024,75 @@ bool InstalldOperator::GetNativeLibraryFileNames(const std::string &filePath, co
     return true;
 }
 
-bool InstalldOperator::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+#if defined(CODE_SIGNATURE_ENABLE)
+bool InstalldOperator::PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+    const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap)
 {
-    APP_LOGD("process code signature of src path %{public}s, signature file path %{public}s", modulePath.c_str(),
-        signatureFileDir.c_str());
-    if (signatureFileDir.empty()) {
-        APP_LOGD("signature file dir is empty and does not need to verify code signature");
-        return true;
+    if (codeSignatureParam.targetSoPath.empty()) {
+        return false;
     }
+    const std::string prefix = Constants::LIBS + codeSignatureParam.cpuAbi + Constants::PATH_SEPARATOR;
+    for_each(soEntryFiles.begin(), soEntryFiles.end(),
+        [&entryMap, &prefix, &codeSignatureParam](const auto &entry) {
+        std::string fileName = entry.substr(prefix.length());
+        std::string path = codeSignatureParam.targetSoPath;
+        if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
+            path += Constants::FILE_SEPARATOR_CHAR;
+        }
+        entryMap.emplace(entry, path + fileName);
+        APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
+    });
+    return true;
+}
+#endif
 
-    BundleExtractor extractor(modulePath);
+bool InstalldOperator::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
+    std::shared_ptr<CodeSignHelper>& codeSignHelper)
+{
+    BundleExtractor extractor(codeSignatureParam.modulePath);
     if (!extractor.Init()) {
         return false;
     }
 
     std::vector<std::string> soEntryFiles;
-    if (!ObtainNativeSoFile(extractor, cpuAbi, soEntryFiles)) {
-        APP_LOGE("ObtainNativeSoFile failed");
+    if (!ObtainNativeSoFile(extractor, codeSignatureParam.cpuAbi, soEntryFiles)) {
         return false;
     }
 
     if (soEntryFiles.empty()) {
-        APP_LOGD("no so file in installation file %{public}s", modulePath.c_str());
         return true;
     }
 
 #if defined(CODE_SIGNATURE_ENABLE)
     Security::CodeSign::EntryMap entryMap;
-    if (!targetSoPath.empty()) {
-        const std::string prefix = Constants::LIBS + cpuAbi + Constants::PATH_SEPARATOR;
-        for_each(soEntryFiles.begin(), soEntryFiles.end(), [&entryMap, &prefix, &targetSoPath](const auto &entry) {
-            std::string fileName = entry.substr(prefix.length());
-            std::string path = targetSoPath;
-            if (path.back() != Constants::FILE_SEPARATOR_CHAR) {
-                path += Constants::FILE_SEPARATOR_CHAR;
-            }
-            entryMap.emplace(entry, path + fileName);
-            APP_LOGD("VerifyCode the targetSoPath is %{public}s", (path + fileName).c_str());
-        });
+    if (!PrepareEntryMap(codeSignatureParam, soEntryFiles, entryMap)) {
+        return false;
     }
-    ErrCode ret = Security::CodeSign::CodeSignUtils::EnforceCodeSignForApp(entryMap, signatureFileDir);
+    
+    ErrCode ret = ERR_OK;
+    if (codeSignatureParam.signatureFileDir.empty()) {
+        if (codeSignHelper == nullptr || codeSignHelper->IsHapChecked()) {
+            codeSignHelper = std::make_shared<CodeSignHelper>();
+        }
+        Security::CodeSign::FileType fileType = FILE_ENTRY_ADD;
+        if (codeSignatureParam.isPreInstalledBundle) {
+            fileType = FILE_ENTRY_ONLY;
+        }
+        if (codeSignatureParam.isEnterpriseBundle) {
+            APP_LOGD("Verify code signature for enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForAppWithOwnerId(
+                codeSignatureParam.appIdentifier, codeSignatureParam.modulePath, entryMap, fileType);
+        } else {
+            APP_LOGD("Verify code signature for non-enterprise bundle");
+            ret = codeSignHelper->EnforceCodeSignForApp(codeSignatureParam.modulePath, entryMap, fileType);
+        }
+    } else {
+        ret = CodeSignUtils::EnforceCodeSignForApp(entryMap, codeSignatureParam.signatureFileDir);
+    }
+    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
+        APP_LOGW("no code sign file in the bundle");
+        return true;
+    }
     if (ret != ERR_OK) {
         APP_LOGE("VerifyCode failed due to %{public}d", ret);
         return false;
@@ -1077,7 +1108,6 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
         return CheckHapEncryption(checkEncryptionParam, isEncryption);
     }
     const std::string cpuAbi = checkEncryptionParam.cpuAbi;
-    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     const int32_t bundleId = checkEncryptionParam.bundleId;
     InstallBundleType installBundleType = checkEncryptionParam.installBundleType;
     const bool isCompressNativeLibrary = checkEncryptionParam.isCompressNativeLibrary;
@@ -1101,6 +1131,7 @@ bool InstalldOperator::CheckEncryption(const CheckEncryptionParam &checkEncrypti
     }
 
 #if defined(CODE_ENCRYPTION_ENABLE)
+    const std::string targetSoPath = checkEncryptionParam.targetSoPath;
     Security::CodeSign::EntryMap entryMap;
     entryMap.emplace(Constants::CODE_SIGNATURE_HAP, checkEncryptionParam.modulePath);
     if (!targetSoPath.empty()) {
@@ -1154,9 +1185,11 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
 {
     std::vector<std::string> entryNames;
     if (!extractor.GetZipFileNames(entryNames)) {
+        APP_LOGE("GetZipFileNames failed");
         return false;
     }
     if (entryNames.empty()) {
+        APP_LOGE("entryNames is empty");
         return false;
     }
 
@@ -1174,12 +1207,21 @@ bool InstalldOperator::ObtainNativeSoFile(const BundleExtractor &extractor, cons
             continue;
         }
     }
+
+    if (soEntryFiles.empty()) {
+        APP_LOGD("no so file in installation file");
+    }
     return true;
 }
 
-bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir)
+bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &desDir, bool isDesDirNeedCreated)
 {
     APP_LOGD("srcDir is %{public}s, desDir is %{public}s", srcDir.c_str(), desDir.c_str());
+    if (isDesDirNeedCreated && !MkRecursiveDir(desDir, true)) {
+        APP_LOGE("create desDir failed");
+        return false;
+    }
+
     if (srcDir.empty() || desDir.empty()) {
         APP_LOGE("move file failed due to srcDir or desDir is empty");
         return false;
@@ -1211,20 +1253,46 @@ bool InstalldOperator::MoveFiles(const std::string &srcDir, const std::string &d
         }
 
         std::string curPath = realPath + Constants::PATH_SEPARATOR + currentName;
+        std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
         struct stat s;
-        if ((stat(curPath.c_str(), &s) == 0) && (s.st_mode & S_IFREG)) {
-            std::string innerDesStr = realDesDir + Constants::PATH_SEPARATOR + currentName;
-            if (!RenameFile(curPath, innerDesStr)) {
-                APP_LOGE("move file from curPath(%{public}s) to desPath(%{public}s) failed", curPath.c_str(),
-                    innerDesStr.c_str());
-                closedir(directory);
-                return false;
-            }
-            mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-            OHOS::ChangeModeFile(innerDesStr, mode);
+        if (stat(curPath.c_str(), &s) != 0) {
+            APP_LOGD("MoveFiles stat %{public}s failed", curPath.c_str());
+            continue;
+        }
+        if (!MoveFileOrDir(curPath, innerDesStr, s.st_mode)) {
+            closedir(directory);
+            return false;
         }
     }
     closedir(directory);
+    return true;
+}
+
+bool InstalldOperator::MoveFileOrDir(const std::string &srcPath, const std::string &destPath, mode_t mode)
+{
+    if (mode & S_IFREG) {
+        APP_LOGD("srcPath(%{public}s) is a file", srcPath.c_str());
+        return MoveFile(srcPath, destPath);
+    } else if (mode & S_IFDIR) {
+        APP_LOGD("srcPath(%{public}s) is a dir", srcPath.c_str());
+        return MoveFiles(srcPath, destPath, true);
+    }
+    return true;
+}
+
+bool InstalldOperator::MoveFile(const std::string &srcPath, const std::string &destPath)
+{
+    APP_LOGD("srcPath is %{public}s, destPath is %{public}s", srcPath.c_str(), destPath.c_str());
+    if (!RenameFile(srcPath, destPath)) {
+        APP_LOGE("move file from srcPath(%{public}s) to destPath(%{public}s) failed", srcPath.c_str(),
+            destPath.c_str());
+        return false;
+    }
+    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
+    if (!OHOS::ChangeModeFile(destPath, mode)) {
+        APP_LOGE("change mode failed");
+        return false;
+    }
     return true;
 }
 
@@ -1257,7 +1325,7 @@ bool InstalldOperator::ExtractResourceFiles(const ExtractParam &extractParam, co
         std::string filePath = targetDir + entryName;
         if (!extractor.ExtractFile(entryName, filePath)) {
             APP_LOGE("ExtractFile failed");
-            return false;
+            continue;
         }
         mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
         if (!OHOS::ChangeModeFile(filePath, mode)) {
@@ -1497,7 +1565,12 @@ ErrCode InstalldOperator::DecryptSoFile(const std::string &filePath, const std::
     }
 
     /* mmap hap or so file to ram */
-    auto fd = open(filePath.c_str(), O_RDONLY);
+    std::string newfilePath;
+    if (!PathToRealPath(filePath, newfilePath)) {
+        APP_LOGE("file is not real path, file path: %{private}s", filePath.c_str());
+        return result;
+    }
+    auto fd = open(newfilePath.c_str(), O_RDONLY);
     if (fd < 0) {
         APP_LOGE("open hap failed");
         close(dev_fd);
@@ -1567,12 +1640,17 @@ ErrCode InstalldOperator::RemoveEncryptedKey(int32_t uid, const std::vector<std:
 
 int32_t InstalldOperator::CallIoctl(int32_t flag, int32_t associatedFlag, int32_t uid, int32_t &fd)
 {
-    int32_t installdUid = getuid();
+    int32_t installdUid = static_cast<int32_t>(getuid());
     int32_t bundleUid = uid;
     APP_LOGD("current process uid is %{public}d and bundle uid is %{public}d", installdUid, bundleUid);
 
     /* open CODE_DECRYPT */
-    fd = open(CODE_DECRYPT.c_str(), O_RDONLY);
+    std::string newCodeDecrypt;
+    if (!PathToRealPath(CODE_DECRYPT, newCodeDecrypt)) {
+        APP_LOGE("file is not real path, file path: %{private}s", CODE_DECRYPT.c_str());
+        return INVALID_RETURN_VALUE;
+    }
+    fd = open(newCodeDecrypt.c_str(), O_RDONLY);
     if (fd < 0) {
         APP_LOGE("call open failed");
         return INVALID_RETURN_VALUE;

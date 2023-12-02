@@ -164,6 +164,8 @@ public:
 
     ErrCode CheckAllowEnterpriseBundle(const std::vector<Security::Verify::HapVerifyResult> &hapVerifyRes) const;
 
+    bool CheckEnterpriseBundle(Security::Verify::HapVerifyResult &hapVerifyRes) const;
+
 private:
 
     ErrCode ParseBundleInfo(

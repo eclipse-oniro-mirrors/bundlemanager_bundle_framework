@@ -29,6 +29,7 @@
 #include "app_log_wrapper.h"
 #include "bundle_constants.h"
 #if defined(CODE_SIGNATURE_ENABLE)
+#include "byte_buffer.h"
 #include "code_sign_utils.h"
 #endif
 #if defined(CODE_ENCRYPTION_ENABLE)
@@ -63,6 +64,9 @@ const std::string BUNDLE_BACKUP_HOME_PATH  = "/data/service/el2/%/backup/bundles
 const std::string DISTRIBUTED_FILE = "/data/service/el2/%/hmdfs/account/data/";
 const std::string SHARE_FILE_PATH = "/data/service/el2/%/share/";
 const std::string DISTRIBUTED_FILE_NON_ACCOUNT = "/data/service/el2/%/hmdfs/non_account/data/";
+#if defined(CODE_SIGNATURE_ENABLE)
+using namespace OHOS::Security::CodeSign;
+#endif
 }
 
 InstalldHostImpl::InstalldHostImpl()
@@ -230,7 +234,7 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
 
         std::string bundleDataDir = GetBundleDataDir(el, createDirParam.userId) + Constants::BASE;
         if (access(bundleDataDir.c_str(), F_OK) != 0) {
-            APP_LOGW("CreateBundleDataDir base directory does not existed.");
+            APP_LOGW("Base directory %{public}s does not existed.", bundleDataDir.c_str());
             return ERR_OK;
         }
         bundleDataDir += createDirParam.bundleName;
@@ -245,6 +249,13 @@ ErrCode InstalldHostImpl::CreateBundleDataDir(const CreateDirParam &createDirPar
                     APP_LOGE("CreateBundledatadir MkOwnerDir el2 failed");
                     return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
                 }
+            }
+            std::string logDir = GetBundleDataDir(el, createDirParam.userId) +
+                Constants::LOG + createDirParam.bundleName;
+            if (!InstalldOperator::MkOwnerDir(
+                logDir, S_IRWXU | S_IRWXG, createDirParam.uid, Constants::LOG_DIR_GID)) {
+                APP_LOGE("create log dir failed");
+                return ERR_APPEXECFWK_INSTALLD_CREATE_DIR_FAILED;
             }
         }
         ErrCode ret = SetDirApl(bundleDataDir, createDirParam.bundleName, createDirParam.apl,
@@ -365,6 +376,13 @@ ErrCode InstalldHostImpl::RemoveBundleDataDir(const std::string &bundleName, con
         if (!InstalldOperator::DeleteDir(databaseDir)) {
             APP_LOGE("remove dir %{public}s failed", databaseDir.c_str());
             return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+        }
+        if (el == Constants::BUNDLE_EL[1]) {
+            std::string logDir = GetBundleDataDir(el, userid) + Constants::LOG + bundleName;
+            if (!InstalldOperator::DeleteDir(logDir)) {
+                APP_LOGE("remove dir %{public}s failed", logDir.c_str());
+                return ERR_APPEXECFWK_INSTALLD_REMOVE_DIR_FAILED;
+            }
         }
     }
     if (RemoveShareDir(bundleName, userid) != ERR_OK) {
@@ -586,14 +604,9 @@ ErrCode InstalldHostImpl::MoveFile(const std::string &oldPath, const std::string
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-    if (!InstalldOperator::RenameFile(oldPath, newPath)) {
+    if (!InstalldOperator::MoveFile(oldPath, newPath)) {
         APP_LOGE("Move file %{public}s to %{public}s failed",
             oldPath.c_str(), newPath.c_str());
-        return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
-    }
-    mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    if (!OHOS::ChangeModeFile(newPath, mode)) {
-        APP_LOGE("change mode failed");
         return ERR_APPEXECFWK_INSTALLD_MOVE_FILE_FAILED;
     }
     return ERR_OK;
@@ -775,20 +788,19 @@ ErrCode InstalldHostImpl::GetNativeLibraryFileNames(const std::string &filePath,
     return ERR_OK;
 }
 
-ErrCode InstalldHostImpl::VerifyCodeSignature(const std::string &modulePath, const std::string &cpuAbi,
-    const std::string &targetSoPath, const std::string &signatureFileDir)
+ErrCode InstalldHostImpl::VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam)
 {
     APP_LOGD("start to process the code signature for so files");
     if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
         APP_LOGE("installd permission denied, only used for foundation process");
         return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
     }
-
-    if (modulePath.empty()) {
+    APP_LOGD("code sign param is %{public}s", codeSignatureParam.ToString().c_str());
+    if (codeSignatureParam.modulePath.empty()) {
         APP_LOGE("Calling the function VerifyCodeSignature with invalid param");
         return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
     }
-    if (!InstalldOperator::VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir)) {
+    if (!InstalldOperator::VerifyCodeSignature(codeSignatureParam, codeSignHelper_)) {
         APP_LOGE("verify code signature failed");
         return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
     }
@@ -883,6 +895,102 @@ ErrCode InstalldHostImpl::ExtractEncryptedSoFiles(const std::string &hapPath, co
     APP_LOGD("code encryption is not supported");
     return ERR_BUNDLEMANAGER_QUICK_FIX_NOT_SUPPORT_CODE_ENCRYPTION;
 #endif
+}
+
+ErrCode InstalldHostImpl::VerifyCodeSignatureForHap(const std::string &realHapPath, const std::string &appIdentifier,
+    bool isEnterpriseBundle)
+{
+    APP_LOGD("start to enable code signature for hap or hsp");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+    if (realHapPath.empty()) {
+        APP_LOGE("real path of the installed hap is empty");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    Security::CodeSign::EntryMap entryMap;
+    ErrCode ret = ERR_OK;
+    if (codeSignHelper_ == nullptr || codeSignHelper_->IsHapChecked()) {
+        codeSignHelper_ = std::make_shared<CodeSignHelper>();
+    }
+    if (isEnterpriseBundle) {
+        APP_LOGD("Verify code signature for enterprise bundle");
+        ret = codeSignHelper_->EnforceCodeSignForAppWithOwnerId(appIdentifier, realHapPath, entryMap, FILE_ALL);
+    } else {
+        APP_LOGD("Verify code signature for non-enterprise bundle");
+        ret = codeSignHelper_->EnforceCodeSignForApp(realHapPath, entryMap, FILE_ALL);
+    }
+    codeSignHelper_->SetHapChecked(true);
+    if (ret == VerifyErrCode::CS_CODE_SIGN_NOT_EXISTS) {
+        APP_LOGW("no code sign file in the bundle");
+        return ERR_OK;
+    }
+    if (ret != ERR_OK) {
+        APP_LOGE("hap or hsp code signature failed due to %{public}d", ret);
+        return ERR_BUNDLEMANAGER_INSTALL_CODE_SIGNATURE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::DeliverySignProfile(const std::string &bundleName, int32_t profileBlockLength,
+    const unsigned char *profileBlock)
+{
+    APP_LOGD("start to delivery sign profile");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty() || profileBlock == nullptr || profileBlockLength == 0) {
+        APP_LOGE("Calling the function DeliverySignProfile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    APP_LOGD("delivery profile of bundle %{public}s and profile size is %{public}d", bundleName.c_str(),
+        profileBlockLength);
+    Security::CodeSign::ByteBuffer byteBuffer;
+    byteBuffer.CopyFrom(reinterpret_cast<const uint8_t *>(profileBlock), profileBlockLength);
+    ErrCode ret = Security::CodeSign::CodeSignUtils::EnableKeyInProfile(bundleName, byteBuffer);
+    if (ret != ERR_OK) {
+        APP_LOGE("delivery code sign profile failed due to error %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_DELIVERY_FILE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
+}
+
+ErrCode InstalldHostImpl::RemoveSignProfile(const std::string &bundleName)
+{
+    APP_LOGD("start to remove sign profile");
+#if defined(CODE_SIGNATURE_ENABLE)
+    if (!InstalldPermissionMgr::VerifyCallingPermission(Constants::FOUNDATION_UID)) {
+        APP_LOGE("installd permission denied, only used for foundation process");
+        return ERR_APPEXECFWK_INSTALLD_PERMISSION_DENIED;
+    }
+
+    if (bundleName.empty()) {
+        APP_LOGE("Calling the function RemoveSignProfile with invalid param");
+        return ERR_APPEXECFWK_INSTALLD_PARAM_ERROR;
+    }
+
+    ErrCode ret = Security::CodeSign::CodeSignUtils::RemoveKeyInProfile(bundleName);
+    if (ret != ERR_OK) {
+        APP_LOGE("remove code sign profile failed due to error %{public}d", ret);
+        return ERR_BUNDLE_MANAGER_CODE_SIGNATURE_REMOVE_FILE_FAILED;
+    }
+#else
+    APP_LOGW("code signature feature is not supported");
+#endif
+    return ERR_OK;
 }
 
 bool InstalldHostImpl::CheckPathValid(const std::string &path, const std::string &prefix)

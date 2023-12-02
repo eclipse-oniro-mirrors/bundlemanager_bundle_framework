@@ -2282,6 +2282,24 @@ HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0103, Function | SmallTest
 }
 
 /**
+ * @tc.number: BmsBundleResourceTest_0104
+ * Function: BundleResourceManager
+ * @tc.name: test BundleResourceManager
+ * @tc.desc: 1. system running normally
+ *           2. test AddResourceInfoByColorModeChanged
+ */
+HWTEST_F(BmsBundleResourceTest, BmsBundleResourceTest_0104, Function | SmallTest | Level0)
+{
+    auto manager = DelayedSingleton<BundleResourceManager>::GetInstance();
+    EXPECT_NE(manager, nullptr);
+    bool ans = manager->AddResourceInfoByColorModeChanged(200);
+    EXPECT_FALSE(ans);
+
+    ans = manager->AddResourceInfoByColorModeChanged(USERID);
+    EXPECT_TRUE(ans);
+}
+
+/**
  * @tc.number: ProcessBundleResourceInfo_0001
  * @tc.name: test the start function of ProcessBundleResourceInfo
  * @tc.desc: 1. test ProcessBundleResourceInfo

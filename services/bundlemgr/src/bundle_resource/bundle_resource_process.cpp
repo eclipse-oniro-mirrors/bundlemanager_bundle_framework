@@ -15,6 +15,8 @@
 
 #include "bundle_resource_process.h"
 
+#include <mutex>
+
 #include "ability_info.h"
 #include "account_helper.h"
 #include "app_log_wrapper.h"
@@ -25,9 +27,13 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
+std::mutex g_systemResLock;
 constexpr const char* GLOBAL_RESOURCE_BUNDLE_NAME = "ohos.global.systemres";
 const std::string INNER_UNDER_LINE = "_";
 }
+std::string BundleResourceProcess::systemResourceHap_ = "";
+int32_t BundleResourceProcess::defaultIconId_ = 0;
+
 bool BundleResourceProcess::GetLauncherAbilityResourceInfo(const InnerBundleInfo &innerBundleInfo,
     const int32_t userId,
     std::vector<ResourceInfo> &resourceInfos)
@@ -348,6 +354,12 @@ ResourceInfo BundleResourceProcess::ConvertToBundleResourceInfo(
 
 bool BundleResourceProcess::GetDefaultIconResource(int32_t &iconId, std::string &hapPath)
 {
+    std::lock_guard<std::mutex> lock(g_systemResLock);
+    if (!systemResourceHap_.empty() && defaultIconId_ != 0) {
+        iconId = defaultIconId_;
+        hapPath = systemResourceHap_;
+        return true;
+    }
     auto dataMgr = DelayedSingleton<BundleMgrService>::GetInstance()->GetDataMgr();
     if (dataMgr == nullptr) {
         return false;
@@ -363,6 +375,8 @@ bool BundleResourceProcess::GetDefaultIconResource(int32_t &iconId, std::string 
     if (!info.hapModuleInfos.empty()) {
         iconId = info.applicationInfo.iconResource.id;
         hapPath = info.hapModuleInfos[0].hapPath;
+        defaultIconId_ = iconId;
+        systemResourceHap_ = hapPath;
         return true;
     }
     APP_LOGE("hapModuleInfos is empty");

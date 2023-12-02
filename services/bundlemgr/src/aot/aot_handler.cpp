@@ -37,6 +37,7 @@ namespace {
 // ark compile option parameter key
 constexpr const char* COMPILE_INSTALL_PARAM_KEY = "persist.bm.install.arkopt";
 constexpr const char* COMPILE_IDLE_PARA_KEY = "persist.bm.idle.arkopt";
+const std::string DEBUG_APP_IDENTIFIER = "DEBUG_LIB_ID";
 }
 
 AOTHandler& AOTHandler::GetInstance()
@@ -114,14 +115,15 @@ std::optional<AOTArgs> AOTHandler::BuildAOTArgs(
     installedInfo.GetInternalDependentHspInfo(moduleName, aotArgs.hspVector);
 
     InnerBundleUserInfo newInnerBundleUserInfo;
-    if (!installedInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, newInnerBundleUserInfo)){
+    if (!installedInfo.GetInnerBundleUserInfo(Constants::ALL_USERID, newInnerBundleUserInfo)) {
         APP_LOGE("bundle(%{public}s) get user (%{public}d) failed.",
             installedInfo.GetBundleName().c_str(), Constants::ALL_USERID);
         return std::nullopt;
     }
-    aotArgs.bundleUid = newInnerBundleUserInfo.uid;
-    aotArgs.appIdentifier = "";
-
+    aotArgs.bundleUid = static_cast<uint32_t>(newInnerBundleUserInfo.uid);
+    aotArgs.isEncryptedBundle = installedInfo.IsEncryptedMoudle(moduleName) ? 1 : 0;
+    aotArgs.appIdentifier = (info.GetAppProvisionType() == Constants::APP_PROVISION_TYPE_DEBUG) ?
+        DEBUG_APP_IDENTIFIER : info.GetAppIdentifier();
     APP_LOGD("args : %{public}s", aotArgs.ToString().c_str());
     return aotArgs;
 }

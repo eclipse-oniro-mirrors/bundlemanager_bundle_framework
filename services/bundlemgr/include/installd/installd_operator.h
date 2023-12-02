@@ -23,8 +23,10 @@
 #include "aot/aot_args.h"
 #include "appexecfwk_errors.h"
 #include "bundle_extractor.h"
+#include "code_sign_helper.h"
 #include "installd/installd_constants.h"
 #include "ipc/check_encryption_param.h"
+#include "ipc/code_signature_param.h"
 #include "ipc/extract_param.h"
 #include "nocopyable.h"
 
@@ -201,14 +203,23 @@ public:
     static bool GetNativeLibraryFileNames(const std::string &filePath, const std::string &cpuAbi,
         std::vector<std::string> &fileNames);
 
-    static bool VerifyCodeSignature(const std::string &modulePath, const std::string &prefix,
-        const std::string &targetSoPath, const std::string &signatureFileDir);
+#if defined(CODE_SIGNATURE_ENABLE)
+    static bool PrepareEntryMap(const CodeSignatureParam &codeSignatureParam,
+        const std::vector<std::string> &soEntryFiles, Security::CodeSign::EntryMap &entryMap);
+#endif
+
+    static bool VerifyCodeSignature(const CodeSignatureParam &codeSignatureParam,
+        std::shared_ptr<CodeSignHelper>& codeSignHelper);
 
     static bool CheckEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
     static bool CheckHapEncryption(const CheckEncryptionParam &checkEncryptionParam, bool &isEncryption);
 
-    static bool MoveFiles(const std::string &srcDir, const std::string &desDir);
+    static bool MoveFiles(const std::string &srcDir, const std::string &desDir, bool isDesDirNeedCreated = false);
+
+    static bool MoveFileOrDir(const std::string &srcPath, const std::string &destPath, mode_t mode);
+
+    static bool MoveFile(const std::string &srcPath, const std::string &destPath);
 
     static bool ExtractDriverSoFiles(const std::string &srcPath,
         const std::unordered_multimap<std::string, std::string> &dirMap);

@@ -39,7 +39,6 @@
 namespace OHOS {
 namespace AppExecFwk {
 namespace {
-const int32_t ASHMEM_LEN = 16;
 inline void ClearAshmem(sptr<Ashmem> &optMem)
 {
     if (optMem != nullptr) {
@@ -319,7 +318,8 @@ bool BundleMgrProxy::GetBundleInfo(
         return false;
     }
 
-    return GetParcelInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO, data, bundleInfo) == ERR_OK;
+    return GetParcelInfoIntelligent<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO, data, bundleInfo) == ERR_OK;
 }
 
 bool BundleMgrProxy::GetBundleInfo(
@@ -349,7 +349,8 @@ bool BundleMgrProxy::GetBundleInfo(
         APP_LOGE("fail to GetBundleInfo due to write userId fail");
         return false;
     }
-    if (!GetBigParcelableInfo<BundleInfo>(BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)) {
+    if (GetParcelInfoIntelligent<BundleInfo>(
+        BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS, data, bundleInfo)!= ERR_OK) {
         APP_LOGE("fail to GetBundleInfo from server");
         return false;
     }
@@ -384,7 +385,7 @@ ErrCode BundleMgrProxy::GetBundleInfoV9(
         return ERR_APPEXECFWK_PARCEL_ERROR;
     }
 
-    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+    auto res = GetParcelInfoIntelligent<BundleInfo>(
         BundleMgrInterfaceCode::GET_BUNDLE_INFO_WITH_INT_FLAGS_V9, data, bundleInfo);
     if (res != ERR_OK) {
         APP_LOGE("fail to GetBundleInfoV9 from server, error code: %{public}d", res);
@@ -1498,7 +1499,7 @@ ErrCode BundleMgrProxy::GetPermissionDef(const std::string &permissionName, Perm
 }
 
 ErrCode BundleMgrProxy::CleanBundleCacheFiles(
-    const std::string &bundleName, const sptr<ICleanCacheCallback> &cleanCacheCallback, int32_t userId)
+    const std::string &bundleName, const sptr<ICleanCacheCallback> cleanCacheCallback, int32_t userId)
 {
     HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
     APP_LOGD("begin to CleanBundleCacheFiles of %{public}s", bundleName.c_str());
@@ -3833,6 +3834,79 @@ sptr<IBundleResource> BundleMgrProxy::GetBundleResourceProxy()
     return bundleResourceProxy;
 }
 
+ErrCode BundleMgrProxy::GetRecoverableApplicationInfo(
+    std::vector<RecoverableApplicationInfo> &recoverableApplications)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetRecoverableApplicationInfo");
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetRecoverableApplicationInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return GetParcelableInfosWithErrCode<RecoverableApplicationInfo>(
+        BundleMgrInterfaceCode::GET_RECOVERABLE_APPLICATION_INFO, data, recoverableApplications);
+}
+
+ErrCode BundleMgrProxy::GetUninstalledBundleInfo(const std::string bundleName, BundleInfo &bundleInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("begin to GetUninstalledBundleInfo of %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to params empty");
+        return ERR_BUNDLE_MANAGER_BUNDLE_NOT_EXIST;
+    }
+
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to write InterfaceToken fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("fail to GetUninstalledBundleInfo due to write bundleName fail");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    auto res = GetParcelableInfoWithErrCode<BundleInfo>(
+        BundleMgrInterfaceCode::GET_UNINSTALLED_BUNDLE_INFO, data, bundleInfo);
+    if (res != ERR_OK) {
+        APP_LOGE("fail to GetUninstalledBundleInfo from server, error code: %{public}d", res);
+        return res;
+    }
+    return ERR_OK;
+}
+
+ErrCode BundleMgrProxy::SetAdditionalInfo(const std::string &bundleName, const std::string &additionalInfo)
+{
+    HITRACE_METER_NAME(HITRACE_TAG_APP, __PRETTY_FUNCTION__);
+    APP_LOGD("Called. BundleName : %{public}s", bundleName.c_str());
+    if (bundleName.empty()) {
+        APP_LOGE("Invalid param");
+        return ERR_BUNDLE_MANAGER_PARAM_ERROR;
+    }
+    MessageParcel data;
+    if (!data.WriteInterfaceToken(GetDescriptor())) {
+        APP_LOGE("Write interfaceToken failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(bundleName)) {
+        APP_LOGE("Write bundleName failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    if (!data.WriteString(additionalInfo)) {
+        APP_LOGE("Write additionalInfo failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel reply;
+    if (!SendTransactCmd(BundleMgrInterfaceCode::SET_ADDITIONAL_INFO, data, reply)) {
+        APP_LOGE("Call failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    return reply.ReadInt32();
+}
+
 template<typename T>
 bool BundleMgrProxy::GetParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
 {
@@ -3933,6 +4007,42 @@ ErrCode BundleMgrProxy::GetParcelableInfosWithErrCode(BundleMgrInterfaceCode cod
     }
     APP_LOGW("GetParcelableInfosWithErrCode ErrCode : %{public}d", res);
     return res;
+}
+
+template<typename T>
+ErrCode BundleMgrProxy::GetParcelInfoIntelligent(
+    BundleMgrInterfaceCode code, MessageParcel &data, T &parcelInfo)
+{
+    MessageParcel reply;
+    if (!SendTransactCmd(code, data, reply)) {
+        APP_LOGE("SendTransactCmd failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    ErrCode ret = reply.ReadInt32();
+    if (ret != ERR_OK) {
+        APP_LOGE("host reply ErrCode : %{public}d", ret);
+        return ret;
+    }
+    size_t dataSize = reply.ReadUint32();
+    void *buffer = nullptr;
+    if (!GetData(buffer, dataSize, reply.ReadRawData(dataSize))) {
+        APP_LOGE("GetData failed, dataSize : %{public}zu", dataSize);
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    MessageParcel tmpParcel;
+    if (!tmpParcel.ParseFrom(reinterpret_cast<uintptr_t>(buffer), dataSize)) {
+        APP_LOGE("ParseFrom failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+
+    std::unique_ptr<T> info(tmpParcel.ReadParcelable<T>());
+    if (info == nullptr) {
+        APP_LOGE("ReadParcelable failed");
+        return ERR_APPEXECFWK_PARCEL_ERROR;
+    }
+    parcelInfo = *info;
+    return ERR_OK;
 }
 
 template<typename T>
@@ -4046,87 +4156,6 @@ bool ParseStr(const char *buf, const int itemLen, int index, std::string &result
 
     std::string str(item, 0, itemLen);
     result = str;
-    return true;
-}
-
-template<typename T>
-bool BundleMgrProxy::GetBigParcelableInfo(BundleMgrInterfaceCode code, MessageParcel &data, T &parcelableInfo)
-{
-    MessageParcel reply;
-    if (!SendTransactCmd(code, data, reply)) {
-        return false;
-    }
-
-    if (!reply.ReadBool()) {
-        APP_LOGE("reply result false");
-        return false;
-    }
-
-    if (reply.ReadBool()) {
-        APP_LOGI("big reply, reading data from ashmem");
-        return GetParcelableFromAshmem<T>(reply, parcelableInfo);
-    }
-
-    std::unique_ptr<T> info(reply.ReadParcelable<T>());
-    if (info == nullptr) {
-        APP_LOGE("readParcelableInfo failed");
-        return false;
-    }
-    parcelableInfo = *info;
-    APP_LOGD("get parcelable info success");
-    return true;
-}
-
-template <typename T>
-bool BundleMgrProxy::GetParcelableFromAshmem(MessageParcel &reply, T &parcelableInfo)
-{
-    APP_LOGE("Get parcelable from ashmem");
-    sptr<Ashmem> ashmem = reply.ReadAshmem();
-    if (ashmem == nullptr) {
-        APP_LOGE("Ashmem is nullptr");
-        return false;
-    }
-
-    bool ret = ashmem->MapReadOnlyAshmem();
-    if (!ret) {
-        APP_LOGE("Map read only ashmem fail");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    int32_t offset = 0;
-    const char* dataStr = static_cast<const char*>(
-        ashmem->ReadFromAshmem(ashmem->GetAshmemSize(), offset));
-    if (dataStr == nullptr) {
-        APP_LOGE("Data is nullptr when read from ashmem");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    std::string lenStr;
-    if (!ParseStr(dataStr, ASHMEM_LEN, offset, lenStr)) {
-        APP_LOGE("Parse lenStr fail");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    int strLen = atoi(lenStr.c_str());
-    offset += ASHMEM_LEN;
-    std::string infoStr;
-    if (!ParseStr(dataStr, strLen, offset, infoStr)) {
-        APP_LOGE("Parse infoStr fail");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    if (!ParseInfoFromJsonStr(infoStr.c_str(), parcelableInfo)) {
-        APP_LOGE("Parse info from json fail");
-        ClearAshmem(ashmem);
-        return false;
-    }
-
-    ClearAshmem(ashmem);
-    APP_LOGD("Get parcelable vector from ashmem success");
     return true;
 }
 

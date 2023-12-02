@@ -82,6 +82,10 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
     NAPI_CALL(env, napi_create_object(env, &nProfileType));
     CreateProfileTypeObject(env, nProfileType);
 
+    napi_value nApplicationReservedFlag = nullptr;
+    NAPI_CALL(env, napi_create_object(env, &nApplicationReservedFlag));
+    CreateApplicationReservedFlagObject(env, nApplicationReservedFlag);
+
     napi_property_descriptor desc[] = {
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfo", GetBundleArchiveInfo),
         DECLARE_NAPI_FUNCTION("getBundleArchiveInfoSync", GetBundleArchiveInfoSync),
@@ -141,6 +145,9 @@ static napi_value BundleManagerExport(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("getJsonProfile", GetJsonProfile),
         DECLARE_NAPI_FUNCTION("verifyAbc", VerifyAbc),
         DECLARE_NAPI_PROPERTY("ProfileType", nProfileType),
+        DECLARE_NAPI_FUNCTION("getRecoverableApplicationInfo", GetRecoverableApplicationInfo),
+        DECLARE_NAPI_PROPERTY("ApplicationReservedFlag", nApplicationReservedFlag),
+        DECLARE_NAPI_FUNCTION("setAdditionalInfo", SetAdditionalInfo),
     };
 
     NAPI_CALL(env, napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc));

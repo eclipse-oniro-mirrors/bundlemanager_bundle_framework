@@ -21,7 +21,6 @@
 #include <dirent.h>
 #include <fcntl.h>
 #include <fstream>
-#include <random>
 #include <set>
 #include <sys/stat.h>
 #include <sys/statfs.h>
@@ -39,12 +38,11 @@ namespace OHOS {
 namespace AppExecFwk {
 namespace {
 const std::string::size_type EXPECT_SPLIT_SIZE = 2;
-const std::string DEC_TO_HEX = "0123456789abcdef";
-const std::string::size_type DATA_GROUP_DIR_SIZE = 36;
-const char DATA_GROUP_DIR_SEPARATOR = '-';
-const std::set<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
-const int32_t RANDOM_NUM_START = 0;
-const int32_t RANDOM_NUM_END = 15;
+const char START_CHAR = 'a';
+const int32_t ZERO = 0;
+const int32_t ORIGIN_STRING_LENGTH = 32;
+const std::string DATA_GROUP_DIR_SEPARATOR = "-";
+const std::vector<int32_t> SEPARATOR_POSITIONS { 8, 13, 18, 23};
 const int64_t HALF_GB = 1024 * 1024 * 512; // 0.5GB
 const double SAVE_SPACE_PERCENT = 0.05;
 static std::string g_deviceUdid;
@@ -674,18 +672,24 @@ void BundleUtil::DeleteTempDirs(const std::vector<std::string> &tempDirs)
 
 std::string BundleUtil::GenerateDataGroupDirName()
 {
-    std::string res(DATA_GROUP_DIR_SIZE, DATA_GROUP_DIR_SEPARATOR);
-    int32_t size = static_cast<int32_t>(DATA_GROUP_DIR_SIZE);
-    for (auto i = 0; i < size; i++) {
-        if (SEPARATOR_POSITIONS.find(i) == SEPARATOR_POSITIONS.end()) {
-            std::random_device seed;
-            std::ranlux48 engine(seed());
-            std::uniform_int_distribution<> distrib(RANDOM_NUM_START, RANDOM_NUM_END);
-            int32_t random = distrib(engine);
-            res[i] = DEC_TO_HEX[random];
+    auto currentTime = std::chrono::system_clock::now();
+    auto timestampNanoseconds =
+        std::chrono::duration_cast<std::chrono::nanoseconds>(currentTime.time_since_epoch()).count();
+
+    // convert nanosecond timestamps to string
+    std::string timestampString = std::to_string(timestampNanoseconds);
+    if (timestampString.size() < ORIGIN_STRING_LENGTH) {
+        for (auto i = ZERO; i < ORIGIN_STRING_LENGTH - timestampString.size(); i++) {
+            timestampString += static_cast<char>(START_CHAR + i);
         }
+    } else {
+        timestampString = timestampString.substr(ZERO, ORIGIN_STRING_LENGTH);
     }
-    return res;
+
+    for (int32_t index : SEPARATOR_POSITIONS) {
+        timestampString.insert(index, DATA_GROUP_DIR_SEPARATOR);
+    }
+    return timestampString;
 }
 }  // namespace AppExecFwk
 }  // namespace OHOS

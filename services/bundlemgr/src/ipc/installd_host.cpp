@@ -95,6 +95,12 @@ void InstalldHost::Init()
         &InstalldHost::HandExtractDriverSoFiles);
     funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::EXTRACT_CODED_SO_FILE),
         &InstalldHost::HandExtractEncryptedSoFiles);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::VERIFY_CODE_SIGNATURE_FOR_HAP),
+        &InstalldHost::HandVerifyCodeSignatureForHap);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::DELIVERY_SIGN_PROFILE),
+        &InstalldHost::HandDeliverySignProfile);
+    funcMap_.emplace(static_cast<uint32_t>(InstalldInterfaceCode::REMOVE_SIGN_PROFILE),
+        &InstalldHost::HandRemoveSignProfile);
 }
 
 int InstalldHost::OnRemoteRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option)
@@ -438,12 +444,13 @@ bool InstalldHost::HandGetNativeLibraryFileNames(MessageParcel &data, MessagePar
 
 bool InstalldHost::HandVerifyCodeSignature(MessageParcel &data, MessageParcel &reply)
 {
-    std::string modulePath = Str16ToStr8(data.ReadString16());
-    std::string cpuAbi = Str16ToStr8(data.ReadString16());
-    std::string targetSoPath = Str16ToStr8(data.ReadString16());
-    std::string signatureFileDir = Str16ToStr8(data.ReadString16());
+    std::unique_ptr<CodeSignatureParam> info(data.ReadParcelable<CodeSignatureParam>());
+    if (info == nullptr) {
+        APP_LOGE("readParcelableInfo failed");
+        return ERR_APPEXECFWK_INSTALL_INSTALLD_SERVICE_ERROR;
+    }
 
-    ErrCode result = VerifyCodeSignature(modulePath, cpuAbi, targetSoPath, signatureFileDir);
+    ErrCode result = VerifyCodeSignature(*info);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }
@@ -503,6 +510,44 @@ bool InstalldHost::HandExtractEncryptedSoFiles(MessageParcel &data, MessageParce
     int32_t uid = data.ReadInt32();
 
     ErrCode result = ExtractEncryptedSoFiles(hapPath, realSoFilesPath, cpuAbi, tmpSoPath, uid);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandVerifyCodeSignatureForHap(MessageParcel &data, MessageParcel &reply)
+{
+    std::string realHapPath = Str16ToStr8(data.ReadString16());
+    std::string appIdentifier = Str16ToStr8(data.ReadString16());
+    bool isEnterpriseBundle = data.ReadBool();
+
+    ErrCode result = VerifyCodeSignatureForHap(realHapPath, appIdentifier, isEnterpriseBundle);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandDeliverySignProfile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+    int32_t profileBlockLength = data.ReadInt32();
+    if (profileBlockLength == 0 || profileBlockLength > Constants::MAX_PARCEL_CAPACITY) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    const unsigned char *profileBlock = reinterpret_cast<const unsigned char *>(data.ReadRawData(profileBlockLength));
+    if (profileBlock == nullptr) {
+        WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, ERR_APPEXECFWK_PARCEL_ERROR);
+        return false;
+    }
+    ErrCode result = DeliverySignProfile(bundleName, profileBlockLength, profileBlock);
+    WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
+    return true;
+}
+
+bool InstalldHost::HandRemoveSignProfile(MessageParcel &data, MessageParcel &reply)
+{
+    std::string bundleName = Str16ToStr8(data.ReadString16());
+
+    ErrCode result = RemoveSignProfile(bundleName);
     WRITE_PARCEL_AND_RETURN_FALSE_IF_FAIL(Int32, reply, result);
     return true;
 }

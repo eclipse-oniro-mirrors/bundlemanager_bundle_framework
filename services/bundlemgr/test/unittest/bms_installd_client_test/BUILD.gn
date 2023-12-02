@@ -44,6 +44,7 @@ ohos_unittest("BmsInstalldClientTest") {
     "access_token:libaccesstoken_sdk",
     "eventhandler:libeventhandler",
     "hilog:libhilog",
+    "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
     "safwk:system_ability_fwk",
